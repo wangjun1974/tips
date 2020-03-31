@@ -66,6 +66,7 @@ EOF
 
 mkdir -p /ftp/virtual/jwang
 chown -R ftp:ftp /ftp/virtual/jwang
+chcon -R --reference /var/ftp/pub /ftp  
 
 firewall-cmd --add-service=ftp
 firewall-cmd --add-service=ftp --permanent

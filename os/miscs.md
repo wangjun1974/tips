@@ -10,7 +10,7 @@ ip -s link show dev ens3
     720256020  10566989 0       0       0       0
 ```
 
-## 安装配置vsftp
+## 安装配置vsftp 
 
 ```
 yum install vsftpd -y 
@@ -73,3 +73,9 @@ firewall-cmd --reload
 
 systemctl enable vsftpd && systemctl start vsftpd
 ```
+
+注意⚠️：对于rhel7来说，安装时看看是否需要（待尝试）
+```
+yum install db4-utils db4 -y
+```
+

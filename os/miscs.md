@@ -82,7 +82,7 @@ firewall-cmd --reload
 systemctl enable vsftpd && systemctl start vsftpd
 ```
 
-注意⚠️：对于rhel7来说，安装时看看是否需要（待尝试）
+注意⚠️：对于rhel7来说，安装时看看是否需要（待尝试）；经尝不需要以下命令
 ```
 yum install db4-utils db4 -y
 ```
@@ -164,4 +164,5 @@ ansible server01 -m sysctl -a 'name=net.ipv4.tcp_congestion_control value=bbr sy
 ```
 $ lftp -c "open -u user,pass ftpsite.com; put -O remote/dir/ /local/file.txt" 
 $ lftp -c "open -u user,pass ftpsite.com; get remote/dir/file.txt" 
+$ lftp -c "open -u user,pass ftpsite.com; pget -n 2 remote/dir/file.txt -o local/dir" 
 ```

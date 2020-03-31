@@ -79,3 +79,18 @@ systemctl enable vsftpd && systemctl start vsftpd
 yum install db4-utils db4 -y
 ```
 
+## 解决Homebrew慢的方法
+因为访问github慢，所以尝试解决方法为使用镜像站点，是否有效待验证
+```
+cd "$(brew --repo)"
+git remote set-url origin https://mirrors.aliyun.com/homebrew/brew.git
+
+cd "$(brew --repo)/Library/Taps/homebrew/homebrew-core"
+git remote set-url origin https://mirrors.aliyun.com/homebrew/homebrew-core.git
+
+echo 'export HOMEBREW_BOTTLE_DOMAIN=https://mirrors.aliyun.com/homebrew/homebrew-bottles' >> ~/.bashrc
+source ~/.bashrc
+
+cd "$(brew --repo)"/Library/Taps/homebrew/homebrew-cask
+git remote set-url origin https://mirrors.ustc.edu.cn/homebrew-cask.git
+```

@@ -11,6 +11,7 @@ ip -s link show dev ens3
 ```
 
 ## 安装配置vsftp 
+参考：https://www.unixmen.com/install-vsftp-with-virtual-users-on-centos-rhel-scientific-linux-6-4/
 
 ```
 yum install vsftpd -y 

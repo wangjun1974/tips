@@ -65,8 +65,11 @@ hide_ids=YES
 EOF
 
 mkdir -p /ftp/virtual/jwang
-chown -R ftp:ftp /ftp/virtual/jwang
-chcon -R --reference /var/ftp/pub /ftp  
+chown -R ftp:ftp /ftp
+# chcon -R --reference /var/ftp/pub /ftp  
+# semanage fcontext -a -t public_content_rw_t "/ftp(/.*)?"
+chcon -R -t public_content_rw_t /ftp/virtual/jwang
+setsebool -P ftpd_full_access 1
 
 firewall-cmd --add-service=ftp
 firewall-cmd --add-service=ftp --permanent
@@ -78,6 +81,14 @@ systemctl enable vsftpd && systemctl start vsftpd
 注意⚠️：对于rhel7来说，安装时看看是否需要（待尝试）
 ```
 yum install db4-utils db4 -y
+```
+
+注意⚠️：遇到报错，500 OOPS: vsftpd: refusing to run with writable root inside chroot()
+参考：https://www.cnblogs.com/wi100sh/p/4542819.html
+```
+ansible server01 -m lineinfile -a 'path=/etc/vsftpd/vsftpd.conf regexp="allow_writeable_chroot" line="allow_writeable_chroot=YES"'
+
+ansible server01 -m service -a 'name=vsftpd state=restarted'
 ```
 
 ## 解决Homebrew慢的方法
@@ -94,4 +105,50 @@ source ~/.bashrc
 
 cd "$(brew --repo)"/Library/Taps/homebrew/homebrew-cask
 git remote set-url origin https://mirrors.ustc.edu.cn/homebrew-cask.git
+```
+
+## 检查哪个软件包提供了命令 yum provides audit2allow
+```
+yum provides audit2allow
+```
+
+## 设置selinux bool变量
+```
+setsebool -P ftpd_full_access 1
+```
+## 配置ansible控制节点
+
+生成inventory
+```
+cat >> /etc/ansible/hosts << 'EOF'
+[group1]
+server01 ansible_host=10.66.208.158 ansible_user=root
+EOF
+```
+
+生成ssh public key，生成ssh config
+```
+ssh-keygen -t rsa -f /root/.ssh/id_rsa -N ''
+
+cat > ~/.ssh/config << 'EOF'
+Host *
+   StrictHostKeyChecking no
+   UserKnownHostsFile=/dev/null
+
+EOF
+```
+
+构建控制节点到服务器间的信任关系
+```
+ansible all -m authorized_key -a 'user=root state=present key="{{ lookup(\"file\",\"/root/.ssh/id_rsa.pub\") }}"' -k
+```
+
+配置bbr
+```
+ansible server01 -m lineinfile -a 'path=/etc/sysctl.conf regexp="net.ipv4.tcp_congestion_control" line="net.ipv4.tcp_congestion_control=bbr"'
+```
+
+另外一种方式配置bbr
+```
+ansible server01 -m sysctl -a 'name=net.ipv4.tcp_congestion_control value=bbr sysctl_set=yes state=present reload=yes'
 ```

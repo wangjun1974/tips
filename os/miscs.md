@@ -63,6 +63,9 @@ chroot_local_user=YES
 
 ## Hide ids from user
 hide_ids=YES
+
+# Allow writable undercloud chroot mode
+allow_writeable_chroot=YES
 EOF
 
 mkdir -p /ftp/virtual/jwang
@@ -70,7 +73,7 @@ chown -R ftp:ftp /ftp
 # chcon -R --reference /var/ftp/pub /ftp  
 # semanage fcontext -a -t public_content_rw_t "/ftp(/.*)?"
 chcon -R -t public_content_rw_t /ftp/virtual/jwang
-setsebool -P ftpd_full_access 1
+# setsebool -P ftpd_full_access 1
 
 firewall-cmd --add-service=ftp
 firewall-cmd --add-service=ftp --permanent
@@ -152,4 +155,13 @@ ansible server01 -m lineinfile -a 'path=/etc/sysctl.conf regexp="net.ipv4.tcp_co
 另外一种方式配置bbr
 ```
 ansible server01 -m sysctl -a 'name=net.ipv4.tcp_congestion_control value=bbr sysctl_set=yes state=present reload=yes'
+```
+
+## lftp 命令
+参考：https://unix.stackexchange.com/questions/93587/lftp-login-put-file-in-remote-dir-and-exit-in-a-single-command-proper-quoting
+
+一条命令完成认证及上传
+```
+$ lftp -c "open -u user,pass ftpsite.com; put -O remote/dir/ /local/file.txt" 
+$ lftp -c "open -u user,pass ftpsite.com; get remote/dir/file.txt" 
 ```

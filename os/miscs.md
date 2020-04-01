@@ -97,7 +97,30 @@ ansible server01 -m service -a 'name=vsftpd state=restarted'
 
 ## 解决Homebrew慢的方法
 因为访问github慢，所以尝试解决方法为使用镜像站点，是否有效待验证
-参考：https://lug.ustc.edu.cn/wiki/mirrors/help/homebrew-bottles
+参考：
+* https://www.zhihu.com/question/31360766
+* https://lug.ustc.edu.cn/wiki/mirrors/help/homebrew-bottles
+* https://nwafu-mirrors-help.readthedocs.io/zh_cn/homebrew-cask-versions.git.html
+
+替换git repo
+```
+cd "$(brew --repo)"
+git remote set-url origin https://mirrors.aliyun.com/homebrew/brew.git
+
+cd "$(brew --repo)/Library/Taps/homebrew/homebrew-core"
+git remote set-url origin https://mirrors.aliyun.com/homebrew/homebrew-core.git
+
+echo 'export HOMEBREW_BOTTLE_DOMAIN=https://mirrors.aliyun.com/homebrew/homebrew-bottles' >> ~/.bashrc
+source ~/.bashrc
+
+cd "$(brew --repo)"/Library/Taps/homebrew/homebrew-cask
+git remote set-url origin https://mirrors.ustc.edu.cn/homebrew-cask.git
+
+cd "$(brew --repo)"/Library/Taps/homebrew/homebrew-cask-versions
+git remote set-url origin https://mirrors.nwafu.edu.cn/homebrew-cask-versions.git
+```
+
+替换homebrew bottles镜像站点
 ```
 echo 'export HOMEBREW_BOTTLE_DOMAIN=https://mirrors.ustc.edu.cn/homebrew-bottles' >> ~/.bash_profile
 source ~/.bash_profile

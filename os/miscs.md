@@ -126,6 +126,8 @@ echo 'export HOMEBREW_BOTTLE_DOMAIN=https://mirrors.ustc.edu.cn/homebrew-bottles
 source ~/.bash_profile
 ```
 
+另外一种思路是使用socks代理，参见：https://www.zhihu.com/question/31360766
+
 ## 检查哪个软件包提供了命令 yum provides audit2allow
 ```
 yum provides audit2allow

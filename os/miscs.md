@@ -97,18 +97,10 @@ ansible server01 -m service -a 'name=vsftpd state=restarted'
 
 ## 解决Homebrew慢的方法
 因为访问github慢，所以尝试解决方法为使用镜像站点，是否有效待验证
+参考：https://lug.ustc.edu.cn/wiki/mirrors/help/homebrew-bottles
 ```
-cd "$(brew --repo)"
-git remote set-url origin https://mirrors.aliyun.com/homebrew/brew.git
-
-cd "$(brew --repo)/Library/Taps/homebrew/homebrew-core"
-git remote set-url origin https://mirrors.aliyun.com/homebrew/homebrew-core.git
-
-echo 'export HOMEBREW_BOTTLE_DOMAIN=https://mirrors.aliyun.com/homebrew/homebrew-bottles' >> ~/.bashrc
-source ~/.bashrc
-
-cd "$(brew --repo)"/Library/Taps/homebrew/homebrew-cask
-git remote set-url origin https://mirrors.ustc.edu.cn/homebrew-cask.git
+echo 'export HOMEBREW_BOTTLE_DOMAIN=https://mirrors.ustc.edu.cn/homebrew-bottles' >> ~/.bash_profile
+source ~/.bash_profile
 ```
 
 ## 检查哪个软件包提供了命令 yum provides audit2allow
@@ -166,3 +158,62 @@ $ lftp -c "open -u user,pass ftpsite.com; put -O remote/dir/ /local/file.txt"
 $ lftp -c "open -u user,pass ftpsite.com; get remote/dir/file.txt" 
 $ lftp -c "open -u user,pass ftpsite.com; pget -n 2 remote/dir/file.txt -o local/dir" 
 ```
+
+## 配置时间服务器(RHEL8)
+
+### chrony 服务器
+```
+yum install -y chrony
+
+cat > /etc/chrony.conf << EOF
+server 127.127.1.0 iburst
+allow all
+local stratum 4
+EOF
+
+firewall-cmd --add-service=ntp
+firewall-cmd --add-service=ntp --permanent
+firewall-cmd --reload
+
+systemctl enable chronyd && systemctl start chronyd
+
+chronyc -n sources
+chronyc -n tracking
+```
+
+### chrony 客户端
+```
+NTPSERVER="clock.corp.redhat.com"
+LOCALSUBNET=$(ip r s | grep ens3 | grep -v default | awk '{print $1}')
+
+yum install -y chrony
+
+cat > /etc/chrony.conf << EOF
+server ${NTPSERVER} iburst
+stratumweight 0
+driftfile /var/lib/chrony/drift
+rtcsync
+makestep 10 3
+bindcmdaddress 127.0.0.1
+bindcmdaddress ::1
+cmdallow 127.0.0.1
+allow ${LOCALSUBNET}
+keyfile /etc/chrony.keys
+commandkey 1
+generatecommandkey
+noclientlog
+logchange 0.5
+logdir /var/log/chrony
+EOF
+
+firewall-cmd --add-service=ntp
+firewall-cmd --add-service=ntp --permanent
+firewall-cmd --reload
+
+systemctl enable chronyd && systemctl start chronyd
+
+chronyc -n sources
+chronyc -n tracking
+```
+
+## 更新homebrew

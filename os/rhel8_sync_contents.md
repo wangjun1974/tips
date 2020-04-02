@@ -22,10 +22,8 @@ do
   rm -rf "$localPath"$i"$fileConn"repodata
 
   echo "sync channel $i..."
-  reposync --newest-only --delete --download-path="$localPath" --download-metadata --repoid=$i
+  reposync --download-path="$localPath" --download-metadata --repoid=$i
 
-  echo "create repo $i..."
-  time createrepo --update --skip-stat --cachedir /tmp/empty-cache-dir "$localPath"$i
 done
 
 exit 0

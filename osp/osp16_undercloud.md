@@ -139,6 +139,7 @@ sed -ie '/6747835/ {N; s/\n//g;}' containers-prepare-parameter.yaml
 cat > undercloud.conf << 'EOF'
 [DEFAULT]
 local_interface = ens8
+enabled_hardware_types = ipmi,redfish,ilo,idrac,staging-ovirt
 local_ip = 192.168.208.1/24
 network_cidr = 192.168.208.0/24
 undercloud_admin_host = 192.168.208.2
@@ -158,7 +159,36 @@ masquerade = true
 EOF
 
 # install undercloud
+# may need run multiple times for sync images
 openstack undercloud install
 
-# may need run multiple times for sync images
+source stackrc
+
+sudo yum install -y rhosp-director-images rhosp-director-images-ipa
+
+pushd ~/images
+tar xvf /usr/share/rhosp-director-images/overcloud-full-latest-16.0.tar
+tar xvf /usr/share/rhosp-director-images/ironic-python-agent-latest-16.0.tar
+
+sudo yum install -y libguestfs-tools
+sudo yum install -y libvirt virt-install libvirt-client
+
+sudo -i
+cd /home/stack/images
+export LIBGUESTFS_BACKEND=direct 
+virt-customize -a overcloud-full.qcow2 --root-password password:redhat
+exit
+
+openstack overcloud image upload --image-path /home/stack/images/
+openstack image list
+ls -l /var/lib/ironic/httpboot/
+
+# config dns to subnet
+openstack subnet list
+openstack subnet set --dns-nameserver 192.168.208.1 ctlplane-subnet
+openstack subnet show ctlplane-subnet
+
+# prepare overcloud node
+openstack baremetal driver list
+
 ```

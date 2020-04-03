@@ -241,4 +241,9 @@ chronyc -n sources
 chronyc -n tracking
 ```
 
-## 更新homebrew
+## osp16 undercloud registry
+OSP16的undercloud上可以运行一个本地registry，用于为undercloud和overcloud提供image
+
+* undercloud registry的监听端口是8787
+* undercloud registry的服务是httpd
+* undercloud registry的存放位置是/var/lib/image-serve

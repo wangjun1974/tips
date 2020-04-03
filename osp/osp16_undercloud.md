@@ -91,6 +91,12 @@ nmcli con add type ethernet ifname ens8 con-name ens8
 nmcli con mod 'ens8' ipv4.method 'manual' ipv4.address '192.168.208.10/24'
 nmcli con down ens8 && nmcli con up ens8
 
+firewall-cmd --get-zone-of-interface=ens8
+
+firewall-cmd --add-service=ntp --zone=$(firewall-cmd --get-zone-of-interface=ens8)
+firewall-cmd --add-service=ntp --zone=$(firewall-cmd --get-zone-of-interface=ens8) --permanent
+firewall-cmd --list-all --zone=$(firewall-cmd --get-zone-of-interface=ens8)
+
 yum update -y && reboot
 
 yum install -y bash-completion
@@ -109,4 +115,50 @@ mkdir -p ~/templates
 
 # install director
 sudo yum install -y python3-tripleoclient
+
+# prepare container image
+openstack tripleo container image prepare default --local-push-destination --output-env-file containers-prepare-parameter.yaml.orig
+
+yes | cp -f containers-prepare-parameter.yaml.orig containers-prepare-parameter.yaml
+
+# access Registry Service Account Url: https://access.redhat.com/terms-based-registry/. 
+# enter account name and account description
+
+cat >> containers-prepare-parameter.yaml << 'EOF'
+  ContainerImageRegistryCredentials:
+    registry.redhat.io:
+      6747835|jwang: 
+  ContainerImageRegistryLogin: true    
+EOF
+
+REGISTRYTOKEN=$(curl http://10.66.208.115/rhel9osp/registry-redhat-io-jwang)
+
+sed -ie "/6747835|jwang:/ a ${REGISTRYTOKEN}" containers-prepare-parameter.yaml
+sed -ie '/6747835/ {N; s/\n//g;}' containers-prepare-parameter.yaml
+
+cat > undercloud.conf << 'EOF'
+[DEFAULT]
+local_interface = ens8
+local_ip = 192.168.208.1/24
+network_cidr = 192.168.208.0/24
+undercloud_admin_host = 192.168.208.2
+undercloud_public_host = 192.168.208.3
+undercloud_debug = true
+undercloud_hostname = undercloud.rhsacn.org
+undercloud_ntp_servers = 10.66.208.158
+container_images_file = containers-prepare-parameter.yaml
+
+[ctlplane-subnet]
+cidr = 192.168.208.0/24
+dhcp_start = 192.168.208.20
+dhcp_end = 192.168.208.120
+gateway = 192.168.208.1
+inspection_iprange = 192.168.208.150,192.168.208.180
+masquerade = true
+EOF
+
+# install undercloud
+openstack undercloud install
+
+# may need run multiple times for sync images
 ```

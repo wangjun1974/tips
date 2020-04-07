@@ -5,6 +5,19 @@
 |---|---|---|---|---|
 |tower01.rhsacn.org|10.66.208.130/24|10.72.17.5|10.66.208.254|clock.corp.redhat.com|
 
+### 安装步骤
+
+|ID|Memo|
+|---|---|
+|1|设置网络|
+|2|设置主机名|
+|3|设置软件源|
+|4|配置时间同步|
+|5|下载软件|
+|6|生成inventory|
+|7|安装|
+
+
 ### 设置环境变量
 ```
 cat > ~/env.sh << 'EOF'
@@ -57,7 +70,7 @@ gpgcheck=0
 EOF
 ```
 
-### 配置时间服务器
+### 配置时间同步
 ```
 yum install -y chrony
 
@@ -88,15 +101,12 @@ chronyc -n tracking
 ### 下载软件
 ```
 curl -O https://releases.ansible.com/ansible-tower/setup-bundle/ansible-tower-setup-bundle-latest.el7.tar.gz
-```
 
-### 解压缩
-```
 tar zxvf ansible-tower-setup*.tar.gz
 cd ansible-tower-setup*
 ```
 
-### 程程inventory
+### 生成inventory
 ```
 cat > inventory << 'EOF'
 [tower]

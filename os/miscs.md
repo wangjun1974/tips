@@ -247,3 +247,12 @@ OSP16的undercloud上可以运行一个本地registry，用于为undercloud和ov
 * undercloud registry的监听端口是8787
 * undercloud registry的服务是httpd
 * undercloud registry的存放位置是/var/lib/image-serve
+
+### OSP13 baremetal node power
+```
+openstack baremetal node power on <uuid>
+openstack baremetal node power off <uuid>
+
+# check node power status
+ipmitool -H 172.168.5.5 -v -I lanplus -U ADMIN -P ADMIN power status
+```

@@ -191,4 +191,42 @@ openstack subnet show ctlplane-subnet
 # prepare overcloud node
 openstack baremetal driver list
 
+# prepare controller vm
+# virt-install --name osp16-controller0 --os-variant=rhel8.1 --ram=8192 --vcpu=4 --boot network,hd --disk path=/var/lib/libvirt/images/osp16-controller0.qcow2,bus=virtio,sparse=true,format=raw,cache=unsafe,size=80 --network network=provision --network network=default --noautoconsole --vnc --noreboot --check disk_size=off
+
+# prepare compute vm
+# virt-install --name osp16-compute0 --os-variant=rhel8.1 --ram=8192 --vcpu=4 --boot network,hd --disk path=/var/lib/libvirt/images/osp16-compute0.qcow2,bus=virtio,sparse=true,format=raw,cache=unsafe,size=80 --network network=provision --network network=default --noautoconsole --vnc --noreboot --check disk_size=off
+
+# install virtual bmc through pip3
+# pip3 install virtualbmc
+
+# register vms into vbmc 
+# vbmc add osp16-controller0 --port 6450 --username admin --password redhat
+# vbmc add osp16-compute0 --port 6451 --username admin --password redhat
+
+# start vbmc
+# vbmc start osp16-controller0
+# vbmc start osp16-compute0
+
+# list vbmc
+# vbmc list
+
+# add vbmc firewall rules into libvirt zone
+# firewall-cmd --add-port=6450/udp --zone=libvirt
+# firewall-cmd --add-port=6451/udp --zone=libvirt
+# firewall-cmd --add-port=6450/udp --zone=libvirt --permanent
+# firewall-cmd --add-port=6451/udp --zone=libvirt --permanent
+
+# install ipmitool on undercloud
+# sudo yum install -y ipmitool
+
+# check undercloud to overcloud node ipmi communication
+
+# check undercloud -> controller ipmi communication
+# ipmitool -H 192.168.208.1 -p 6450 -I lanplus -U admin -P redhat power status
+
+# check undercloud -> compute ipmi communication
+# ipmitool -H 192.168.208.1 -p 6451 -I lanplus -U admin -P redhat power status
+
+
 ```

@@ -256,3 +256,16 @@ openstack baremetal node power off <uuid>
 # check node power status
 ipmitool -H 172.168.5.5 -v -I lanplus -U ADMIN -P ADMIN power status
 ```
+
+### restart auditd
+```
+service auditd restart
+```
+
+### dnsmasq infinite lease
+在dnsmasq.conf文件里包含描述mac地址，ip地址，过期时间的内容
+```
+dhcp-range=192.168.0.0,static
+dhcp-host=aa:bb:cc:dd:ee:ff,192.168.0.199,infinite
+```
+

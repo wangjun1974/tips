@@ -269,3 +269,6 @@ dhcp-range=192.168.0.0,static
 dhcp-host=aa:bb:cc:dd:ee:ff,192.168.0.199,infinite
 ```
 
+### 检查ip地址范围
+可以访问以下网址，例子里通过检查172.23.101.4/255.255.252.0的地址查看地址范围
+http://jodies.de/ipcalc?host=172.23.101.4&mask1=255.255.252.0&mask2=

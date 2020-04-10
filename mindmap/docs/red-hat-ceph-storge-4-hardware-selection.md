@@ -142,7 +142,7 @@ https://arpnetworks.com/blog/2019/06/28/how-to-update-the-device-class-on-a-ceph
 
 #### OSD采用NVMe SSD
 
-#### 每个OSD配置 10 * 2GHz CPU
+#### 每个OSD配置 10 Core * 2GHz CPU
 
 #### 在16 GB内存的基础上，每个OSD配置 5GB 内存
 
@@ -158,7 +158,7 @@ https://arpnetworks.com/blog/2019/06/28/how-to-update-the-device-class-on-a-ceph
 
 #### OSD采用7200转HDD
 
-#### 每个OSD配置 0.5 * 2GHz CPU
+#### 每个OSD配置 0.5 Core * 2GHz CPU
 
 #### 在16 GB内存的基础上，每个OSD配置 5GB 内存
 
@@ -186,7 +186,7 @@ https://arpnetworks.com/blog/2019/06/28/how-to-update-the-device-class-on-a-ceph
 
 #### 1块盘1个OSD
 
-#### 每个OSD配置 0.5 * 2GHz CPU
+#### 每个OSD配置 0.5 Core * 2GHz CPU
 
 #### 在16 GB内存的基础上，每个OSD配置 5GB 内存
 
@@ -202,15 +202,15 @@ https://arpnetworks.com/blog/2019/06/28/how-to-update-the-device-class-on-a-ceph
 
 ### 参考最小配置：https://access.redhat.com/documentation/en-us/red_hat_ceph_storage/4/html/hardware_guide/minimum-hardware-recommendations_hw
 
-### 非容器化CPU需求为1个OSD对应0.5个CPU Core
+### 非容器化CPU需求为1个OSD对应0.5个CPU Core * 2 GHz CPU
 
-### 容器化以后OSD内存需求提高1个OSD 5G内存
+### 容器化以后OSD内存需求提高到1个OSD 5G内存
 
 ## 容器化后的最小配置建议
 
 ### 参考最小配置：https://access.redhat.com/documentation/en-us/red_hat_ceph_storage/4/html/hardware_guide/minimum-hardware-recommendations-for-containerized-ceph_hw
 
-### 容器化以后CPU需求提高为1个容器1个CPU Core
+### 容器化以后CPU需求提高为1个容器0.5个CPU Core 2 GHz
 
 ### 容器化以后OSD内存需求提高1个OSD 5G内存
 

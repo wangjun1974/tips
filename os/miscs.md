@@ -273,3 +273,35 @@ dhcp-host=aa:bb:cc:dd:ee:ff,192.168.0.199,infinite
 可以访问以下网址，例子里通过检查172.23.101.4/255.255.252.0的地址查看地址范围
 http://jodies.de/ipcalc?host=172.23.101.4&mask1=255.255.252.0&mask2=
 
+### 定期重新生成网卡配置的脚本
+
+```
+cat > /usr/local/sbin/network-con-recreate.sh << 'EOF'
+#!/bin/bash
+
+# delete all connection 
+nmcli -g uuid con | while read i ; do nmcli c delete uuid ${i} ; done 
+
+# re-create primary connection 
+nmcli con add type ethernet \
+    con-name eth0 \
+    ifname eth0 \
+    ipv4.method 'manual' \
+    ipv4.address '192.168.208.137/24' \
+    ipv4.gateway '192.168.208.254' \
+    ipv4.dns '192.168.208.254'
+
+# restart interface
+nmcli con down eth0 && nmcli con up eth0
+
+exit 0
+EOF
+
+chmod +x /usr/local/sbin/network-con-recreate.sh
+
+cat > ~/cron-network-con-recreate << EOF
+* */1 * * * /bin/bash /usr/local/sbin/network-con-recreate.sh
+EOF
+
+crontab ~/cron-network-con-recreate
+```

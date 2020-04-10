@@ -305,3 +305,17 @@ EOF
 
 crontab ~/cron-network-con-recreate
 ```
+
+### 全局忽略.DS_Store
+```
+echo '.DS_Store' > ~/.gitignore_global
+
+git config --global core.excludesfile ~/.gitignore_global
+
+find . -name .DS_Store -print0 | xargs -0 git rm --ignore-unmatch
+
+git commit -m "Remove .DS_Store from everywhere"
+
+git push origin master
+```
+

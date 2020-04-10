@@ -319,3 +319,50 @@ git commit -m "Remove .DS_Store from everywhere"
 git push origin master
 ```
 
+### Tunnelblick配置文件
+```
+```
+
+### RHCOS定制文件系统和分区
+参考：Red Hat Enterprise Linux CoreOS Eval Guide
+```
+Separate /var/log
+
+  "storage": {
+    "disks": [
+      {
+        "device": "/dev/sdb",
+        "wipeTable": true,
+        "partitions": [
+          {
+            "label": "LOG",
+            "sizeMiB": 0,
+            "startMiB": 0,
+            "wipePartitionEntry": true
+          }
+        ]
+        }
+      }
+    ],
+    "filesystems": [
+      {
+        "mount": {
+          "device": "/dev/sdb1",
+          "format": "xfs",
+          "label": "LOG",
+          "wipeFilesystem": true
+        }
+      }
+    ]
+  },
+    "systemd": {
+     "units": [
+       {
+        "name": "var-log.mount",
+        "enabled": true,
+        "contents": "[Mount]\nWhat=/dev/sdb1\nWhere=/var/log\nType=xfs\nOptions=defaults\n[Install]\nWantedBy=local-fs.target"
+       }
+     ]
+   }
+}
+```

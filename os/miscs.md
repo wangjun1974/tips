@@ -415,3 +415,35 @@ https://docs.projectcalico.org/reference/architecture/overview#bgp-client-bird
 ```
 TERM=linux setterm -blank 0 -powerdown 0  -powersave off >/dev/tty0 </dev/tty0
 ```
+
+### 使用lvm snapshot 备份及恢复系统
+
+新添加的磁盘/dev/sdb创建label，创建分区，设置分区类型为lvm
+```
+parted -s /dev/sdb mklabel msdos 
+parted -s /dev/sdb unit mib mkpart primary 1 100%
+parted -s /dev/sdb set 1 lvm on
+```
+
+创建pv
+```
+pvcreate /dev/sdb1
+```
+
+扩展vg
+```
+vgextend rhel /dev/sdb1
+```
+
+为逻辑卷/dev/rhel/root，创建lvm snapshot root_snap1
+```
+lvcreate --size 75G --snapshot --name root_snap1 /dev/rhel/root
+```
+
+更新系统...
+
+如果需要回滚变更，可执行以下命令，然后重启系统恢复快照
+```
+lvconvert --merge /dev/rhel/root_snap1
+```
+

@@ -445,5 +445,7 @@ lvcreate --size 75G --snapshot --name root_snap1 /dev/rhel/root
 如果需要回滚变更，可执行以下命令，然后重启系统恢复快照
 ```
 lvconvert --merge /dev/rhel/root_snap1
+yes | cp $(ls -1F -tr /boot/grub2/grub.cfg.*.rpmsave | head -1) /boot/grub2/grub.cfg
+reboot 
 ```
 

@@ -393,3 +393,25 @@ Homebrew cask
 ```
 brew cask install alfred
 ```
+
+### Calico相关资料
+Calico FAQ
+https://docs.projectcalico.org/v3.5/usage/troubleshooting/faq
+
+Kubernetes Networking with Calico
+https://www.tigera.io/blog/kubernetes-networking-with-calico/
+
+External connectivity
+https://docs.projectcalico.org/networking/external-connectivity#outbound-connectivity
+
+Calico over Ethernet fabrics
+https://docs.projectcalico.org/reference/architecture/design/l2-interconnect-fabric
+
+BGP Client, BGP Route Reflector and Centralized route distribution
+https://docs.projectcalico.org/reference/architecture/overview#bgp-client-bird
+
+### 解决虚拟机spice客户端显示blank screen的问题
+参考：https://bugzilla.redhat.com/show_bug.cgi?id=1611625
+```
+TERM=linux setterm -blank 0 -powerdown 0  -powersave off >/dev/tty0 </dev/tty0
+```

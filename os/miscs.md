@@ -551,6 +551,12 @@ LEAPP_UNSUPPORTED=1 LEAPP_DEVEL_SKIP_RHSM=1 leapp preupgrade --debug 2>&1 | tee 
 # 根据分析报告内容/var/log/leapp/leapp-report.txt，执行以下命令解决升级冲突
 sed -ie 's|^#PermitRootLogin yes|PermitRootLogin yes|' /etc/ssh/sshd_config
 
+# 卸载btrfs驱动
+rmmod btrfs
+
+# mv efibootorderfix actors to /tmp
+mv /usr/share/leapp-repository/repositories/system_upgrade/el7toel8/actors/efibootorderfix/ /tmp/
+
 # 升级
 LEAPP_DEVEL_SKIP_RHSM=1 leapp upgrade --debug 2>&1 | tee /tmp/leapp-upgrade.log
 ```

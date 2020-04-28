@@ -484,16 +484,16 @@ curl http://10.66.208.115/rhel7osp/leapp-data6.tar.gz -o /root/leapp-data6.tar.g
 tar -xzf leapp-data6.tar.gz -C /etc/leapp/files
 
 cat >> /etc/yum.repos.d/w.repo << 'EOF'
-[rhel-8-for-x86_64-baseos-rpms]
-name=rhel-8-for-x86_64-baseos-rpms
+[BASEOS]
+name=BASEOS
 baseurl=http://10.66.208.158/rhel8osp/rhel-8-for-x86_64-baseos-rpms/
-enabled=1
+enabled=0
 gpgcheck=0
 
-[rhel-8-for-x86_64-appstream-rpms]
-name=rhel-8-for-x86_64-appstream-rpms
+[APPSTREAM]
+name=APPSTREAM
 baseurl=http://10.66.208.158/rhel8osp/rhel-8-for-x86_64-appstream-rpms/
-enabled=1
+enabled=0
 gpgcheck=0
 
 EOF
@@ -501,11 +501,26 @@ EOF
 export LEAPP_UNSUPPORTED=1
 export LEAPP_DEVEL_SKIP_RHSM=1
 
+yum install snactor
+cd /usr/share/leapp-repository/repositories/system_upgrade/el7toel8/actors
+snactor new-actor --produces CustomTargetRepository --tag IPUWorkflowTag --tag FactsPhaseTag CustomRepoActor
+
+# 参考https://docs.google.com/document/d/1MuyO9PN9sFU0r2r01t6-OXi6RK0l1pqTFfi_UkIeGtc/edit里的步骤添加
+# 编辑/usr/share/leapp-repository/repositories/system_upgrade/el7toel8/actors/customrepoactor/actor.py
+#    def process(self):
+#        self.produce(CustomTargetRepository(repoid='BASEOS', name='BASEOS', baseurl='http://10.66.208.158/rhel8osp/rhel-8-for-x86_64-baseos-rpms/'))
+#        self.produce(CustomTargetRepository(repoid='APPSTREAM', name='APPSTREAM', baseurl='http://10.66.208.158/rhel8osp/rhel-8-for-x86_64-appstream-rpms/'))
+#        pass
+
 # 升级前，事前分析
-leapp preupgrade --debug 2>&1 | tee /tmp/leapp-preupgrade.log
+LEAPP_UNSUPPORTED=1 LEAPP_DEVEL_SKIP_RHSM=1 leapp preupgrade --debug 2>&1 | tee /tmp/leapp-preupgrade.log
 
 # 根据分析报告内容/var/log/leapp/leapp-report.txt，执行以下命令解决升级冲突
 sed -ie 's|^#PermitRootLogin yes|PermitRootLogin yes|' /etc/ssh/sshd_config
+
+# 升级
+LEAPP_DEVEL_SKIP_RHSM=1 leapp upgrade --debug 2>&1 | tee /tmp/leapp-upgrade.log
+
 
 ```
 

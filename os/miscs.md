@@ -449,3 +449,63 @@ yes | cp $(ls -1F -tr /boot/grub2/grub.cfg.*.rpmsave | head -1) /boot/grub2/grub
 reboot 
 ```
 
+### 使用本地软件仓库和leapp从RHEL7升级到RHEL8
+```
+mkdir -p /etc/yum.repos.d/backup
+mv -f /etc/yum.repos.d/*.repo /etc/yum.repos.d/backup
+
+cat > /etc/yum.repos.d/w.repo << 'EOF'
+[rhel-7-server-rpms]
+name=rhel-7-server-rpms
+baseurl=http://10.66.208.115/rhel7osp/rhel-7-server-rpms/
+enabled=1
+gpgcheck=0
+
+[rhel-7-server-extras-rpms]
+name=rhel-7-server-extras-rpms
+baseurl=http://10.66.208.115/rhel7osp/rhel-7-server-extras-rpms/
+enabled=1
+gpgcheck=0
+
+EOF
+
+mkdir -p /leapp
+yum install --downloadonly --downloaddir=/leapp leapp
+
+yum upgrade -y audit audit-libs libselinux libselinux-python libselinux-utils  libsemanage libsepol policycoreutils
+
+yum install -y audit-libs-python bzip2 checkpolicy dnf dnf-data json-c json-glib leapp-deps libcgroup libcomps libdnf libmodulemd librepo libreport-filesystem librhsm libsemanage-python libsmartcols libsolv libyaml pciutils policycoreutils-python python-IPy python-babel python-backports python-backports-ssl_match_hostname python-enum34 python-ipaddress python-jinja2 python-markupsafe python-setuptools python2-dnf python2-futures python2-hawkey python2-leapp python2-libcomps python2-libdnf setools-libs 
+
+pushd /leapp
+rpm -ivh leapp-0.9.0-1.el7.noarch.rpm leapp-repository-0.9.0-4.el7.noarch.rpm leapp-deps-0.9.0-1.el7.noarch.rpm leapp-repository-deps-0.9.0-4.el7.noarch.rpm leapp-repository-sos-plugin-0.9.0-4.el7.noarch.rpm sos-3.8-6.el7.noarch.rpm --force
+
+popd
+curl http://10.66.208.115/rhel7osp/leapp-data6.tar.gz -o /root/leapp-data6.tar.gz
+tar -xzf leapp-data6.tar.gz -C /etc/leapp/files
+
+cat >> /etc/yum.repos.d/w.repo << 'EOF'
+[rhel-8-for-x86_64-baseos-rpms]
+name=rhel-8-for-x86_64-baseos-rpms
+baseurl=http://10.66.208.158/rhel8osp/rhel-8-for-x86_64-baseos-rpms/
+enabled=1
+gpgcheck=0
+
+[rhel-8-for-x86_64-appstream-rpms]
+name=rhel-8-for-x86_64-appstream-rpms
+baseurl=http://10.66.208.158/rhel8osp/rhel-8-for-x86_64-appstream-rpms/
+enabled=1
+gpgcheck=0
+
+EOF
+
+export LEAPP_UNSUPPORTED=1
+export LEAPP_DEVEL_SKIP_RHSM=1
+
+# 升级前，事前分析
+leapp preupgrade --debug 2>&1 | tee /tmp/leapp-preupgrade.log
+
+# 根据分析报告内容/var/log/leapp/leapp-report.txt，执行以下命令解决升级冲突
+sed -ie 's|^#PermitRootLogin yes|PermitRootLogin yes|' /etc/ssh/sshd_config
+
+```
+

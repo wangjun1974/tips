@@ -449,6 +449,33 @@ yes | cp $(ls -1F -tr /boot/grub2/grub.cfg.*.rpmsave | head -1) /boot/grub2/grub
 reboot 
 ```
 
+### 从RHEL 7.6升级到RHEL8
+```
+subscription-manager register
+subscription-manager attach --pool=XXXXXX
+subscription-manager list --installed
+
+subscription-manager repos --disable rhel-7-server-rpms --enable rhel-7-server-eus-rpms
+subscription-manager repos --enable rhel-7-server-extras-rpms
+subscription-manager release --set 7.6
+
+yum update -y
+reboot
+
+yum install -y leapp
+curl http://10.66.208.115/rhel7osp/leapp-data6.tar.gz -o /root/leapp-data6.tar.gz
+tar -xzf leapp-data6.tar.gz -C /etc/leapp/files
+
+# 升级前，事前分析
+leapp preupgrade --debug 2>&1 | tee /tmp/leapp-preupgrade.log
+
+# 根据分析报告内容/var/log/leapp/leapp-report.txt，执行以下命令解决升级冲突
+sed -ie 's|^#PermitRootLogin yes|PermitRootLogin yes|' /etc/ssh/sshd_config
+
+# 执行命令
+leapp upgrade --debug 2>&1 | tee /tmp/leapp.log
+```
+
 ### 使用本地软件仓库和leapp从RHEL7升级到RHEL8
 ```
 mkdir -p /etc/yum.repos.d/backup

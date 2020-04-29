@@ -476,7 +476,7 @@ sed -ie 's|^#PermitRootLogin yes|PermitRootLogin yes|' /etc/ssh/sshd_config
 leapp upgrade --debug 2>&1 | tee /tmp/leapp.log
 ```
 
-### 使用本地软件仓库和leapp从RHEL7升级到RHEL8
+### 使用本地软件仓库和leapp从RHEL7.5升级到RHEL8
 ```
 mkdir -p /etc/yum.repos.d/backup
 mv -f /etc/yum.repos.d/*.repo /etc/yum.repos.d/backup
@@ -561,3 +561,76 @@ mv /usr/share/leapp-repository/repositories/system_upgrade/el7toel8/actors/efibo
 LEAPP_DEVEL_SKIP_RHSM=1 leapp upgrade --debug 2>&1 | tee /tmp/leapp-upgrade.log
 ```
 
+### convert2rhel workthrough
+参考链接：https://access.redhat.com/articles/2360841
+
+```
+nmcli con mod 'eth0' ipv4.method 'manual' ipv4.address 'X.X.X.X/24' ipv4.gateway 'Y.Y.Y.Y' ipv4.dns 'Z.Z.Z.Z'
+
+mkdir -p /isos
+pushd isos
+curl http://pek-iso.usersys.redhat.com/iso_centos/CentOS-7-x86_64-DVD-1810.iso -o CentOS-7-x86_64-DVD-1810.iso
+curl http://pek-iso.usersys.redhat.com/iso_rhel/rhel-server-7.7-x86_64-dvd.iso -o rhel-server-7.7-x86_64-dvd.iso
+
+mkdir -p /mnt/{centos,rhel}
+mount -o loop /isos/CentOS-7-x86_64-DVD-1810.iso /mnt/centos
+mount -o loop /isos/rhel-server-7.7-x86_64-dvd.iso /mnt/rhel
+
+mkdir -p /etc/yum.repos.d/backup
+yes | mv -f /etc/yum.repos.d/*.repo /etc/yum.repos.d/backup
+
+cat > /etc/yum.repos.d/centos.repo << 'EOF'
+[centos-7-server-rpms-6]
+name=centos-7-server-rpms-6
+baseurl=file:///mnt/centos
+enabled=1
+gpgcheck=0
+EOF
+
+cat > /etc/yum.repos.d/rhel.repo << 'EOF'
+[rhel-7-server-rpms-7]
+name=rhel-7-server-rpms-7
+baseurl=file:///mnt/rhel
+enabled=0
+gpgcheck=0
+EOF
+
+yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+
+yum install -y convert2rhel
+
+yum-config-manager --disable epel
+
+yum update -y
+
+reboot
+
+mount -o loop /isos/CentOS-7-x86_64-DVD-1810.iso /mnt/centos
+mount -o loop /isos/rhel-server-7.7-x86_64-dvd.iso /mnt/rhel
+convert2rhel --disable-submgr --disablerepo "*" --enablerepo rhel-7-server-rpms-7 -v Server -y --debug 2>&1 | tee /tmp/convert2rhel.log
+
+[04/21/2020 13:50:35] TASK - [Prepare: End user license agreement] ******************************
+[04/21/2020 13:50:35] TASK - [Prepare: Gather system information] *******************************
+[04/21/2020 13:51:08] TASK - [Prepare: Determine RHEL variant] **********************************
+[04/21/2020 13:51:08] TASK - [Prepare: Backup System] *******************************************
+[04/21/2020 13:51:08] TASK - [Convert: Remove blacklisted packages] *****************************
+[04/21/2020 13:51:14] TASK - [Convert: Install Red Hat release package] *************************
+[04/21/2020 13:51:14] TASK - [Convert: Patch yum configuration file] ****************************
+[04/21/2020 13:51:14] TASK - [Convert: Package analysis] ****************************************
+[04/21/2020 13:51:14] TASK - [Convert: Check required repos] ************************************
+[04/21/2020 13:51:16] TASK - [Convert: Prepare kernel] ******************************************
+[04/21/2020 13:52:32] TASK - [Convert: Replace packages] ****************************************
+[04/21/2020 13:55:11] TASK - [Convert: List remaining non-Red Hat packages] *********************
+[04/21/2020 13:55:11] TASK - [Final: Non-interactive mode] **************************************
+
+[root@unused ~]# rpm -qa --qf '%{NAME} %{VENDOR}\n' | grep -Ev 'Red Hat' 
+yum-plugin-fastestmirror CentOS
+gpg-pubkey (none)
+convert2rhel Fedora Project
+epel-release Fedora Project
+
+reboot
+yum remove gpg-pubkey
+yum remove yum-plugin-fastestmirror
+
+```

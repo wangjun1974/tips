@@ -647,3 +647,58 @@ virt-install --name="jwang-testvm" --vcpus=2 --ram=4096 \
 --console pty,target_type=serial --extra-args='console=ttyS0'
 ```
 
+### Minimal rhel7 kickstart example file
+参考：https://gist.github.com/devynspencer/99cbcf0b09245e285ee4
+```
+#version=RHEL7
+ignoredisk --only-use=sda
+
+# Partition clearing information
+clearpart --all
+
+# Use text install
+text
+
+# System language
+lang en_US.UTF-8
+
+# Keyboard layouts
+keyboard us
+
+# Network information
+network --bootproto=static --device=eth0 --ip=192.168.122.122 --gateway=192.168.122.1 --hostname=jwangtest.example.com
+
+# Root password
+rootpw --iscrypted $6$q9HNZaOm8rO91oRR$eSWRwR7Hc9FBRlcEm83EiJx8MeFUQJXd.33YVDjzXkgCTiY3gcMHOvDtI6wh35Zw9.7Ql6rAo9tEZpo3y7Uy6/
+
+# Run the Setup Agent on first boot
+firstboot --enable
+
+# Do not configure the X Window System
+skipx
+
+# System timezone
+timezone Asia/Shanghai --isUtc
+
+# Agree EULA
+eula --agreed
+
+# System services
+services --enabled=NetworkManager,sshd
+
+# Reboot after installation completes
+reboot
+
+# Disk partitioning information
+autopart --type=lvm --fstype=xfs
+
+# Reboot after installation completes
+reboot
+
+%packages --nobase --ignoremissing --excludedocs
+@core
+%end
+
+%addon com_redhat_kdump --enable --reserve-mb='auto'
+%end
+```

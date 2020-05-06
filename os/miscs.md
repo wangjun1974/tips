@@ -634,3 +634,16 @@ yum remove gpg-pubkey
 yum remove yum-plugin-fastestmirror
 
 ```
+
+### 安装测试虚拟机
+虚拟机使用raw format磁盘，总线为scsi，驱动对应virtio-scsi，通过字符界面安装
+```
+virt-install --name="jwang-testvm" --vcpus=2 --ram=4096 \
+--disk path=/var/lib/libvirt/images/jwang-test-01.img,format=raw,bus=scsi,size=20 \
+--os-variant rhel7.0 \
+--boot menu=on \
+--location /var/lib/libvirt/images/isos/rhel-server-7.6-x86_64-dvd.iso \
+--graphics none \
+--console pty,target_type=serial --extra-args='console=ttyS0'
+```
+

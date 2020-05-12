@@ -702,3 +702,29 @@ reboot
 %addon com_redhat_kdump --enable --reserve-mb='auto'
 %end
 ```
+
+### blktrace用法
+参见：https://tunnelix.com/debugging-disk-issues-with-blktrace-blkparse-btrace-and-btt-in-linux-environment/
+https://www.ibm.com/support/knowledgecenter/linuxonibm/com.ibm.linux.z.ldsg/ldsg_t_iodata_remote.html
+https://www.hwchiu.com/blktrace-example.html
+
+
+服务器端
+```
+blktrace -l
+```
+
+客户端
+```
+blktrace -h <server_ip> -d <device>
+e.g.
+blktrace -h 10.72.32.50 -d /dev/sda
+```
+
+客户端执行i/o操作，然后服务器端退出blktrace服务端
+
+在服务端查看blktrace产生的事物日志
+```
+blkparse -D 10.72.32.49-2020-05-06-12:42:33/ sda -d events.bin > events.txt
+```
+

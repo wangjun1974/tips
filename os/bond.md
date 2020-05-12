@@ -1,4 +1,5 @@
 参考：https://developer.rackspace.com/blog/lacp-bonding-and-linux-configuration/
+参考：https://www.kernel.org/doc/Documentation/networking/bonding.txt
 
 这篇文章介绍如何在Linux操作系统里，基于nmcli配置bond。
 常见bond模式有mode 1(active-backup)和mode 4(802.3ad)

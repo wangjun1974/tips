@@ -728,3 +728,6 @@ blktrace -h 10.72.32.50 -d /dev/sda
 blkparse -D 10.72.32.49-2020-05-06-12:42:33/ sda -d events.bin > events.txt
 ```
 
+
+### Mac下直播软件OBS的设置
+https://www.jianshu.com/p/ecfaac6ee7ab

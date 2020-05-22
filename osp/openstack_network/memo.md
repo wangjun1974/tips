@@ -125,5 +125,5 @@ openstack port create --network <network> [--description <description>]
 网络架构
 ![网络架构](pics/architecture_network_point_of_view.png)
 
-在各种角色的节点上有哪些组件
+在各种角色的节点上有哪些组件<br>
 ![](pics/services.png)

@@ -707,6 +707,7 @@ reboot
 参见：https://tunnelix.com/debugging-disk-issues-with-blktrace-blkparse-btrace-and-btt-in-linux-environment/
 https://www.ibm.com/support/knowledgecenter/linuxonibm/com.ibm.linux.z.ldsg/ldsg_t_iodata_remote.html
 https://www.hwchiu.com/blktrace-example.html
+http://linuxperf.com/?p=161
 
 
 服务器端

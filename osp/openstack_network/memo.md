@@ -124,7 +124,9 @@ openstack port create --network <network> [--description <description>]
 
 ### 传统网络架构
 ![网络架构](pics/architecture_network_point_of_view.png)
-![网络架构](pics/architecture_network_point_of_view_01.png)
 
 ### 在各种角色的节点上有哪些组件
 ![](pics/services.png)
+
+### 传统网络架构下计算节点与网络节点的网络映射
+![网络架构](pics/architecture_network_point_of_view_01.png)

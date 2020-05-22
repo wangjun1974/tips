@@ -122,8 +122,9 @@ openstack port create --network <network> [--description <description>]
 
 ## 部署Open vSwitch
 
-### 网络架构
+### 传统网络架构
 ![网络架构](pics/architecture_network_point_of_view.png)
+![网络架构](pics/architecture_network_point_of_view_01.png)
 
 ### 在各种角色的节点上有哪些组件
 ![](pics/services.png)

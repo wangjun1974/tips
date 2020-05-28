@@ -647,9 +647,23 @@ virt-install --name="jwang-testvm" --vcpus=2 --ram=4096 \
 --console pty,target_type=serial --extra-args='console=ttyS0'
 ```
 
+如果在安装时希望使用kickstart文件，可以参考下面的例子
+```
+virt-install --name="jwang-testvm" --vcpus=2 --ram=4096 \
+--disk path=/var/lib/libvirt/images/jwang-test-01.img,format=raw,bus=scsi,size=20 \
+--os-variant rhel7.0 \
+--boot menu=on \
+--location /var/lib/libvirt/images/isos/rhel-server-7.6-x86_64-dvd.iso \
+--graphics none \
+--console pty,target_type=serial \
+--initrd-inject /tmp/ks.cfg \
+--extra-args='ks=file:/ks.cfg console=ttyS0'
+```
+
 ### Minimal rhel7 kickstart example file
 参考：https://gist.github.com/devynspencer/99cbcf0b09245e285ee4
 ```
+cat > /tmp/ks.cfg << 'EOF'
 #version=RHEL7
 ignoredisk --only-use=sda
 
@@ -692,15 +706,13 @@ reboot
 # Disk partitioning information
 autopart --type=lvm --fstype=xfs
 
-# Reboot after installation completes
-reboot
-
 %packages --nobase --ignoremissing --excludedocs
 @core
 %end
 
 %addon com_redhat_kdump --enable --reserve-mb='auto'
 %end
+EOF
 ```
 
 ### blktrace用法
@@ -733,3 +745,14 @@ blkparse -D 10.72.32.49-2020-05-06-12:42:33/ sda -d events.bin > events.txt
 ### Mac下直播软件OBS的设置
 https://www.jianshu.com/p/ecfaac6ee7ab<br>
 https://blog.csdn.net/lk142500/article/details/91491299<br>
+
+### 什么是Systemtap，如何使用Systemtap
+https://access.redhat.com/articles/882463
+
+systemtap运行需要哪些软件包
+```
+systemtap, systemtap-runtime
+gcc
+kernel-devel, kernel-debuginfo, kernel-debuginfo-common
+```
+

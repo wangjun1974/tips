@@ -756,3 +756,129 @@ gcc
 kernel-devel, kernel-debuginfo, kernel-debuginfo-common
 ```
 
+### 在Mac上启动 Web Server
+```
+python -m SimpleHTTPServer 8000
+```
+
+### 使用dropwatch分析drop包
+参考：https://access.redhat.com/solutions/206223
+``` 
+1. 安装dropwatch和安装客户环境一致的内核包
+# yum install -y kernel-3.10.0-957.el7
+# yum install dropwatch -y
+ 
+离线安装
+# yum localinstall -y dropwatch-1.4-9.el7.x86_64.rpm
+ 
+2. 重启系统
+# systemctl reboot
+ 
+3. 安装 debuginfo 包
+# yum install -y kernel-debuginfo-3.10.0-957.el7 kernel-debuginfo-common-3.10.0-957.el7
+ 
+离线安装
+# yum localinstall -y kernel-debuginfo-3.10.0-957.el7.x86_64.rpm kernel-debuginfo-common-x86_64-3.10.0-957.el7.x86_64.rpm
+ 
+4. 查看网卡信息：
+[root@rhel7u5 ~]# ifconfig
+eth0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
+        inet 10.72.37.29  netmask 255.255.254.0  broadcast 10.72.37.255
+        inet6 fe80::21a:4aff:fe16:730  prefixlen 64  scopeid 0x20<link>
+        inet6 2620:52:0:4824:21a:4aff:fe16:730  prefixlen 64  scopeid 0x0<global>
+        ether 00:1a:4a:16:07:30  txqueuelen 1000  (Ethernet)
+        RX packets 2618  bytes 560244 (547.1 KiB)
+        RX errors 0  dropped 5  overruns 0  frame 0
+        TX packets 721  bytes 106800 (104.2 KiB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+ 
+lo: flags=73<UP,LOOPBACK,RUNNING>  mtu 65536
+        inet 127.0.0.1  netmask 255.0.0.0
+        inet6 ::1  prefixlen 128  scopeid 0x10<host>
+        loop  txqueuelen 1000  (Local Loopback)
+        RX packets 48  bytes 3600 (3.5 KiB)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 48  bytes 3600 (3.5 KiB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+ 
+ip -s link show 
+ 
+5. 抓取 dropwatch 信息
+[root@rhel7u5 ~]# dropwatch -l kas
+Initalizing kallsyms db
+dropwatch> start
+Enabling monitoring...
+Kernel monitoring activated.
+Issue Ctrl-C to stop monitoring
+1 drops at skb_queue_purge+18 (0xffffffff88a235d8)
+1 drops at __brk_limit+36c27a68 (0xffffffffc06a1a68)
+1 drops at __brk_limit+36c27a68 (0xffffffffc06a1a68)
+1 drops at __brk_limit+36c27a68 (0xffffffffc06a1a68)
+1 drops at __brk_limit+36c27a68 (0xffffffffc06a1a68)
+1 drops at skb_queue_purge+18 (0xffffffff88a235d8)
+1 drops at __brk_limit+36c27a68 (0xffffffffc06a1a68)
+1 drops at nf_hook_slow+f3 (0xffffffff88a785e3)
+1 drops at __brk_limit+36c27a68 (0xffffffffc06a1a68)
+1 drops at skb_queue_purge+18 (0xffffffff88a235d8)
+1 drops at ip_rcv_finish+1d4 (0xffffffff88a82604)
+1 drops at __brk_limit+36c27a68 (0xffffffffc06a1a68)
+2 drops at skb_queue_purge+18 (0xffffffff88a235d8)
+1 drops at __brk_limit+36c27a68 (0xffffffffc06a1a68)
+1 drops at ip_rcv_finish+1d4 (0xffffffff88a82604)
+1 drops at skb_queue_purge+18 (0xffffffff88a235d8)
+1 drops at __brk_limit+36c27a68 (0xffffffffc06a1a68)
+1 drops at __brk_limit+36c27a68 (0xffffffffc06a1a68)
+1 drops at __brk_limit+36c27a68 (0xffffffffc06a1a68)
+1 drops at __brk_limit+36c27a68 (0xffffffffc06a1a68)
+^CGot a stop message
+dropwatch> exit
+Shutting down ...
+[root@rhel7u5 ~]#
+ 
+ 
+6. 把 dropwatch 的输出放入 dropwatch.txt 文件：
+[root@rhel7u5 ~]# vim dropwatch.txt
+[root@rhel7u5 ~]# awk '/drops at/ {t[$4" "$5]+=$1} END {for (n in t) print t[n], n}' dropwatch.txt | sort -rn
+12 __brk_limit+36c27a68 (0xffffffffc06a1a68)
+6 skb_queue_purge+18 (0xffffffff88a235d8)
+2 ip_rcv_finish+1d4 (0xffffffff88a82604)
+1 nf_hook_slow+f3 (0xffffffff88a785e3)
+ 
+ 
+7. 用 eu-addr2line 查看地址对应的函数：
+ 
+[root@rhel7u5 ~]# yum install elfutils -y
+ 
+[root@rhel7u5 ~]# eu-addr2line -f -k 0xffffffff88a235d8
+skb_queue_purge
+net/core/skbuff.c:2550
+[root@rhel7u5 ~]# printf "%x\n" $((0xffffffff88a235d8+0x18))
+ffffffff88a235f0
+ 
+[root@rhel7u5 ~]# eu-addr2line -f -k 0xffffffff88a235f0
+skb_complete_wifi_ack
+net/core/skbuff.c:3919
+ 
+8. 查看当前的网卡信息:
+ 
+[root@rhel7u5 ~]# ifconfig
+eth0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
+        inet 10.72.37.29  netmask 255.255.254.0  broadcast 10.72.37.255
+        inet6 fe80::21a:4aff:fe16:730  prefixlen 64  scopeid 0x20<link>
+        inet6 2620:52:0:4824:21a:4aff:fe16:730  prefixlen 64  scopeid 0x0<global>
+        ether 00:1a:4a:16:07:30  txqueuelen 1000  (Ethernet)
+        RX packets 319659  bytes 569255807 (542.8 MiB)
+        RX errors 0  dropped 5  overruns 0  frame 0
+        TX packets 224358  bytes 19487629 (18.5 MiB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+ 
+lo: flags=73<UP,LOOPBACK,RUNNING>  mtu 65536
+        inet 127.0.0.1  netmask 255.0.0.0
+        inet6 ::1  prefixlen 128  scopeid 0x10<host>
+        loop  txqueuelen 1000  (Local Loopback)
+        RX packets 48  bytes 3600 (3.5 KiB)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 48  bytes 3600 (3.5 KiB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+```

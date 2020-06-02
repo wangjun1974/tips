@@ -882,3 +882,16 @@ lo: flags=73<UP,LOOPBACK,RUNNING>  mtu 65536
         TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
 
 ```
+
+### wireshark过滤规则
+过滤掉 nfs, arp, http, vrrp 和 tcp 的包可以把过滤器定义成
+```
+!nfs and !arp and !http and !vrrp and !tcp
+```
+
+只保留LACP包
+```
+lacp
+```
+
+

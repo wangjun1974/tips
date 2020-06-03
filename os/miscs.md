@@ -952,3 +952,6 @@ tcpdump:
 dropwatch2:
 /tmp/dropwatch2.log
 ```
+
+### tcpdump抓包来定位rxdrop问题时如果rxdrop计数器仍然增长的处理方法
+运行dropwatch2.stap的同时执行tcpdump，确认netstat -in输出里的rxdrop不再增长

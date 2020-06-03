@@ -894,4 +894,61 @@ lo: flags=73<UP,LOOPBACK,RUNNING>  mtu 65536
 lacp
 ```
 
+### 分析丢包问题的方法
+参考：<br>
+https://access.redhat.com/solutions/2194511<br>
+https://access.redhat.com/articles/1311173<br>
+https://access.redhat.com/solutions/3684651
 
+```
+1. 安装如下rpm包：
+
+    kernel-devel - 和当前的内核相同版本
+    kernel-debuginfo - 和当前的内核相同版本
+    kernel-debuginfo-common - 和当前的内核相同版本
+    gcc
+    systemtap
+
+
+# yum install kernel-debuginfo-3.10.0-957.el7 kernel-devel-3.10.0-957.el7 kernel-debuginfo-common-x86_64-3.10.0-957.el7 gcc
+
+[root@rhel7u5 ~]# rpm -qa | egrep "kernel-debuginfo|kernel-devel"
+kernel-debuginfo-3.10.0-957.el7.x86_64
+kernel-devel-3.10.0-957.el7.x86_64
+kernel-debuginfo-common-x86_64-3.10.0-957.el7.x86_64
+
+[root@rhel7u5 ~]# uname -r
+3.10.0-957.el7.x86_64
+
+2. 执行 stap-prep：
+[root@rhel7u5 ~]# stap-prep
+[root@rhel7u5 ~]#
+
+3. 创建dropwatch2.stp文件：https://access.redhat.com/solutions/2194511
+   创建monitor.sh文件：https://access.redhat.com/articles/1311173
+https://access.redhat.com/solutions/3684651
+
+4. 同时在另外的两个terminal执行 monitor.sh 和 tcpdump:
+[terminal 1]
+./monitor.sh -d 2
+
+[terminal 2]
+# tcpdump -i ens4 -w /tmp/vm_$(hostname)-$(date +"%Y-%m-%d-%H-%M-%S").pcap
+
+5. 执行netstat -in查看当前的RX-DRP状态
+
+6. 执行 stap 脚本：
+[root@rhel7u5 ~]# stap --all-modules -o /tmp/dropwatch2.log dropwatch2.stp
+
+7.执行netstat -in查看测试后的RX-DRP状态
+
+8.收集信息：
+monitor.sh:
+# tar cvzf net_stats_$(hostname)-$(date +"%Y-%m-%d-%H-%M-%S").tgz *network_stats_*
+
+tcpdump:
+/tmp/vm_*
+
+dropwatch2:
+/tmp/dropwatch2.log
+```

@@ -959,3 +959,64 @@ dropwatch2:
 ### 使用cgroup限制blkio
 https://andrestc.com/post/cgroups-io/
 
+### 使用virsh设置块设备IO限流
+https://fedoraproject.org/wiki/QA:Testcase_Virtualization_IO_Throttling
+```
+virsh blkdeviotune f18 vda
+virsh blkdeviotune f18 vda --write_bytes_sec $(expr 1024 \* 1024 \* 10)
+virsh blkdeviotune f18 vda
+```
+
+### 使用cgroup和systemctl设置虚拟机cpu
+为某个虚拟机设置CPUQuota
+```
+tmpfile=$(mktemp /tmp/tmpXXXXXX)
+systemd-cgls | grep machine-qemu | grep test | sed -e 's#| |-##' -e 's#| `-##' | while read i 
+do
+  echo systemctl set-property --runtime "'"$i"'" CPUQuota=10%
+done | tee $tmpfile
+sed -ie 's|x2d|\\x2d|g' $tmpfile
+
+sh -x $tmpfile
+rm -f $tmpfile
+```
+
+### 在ovirt node上执行virsh blkdeviotune
+查看virsh blkdeviotune
+```
+prog=/usr/bin/virsh
+myuser="vdsm@ovirt"
+mypass="shibboleth"
+
+args=" blkdeviotune jwang-zyjk-01 sda"
+/usr/bin/expect <<EOF
+set timeout -1
+spawn "$prog" $args
+expect "Please enter your authentication name: "
+send "$myuser\r"
+expect "Please enter your password:"
+send "$mypass\r"
+expect eof
+exit
+EOF
+```
+
+设置 virsh blkdeviotune 虚拟机 jwang-zyjk-01 的硬盘 sda 每秒写入字节为 10M `
+```
+prog=/usr/bin/virsh
+myuser="vdsm@ovirt"
+mypass="shibboleth"
+
+args=" blkdeviotune jwang-zyjk-01 sda --write_bytes_sec $(expr 1024 \* 1024 \* 10)"
+/usr/bin/expect <<EOF
+set timeout -1
+spawn "$prog" $args
+expect "Please enter your authentication name: "
+send "$myuser\r"
+expect "Please enter your password:"
+send "$mypass\r"
+expect eof
+exit
+EOF
+```
+

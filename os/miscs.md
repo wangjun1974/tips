@@ -1020,3 +1020,11 @@ exit
 EOF
 ```
 
+### 用tshark查看包的内容
+```
+# 查看有哪些包
+tshark -r /tmp/pcap.ip6 
+
+# 查看包的详情
+tshark -r /tmp/pcap.ip6  -x -R frame.number==658  -V
+```

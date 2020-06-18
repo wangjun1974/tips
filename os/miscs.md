@@ -1095,3 +1095,11 @@ qpc scan job --name scan_rhvhost1
 qpc report download --scan-job 1 --output-file=~/scan_output.tar.gz
 qpc report download --scan-job 2 --output-file=~/scan_output_rhvhost.tar.gz
 ```
+
+### Prometheus查询
+参考：https://redhat-developer-demos.github.io/istio-tutorial/istio-tutorial/1.4.x/3monitoring-tracing.html
+
+```
+istio_requests_total{destination_service="recommendation.tutorial.svc.cluster.local"}
+container_memory_rss{namespace="tutorial",container=~"customer|preference|recommendation"}
+```

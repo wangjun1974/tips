@@ -1147,3 +1147,7 @@ spec:
   inclusion:
     namespaces: ["-tutorial"]
 ```
+
+### [转发]开放分布式追踪（OpenTracing）入门与 Jaeger 实现
+https://yq.aliyun.com/articles/514488
+

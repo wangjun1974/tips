@@ -1119,3 +1119,15 @@ Performance Tests
 http://lab-ossm-labguides.6923.rh-us-east-1.openshiftapps.com/workshop/authentication<br>
 https://istio.io/latest/docs/tasks/security/authorization/authz-jwt/
 
+### Kiali's Graph
+http://lab-ossm-labguides.6923.rh-us-east-1.openshiftapps.com/workshop/authentication
+
+```
+Within the Kiali UI select the Graph option from the left hand navigation and then choose
+
+Namespace: -tutorial
+Versioned app graph
+Requests percentage
+Last 1m
+Every 10s
+```

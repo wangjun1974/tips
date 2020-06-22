@@ -1114,3 +1114,7 @@ Deploying
 End to End Tests
 Performance Tests
 ```
+
+### Istio w/ jwt-authz
+https://istio.io/latest/docs/tasks/security/authorization/authz-jwt/
+

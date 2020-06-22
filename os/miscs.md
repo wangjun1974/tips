@@ -1116,5 +1116,6 @@ Performance Tests
 ```
 
 ### Istio w/ jwt-authz
+http://lab-ossm-labguides.6923.rh-us-east-1.openshiftapps.com/workshop/authentication<br>
 https://istio.io/latest/docs/tasks/security/authorization/authz-jwt/
 

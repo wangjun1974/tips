@@ -1103,3 +1103,14 @@ qpc report download --scan-job 2 --output-file=~/scan_output_rhvhost.tar.gz
 istio_requests_total{destination_service="recommendation.tutorial.svc.cluster.local"}
 container_memory_rss{namespace="tutorial",container=~"customer|preference|recommendation"}
 ```
+
+### 常见的pipeline包含哪些步骤
+```
+Build
+Unit Test
+Static Code Scan/Security Scan
+Packaging/Publishing of Artifacts
+Deploying
+End to End Tests
+Performance Tests
+```

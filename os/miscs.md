@@ -1131,3 +1131,19 @@ Requests percentage
 Last 1m
 Every 10s
 ```
+
+### Service Mesh Role Based Access Control (RBAC)
+http://lab-ossm-labguides.6923.rh-us-east-1.openshiftapps.com/workshop/authentication
+
+RbacConfig objects are used to enable and configure Authorization in the service mesh. Take a look at the following YAML:
+
+```
+apiVersion: "rbac.istio.io/v1alpha1"
+kind: RbacConfig
+metadata:
+  name: default
+spec:
+  mode: 'ON_WITH_INCLUSION'
+  inclusion:
+    namespaces: ["-tutorial"]
+```

@@ -1154,3 +1154,14 @@ https://yq.aliyun.com/articles/514488
 https://www.jianshu.com/p/bd11294cf83e
 
 
+### 如何降低lvm thinpool meta占用率
+```
+lvs -a -o +devices
+df -h 
+fstrim -v <device_mount_point> e.g.
+fstrim -v /
+```
+
+### 检查nfs的io状态
+利用nfsstat和nfsiostat工具检查nfs延时
+https://www.redhat.com/sysadmin/using-nfsstat-nfsiostat

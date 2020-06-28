@@ -1165,3 +1165,38 @@ fstrim -v /
 ### 检查nfs的io状态
 利用nfsstat和nfsiostat工具检查nfs延时
 https://www.redhat.com/sysadmin/using-nfsstat-nfsiostat
+
+### 重置crio存储
+
+```
+-------------------------------------------------------
+crio storage reset
+-------------------------------------------------------
+
+oc adm cordon $NODENAME
+
+oc adm drain $NODENAME --ignore-daemonsets=true --delete-local-data=true
+
+
+--on the worker node----
+
+systemctl stop kubelet.service 
+
+crictl stop $(crictl ps -q)
+
+systemctl stop crio.service
+systemctl stop crio-*
+
+
+rm -rf /var/lib/containers/storage/*
+
+
+systemctl start crio.service
+systemctl start kubelet.service
+
+--/------------------
+
+oc adm uncordon $NODENAME
+
+With the above, I was able to clear and repopulate all the images and containers.
+```

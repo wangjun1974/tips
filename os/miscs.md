@@ -655,6 +655,7 @@ virt-install --name="jwang-testvm" --vcpus=2 --ram=4096 \
 --boot menu=on \
 --location /var/lib/libvirt/images/isos/rhel-server-7.6-x86_64-dvd.iso \
 --graphics none \
+--network bridge:virbr0 \
 --console pty,target_type=serial \
 --initrd-inject /tmp/ks.cfg \
 --extra-args='ks=file:/ks.cfg console=ttyS0'

@@ -1204,3 +1204,5 @@ With the above, I was able to clear and repopulate all the images and containers
 ### 如何针对OSP做CI/CD
 https://mojo.redhat.com/community/communities-at-red-hat/infrastructure/cloud-platforms-community-of-practice/blog/2019/08/19/deploy-different-a-customer-tale-of-cicd-on-osp13
 
+### virt-install的例子
+https://raymii.org/s/articles/virt-install_introduction_and_copy_paste_distro_install_commands.html

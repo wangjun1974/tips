@@ -1207,3 +1207,6 @@ https://mojo.redhat.com/community/communities-at-red-hat/infrastructure/cloud-pl
 
 ### virt-install的例子
 https://raymii.org/s/articles/virt-install_introduction_and_copy_paste_distro_install_commands.html
+
+### 启用windows远程桌面
+https://support.microsoft.com/en-us/help/4028379/windows-10-how-to-use-remote-desktop

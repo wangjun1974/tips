@@ -680,7 +680,7 @@ lang en_US.UTF-8
 keyboard us
 
 # Network information
-network --bootproto=static --device=eth0 --ip=192.168.122.122 --gateway=192.168.122.1 --hostname=jwangtest.example.com
+network --bootproto=static --device=eth0 --ip=192.168.122.122 --netmask 255.255.255.0 --gateway=192.168.122.1 --hostname=jwangtest.example.com
 
 # Root password
 rootpw --iscrypted $6$q9HNZaOm8rO91oRR$eSWRwR7Hc9FBRlcEm83EiJx8MeFUQJXd.33YVDjzXkgCTiY3gcMHOvDtI6wh35Zw9.7Ql6rAo9tEZpo3y7Uy6/

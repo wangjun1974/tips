@@ -1210,3 +1210,6 @@ https://raymii.org/s/articles/virt-install_introduction_and_copy_paste_distro_in
 
 ### 启用windows远程桌面
 https://support.microsoft.com/en-us/help/4028379/windows-10-how-to-use-remote-desktop
+
+### 安装virtualbox extension pack
+https://www.nakivo.com/blog/how-to-install-virtualbox-extension-pack/

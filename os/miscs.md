@@ -1213,3 +1213,9 @@ https://support.microsoft.com/en-us/help/4028379/windows-10-how-to-use-remote-de
 
 ### 安装virtualbox extension pack
 https://www.nakivo.com/blog/how-to-install-virtualbox-extension-pack/
+
+### rhel8 安装 virsh
+dnf install libvirt-client
+
+### rhel8 virsh 禁用网络自动启动
+virsh net-autostart --network default --disable

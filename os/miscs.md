@@ -1273,3 +1273,39 @@ openstack volume list --status available -c ID -f value | xargs openstack volume
 ### How do I configure OpenStack with Ceph?
 https://access.redhat.com/solutions/2625991
 
+### add/remove openstack server floating ip from server
+```
+openstack server add floating ip <server> <ip>
+openstack server remove floating ip <server> <ip>
+```
+
+### 为glance image进行签名
+```
+## Generate a openssl key to be used for signing
+# Generate private key
+openssl genrsa -out private_key.pem 1024
+
+# Generate public key from private key
+openssl rsa -pubout -in private_key.pem -out public_key.pem
+
+# Create a certification request (CSR)
+openssl req -new -key private_key.pem -out cert_request.csr -subj "/C=CN/ST=GD/L=SZ/O=Global Security/OU=IT/CN=openstack.example.com"
+
+# Generate certification from the CSR
+openssl x509 -req -days 14 -in cert_request.csr -signkey private_key.pem -out x509_signing_cert.crt
+
+## Create a new secret inside Barbican using the generated SSL cert.
+openstack secret store --name signing-cert --algorithm RSA --secret-type certificate --payload-content-type "application/octet-stream" --payload-content-encoding base64  --payload "$(base64 x509_signing_cert.crt)" -c 'Secret href' -f value
+# http://10.0.0.150:9311/v1/secrets/ef0a16ba-ed44-4b59-939c-42e053c29ac6
+
+## Use private_key.pem to sign the image and generate the .signature file. Copy the private_key.pem and x509_signing_cert.crt from controller01 to undercloud
+# wget https://download.cirros-cloud.net/0.4.0/cirros-0.4.0-x86_64-disk.img
+openssl dgst -sha256 -sign private_key.pem -sigopt rsa_padding_mode:pss -out cirros-0.4.0.signature cirros-0.4.0-x86_64-disk.img
+
+## Convert signature to Base64 and store the information in one variable.
+base64 -w 0 cirros-0.4.0.signature  > cirros-0.4.0.signature.b64
+cirros_signature_b64=$(cat cirros-0.4.0.signature.b64)
+
+## Upload the image with the proper parameters
+openstack image create --container-format bare --disk-format qcow2 --property img_signature="$cirros_signature_b64" --property img_signature_certificate_uuid='ef0a16ba-ed44-4b59-939c-42e053c29ac6' --property img_signature_hash_method='SHA-256' --property img_signature_key_type='RSA-PSS' cirros_0_4_0_signed < cirros-0.4.0-x86_64-disk.img
+```

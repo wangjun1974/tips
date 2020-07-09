@@ -1269,3 +1269,7 @@ pcs resource restart openstack-cinder-volume
 # delete all volumes in test env
 openstack volume list --status available -c ID -f value | xargs openstack volume delete
 ```
+
+### How do I configure OpenStack with Ceph?
+https://access.redhat.com/solutions/2625991
+

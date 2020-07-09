@@ -1255,6 +1255,8 @@ crudini --del  /var/lib/config-data/puppet-generated/cinder/etc/cinder/cinder.co
 
 cat /var/lib/config-data/puppet-generated/cinder/etc/cinder/cinder.conf | grep -Ev "^$|^#" 
 cat /var/lib/config-data/puppet-generated/cinder/etc/cinder/cinder.conf | grep scheduler_default_weighers
+cat /var/lib/config-data/puppet-generated/cinder/etc/cinder/cinder.conf | grep scheduler_default_filters
+
 
 # restart cinder services on the controller
 systemctl restart tripleo_cinder_scheduler.service tripleo_cinder_api_cron.service tripleo_cinder_api.service
@@ -1264,4 +1266,6 @@ podman ps | grep cinder
 # restart cinder volume service on the controller
 pcs resource restart openstack-cinder-volume
 
+# delete all volumes in test env
+openstack volume list --status available -c ID -f value | xargs openstack volume delete
 ```

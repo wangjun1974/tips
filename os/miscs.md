@@ -1309,3 +1309,7 @@ cirros_signature_b64=$(cat cirros-0.4.0.signature.b64)
 ## Upload the image with the proper parameters
 openstack image create --container-format bare --disk-format qcow2 --property img_signature="$cirros_signature_b64" --property img_signature_certificate_uuid='ef0a16ba-ed44-4b59-939c-42e053c29ac6' --property img_signature_hash_method='SHA-256' --property img_signature_key_type='RSA-PSS' cirros_0_4_0_signed < cirros-0.4.0-x86_64-disk.img
 ```
+
+### rbd mirror practice
+https://github.com/MiracleMa/Blog/issues/2
+

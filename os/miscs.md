@@ -1313,3 +1313,12 @@ openstack image create --container-format bare --disk-format qcow2 --property im
 ### rbd mirror practice
 https://github.com/MiracleMa/Blog/issues/2
 
+### 创建6个3gb的卷，让filters和weighters帮助选择合适的volume backend
+```
+for i in `seq 1 6` ; do openstack volume delete 3gb-vol-0$i ; done 
+for i in `seq 1 6` ; do openstack volume create --size 3 3gb-vol-0$i ; done
+for i in `seq 1 6` ; do openstack volume show 3gb-vol-0$i | grep os-vol-host-attr ; done 
+```
+
+### 什么是Group-Version和Kind-Resource
+https://book.kubebuilder.io/cronjob-tutorial/gvks.html

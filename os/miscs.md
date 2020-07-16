@@ -1322,3 +1322,11 @@ for i in `seq 1 6` ; do openstack volume show 3gb-vol-0$i | grep os-vol-host-att
 
 ### 什么是Group-Version和Kind-Resource
 https://book.kubebuilder.io/cronjob-tutorial/gvks.html
+
+### Ceph 和 SDD HDD Pool
+Ceph: mix SATA and SSD within the same box<br>
+这个时候主要还是通过人工编辑crush完成的<br>
+https://www.sebastien-han.fr/blog/2014/08/25/ceph-mix-sata-and-ssd-within-the-same-box/<br>
+
+通过把 crush rule 和 device class 关联，pool 和 crush rule 关联实现 pool 到 device class 的映射
+https://www.bookstack.cn/read/zxj_ceph/crush-class 

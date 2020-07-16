@@ -1328,5 +1328,23 @@ Ceph: mix SATA and SSD within the same box<br>
 这个时候主要还是通过人工编辑crush完成的<br>
 https://www.sebastien-han.fr/blog/2014/08/25/ceph-mix-sata-and-ssd-within-the-same-box/<br>
 
-通过把 crush rule 和 device class 关联，pool 和 crush rule 关联实现 pool 到 device class 的映射
+通过把 crush rule 和 device class 关联，pool 和 crush rule 关联实现 pool 到 device class 的映射<br>
 https://www.bookstack.cn/read/zxj_ceph/crush-class 
+
+### What's new in RHEL8
+What’s new in RHEL 8 file systems and storage<br>
+https://www.redhat.com/en/blog/whats-new-rhel-8-file-systems-and-storage
+
+What’s new in RHEL 8.1: Kernel patching, more Insights, and right on time<br>
+https://www.redhat.com/en/blog/whats-new-rhel-81-kernel-patching-more-insights-and-right-time
+
+Red Hat expands coverage of CVE fixes<br>
+https://www.redhat.com/en/blog/red-hat-expands-coverage-cve-fixes
+
+Generate SELinux policies for containers with Udica<br>
+https://www.redhat.com/en/blog/generate-selinux-policies-containers-with-udica
+
+Using the rootless containers Tech Preview in RHEL 8.0<br>
+https://www.redhat.com/en/blog/using-rootless-containers-tech-preview-rhel-80<br>
+https://www.redhat.com/en/blog/preview-running-containers-without-root-rhel-76<br>
+

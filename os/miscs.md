@@ -1348,3 +1348,5 @@ Using the rootless containers Tech Preview in RHEL 8.0<br>
 https://www.redhat.com/en/blog/using-rootless-containers-tech-preview-rhel-80<br>
 https://www.redhat.com/en/blog/preview-running-containers-without-root-rhel-76<br>
 
+### 配置 kvm usb passthrough
+https://blog.csdn.net/weixin_33716557/article/details/85104312

@@ -476,4 +476,61 @@ ROUTERID=$(openstack router show router1 -c id -f value)
 11: vlan50: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UNKNOWN group default qlen 1000
     inet 172.16.0.230/24 brd 172.16.0.255 scope global vlan50
 
+
+
+sed  '/crypto_hash: sha256/a     ' input
+```
+
+```
+openstack network create private --dns-domain example.com.
+openstack subnet create sub_private --network private --subnet-range 192.168.100.0/24 --dns-nameserver 8.8.8.8
+
+curl -L http://download.cirros-cloud.net/0.4.0/cirros-0.4.0-x86_64-disk.img -O
+openstack image create --disk-format qcow2 --file cirros-0.4.0-x86_64-disk.img cirros
+
+openstack flavor create --ram 128 --disk 1 --vcpus 1 m1.tiny
+
+sg_id=$(openstack security group list | grep $(openstack project show admin -f value -c id) | awk '{ print $2 }')
+openstack security group rule create --proto icmp $sg_id
+openstack security group rule create --dst-port 22 --protocol tcp $sg_id
+
+openstack server create --image cirros --flavor m1.tiny --nic net-id=private,v4-fixed-ip=192.168.100.100 testmetadata
+
+openstack network create public  --share --external --provider-physical-network datacentre --provider-network-type vlan --provider-segment 10
+
+openstack subnet create public --no-dhcp --network public --subnet-range 10.0.0.0/24   --allocation-pool start=10.0.0.71,end=10.0.0.200 --gateway 10.0.0.1 --dns-nameserver 8.8.8.8
+
+openstack router create router_private
+
+openstack router set router_private --external-gateway public
+
+openstack router add subnet router_private sub_private
+
+# openstack port list --device-owner compute:nova
+
+openstack floating ip create --floating-ip-address 10.0.0.70 public
+
+openstack server add floating ip testmetadata 10.0.0.70
+
+openstack port create  --network private --fixed-ip subnet=sub_private,ip-address=192.168.100.101 --mac-address fa:fa:fa:d0:d0:d0 vm1port
+
+openstack server create --image cirros --flavor m1.tiny --nic port-id=vm1port vm1 --wait
+
+openstack floating ip create public --floating-ip-address 10.0.0.71
+
+openstack server add floating ip vm1 10.0.0.71
+
+openstack server ssh testmetadata --login cirros
+
+```
+
+```
+  Attributes: additional_parameters=--open-files-limit=16384 cluster_host_map=overcloud-controller-0:overcloud-controller-0.internalapi.localdomain;overcloud-controller-1:overcloud-controller-1.internalapi.localdomain;overcloud-controller-2:overcloud-controller-2.internalapi.localdomain enable_creation=true log=/var/log/mysql/mysqld.log wsrep_cluster_address=gcomm://overcloud-controller-0.internalapi.localdomain,overcloud-controller-1.internalapi.localdomain,overcloud-controller-2.internalapi.localdomain
+
+pcs resource update galera wsrep_cluster_address=gcomm://overcloud-controller-1.internalapi.localdomain,overcloud-controller-2.internalapi.localdomain
+
+crm_attribute -N overcloud-controller-2 -l reboot --name galera-last-committed -Q
+crm_attribute -N overcloud-controller-2 -l reboot --name galera-bootstrap -v true
+crm_attribute -N overcloud-controller-2 -l reboot --name master-galera -v 100
+crm_resource --force-promote -r galera -V
 ```

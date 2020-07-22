@@ -1359,3 +1359,42 @@ https://asciinema.org/a/TcTR7Lu7jI0pEsd9ThEn01l7n?autoplay=1
 corosync-cfgtool -s
 ```
 
+### 调整 totem token timeout
+https://access.redhat.com/solutions/221263
+
+查看corosync心跳链路状态
+```
+corosync-cfgtool -s
+```
+
+查看corosync日志
+```
+cat /var/log/cluster/corosync.log
+```
+
+调整corosync totem token timeout，编辑/etc/corosync/corosync.conf文件
+```
+totem {
+    version: 2
+    cluster_name: tripleo_cluster
+    transport: knet
+    crypto_cipher: aes256
+    crypto_hash: sha256
+    token: 30000                          # add this line
+}
+```
+
+让上面的调整生效，在每个节点上编辑corosync.conf文件，添加token，然后执行
+```
+pcs cluster reload corosync
+```
+
+检查修改结果
+```
+corosync-cmapctl | grep totem | grep token 
+```
+
+确认节点心跳状态
+```
+corosync-cfgtool -s
+```

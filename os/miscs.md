@@ -1354,3 +1354,8 @@ https://blog.csdn.net/weixin_33716557/article/details/85104312
 ### cinderlib 的演示
 https://asciinema.org/a/TcTR7Lu7jI0pEsd9ThEn01l7n?autoplay=1
 
+### 检查 corosync 状态
+```
+corosync-cfgtool -s
+```
+

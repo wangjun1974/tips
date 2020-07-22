@@ -417,3 +417,63 @@ ovn-sbctl get Chassis $(ovn-sbctl find Port_Binding logical_port=cr-lrp-b4ecd092
 
 
 ```
+
+
+
+```
+openstack security group create sg-web
+openstack security group rule create --protocol tcp --dst-port 22 sg-web
+openstack security group rule create --protocol tcp --dst-port 80 sg-web
+
+openstack server create --image cirros --flavor m1.tiny --security-group sg-web --nic net-id=private1 web01
+openstack server create --image cirros --flavor m1.tiny --security-group sg-web --nic net-id=private1 web02
+
+openstack server list
+
+ROUTERID=$(openstack router show router1 -c id -f value)
+
+```
+
+```
+[heat-admin@overcloud-controller-2 ~]$ ip a s | grep vlan
+9: vlan10: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UNKNOWN group default qlen 1000
+    inet 10.0.0.165/24 brd 10.0.0.255 scope global vlan10
+10: vlan20: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UNKNOWN group default qlen 1000
+    inet 172.17.0.200/24 brd 172.17.0.255 scope global vlan20
+11: vlan40: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UNKNOWN group default qlen 1000
+    inet 172.19.0.92/24 brd 172.19.0.255 scope global vlan40
+12: vlan30: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UNKNOWN group default qlen 1000
+    inet 172.18.0.122/24 brd 172.18.0.255 scope global vlan30
+14: vlan50: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UNKNOWN group default qlen 1000
+    inet 172.16.0.33/24 brd 172.16.0.255 scope global vlan50
+
+[heat-admin@overcloud-controller-1 ~]$ sudo ip a s | grep vlan
+6: vlan20: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UNKNOWN group default qlen 1000
+    inet 172.17.0.117/24 brd 172.17.0.255 scope global vlan20
+7: vlan40: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UNKNOWN group default qlen 1000
+    inet 172.19.0.60/24 brd 172.19.0.255 scope global vlan40
+    inet 172.19.0.123/32 brd 172.19.0.255 scope global vlan40
+8: vlan10: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UNKNOWN group default qlen 1000
+    inet 10.0.0.249/24 brd 10.0.0.255 scope global vlan10
+    inet 10.0.0.91/32 brd 10.0.0.255 scope global vlan10
+9: vlan30: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UNKNOWN group default qlen 1000
+    inet 172.18.0.189/24 brd 172.18.0.255 scope global vlan30
+10: vlan50: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UNKNOWN group default qlen 1000
+    inet 172.16.0.130/24 brd 172.16.0.255 scope global vlan50
+
+[heat-admin@overcloud-controller-0 ~]$ ip a s | grep vlan
+6: vlan40: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UNKNOWN group default qlen 1000
+    inet 172.19.0.210/24 brd 172.19.0.255 scope global vlan40
+7: vlan20: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UNKNOWN group default qlen 1000
+    inet 172.17.0.221/24 brd 172.17.0.255 scope global vlan20
+    inet 172.17.0.25/32 brd 172.17.0.255 scope global vlan20
+    inet 172.17.0.164/32 brd 172.17.0.255 scope global vlan20
+8: vlan10: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UNKNOWN group default qlen 1000
+    inet 10.0.0.25/24 brd 10.0.0.255 scope global vlan10
+10: vlan30: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UNKNOWN group default qlen 1000
+    inet 172.18.0.24/24 brd 172.18.0.255 scope global vlan30
+    inet 172.18.0.142/32 brd 172.18.0.255 scope global vlan30
+11: vlan50: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UNKNOWN group default qlen 1000
+    inet 172.16.0.230/24 brd 172.16.0.255 scope global vlan50
+
+```

@@ -1398,3 +1398,5 @@ corosync-cmapctl | grep totem | grep token
 ```
 corosync-cfgtool -s
 ```
+
+https://www.thegeekdiary.com/how-to-change-pacemaker-cluster-heartbeat-timeout-in-centos-rhel-7/

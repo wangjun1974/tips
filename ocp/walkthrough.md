@@ -533,4 +533,6 @@ crm_attribute -N overcloud-controller-2 -l reboot --name galera-last-committed -
 crm_attribute -N overcloud-controller-2 -l reboot --name galera-bootstrap -v true
 crm_attribute -N overcloud-controller-2 -l reboot --name master-galera -v 100
 crm_resource --force-promote -r galera -V
+
+
 ```

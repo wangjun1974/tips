@@ -1350,3 +1350,7 @@ https://www.redhat.com/en/blog/preview-running-containers-without-root-rhel-76<b
 
 ### 配置 kvm usb passthrough
 https://blog.csdn.net/weixin_33716557/article/details/85104312
+
+### cinderlib 的演示
+https://asciinema.org/a/TcTR7Lu7jI0pEsd9ThEn01l7n?autoplay=1
+

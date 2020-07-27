@@ -1400,3 +1400,31 @@ corosync-cfgtool -s
 ```
 
 https://www.thegeekdiary.com/how-to-change-pacemaker-cluster-heartbeat-timeout-in-centos-rhel-7/
+
+### OpenShift Virtualization 支持 UEFI
+OpenShift Virtualization and UEFI 支持
+ 
+需要让 virt-handler 和 virt-launcher pod 里有 UEFI 所需的 firmware
+ 
+So just for testing I did this...
+```
+$ oc exec -it virt-handler-hxdvs bash
+# rpm -ivh http://mirror.centos.org/centos/7/os/x86_64/Packages/OVMF-20180508-6.gitee3198e672e2.el7.noarch.rpm
+# ln -sf /usr/share/OVMF/OVMF_CODE.secboot.fd /usr/share/OVMF/OVMF_CODE.fd
+```
+
+Then started a VM with-
+```
+firmware:
+         bootloader:
+           efi: {}
+```
+
+It'll fail, because virt-launcher pod won't have the symlink (but will have the RPM), so I...
+```
+$  oc exec -it virt-launcher-example-qv5nw bash
+# ln -sf /usr/share/OVMF/OVMF_CODE.secboot.fd /usr/share/OVMF/OVMF_CODE.fd
+# virsh start openshift-cnv_example
+```
+
+So what we really need is the OVMF ROM's inside of the virt-launcher/virt-handler pods as shipped then it'll just work out of the box

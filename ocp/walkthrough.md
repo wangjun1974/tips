@@ -522,6 +522,10 @@ openstack server add floating ip vm1 10.0.0.71
 
 openstack server ssh testmetadata --login cirros
 
+openstack flavor create --ram 2048 --disk 20 --vcpus 1 m1.small
+
+openstack server add security group e813faec-2236-41b9-a22d-4cd7ed842212 $sg_id
+
 ```
 
 ```
@@ -534,5 +538,191 @@ crm_attribute -N overcloud-controller-2 -l reboot --name galera-bootstrap -v tru
 crm_attribute -N overcloud-controller-2 -l reboot --name master-galera -v 100
 crm_resource --force-promote -r galera -V
 
+
+openstack network create storage  --share --provider-physical-network datacentre --provider-network-type vlan --provider-segment 30
+
+openstack subnet create storage --network storage --subnet-range 172.16.100.0/24   --allocation-pool start=172.16.100.100,end=172.16.100.150 --gateway 172.16.100.1 --dns-nameserver 8.8.8.8
+
+openstack port create  --network private --fixed-ip subnet=sub_private,ip-address=192.168.100.102 --mac-address fa:fa:fa:d0:d0:d1 vm2port
+
+openstack server create --image cirros --flavor m1.tiny --key-name admin-key --nic port-id=vm2port rh1
+
+openstack server add port rh1 $p1_id
+
+openstack server ssh testmetadata --login cirros
+
+sudo ip link add link eth1 name eth1.1070 type vlan id 1070
+
+openstack security group create sg-web
+openstack security group rule create --protocol tcp --dst-port 22 sg-web
+openstack security group rule create --protocol tcp --dst-port 80 sg-web
+openstack security group rule create --protocol icmp sg-web
+
+cat > webserver.sh << 'EOF'
+#!/bin/sh
+
+MYIP=$(/sbin/ifconfig eth0|grep 'inet addr'|awk -F: '{print $2}'| awk '{print $1}');
+OUTPUT_STR="Welcome to $MYIP\r"
+OUTPUT_LEN=${#OUTPUT_STR}
+
+while true; do
+    echo -e "HTTP/1.0 200 OK\r\nContent-Length: ${OUTPUT_LEN}\r\n\r\n${OUTPUT_STR}" | sudo nc -l -p 80
+done
+EOF
+
+openstack server create --image cirros --flavor m1.tiny --security-group sg-web --nic net-id=private --user-data webserver.sh web01  --wait
+openstack server create --image cirros --flavor m1.tiny --security-group sg-web --nic net-id=private --user-data webserver.sh web02  --wait
+
+openstack server list --name web
+
+openstack loadbalancer create --name lbweb --vip-subnet-id sub_private
+
+openstack loadbalancer list
+
+openstack loadbalancer listener create --name listenerweb --protocol HTTP --protocol-port 80 lbweb
+
+openstack loadbalancer pool create --name poolweb --protocol HTTP  --listener listenerweb --lb-algorithm ROUND_ROBIN
+
+IPWEB01=$(openstack server show web01 -c addresses -f value | cut -d"=" -f2)
+IPWEB02=$(openstack server show web02 -c addresses -f value | cut -d"=" -f2)
+openstack loadbalancer member create --name web01 --address $IPWEB01 --protocol-port 80 poolweb
+openstack loadbalancer member create --name web02 --address $IPWEB02 --protocol-port 80 poolweb
+
+VIP=$(openstack loadbalancer show lbweb -c vip_address -f value)
+PORTID=$(openstack port list --fixed-ip ip-address=$VIP -c ID -f value)
+openstack floating ip create --port $PORTID public
+
+openstack loadbalancer amphora list
+
+openstack server list --project service
+
+openstack catalog show octavia
+
+
+# Qos
+openstack network qos policy create bw-limiter
+openstack network qos rule create  --max-kbps 3000 --max-burst-kbits 300 bw-limiter --type bandwidth-limit --ingress
+
+openstack server list --name vm1
+openstack port list --server vm1
+openstack port list --server vm1 -f value -c ID
+openstack port set --qos-policy bw-limiter $(openstack port list --server vm1 -f value -c ID)
+openstack port show $(openstack port list --server vm1 -f value -c ID)
+
+openstack server create --image cirros --flavor m1.tiny  --nic net-id=private  testdns
+openstack port show $(openstack port list -c ID -f value --server testdns)
+
+openstack network create provider --provider-physical-network datacentre --provider-network-type vlan --provider-segment 100
+openstack subnet create provider --dhcp --network provider --subnet-range 192.168.50.0/24   --allocation-pool start=192.168.50.100,end=192.168.50.200 --gateway 192.168.50.1 --dns-nameserver 8.8.8.8
+
+nmcli con add type vlan ifname vlan100 dev eth1 id 100 ipv4.method 'manual' ipv4.address '192.168.50.50/24' 
+
+openstack server create --image cirros --flavor m1.tiny --nic net-id=provider rh2
+
+(overcloud) [stack@undercloud ~]$ openstack network create provider --provider-physical-network datacentre --provider-network-type vlan --provider-segment 100
+(overcloud) [stack@undercloud ~]$ openstack subnet create provider --dhcp --network provider --subnet-range 192.168.50.0/24   --allocation-pool start=192.168.50.100,end=192.168.50.200 --gateway 192.168.50.1 --dns-nameserver 8.8.8.8
+[root@workstation-dc36 ~]# nmcli con add type vlan ifname vlan100 dev eth1 id 100 ipv4.method 'manual' ipv4.address '192.168.50.50/24' 
+Connection 'vlan-vlan100' (d7e3fb84-585d-4af7-9034-7f101f7d6a53) successfully added.
+[root@workstation-dc36 ~]# nmcli c s 
+NAME          UUID                                  TYPE      DEVICE  
+System eth0   5fb06bd0-0bb0-7ffb-45f1-d6edd65f3e03  ethernet  eth0    
+System eth1   9c92fad9-6ecb-3e6c-eb4d-8a47c6f50c04  ethernet  eth1    
+vlan-vlan100  d7e3fb84-585d-4af7-9034-7f101f7d6a53  vlan      vlan100 
+[root@workstation-dc36 ~]# ip a s 
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+       valid_lft forever preferred_lft forever
+    inet6 ::1/128 scope host 
+       valid_lft forever preferred_lft forever
+2: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP group default qlen 1000
+    link/ether 2c:c2:60:29:83:44 brd ff:ff:ff:ff:ff:ff
+    inet 192.0.2.252/24 brd 192.0.2.255 scope global noprefixroute eth0
+       valid_lft forever preferred_lft forever
+    inet6 fe80::2ec2:60ff:fe29:8344/64 scope link 
+       valid_lft forever preferred_lft forever
+3: eth1: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP group default qlen 1000
+    link/ether 2c:c2:60:1b:2c:d2 brd ff:ff:ff:ff:ff:ff
+    inet 1.0.0.19/8 brd 1.255.255.255 scope global noprefixroute eth1
+       valid_lft forever preferred_lft forever
+    inet6 fe80::2ec2:60ff:fe1b:2cd2/64 scope link 
+       valid_lft forever preferred_lft forever
+4: vlan100@eth1: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default qlen 1000
+    link/ether 2c:c2:60:1b:2c:d2 brd ff:ff:ff:ff:ff:ff
+    inet 192.168.50.50/24 brd 192.168.50.255 scope global noprefixroute vlan100
+       valid_lft forever preferred_lft forever
+    inet6 fe80::9a2d:16ba:aac7:4bf6/64 scope link noprefixroute 
+       valid_lft forever preferred_lft forever
+
+(overcloud) [stack@undercloud ~]$ openstack server create --image cirros --flavor m1.tiny --nic net-id=provider rh2
+(overcloud) [stack@undercloud ~]$ openstack server list --name rh2
++--------------------------------------+------+--------+-------------------------+--------+--------+
+| ID                                   | Name | Status | Networks                | Image  | Flavor |
++--------------------------------------+------+--------+-------------------------+--------+--------+
+| d53e56b6-8ff4-453d-ae2f-ae9911f084cf | rh2  | ACTIVE | provider=192.168.50.141 | cirros |        |
++--------------------------------------+------+--------+-------------------------+--------+--------+
+[root@workstation-dc36 ~]# ssh cirros@192.168.50.141
+The authenticity of host '192.168.50.141 (192.168.50.141)' can't be established.
+ECDSA key fingerprint is SHA256:I43S5Q02AliFZCyl+hmljeBrq6sRqGhpi+qgvZmY7jk.
+Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
+Warning: Permanently added '192.168.50.141' (ECDSA) to the list of known hosts.
+cirros@192.168.50.141's password: 
+$ 
+
+```
+
+
+```
+(undercloud) [stack@undercloud ~]$ openstack server list
++--------------------------------------+----------------------------+--------+-------------------------+----------------+---------------+
+| ID                                   | Name                       | Status | Networks                | Image          | Flavor        |
++--------------------------------------+----------------------------+--------+-------------------------+----------------+---------------+
+| 26bb56b9-357e-4b39-bbb7-e9cf480aee9c | overcloud-controller-0     | ACTIVE | ctlplane=192.168.10.56  | overcloud-full | control0      |
+| deb46580-cfa8-4ea2-bd11-aa9c7385fe42 | overcloud-controller-1     | ACTIVE | ctlplane=192.168.10.82  | overcloud-full | control0      |
+| 61793a0f-cd84-4066-a981-c821c2fb2912 | overcloud-controller-2     | ACTIVE | ctlplane=192.168.10.29  | overcloud-full | control0      |
+| a7864d10-28e5-47f7-af19-757a598f2f28 | overcloud-novacompute0-0   | ACTIVE | ctlplane=192.168.10.81  | overcloud-full | compute_leaf0 |
+| 1a804c1a-5801-4c9d-bc59-6512b2dd2cd6 | overcloud-novacompute2-0   | ACTIVE | ctlplane=192.168.12.43  | overcloud-full | compute_leaf2 |
+| 29aef523-d5fe-4c86-abf5-fcb5446fda8f | overcloud-novacomputeaz1-0 | ACTIVE | ctlplane=192.168.100.88 | overcloud-full | compute_az1   |
+| 77a6f3fb-61a5-4ea9-ab6b-dc17d3f7b30a | overcloud-novacompute1-0   | ACTIVE | ctlplane=192.168.11.52  | overcloud-full | compute_leaf1 |
++--------------------------------------+----------------------------+--------+-------------------------+----------------+---------------+
+
+source overcloudrc
+openstack network create public --share --external --provider-physical-network datacentre   --provider-network-type vlan --provider-segment 10
+openstack subnet create public --no-dhcp --network public --subnet-range 10.0.0.0/24   --allocation-pool start=10.0.0.100,end=10.0.0.200 --gateway 10.0.0.1 --dns-nameserver 8.8.8.8
+
+openstack network create private
+openstack subnet create --network private --dns-nameserver 8.8.4.4 --gateway 172.16.1.1   --subnet-range 172.16.1.0/24 private
+
+openstack router create router1
+openstack router add subnet router1 private
+openstack router set router1 --external-gateway public
+
+
+curl -L -O https://download.cirros-cloud.net/0.4.0/cirros-0.4.0-x86_64-disk.img
+openstack image create cirros --file cirros-0.4.0-x86_64-disk.img --disk-format qcow2 --container-format bare --public
+
+openstack flavor create m1.nano --ram 256
+
+openstack keypair create --public-key ~/.ssh/id_rsa.pub admin-key
+
+openstack server create private_leaf0 --availability-zone nova:overcloud-novacompute0-0.localdomain --flavor m1.nano --image cirros --network private  --key-name admin-key --wait
+openstack server create private_leaf1 --availability-zone nova:overcloud-novacompute1-0.localdomain --flavor m1.nano --image cirros --network private  --key-name admin-key --wait
+openstack server create private_leaf2 --availability-zone nova:overcloud-novacompute2-0.localdomain --flavor m1.nano --image cirros --network private  --key-name admin-key --wait
+
+FP1=$(openstack floating ip create public -f value -c floating_ip_address)
+FP2=$(openstack floating ip create public -f value -c floating_ip_address)
+FP3=$(openstack floating ip create public -f value -c floating_ip_address)
+
+openstack server add floating ip private_leaf0 $FP1
+openstack server add floating ip private_leaf1 $FP2
+openstack server add floating ip private_leaf2 $FP3
+
+IN1=$(openstack server list -c Networks --name private_leaf0 -f value|cut -d"," -f1|cut -d"=" -f2)
+IN2=$(openstack server list -c Networks --name private_leaf1 -f value|cut -d"," -f1|cut -d"=" -f2)
+IN3=$(openstack server list -c Networks --name private_leaf2 -f value|cut -d"," -f1|cut -d"=" -f2)
+
+ssh cirros@$FP1 ping -c1 $IN2
+ssh cirros@$FP2 ping -c1 $IN3
+ssh cirros@$FP3 ping -c1 $IN1
 
 ```

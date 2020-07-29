@@ -1428,3 +1428,7 @@ $  oc exec -it virt-launcher-example-qv5nw bash
 ```
 
 So what we really need is the OVMF ROM's inside of the virt-launcher/virt-handler pods as shipped then it'll just work out of the box
+
+### 如何用好 Bash 的变量替换
+How To Use Bash Parameter Substitution Like A Pro<br>
+https://www.cyberciti.biz/tips/bash-shell-parameter-substitution-2.html

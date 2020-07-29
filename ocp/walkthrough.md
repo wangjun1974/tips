@@ -726,3 +726,77 @@ ssh cirros@$FP2 ping -c1 $IN3
 ssh cirros@$FP3 ping -c1 $IN1
 
 ```
+
+
+```
+openstack network create provider --provider-physical-network datacentre --provider-network-type vlan --provider-segment 100
+openstack subnet create provider --network provider --dhcp --subnet-range 192.168.60.0/24   --allocation-pool start=192.168.60.100,end=192.168.60.150 --gateway 192.168.60.1 --dns-nameserver 8.8.8.8
+
+curl -L http://download.cirros-cloud.net/0.4.0/cirros-0.4.0-x86_64-disk.img -O
+openstack image create --disk-format qcow2 --file cirros-0.4.0-x86_64-disk.img cirros
+
+openstack flavor create --ram 128 --disk 1 --vcpus 1 m1.tiny
+
+sg_id=$(openstack security group list | grep $(openstack project show admin -f value -c id) | awk '{ print $2 }')
+openstack security group rule create --proto icmp $sg_id
+openstack security group rule create --dst-port 22 --protocol tcp $sg_id
+openstack security group rule create --dst-port 80 --protocol tcp $sg_id
+
+openstack server create --image cirros --flavor m1.tiny --nic net-id=provider,v4-fixed-ip=192.168.60.100 vm1
+```
+
+Task 2 
+```
+openstack network create private --dns-domain example.com.
+openstack subnet create sub_private --network private --subnet-range 192.168.100.0/24 --dns-nameserver 8.8.8.8
+
+openstack network create public  --share --external --provider-physical-network datacentre --provider-network-type vlan --provider-segment 10
+
+openstack subnet create public --no-dhcp --network public --subnet-range 10.0.0.0/24   --allocation-pool start=10.0.0.71,end=10.0.0.200 --gateway 10.0.0.1 --dns-nameserver 8.8.8.8
+
+openstack router create router_private
+
+openstack router set router_private --external-gateway public
+
+openstack router add subnet router_private sub_private
+
+
+cat > webserver.sh << 'EOF'
+#!/bin/sh
+
+MYIP=$(/sbin/ifconfig eth0|grep 'inet addr'|awk -F: '{print $2}'| awk '{print $1}');
+OUTPUT_STR="Welcome to $MYIP\r"
+OUTPUT_LEN=${#OUTPUT_STR}
+
+while true; do
+    echo -e "HTTP/1.0 200 OK\r\nContent-Length: ${OUTPUT_LEN}\r\n\r\n${OUTPUT_STR}" | sudo nc -l -p 80
+done
+EOF
+
+openstack server create --image cirros --flavor m1.tiny --nic net-id=private --user-data webserver.sh web01  --wait
+openstack server create --image cirros --flavor m1.tiny --nic net-id=private --user-data webserver.sh web02  --wait
+
+openstack loadbalancer create --name lbweb --vip-subnet-id sub_private
+
+openstack loadbalancer list
+
+openstack loadbalancer listener create --name listenerweb --protocol HTTP --protocol-port 80 lbweb
+
+openstack loadbalancer pool create --name poolweb --protocol HTTP  --listener listenerweb --lb-algorithm ROUND_ROBIN
+
+IPWEB01=$(openstack server show web01 -c addresses -f value | cut -d"=" -f2)
+IPWEB02=$(openstack server show web02 -c addresses -f value | cut -d"=" -f2)
+openstack loadbalancer member create --name web01 --address $IPWEB01 --protocol-port 80 poolweb
+openstack loadbalancer member create --name web02 --address $IPWEB02 --protocol-port 80 poolweb
+
+VIP=$(openstack loadbalancer show lbweb -c vip_address -f value)
+PORTID=$(openstack port list --fixed-ip ip-address=$VIP -c ID -f value)
+openstack floating ip create --port $PORTID public
+
+openstack loadbalancer amphora list
+
+# Access the server using the floating IP addresses associated with the load balancer:
+
+
+
+```

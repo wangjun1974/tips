@@ -797,6 +797,7 @@ openstack loadbalancer amphora list
 
 # Access the server using the floating IP addresses associated with the load balancer:
 
+openstack floating ip create --floating-ip-address 10.0.0.70 public
 
-
+openstack server add floating ip web01 10.0.0.70
 ```

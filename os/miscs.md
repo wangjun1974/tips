@@ -1432,3 +1432,32 @@ So what we really need is the OVMF ROM's inside of the virt-launcher/virt-handle
 ### 如何用好 Bash 的变量替换
 How To Use Bash Parameter Substitution Like A Pro<br>
 https://www.cyberciti.biz/tips/bash-shell-parameter-substitution-2.html
+
+### 修改 ssh config 不再进行严格的 HostKey 检查
+```
+cat > ~/.ssh/config << 'EOF'
+Host *
+  StrictHostKeyChecking no
+  UserKnownHostsFile=/dev/null  
+EOF
+``` 
+
+### 在 rhel7 上启用 software collection 软件频道并且安装 maven 3.0 
+https://www.softwarecollections.org/en/scls/rhscl/maven30/
+
+```
+# On RHEL, enable RHSCL repository for you system:
+sudo yum-config-manager --enable rhel-server-rhscl-7-rpms
+
+# 2. Install the collection:
+$ sudo yum install maven30
+
+# 3. Start using the software collection:
+$ scl enable maven30 bash
+
+# At this time you should be able to use maven as a normal application. Some available command examples follow:
+$ mvn --version
+$ mvn package
+$ mvn clean dependency:copy-dependencies package
+$ mvn site
+```

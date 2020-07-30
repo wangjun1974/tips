@@ -1468,3 +1468,6 @@ https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/7/html/ne
 ```
 nmcli con modify bridge-br0 bridge.stp no
 ```
+
+### OpenShift Cheatsheet
+http://www.mastertheboss.com/soa-cloud/openshift/openshift-cheatsheet

@@ -1461,3 +1461,10 @@ $ mvn package
 $ mvn clean dependency:copy-dependencies package
 $ mvn site
 ```
+
+### 遇到不支持 STP 的设备，记得关闭 bridge.stp
+在实验室里的设备不支持 STP，默认 bridge.stp 是启用的，因此创建的 bridge 跟外面无法通信。
+https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/7/html/networking_guide/sec-network_bridging_using_the_networkmanager_command_line_tool_nmcli
+```
+nmcli con modify bridge-br0 bridge.stp no
+```

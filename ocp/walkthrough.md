@@ -799,5 +799,5 @@ openstack loadbalancer amphora list
 
 openstack floating ip create --floating-ip-address 10.0.0.70 public
 
-openstack server add floating ip web01 10.0.0.70
+openstack server add floating ip testmetadata 10.0.0.70
 ```

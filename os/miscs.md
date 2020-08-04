@@ -1484,6 +1484,12 @@ Host *
 EOF
 ``` 
 
+### 在 ovirt hypervisor 上执行 virsh 命令
+可指定认证文件 authfile=/etc/ovirt-hosted-engine/virsh_auth.conf 
+```
+virsh -c qemu:///system?authfile=/etc/ovirt-hosted-engine/virsh_auth.conf list
+```
+
 ### 为 ovirt 虚拟机设置磁盘 QoS 
 ```
 tmpfile=$(mktemp /tmp/tmpXXXXXX)

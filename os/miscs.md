@@ -1483,3 +1483,22 @@ Host *
   GSSAPIAuthentication no
 EOF
 ``` 
+
+### 为 ovirt 虚拟机设置磁盘 QoS 
+```
+tmpfile=$(mktemp /tmp/tmpXXXXXX)
+
+for domain in $(virsh -c qemu:///system?authfile=/etc/ovirt-hosted-engine/virsh_auth.conf list | grep testvm | awk '{print $2}')
+do
+    if [ x$domain == 'x' ]; then
+        exit 0
+    else    
+        for device in $(virsh -c qemu:///system?authfile=/etc/ovirt-hosted-engine/virsh_auth.conf domblklist ${domain} | awk '{print $1}')
+        do
+            echo virsh -c qemu:///system?authfile=/etc/ovirt-hosted-engine/virsh_auth.conf blkdeviotune ${domain} ${device} --write_bytes_sec $(expr 1024 \* 1024 \* 1)
+        done
+    fi
+done | tee $tmpfile
+sh -x $tmpfile
+rm -f $tmpfile
+```

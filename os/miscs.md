@@ -1471,3 +1471,15 @@ nmcli con modify bridge-br0 bridge.stp no
 
 ### OpenShift Cheatsheet
 http://www.mastertheboss.com/soa-cloud/openshift/openshift-cheatsheet
+
+### ssh client config 可以让 ssh 访问快起来
+根据需要配置
+```
+cat > ~/.ssh/config << 'EOF'
+Host *
+  StrictHostKeyChecking no
+  CheckHostIP no
+  VerifyHostKeyDNS no
+  GSSAPIAuthentication no
+EOF
+``` 

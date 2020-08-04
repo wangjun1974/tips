@@ -801,3 +801,46 @@ openstack floating ip create --floating-ip-address 10.0.0.70 public
 
 openstack server add floating ip testmetadata 10.0.0.70
 ```
+
+```
+
+656d02f7796f8df952ea0e62f16530b6
+
+    "name": "user_key",
+    "in": "query",
+    "description": "Your API access key",
+    "required": true,
+    "x-data-threescale-name": "user_keys",
+    "type": "string"
+
+            "name": "lang",
+            "in": "query",
+            "description": "language of labels, e.g. \"en\" or \"fi\"",
+            "required": true,
+            "type": "string"
+
+https://api-2445583270468.staging.gw.apicast.io:443
+
+curl -v https://api-2445583270468.production.gw.apicast.io:443/rest/v1/vocabularies?lang=en?user_key=21b7921ee48f976c301ce86d5b8feb6c
+
+
+curl "https://api-2445583270468.production.gw.apicast.io:443/rest/v1/vocabularies?lang=en&user_key=21b7921ee48f976c301ce86d5b8feb6c"
+
+curl "https://api-2445583270468.production.gw.apicast.io:443/rest/v1/vocabularies?lang=en&user_key=656d02f7796f8df952ea0e62f16530b6"
+
+
+<div class="row">
+  {% if provider.multiple_applications_allowed? %}
+    {% if applications == present %}
+      <div id="client-name" data-client="{{ applications.first.id }}" style="display:none"></div>
+      # {% include 'stats/chart' %}
+    {% else %}
+      <p>You do not currently have any live applications.</p>
+    {% endif %}
+  {% else %}
+    <div id="client-name" data-client="{{ applications.first.id }}" style="display:none"></div>
+    {% include 'stats/chart' %}
+  {% endif %}
+</div>
+
+```

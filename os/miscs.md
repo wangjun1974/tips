@@ -1502,3 +1502,24 @@ done | tee $tmpfile
 sh -x $tmpfile
 rm -f $tmpfile
 ```
+
+### 为 ovirt 虚拟机设置网络 QoS
+http://manpages.ubuntu.com/manpages/trusty/man1/virsh.1.html
+```
+tmpfile=$(mktemp /tmp/tmpXXXXXX)
+
+for domain in $(virsh -c qemu:///system?authfile=/etc/ovirt-hosted-engine/virsh_auth.conf list | grep testvm | awk '{print $2}')
+do
+    if [ x$domain == 'x' ]; then
+        exit 0
+    else
+       for device in $(virsh -c qemu:///system?authfile=/etc/ovirt-hosted-engine/virsh_auth.conf domiflist ${domain} | grep -E "^vnet" | awk '{print $1}')
+       do
+            SPEED=$(expr 1024 \* 10)
+            echo virsh -c qemu:///system?authfile=/etc/ovirt-hosted-engine/virsh_auth.conf domiftune ${domain} ${device} --live --config --inbond ${SPEED},${SPEED},${SPEED} --outbond ${SPEED},${SPEED},${SPEED}
+       done
+    fi
+done | tee $tmpfile
+sh -x $tmpfile
+rm -f $tmpfile
+```

@@ -1516,7 +1516,7 @@ do
        for device in $(virsh -c qemu:///system?authfile=/etc/ovirt-hosted-engine/virsh_auth.conf domiflist ${domain} | grep -E "^vnet" | awk '{print $1}')
        do
             SPEED=$(expr 1024 \* 10)
-            echo virsh -c qemu:///system?authfile=/etc/ovirt-hosted-engine/virsh_auth.conf domiftune ${domain} ${device} --live --config --inbond ${SPEED},${SPEED},${SPEED} --outbond ${SPEED},${SPEED},${SPEED}
+            echo virsh -c qemu:///system?authfile=/etc/ovirt-hosted-engine/virsh_auth.conf domiftune ${domain} ${device} --live --inbound ${SPEED},${SPEED},${SPEED} --outbound ${SPEED},${SPEED},${SPEED}
        done
     fi
 done | tee $tmpfile

@@ -844,3 +844,43 @@ curl "https://api-2445583270468.production.gw.apicast.io:443/rest/v1/vocabularie
 </div>
 
 ```
+
+```
+/opt/install/amq-broker-7.6.0/bin/artemis create  --user amquser --password amquser --role amq --allow-anonymous /opt/install/amq7/broker0
+
+cat /opt/install/amq7/broker0/etc/broker.xml | grep journal-type
+
+sed -i 's/localhost/'$HOSTNAME'/' /opt/install/amq7/broker0/etc/bootstrap.xml
+
+cat /opt/install/amq7/broker0/etc/jolokia-access.xml
+sed -i 's#<strict-checking/>#<!-- strict-checking -->#'  /opt/install/amq7/broker0/etc/jolokia-access.xml
+cat /opt/install/amq7/broker0/etc/jolokia-access.xml
+
+/opt/install/amq7/broker0/bin/artemis-service start
+
+ps -aef | grep java
+
+sudo netstat -ntuapee | grep LISTEN | grep java
+sudo netstat -antup | grep LISTEN | grep java
+
+# view broker log
+cat /opt/install/amq7/broker0/log/artemis.log
+
+# create a durable messaging address and queue
+/opt/install/amq7/broker0/bin/artemis address create --name gpteAddress --anycast --no-multicast
+
+# Associate a durable anycast queue with the previously created address
+/opt/install/amq7/broker0/bin/artemis queue create --name gpteQueue --address gpteAddress --anycast --durable --auto-create-address
+
+# consume messages from gpteQueue
+/opt/install/amq7/broker0/bin/artemis consumer --destination gpteQueue --url tcp://$HOSTNAME:61616
+
+# send a total of 20 10-byte messages via two parallel threads with a one-second sleep between messages
+/opt/install/amq7/broker0/bin/artemis producer --destination gpteAddress --message-count 10 --message-size 10 --sleep 1000 --threads 2 --url tcp://$HOSTNAME:61616
+
+# Stop the broker0 instance
+/opt/install/amq7/broker0/bin/artemis-service stop
+
+# Delete everything about the broker0 instance
+rm -rf /opt/install/amq7/broker0/
+```

@@ -1529,3 +1529,8 @@ done | tee $tmpfile
 sh -x $tmpfile
 rm -f $tmpfile
 ```
+
+### 实验环境 AMQ Broker 和 AMQ Broker Maven
+https://www.opentlc.com/labs/amq/amq-broker-7.6.0-bin.zip<br>
+https://www.opentlc.com/labs/amq/amq-broker-7.6.0-maven-repository.zip<br>
+

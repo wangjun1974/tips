@@ -1545,3 +1545,77 @@ https://irssi.org/documentation/startup/#server-and-channel-automation<br>
 ```
 /CHANNEL ADD -auto #secret IRCnet password
 ```
+
+### 离线安装 qpc 
+```
+# upload QPC package
+scp ~/Downloads/QPC\ Dependencies_76.zip root@<qpcserverip>:~
+scp ~/Downloads/quipucords_server_image.tar.gz root@<qpcserverip>:~
+scp ~/Downloads/postgres.9.6.10.tar root@<qpcserverip>:~
+
+# log into qpcserver
+ssh root@<qpcserverip>
+
+# define repo
+cat > /etc/yum.repos.d/w.repo << 'EOF'
+[rhel-7-server-rpms]
+name=rhel-7-server-rpms
+baseurl=http://10.66.208.115/rhel7osp/rhel-7-server-rpms/
+enabled=1
+gpgcheck=0
+
+[rhel-7-server-extras-rpms]
+name=rhel-7-server-extras-rpms
+baseurl=http://10.66.208.115/rhel7osp/rhel-7-server-extras-rpms/
+enabled=1
+gpgcheck=0
+
+EOF
+
+# prepare qpc content
+mkdir /root/qpc
+cd /root/qpc
+mv /root/quipucords_server_image.tar.gz .
+mv /root/postgres.9.6.10.tar .
+
+# install unzip and unzip QPC\ Dependencies_76.zip
+yum install -y unzip
+unzip /root/QPC\ Dependencies_76.zip
+
+# install dependency
+yum install -y ansible policycoreutils-python selinux-policy selinux-policy-base selinux-policy-targeted libseccomp libtirpc
+
+# install offline rpm packages
+rpm -Uvh *.rpm --force
+
+# install qpc server - offline
+qpc-tools server install --offline-files=/root/qpc --version=0.9.2
+
+# install qpc client - offline
+qpc-tools cli install --offline-files=/root/qpc
+
+# config qpc server, replace 10.66.208.160 with ip address in your env
+qpc server config --host 10.66.208.160
+
+# login qpc server as 'admin' user
+qpc server login
+
+# add cred
+qpc cred add --type network --name cred_rhel --username root --password
+
+# add source
+qpc source add --type network --name source_rhel --hosts 10.66.208.[51:53] --cred cred_rhel
+
+# add scan
+qpc scan add --name scan_rhel --sources source_rhel
+
+# exec scan
+qpc scan start --name scan_rhel
+
+# check if scan is complete
+qpc scan list
+qpc scan job --name scan_rhel | grep status 
+
+# download scan report, scan job id is from output of command 'qpc scan list'
+qpc report download --scan-job 1 --output-file=~/scan_output_rhel.tar.gz
+```

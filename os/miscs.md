@@ -1534,3 +1534,14 @@ rm -f $tmpfile
 https://www.opentlc.com/labs/amq/amq-broker-7.6.0-bin.zip<br>
 https://www.opentlc.com/labs/amq/amq-broker-7.6.0-maven-repository.zip<br>
 
+### 更新 ovirt 管理员密码
+https://access.redhat.com/solutions/63677<br>
+```
+ovirt-aaa-jdbc-tool user password-reset admin --password-valid-to="2055-08-01 12:00:00Z"
+```
+
+### 设置 irssi 登陆时自动加入 channel
+https://irssi.org/documentation/startup/#server-and-channel-automation<br>
+```
+/CHANNEL ADD -auto #secret IRCnet password
+```

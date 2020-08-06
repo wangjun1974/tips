@@ -884,3 +884,181 @@ cat /opt/install/amq7/broker0/log/artemis.log
 # Delete everything about the broker0 instance
 rm -rf /opt/install/amq7/broker0/
 ```
+
+```
+# AMQP Lab
+# Set Up Lab Assets
+## change to the /opt directory, make a router-dev subdirectory, set permissions on this directory, and change to it:
+cd /opt
+sudo mkdir router-dev
+sudo chown -R <your user>:users /opt/router-dev
+cd router-dev
+
+## Clone the amqp-dispatch-workshop lab assets
+git clone https://github.com/gpe-mw-training/amqp-dispatch-workshop
+
+# Use AMQP Wire Communication
+## Create AMQP Broker
+cd /opt/install/amq7
+
+## stop and remove any older AMQ brokers
+"/opt/install/amq7/broker0/bin/artemis-service" stop
+rm -rf /opt/install/amq7/broker0
+
+## Create an instance of the AMQ broker called broker0 and specify the credentials for a guest user and role
+/opt/install/amq-broker-7.6.0/bin/artemis create  --user amquser --password amquser --role amq --allow-anonymous /opt/install/amq7/broker0
+
+## Start Broker Instance
+## replace localhost with $HOSTNAME in the /opt/install/amq7/broker0/etc/bootstrap.xml file
+echo $HOSTNAME
+sed -i 's/localhost/'$HOSTNAME'/' /opt/install/amq7/broker0/etc/bootstrap.xml
+
+## In the /opt/install/amq7/broker0/etc/jolokia-access.xml file, comment out the following line to disable strict checking
+cat /opt/install/amq7/broker0/etc/jolokia-access.xml
+sed -i 's#<strict-checking/>#<!-- strict-checking -->#'  /opt/install/amq7/broker0/etc/jolokia-access.xml
+cat /opt/install/amq7/broker0/etc/jolokia-access.xml
+
+## Start the broker instance
+"/opt/install/amq7/broker0/bin/artemis-service" start
+
+## Create Durable Queue
+## Create an anycast address called gpteAddress
+/opt/install/amq7/broker0/bin/artemis address create --name gpteAddress --anycast --no-multicast
+
+## Associate a durable anycast queue with the previously created address
+/opt/install/amq7/broker0/bin/artemis queue create \
+                              --name gpteQueue \
+                              --address gpteAddress \
+                              --anycast --durable \
+                              --auto-create-address
+
+## Send and Consume JMS Messages Using AMQP
+## Change to the simple-jms-request-response directory of your lab assets
+cd /opt/router-dev/amqp-dispatch-workshop/simple-jms-request-response/
+
+## Review the com.redhat.gpte.amqp.examples.simplejms.AMQPQueueExample class
+
+## At the root of the project, review the pom.xml Maven build file
+
+## From the project root, identify the exact dependency tree that includes the supported qpid libraries
+mvn dependency:tree
+
+## Use a JMS client to produce and consume a message using AMQP from the root of the simple-jms-request-response project
+mvn clean package exec:java \
+          -Dexec.mainClass="org.apache.activemq.artemis.jms.example.AMQPQueueExample" \
+          -DQUEUE_NAME="gpteAddress" \
+          -DCONNECTION_URL="amqp://0.0.0.0:5672" \
+          -Dexec.cleanupDaemonThreads=false 2>&1 | tee /tmp/err 
+
+## Set Up qdrouterd Dispatch Router
+## Verify Installation
+sudo yum list qpid-\* | more
+
+## Configure Dispatch Router
+## Make a backup of the qpid-dispatch configuration file
+sudo cp /etc/qpid-dispatch/qdrouterd.conf /etc/qpid-dispatch/qdrouterd.conf.bk
+
+## make small change to /etc/qpid-dispatch/qdrouterd.conf
+sudo yum install -y ansible
+
+ssh-keygen -t rsa -f ~/.ssh/id_rsa -N ''
+
+cat > ~/inventory << 'EOF'
+[localhost]
+localhost ansible_host=127.0.0.1 
+EOF
+
+ansible -i ~/inventory localhost -m authorized_key -a 'user=jwang-redhat.com state=present key="{{ lookup(\"file\",\"/home/jwang-redhat.com/.ssh/id_rsa.pub\") }}"'
+
+cat > ~/.ssh/config << 'EOF'
+Host *
+  StrictHostKeyChecking no
+EOF
+
+cat > playbook.yml << 'EOF'
+- name: playbook for qpid-dispatch qdrouterd
+  hosts: localhost
+  become: true
+
+  tasks:
+  - name: Insert/Update router configuration stanza in /etc/qpid-dispatch/qdrouterd.conf
+    blockinfile:
+      path: /etc/qpid-dispatch/qdrouterd.conf
+      backup: yes
+      insertafter: "mode: standalone"
+      block: |4
+              id: gpteRoute
+              workerThreads: 4
+EOF
+
+ansible-playbook -i ~/inventory playbook.yml
+
+## Save your changes to /etc/qpid-dispatch/qdrouterd.conf
+sudo cat > /etc/qpid-dispatch/qdrouterd.conf << 'EOF'
+router {
+    mode: standalone
+    id: gpteRoute
+    workerThreads: 4
+}
+
+listener {
+    host: 0.0.0.0
+    port: 2009
+    authenticatePeer: no
+    role: normal
+    saslMechanisms: ANONYMOUS
+}
+
+connector {
+    name: brokerConnector
+    host: localhost
+    port: 5672
+    role: route-container
+    allowRedirect: no
+}
+
+address {
+    prefix: gpteAddress
+    waypoint: yes
+}
+
+autoLink {
+    addr: gpteAddress
+    dir: in
+    connection: brokerConnector
+}
+
+autoLink {
+    addr: gpteAddress
+    dir: out
+    connection: brokerConnector
+}
+EOF
+
+## Start the qpid-dispatch router
+sudo systemctl restart qdrouterd.service
+
+## Verify that the dispatch-router is listening on the desired socket (0.0.0.0:2009)
+sudo netstat -ntuapee | grep LISTEN | grep 2009
+
+## View the connection status and statistics of the running qdrouterd service
+qdstat -b 0.0.0.0:2009 -c
+
+## View and tail the latest logs from the qdrouterd service
+sudo journalctl -u qdrouterd -n 200 -f
+
+# Publish and Subscribe JMS messages Using AMQP
+## From anywhere on the file system of your lab VM, start the websockify proxy
+websockify 0.0.0.0:5673 0.0.0.0:2009 &
+
+## Send and Consume JMS Messages Using AMQP
+## change to the simple-jms-request-response project directory
+cd /opt/router-dev/amqp-dispatch-workshop/simple-jms-request-response
+
+## Produce and consume a single JMS message by communicating via AMQP to the dispatch-router that listens on 0.0.0.0:2009
+mvn clean package exec:java \
+          -Dexec.mainClass="org.apache.activemq.artemis.jms.example.AMQPQueueExample" \
+          -DQUEUE_NAME="gpteAddress" \
+          -DCONNECTION_URL="amqp://$HOSTNAME:2009" \
+          -Dexec.cleanupDaemonThreads=false
+```

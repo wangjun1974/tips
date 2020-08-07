@@ -1062,3 +1062,27 @@ mvn clean package exec:java \
           -DCONNECTION_URL="amqp://$HOSTNAME:2009" \
           -Dexec.cleanupDaemonThreads=false
 ```
+
+```
+# Router Network Pattern Lab
+# Review router-network Project
+cd /opt/router-dev/amqp-dispatch-workshop/router-network
+
+# start router network
+./start.sh
+
+# View running containers
+podman ps -a
+
+# Make sure that router1 is bound to port 2009
+sudo netstat -ntuapee | grep LISTEN | grep 2009
+
+# Use AMQP Clients
+# start qpid client receiver
+IP=$(ip addr | grep 'state UP' -A2 | tail -n1 | awk '{print $2}' | cut -f1  -d'/')
+podman run -e QPID_LOG_ENABLE=trace+  --add-host=router4:$IP -t -i scholzj/qpid-cpp:latest qpid-receive -b router4:5672 --connection-options "{protocol: amqp1.0}" -a "'/myAddress'" -m 1 -f --print-headers yes
+
+# start qpid client sender
+IP=$(ip addr | grep 'state UP' -A2 | tail -n1 | awk '{print $2}' | cut -f1  -d'/')
+podman run -e QPID_LOG_ENABLE=trace --add-host=router1:$IP -t -i scholzj/qpid-cpp:latest qpid-send -b router1:5672 --connection-options "{protocol: amqp1.0}" -a "'/myAddress'" -m 1
+```

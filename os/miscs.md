@@ -1631,5 +1631,8 @@ https://github.com/openshift/origin/issues/11963
 https://dzone.com/articles/adding-a-github-webhook-in-your-jenkins-pipeline
 
 ### Kata Container 的架构介绍
-https://www.cnblogs.com/xiaochina/p/12812158.html
+https://www.cnblogs.com/xiaochina/p/12812158.html<br>
+https://blog.csdn.net/feeltouch/article/details/88631193<br>
 
+### CRI-O 1.0 的介绍
+https://www.redhat.com/en/blog/introducing-cri-o-10

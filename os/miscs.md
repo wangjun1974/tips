@@ -1619,3 +1619,10 @@ qpc scan job --name scan_rhel | grep status
 # download scan report, scan job id is from output of command 'qpc scan list'
 qpc report download --scan-job 1 --output-file=~/scan_output_rhel.tar.gz
 ```
+
+### OpenShift 下如何实际路由分片
+OpenShift Router Sharding for Production and Development Traffic<br>
+https://www.openshift.com/blog/openshift-router-sharding-for-production-and-development-traffic
+
+### OpenShift 下 Custom 类型的 Deployment Strategy 的例子
+https://github.com/openshift/origin/issues/11963

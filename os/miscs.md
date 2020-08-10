@@ -1636,3 +1636,6 @@ https://blog.csdn.net/feeltouch/article/details/88631193<br>
 
 ### CRI-O 1.0 的介绍
 https://www.redhat.com/en/blog/introducing-cri-o-10
+
+### DEFCON 28 Safe Mode Presentations
+https://www.youtube.com/playlist?list=PL9fPq3eQfaaBk9DFnyJRpxPi8Lz1n7cFv

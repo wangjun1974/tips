@@ -1626,3 +1626,7 @@ https://www.openshift.com/blog/openshift-router-sharding-for-production-and-deve
 
 ### OpenShift 下 Custom 类型的 Deployment Strategy 的例子
 https://github.com/openshift/origin/issues/11963
+
+### Github webhook 与 Jenkins 的集成
+https://dzone.com/articles/adding-a-github-webhook-in-your-jenkins-pipeline
+

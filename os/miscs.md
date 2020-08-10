@@ -1630,3 +1630,6 @@ https://github.com/openshift/origin/issues/11963
 ### Github webhook 与 Jenkins 的集成
 https://dzone.com/articles/adding-a-github-webhook-in-your-jenkins-pipeline
 
+### Kata Container 的架构介绍
+https://www.cnblogs.com/xiaochina/p/12812158.html
+

@@ -1086,3 +1086,56 @@ podman run -e QPID_LOG_ENABLE=trace+  --add-host=router4:$IP -t -i scholzj/qpid-
 IP=$(ip addr | grep 'state UP' -A2 | tail -n1 | awk '{print $2}' | cut -f1  -d'/')
 podman run -e QPID_LOG_ENABLE=trace --add-host=router1:$IP -t -i scholzj/qpid-cpp:latest qpid-send -b router1:5672 --connection-options "{protocol: amqp1.0}" -a "'/myAddress'" -m 1
 ```
+
+```
+psql -Usampledb
+sampledb-> \d
+sampledb-> \x
+sampledb-> \df+ add_lead
+sampledb=> \df+ add_lead                                                                                                                 
+List of functions                                                                                                                        
+-[ RECORD 1 ]-------+--------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------                             
+Schema              | sampledb                                                                                                           
+Name                | add_lead                                                                                                           
+Result data type    | void                                                                                                               
+Argument data types | first_and_last_name character varying, company character varying, phone character varying, email character varying,
+ lead_source character varying, lead_status character varying, rating character varying                                                  
+Type                | normal                                                                                                             
+Volatility          | volatile
+Parallel            | unsafe
+Owner               | sampledb
+Security            | invoker
+Access privileges   | 
+Language            | plpgsql
+Source code         |             
+                                                                                                            +
+                    |   DECLARE   
+                                                                                                            +
+                    |     task varchar;                             
+                                                                                                            +
+                    |   BEGIN     
+                                                                                                            +
+                    |     task := concat(lead_status || ' ', 'Lead: Please contact ', first_and_last_name, ' from ' || company, ' via pho
+ne: ' || phone, ' via email: ' || email, '. ', 'Lead is from ' || lead_source, '. Rating: ' || rating, '.');+
+                    |     insert into todo(task,completed) VALUES (task,0);                                                              
+                                                                                                            +
+                    |   END;      
+                                                                                                            +
+                                                                                                            +
+                    |   
+Description         | 
+sampledb=> select * from todo ;     
+-[ RECORD 1 ]-------------------------------------------------------------------------------------------------------------
+id        | 1
+task      | send email to jwang@redhat.com
+completed | 0
+-[ RECORD 2 ]-------------------------------------------------------------------------------------------------------------
+id        | 2
+task      | Open - Not Contacted Lead: Please contact Wang from Noexist via phone: 60000000 via email: a@aaa.com. .
+completed | 0
+-[ RECORD 3 ]-------------------------------------------------------------------------------------------------------------
+id        | 3
+task      | Open - Not Contacted Lead: Please contact Pang from Noexist via phone: 60000000 via email: b@aaa.com. .
+completed | 0
+```

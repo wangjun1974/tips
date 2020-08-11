@@ -1651,3 +1651,9 @@ https://access.redhat.com/documentation/en-us/red_hat_amq/7.7/html-single/using_
 
 ### OpenShift 4.5.3 在 Openstack 上的 UPI 离线安装
 https://github.com/davidsajare/david-share/blob/master/OpenShift/OpenShift%204.5.3%E5%9C%A8Openstack%E4%B8%8A%E7%9A%84UPI%E7%A6%BB%E7%BA%BF%E5%AE%89%E8%A3%85.txt
+
+### Mac OS iostat and top
+```
+iostat -d -K 1
+top -o cpu
+```

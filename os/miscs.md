@@ -1645,3 +1645,6 @@ https://github.com/broskos/dell-lab/blob/16.1-ExternalCeph/templates/network_dat
 
 ### OpenShift 4 如何改变 MTU
 https://access.redhat.com/solutions/5307301
+
+### AMQ JMS Client 启用分布式跟踪
+https://access.redhat.com/documentation/en-us/red_hat_amq/7.7/html-single/using_the_amq_jms_client/index#enabling_distributed_tracing

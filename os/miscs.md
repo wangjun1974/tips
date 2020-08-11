@@ -1639,3 +1639,9 @@ https://www.redhat.com/en/blog/introducing-cri-o-10
 
 ### DEFCON 28 Safe Mode Presentations
 https://www.youtube.com/playlist?list=PL9fPq3eQfaaBk9DFnyJRpxPi8Lz1n7cFv
+
+### OSP 16.1 - new layout of the network_yaml file
+https://github.com/broskos/dell-lab/blob/16.1-ExternalCeph/templates/network_data.yaml
+
+### OpenShift 4 如何改变 MTU
+https://access.redhat.com/solutions/5307301

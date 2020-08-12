@@ -1657,3 +1657,6 @@ https://github.com/davidsajare/david-share/blob/master/OpenShift/OpenShift%204.5
 iostat -d -K 1
 top -o cpu
 ```
+
+### 如何理解 Kafka 与传统消息队列解决方案
+https://www.confluent.io/blog/apache-kafka-vs-enterprise-service-bus-esb-friends-enemies-or-frenemies/

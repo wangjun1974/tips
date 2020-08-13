@@ -1660,3 +1660,6 @@ top -o cpu
 
 ### 如何理解 Kafka 与传统消息队列解决方案
 https://www.confluent.io/blog/apache-kafka-vs-enterprise-service-bus-esb-friends-enemies-or-frenemies/
+
+### Red Hat Network Adapter Fast Datapath Feature Support Matrix
+https://access.redhat.com/articles/3538141

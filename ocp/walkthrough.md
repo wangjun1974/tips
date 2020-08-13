@@ -1139,3 +1139,8 @@ id        | 3
 task      | Open - Not Contacted Lead: Please contact Pang from Noexist via phone: 60000000 via email: b@aaa.com. .
 completed | 0
 ```
+
+```
+# steps for install apache maven
+http://maven.apache.org/install.html
+```

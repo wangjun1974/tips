@@ -1143,4 +1143,10 @@ completed | 0
 ```
 # steps for install apache maven
 http://maven.apache.org/install.html
+
+# Install Maven for Fuse
+https://access.redhat.com/documentation/en-us/red_hat_fuse/7.5/html/installing_on_jboss_eap/set-up-maven-locally
+
+# Install SoapUI
+https://www.soapui.org/downloads/soapui/source-forge.html
 ```

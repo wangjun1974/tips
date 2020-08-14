@@ -1663,3 +1663,16 @@ https://www.confluent.io/blog/apache-kafka-vs-enterprise-service-bus-esb-friends
 
 ### Red Hat Network Adapter Fast Datapath Feature Support Matrix
 https://access.redhat.com/articles/3538141
+
+### OCP 3.11 config map 覆盖 AMQ 配置
+```
+You can mount the /opt/amq/conf folder as a configmap.Then, you can edit the activemq.xml directly from the configmap.
+
+For instance:
+
+mkdir conf & cd conf
+oc rsync amq63-amq-1-7jc97:/opt/amq/conf .
+oc create configmap amq63-conf --from-file=. 
+#configmap/broker-etc created
+oc set volume dc/amq63-amq --overwrite --add --name=amq63-conf --type=configmap --configmap-name=amq63-conf --mount-path=/opt/amq/conf
+```

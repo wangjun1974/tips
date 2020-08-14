@@ -1676,3 +1676,6 @@ oc create configmap amq63-conf --from-file=.
 #configmap/broker-etc created
 oc set volume dc/amq63-amq --overwrite --add --name=amq63-conf --type=configmap --configmap-name=amq63-conf --mount-path=/opt/amq/conf
 ```
+
+### OCP4 安装后需要完成的一些任务
+https://post-install-config--ocpdocs.netlify.app/openshift-enterprise/latest/post_installation_configuration/cluster-tasks.html

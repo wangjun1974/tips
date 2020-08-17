@@ -1682,3 +1682,103 @@ https://post-install-config--ocpdocs.netlify.app/openshift-enterprise/latest/pos
 
 ### 在 OpenShift 下如何为容器指定可定制化的 Satellite 软件仓库
 https://github.com/atgreen/howto-change-container-yum-source
+
+### 清理 Satellite 镜像仓库不完整镜像内容的方法
+https://access.redhat.com/solutions/3363761
+
+清理脚本
+```
+#!/bin/bash
+
+docker_v2_dir="/var/lib/pulp/published/docker/v2/master/"
+docker_repo=$1
+#blobs missing on disk
+tmp_mblobs=$(mktemp /tmp/mblob.XXXX)
+#blobs with checksum errors
+tmp_cblobs=$(mktemp /tmp/cblob.XXXX)
+
+rm -f /tmp/cblob
+rm -f /tmp/mblob
+
+
+function Usage {
+
+echo "Usage: $0 $organization-$docker_repo_name"
+echo "  Example: $0 AcmeCorp-openshift3_metrics-hawkular"
+echo ""
+        exit 1
+}
+
+if [ $# -eq 0 ]    
+then
+        Usage   
+fi
+
+txtbld=$(tput bold)             # bold
+bldred=${txtbld}$(tput setaf 1) # red
+bldylw=${txtbld}$(tput setaf 3) # yellow
+bldgrn=${txtbld}$(tput setaf 2) # green
+txtrst=$(tput sgr0)             # reset
+
+function safe {
+        pass=${bldgrn}$1${txtrst}
+        echo -e "####################\n${pass}  \n####################\n\n"
+}
+
+function crit {
+        crit=${bldred}$1${txtrst}
+        echo -e "####################\n${crit}  \n#################\n\n"
+}
+
+function warn {
+        warn=${bldylw}$1${txtrst}
+        echo -e "####################\n${warn}  \n#################\n\n"
+}
+
+
+
+safe "Checking Docker repo $docker_repo for invalid blobs, that might take time !!!"
+#Follow symlinks
+for blob in `find $docker_v2_dir/$docker_repo/*/blobs -type l -exec readlink -m {} ';'`;do
+  #File doesn't exist
+  if [ ! -f $blob ] ; then
+      crit "File $blob is missing on disk"
+      echo $blob >> $tmp_mblobs
+  #File exists
+  elif [ -f $blob ] ; then
+      #checksum is correct?
+      ondisk_chksum=`sha256sum $blob | awk '{print$1}'`
+      #is this the best way?
+      fname_chksum=`echo $blob| cut -d: -f2`
+      if [ "$ondisk_chksum" != "$fname_chksum" ];then
+        crit "File $blob sha256sum is wrong"
+        echo $blob >> $tmp_cblobs
+      fi
+  fi
+done
+
+
+if [ -s $tmp_cblobs ] || [ -s $tmp_mblobs ] ; then
+    sort $tmp_cblobs|uniq > /tmp/cblob
+    sort $tmp_mblobs|uniq > /tmp/mblob
+
+    for blob in `cat /tmp/cblob`;do
+    warn "Removing $blob entry from mongoDB"
+    mongo pulp_database --eval "db.units_docker_blob.remove({_storage_path: \"$blob\"})"
+    done
+
+    for blob in `cat /tmp/mblob`;do
+    warn "Removing $blob entry from mongoDB"
+    mongo pulp_database --eval "db.units_docker_blob.remove({_storage_path: \"$blob\"})"
+    done
+
+    #cleanup
+    rm -f /tmp/mblob
+    rm -f /tmp/cblob
+    rm -f $tmp_cblobs
+    rm -f $tmp_mblobs
+    safe "Please proceed to satellite WebUI and sync docker repo $docker_repo"
+else
+    safe "Repo $docker_repo looks fine!!"
+fi
+```

@@ -1679,3 +1679,6 @@ oc set volume dc/amq63-amq --overwrite --add --name=amq63-conf --type=configmap 
 
 ### OCP4 安装后需要完成的一些任务
 https://post-install-config--ocpdocs.netlify.app/openshift-enterprise/latest/post_installation_configuration/cluster-tasks.html
+
+### 在 OpenShift 下如何为容器指定可定制化的 Satellite 软件仓库
+https://github.com/atgreen/howto-change-container-yum-source

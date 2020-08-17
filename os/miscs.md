@@ -1789,3 +1789,9 @@ https://www.youtube.com/watch?v=UopGqYs0PKA&t=7s<br>
 
 ### Github Pull Request(PR) 的含义
 https://hackernoon.com/how-to-git-pr-from-the-command-line-a5b204a57ab1
+
+### OCP4 fluentd 多行日志 RFE
+https://docs.openshift.com/container-platform/4.5/architecture/architecture-installation.html#unmanaged-operators_architecture-installation<br>
+https://issues.redhat.com/browse/RFE-706<br>
+
+

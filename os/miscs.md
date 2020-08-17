@@ -1787,3 +1787,5 @@ fi
 https://www.youtube.com/watch?v=UopGqYs0PKA&t=7s<br>
 ![imagerbuilder user examples](https://github.com/wangjun1974/tips/blob/master/os/pics/imagebuild-adduser-example1.png)
 
+### Github Pull Request(PR) 的含义
+https://hackernoon.com/how-to-git-pr-from-the-command-line-a5b204a57ab1

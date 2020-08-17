@@ -1785,5 +1785,5 @@ fi
 
 ### 关于 imagebuilder 的视频
 https://www.youtube.com/watch?v=UopGqYs0PKA&t=7s<br>
-![](os/pics/imagebuild-adduser-example1.png)
+![imagerbuilder user examples](https://github.com/wangjun1974/tips/blob/master/os/pics/imagebuild-adduser-example1.png)
 

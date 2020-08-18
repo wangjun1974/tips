@@ -1870,3 +1870,29 @@ https://access.redhat.com/documentation/en-us/openshift_container_platform/4.5/
 ### RHEL 是如何做到 ABI 兼容性的
 https://access.redhat.com/articles/rhel-abi-compatibility<br>
 https://mojo.redhat.com/docs/DOC-1080350
+
+### 添加用户
+```
+# gen encrypt passwd
+python -c "import crypt, getpass; print(crypt.crypt(getpass.getpass(), crypt.METHOD_SHA512))"
+
+# gen chpasswd format file in form <user>:<pass>
+cat > /tmp/pass << 'EOF'
+tester:$6$WPuEqIRfSyKjwY6e$3eLkZXDNI6Ysn9412nF4tCgvRMMhHr0Mfx19Hw82tJdC/yOpS3c4WKk1r4c0aVY4qO.35s0101Uxme9hrHv6Q1
+EOF
+
+# Apply password by run command chpasswd
+cat /tmp/pass | chpasswd -e
+```
+
+```
+useradd -m tester
+passwd tester
+
+echo "tester ALL=(root) NOPASSWD:ALL" | sudo tee -a /etc/sudoers.d/tester
+sudo chmod 0440 /etc/sudoers.d/tester
+
+su - tester
+
+python -c "import crypt, getpass; print(crypt.crypt(getpass.getpass(), crypt.METHOD_SHA512))"
+```

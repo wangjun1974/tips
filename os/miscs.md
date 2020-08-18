@@ -1856,3 +1856,9 @@ There are 2 programs which provide 'java'.
 
 Enter to keep the current selection[+], or type selection number: 2
 ```
+
+### 查看 openstack stack 失效资源
+```
+openstack stack resource -n 5 list overcloud | grep -v COMPLETE
+openstack stack failures list overcloud
+```

@@ -1843,3 +1843,16 @@ https://docs.google.com/presentation/d/1LMqYeXoltwjeU8G8kx9DDch8JF8ysf-SJV6UMNef
 Killing Xvnc process ID 7854
 ```
 
+### RHEL7 如何设置默认 Java
+https://access.redhat.com/documentation/en-us/jboss_enterprise_application_platform/5/html/installation_guide/sect-use_alternatives_to_set_default_jdk
+```
+/usr/sbin/alternatives --config java
+There are 2 programs which provide 'java'.
+
+  Selection    Command
+-----------------------------------------------
+*+ 1           java-1.8.0-openjdk.x86_64 (/usr/lib/jvm/java-1.8.0-openjdk-1.8.0.262.b10-0.el7_8.x86_64/jre/bin/java)
+   2           java-11-openjdk.x86_64 (/usr/lib/jvm/java-11-openjdk-11.0.8.10-0.el7_8.x86_64/bin/java)
+
+Enter to keep the current selection[+], or type selection number: 2
+```

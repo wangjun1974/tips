@@ -1866,3 +1866,6 @@ openstack stack failures list overcloud
 ### OpenShift 4.5 文档链接
 https://docs.openshift.com/container-platform/4.5/welcome/index.html<br>
 https://access.redhat.com/documentation/en-us/openshift_container_platform/4.5/
+
+### RHEL 是如何做到 ABI 兼容性的
+https://mojo.redhat.com/docs/DOC-1080350

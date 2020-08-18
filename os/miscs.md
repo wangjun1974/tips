@@ -1862,3 +1862,7 @@ Enter to keep the current selection[+], or type selection number: 2
 openstack stack resource -n 5 list overcloud | grep -v COMPLETE
 openstack stack failures list overcloud
 ```
+
+### OpenShift 4.5 文档链接
+https://docs.openshift.com/container-platform/4.5/welcome/index.html<br>
+https://access.redhat.com/documentation/en-us/openshift_container_platform/4.5/

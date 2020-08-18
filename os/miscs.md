@@ -1822,3 +1822,9 @@ A: https://archive.istio.io/v1.4/docs/reference/config/istio.mesh.v1alpha1/
 There's a table there which describes rootNamespace
 but that's general and leaves the behaviour to the other sections, like the Authorization Policy
 ```
+
+### OpenShift Active Directory LDAP 例子
+https://examples.openshift.pub/authentication/activedirectory-ldap/
+
+### OpenShift 4 运维
+在 Google Chat OpenShift 4 里找 “OCP 4.x Day 2 Operations”

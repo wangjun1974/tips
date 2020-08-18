@@ -1794,4 +1794,31 @@ https://hackernoon.com/how-to-git-pr-from-the-command-line-a5b204a57ab1
 https://docs.openshift.com/container-platform/4.5/architecture/architecture-installation.html#unmanaged-operators_architecture-installation<br>
 https://issues.redhat.com/browse/RFE-706<br>
 
+### Istio 如何实现 Deny All 策略
+https://www.stackrox.com/post/2019/08/istio-security-basics-running-microservices-on-zero-trust-networks/
 
+几个重要的讨论过程
+```
+You can set authz policy to deny all (https://istio.io/latest/docs/reference/config/security/authorization-policy/) for a specific workload...
+
+yep, that's what I'm saying. mTLS + authz. We cover pretty much all of it in the DO328 course that we recently wrote. Take a look at ch08, security. Inside the course we also specify how to restrict egress, though I'm not sure which chapter that is.
+
+'Authorization Policy scope (target) is determined by “metadata/namespace” and an optional “selector”. - “metadata/namespace” tells which namespace the policy applies. If set to root namespace, the policy applies to all namespaces in a mesh. - workload “selector” can be used to further restrict where a policy applies.'
+
+Q: What is a _root_ ns? Is that a namespace literally called `root`, being a magic value for SM? Or are you talking about a future feature, e.g. https://kubernetes.io/blog/2020/08/14/introducing-hierarchical-namespaces/ ?
+A: it's the control plane namespace
+
+Q: Authz is ns-bound unless it's in the control plane, in which case it influences the whole SM? If that's the case, is it documented somewhere? Because this sounds like an unexpected behavior to me.
+A: Set .global.configRootNamespace to define it, by default it is the control plane namespace
+
+Q: Could you point me to the docs please? I don't see it in https://access.redhat.com/documentation/en-us/openshift_container_platform/4.5/html-single/service_mesh/index
+A: See https://archive.istio.io/v1.4/docs/reference/config/security/authorization-policy/
+
+Q: Which also doesn't mention `configRootNamespace` though..?
+A: That's the AuthorizationPolicy section which describes the behaviour to be expected with policies
+
+Q: Yep, that I understand. But I just don't know where we missed the magic behavior of root namespace, because that's important and I can't find it anywhere.
+A: https://archive.istio.io/v1.4/docs/reference/config/istio.mesh.v1alpha1/
+There's a table there which describes rootNamespace
+but that's general and leaves the behaviour to the other sections, like the Authorization Policy
+```

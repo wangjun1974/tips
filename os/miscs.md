@@ -1828,3 +1828,18 @@ https://examples.openshift.pub/authentication/activedirectory-ldap/
 
 ### OpenShift 4 运维
 在 Google Chat OpenShift 4 里找 “OCP 4.x Day 2 Operations”
+
+### RHEL CoreOS 相关资料
+https://docs.google.com/presentation/d/1lxE7ArDTv-O3cK2QTUKBYis4tVolqQ863dgVSRg_Qbg/edit#slide=id.g518d9a1131_5_0<br>
+https://docs.google.com/presentation/d/1LMqYeXoltwjeU8G8kx9DDch8JF8ysf-SJV6UMNefnxY/edit<br>
+
+### RHEL7 升级后 vnc 报错的处理
+如果报如下错误，可尝试更新系统，然后重启系统
+```
+ vncext:      VNC extension running!
+ vncext:      Listening for VNC connections on all interface(s), port 5903
+ vncext:      created VNC server for screen 0
+/root/.vnc/xstartup: line 5:  7863 Terminated              /etc/X11/xinit/xinitrc
+Killing Xvnc process ID 7854
+```
+

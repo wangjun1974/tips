@@ -1896,3 +1896,6 @@ su - tester
 
 python -c "import crypt, getpass; print(crypt.crypt(getpass.getpass(), crypt.METHOD_SHA512))"
 ```
+
+### 在 KubeVirt 下如何导入虚拟机磁盘模版并且从虚拟机磁盘模版创建虚拟机
+https://kubevirt.io/2020/KubeVirt-VM-Image-Usage-Patterns.html

@@ -1946,3 +1946,12 @@ This App enforces the Developer Certificate of Origin (DCO) on Pull Requests. It
 
 ### 关于 OpenShift Infra Node 的视频
 https://www.youtube.com/watch?v=9VNjDh1vPXI&feature=youtu.be&t=262
+
+### reposync and modules on RHEL8
+https://www.reddit.com/r/redhat/comments/d5e1w6/reposync_and_modules_on_rhel8/
+```
+reposync --download-path="$localPath" --download-metadata --repoid=$i  --setopt=repo_id.module_hotfixes=1
+```
+
+### How to deploy Red Hat Enterprise Linux 8, really fast
+https://redhatnordicssa.github.io/rhel8-really-fast

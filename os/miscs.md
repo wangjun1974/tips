@@ -1939,3 +1939,7 @@ rpm-ostree combines libostree (an image system), with libdnf (a package system),
 |                                           |        |                                         |
 +-------------------------------------------+        +------------------------------
 ```
+
+### 关于 DCO - Developer Certificate of Origin
+https://github.com/apps/dco<br>
+This App enforces the Developer Certificate of Origin (DCO) on Pull Requests. It requires all commit messages to contain the Signed-off-by line with an email address that matches the commit author.<br>

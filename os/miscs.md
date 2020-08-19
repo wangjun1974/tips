@@ -1909,3 +1909,33 @@ https://phpipam.net/
 ```
 oc get csv -n openshift-storage -o json | jq '.items[0].status.phase'```
 ```
+
+### rpm-ostree相关信息
+https://rpm-ostree.readthedocs.io/en/latest/<br>
+What is rpm-ostree?<br>
+rpm-ostree is a hybrid image/package system. It uses libOSTree as a base image format, and accepts RPM on both the client and server side, sharing code with the dnf project; specifically libdnf.
+
+https://github.com/coreos/rpm-ostree<br>
+rpm-ostree combines libostree (an image system), with libdnf (a package system), bringing many of the benefits of both together.
+
+```
+                         +-----------------------------------------+
+                         |                                         |
+                         |       rpm-ostree (daemon + CLI)         |
+                  +------>                                         <---------+
+                  |      |     status, upgrade, rollback,          |         |
+                  |      |     pkg layering, initramfs --enable    |         |
+                  |      |                                         |         |
+                  |      +-----------------------------------------+         |
+                  |                                                          |
+                  |                                                          |
+                  |                                                          |
++-----------------|-------------------------+        +-----------------------|-----------------+
+|                                           |        |                                         |
+|         libostree (image system)          |        |            libdnf (pkg system)          |
+|                                           |        |                                         |
+|   C API, hardlink fs trees, system repo,  |        |    ties together libsolv (SAT solver)   |
+|   commits, atomic bootloader swap         |        |    with librepo (RPM repo downloads)    |
+|                                           |        |                                         |
++-------------------------------------------+        +------------------------------
+```

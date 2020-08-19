@@ -1899,3 +1899,13 @@ python -c "import crypt, getpass; print(crypt.crypt(getpass.getpass(), crypt.MET
 
 ### 在 KubeVirt 下如何导入虚拟机磁盘模版并且从虚拟机磁盘模版创建虚拟机
 https://kubevirt.io/2020/KubeVirt-VM-Image-Usage-Patterns.html
+
+### 开源 IPAM 
+一个开源的IP地址管理系统
+https://phpipam.net/
+
+### 在创建 OCS4 StorageCluster 之前需要满足的条件
+以下命令输出的状态必须是 'Successed'
+```
+oc get csv -n openshift-storage -o json | jq '.items[0].status.phase'```
+```

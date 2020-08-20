@@ -1150,3 +1150,52 @@ https://access.redhat.com/documentation/en-us/red_hat_fuse/7.5/html/installing_o
 # Install SoapUI
 https://www.soapui.org/downloads/soapui/source-forge.html
 ```
+
+```
+nmcli con mod 'ens3' ipv4.method 'manual' ipv4.address '10.66.208.130/24' ipv4.gateway '10.66.208.254' ipv4.dns '10.64.63.6'
+
+cat > /etc/yum.repos.d/public.repo << 'EOF'
+[rhel-8-for-x86_64-baseos-rpms]
+name=rhel-8-for-x86_64-baseos-rpms
+baseurl=http://10.66.208.158/rhel8osp/rhel-8-for-x86_64-baseos-rpms/
+gpgcheck=0
+enabled=1
+
+[rhel-8-for-x86_64-appstream-rpms]
+name=rhel-8-for-x86_64-appstream-rpms
+baseurl=http://10.66.208.158/rhel8osp/rhel-8-for-x86_64-appstream-rpms/
+gpgcheck=0
+enabled=1
+
+[ansible-2.8-for-rhel-8-x86_64-rpms]
+name=ansible-2.8-for-rhel-8-x86_64-rpms
+baseurl=http://10.66.208.158/rhel8osp/ansible-2.8-for-rhel-8-x86_64-rpms/
+gpgcheck=0
+enabled=1
+EOF
+
+cat > inventory << 'EOF'
+[tower]
+localhost ansible_connection=local
+
+[database]
+localhost ansible_connection=local
+
+[all:vars]
+admin_password='redhat'
+
+pg_host='localhost'
+pg_port='5432'
+
+pg_database='awx'
+pg_username='awx'
+pg_password='redhat'
+
+rabbitmq_username=tower
+rabbitmq_password='redhat'
+rabbitmq_cookie=cookiemonster
+
+nginx_http_port='80'
+nginx_https_port='443'
+EOF
+```

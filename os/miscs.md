@@ -1953,5 +1953,40 @@ https://www.reddit.com/r/redhat/comments/d5e1w6/reposync_and_modules_on_rhel8/
 reposync --download-path="$localPath" --download-metadata --repoid=$i  --setopt=repo_id.module_hotfixes=1
 ```
 
-### How to deploy Red Hat Enterprise Linux 8, really fast
+### RHEL8 上同步离线仓库的方法
 https://redhatnordicssa.github.io/rhel8-really-fast
+```
+#!/bin/bash
+
+localPath="/repos/rhel8osp/"
+fileConn="/getPackage/"
+
+## RHEL 8 OSP
+# rhel-8-for-x86_64-baseos-rpms
+# rhel-8-for-x86_64-appstream-rpms
+
+for i in rhel-8-for-x86_64-baseos-rpms rhel-8-for-x86_64-appstream-rpms 
+do
+
+  rm -rf "$localPath"$i/repodata
+  echo "sync channel $i..."
+  reposync -n --delete --download-path="$localPath" --repoid $i --downloadcomps --download-metadata
+
+  echo "create repo $i..."
+  #createrepo "$localPath"$i
+  time createrepo -g $(ls "$localPath"$i/repodata/*comps.xml) --update --skip-stat --cachedir /tmp/empty-cache-dir "$localPath"$i
+
+done
+
+exit 0
+```
+
+### RHEL8 reposync 的一个问题解决
+--newest-only does not download the latest package<br>
+https://bugzilla.redhat.com/show_bug.cgi?id=1833074
+```
+2. After using "reposync -n --download-metadata --repo=<repo-id>", when a package is identified, you can download the latest and put it in the repository with no further changes. The repodata already thinks the package is there. Using rhsnd as my example.
+
+    # yumdownloader rhnsd
+    # mv rhnsd-5.0.35-3.module+el8+2754+6a08e8f4.x86_64.rpm <repo-id>/Packages/r/
+```

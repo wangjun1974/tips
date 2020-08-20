@@ -1990,3 +1990,38 @@ https://bugzilla.redhat.com/show_bug.cgi?id=1833074
     # yumdownloader rhnsd
     # mv rhnsd-5.0.35-3.module+el8+2754+6a08e8f4.x86_64.rpm <repo-id>/Packages/r/
 ```
+
+### DNF module 相关命令
+https://docs.fedoraproject.org/en-US/modularity/installing-modules/
+```
+  <modular command>     disable: disable a module with all its streams
+                        enable: enable a module stream
+                        info: print detailed information about a module
+                        install: install a module profile including its packages
+                        list: list all module streams, profiles and states
+                        provides: list modular packages
+                        remove: remove installed module profiles and their packages
+                        repoquery: list packages belonging to a module
+                        reset: reset a module
+                        update: update packages associated with an active stream
+
+dnf module list
+...
+Hint: [d]efault, [e]nabled, [x]disabled, [i]nstalled
+
+dnf module list | grep nginx
+nginx                1.14 [d]     common [d]                               nginx webserver                                                             
+nginx                1.16         common [d]                               nginx webserver                                                             
+dnf module list | grep nginx
+...
+nginx                1.14 [d]     common [d]                               nginx webserver                                                             
+nginx                1.16 [e]     common [d]                               nginx webserver     
+
+dnf module install nginx:1.16
+...
+
+dnf module list | grep nginx
+...
+nginx                1.14 [d]     common [d]                               nginx webserver                                                             
+nginx                1.16 [e]     common [d] [i]                           nginx webserver      
+```

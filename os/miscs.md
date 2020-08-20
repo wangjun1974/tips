@@ -2025,3 +2025,6 @@ dnf module list | grep nginx
 nginx                1.14 [d]     common [d]                               nginx webserver                                                             
 nginx                1.16 [e]     common [d] [i]                           nginx webserver      
 ```
+
+### OSP13 with OVS/DPDK templates
+https://gitlab.consulting.redhat.com/bajmera/osp13-hci-nfvi/-/blob/master/templates/nic-configs/computeovsdpdksriov.yaml

@@ -1154,6 +1154,7 @@ https://www.soapui.org/downloads/soapui/source-forge.html
 ```
 nmcli con mod 'ens3' ipv4.method 'manual' ipv4.address '10.66.208.130/24' ipv4.gateway '10.66.208.254' ipv4.dns '10.64.63.6'
 
+# rhel8
 cat > /etc/yum.repos.d/public.repo << 'EOF'
 [rhel-8-for-x86_64-baseos-rpms]
 name=rhel-8-for-x86_64-baseos-rpms
@@ -1173,6 +1174,25 @@ baseurl=http://10.66.208.158/rhel8osp/ansible-2.8-for-rhel-8-x86_64-rpms/
 gpgcheck=0
 enabled=1
 EOF
+
+# rhel7
+cat > /etc/yum.repos.d/public.repo << 'EOF'
+[rhel-7-server-rpms]
+name=rhel-7-server-rpms
+baseurl=http://10.66.208.115/rhel7osp/rhel-7-server-rpms/
+gpgcheck=0
+enabled=1
+
+[rhel-7-server-extras-rpms]
+name=rhel-7-server-extras-rpms
+baseurl=http://10.66.208.115/rhel7osp/rhel-7-server-extras-rpms/
+gpgcheck=0
+enabled=1
+EOF
+
+# rhel7
+yum install -y dnf
+dnf update -y
 
 cat > inventory << 'EOF'
 [tower]

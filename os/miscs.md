@@ -2092,3 +2092,6 @@ EOF
 # 执行 setup 脚本
 ./setup 
 ```
+### RHEL7 使用 dnf 的例子
+https://blog.remirepo.net/post/2019/12/03/Install-PHP-7.4-on-CentOS-RHEL-or-Fedora<br>
+https://www.vultr.com/docs/use-dnf-to-manage-software-packages-on-centos-7<br>

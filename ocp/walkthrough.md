@@ -1152,7 +1152,17 @@ https://www.soapui.org/downloads/soapui/source-forge.html
 ```
 
 ```
+# rhel8
 nmcli con mod 'ens3' ipv4.method 'manual' ipv4.address '10.66.208.130/24' ipv4.gateway '10.66.208.254' ipv4.dns '10.64.63.6'
+
+# rhel7
+nmcli con mod 'eth0' ipv4.method 'manual' ipv4.address '10.66.208.130/24' ipv4.gateway '10.66.208.254' ipv4.dns '10.64.63.6'
+
+# disconnected rhel8
+nmcli con mod 'ens3' ipv4.method 'manual' ipv4.address '10.66.208.130/24' ipv4.gateway '10.66.208.254'
+
+# disconnected rhel7
+nmcli con mod 'eth0' ipv4.method 'manual' ipv4.address '10.66.208.130/24' ipv4.gateway '10.66.208.254'
 
 # rhel8
 cat > /etc/yum.repos.d/public.repo << 'EOF'
@@ -1183,17 +1193,45 @@ baseurl=http://10.66.208.115/rhel7osp/rhel-7-server-rpms/
 gpgcheck=0
 enabled=1
 
-[rhel-7-server-extras-rpms]
-name=rhel-7-server-extras-rpms
-baseurl=http://10.66.208.115/rhel7osp/rhel-7-server-extras-rpms/
+[rhel-server-rhscl-7-rpms]
+name=rhel-server-rhscl-7-rpms
+baseurl=http://10.66.208.115/rhel7osp/rhel-server-rhscl-7-rpms/
 gpgcheck=0
 enabled=1
 EOF
 
-# rhel7
+# rhel7 (optional)
 yum install -y dnf
 dnf update -y
 
+curl -O https://releases.ansible.com/ansible-tower/setup-bundle/ansible-tower-setup-bundle-latest.el7.tar.gz
+tar zxvf ansible-tower-setup*.tar.gz
+cd ansible-tower-setup*
+
+# rhel7
+cat > inventory << 'EOF'
+[tower]
+localhost ansible_connection=local
+
+[database]
+localhost ansible_connection=local
+
+[all:vars]
+admin_password='redhat'
+
+pg_host='localhost'
+pg_port='5432'
+
+pg_database='awx'
+pg_username='awx'
+pg_password='redhat'
+
+rabbitmq_username=tower
+rabbitmq_password='redhat'
+rabbitmq_cookie=cookiemonster
+EOF
+
+# rhel 8
 cat > inventory << 'EOF'
 [tower]
 localhost ansible_connection=local
@@ -1219,6 +1257,20 @@ nginx_http_port='80'
 nginx_https_port='443'
 EOF
 
+# rhel7
+mkdir -p /repos/ansible-tower-dependencies
+pushd /repos/ansible-tower-dependencies
+wget \
+     --recursive \
+     --no-clobber \
+     --page-requisites \
+     --html-extension \
+     --convert-links \
+     --domains ansible.com \
+     --no-parent \
+         https://releases.ansible.com/ansible-tower/rpm/dependencies/3.7/epel-7-x86_64/
+
+# rhel8
 mkdir -p /repos/ansible-tower-dependencies
 pushd /repos/ansible-tower-dependencies
 wget \
@@ -1231,9 +1283,26 @@ wget \
      --no-parent \
          https://releases.ansible.com/ansible-tower/rpm/dependencies/3.7/epel-8-x86_64/
 
+# cleanup
+mv releases.ansible.com/ansible-tower/rpm/dependencies/3.7/epel-7-x86_64/*.rpm . 
+mv releases.ansible.com/ansible-tower/rpm/dependencies/3.7/epel-7-x86_64/repodata/ .
+rm -rf releases.ansible.com/ 
 
 dnf install -y ansible
 
+# rhel7
+mkdir -p /repos/ansible-tower
+pushd /repos/ansible-tower
+wget https://releases.ansible.com/ansible-tower/rpm/epel-7-x86_64/ansible-tower-3.7.2-1.el7at.x86_64.rpm
+wget https://releases.ansible.com/ansible-tower/rpm/epel-7-x86_64/ansible-tower-cli-3.7.2-1.el7at.x86_64.rpm
+wget https://releases.ansible.com/ansible-tower/rpm/epel-7-x86_64/ansible-tower-isolated-3.7.2-1.el7at.x86_64.rpm 
+wget https://releases.ansible.com/ansible-tower/rpm/epel-7-x86_64/ansible-tower-server-3.7.2-1.el7at.x86_64.rpm 
+wget https://releases.ansible.com/ansible-tower/rpm/epel-7-x86_64/ansible-tower-setup-3.7.2-1.el7at.x86_64.rpm 
+wget https://releases.ansible.com/ansible-tower/rpm/epel-7-x86_64/ansible-tower-ui-3.7.2-1.el7at.x86_64.rpm
+wget https://releases.ansible.com/ansible-tower/rpm/epel-7-x86_64/ansible-tower-venv-ansible-3.7.2-1.el7at.x86_64.rpm 
+wget https://releases.ansible.com/ansible-tower/rpm/epel-7-x86_64/ansible-tower-venv-tower-3.7.2-1.el7at.x86_64.rpm
+
+# rhel8
 mkdir -p /repos/ansible-tower
 pushd /repos/ansible-tower
 wget https://releases.ansible.com/ansible-tower/rpm/epel-8-x86_64/ansible-tower-3.7.2-1.el8at.x86_64.rpm 
@@ -1251,7 +1320,7 @@ popd
 popd
 
 
-
+# rhel7 and rhel8
 cat > /root/ansible-tower.repo << 'EOF'
 [ansible-tower]
 name=Ansible Tower Repository - $releasever $basearch
@@ -1270,6 +1339,7 @@ EOF
 
 dnf repolist --all
 
+# rhel7 and rhel8
 cat /root/test.sh << 'EOF'
 for ((;;))
 do

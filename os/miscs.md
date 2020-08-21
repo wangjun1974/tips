@@ -2028,3 +2028,67 @@ nginx                1.16 [e]     common [d] [i]                           nginx
 
 ### OSP13 with OVS/DPDK templates
 https://gitlab.consulting.redhat.com/bajmera/osp13-hci-nfvi/-/blob/master/templates/nic-configs/computeovsdpdksriov.yaml
+
+### Ansible Tower 3.7.2 如何在 RHEL 8 上安装
+```
+# 从红帽官网下载 rsyslog rsyslog-8.1911 rhel8 软件包
+https://drive.google.com/file/d/1hGybyRfL5fFZbgXNVThspbLjs6MlpcjV/view?usp=sharing
+
+# 从以下网址下载 ansible-tower-3.7.2 bundle rhel8 离线 repo 
+https://drive.google.com/file/d/155jVxypKKPg_0zw2Rs3A0Aq7pQzwik9D/view?usp=sharing
+
+# 在目标主机上准备 rhel8 yum repo rhel-8-for-x86_64-baseos-rpms, rhel-8-for-x86_64-appstream-rpms 和 ansible-2.8-for-rhel-8-x86_64-rpms
+cat > /etc/yum.repos.d/public.repo << 'EOF'
+[rhel-8-for-x86_64-baseos-rpms]
+name=rhel-8-for-x86_64-baseos-rpms
+baseurl=http://10.66.208.158/rhel8osp/rhel-8-for-x86_64-baseos-rpms/
+gpgcheck=0
+enabled=1
+
+[rhel-8-for-x86_64-appstream-rpms]
+name=rhel-8-for-x86_64-appstream-rpms
+baseurl=http://10.66.208.158/rhel8osp/rhel-8-for-x86_64-appstream-rpms/
+gpgcheck=0
+enabled=1
+
+[ansible-2.8-for-rhel-8-x86_64-rpms]
+name=ansible-2.8-for-rhel-8-x86_64-rpms
+baseurl=http://10.66.208.158/rhel8osp/ansible-2.8-for-rhel-8-x86_64-rpms/
+gpgcheck=0
+enabled=1
+EOF
+
+# 在目标主机上准备本地文件，用于覆盖 ansible-tower 安装程序生成的 repo 文件
+cat > /root/ansible-tower.repo << 'EOF'
+[ansible-tower]
+name=Ansible Tower Repository - $releasever $basearch
+baseurl=file:///repos/ansible-tower
+enabled=0
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
+
+[ansible-tower-dependencies]
+name=Ansible Tower Dependencies Repository - $releasever $basearch
+baseurl=file:///repos/ansible-tower-dependencies
+enabled=0
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
+EOF
+
+# 在目标主机上生成后台刷新脚本
+cat /root/test.sh << 'EOF'
+for ((;;))
+do
+  sleep .1
+  echo yes | cp -rf /root/ansible-tower.repo /etc/yum.repos.d
+done
+EOF
+
+# 在目标主机上的1个终端里运行此脚本
+/bin/bash -x /root/test.sh
+
+# 在安装主机上解压缩 3.7.2 对应的 ansible-tower-setup-latest.tar.gz 压缩包
+# 进入解压后的目录
+# 执行 setup 脚本
+./setup 
+```

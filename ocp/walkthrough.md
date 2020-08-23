@@ -1408,3 +1408,49 @@ EOF
 
 # : ./setup 
 ```
+
+```
+# disconnected rhel7 tower-support-01
+hostnamectl set-hostname jwang-tower-support-01.example.com
+
+cat >> /etc/hosts << 'EOF'
+10.66.208.162 jwang-tower-01.example.com
+10.66.208.163 jwang-tower-db-01.example.com
+EOF
+ssh-keygen -t rsa -N '' -f ~/.ssh/id_rsa
+
+# disconnected rhel7 tower-01
+hostnamectl set-hostname jwang-tower-01.example.com
+nmcli con mod 'eth0' ipv4.method 'manual' ipv4.address '10.66.208.162/24' ipv4.gateway '10.66.208.254'
+cat >> /etc/hosts << 'EOF'
+10.66.208.162 jwang-tower-01.example.com
+10.66.208.163 jwang-tower-db-01.example.com
+EOF
+
+# disconnected rhel7 tower-db-01
+hostnamectl set-hostname jwang-tower-db-01.example.com
+nmcli con mod 'eth0' ipv4.method 'manual' ipv4.address '10.66.208.163/24' ipv4.gateway '10.66.208.254'
+cat >> /etc/hosts << 'EOF'
+10.66.208.162 jwang-tower-01.example.com
+10.66.208.163 jwang-tower-db-01.example.com
+EOF
+
+
+cat > inventory << 'EOF'
+[tower]
+jwang-tower-01.example.com
+
+[database]
+jwang-tower-db-01.example.com
+
+[all:vars]
+admin_password='redhat'
+
+pg_host='jwang-tower-db-01.example.com'
+pg_port='5432'
+
+pg_database='awx'
+pg_username='awx'
+pg_password='redhat'
+EOF
+```

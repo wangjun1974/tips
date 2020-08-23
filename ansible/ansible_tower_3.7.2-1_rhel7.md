@@ -50,10 +50,6 @@ pg_port='5432'
 pg_database='awx'
 pg_username='awx'
 pg_password='redhat'
-
-rabbitmq_username=tower
-rabbitmq_password='redhat'
-rabbitmq_cookie=cookiemonster
 EOF
 
 ./setup
@@ -63,4 +59,28 @@ skipping: no hosts matched
 
 PLAY RECAP ******************************************************************************************************************************
 localhost                  : ok=172  changed=88   unreachable=0    failed=0    skipped=85   rescued=0    ignored=2   
+```
+
+### 多节点 ansible tower setup inventory
+```
+[tower]
+jwang-tower-01.example.com
+
+[database]
+jwang-tower-db-01.example.com
+
+[all:vars]
+admin_password='redhat'
+
+pg_host='jwang-tower-db-01.example.com'
+pg_port='5432'
+
+pg_database='awx'
+pg_username='awx'
+pg_password='redhat'
+```
+
+⚠️：在执行 tower setup 的节点上需手工安装 rsync 软件包
+```
+yum install -y rsync
 ```

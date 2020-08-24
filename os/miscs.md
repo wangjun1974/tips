@@ -2095,3 +2095,16 @@ EOF
 ### RHEL7 使用 dnf 的例子
 https://blog.remirepo.net/post/2019/12/03/Install-PHP-7.4-on-CentOS-RHEL-or-Fedora<br>
 https://www.vultr.com/docs/use-dnf-to-manage-software-packages-on-centos-7<br>
+
+### 在 Ansible Tower 里使用 dynamic inventory 如何处理 group_vars
+在 plugin 里创建 keyed_groups，然后在 group_vars 里创建对应的 infra_type.yml 和 environment.yml
+```
+I do this from an AWS inventory, but the idea should be the same. Use the Inventory plugin to pull the inventory hosts, then create groups. Those groups would then correspond to `group_vars/<group_name>.yml`
+
+
+keyed_groups:
+  - key: tags['infra_type']
+  - key: tags['environment']
+
+In my AWS plugin file. Then group vars that are named by infra_type tags and environment tags. According to the docs, the Azure plugin can do the same
+```

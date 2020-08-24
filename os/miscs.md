@@ -2111,3 +2111,23 @@ In my AWS plugin file. Then group vars that are named by infra_type tags and env
 
 ### ServiceNow 与 Ansible Tower 集成
 https://cloudautomation.pharriso.co.uk/post/snow-call-tower/
+
+### Mac 上 如何查看 RHV 虚拟机的 Console
+https://github.com/heinlein/ovirt-console/blob/master/ovirt-console
+
+保存以上内容到~/bin/ovirt-console
+
+```
+mkdir -p ~/bin
+pushd ~/bin
+curl -O https://raw.githubusercontent.com/heinlein/ovirt-console/master/ovirt-console
+chmod +x ~/bin/ovirt-console
+
+sed -ie '/ovirt-console/d' ~/.bashrc
+
+cat >> ~/.bashrc << 'EOF'
+alias ovc='~/bin/ovirt-console ~/Downloads/console.vv'
+EOF
+
+
+```

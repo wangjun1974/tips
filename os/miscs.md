@@ -2108,3 +2108,6 @@ keyed_groups:
 
 In my AWS plugin file. Then group vars that are named by infra_type tags and environment tags. According to the docs, the Azure plugin can do the same
 ```
+
+### ServiceNow 与 Ansible Tower 集成
+https://cloudautomation.pharriso.co.uk/post/snow-call-tower/

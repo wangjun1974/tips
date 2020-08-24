@@ -32,7 +32,7 @@ Red Hat Enterprise Linux release 8.2 (Ootpa)
 ```
 
 ### 从红帽官网下载 rsyslog 8.1911.0-6.el8
-https://access.redhat.com/downloads/content/rsyslog/8.1911.0-6.el8/x86_64/fd431d51/package
+https://access.redhat.com/downloads/content/rsyslog/8.1911.0-6.el8/x86_64/fd431d51/package<br>
 上传并安装 
 ```
 dnf localinstall -y ~/rsyslog-8.1911.0-6.el8.x86_64.rpm
@@ -70,4 +70,31 @@ nginx_https_port='443'
 EOF
 
 ./setup
+```
+
+### 多节点 ansible tower setup inventory
+```
+[tower]
+jwang-tower-01.example.com
+
+[database]
+jwang-tower-db-01.example.com
+
+[all:vars]
+admin_password='redhat'
+
+pg_host='jwang-tower-db-01.example.com'
+pg_port='5432'
+
+pg_database='awx'
+pg_username='awx'
+pg_password='redhat'
+
+nginx_http_port='80'
+nginx_https_port='443'
+```
+
+⚠️：在执行 tower setup 的节点上需手工安装 rsync 软件包
+```
+dnf install -y rsync
 ```

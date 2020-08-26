@@ -1,6 +1,7 @@
 ## rhel8
 ### 下载 ansible-tower-setup-bundle-3.7.2-1.tar.gz
 https://releases.ansible.com/ansible-tower/setup-bundle/ansible-tower-setup-bundle-3.7.2-1.tar.gz
+⚠️：在离线环境中，最好使用 bundle 安装包，因为此安装包包含离线安装所需的依赖内容
 
 ### 在 rhel8 上设置软件仓库
 rhel8 上需要软件仓库 rhel-8-for-x86_64-baseos-rpms 和 rhel-8-for-x86_64-appstream-rpms
@@ -32,6 +33,7 @@ Red Hat Enterprise Linux release 8.2 (Ootpa)
 ```
 
 ### 从红帽官网下载 rsyslog 8.1911.0-6.el8
+⚠️：在 rhel8 上 ansible tower 3.7.2-1 依赖 rsyslog 版本 8.1911 或更高版本，这个版本的 rsyslog 需要从红帽官网下载
 https://access.redhat.com/downloads/content/rsyslog/8.1911.0-6.el8/x86_64/fd431d51/package<br>
 上传并安装 
 ```

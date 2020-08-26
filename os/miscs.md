@@ -2131,3 +2131,13 @@ EOF
 
 
 ```
+
+### 如何在 Mac OS X 上降低 Google Chrome 的 CPU 占用
+```
+# make chrome be nice to other process
+for f in $(pgrep 'Chrome'); do renice +20 -p $f; done
+
+# make chrome normal
+for f in $(pgrep 'Chrome'); do renice 0 -p $f; done
+
+```

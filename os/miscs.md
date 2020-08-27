@@ -2201,3 +2201,6 @@ https://docs.openshift.com/container-platform/4.5/operators/olm-restricted-netwo
 
 同时请参考王征写的离线 Operator Hub 和离线 Operator 的相关内容<br>
 https://github.com/wangzheng422/docker_env/blob/master/redhat/ocp4/4.5/4.5.disconnect.operator.md<br>
+
+### 在 AWS 上建立 FTP 服务
+https://medium.com/tensult/configure-ftp-on-aws-ec2-85b5b56b9c94

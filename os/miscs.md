@@ -2195,3 +2195,9 @@ spec:
         echo "fedora" |passwd fedora --stdin
     name: cloudinitdisk
 ```
+
+### Using Operator Lifecycle Manager on restricted networks
+https://docs.openshift.com/container-platform/4.5/operators/olm-restricted-networks.html<br>
+
+同时请参考王征写的离线 Operator Hub 和离线 Operator 的相关内容<br>
+https://github.com/wangzheng422/docker_env/blob/master/redhat/ocp4/4.5/4.5.disconnect.operator.md<br>

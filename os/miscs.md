@@ -2143,4 +2143,55 @@ for f in $(pgrep 'Chrome'); do renice 0 -p $f; done
 ```
  
 ### 如何在 url 里将特殊字符进行编码
-https://www.w3schools.com/tags/ref_urlencode.ASP  
+https://www.w3schools.com/tags/ref_urlencode.ASP
+
+### 如何在 kubevirt 下通过 cloudinit 为虚拟机指定静态 IP 地址
+```
+---
+apiVersion: kubevirt.io/v1alpha3
+kind: VirtualMachineInstance
+metadata:
+  labels:
+    special: vmi1
+  name: vmi1
+spec:
+  domain:
+    devices:
+      disks:
+      - disk:
+          bus: virtio
+        name: containerdisk
+      - disk:
+          bus: virtio
+        name: cloudinitdisk
+      interfaces:
+      - masquerade: {}
+        name: default
+      - bridge: {}
+        name: br10
+    machine:
+      type: ""
+    resources:
+      requests:
+        memory: 1024M
+  networks:
+  - name: default
+    pod: {}
+  - name: br10
+    multus:
+      networkName: br10
+  volumes:
+  - containerDisk:
+      image: kubevirt/fedora-cloud-container-disk-demo
+    name: containerdisk
+  - cloudInitNoCloud:
+      networkData: |
+        version: 2
+        ethernets:
+          eth1:
+            addresses: [ 192.168.111.10/24 ]
+      userData: |-
+        #!/bin/bash
+        echo "fedora" |passwd fedora --stdin
+    name: cloudinitdisk
+```

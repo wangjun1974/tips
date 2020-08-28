@@ -2204,3 +2204,14 @@ https://github.com/wangzheng422/docker_env/blob/master/redhat/ocp4/4.5/4.5.disco
 
 ### 在 AWS 上建立 FTP 服务
 https://medium.com/tensult/configure-ftp-on-aws-ec2-85b5b56b9c94
+
+### 更新 RHV admin@internal 用户口令
+https://access.redhat.com/solutions/63677
+
+### Open Data Hub 白皮书
+https://gitlab.com/opendatahub/opendatahub.io/blob/master/pages/arch.md
+
+### OpenShift 3.4 配置 External IP 的步骤
+配置 master 和 node 的路由，以及服务的 External IP，实现：外部 -> external ip -> 主机转发 -> service iptables -> Pod 的过程
+https://docs.openshift.com/container-platform/3.4/dev_guide/expose_service/expose_internal_ip_service.html
+

@@ -2215,3 +2215,44 @@ https://gitlab.com/opendatahub/opendatahub.io/blob/master/pages/arch.md
 配置 master 和 node 的路由，以及服务的 External IP，实现：外部 -> external ip -> 主机转发 -> service iptables -> Pod 的过程
 https://docs.openshift.com/container-platform/3.4/dev_guide/expose_service/expose_internal_ip_service.html
 
+### OpenShift 4.6 复制离线 operator hub 的步骤
+```
+The process is simpler now, but the docs are not updated yet.
+https://issues.redhat.com/browse/OSDOCS-1349 tracks that work.
+
+A quick summary of the changes:
+
+- You no longer need to run `oc adm catalog build` at all
+- You can reference the default catalogs directly when mirroring, i.e.
+`oc adm catalog mirror
+registry.redhat.io/redhat/redhat-operator-index:v4.6`
+- You'll need to `oc image mirror` the index image itself (i.e.
+`registry.redhat.io/redhat/redhat-operator-index`), at least until `oc
+adm catalog mirror` is updated to include that image.
+- If you configure the ICSP for the index images to use the default
+image names, there is no need to disable default catalogs via the
+OperatorHub config.
+```
+
+### 同步 OperatorHub 内容到离线环境
+```
+- On an internet connected hosts:
+
+1) Stand up podman registry
+2) oc adm catalog build to create the catalog image for redhat-operators
+3) oc adm catalog mirror to the podman registry on the connected node
+
+This will result in all of the images being pulled into your local podman registry and a mapping.txt file. The mapping.txt file will contain lines like:
+
+registry.redhat.io/#####   localhost:5000/######
+
+Drag the data directory backing the podman registry and the mapping file over to the disconnected environment
+Stand up a temporary podman registry with that data directory
+update the mapping.txt file such that the line I referred to above now says
+
+localhost:5000/####   registry.private.permanent:5000/#####
+
+run oc image mirror --file mapping.txt
+
+This will not result in any reachback to the internet on the disconnected cluster.
+```

@@ -2271,3 +2271,61 @@ A2. There is no matrix, but on the operator level its usually n + or - 1 from th
 
 ### GitHub Merge a pull request
 https://docs.github.com/en/github/collaborating-with-issues-and-pull-requests/merging-a-pull-request
+
+### How to install the Operator on OCP4 using only CLI ?
+https://access.redhat.com/solutions/5240251<br>
+```
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: jaeger-product
+  namespace: openshift-operators          <--- Set the target namespace, default "openshift-opeartors" supported the all namespaces Install mode.
+spec:
+  channel: stable                         <--- Set specific channel
+  name: jager-product
+  installPlanApproval: Automatic          <--- Set install plan, Automatic or Manual
+  source: redhat-operators                <--- Set catalog source name
+  sourceNamespace: openshift-marketplace  <--- Set catalog source namespace name
+
+// Create new project
+$ oc new-project myjaeger
+
+// Verify the CSV is created in the new project
+$ oc get csv
+NAME                      DISPLAY                    VERSION   REPLACES   PHASE
+jaeger-operator.v1.17.4   Red Hat OpenShift Jaeger   1.17.4
+
+// Check "alm-examples" in the Annotations section, usually the sample CRD format is provided here.               
+$ oc describe csv jaeger-operator.v1.17.4
+Name:         jaeger-operator.v1.17.4
+Namespace:    myjaeger
+Labels:       olm.api.c9f771e815ec55e=provided
+              olm.copiedFrom=myoperators
+Annotations:  alm-examples:
+                [
+                  {
+                    "apiVersion": "jaegertracing.io/v1",
+                    "kind": "Jaeger",
+                    "metadata": {
+                      "name": "jaeger-all-in-one-inmemory"
+                    }
+                  }
+                ]
+:
+
+// Create CRD for launching pods
+$ oc create -n myjaeger -f - <<EOF
+  {
+    "apiVersion": "jaegertracing.io/v1",
+    "kind": "Jaeger",
+    "metadata": {
+      "name": "jaeger-all-in-one-inmemory"
+    }
+  }
+EOF
+
+// Check the lauched pod though the CRD
+$ oc get pod -n myjaeger
+NAME                                         READY   STATUS    RESTARTS   AGE
+jaeger-all-in-one-inmemory-f95749dc6-vr9vw   2/2     Running   0          21s
+```

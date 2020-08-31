@@ -2256,3 +2256,15 @@ run oc image mirror --file mapping.txt
 
 This will not result in any reachback to the internet on the disconnected cluster.
 ```
+
+### 关于 OpenShift Lifecycle Manager 在离线环境下更新 CatalogSource version 版本的问题
+```
+IHAC wants to upgrade the Red Hat operator registry image in disconnected mode. Mirroring the new operator registry image and changing CatalogSource image version does the job.
+
+2- is there any map of supported Red Hat operator registry image versions vs OpenShift versions ?
+Q1. I found no documentation about this procedure in doc, is this supported ? Otherwise, what's the official procedure ?
+A1. You can use the docs here for updating https://docs.openshift.com/container-platform/4.5/operators/olm-restricted-networks.html#olm-updating-operator-catalog-image_olm-restricted-networks. As you mention just update the version number of the catalogue image. If you only need a catalogue with a small list of operators, you can use the scripts here . https://github.com/arvin-a/openshift-disconnected-operators
+
+Q2. is there any map of supported Red Hat operator registry image versions vs OpenShift versions ?
+A2. There is no matrix, but on the operator level its usually n + or - 1 from the OCP version the operator version was released on. For example OCS 4.5 will be supported for OCP 4.4, 4.5, 4.6. To be on the safe side I would check with the individual engineering team for now.
+```

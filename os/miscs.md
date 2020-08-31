@@ -2268,3 +2268,6 @@ A1. You can use the docs here for updating https://docs.openshift.com/container-
 Q2. is there any map of supported Red Hat operator registry image versions vs OpenShift versions ?
 A2. There is no matrix, but on the operator level its usually n + or - 1 from the OCP version the operator version was released on. For example OCS 4.5 will be supported for OCP 4.4, 4.5, 4.6. To be on the safe side I would check with the individual engineering team for now.
 ```
+
+### GitHub Merge a pull request
+https://docs.github.com/en/github/collaborating-with-issues-and-pull-requests/merging-a-pull-request

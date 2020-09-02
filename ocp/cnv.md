@@ -1,6 +1,6 @@
 ## OpenShift Virtualization 实验记录
-https://github.com/RHFieldProductManagement/openshift-virt-labs
-
+实验手册
+https://github.com/RHFieldProductManagement/openshift-virt-labs/tree/rhpds
 
 ## Network
 https://docs.openshift.com/container-platform/4.3/networking/multiple_networks/configuring-bridge.html

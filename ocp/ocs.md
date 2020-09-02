@@ -1,4 +1,5 @@
 ## OpenShift and Container Storage for Admins Workshop 手册
+https://github.com/openshift/openshift-cns-testdrive/tree/ocp4-prod/workshop/content
 
 ### 环境介绍
 http://ocp-ocs-admins-labguides.6923.rh-us-east-1.openshiftapps.com/workshop/environment

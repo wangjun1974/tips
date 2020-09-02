@@ -2329,3 +2329,32 @@ $ oc get pod -n myjaeger
 NAME                                         READY   STATUS    RESTARTS   AGE
 jaeger-all-in-one-inmemory-f95749dc6-vr9vw   2/2     Running   0          21s
 ```
+
+### 为 OpenShift Project 设置合理的 LimitRange
+设置合适的默认 LimitRange 可以让集群资源被更合理的使用
+```
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: ${PROJECT_NAME}-core-resource-limits
+  namespace: ${PROJECT_NAME}
+spec:
+   limits:
+   - type: Container
+     max:
+       cpu: 2
+       memory: 6Gi
+     default:
+       cpu: 500m[e]
+       memory: 1.5Gi
+     defaultRequest:
+       cpu: 50m
+       memory: 256Mi
+   - type: Pod
+     max:
+       cpu: 2
+       memory: 12Gi
+
+# modify default limitrange for template/project-request 
+oc edit template project-request -n openshift-config
+```

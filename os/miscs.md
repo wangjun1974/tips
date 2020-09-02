@@ -2358,3 +2358,39 @@ spec:
 # modify default limitrange for template/project-request 
 oc edit template project-request -n openshift-config
 ```
+
+### 在 RHEL/CentOS 7.x 上使用 ISCSI 存储或者 FC 存储
+ISCSI 存储需安装 sg3_utils, device_mapper_multipath 和 iscsi-initiator-utils 软件包
+```
+yum install -y sg3_utils iscsi-initiator-utils device-mapper-multipath
+```
+
+FC 存储需安装 sg3_utils 和 device_mapper_multipath 软件包
+```
+yum install -y sg3_utils device-mapper-multipath
+```
+
+|软件包|说明|
+|---|---|
+| sg3_utils | 处理 SCSI 指令 |
+| device-mapper-multipath | 配置服务器与存储间的多路径 |
+| iscsi-initiator-utils | 运行 iscsi initiator 所需程序 |
+
+RHEL7 与 IBM FlashSystem V7200 的 /etc/multipath.conf 配置例子
+```
+devices {
+    device {
+        vendor “IBM”
+        product “2145”
+        path_grouping_policy “group_by_prio”
+        path_selector “service-time 0”
+        prio “alua”
+        path_checker “tur”
+        failback “immediate”
+        no_path_retry 5
+        rr_weight uniform
+        rr_min_io_rq “1”
+        dev_loss_tmo 120
+    }
+}
+```

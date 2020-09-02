@@ -13,6 +13,7 @@ https://docs.openshift.com/container-platform/4.4/storage/persistent_storage/per
 IBM Storage for Red Hat OpenShift Blueprint Version 1 Release 5<br>
 https://www.redbooks.ibm.com/redpapers/pdfs/redp5565.pdf
 
+OpenShift 4 对接 HPE 存储的例子
 https://www.openshift.com/blog/red-hat-openshift-certified-hpe-csi-operator-for-kubernetes-available-now
 
 https://www.dellemc.com/resources/en-us/asset/technical-guides-support-information/solutions/h18217-openshift-container-dg.pdf

@@ -2331,7 +2331,7 @@ jaeger-all-in-one-inmemory-f95749dc6-vr9vw   2/2     Running   0          21s
 ```
 
 ### 为 OpenShift Project 设置合理的 LimitRange
-设置合适的默认 LimitRange 可以让集群资源被更合理的使用
+设置合适的默认 LimitRange 可以让集群资源被更合理的使用，这项设置对生产集群尤其重要
 ```
 apiVersion: v1
 kind: LimitRange

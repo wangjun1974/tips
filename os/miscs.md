@@ -2397,3 +2397,9 @@ devices {
     }
 }
 ```
+
+### OpenShift Pipeline 相关信息
+Tekton Trigers<br>
+https://github.com/tektoncd/triggers
+
+当 repository 发生预先定义的事件，通过 Webhook 的方式将事件相关信息发送给 EventListener，EventListener 通过 TriggerBinding 解析接收到的 HTTP JSON body 获得感兴趣的参数，这些参数可被 TriggerTemplate 用来作为参数传递给生成 PipelineResources 和 PipelineRun 

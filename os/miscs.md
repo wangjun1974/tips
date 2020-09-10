@@ -2427,3 +2427,8 @@ https://zhuanlan.zhihu.com/p/74238082
 InfiniBand, RDMA, iWARP, RoCE , CNA, FCoE, TOE, RDMA, iWARP, iSCSI等概念<br>
 https://blog.csdn.net/jhzh951753/article/details/78813666
 
+Working with RDMA in RedHat/CentOS 7.*<br>
+https://www.rdmamojo.com/2014/10/11/working-rdma-redhatcentos-7/
+
+### Bridge 与 macvlan 的对别
+https://hicu.be/bridge-vs-macvlan

@@ -2423,3 +2423,7 @@ RoCE is a network protocol that allows remote direct memory access (RDMA) over a
 
 关于InfiniBand架构和知识点漫谈<br>
 https://zhuanlan.zhihu.com/p/74238082
+
+InfiniBand, RDMA, iWARP, RoCE , CNA, FCoE, TOE, RDMA, iWARP, iSCSI等概念<br>
+https://blog.csdn.net/jhzh951753/article/details/78813666
+

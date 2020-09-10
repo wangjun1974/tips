@@ -2432,3 +2432,9 @@ https://www.rdmamojo.com/2014/10/11/working-rdma-redhatcentos-7/
 
 ### Bridge 与 macvlan 的对别
 https://hicu.be/bridge-vs-macvlan
+
+### Linux 虚拟网络接口介绍
+Introduction to Linux interfaces for virtual networking<br>
+https://developers.redhat.com/blog/2018/10/22/introduction-to-linux-interfaces-for-virtual-networking/#macvlan
+
+

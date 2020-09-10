@@ -2409,7 +2409,7 @@ https://keda.sh/
 
 KEDA 是 Kubernetes Event Driven Autoscaler 的缩写。是对 Kubernetes 的 Horizontal Pod Autoscaler 的补充，可以基于事件驱动进行水平扩展
 
-### Infiniband on RHEL7
+### Infiniband
 https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/7/html/networking_guide/ch-configure_infiniband_and_rdma_networks<br>
 InfiniBand refers to two distinct things. The first is a physical link-layer protocol for InfiniBand networks. The second is a higher level programming API called the InfiniBand Verbs API. The InfiniBand Verbs API is an implementation of a remote direct memory access (RDMA) technology.
 RDMA provides direct access from the memory of one computer to the memory of another without involving either computer’s operating system. This technology enables high-throughput, low-latency networking with low CPU utilization, which is especially useful in massively parallel computer clusters.<br>
@@ -2420,3 +2420,6 @@ The Internet Wide Area RDMA Protocol (iWARP)<br>
 iWARP is a computer networking protocol that implements remote direct memory access (RDMA) for efficient data transfer over Internet Protocol (IP) networks.<br>
 The RDMA over Converged Ethernet (RoCE) protocol, which later renamed to InfiniBand over Ethernet (IBoE).<br>
 RoCE is a network protocol that allows remote direct memory access (RDMA) over an Ethernet network.<br>
+
+关于InfiniBand架构和知识点漫谈<br>
+https://zhuanlan.zhihu.com/p/74238082

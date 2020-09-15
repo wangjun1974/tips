@@ -2455,3 +2455,7 @@ https://kb.juniper.net/InfoCenter/index?page=content&id=kb14737
 iptables -I INPUT 1 -m state --state NEW -m tcp -p tcp --dport 5901 -j ACCEPT
 iptables -I INPUT 1 -m state --state NEW -m tcp -p tcp --dport 6001 -j ACCEPT
 ```
+
+### Tekton and ArgoCD
+https://developers.redhat.com/blog/2020/09/03/introduction-to-tekton-and-argo-cd-for-multicluster-development/?sc_cid=7013a0000025vsOAAQ<br>
+https://youtu.be/pVZ-3LEIHc8<br>

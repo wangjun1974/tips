@@ -2449,3 +2449,9 @@ https://iperf.fr/
 ### How many Packets per Second per port are needed to achieve Wire-Speed?
 每个端口每秒需要多少个数据包才能达到线速？<br>
 https://kb.juniper.net/InfoCenter/index?page=content&id=kb14737
+
+### RHEL6 添加 iptables 规则
+```
+iptables -I INPUT 1 -m state --state NEW -m tcp -p tcp --dport 5901 -j ACCEPT
+iptables -I INPUT 1 -m state --state NEW -m tcp -p tcp --dport 6001 -j ACCEPT
+```

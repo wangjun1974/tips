@@ -43,3 +43,4 @@ http://ocp-ocs-admins-labguides.6923.rh-us-east-1.openshiftapps.com/workshop/dis
 
 ### 如何为用户设置集群范围的资源配额
 http://ocp-ocs-admins-labguides.6923.rh-us-east-1.openshiftapps.com/workshop/clusterresourcequota
+

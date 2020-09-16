@@ -2488,3 +2488,6 @@ https://github.com/openshift/node-feature-discovery<br>
 
 ### Virtio-networking 系列高质量博客
 https://www.redhat.com/en/virtio-networking-series
+
+### SCTP
+https://en.wikipedia.org/wiki/Stream_Control_Transmission_Protocol

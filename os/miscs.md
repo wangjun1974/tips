@@ -2469,6 +2469,9 @@ https://wiki.mozilla.org/Security/Server_Side_TLS#Recommended_configurations<br>
 ### OCP4 with Azure AD 
 https://www.arctiq.ca/our-blog/2020/1/30/ocp4-auth-with-azure-ad/
 
+group sync operator<br>
+https://github.com/redhat-cop/group-sync-operator
+
 ### Declarative OpenShift
 https://github.com/redhat-cop/declarative-openshift<br>
 This repository contains sets of example resources to be used with a declarative management strategy. Please familiarize yourself with the terminology in that document before reading on.

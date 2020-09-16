@@ -2467,4 +2467,12 @@ Recommended configurations<br>
 https://wiki.mozilla.org/Security/Server_Side_TLS#Recommended_configurations<br>
 
 ### OCP4 with Azure AD 
-https://www.arctiq.ca/our-blog/2020/1/30/ocp4-auth-with-azure-ad/c
+https://www.arctiq.ca/our-blog/2020/1/30/ocp4-auth-with-azure-ad/
+
+### Declarative OpenShift
+https://github.com/redhat-cop/declarative-openshift<br>
+This repository contains sets of example resources to be used with a declarative management strategy. Please familiarize yourself with the terminology in that document before reading on.
+
+The purpose of these examples is twofold:
+* To act as supporting content for a GitOps series being written for uncontained.io
+* To serve as a starting point for establishing a GitOps practice for cluster management

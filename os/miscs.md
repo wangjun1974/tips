@@ -2465,3 +2465,6 @@ Ingress controller TLS profiles<br>
 https://docs.openshift.com/container-platform/4.5/networking/ingress-operator.html<br>
 Recommended configurations<br>
 https://wiki.mozilla.org/Security/Server_Side_TLS#Recommended_configurations<br>
+
+### OCP4 with Azure AD 
+https://www.arctiq.ca/our-blog/2020/1/30/ocp4-auth-with-azure-ad/

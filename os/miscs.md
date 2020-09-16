@@ -2440,10 +2440,10 @@ https://developers.redhat.com/blog/2018/10/22/introduction-to-linux-interfaces-f
 ### 网络性能测试工具
 https://medium.com/@duhroach/tools-to-profile-networking-performance-3141870d5233
 
-非常好的一片文章，介绍使用 netperf 和 ping 来评估网络时延，并且设定可对别的时间间隔
+非常好的一片文章，介绍使用 netperf 和 ping 来评估网络时延，并且设定可对比的时间间隔
 https://cloud.google.com/blog/products/networking/using-netperf-and-ping-to-measure-network-latency
 
-iperf
+iperf<br>
 https://iperf.fr/
 
 ### How many Packets per Second per port are needed to achieve Wire-Speed?

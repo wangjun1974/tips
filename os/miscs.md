@@ -2479,3 +2479,12 @@ This repository contains sets of example resources to be used with a declarative
 The purpose of these examples is twofold:
 * To act as supporting content for a GitOps series being written for uncontained.io
 * To serve as a starting point for establishing a GitOps practice for cluster management
+
+### OpenShift Node Tuning Operator
+https://docs.openshift.com/container-platform/4.1/scalability_and_performance/using-node-tuning-operator.html
+
+### Node feature discovery for Kubernetes
+https://github.com/openshift/node-feature-discovery<br>
+
+### Virtio-networking 系列高质量博客
+https://www.redhat.com/en/virtio-networking-series

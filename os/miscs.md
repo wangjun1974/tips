@@ -2491,3 +2491,6 @@ https://www.redhat.com/en/virtio-networking-series
 
 ### SCTP
 https://en.wikipedia.org/wiki/Stream_Control_Transmission_Protocol
+
+### 基于 Open Data Hub 构建 ML 平台
+https://www.openshift.com/blog/building-an-open-ml-platform-with-red-hat-openshift-and-open-data-hub-project

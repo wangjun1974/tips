@@ -64,7 +64,7 @@ nmcli con mod id bond0 bond.options \
 ## 在 bond 设备上添加 vlan 
 ```
 nmcli con add type vlan con-name bond-vlan-12 dev bond0 id 12
-nmcli con mod ond-vlan-12 \
+nmcli con mod bond0-vlan-12 \
     ipv4.method 'manual' \
     ipv4.address '10.66.208.237/24' \
     ipv4.gateway '10.66.208.254' \

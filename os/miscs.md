@@ -2494,3 +2494,7 @@ https://en.wikipedia.org/wiki/Stream_Control_Transmission_Protocol
 
 ### 基于 Open Data Hub 构建 ML 平台
 https://www.openshift.com/blog/building-an-open-ml-platform-with-red-hat-openshift-and-open-data-hub-project
+
+### 如何使用 Custom Resource Definition 扩展 Kubernetes 
+https://kubernetes.io/docs/tasks/extend-kubernetes/custom-resources/custom-resource-definitions/
+

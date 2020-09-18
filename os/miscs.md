@@ -2498,3 +2498,6 @@ https://www.openshift.com/blog/building-an-open-ml-platform-with-red-hat-openshi
 ### 如何使用 Custom Resource Definition 扩展 Kubernetes 
 https://kubernetes.io/docs/tasks/extend-kubernetes/custom-resources/custom-resource-definitions/
 
+### Writing Your First Kubernetes Operator
+非常好的文章介绍如何使用 Operator SDK 帮助生成 Operator 来扩展 Kubernetes<br>
+https://medium.com/faun/writing-your-first-kubernetes-operator-8f3df4453234

@@ -2501,3 +2501,16 @@ https://kubernetes.io/docs/tasks/extend-kubernetes/custom-resources/custom-resou
 ### Writing Your First Kubernetes Operator
 非常好的文章介绍如何使用 Operator SDK 帮助生成 Operator 来扩展 Kubernetes<br>
 https://medium.com/faun/writing-your-first-kubernetes-operator-8f3df4453234
+
+### 为 undercloud 添加 overcloud 控制节点登陆 alias
+```
+(undercloud) [stack@undercloud ~]$ 
+cat >> ~/.bashrc << 'EOF'
+
+alias c0="source ~/stackrc; ssh heat-admin@$( openstack server list | grep controller-0 | awk -F'|' '{print $5}' | awk -F'=' '{print $2}' )"
+alias c1="source ~/stackrc; ssh heat-admin@$( openstack server list | grep controller-1 | awk -F'|' '{print $5}' | awk -F'=' '{print $2}' )"
+alias c2="source ~/stackrc; ssh heat-admin@$( openstack server list | grep controller-2 | awk -F'|' '{print $5}' | awk -F'=' '{print $2}' )"
+alias cp0="source ~/stackrc; ssh heat-admin@$( openstack server list | grep compute-0 | awk -F'|' '{print $5}' | awk -F'=' '{print $2}' )"
+alias cp1="source ~/stackrc; ssh heat-admin@$( openstack server list | grep compute-1 | awk -F'|' '{print $5}' | awk -F'=' '{print $2}' )"
+EOF
+```

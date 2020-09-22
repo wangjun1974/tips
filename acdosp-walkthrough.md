@@ -1917,14 +1917,526 @@ EOF
 
 [root@workstation ceph-ansible]# cp site-docker.yml.sample site-docker.yml
 [root@workstation ceph-ansible]# ansible-playbook site-docker.yml
+[root@workstation ceph-ansible]# cd
+
+[root@workstation ceph-ansible]# dnf -y install ceph-common
+[root@workstation ~]# scp root@ceph-node01:/etc/ceph/ceph.conf /etc/ceph/
+[root@workstation ~]# scp root@ceph-node01:/etc/ceph/ceph.client.admin.keyring /etc/ceph/
+
+[root@workstation ~]# ceph -s
+  cluster:
+    id:     eb0670c0-e359-4cb3-bf11-c650b82118ef
+    health: HEALTH_OK
+ 
+  services:
+    mon: 3 daemons, quorum ceph-node01,ceph-node02,ceph-node03 (age 11m)
+    mgr: ceph-node02(active, since 3m), standbys: ceph-node01, ceph-node03
+    osd: 6 osds: 6 up (since 8m), 6 in (since 8m)
+    rgw: 3 daemons active (ceph-node01.rgw0, ceph-node02.rgw0, ceph-node03.rgw0)
+ 
+  task status:
+ 
+  data:
+    pools:   4 pools, 128 pgs
+    objects: 223 objects, 6.6 KiB
+    usage:   6.0 GiB used, 54 GiB / 60 GiB avail
+    pgs:     128 active+clean
+
+[root@workstation ~]# ceph health
+HEALTH_OK
+
+[root@workstation ~]# ceph osd tree
+ID CLASS WEIGHT  TYPE NAME            STATUS REWEIGHT PRI-AFF 
+-1       0.05878 root default                                 
+-3       0.01959     host ceph-node01                         
+ 0   hdd 0.00980         osd.0            up  1.00000 1.00000 
+ 3   hdd 0.00980         osd.3            up  1.00000 1.00000 
+-7       0.01959     host ceph-node02                         
+ 1   hdd 0.00980         osd.1            up  1.00000 1.00000 
+ 4   hdd 0.00980         osd.4            up  1.00000 1.00000 
+-5       0.01959     host ceph-node03                         
+ 2   hdd 0.00980         osd.2            up  1.00000 1.00000 
+ 5   hdd 0.00980         osd.5            up  1.00000 1.00000 
+
+[root@workstation ~]# ceph mon dump
+dumped monmap epoch 1
+epoch 1
+fsid eb0670c0-e359-4cb3-bf11-c650b82118ef
+last_changed 2020-09-22 03:42:39.385706
+created 2020-09-22 03:42:39.385706
+min_mon_release 14 (nautilus)
+0: [v2:172.18.0.61:3300/0,v1:172.18.0.61:6789/0] mon.ceph-node01
+1: [v2:172.18.0.62:3300/0,v1:172.18.0.62:6789/0] mon.ceph-node02
+2: [v2:172.18.0.63:3300/0,v1:172.18.0.63:6789/0] mon.ceph-node03
+
+[root@workstation ~]# ssh ceph-node01
+Activate the web console with: systemctl enable --now cockpit.socket
+
+This system is not registered to Red Hat Insights. See https://cloud.redhat.com/
+To register this system, run: insights-client --register
+
+Last login: Tue Sep 22 03:51:04 2020 from 172.18.0.70
+[admin@ceph-node01 ~]$ 
+
+[admin@ceph-node01 ~]$ sudo podman ps
+CONTAINER ID  IMAGE                                                    COMMAND               CREATED         STATUS             PORTS  NAMES
+f1f57583589a  docker.io/prom/node-exporter:v0.17.0                     --path.procfs=/ho...  10 minutes ago  Up 10 minutes ago         node-exporter
+eb9bb5134892  classroom.example.com:5000/rhceph/rhceph-4-rhel8:latest                        11 minutes ago  Up 11 minutes ago         ceph-rgw-ceph-node01-rgw0
+b2a9a04064bf  classroom.example.com:5000/rhceph/rhceph-4-rhel8:latest                        12 minutes ago  Up 12 minutes ago         ceph-osd-3
+09c07d6f5b1a  classroom.example.com:5000/rhceph/rhceph-4-rhel8:latest                        12 minutes ago  Up 12 minutes ago         ceph-osd-0
+124cb57f46d9  classroom.example.com:5000/rhceph/rhceph-4-rhel8:latest                        14 minutes ago  Up 14 minutes ago         ceph-mgr-ceph-node01
+7e340886c19c  classroom.example.com:5000/rhceph/rhceph-4-rhel8:latest                        15 minutes ago  Up 15 minutes ago         ceph-mon-ceph-node01
 
 
+[admin@ceph-node01 ~]$ sudo podman stats
+ID             NAME                        CPU %   MEM USAGE / LIMIT   MEM %    NET IO    BLOCK IO            PIDS
+09c07d6f5b1a   ceph-osd-0                  2.08%   53.03MB / 1.916GB   2.77%    -- / --   11.42MB / 19.37MB   60
+124cb57f46d9   ceph-mgr-ceph-node01        9.55%   314.5MB / 1.074GB   29.29%   -- / --   9.089MB / 0B        47
+7e340886c19c   ceph-mon-ceph-node01        8.24%   104.7MB / 1.074GB   9.75%    -- / --   20.21MB / 91.67MB   28
+b2a9a04064bf   ceph-osd-3                  1.74%   58.24MB / 1.916GB   3.04%    -- / --   14.57MB / 27.42MB   60
+eb9bb5134892   ceph-rgw-ceph-node01-rgw0   1.01%   83.78MB / 1.074GB   7.80%    -- / --   15.59MB / 0B        602
+f1f57583589a   node-exporter               6.89%   10.14MB / 1.916GB   0.53%    -- / --   -- / --             4
+
+[admin@ceph-node01 ~]$ sudo systemctl | grep "ceph-.*.service"
+ceph-mgr@ceph-node01.service                                                                                                         loaded active running   Ceph Manager                                                                                                                
+ceph-mon@ceph-node01.service                                                                                                         loaded active running   Ceph Monitor                                                                                                                
+ceph-osd@0.service                                                                                                                   loaded active running   Ceph OSD                                                                                                                    
+ceph-osd@3.service                                                                                                                   loaded active running   Ceph OSD                                                                                                                    
+ceph-radosgw@rgw.ceph-node01.rgw0.service                                                                                            loaded active running   Ceph RGW                   
+
+[admin@ceph-node01 ~]$ sudo systemctl status ceph*@*.service
+
+# Service Telemetry Framework Lab
+[root@pool08-iad ~]# su - student
+[student@pool08-iad ~]$ curl -O -L https://mirror.openshift.com/pub/openshift-v4/clients/crc/1.9.0/crc-linux-amd64.tar.xz
+[student@pool08-iad ~]$ tar xvfJ crc-linux-amd64.tar.xz
+
+[student@pool08-iad ~]$ cd crc-linux-1.9.0-amd64
+[student@pool08-iad crc-linux-1.9.0-amd64]$ ./crc setup
+
+[student@pool08-iad crc-linux-1.9.0-amd64]$ ./crc start -m 16000 -c 12
+...
+? Image pull secret [? for help]
+...
+INFO Extracting bundle: crc_libvirt_4.3.10.crcbundle ...
+INFO Checking size of the disk image /home/student/.crc/cache/crc_libvirt_4.3.10/crc.qcow2 ...
+INFO Creating CodeReady Containers VM for OpenShift 4.3.10...
+INFO Verifying validity of the cluster certificates ...
+INFO Check internal and public DNS query ...
+INFO Check DNS query from host ...
+INFO Copying kubeconfig file to instance dir ...
+INFO Cluster TLS certificates have expired, renewing them... [will take up to 5 minutes]
+INFO Adding user's pull secret ...
+INFO Updating cluster ID ...
+
+
+
+INFO Starting OpenShift cluster ... [waiting 3m]
+INFO
+INFO To access the cluster, first set up your environment by following 'crc oc-env' instructions
+INFO Then you can access it by running 'oc login -u developer -p developer https://api.crc.testing:6443'
+INFO To login as an admin, run 'oc login -u kubeadmin -p HeJWN-ckbCA-Q96Ds-Sj763 https://api.crc.testing:6443'
+INFO
+INFO You can now run 'crc console' and use these credentials to access the OpenShift web console
+Started the OpenShift cluster
+WARN The cluster might report a degraded or error state. This is expected since several operators have been disabled to lower the resource usage. For more information, please consult the documentation
+
+[student@pool08-iad crc-linux-1.9.0-amd64]$ eval $(./crc oc-env)
+
+[student@pool08-iad crc-linux-1.9.0-amd64]$ oc login -u kubeadmin -p HeJWN-ckbCA-Q96Ds-Sj763 https://api.crc.testing:6443
+
+[student@pool08-iad crc-linux-1.9.0-amd64]$ oc version
+Client Version: 4.5.0-202004180718-6b061e3
+Server Version: 4.3.10
+Kubernetes Version: v1.16.2
+
+[student@pool08-iad crc-linux-1.9.0-amd64]$ oc new-project service-telemetry
+Now using project "service-telemetry" on server "https://api.crc.testing:6443".
+
+You can add applications to this project with the 'new-app' command. For example, try:
+
+    oc new-app ruby~https://github.com/sclorg/ruby-ex.git
+
+to build a new example application in Python. Or use kubectl to deploy a simple Kubernetes application:
+
+    kubectl create deployment hello-node --image=gcr.io/hello-minikube-zero-install/hello-node
+
+[student@pool04-iad crc-linux-1.9.0-amd64]$ 
+oc apply -f - <<EOF
+apiVersion: operators.coreos.com/v1
+kind: OperatorGroup
+metadata:
+  name: service-telemetry-operator-group
+  namespace: service-telemetry
+spec:
+  targetNamespaces:
+  - service-telemetry
+EOF
+
+[student@pool04-iad crc-linux-1.9.0-amd64]$ 
+oc apply -f - <<EOF
+apiVersion: operators.coreos.com/v1alpha1
+kind: CatalogSource
+metadata:
+  name: operatorhubio-operators
+  namespace: openshift-marketplace
+spec:
+  sourceType: grpc
+  image: quay.io/operator-framework/upstream-community-operators:latest
+  displayName: OperatorHub.io Operators
+  publisher: OperatorHub.io
+EOF
+
+[student@pool04-iad crc-linux-1.9.0-amd64]$ 
+oc apply -f - <<EOF
+apiVersion: operators.coreos.com/v1
+kind: OperatorSource
+metadata:
+  labels:
+    opsrc-provider: redhat-operators-stf
+  name: redhat-operators-stf
+  namespace: openshift-marketplace
+spec:
+  authorizationToken: {}
+  displayName: Red Hat STF Operators
+  endpoint: https://quay.io/cnr
+  publisher: Red Hat
+  registryNamespace: redhat-operators-stf
+  type: appregistry
+EOF
+
+[student@pool08-iad crc-linux-1.9.0-amd64]$ oc get -nopenshift-marketplace operatorsource redhat-operators-stf
+NAME                   TYPE          ENDPOINT              REGISTRY               DISPLAYNAME             PUBLISHER   STATUS      MESSAGE                                       AGE
+redhat-operators-stf   appregistry   https://quay.io/cnr   redhat-operators-stf   Red Hat STF Operators   Red Hat     Succeeded   The object has been successfully reconciled   23s
+
+[student@pool08-iad crc-linux-1.9.0-amd64]$ oc get packagemanifests | grep "Red Hat STF"
+servicetelemetry-operator                    Red Hat STF Operators      86s
+smartgateway-operator                        Red Hat STF Operators      86s
+
+[student@pool08-iad crc-linux-1.9.0-amd64]$ 
+oc apply -f - <<EOF
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: amq7-cert-manager
+  namespace: openshift-operators
+spec:
+  channel: alpha
+  installPlanApproval: Automatic
+  name: amq7-cert-manager
+  source: redhat-operators
+  sourceNamespace: openshift-marketplace
+EOF
+
+[student@pool08-iad crc-linux-1.9.0-amd64]$ oc get --namespace openshift-operators csv
+NAME                       DISPLAY                                         VERSION   REPLACES   PHASE
+amq7-cert-manager.v1.0.0   Red Hat Integration - AMQ Certificate Manager   1.0.0                Succeeded
+
+[student@pool08-iad crc-linux-1.9.0-amd64]$ 
+oc apply -f - <<EOF
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: elastic-cloud-eck
+  namespace: service-telemetry
+spec:
+  channel: stable
+  installPlanApproval: Automatic
+  name: elastic-cloud-eck
+  source: operatorhubio-operators
+  sourceNamespace: openshift-marketplace
+EOF
+
+[student@pool08-iad crc-linux-1.9.0-amd64]$ oc get csv
+NAME                       DISPLAY                                         VERSION   REPLACES                   PHASE
+amq7-cert-manager.v1.0.0   Red Hat Integration - AMQ Certificate Manager   1.0.0                                Succeeded
+elastic-cloud-eck.v1.2.1   Elastic Cloud on Kubernetes                     1.2.1     elastic-cloud-eck.v1.2.0   Succeeded
+
+[student@pool08-iad crc-linux-1.9.0-amd64]$ 
+oc apply -f - <<EOF
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: servicetelemetry-operator
+  namespace: service-telemetry
+spec:
+  channel: stable
+  installPlanApproval: Automatic
+  name: servicetelemetry-operator
+  source: redhat-operators-stf
+  sourceNamespace: openshift-marketplace
+EOF
+
+[student@pool08-iad crc-linux-1.9.0-amd64]$ oc get csv 
+NAME                                DISPLAY                                         VERSION   REPLACES                              PHASE
+amq7-cert-manager.v1.0.0            Red Hat Integration - AMQ Certificate Manager   1.0.0                                           Succeeded
+amq7-interconnect-operator.v1.2.0   Red Hat Integration - AMQ Interconnect          1.2.0                                           Succeeded
+elastic-cloud-eck.v1.2.1            Elastic Cloud on Kubernetes                     1.2.1     elastic-cloud-eck.v1.2.0              Succeeded
+prometheusoperator.0.37.0           Prometheus Operator                             0.37.0    prometheusoperator.0.32.0             Succeeded
+service-telemetry-operator.v1.0.3   Service Telemetry Operator                      1.0.3     service-telemetry-operator.v1.0.2-2   Succeeded
+smart-gateway-operator.v1.0.4       Smart Gateway Operator                          1.0.4     smart-gateway-operator.v1.0.2-3       Succeeded
+
+[student@pool08-iad crc-linux-1.9.0-amd64]$ 
+oc apply -f - <<EOF
+apiVersion: infra.watch/v1alpha1
+kind: ServiceTelemetry
+metadata:
+  name: stf-default
+  namespace: service-telemetry
+spec:
+  eventsEnabled: true
+  metricsEnabled: true
+EOF
+
+[student@pool08-iad crc-linux-1.9.0-amd64]$ oc logs $(oc get pod --selector='name=service-telemetry-operator' -oname) -c ansible -f
+
+[student@pool08-iad crc-linux-1.9.0-amd64]$  oc get pods
+NAME                                                              READY   STATUS    RESTARTS   AGE
+alertmanager-stf-default-0                                        2/2     Running   0          97s
+elastic-operator-5858dbbf55-dzlrw                                 1/1     Running   0          5m9s
+elasticsearch-es-default-0                                        1/1     Running   0          80s
+interconnect-operator-688f9b47bf-x5tc2                            1/1     Running   0          3m38s
+prometheus-operator-6f5cf8db54-l2w4w                              1/1     Running   0          3m32s
+prometheus-stf-default-0                                          3/3     Running   1          100s
+service-telemetry-operator-678f8d4fc7-s7lgz                       2/2     Running   0          3m32s
+smart-gateway-operator-c9798d678-n87m7                            2/2     Running   0          3m28s
+stf-default-ceilometer-notification-smartgateway-66bf8bffcctt8p   1/1     Running   1          36s
+stf-default-ceilometer-telemetry-smartgateway-dd8d755dc-7tfrf     1/1     Running   0          70s
+stf-default-collectd-notification-smartgateway-85f4b6cd5f-vfmvw   1/1     Running   2          47s
+stf-default-collectd-telemetry-smartgateway-6b978bc9-gjbh8        2/2     Running   0          83s
+stf-default-interconnect-db474ccf8-wfp8w                          1/1     Running   0          102s
+
+[student@pool08-iad crc-linux-1.9.0-amd64]$ oc get route
+NAME                             HOST/PORT                                                           PATH   SERVICES                   PORT    TERMINATION        WILDCARD
+stf-default-interconnect-55671   stf-default-interconnect-55671-service-telemetry.apps-crc.testing          stf-default-interconnect   55671   passthrough/None   None
+stf-default-interconnect-5671    stf-default-interconnect-5671-service-telemetry.apps-crc.testing           stf-default-interconnect   5671    passthrough/None   None
+stf-default-interconnect-8672    stf-default-interconnect-8672-service-telemetry.apps-crc.testing           stf-default-interconnect   8672    edge/Redirect      None
+
+[student@pool08-iad crc-linux-1.9.0-amd64]$ git clone https://github.com/infrawatch/dashboards
+[student@pool08-iad crc-linux-1.9.0-amd64]$ cd dashboards
+[student@pool08-iad dashboards]$ oc create -f deploy/subscription.yaml
+subscription.operators.coreos.com/grafana-operator created
+
+[student@pool08-iad dashboards]$  oc get csv grafana-operator.v3.2.0
+NAME                      DISPLAY            VERSION   REPLACES                  PHASE
+grafana-operator.v3.2.0   Grafana Operator   3.2.0     grafana-operator.v3.0.2   Succeeded
+
+[student@pool08-iad dashboards]$ oc create -f deploy/grafana.yaml
+grafana.integreatly.org/service-telemetry-grafana2 created
+
+[student@pool08-iad dashboards]$ oc get pod -l app=grafana
+NAME                                  READY   STATUS    RESTARTS   AGE
+grafana-deployment-549c685ddc-m7vrf   1/1     Running   0          34s
+
+[student@pool08-iad dashboards]$ oc create -f deploy/datasource.yaml -f deploy/rhos-dashboard.yaml
+grafanadatasource.integreatly.org/service-telemetry-grafanadatasource created
+grafanadashboard.integreatly.org/rhos-dashboard created
+
+[student@pool08-iad dashboards]$ oc get route grafana-route
+NAME            HOST/PORT                                          PATH   SERVICES          PORT   TERMINATION   WILDCARD
+grafana-route   grafana-route-service-telemetry.apps-crc.testing          grafana-service   3000   edge          None
+
+# Deploy Overcloud with External Ceph, Service Telemetry Framework and Advanced configuration
+(undercloud) [stack@undercloud ~]$ openstack overcloud delete overcloud --yes
+
+(undercloud) [stack@undercloud ~]$ openstack baremetal node list
+/usr/lib/python3.6/site-packages/tripleoclient/v1/overcloud_delete.py:136: ResourceWarning: unclosed file <_io.BufferedReader name=6>
+  python_interpreter=python_interpreter)
+Undeploying stack overcloud...
+Waiting for messages on queue 'tripleo' with no timeout.
+Deleting plan overcloud...
+Success.
+sys:1: ResourceWarning: unclosed <ssl.SSLSocket fd=4, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=6, laddr=('192.0.2.2', 57156)>
+sys:1: ResourceWarning: unclosed <ssl.SSLSocket fd=6, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=6, laddr=('192.0.2.2', 60272)>
+sys:1: ResourceWarning: unclosed <ssl.SSLSocket fd=8, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=6, laddr=('192.0.2.2', 58000), raddr=('192.0.2.2', 13989)>
+
+(undercloud) [stack@undercloud ~]$ openstack baremetal node list
++--------------------------------------+---------------------+---------------+-------------+--------------------+-------------+
+| UUID                                 | Name                | Instance UUID | Power State | Provisioning State | Maintenance |
++--------------------------------------+---------------------+---------------+-------------+--------------------+-------------+
+| ad3e3612-fa87-499b-bda4-f29f5d99952f | overcloud-compute01 | None          | power off   | available          | False       |
+| 87f78af7-20af-41d0-860b-e206cac5ea87 | overcloud-compute02 | None          | power off   | available          | False       |
+| 629e932c-e32c-438e-a3c8-403eac0e363d | overcloud-ctrl01    | None          | power off   | available          | False       |
+| a7aeee1d-af3a-4b18-86b6-24e8c4ba1ed4 | overcloud-ctrl02    | None          | power off   | available          | False       |
+| 436da99c-88a9-42f9-ba17-1e38ac3e4a89 | overcloud-ctrl03    | None          | power off   | available          | False       |
+| fdebcc21-49e6-4a6d-bb28-eca45a3985c8 | overcloud-networker | None          | power off   | available          | False       |
+| acf56624-065a-4dd0-acb2-ecc3079c62fd | overcloud-stor01    | None          | power off   | available          | False       |
++--------------------------------------+---------------------+---------------+-------------+--------------------+-------------+
+
+(undercloud) [stack@undercloud ~]$ 
+cat > ~/templates/HostnameMap.yaml <<EOF
+parameter_defaults:
+  HostnameMap:
+    overcloud-controller-0: lab-controller01
+    overcloud-controller-1: lab-controller02
+    overcloud-controller-2: lab-controller03
+    overcloud-novacompute-0: lab-compute01
+    overcloud-novacompute-1: lab-compute02
+EOF
+
+(undercloud) [stack@undercloud ~]$ grep -e name: -e _pools ~/templates/network_data.yaml|grep -v ipv6
+- name: Storage
+  allocation_pools: [{'start': '172.18.0.4', 'end': '172.18.0.250'}]
+- name: StorageMgmt
+  allocation_pools: [{'start': '172.19.0.4', 'end': '172.19.0.250'}]
+- name: InternalApi
+  allocation_pools: [{'start': '172.17.0.4', 'end': '172.17.0.250'}]
+- name: Tenant
+  allocation_pools: [{'start': '172.16.0.4', 'end': '172.16.0.250'}]
+- name: External
+  allocation_pools: [{'start': '10.0.0.4', 'end': '10.0.0.250'}]
+- name: Management
+  allocation_pools: [{'start': '10.0.1.4', 'end': '10.0.1.250'}]
+
+(undercloud) [stack@undercloud ~]$ 
+cat > ~/templates/ips-from-pool-all.yaml <<EOF
+parameter_defaults:
+  ControllerIPs:
+    # Each controller will get an IP from the lists below, first controller, first IP
+    ctlplane:
+    - 192.0.2.201
+    - 192.0.2.202
+    - 192.0.2.203
+    external:
+    - 10.0.0.201
+    - 10.0.0.202
+    - 10.0.0.203
+    internal_api:
+    - 172.17.0.201
+    - 172.17.0.202
+    - 172.17.0.203
+    storage:
+    - 172.18.0.201
+    - 172.18.0.202
+    - 172.18.0.203
+    storage_mgmt:
+    - 172.19.0.201
+    - 172.19.0.202
+    - 172.19.0.203
+    tenant:
+    - 172.16.0.201
+    - 172.16.0.202
+    - 172.16.0.203
+    #management:
+    #management:
+    #- 172.16.4.251
+  ComputeIPs:
+    # Each compute will get an IP from the lists below, first compute, first IP
+    ctlplane:
+    - 192.0.2.211
+    - 192.0.2.212
+    external:
+    - 10.0.0.211
+    - 10.0.0.212
+    internal_api:
+    - 172.17.0.211
+    - 172.17.0.212
+    storage:
+    - 172.18.0.211
+    - 172.18.0.212
+    storage_mgmt:
+    - 172.19.0.211
+    - 172.19.0.212
+    tenant:
+    - 172.16.0.211
+    - 172.16.0.212
+    #management:
+    #- 172.16.4.252
+### VIPs ###
+
+  ControlFixedIPs: [{'ip_address':'192.0.2.150'}]
+  InternalApiVirtualFixedIPs: [{'ip_address':'172.17.0.150'}]
+  PublicVirtualFixedIPs: [{'ip_address':'10.0.0.150'}]
+  StorageVirtualFixedIPs: [{'ip_address':'172.18.0.150'}]
+  StorageMgmtVirtualFixedIPs: [{'ip_address':'172.19.0.150'}]
+  RedisVirtualFixedIPs: [{'ip_address':'172.17.0.151'}]
+EOF
+
+[root@workstation ~]# ceph -s
+
+[root@workstation ~]# ceph auth add client.openstack mon 'allow r' osd 'allow class-read object_prefix rbd_children, allow rwx pool=volumes, allow rwx pool=vms, allow rwx pool=images, allow rwx pool=backups, allow rwx pool=metrics'
+
+[root@workstation ~]# for pool in volumes images vms backups metrics; do ceph osd pool create $pool 32; done
+
+[root@workstation ~]# cephkey=$(sudo ceph auth get-key client.openstack)
+[root@workstation ~]# fsid=$(grep fsid /etc/ceph/ceph.conf | awk '{print $3}')
+[root@workstation ~]# 
+cat > ceph-external.yaml <<EOF
+parameter_defaults:
+ CephClientKey: $cephkey
+ CephClusterFSID: $fsid
+ CephExternalMonHost: 172.18.0.61,172.18.0.62,172.18.0.63
+EOF
+
+[root@pool08-iad ~]# ssh 192.0.2.249 cat ceph-external.yaml | ssh stack@undercloud "tee templates/ceph-external.yaml"
+
+(undercloud) [stack@undercloud ~]$ 
+cat > /home/stack/templates/stf-connectors.yaml << EOF
+parameter_defaults:
+  CeilometerQdrPublishEvents: true
+  MetricsQdrConnectors:
+  - host: stf-default-interconnect-5671-service-telemetry.apps-crc.testing
+    port: 443
+    role: edge
+    sslProfile: sslProfile
+    verifyHostname: false
+EOF
+
+[root@pool08-iad ~]# iptables -I FORWARD 1 -j ACCEPT
+
+(undercloud) [stack@undercloud ~]$ curl -v stf-default-interconnect-5671-service-telemetry.apps-crc.testing:443
+* Rebuilt URL to: stf-default-interconnect-5671-service-telemetry.apps-crc.testing:443/
+*   Trying 192.168.130.11...
+* TCP_NODELAY set
+* Connected to stf-default-interconnect-5671-service-telemetry.apps-crc.testing (192.168.130.11) port 443 (#0)
+> GET / HTTP/1.1
+> Host: stf-default-interconnect-5671-service-telemetry.apps-crc.testing:443
+> User-Agent: curl/7.61.1
+> Accept: */*
+>
+* Empty reply from server
+* Connection #0 to host stf-default-interconnect-5671-service-telemetry.apps-crc.testing left intact
+curl: (52) Empty reply from server
+
+(undercloud) [stack@undercloud ~]$ 
+cat > ~/deploy-with-ext-ceph-stf.sh <<\EOF
+#!/bin/bash
+THT=/usr/share/openstack-tripleo-heat-templates/
+CNF=~/templates/
+
+source ~/stackrc
+openstack overcloud deploy --templates $THT \
+-r $CNF/roles_data.yaml \
+-n $CNF/network_data.yaml \
+-e $THT/environments/network-isolation.yaml \
+-e $THT/environments/ceph-ansible/ceph-ansible-external.yaml \
+-e $THT/environments/metrics/ceilometer-write-qdr.yaml \
+-e $THT/environments/enable-stf.yaml \
+-e $THT/environments/ips-from-pool-all.yaml \
+-e $CNF/environments/network-environment.yaml \
+-e $CNF/environments/net-bond-with-vlans.yaml \
+-e ~/containers-prepare-parameter.yaml \
+-e $CNF/node-info.yaml \
+-e $CNF/ceph-external.yaml \
+-e $CNF/HostnameMap.yaml \
+-e $CNF/ips-from-pool-all.yaml \
+-e $CNF/stf-connectors.yaml \
+-e $CNF/fix-nova-reserved-host-memory.yaml
+EOF
+
+(undercloud) [stack@undercloud ~]$ chmod 0755 ~/deploy-with-ext-ceph-stf.sh
+(undercloud) [stack@undercloud ~]$ time /bin/bash -x ~/deploy-with-ext-ceph-stf.sh
 
 ### day 3
 
 ### day 4
 
 ### day 5
+
+### sync repo
+# underlcoud
+sudo -i
+dnf repolist | grep -v "repo id" | awk '{print $1}' | while read i ; do reposync -p /var/www/html --download-metadata --repo=$i ; done 
 
 
 ```

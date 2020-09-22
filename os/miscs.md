@@ -2514,3 +2514,11 @@ alias cp0="source ~/stackrc; ssh heat-admin@$( openstack server list | grep comp
 alias cp1="source ~/stackrc; ssh heat-admin@$( openstack server list | grep compute-1 | awk -F'|' '{print $5}' | awk -F'=' '{print $2}' )"
 EOF
 ```
+
+### RHEL8 如何同步软件频道内容
+参见：https://access.redhat.com/solutions/23016
+```
+# yum install yum-utils createrepo
+# reposync -p /var/www/html --download-metadata --repo=<repo id>
+
+```

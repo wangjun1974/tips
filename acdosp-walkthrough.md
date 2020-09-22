@@ -1530,6 +1530,68 @@ ports               : [0cc1be07-842a-4666-b354-17d443eb81ba, 43a830eb-20ea-441f-
 tunnel_key          : 32768
 
 ### day 2
+[root@pool08-iad ~]# mkdir /ctl_plane_backups
+[root@pool08-iad ~]# chmod 755 /ctl_plane_backups
+
+[root@pool08-iad ~]# 
+cat >> /etc/exports <<EOF
+/ctl_plane_backups 192.0.0.0/8(rw,sync,no_root_squash,no_subtree_check)
+EOF
+
+[root@pool08-iad ~]# exportfs -a
+
+(undercloud) [stack@undercloud ~]$ tripleo-ansible-inventory --ansible_ssh_user heat-admin --static-yaml-inventory ~/tripleo-inventory.yaml
+
+(undercloud) [stack@undercloud ~]$ 
+cat <<'EOF' > ~/undercloud_bar_rear_setup.yaml
+---
+# Playbook
+# We install and configure ReaR in the control plane nodes
+# As they are the only nodes we will like to backup now.
+- become: true
+  hosts: Undercloud
+  name: Install ReaR
+  roles:
+  - role: backup-and-restore
+EOF
+
+# Bug 1860439 workaround
+(undercloud) [stack@undercloud ~]$ sudo sed -i 's/  register: tripleo_backup_and_restore_exclude_paths//' /usr/share/ansible/roles/backup-and-restore/setup_rear/tasks/main.yml
+
+# Run playbook to configure ReaR to use the NFS server
+(undercloud) [stack@undercloud ~]$ 
+ansible-playbook \
+    -v -i ~/tripleo-inventory.yaml \
+    --extra="ansible_ssh_common_args='-o StrictHostKeyChecking=no'" \
+    --become \
+    --become-user root \
+    --tags bar_setup_rear \
+    --extra="tripleo_backup_and_restore_nfs_server=192.0.2.254" \
+    ~/undercloud_bar_rear_setup.yaml
+
+# Backup stopping the services
+(undercloud) [stack@undercloud ~]$ 
+ansible-playbook \
+	-v -i ~/tripleo-inventory.yaml \
+	--extra="ansible_ssh_common_args='-o StrictHostKeyChecking=no'" \
+	--become \
+	--become-user root \
+	--tags bar_create_recover_image \
+	~/undercloud_bar_rear_setup.yaml
+
+# Restore from the Backup
+[root@pool08-iad ~]# virsh destroy undercloud
+Domain undercloud destroyed
+
+[root@pool08-iad ~]# mv /var/lib/libvirt/images/undercloud.qcow2 /var/lib/libvirt/images/undercloud.qcow2.original
+
+[root@pool08-iad ~]# qemu-img create -f qcow2 /var/lib/libvirt/images/undercloud.qcow2 100G
+Formatting '/var/lib/libvirt/images/undercloud.qcow2', fmt=qcow2 size=107374182400 cluster_size=65536 lazy_refcounts=off refcount_bits=16
+
+[root@pool08-iad ~]# chmod 775 /ctl_plane_backups/undercloud/
+[root@pool08-iad ~]# chmod 664 /ctl_plane_backups/undercloud/undercloud.example.com.iso
+[root@pool08-iad ~]# virsh attach-disk undercloud /ctl_plane_backups/undercloud/undercloud.example.com.iso sda --type cdrom --mode readonly --config
+Disk attached successfully
 
 ### day 3
 

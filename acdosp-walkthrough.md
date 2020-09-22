@@ -1289,6 +1289,247 @@ EOF
 (undercloud) [stack@undercloud ~]$ source ~/overcloudrc
 (overcloud) [stack@undercloud ~]$ 
 
+(overcloud) [stack@undercloud ~]$ openstack compute service list
++--------------------------------------+----------------+-------------------------------------+----------+---------+-------+----------------------------+
+| ID                                   | Binary         | Host                                | Zone     | Status  | State | Updated At                 |
++--------------------------------------+----------------+-------------------------------------+----------+---------+-------+----------------------------+
+| d4c980ff-cf39-49ff-91df-be6e22ee799c | nova-conductor | overcloud-controller-0.localdomain  | internal | enabled | up    | 2020-09-21T07:50:34.000000 |
+| 51b4537b-3265-44e2-aa84-94b2d2e9c5c3 | nova-conductor | overcloud-controller-2.localdomain  | internal | enabled | up    | 2020-09-21T07:50:34.000000 |
+| 21474e15-9e07-4dad-b0ff-0037be1b7fef | nova-conductor | overcloud-controller-1.localdomain  | internal | enabled | up    | 2020-09-21T07:50:25.000000 |
+| 090f67db-f54a-4397-a145-8a2715fd16a4 | nova-scheduler | overcloud-controller-2.localdomain  | internal | enabled | up    | 2020-09-21T07:50:28.000000 |
+| 704a2862-f7c1-493f-9006-2fee3791f434 | nova-scheduler | overcloud-controller-0.localdomain  | internal | enabled | up    | 2020-09-21T07:50:28.000000 |
+| 4832da4d-a23a-4b61-9555-6da58b8da3c0 | nova-scheduler | overcloud-controller-1.localdomain  | internal | enabled | up    | 2020-09-21T07:50:28.000000 |
+| c3ff3859-e03a-4cb9-8b1c-fe8e67f73730 | nova-compute   | overcloud-novacompute-1.localdomain | nova     | enabled | up    | 2020-09-21T07:50:31.000000 |
+| 6ce5aa6b-0ea2-4549-a812-ea1fddfb9ccb | nova-compute   | overcloud-novacompute-0.localdomain | nova     | enabled | up    | 2020-09-21T07:50:31.000000 |
++--------------------------------------+----------------+-------------------------------------+----------+---------+-------+----------------------------+
+
+(undercloud) [stack@undercloud ~]$ heat-admin@overcloud-controller-0.ctlplane
+[heat-admin@overcloud-controller-0 ~]$ cat /etc/rhosp-release
+Red Hat OpenStack Platform release 16.1.0 GA (Train)
+
+[heat-admin@overcloud-controller-0 ~]$ cat /etc/system-release
+Red Hat Enterprise Linux release 8.2 (Ootpa)
+
+[heat-admin@overcloud-controller-0 ~]$ sudo podman ps 
+
+[heat-admin@overcloud-controller-0 ~]$ sudo pcs status
+
+[heat-admin@overcloud-controller-0 ~]$ sudo podman exec -ti haproxy-bundle-podman-0 cat /etc/haproxy/haproxy.cfg
+
+(overcloud) [stack@undercloud ~]$ ssh heat-admin@overcloud-novacompute-0.ctlplane
+
+[heat-admin@overcloud-novacompute-0 ~]$ sudo podman ps
+CONTAINER ID  IMAGE                                                                                          COMMAND      CREATED         STATUS             PORTS  NAMES
+339c8022441e  undercloud.ctlplane.localdomain:8787/rhosp-rhel8/openstack-nova-compute:16.1-43                kolla_start  28 minutes ago  Up 28 minutes ago         nova_compute
+cb3ddb333fa5  undercloud.ctlplane.localdomain:8787/rhosp-rhel8/openstack-neutron-metadata-agent-ovn:16.1-46  kolla_start  31 minutes ago  Up 31 minutes ago         ovn_metadata_agent
+1430b2fb97b2  undercloud.ctlplane.localdomain:8787/rhosp-rhel8/openstack-ovn-controller:16.1-46              kolla_start  31 minutes ago  Up 31 minutes ago         ovn_controller
+4066011c61f1  undercloud.ctlplane.localdomain:8787/rhosp-rhel8/openstack-nova-compute:16.1-43                kolla_start  31 minutes ago  Up 31 minutes ago         nova_migration_target
+2a25b48850a0  undercloud.ctlplane.localdomain:8787/rhosp-rhel8/openstack-cron:16.1-50                        kolla_start  31 minutes ago  Up 31 minutes ago         logrotate_crond
+3487df64cbf3  undercloud.ctlplane.localdomain:8787/rhosp-rhel8/openstack-iscsid:16.1-49                      kolla_start  37 minutes ago  Up 37 minutes ago         iscsid
+f50187049f8c  undercloud.ctlplane.localdomain:8787/rhosp-rhel8/openstack-nova-libvirt:16.1-46                kolla_start  37 minutes ago  Up 37 minutes ago         nova_libvirt
+a46eaf476f26  undercloud.ctlplane.localdomain:8787/rhosp-rhel8/openstack-nova-libvirt:16.1-46                kolla_start  37 minutes ago  Up 37 minutes ago         nova_virtlogd
+
+
+[heat-admin@overcloud-novacompute-0 ~]$ sudo podman exec -ti nova_compute ps auwwx
+USER         PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+nova           1  0.0  0.0   4204   796 ?        Ss   07:31   0:00 dumb-init --single-child -- kolla_start
+nova           7  0.4  2.0 2197908 162848 ?      Sl   07:31   0:07 /usr/bin/python3 /usr/bin/nova-compute
+nova         402  0.0  0.0  47628  3896 pts/1    Rs+  08:01   0:00 ps auwwx
+
+[heat-admin@overcloud-controller-0 ~]$ sudo ovs-vsctl show 
+
+[heat-admin@overcloud-controller-0 ~]$ ip --brief address show
+lo               UNKNOWN        127.0.0.1/8 ::1/128 
+ens3             UP             192.0.2.20/24 192.0.2.8/32 fe80::5054:ff:fe56:484d/64 
+ens4             UP             fe80::5054:ff:fec4:650b/64 
+ens5             UP             fe80::5054:ff:fe6a:2a62/64 
+ens6             UP             fe80::5054:ff:fe77:7e03/64 
+ovs-system       DOWN           
+br-ex            UNKNOWN        fe80::7439:afff:fe6b:6843/64 
+vlan20           UNKNOWN        172.17.0.198/24 172.17.0.14/32 172.17.0.246/32 fe80::a041:98ff:fe8f:1e09/64 
+vlan10           UNKNOWN        10.0.0.19/24 fe80::c498:2fff:fec3:5e87/64 
+vlan40           UNKNOWN        172.19.0.106/24 fe80::dc20:c9ff:fe62:92af/64 
+vlan50           UNKNOWN        172.16.0.187/24 fe80::16:2aff:fed6:c199/64 
+vlan30           UNKNOWN        172.18.0.36/24 fe80::481:2eff:feaf:30e6/64 
+genev_sys_6081   UNKNOWN        fe80::70ec:5dff:fe6b:f4f3/64 
+br-int           DOWN           
+
+[heat-admin@overcloud-controller-0 ~]$ jq "." /etc/os-net-config/config.json
+
+(overcloud) [stack@undercloud ~]$ 
+openstack network create public \
+  --external --provider-physical-network datacentre \
+  --provider-network-type vlan --provider-segment 10
+
+(overcloud) [stack@undercloud ~]$ 
+openstack subnet create public-subnet \
+  --no-dhcp --network public --subnet-range 10.0.0.0/24 \
+  --allocation-pool start=10.0.0.100,end=10.0.0.200  \
+  --gateway 10.0.0.1 --dns-nameserver 8.8.8.8
+
+(overcloud) [stack@undercloud ~]$ 
+openstack network create private
+
+(overcloud) [stack@undercloud ~]$ 
+openstack subnet create private-subnet \
+  --network private \
+  --dns-nameserver 8.8.4.4 --gateway 172.16.1.1 \
+  --subnet-range 172.16.1.0/24
+
+(overcloud) [stack@undercloud ~]$ 
+openstack router create router1
+
+(overcloud) [stack@undercloud ~]$ 
+openstack router add subnet router1 private-subnet
+
+(overcloud) [stack@undercloud ~]$ 
+openstack router set router1 --external-gateway public
+
+(overcloud) [stack@undercloud ~]$ 
+openstack port list --router=router1
+
+(overcloud) [stack@undercloud ~]$ 
+openstack flavor create m1.nano --vcpus 1 --ram 64 --disk 1
+
+(overcloud) [stack@undercloud ~]$ 
+openstack security group list --project admin
+
+(overcloud) [stack@undercloud ~]$ SGID=$(openstack security group list --project admin -c ID -f value)
+(overcloud) [stack@undercloud ~]$ openstack security group rule create --proto icmp $SGID
+(overcloud) [stack@undercloud ~]$ openstack security group rule create --dst-port 22 --proto tcp $SGID
+
+(overcloud) [stack@undercloud ~]$  curl -L -O http://download.cirros-cloud.net/0.4.0/cirros-0.4.0-x86_64-disk.img
+
+(overcloud) [stack@undercloud ~]$ openstack image create cirros   --file cirros-0.4.0-x86_64-disk.img   --disk-format qcow2 --container-format bare
+
+(overcloud) [stack@undercloud ~]$ openstack server create test-instance --network private --flavor m1.nano --image cirros
+
+(overcloud) [stack@undercloud ~]$ openstack server list
+
+(overcloud) [stack@undercloud ~]$ openstack console log show test-instance
+
+(overcloud) [stack@undercloud ~]$ openstack floating ip create public
+
+(overcloud) [stack@undercloud ~]$ openstack floating ip list
+
+(overcloud) [stack@undercloud ~]$ FIP=$(openstack floating ip list -c "Floating IP Address" -f value)
+(overcloud) [stack@undercloud ~]$ openstack server add floating ip test-instance $FIP
+
+(overcloud) [stack@undercloud ~]$ ping -c3 $FIP
+
+(overcloud) [stack@undercloud ~]$ ssh cirros@$FIP
+$ cat /etc/resolv.conf
+nameserver 8.8.4.4
+
+[heat-admin@overcloud-controller-0 ~]$ sudo crudini --get  /var/lib/config-data/puppet-generated/neutron/etc/neutron/plugins/ml2/ml2_conf.ini ml2 mechanism_drivers
+ovn
+
+[heat-admin@overcloud-controller-0 ~]$ sudo crudini --get  /var/lib/config-data/puppet-generated/neutron/etc/neutron/plugins/ml2/ml2_conf.ini ml2 tenant_network_types
+geneve,vlan
+
+[heat-admin@overcloud-controller-0 ~]$ sudo podman ps -f name=ovn
+CONTAINER ID  IMAGE                                                                              COMMAND               CREATED         STATUS             PORTS  NAMES
+75d89f98975e  undercloud.ctlplane.localdomain:8787/rhosp-rhel8/openstack-ovn-controller:16.1-46  kolla_start           48 minutes ago  Up 48 minutes ago         ovn_controller
+5ee0f247b3e6  undercloud.ctlplane.localdomain:8787/rhosp-rhel8/openstack-ovn-northd:16.1-45      /bin/bash /usr/lo...  54 minutes ago  Up 54 minutes ago         ovn-dbs-bundle-podman-0
+
+[heat-admin@overcloud-controller-0 ~]$ ss -4l | grep 6641 
+tcp    LISTEN  0       10        172.17.0.246:6641                 0.0.0.0:*  
+
+[heat-admin@overcloud-controller-0 ~]$ ss -4l | grep 6642
+tcp    LISTEN  0       10        172.17.0.246:6642                 0.0.0.0:*  
+
+(overcloud) [stack@undercloud ~]$ openstack network agent list 
++--------------------------------------+----------------------+-------------------------------------+-------------------+-------+-------+-------------------------------+
+| ID                                   | Agent Type           | Host                                | Availability Zone | Alive | State | Binary                        |
++--------------------------------------+----------------------+-------------------------------------+-------------------+-------+-------+-------------------------------+
+| dbf52d09-f301-428a-a2ad-0a6a99118d6a | OVN Controller agent | overcloud-novacompute-0.localdomain | n/a               | :-)   | UP    | ovn-controller                |
+| 1d87b125-e881-4e25-962d-850a316f1914 | OVN Metadata agent   | overcloud-novacompute-0.localdomain | n/a               | :-)   | UP    | networking-ovn-metadata-agent |
+| f411fb0c-dff1-479a-ac68-97796d6c1f45 | OVN Controller agent | overcloud-novacompute-1.localdomain | n/a               | :-)   | UP    | ovn-controller                |
+| 891b9ee1-842b-4aa8-9bd9-a6cc021270c3 | OVN Metadata agent   | overcloud-novacompute-1.localdomain | n/a               | :-)   | UP    | networking-ovn-metadata-agent |
+| 4e896537-3e36-4eff-acba-ad793f9fe233 | OVN Controller agent | overcloud-controller-2.localdomain  | n/a               | :-)   | UP    | ovn-controller                |
+| 8ede74a7-b5d3-4260-99d3-074dcf6afdbc | OVN Controller agent | overcloud-controller-0.localdomain  | n/a               | :-)   | UP    | ovn-controller                |
+| a68be20c-11ea-4a9b-b9b2-00484fcc9b96 | OVN Controller agent | overcloud-controller-1.localdomain  | n/a               | :-)   | UP    | ovn-controller                |
++--------------------------------------+----------------------+-------------------------------------+-------------------+-------+-------+-------------------------------+
+
+[heat-admin@overcloud-novacompute-0 ~]$ sudo podman ps -f name=ovn
+CONTAINER ID  IMAGE                                                                                          COMMAND               CREATED         STATUS             PORTS  NAMES
+a66ae3111c85  undercloud.ctlplane.localdomain:8787/rhosp-rhel8/openstack-neutron-metadata-agent-ovn:16.1-46  /bin/bash -c HAPR...  6 minutes ago   Up 6 minutes ago          neutron-haproxy-ovnmeta-7ee90608-0e2b-4df6-9515-6cec41bd2203
+cb3ddb333fa5  undercloud.ctlplane.localdomain:8787/rhosp-rhel8/openstack-neutron-metadata-agent-ovn:16.1-46  kolla_start           50 minutes ago  Up 50 minutes ago         ovn_metadata_agent
+1430b2fb97b2  undercloud.ctlplane.localdomain:8787/rhosp-rhel8/openstack-ovn-controller:16.1-46              kolla_start           50 minutes ago  Up 50 minutes ago         ovn_controller
+
+[heat-admin@overcloud-novacompute-0 ~]$ sudo ip netns
+ovnmeta-7ee90608-0e2b-4df6-9515-6cec41bd2203 (id: 0)
+
+[heat-admin@overcloud-controller-0 ~]$ IP=$(ss -4l | grep 6641|awk '{print $5}'|cut -d":" -f1)
+[heat-admin@overcloud-controller-0 ~]$ sudo podman exec -ti ovn_controller ovn-nbctl --db=tcp:$IP:6641 show
+switch f2ccad81-6c29-460b-aa3a-2045a01a1bca (neutron-5d12ed03-ca23-4738-8693-7a5141f2302d) (aka public)
+    port bc3aa35d-1d5d-47a0-9716-e1ce52d79376
+        type: localport
+        addresses: ["fa:16:3e:8a:02:a2"]
+    port 38939c52-01e2-4e9a-8eaf-156d2737e594
+        type: router
+        router-port: lrp-38939c52-01e2-4e9a-8eaf-156d2737e594
+    port provnet-5d12ed03-ca23-4738-8693-7a5141f2302d
+        type: localnet
+        tag: 10
+        addresses: ["unknown"]
+switch 3a5a52cf-70ec-474b-8882-d7680c25e698 (neutron-e0289aed-e15a-4670-a2c7-441574f36471) (aka private)
+    port 0edf3845-2501-484c-a96b-a8783b080ffa
+        addresses: ["fa:16:3e:05:cd:92 172.16.1.100"]
+    port 16bb228f-02e2-4099-80d5-4915ede8cd68
+        type: localport
+        addresses: ["fa:16:3e:19:f1:4b 172.16.1.2"]
+    port a1b20d84-cd6e-4973-81c9-d73ab1a6c09f
+        type: router
+        router-port: lrp-a1b20d84-cd6e-4973-81c9-d73ab1a6c09f
+router e010cd21-1e2d-4840-b9ab-b13b4803f7af (neutron-8f0d3b07-3670-493f-9c2a-5871da3c4449) (aka router1)
+    port lrp-38939c52-01e2-4e9a-8eaf-156d2737e594
+        mac: "fa:16:3e:ba:dd:95"
+        networks: ["10.0.0.191/24"]
+        gateway chassis: [4e896537-3e36-4eff-acba-ad793f9fe233 8ede74a7-b5d3-4260-99d3-074dcf6afdbc a68be20c-11ea-4a9b-b9b2-00484fcc9b96 f411fb0c-dff1-479a-ac68-97796d6c1f45 dbf52d09-f301-428a-a2ad-0a6a99118d6a]
+    port lrp-a1b20d84-cd6e-4973-81c9-d73ab1a6c09f
+        mac: "fa:16:3e:14:49:05"
+        networks: ["172.16.1.1/24"]
+    nat 34444f9b-02d7-4fcd-8f13-a37397b94583
+        external ip: "10.0.0.191"
+        logical ip: "172.16.1.0/24"
+        type: "snat"
+    nat 9a915bb7-b649-4ed8-9235-4baf5cf4d932
+        external ip: "10.0.0.166"
+        logical ip: "172.16.1.100"
+        type: "dnat_and_snat"
+
+[heat-admin@overcloud-controller-0 ~]$ sudo podman exec -ti ovn_controller ovn-nbctl --db=tcp:$IP:6641 list logical_switch_port
+
+[heat-admin@overcloud-controller-0 ~]$ sudo podman exec -ti ovn_controller ovn-sbctl --db=tcp:$IP:6642 list datapath_binding
+_uuid               : 7ee90608-0e2b-4df6-9515-6cec41bd2203
+external_ids        : {logical-switch="3a5a52cf-70ec-474b-8882-d7680c25e698", name=neutron-e0289aed-e15a-4670-a2c7-441574f36471, name2=private}
+tunnel_key          : 2
+
+_uuid               : f2592706-b6f5-44e3-9cae-c5ef737300f7
+external_ids        : {logical-switch="f2ccad81-6c29-460b-aa3a-2045a01a1bca", name=neutron-5d12ed03-ca23-4738-8693-7a5141f2302d, name2=public}
+tunnel_key          : 1
+
+_uuid               : b40d9ee7-7871-4052-b208-46f3cff146f1
+external_ids        : {logical-router="e010cd21-1e2d-4840-b9ab-b13b4803f7af", name=neutron-8f0d3b07-3670-493f-9c2a-5871da3c4449, name2=router1}
+tunnel_key          : 3
+
+[heat-admin@overcloud-controller-0 ~]$ sudo podman exec -ti ovn_controller ovn-sbctl --db=tcp:$IP:6642 lflow-list private
+
+[heat-admin@overcloud-controller-0 ~]$ sudo podman exec -ti ovn_controller ovn-sbctl --db=tcp:$IP:6642 find multicast_group name=_MC_flood
+_uuid               : 9b21d7d2-d9ee-499f-9e40-f0a5e3dae0a4
+datapath            : 7ee90608-0e2b-4df6-9515-6cec41bd2203
+name                : _MC_flood
+ports               : [6c08af06-e327-416b-a8d1-d5d6f876db6d, 80831a2d-4467-476b-9508-14d005980d6a, 92520c71-2eef-4971-8e16-f52761f84875]
+tunnel_key          : 32768
+
+_uuid               : 9d45a163-f82b-4276-a5ed-d56facf00f7a
+datapath            : f2592706-b6f5-44e3-9cae-c5ef737300f7
+name                : _MC_flood
+ports               : [0cc1be07-842a-4666-b354-17d443eb81ba, 43a830eb-20ea-441f-8c8f-aa107a735118, 549560f0-83ff-4a4e-9d93-6e2160b01951]
+tunnel_key          : 32768
+
+
 
 
 ```

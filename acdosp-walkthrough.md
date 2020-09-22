@@ -1593,6 +1593,333 @@ Formatting '/var/lib/libvirt/images/undercloud.qcow2', fmt=qcow2 size=1073741824
 [root@pool08-iad ~]# virsh attach-disk undercloud /ctl_plane_backups/undercloud/undercloud.example.com.iso sda --type cdrom --mode readonly --config
 Disk attached successfully
 
+(undercloud) [stack@undercloud ~]$  openstack baremetal node list
++--------------------------------------+---------------------+--------------------------------------+-------------+--------------------+-------------+
+| UUID                                 | Name                | Instance UUID                        | Power State | Provisioning State | Maintenance |
++--------------------------------------+---------------------+--------------------------------------+-------------+--------------------+-------------+
+| ad3e3612-fa87-499b-bda4-f29f5d99952f | overcloud-compute01 | a7c556c6-b22d-405f-92a5-4955553e4de0 | power on    | active             | False       |
+| 87f78af7-20af-41d0-860b-e206cac5ea87 | overcloud-compute02 | bca90171-34dc-4713-b65e-563065dc7e39 | power on    | active             | False       |
+| 629e932c-e32c-438e-a3c8-403eac0e363d | overcloud-ctrl01    | d95e7a6c-c9cc-4e69-9584-a2c945a74671 | power on    | active             | False       |
+| a7aeee1d-af3a-4b18-86b6-24e8c4ba1ed4 | overcloud-ctrl02    | 42d2a7eb-664d-4403-9a17-47c3f1a680a9 | power on    | active             | False       |
+| 436da99c-88a9-42f9-ba17-1e38ac3e4a89 | overcloud-ctrl03    | 259ceb8c-557b-45cb-9d4e-75de23298dc0 | power on    | active             | False       |
+| fdebcc21-49e6-4a6d-bb28-eca45a3985c8 | overcloud-networker | None                                 | power off   | available          | False       |
+| acf56624-065a-4dd0-acb2-ecc3079c62fd | overcloud-stor01    | None                                 | power off   | available          | False       |
++--------------------------------------+---------------------+--------------------------------------+-------------+--------------------+-------------+
+
+(undercloud) [stack@undercloud ~]$ openstack compute service list
++----+----------------+------------------------+----------+---------+-------+----------------------------+
+| ID | Binary         | Host                   | Zone     | Status  | State | Updated At                 |
++----+----------------+------------------------+----------+---------+-------+----------------------------+
+|  1 | nova-conductor | undercloud.localdomain | internal | enabled | up    | 2020-09-22T06:25:11.000000 |
+|  3 | nova-scheduler | undercloud.localdomain | internal | enabled | up    | 2020-09-22T06:25:15.000000 |
+|  5 | nova-compute   | undercloud.localdomain | nova     | enabled | up    | 2020-09-22T06:25:16.000000 |
++----+----------------+------------------------+----------+---------+-------+----------------------------+
+
+(undercloud) [stack@undercloud ~]$ swift download overcloud plan-environment.yaml -o - | grep Count
+  ComputeCount: 2
+  ControllerCount: 3
+
+(undercloud) [stack@undercloud ~]$ openstack server list
++--------------------------------------+-------------------------+--------+---------------------+----------------+---------+
+| ID                                   | Name                    | Status | Networks            | Image          | Flavor  |
++--------------------------------------+-------------------------+--------+---------------------+----------------+---------+
+| 42d2a7eb-664d-4403-9a17-47c3f1a680a9 | overcloud-controller-1  | ACTIVE | ctlplane=192.0.2.23 | overcloud-full | control |
+| 259ceb8c-557b-45cb-9d4e-75de23298dc0 | overcloud-controller-2  | ACTIVE | ctlplane=192.0.2.11 | overcloud-full | control |
+| d95e7a6c-c9cc-4e69-9584-a2c945a74671 | overcloud-controller-0  | ACTIVE | ctlplane=192.0.2.20 | overcloud-full | control |
+| bca90171-34dc-4713-b65e-563065dc7e39 | overcloud-novacompute-1 | ACTIVE | ctlplane=192.0.2.10 | overcloud-full | compute |
+| a7c556c6-b22d-405f-92a5-4955553e4de0 | overcloud-novacompute-0 | ACTIVE | ctlplane=192.0.2.6  | overcloud-full | compute |
++--------------------------------------+-------------------------+--------+---------------------+----------------+---------+
+
+# Backup and Restore Overcloud
+## Install ReaR in the Overcloud
+
+(undercloud) [stack@undercloud ~]$ 
+cat <<'EOF' > ~/overcloud_bar_rear_setup.yaml
+# Playbook
+# We install and configure ReaR in the control plane nodes
+# As they are the only nodes we will like to backup now.
+- become: true
+  hosts: Controller
+  name: Install ReaR
+  roles:
+  - role: backup-and-restore
+EOF
+
+# copy yum repository config file from undercloud to controller
+(undercloud) [stack@undercloud ~]$ 
+ansible -i ~/tripleo-inventory.yaml \
+    --become \
+    --become-user root \
+    -m copy \
+    -a "src=/etc/yum.repos.d/open.repo dest=/etc/yum.repos.d/open.repo" \
+    Controller
+
+# Install ReaR on the Controller nodes
+(undercloud) [stack@undercloud ~]$ 
+ansible-playbook \
+	-v -i ~/tripleo-inventory.yaml \
+	--extra="ansible_ssh_common_args='-o StrictHostKeyChecking=no'" \
+	--become \
+	--become-user root \
+	--tags bar_setup_rear \
+	--extra="tripleo_backup_and_restore_nfs_server=192.0.2.254" \
+	~/overcloud_bar_rear_setup.yaml
+
+# Perform Backup
+## Snapshot backup without stop services
+
+(undercloud) [stack@undercloud ~]$ 
+ansible-playbook \
+	-v -i ~/tripleo-inventory.yaml \
+	--extra="ansible_ssh_common_args='-o StrictHostKeyChecking=no'" \
+	--become \
+	--become-user root \
+	--tags bar_create_recover_image \
+	--extra="tripleo_container_cli=podman" \
+	--extra="tripleo_backup_and_restore_service_manager=false" \
+	~/overcloud_bar_rear_setup.yaml
+
+
+# Restore from the Backup
+## destroy vm overcloud-ctrl01
+[root@pool08-iad ~]# virsh destroy overcloud-ctrl01
+
+[root@pool08-iad ~]# mv /var/lib/libvirt/images/overcloud-ctrl01.qcow2 /var/lib/libvirt/images/overcloud-ctrl01.qcow2.original
+
+[root@pool08-iad ~]# qemu-img create -f qcow2 /var/lib/libvirt/images/overcloud-ctrl01.qcow2 60G
+Formatting '/var/lib/libvirt/images/overcloud-ctrl01.qcow2', fmt=qcow2 size=64424509440 cluster_size=65536 lazy_refcounts=off refcount_bits=16
+
+[root@pool08-iad ~]# chmod 775 /ctl_plane_backups/overcloud-controller-0/
+[root@pool08-iad ~]# chmod 664 /ctl_plane_backups/overcloud-controller-0/overcloud-controller-0.iso
+[root@pool08-iad ~]# virsh attach-disk overcloud-ctrl01 /ctl_plane_backups/overcloud-controller-0/overcloud-controller-0.iso sda --type cdrom --mode readonly --config
+Disk attached successfully
+
+# config boot order and boot device manually add boot dev and remove boot order
+[root@pool08-iad ~]# 
+virsh edit overcloud-ctrl01
+...
+  <os>
+    <type arch='x86_64' machine='pc-i440fx-rhel7.6.0'>hvm</type>
+    <boot dev='hd'/>
+  </os>
+...
+
+# Ceph 4 Installation Lab
+# Create the Workstation node
+[root@pool08-iad ~]# /bin/bash -x ./setup-env-workstation.sh
+
+# Create the Ceph nodes
+[root@pool08-iad ~]# /bin/bash -x ./setup-env-ceph4-osp16.sh
+
+[root@pool08-iad ~]# ssh-copy-id root@192.0.2.249
+[root@pool08-iad ~]# ssh root@192.0.2.249
+Activate the web console with: systemctl enable --now cockpit.socket
+
+This system is not registered to Red Hat Insights. See https://cloud.redhat.com/
+To register this system, run: insights-client --register
+
+[root@workstation ~]# 
+[root@workstation ~]# dnf repolist
+repo id                                                                     repo name
+ansible-2.9-for-rhel-8-x86_64-rpms                                          ansible-2.9-for-rhel-8-x86_64-rpms
+fast-datapath-for-rhel-8-x86_64-rpms                                        fast-datapath-for-rhel-8-x86_64-rpms
+openstack-16.1-for-rhel-8-x86_64-rpms                                       openstack-16.1-for-rhel-8-x86_64-rpms
+rhceph-4-tools-for-rhel-8-x86_64-rpms                                       rhceph-4-tools-for-rhel-8-x86_64-rpms
+rhel-8-for-x86_64-appstream-eus-rpms                                        rhel-8-for-x86_64-appstream-eus-rpms
+rhel-8-for-x86_64-baseos-eus-rpms                                           rhel-8-for-x86_64-baseos-eus-rpms
+rhel-8-for-x86_64-highavailability-eus-rpms                                 rhel-8-for-x86_64-highavailability-eus-rpms
+
+[root@workstation ~]# dnf -y install ceph-ansible
+
+[root@workstation ~]# 
+cat >> /etc/hosts <<EOF
+172.18.0.61 ceph-node01 ceph-node01.example.com
+172.18.0.62 ceph-node02 ceph-node02.example.com
+172.18.0.63 ceph-node03 ceph-node03.example.com
+EOF
+
+[root@workstation ~]# 
+cat > ceph-nodes << EOF
+[all]
+ceph-node01
+ceph-node02
+ceph-node03
+EOF
+
+[root@workstation ~]# 
+cat > ceph-preqs.yaml << EOF
+---
+- name: Ceph Installation Pre-requisites
+  hosts: all
+  gather_facts: no
+  vars:
+  remote_user: root
+  ignore_errors: yes
+  tasks:
+
+  - name: Create the admin user
+    user:
+      name: admin
+      generate_ssh_key: yes
+      ssh_key_bits: 2048
+      ssh_key_file: .ssh/id_rsa
+      password: $6$mZKDrweZ5e04Hcus$97I..Zb0Ywh1lQefdCRxGh2PJ/abNU/LIN7zp8d2E.uYUSmx1RLokyzYS3mUTpipvToZbYKyfMqdP6My7yYJW1
+
+  - name: Create sudo file for admin user
+    lineinfile:
+      path: /etc/sudoers.d/admin
+      state: present
+      create: yes
+      line: "admin ALL=(root) NOPASSWD:ALL"
+      owner: root
+      group: root
+      mode: 0440
+
+  - name: Push ssh key to hosts
+    authorized_key:
+      user: admin
+      key: "{{ lookup('file', '/root/.ssh/id_rsa.pub') }}"
+      state: present
+
+  - name: Copy certificate
+    copy:
+      src: /etc/pki/ca-trust/source/anchors/classroom.crt
+      dest: /etc/pki/ca-trust/source/anchors/classroom.crt
+
+  - name:  Extract CA cert into trust chain
+    command: /bin/update-ca-trust update
+EOF
+
+[root@workstation ~]# curl http://classroom.example.com/ca.crt -o /etc/pki/ca-trust/source/anchors/classroom.crt
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100  1172  100  1172    0     0   127k      0 --:--:-- --:--:-- --:--:--  127k
+
+[root@workstation ~]# update-ca-trust update
+
+[root@workstation ~]# ssh-keygen -t rsa -f ~/.ssh/id_rsa -N ''
+[root@workstation ~]# ssh-copy-id 172.18.0.61
+[root@workstation ~]# ssh-copy-id 172.18.0.62
+[root@workstation ~]# ssh-copy-id 172.18.0.63
+
+[root@workstation ~]# ansible-playbook -i ceph-nodes ceph-preqs.yaml
+
+[root@workstation ~]# 
+cat > ~/.ssh/config << EOF
+Host ceph*
+  StrictHostKeyChecking no
+  User admin
+EOF
+
+[root@workstation ~]# cd /usr/share/ceph-ansible/
+
+[root@workstation ceph-ansible]# 
+cat >> hosts << EOF
+[mons]
+ceph-node01
+ceph-node02
+ceph-node03
+
+[mgrs]
+ceph-node01
+ceph-node02
+ceph-node03
+
+[rgws]
+ceph-node01
+ceph-node02
+ceph-node03
+
+[osds]
+ceph-node01
+ceph-node02
+ceph-node03
+
+[grafana-server]
+localhost ansible_connection=local
+EOF
+
+[root@workstation ceph-ansible]# mv ansible.cfg ansible.cfg.orig
+
+[root@workstation ceph-ansible]# 
+cat > ansible.cfg << EOF
+[defaults]
+inventory     = /usr/share/ceph-ansible/hosts
+action_plugins = /usr/share/ceph-ansible/plugins/actions
+filter_plugins = /usr/share/ceph-ansible/plugins/filter
+roles_path = /usr/share/ceph-ansible/roles
+log_path = /var/log/ansible.log
+timeout = 60
+host_key_checking = False
+retry_files_enabled = False
+retry_files_save_path = /usr/share/ceph-ansible/ansible-retry
+[privilege_escalation]
+become=True
+become_method=sudo
+become_user=root
+become_ask_pass=False
+EOF
+
+[root@workstation ceph-ansible]# 
+cat > group_vars/all.yml << EOF
+---
+monitor_interface: eth0.30
+radosgw_interface: eth0.30
+journal_size: 5120
+public_network: 172.18.0.0/24
+ceph_docker_image: rhceph/rhceph-4-rhel8
+ceph_docker_image_tag: latest
+containerized_deployment: true
+ceph_docker_registry: classroom.example.com:5000
+ceph_origin: repository
+ceph_repository: rhcs
+ceph_repository_type: local
+ceph_rhcs_version: 4
+dashboard_admin_user: admin
+dashboard_admin_password: r3dh4t1!
+grafana_admin_user: admin
+grafana_admin_password: r3dh4t1!
+ceph_conf_overrides:
+  global:
+    mon_pg_warn_min_per_osd: 0
+EOF
+
+[root@workstation ceph-ansible]# 
+cat > group_vars/osds.yml << EOF
+---
+copy_admin_key: true
+
+devices:
+  - /dev/vdb
+  - /dev/vdc
+
+ceph_osd_docker_memory_limit: 1g
+ceph_osd_docker_cpu_limit: 1
+EOF
+
+cat > group_vars/mons.yml << EOF
+---
+ceph_mon_docker_memory_limit: 1g
+ceph_mon_docker_cpu_limit: 1
+EOF
+
+cat > group_vars/mgrs.yml << EOF
+---
+ceph_mgr_docker_memory_limit: 1g
+ceph_mgr_docker_cpu_limit: 1
+EOF
+
+cat > group_vars/rgws.yml << EOF
+---
+ceph_rgw_docker_memory_limit: 1g
+ceph_rgw_docker_cpu_limit: 1
+EOF
+
+[root@workstation ceph-ansible]# cp site-docker.yml.sample site-docker.yml
+[root@workstation ceph-ansible]# ansible-playbook site-docker.yml
+
+
+
 ### day 3
 
 ### day 4

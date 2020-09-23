@@ -2427,6 +2427,22 @@ EOF
 (undercloud) [stack@undercloud ~]$ chmod 0755 ~/deploy-with-ext-ceph-stf.sh
 (undercloud) [stack@undercloud ~]$ time /bin/bash -x ~/deploy-with-ext-ceph-stf.sh
 
+Ansible passed.
+Overcloud configuration completed.
+Overcloud Endpoint: http://10.0.0.150:5000
+Overcloud Horizon Dashboard URL: http://10.0.0.150:80/dashboard
+Overcloud rc file: /home/stack/overcloudrc
+Overcloud Deployed
+sys:1: ResourceWarning: unclosed <ssl.SSLSocket fd=4, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=6, laddr=('192.0.2.2', 56656)>
+sys:1: ResourceWarning: unclosed <ssl.SSLSocket fd=5, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=6, laddr=('192.0.2.2', 59420), raddr=('192.0.2.2', 13004)>
+sys:1: ResourceWarning: unclosed <ssl.SSLSocket fd=7, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=6, laddr=('192.0.2.2', 52070), raddr=('192.0.2.2', 13989)>
+
+real    55m22.436s
+user    0m13.182s
+sys     0m1.508s
+
+
+
 ### day 3
 
 ### day 4

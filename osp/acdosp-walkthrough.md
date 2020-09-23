@@ -2925,6 +2925,55 @@ real    45m37.309s
 user    0m15.198s
 sys     0m1.620s
 
+(undercloud) [stack@undercloud ~]$ openstack tripleo validator run --validation stonith-exists
+/usr/lib/python3.6/site-packages/tripleoclient/v1/tripleo_validator.py:437: ResourceWarning: unclosed file <_io.BufferedReader name=8>
+  gathering_policy=gathering_policy)
++--------------------------------------+----------------+--------+---------------+------------------------------------------------------+---------------------+-------------+
+| UUID                                 | Validations    | Status | Host Group(s) | Status by Host                                       | Unreachable Host(s) | Duration    |
++--------------------------------------+----------------+--------+---------------+------------------------------------------------------+---------------------+-------------+
+| 525400bb-1867-8741-378e-00000000000b | stonith-exists | PASSED | Controller    | lab-controller01, lab-controller02, lab-controller03 |                     | 0:00:05.193 |
++--------------------------------------+----------------+--------+---------------+------------------------------------------------------+---------------------+-------------+
+sys:1: ResourceWarning: unclosed <ssl.SSLSocket fd=4, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=6, laddr=('192.0.2.2', 42724), raddr=('192.0.2.2', 13000)>
+
+(undercloud) [stack@undercloud ~]$ ssh heat-admin@lab-controller01.ctlplane "sudo pcs property show"
+The authenticity of host 'lab-controller01.ctlplane (192.0.2.201)' can't be established.
+ECDSA key fingerprint is SHA256:k0Ii1vJCRDEByMoIz0lHHnDUd0BacwPaqlRTrP5veu4.
+Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
+Warning: Permanently added 'lab-controller01.ctlplane' (ECDSA) to the list of known hosts.
+Cluster Properties:
+ OVN_REPL_INFO: lab-controller01
+ cluster-infrastructure: corosync
+ cluster-name: tripleo_cluster
+ dc-version: 2.0.3-5.el8_2.1-4b1f869f0f
+ have-watchdog: false
+ redis_REPL_INFO: lab-controller01
+ stonith-enabled: true
+
+ (undercloud) [stack@undercloud ~]$ ssh heat-admin@lab-controller01.ctlplane "sudo pcs status | grep fence"
+  * stonith-fence_ipmilan-525400f9dd26  (stonith:fence_ipmilan):        Started lab-controller01
+  * stonith-fence_ipmilan-5254002b9c80  (stonith:fence_ipmilan):        Started lab-controller03
+  * stonith-fence_ipmilan-52540056484d  (stonith:fence_ipmilan):        Started lab-controller02
+
+[heat-admin@lab-controller02 ~]# 
+iptables -A INPUT -m state --state RELATED,ESTABLISHED -j ACCEPT &&
+ iptables -A INPUT -p tcp -m state --state NEW -m tcp --dport 22 -j ACCEPT &&
+ iptables -A INPUT -p tcp -m state --state NEW -m tcp --dport 5016 -j ACCEPT &&
+ iptables -A INPUT -p udp -m state --state NEW -m udp --dport 5016 -j ACCEPT &&
+ iptables -A INPUT ! -i lo -j REJECT --reject-with icmp-host-prohibited &&
+ iptables -A OUTPUT -p tcp --sport 22 -j ACCEPT &&
+ iptables -A OUTPUT -p tcp --sport 5016 -j ACCEPT &&
+ iptables -A OUTPUT -p udp --sport 5016 -j ACCEPT &&
+ iptables -A OUTPUT ! -o lo -j REJECT --reject-with icmp-host-prohibited
+
+[heat-admin@lab-controller02 ~]$ sudo grep fencing /var/log/pacemaker/pacemaker.log |grep -v "is active"
+Sep 23 03:40:01 lab-controller02 pacemaker-schedulerd[40642] (fence_guest)      info: Implying guest node ovn-dbs-bundle-0 is down (action 262) after lab-controller01 fencing
+Sep 23 03:40:01 lab-controller02 pacemaker-schedulerd[40642] (fence_guest)      info: Implying guest node rabbitmq-bundle-0 is down (action 267) after lab-controller01 fencing
+Sep 23 03:40:01 lab-controller02 pacemaker-schedulerd[40642] (fence_guest)      info: Implying guest node redis-bundle-0 is down (action 272) after lab-controller01 fencing
+Sep 23 03:40:01 lab-controller02 pacemaker-controld  [40643] (te_fence_node)    notice: Requesting fencing (reboot) of node lab-controller01 | action=1 timeout=60000
+Sep 23 03:40:01 lab-controller02 pacemaker-fenced    [40639] (initiate_remote_stonith_op)       notice: Requesting peer fencing (reboot) targeting lab-controller01 | id=ef4eb443-bbb3-4aa4-8e7e-1724ee63e76d state=0
+Sep 23 03:40:01 lab-controller02 pacemaker-fenced    [40639] (call_remote_stonith)      info: Total timeout set to 60 for peer's fencing targeting lab-controller01 for pacemaker-controld.40643|id=ef4eb443-bbb3-4aa4-8e7e-1724ee63e76d
+Sep 23 03:40:58 lab-controller02 pacemaker-controld  [40643] (cib_fencing_updated)      info: Fencing update 449 for lab-controller01: complete
+Sep 23 03:40:58 lab-controller02 pacemaker-controld  [40643] (cib_fencing_updated)      info: Fencing update 451 for lab-controller01: complete
 
 
 ### day 3

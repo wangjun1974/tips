@@ -3190,8 +3190,6 @@ EOF
 | 0c523f61-cc33-4e99-8f06-4fa1690b97d8 | overcloud-compute03 | available       | compute         |                   |
 +--------------------------------------+---------------------+-----------------+-----------------+-------------------+
 
-(undercloud) [stack@undercloud ~]$ time /bin/bash -x deploy-with-ext-ceph-stf.sh
-
 (undercloud) [stack@undercloud ~]$ 
 cat > ~/templates/HostnameMap.yaml << EOF
 parameter_defaults:
@@ -3262,45 +3260,45 @@ parameter_defaults:
     # Each compute will get an IP from the lists below, first compute, first IP
     ctlplane:
     - 192.0.2.211
-    - DELETED
-    - DELETED
-    - DELETED
-    - DELETED
+    - 192.0.2.212
+    - 192.0.2.212
+    - 192.0.2.212
+    - 192.0.2.212
     - 192.0.2.212
     external:
     - 10.0.0.211
-    - DELETED
-    - DELETED
-    - DELETED
-    - DELETED
+    - 10.0.0.212
+    - 10.0.0.212
+    - 10.0.0.212
+    - 10.0.0.212
     - 10.0.0.212
     internal_api:
     - 172.17.0.211
-    - DELETED
-    - DELETED
-    - DELETED
-    - DELETED
+    - 172.17.0.212
+    - 172.17.0.212
+    - 172.17.0.212
+    - 172.17.0.212
     - 172.17.0.212
     storage:
     - 172.18.0.211
-    - DELETED
-    - DELETED
-    - DELETED
-    - DELETED
+    - 172.18.0.212
+    - 172.18.0.212
+    - 172.18.0.212
+    - 172.18.0.212
     - 172.18.0.212
     storage_mgmt:
     - 172.19.0.211
-    - DELETED
-    - DELETED
-    - DELETED
-    - DELETED
+    - 172.19.0.212
+    - 172.19.0.212
+    - 172.19.0.212
+    - 172.19.0.212
     - 172.19.0.212
     tenant:
     - 172.16.0.211
-    - DELETED
-    - DELETED
-    - DELETED
-    - DELETED
+    - 172.16.0.212
+    - 172.16.0.212
+    - 172.16.0.212
+    - 172.16.0.212
     - 172.16.0.212
     #management:
     #- 172.16.4.252
@@ -3313,6 +3311,23 @@ parameter_defaults:
   StorageMgmtVirtualFixedIPs: [{'ip_address':'172.19.0.150'}]
   RedisVirtualFixedIPs: [{'ip_address':'172.17.0.151'}]
 EOF
+
+(undercloud) [stack@undercloud ~]$ time /bin/bash -x deploy-with-ext-ceph-stf.sh
+...
+Ansible passed.
+Overcloud configuration completed.
+Overcloud Endpoint: http://10.0.0.150:5000
+Overcloud Horizon Dashboard URL: http://10.0.0.150:80/dashboard
+Overcloud rc file: /home/stack/overcloudrc
+Overcloud Deployed
+sys:1: ResourceWarning: unclosed <ssl.SSLSocket fd=4, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=6, laddr=('192.0.2.2', 59552)>
+sys:1: ResourceWarning: unclosed <ssl.SSLSocket fd=5, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=6, laddr=('192.0.2.2', 36182), raddr=('192.0.2.2', 13004)>
+sys:1: ResourceWarning: unclosed <ssl.SSLSocket fd=7, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=6, laddr=('192.0.2.2', 56920), raddr=('192.0.2.2', 13989)>
+
+real    50m30.240s
+user    0m16.124s
+sys     0m1.580s
+
 
 ### day 4
 

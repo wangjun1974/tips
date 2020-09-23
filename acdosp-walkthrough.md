@@ -2441,6 +2441,319 @@ real    55m22.436s
 user    0m13.182s
 sys     0m1.508s
 
+(undercloud) [stack@undercloud ~]$ openstack stack environment show overcloud
+
+(undercloud) [stack@undercloud ~]$ openstack server list
++--------------------------------------+------------------+--------+----------------------+----------------+---------+
+| ID                                   | Name             | Status | Networks             | Image          | Flavor  |
++--------------------------------------+------------------+--------+----------------------+----------------+---------+
+| 5cc91431-4764-48d4-967f-aed6518902e8 | lab-controller02 | ACTIVE | ctlplane=192.0.2.202 | overcloud-full | control |
+| ed500b04-67f6-429d-b1b2-7a4a3f6cb5c8 | lab-controller01 | ACTIVE | ctlplane=192.0.2.201 | overcloud-full | control |
+| f12b28d7-8c70-434b-9819-4a801a4ab012 | lab-controller03 | ACTIVE | ctlplane=192.0.2.203 | overcloud-full | control |
+| 3c30899e-d9ba-446f-a3da-706443d3b424 | lab-compute02    | ACTIVE | ctlplane=192.0.2.212 | overcloud-full | compute |
+| 8c158b18-a76d-4a3f-9f9a-9ed9adfb057b | lab-compute01    | ACTIVE | ctlplane=192.0.2.211 | overcloud-full | compute |
++--------------------------------------+------------------+--------+----------------------+----------------+---------+
+
+(undercloud) [stack@undercloud ~]$ openstack network list
++--------------------------------------+--------------+--------------------------------------+
+| ID                                   | Name         | Subnets                              |
++--------------------------------------+--------------+--------------------------------------+
+| 17005daa-a2e5-41fc-a60c-75e2629a43c9 | external     | 2463105b-8252-47d9-bafb-9541686d2841 |
+| 4cabba20-7fd2-4018-92fd-84c0c392c1ce | storage      | ea2558ff-6835-422b-847a-75b8a7f96435 |
+| 8c70a7ee-a5b4-4b60-8e37-8a737b4d2e16 | tenant       | 3dd5a245-ce1a-4bac-a753-f621cd7108bf |
+| a09c8328-66e1-424a-810b-4b5593e47444 | ctlplane     | 437f7ef9-54e2-461f-a8c2-73132e5c3139 |
+| d067cc5d-2a1b-4164-b8f0-feca936cc51b | internal_api | 98c1bbbd-f9a7-4e33-a16f-41d9f5fdfb4e |
+| dd053d92-ea5f-4ad7-bce4-376137013dac | storage_mgmt | f26b9f14-dabe-4f94-8d71-82629e5b9bd0 |
+| f79af7bc-96a4-4b48-9cf7-50e659abea3b | management   | dcadc8be-91fe-4d1f-9175-463457344a86 |
++--------------------------------------+--------------+--------------------------------------+
+
+(undercloud) [stack@undercloud ~]$ openstack subnet list
++--------------------------------------+---------------------+--------------------------------------+---------------+
+| ID                                   | Name                | Network                              | Subnet        |
++--------------------------------------+---------------------+--------------------------------------+---------------+
+| 2463105b-8252-47d9-bafb-9541686d2841 | external_subnet     | 17005daa-a2e5-41fc-a60c-75e2629a43c9 | 10.0.0.0/24   |
+| 3dd5a245-ce1a-4bac-a753-f621cd7108bf | tenant_subnet       | 8c70a7ee-a5b4-4b60-8e37-8a737b4d2e16 | 172.16.0.0/24 |
+| 437f7ef9-54e2-461f-a8c2-73132e5c3139 | ctlplane-subnet     | a09c8328-66e1-424a-810b-4b5593e47444 | 192.0.2.0/24  |
+| 98c1bbbd-f9a7-4e33-a16f-41d9f5fdfb4e | internal_api_subnet | d067cc5d-2a1b-4164-b8f0-feca936cc51b | 172.17.0.0/24 |
+| dcadc8be-91fe-4d1f-9175-463457344a86 | management_subnet   | f79af7bc-96a4-4b48-9cf7-50e659abea3b | 10.0.1.0/24   |
+| ea2558ff-6835-422b-847a-75b8a7f96435 | storage_subnet      | 4cabba20-7fd2-4018-92fd-84c0c392c1ce | 172.18.0.0/24 |
+| f26b9f14-dabe-4f94-8d71-82629e5b9bd0 | storage_mgmt_subnet | dd053d92-ea5f-4ad7-bce4-376137013dac | 172.19.0.0/24 |
++--------------------------------------+---------------------+--------------------------------------+---------------+
+
+(undercloud) [stack@undercloud ~]$ openstack port list --device-owner " "
++--------------------------------------+-------------------------+-------------------+-----------------------------------------------------------------------------+--------+
+| ID                                   | Name                    | MAC Address       | Fixed IP Addresses                                                          | Status |
++--------------------------------------+-------------------------+-------------------+-----------------------------------------------------------------------------+--------+
+| 340437d0-a705-4e50-8216-6035f55e1b44 | internal_api_virtual_ip | fa:16:3e:85:e1:ba | ip_address='172.17.0.150', subnet_id='98c1bbbd-f9a7-4e33-a16f-41d9f5fdfb4e' | DOWN   |
+| 559f1c76-f0c8-4dc6-b591-a84bc1e9d224 | ovn_dbs_virtual_ip      | fa:16:3e:26:ef:b6 | ip_address='172.17.0.249', subnet_id='98c1bbbd-f9a7-4e33-a16f-41d9f5fdfb4e' | DOWN   |
+| 69821e50-0a86-43a0-912a-647373380f1c | control_virtual_ip      | fa:16:3e:cd:cd:cd | ip_address='192.0.2.150', subnet_id='437f7ef9-54e2-461f-a8c2-73132e5c3139'  | DOWN   |
+| 77f4bf40-30a8-43a2-9861-517652d427e9 | storage_virtual_ip      | fa:16:3e:7f:7f:fa | ip_address='172.18.0.150', subnet_id='ea2558ff-6835-422b-847a-75b8a7f96435' | DOWN   |
+| ac0c490c-160c-4a22-8ec7-fc9a79172951 | public_virtual_ip       | fa:16:3e:f0:a1:9f | ip_address='10.0.0.150', subnet_id='2463105b-8252-47d9-bafb-9541686d2841'   | DOWN   |
+| c4039ada-647c-42ec-8d0b-bce0c9874bb0 | redis_virtual_ip        | fa:16:3e:f6:83:34 | ip_address='172.17.0.151', subnet_id='98c1bbbd-f9a7-4e33-a16f-41d9f5fdfb4e' | DOWN   |
+| d887131c-dd67-4d0f-95db-f04103be4b17 | storage_mgmt_virtual_ip | fa:16:3e:9c:1b:51 | ip_address='172.19.0.150', subnet_id='f26b9f14-dabe-4f94-8d71-82629e5b9bd0' | DOWN   |
++--------------------------------------+-------------------------+-------------------+-----------------------------------------------------------------------------+--------+
+
+(undercloud) [stack@undercloud ~]$ grep AUTH_URL ~/overcloudrc
+export OS_AUTH_URL=http://10.0.0.150:5000
+
+(overcloud) [stack@undercloud ~]$ openstack catalog list
++-----------+----------------+-------------------------------------------------------------------------------+
+| Name      | Type           | Endpoints                                                                     |
++-----------+----------------+-------------------------------------------------------------------------------+
+| heat-cfn  | cloudformation | regionOne                                                                     |
+|           |                |   admin: http://172.17.0.150:8000/v1                                          |
+|           |                | regionOne                                                                     |
+|           |                |   public: http://10.0.0.150:8000/v1                                           |
+|           |                | regionOne                                                                     |
+|           |                |   internal: http://172.17.0.150:8000/v1                                       |
+|           |                |                                                                               |
+| glance    | image          | regionOne                                                                     |
+|           |                |   public: http://10.0.0.150:9292                                              |
+|           |                | regionOne                                                                     |
+|           |                |   admin: http://172.17.0.150:9292                                             |
+|           |                | regionOne                                                                     |
+|           |                |   internal: http://172.17.0.150:9292                                          |
+|           |                |                                                                               |
+...
+| nova      | compute        | regionOne                                                                     |
+|           |                |   internal: http://172.17.0.150:8774/v2.1                                     |
+|           |                | regionOne                                                                     |
+|           |                |   public: http://10.0.0.150:8774/v2.1                                         |
+|           |                | regionOne                                                                     |
+|           |                |   admin: http://172.17.0.150:8774/v2.1                                        |
+|           |                |                                                                               |
++-----------+----------------+-------------------------------------------------------------------------------+
+
+cat > alias-overcloud-rc << 'EOF'
+alias c0="source ~/stackrc; ssh heat-admin@$( openstack server list | grep controller01 | awk -F'|' '{print $5}' | awk -F'=' '{print $2}' )"
+alias c1="source ~/stackrc; ssh heat-admin@$( openstack server list | grep controller02 | awk -F'|' '{print $5}' | awk -F'=' '{print $2}' )"
+alias c2="source ~/stackrc; ssh heat-admin@$( openstack server list | grep controller03 | awk -F'|' '{print $5}' | awk -F'=' '{print $2}' )"
+alias cp0="source ~/stackrc; ssh heat-admin@$( openstack server list | grep compute01 | awk -F'|' '{print $5}' | awk -F'=' '{print $2}' )"
+alias cp1="source ~/stackrc; ssh heat-admin@$( openstack server list | grep compute02 | awk -F'|' '{print $5}' | awk -F'=' '{print $2}' )"
+EOF
+
+[heat-admin@lab-controller01 ~]$ ip a | grep -e 172 -e 10.0.0
+    inet 172.19.0.201/24 brd 172.19.0.255 scope global vlan40
+    inet 10.0.0.201/24 brd 10.0.0.255 scope global vlan10
+    inet 172.17.0.201/24 brd 172.17.0.255 scope global vlan20
+    inet 172.17.0.150/32 brd 172.17.0.255 scope global vlan20
+    inet 172.17.0.249/32 brd 172.17.0.255 scope global vlan20
+    inet 172.18.0.201/24 brd 172.18.0.255 scope global vlan30
+    inet 172.16.0.201/24 brd 172.16.0.255 scope global vlan50
+
+[heat-admin@lab-controller01 ~]$ sudo pcs status cluster
+Cluster Status:
+ Cluster Summary:
+   * Stack: corosync
+   * Current DC: lab-controller02 (version 2.0.3-5.el8_2.1-4b1f869f0f) - partition with quorum
+   * Last updated: Wed Sep 23 00:53:41 2020
+   * Last change:  Tue Sep 22 10:01:04 2020 by root via cibadmin on lab-controller01
+   * 15 nodes configured
+   * 47 resource instances configured
+ Node List:
+   * Online: [ lab-controller01 lab-controller02 lab-controller03 ]
+   * GuestOnline: [ galera-bundle-0@lab-controller01 galera-bundle-1@lab-controller02 galera-bundle-2@lab-controller03 ovn-dbs-bundle-0@lab-controller01 ovn-dbs-bundle-1@lab-controller02 ovn-dbs-bundle-2@lab-controller03 rabbitmq-bundle-0@lab-controller01 rabbitmq-bundle-1@lab-controller02 rabbitmq-bundle-2@lab-controller03 redis-bundle-0@lab-controller01 redis-bundle-1@lab-controller02 redis-bundle-2@lab-controller03 ]
+
+PCSD Status:
+  lab-controller02: Online
+  lab-controller01: Online
+  lab-controller03: Online
+
+[heat-admin@lab-controller01 ~]$ sudo podman exec -ti haproxy-bundle-podman-0 cat /etc/haproxy/haproxy.cfg
+
+[heat-admin@lab-controller01 ~]$ sudo podman exec -ti haproxy-bundle-podman-0 cat /etc/haproxy/haproxy.cfg | grep -A10 glance_api
+listen glance_api
+  bind 10.0.0.150:9292 transparent
+  bind 172.17.0.150:9292 transparent
+  mode http
+  http-request set-header X-Forwarded-Proto https if { ssl_fc }
+  http-request set-header X-Forwarded-Proto http if !{ ssl_fc }
+  http-request set-header X-Forwarded-Port %[dst_port]
+  option httpchk GET /healthcheck
+  server lab-controller01.internalapi.localdomain 172.17.0.201:9292 check fall 5 inter 2000 rise 2
+  server lab-controller02.internalapi.localdomain 172.17.0.202:9292 check fall 5 inter 2000 rise 2
+  server lab-controller03.internalapi.localdomain 172.17.0.203:9292 check fall 5 inter 2000 rise 2
+
+[heat-admin@lab-controller01 ~]$ sudo podman exec -ti glance_api grep rbd /etc/glance/glance-api.conf | grep -v '#'
+enabled_backends=default_backend:rbd
+[glance.store.rbd.store]
+rbd_store_ceph_conf=/etc/ceph/ceph.conf
+rbd_store_user=openstack
+rbd_store_pool=images
+
+[heat-admin@lab-controller01 ~]$ sudo podman exec -ti cinder_api  grep rbd /etc/cinder/cinder.conf | grep -v '#'
+volume_driver=cinder.volume.drivers.rbd.RBDDriver
+rbd_ceph_conf=/etc/ceph/ceph.conf
+rbd_user=openstack
+rbd_pool=volumes
+rbd_flatten_volume_from_snapshot=False
+rbd_secret_uuid=eb0670c0-e359-4cb3-bf11-c650b82118ef
+
+
+[heat-admin@lab-compute01 ~]$ sudo podman exec -ti nova_compute  grep rbd /etc/nova/nova.conf | grep -v '#'
+images_type=rbd
+images_rbd_pool=vms
+images_rbd_ceph_conf=/etc/ceph/ceph.conf
+rbd_user=openstack
+rbd_secret_uuid=eb0670c0-e359-4cb3-bf11-c650b82118ef
+
+(overcloud) [stack@undercloud ~]$ 
+openstack network create public \
+  --external --provider-physical-network datacentre \
+  --provider-network-type vlan --provider-segment 10
+
+(overcloud) [stack@undercloud ~]$ 
+openstack subnet create public-subnet \
+  --no-dhcp --network public --subnet-range 10.0.0.0/24 \
+  --allocation-pool start=10.0.0.100,end=10.0.0.200  \
+  --gateway 10.0.0.1 --dns-nameserver 8.8.8.8
+
+(overcloud) [stack@undercloud ~]$ qemu-img convert -f qcow2 -O raw cirros-0.4.0-x86_64-disk.img cirros-0.4.0-x86_64-disk.raw
+
+(overcloud) [stack@undercloud ~]$ openstack image create cirros --public --file cirros-0.4.0-x86_64-disk.raw
+
+[root@workstation ~]# rbd --id admin -p images ls
+1ce6d54d-9c7c-49bb-b1b1-61236eae2641
+
+(overcloud) [stack@undercloud ~]$ openstack flavor create --ram 512 --disk 1 --vcpus 1 m1.tiny
+
+(overcloud) [stack@undercloud ~]$ openstack project create test
+
+(overcloud) [stack@undercloud ~]$ openstack user create --project test --password r3dh4t1! test
+
+(overcloud) [stack@undercloud ~]$ openstack role add --user test --project test member
+
+(overcloud) [stack@undercloud ~]$ sed -e 's/=admin/=test/' -e 's/OS_PASSWORD=.*/OS_PASSWORD=r3dh4t1!/' -e 's/OS_CLOUDNAME=overcloud/OS_CLOUDNAME=overcloud_test/' overcloudrc > ~/testrc
+
+(overcloud) [stack@undercloud ~]$ source ~/testrc
+(overcloud_test) [stack@undercloud ~]$ openstack network create test
+
+(overcloud_test) [stack@undercloud ~]$ 
+openstack subnet create \
+ --network test \
+ --gateway 192.168.123.254 \
+ --allocation-pool start=192.168.123.1,end=192.168.123.253 \
+ --dns-nameserver 8.8.8.8 \
+ --subnet-range 192.168.123.0/24 \
+ test
+
+(overcloud_test) [stack@undercloud ~]$ openstack router create test
+
+(overcloud_test) [stack@undercloud ~]$ openstack router set --external-gateway public test
+
+(overcloud_test) [stack@undercloud ~]$ openstack router add subnet test test
+
+(overcloud_test) [stack@undercloud ~]$ 
+openstack security group rule create \
+ --ingress \
+ --ethertype IPv4 \
+ --protocol tcp \
+ --dst-port 22 \
+  default
+
+(overcloud_test) [stack@undercloud ~]$ 
+openstack security group rule create \
+ --ingress \
+ --ethertype IPv4 \
+ --protocol icmp \
+ default
+
+(overcloud_test) [stack@undercloud ~]$ openstack security group list
+
+(overcloud_test) [stack@undercloud ~]$ openstack security group show default
+
+(overcloud_test) [stack@undercloud ~]$ openstack keypair create --public-key ~/.ssh/id_rsa.pub stack
+
+(overcloud_test) [stack@undercloud ~]$ openstack floating ip create public
+
+
+openstack server create  --flavor m1.tiny \
+ --image cirros  --key-name stack \
+ --security-group default \
+ --network test test
+
+(overcloud_test) [stack@undercloud ~]$ openstack server add floating ip test 10.0.0.124
+
+(overcloud_test) [stack@undercloud ~]$ openstack server list
++--------------------------------------+------+--------+----------------------------------+--------+--------+
+| ID                                   | Name | Status | Networks                         | Image  | Flavor |
++--------------------------------------+------+--------+----------------------------------+--------+--------+
+| df8d9837-f627-4e9e-b3d1-3c252b010988 | test | ACTIVE | test=192.168.123.245, 10.0.0.124 | cirros |        |
++--------------------------------------+------+--------+----------------------------------+--------+--------+
+
+(overcloud_test) [stack@undercloud ~]$ ping -c 3 10.0.0.124
+
+(overcloud_test) [stack@undercloud ~]$ ssh cirros@10.0.0.124
+
+$ ping -c3 google.com
+
+[root@workstation ~]# rbd  -p vms ls
+df8d9837-f627-4e9e-b3d1-3c252b010988_disk
+
+[heat-admin@lab-controller01 ~]$ sudo podman ps -f name=metrics
+CONTAINER ID  IMAGE                                                                         COMMAND      CREATED       STATUS           PORTS  NAMES
+f80a19f7ec40  undercloud.ctlplane.localdomain:8787/rhosp-rhel8/openstack-qdrouterd:16.1-49  kolla_start  16 hours ago  Up 16 hours ago         metrics_qdr
+
+[heat-admin@lab-controller01 ~]$ sudo podman ps -f name=ceilometer
+CONTAINER ID  IMAGE                                                                                       COMMAND      CREATED       STATUS           PORTS  NAMES
+36bfc2494733  undercloud.ctlplane.localdomain:8787/rhosp-rhel8/openstack-ceilometer-notification:16.1-45  kolla_start  16 hours ago  Up 16 hours ago         ceilometer_agent_notification
+68e81356c3e6  undercloud.ctlplane.localdomain:8787/rhosp-rhel8/openstack-ceilometer-central:16.1-45       kolla_start  16 hours ago  Up 16 hours ago         ceilometer_agent_central
+
+[heat-admin@lab-controller01 ~]$ sudo podman ps -f name=collectd
+CONTAINER ID  IMAGE                                                                        COMMAND      CREATED       STATUS           PORTS  NAMES
+c02c7781bbc4  undercloud.ctlplane.localdomain:8787/rhosp-rhel8/openstack-collectd:16.1-50  kolla_start  16 hours ago  Up 16 hours ago         collectd
+
+[heat-admin@lab-controller01 ~]$ sudo podman exec -it metrics_qdr cat /etc/qpid-dispatch/qdrouterd.conf
+
+[heat-admin@lab-controller01 ~]$ QIP=172.17.0.201
+
+[heat-admin@lab-controller01 ~]$ sudo podman exec -it metrics_qdr qdstat --bus=$QIP:5666 --connections
+Connections
+  id   host                                                                  container                                                                                                      role    dir  security                            authentication  tenant
+  ===================================================================================================================================================================================================================================================================
+  1    stf-default-interconnect-5671-service-telemetry.apps-crc.testing:443  stf-default-interconnect-db474ccf8-wfp8w                                                                       edge    out  TLSv1.2(DHE-RSA-AES256-GCM-SHA384)  anonymous-user  
+  15   172.17.0.201:44332                                                    openstack.org/om/container/lab-controller01/ceilometer-agent-notification/25/b13fbd5c414e4deaa838909c74a3af67  normal  in   no-security                         no-auth         
+  18   172.17.0.201:51630                                                    metrics                                                                                                        normal  in   no-security                         anonymous-user  
+  664  172.17.0.201:56986                                                    919ad388-c412-4d80-aa42-f819c8ec52b3                                                                           normal  in   no-security                         no-auth         
+
+[heat-admin@lab-controller01 ~]$ sudo podman exec -it metrics_qdr qdstat --bus=$QIP:5666 --links |grep  --color=never  -e Router -e type -e === -e _edge
+Router Links
+  type      dir  conn id  id    peer  class   addr                  phs  cap  pri  undel  unsett  deliv    presett  psdrop  acc  rej  rel  mod  delay  rate
+  ===========================================================================================================================================================
+  endpoint  out  1        5           local   _edge                      250  0    0      0       1876232  1876232  0       0    0    0    0    0      33
+
+[student@pool08-iad crc-linux-1.9.0-amd64]$ POD=$(oc get pods -l application=stf-default-interconnect  -o custom-columns=POD:.metadata.name --no-headers) 
+
+[student@pool08-iad crc-linux-1.9.0-amd64]$ oc exec -it  $POD -- qdstat --connections
+2020-09-23 01:38:57.022871 UTC
+stf-default-interconnect-db474ccf8-wfp8w
+
+Connections
+  id  host                container                                                             role    dir  security                                authentication  tenant  last dlv      uptime
+  =======================================================================================================================================================================================================
+  1   10.128.0.161:59072  bridge-a4                                                             edge    in   no-security                             anonymous-user          000:00:00:00  000:17:02:39
+  2   10.128.0.162:55508  rcv[stf-default-ceilometer-telemetry-smartgateway-dd8d755dc-7tfrf]    edge    in   no-security                             anonymous-user          -             000:17:02:37
+  3   10.128.0.164:35600  rcv[stf-default-ceilometer-notification-smartgateway-66bf8bffcctt8p]  normal  in   no-security                             anonymous-user          000:00:08:46  000:17:02:11
+  4   10.128.0.163:35158  rcv[stf-default-collectd-notification-smartgateway-85f4b6cd5f-vfmvw]  normal  in   no-security                             anonymous-user          000:00:30:51  000:17:02:04
+  5   10.128.0.1:33208    Router.lab-compute01.localdomain                                      edge    in   TLSv1/SSLv3(DHE-RSA-AES256-GCM-SHA384)  anonymous-user          000:00:00:02  000:15:59:41
+  6   10.128.0.1:33210    Router.lab-compute02.localdomain                                      edge    in   TLSv1/SSLv3(DHE-RSA-AES256-GCM-SHA384)  anonymous-user          000:00:00:02  000:15:59:41
+  7   10.128.0.1:33272    Router.lab-controller02.localdomain                                   edge    in   TLSv1/SSLv3(DHE-RSA-AES256-GCM-SHA384)  anonymous-user          000:00:00:00  000:15:59:37
+  9   10.128.0.1:33284    Router.lab-controller03.localdomain                                   edge    in   TLSv1/SSLv3(DHE-RSA-AES256-GCM-SHA384)  anonymous-user          000:00:00:00  000:15:59:37
+  8   10.128.0.1:33280    Router.lab-controller01.localdomain                                   edge    in   TLSv1/SSLv3(DHE-RSA-AES256-GCM-SHA384)  anonymous-user          000:00:00:04  000:15:59:37
+  10  127.0.0.1:51542     0c107b4b-a771-4cd0-bab0-62e996a61b63                                  normal  in   no-security                             no-auth                 000:00:00:00  000:00:00:00
+
+[student@pool08-iad crc-linux-1.9.0-amd64]$ oc exec -it  $POD -- qdstat --address |grep --color=never -e stf -e Addresses -e class -e === -e telemetry
+stf-default-interconnect-db474ccf8-wfp8w
+Router Addresses
+  class   addr                                 phs  distrib    pri  local  remote  in         out        thru  fallback
+  =======================================================================================================================
+  mobile  collectd/telemetry                   0    multicast  -    1      0       8,795,520  8,795,520  0     0
+
+[root@workstation ~]# dnf groupinstall "Workstation" -y
+[root@workstation ~]# systemctl set-default graphical
+[root@workstation ~]# reboot
+
+
 
 
 ### day 3

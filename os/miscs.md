@@ -2522,3 +2522,11 @@ EOF
 # reposync -p /var/www/html --download-metadata --repo=<repo id>
 
 ```
+
+### 寻找占用资源较多的 kvm 虚拟机 
+Quick How To: Finding IO Abuser in KVM VM<br>
+https://mellowhost.com/blog/quick-how-to-finding-io-abuser-in-kvm-vm.html<br>
+这篇博客介绍了 virt-top 工具，使用它可以查看哪个 kvm 虚拟机占用资源较多，尤其是 blkio 角度
+```
+virt-top -o blockwrrq -3 
+```

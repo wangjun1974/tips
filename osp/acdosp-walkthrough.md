@@ -2753,6 +2753,177 @@ Router Addresses
 [root@workstation ~]# systemctl set-default graphical
 [root@workstation ~]# reboot
 
+[heat-admin@lab-controller01 ~]$ sudo crudini --get /var/lib/config-data/puppet-generated/keystone/etc/keystone/keystone.conf token provider 
+fernet
+
+(overcloud_test) [stack@undercloud ~]$ source ~/overcloudrc
+(overcloud) [stack@undercloud ~]$ 
+
+(overcloud) [stack@undercloud ~]$ openstack token issue
++------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Field      | Value                                                                                                                                                                                   |
++------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| expires    | 2020-09-23T03:24:20+0000                                                                                                                                                                |
+| id         | gAAAAABfarHUKDHTD_FDLJVJeHPoGzeaVrIDS63Gm6TBBB8jY_aAICX0fCguNC1ZWUjUpG18RJMvl-7z7bKYoRWm7tj5FTOPbxJNIH3FCxy6wVd48qtoRoXhjfzQ5F6tUe3eJsZ-uQ4uWTV097CcT5LNs-uduowoTOD27o7XnHzOp4QN5OCWCn4 |
+| project_id | 53c8d204c59b4725a983a8b364a0e75c                                                                                                                                                        |
+| user_id    | 76178987d59245f09d1e7ca012a6a978                                                                                                                                                        |
++------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+
+[heat-admin@lab-controller01 ~]$ sudo crudini --get /var/lib/config-data/puppet-generated/keystone/etc/keystone/keystone.conf fernet_tokens key_repository
+/etc/keystone/fernet-keys
+
+[heat-admin@lab-controller01 ~]$ sudo ls /var/lib/config-data/puppet-generated/keystone/etc/keystone/fernet-keys
+0  1
+
+[heat-admin@lab-controller01 ~]$ sudo cat /var/lib/config-data/puppet-generated/keystone/etc/keystone/fernet-keys/1
+rsd1II4c2vlPfe2wM5Pj3aS-c1EugnC3cZ3ERg4H5x4=
+
+[heat-admin@lab-controller01 ~]$ sudo cat /var/lib/config-data/puppet-generated/keystone/etc/keystone/fernet-keys/0
+CbqsPe59ztViM0yVjkEpafYXbhEhdBTh9mk2lWe2Ob0=
+
+(undercloud) [stack@undercloud ~]$ openstack workflow execution create tripleo.fernet_keys.v1.rotate_fernet_keys '{"container": "overcloud"}'
++--------------------+-------------------------------------------+
+| Field              | Value                                     |
++--------------------+-------------------------------------------+
+| ID                 | be419f16-a7d3-464c-b7c7-5ffc493f2706      |
+| Workflow ID        | 9f8fb35f-52ce-4237-8459-8a4e363550cf      |
+| Workflow name      | tripleo.fernet_keys.v1.rotate_fernet_keys |
+| Workflow namespace |                                           |
+| Description        |                                           |
+| Task Execution ID  | <none>                                    |
+| Root Execution ID  | <none>                                    |
+| State              | RUNNING                                   |
+| State info         | None                                      |
+| Created at         | 2020-09-23 02:27:54                       |
+| Updated at         | 2020-09-23 02:27:54                       |
++--------------------+-------------------------------------------+
+
+(undercloud) [stack@undercloud ~]$ openstack workflow execution show be419f16-a7d3-464c-b7c7-5ffc493f2706 
++--------------------+-------------------------------------------+
+| Field              | Value                                     |
++--------------------+-------------------------------------------+
+| ID                 | be419f16-a7d3-464c-b7c7-5ffc493f2706      |
+| Workflow ID        | 9f8fb35f-52ce-4237-8459-8a4e363550cf      |
+| Workflow name      | tripleo.fernet_keys.v1.rotate_fernet_keys |
+| Workflow namespace |                                           |
+| Description        |                                           |
+| Task Execution ID  | <none>                                    |
+| Root Execution ID  | <none>                                    |
+| State              | SUCCESS                                   |
+| State info         | None                                      |
+| Created at         | 2020-09-23 02:27:54                       |
+| Updated at         | 2020-09-23 02:28:22                       |
++--------------------+-------------------------------------------+
+
+[heat-admin@lab-controller01 ~]$ sudo ls /var/lib/config-data/puppet-generated/keystone/etc/keystone/fernet-keys
+0  1  2
+
+[heat-admin@lab-controller01 ~]$ sudo cat /var/lib/config-data/puppet-generated/keystone/etc/keystone/fernet-keys/2
+CbqsPe59ztViM0yVjkEpafYXbhEhdBTh9mk2lWe2Ob0=
+
+(undercloud) [stack@undercloud ~]$ openstack tripleo validator list
+
+(undercloud) [stack@undercloud ~]$ openstack tripleo validator run --validation controller-ulimits
+/usr/lib/python3.6/site-packages/tripleoclient/v1/tripleo_validator.py:437: ResourceWarning: unclosed file <_io.BufferedReader name=8>
+  gathering_policy=gathering_policy)
++--------------------------------------+--------------------+--------+---------------+------------------------------------------------------+---------------------+-------------+
+| UUID                                 | Validations        | Status | Host Group(s) | Status by Host                                       | Unreachable Host(s) | Duration    |
++--------------------------------------+--------------------+--------+---------------+------------------------------------------------------+---------------------+-------------+
+| 525400bb-1867-9401-6c3d-00000000000b | controller-ulimits | PASSED | Controller    | lab-controller01, lab-controller02, lab-controller03 |                     | 0:00:03.253 |
++--------------------------------------+--------------------+--------+---------------+------------------------------------------------------+---------------------+-------------+
+sys:1: ResourceWarning: unclosed <ssl.SSLSocket fd=4, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=6, laddr=('192.0.2.2', 56904), raddr=('192.0.2.2', 13000)>
+
+
+(undercloud) [stack@undercloud ~]$ openstack tripleo validator run --validation stonith-exists
++--------------------------------------+----------------+--------+---------------+------------------------------------------------------+---------------------+-------------+
+| UUID                                 | Validations    | Status | Host Group(s) | Status by Host                                       | Unreachable Host(s) | Duration    |
++--------------------------------------+----------------+--------+---------------+------------------------------------------------------+---------------------+-------------+
+| 525400bb-1867-8f72-8177-00000000000b | stonith-exists | FAILED | Controller    | lab-controller01, lab-controller02, lab-controller03 |                     | 0:00:03.354 |
++--------------------------------------+----------------+--------+---------------+------------------------------------------------------+---------------------+-------------+
+One or more validations have failed!
+/usr/lib64/python3.6/_weakrefset.py:59: ResourceWarning: unclosed file <_io.FileIO name=7 mode='rb' closefd=True>
+  with _IterationGuard(self):
+sys:1: ResourceWarning: unclosed <ssl.SSLSocket fd=4, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=6, laddr=('192.0.2.2', 57532), raddr=('192.0.2.2', 13000)>
+
+# Fix the fencing validation
+[heat-admin@lab-controller01 ~]$ sudo pcs property show
+Cluster Properties:
+ OVN_REPL_INFO: lab-controller01
+ cluster-infrastructure: corosync
+ cluster-name: tripleo_cluster
+ dc-version: 2.0.3-5.el8_2.1-4b1f869f0f
+ have-watchdog: false
+ redis_REPL_INFO: lab-controller01
+ stonith-enabled: false
+
+# Generate a fencing.yaml file using the following command:
+ (undercloud) [stack@undercloud ~]$ openstack overcloud generate fencing --ipmi-lanplus --ipmi-level administrator --output ~/templates/fencing.yaml nodes.json
+
+(undercloud) [stack@undercloud ~]$ head -20 ~/templates/fencing.yaml
+parameter_defaults:
+  EnableFencing: true
+  FencingConfig:
+    devices:
+    - agent: fence_ipmilan
+      host_mac: 52:54:00:9f:d5:9e
+      params:
+        ipaddr: 192.168.1.1
+        ipport: '6234'
+        lanplus: true
+        login: admin
+        passwd: password
+        pcmk_host_list: lab-compute02
+        privlvl: administrator
+    - agent: fence_ipmilan
+      host_mac: 52:54:00:cf:6d:7b
+      params:
+        ipaddr: 192.168.1.1
+        ipport: '6235'
+        lanplus: true
+
+
+(undercloud) [stack@undercloud ~]$ 
+cat > deploy-with-ext-ceph-stf.sh << 'EOF'
+#!/bin/bash
+THT=/usr/share/openstack-tripleo-heat-templates/
+CNF=~/templates/
+
+source ~/stackrc
+openstack overcloud deploy --templates $THT \
+-r $CNF/roles_data.yaml \
+-n $CNF/network_data.yaml \
+-e $THT/environments/network-isolation.yaml \
+-e $THT/environments/ceph-ansible/ceph-ansible-external.yaml \
+-e $THT/environments/metrics/ceilometer-write-qdr.yaml \
+-e $THT/environments/enable-stf.yaml \
+-e $THT/environments/ips-from-pool-all.yaml \
+-e $CNF/environments/network-environment.yaml \
+-e $CNF/environments/net-bond-with-vlans.yaml \
+-e ~/containers-prepare-parameter.yaml \
+-e $CNF/node-info.yaml \
+-e $CNF/ceph-external.yaml \
+-e $CNF/HostnameMap.yaml \
+-e $CNF/ips-from-pool-all.yaml \
+-e $CNF/stf-connectors.yaml \
+-e $CNF/fencing.yaml \
+-e $CNF/fix-nova-reserved-host-memory.yaml
+EOF
+
+(undercloud) [stack@undercloud ~]$ time /bin/bash -x ./deploy-with-ext-ceph-stf.sh 2>&1 | tee /tmp/err 
+...
+Ansible passed.
+Overcloud configuration completed.
+Overcloud Endpoint: http://10.0.0.150:5000
+Overcloud Horizon Dashboard URL: http://10.0.0.150:80/dashboard
+Overcloud rc file: /home/stack/overcloudrc
+Overcloud Deployed
+sys:1: ResourceWarning: unclosed <ssl.SSLSocket fd=4, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=6, laddr=('192.0.2.2', 33588)>
+sys:1: ResourceWarning: unclosed <ssl.SSLSocket fd=5, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=6, laddr=('192.0.2.2', 32788), raddr=('192.0.2.2', 13004)>
+sys:1: ResourceWarning: unclosed <ssl.SSLSocket fd=7, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=6, laddr=('192.0.2.2', 53688), raddr=('192.0.2.2', 13989)>
+
+real    45m37.309s
+user    0m15.198s
+sys     0m1.620s
 
 
 

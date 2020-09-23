@@ -2977,6 +2977,342 @@ Sep 23 03:40:58 lab-controller02 pacemaker-controld  [40643] (cib_fencing_update
 
 
 ### day 3
+# Compute Node Replacement Lab
+(overcloud) [stack@undercloud ~]$ openstack hypervisor list
++--------------------------------------+---------------------------+-----------------+--------------+-------+
+| ID                                   | Hypervisor Hostname       | Hypervisor Type | Host IP      | State |
++--------------------------------------+---------------------------+-----------------+--------------+-------+
+| e2882f92-3ff7-4e44-ab9c-68e663b0eea0 | lab-compute02.localdomain | QEMU            | 172.17.0.212 | up    |
+| 74c66213-7395-43b0-87fe-97ec9583c6dd | lab-compute01.localdomain | QEMU            | 172.17.0.211 | up    |
++--------------------------------------+---------------------------+-----------------+--------------+-------+
+
+(overcloud) [stack@undercloud ~]$ openstack server list --all-projects --long
++--------------------------------------+------+--------+------------+-------------+----------------------------------+------------+--------------------------------------+-------------+-----------+-------------------+---------------------------+------------+
+| ID                                   | Name | Status | Task State | Power State | Networks                         | Image Name | Image ID                             | Flavor Name | Flavor ID | Availability Zone | Host                      | Properties |
++--------------------------------------+------+--------+------------+-------------+----------------------------------+------------+--------------------------------------+-------------+-----------+-------------------+---------------------------+------------+
+| df8d9837-f627-4e9e-b3d1-3c252b010988 | test | ACTIVE | None       | Running     | test=192.168.123.245, 10.0.0.124 | cirros     | 1ce6d54d-9c7c-49bb-b1b1-61236eae2641 |             |           | nova              | lab-compute02.localdomain |            |
++--------------------------------------+------+--------+------------+-------------+----------------------------------+------------+--------------------------------------+-------------+-----------+-------------------+---------------------------+------------+
+
+(overcloud) [stack@undercloud ~]$ openstack compute service set lab-compute02.localdomain  nova-compute --disable
+(overcloud) [stack@undercloud ~]$ openstack compute service list
++--------------------------------------+----------------+------------------------------+----------+----------+-------+----------------------------+
+| ID                                   | Binary         | Host                         | Zone     | Status   | State | Updated At                 |
++--------------------------------------+----------------+------------------------------+----------+----------+-------+----------------------------+
+| d0fd7711-0d73-4fc4-b203-2a303fb07d4a | nova-conductor | lab-controller01.localdomain | internal | enabled  | up    | 2020-09-23T05:31:38.000000 |
+| 5e3be132-bcb0-42da-a9f5-5ab7292721de | nova-conductor | lab-controller03.localdomain | internal | enabled  | up    | 2020-09-23T05:31:41.000000 |
+| b00fca95-4b46-4593-9633-22ffc2b52a67 | nova-conductor | lab-controller02.localdomain | internal | enabled  | up    | 2020-09-23T05:31:41.000000 |
+| 04b3256f-72d9-416a-8ddd-2edd9997d7fe | nova-scheduler | lab-controller01.localdomain | internal | enabled  | up    | 2020-09-23T05:31:37.000000 |
+| 02a3421a-cf8b-47f2-88a0-db50f8b03b68 | nova-scheduler | lab-controller02.localdomain | internal | enabled  | up    | 2020-09-23T05:31:42.000000 |
+| 8f4c4221-fd76-4b7e-937c-30de17c7878f | nova-scheduler | lab-controller03.localdomain | internal | enabled  | up    | 2020-09-23T05:31:42.000000 |
+| 0c7eda28-489f-41b4-bd5c-fb9184d90f1d | nova-compute   | lab-compute02.localdomain    | nova     | disabled | up    | 2020-09-23T05:31:38.000000 |
+| 773ea88e-b3fc-4dcd-ac36-1a3be0440409 | nova-compute   | lab-compute01.localdomain    | nova     | enabled  | up    | 2020-09-23T05:31:43.000000 |
++--------------------------------------+----------------+------------------------------+----------+----------+-------+----------------------------+
+
+(overcloud) [stack@undercloud ~]$ openstack server migrate --shared-migration df8d9837-f627-4e9e-b3d1-3c252b010988
+
+(overcloud) [stack@undercloud ~]$ openstack server list --all-projects --host lab-compute02.localdomain
+
+(overcloud) [stack@undercloud ~]$ openstack server list --all-projects --host lab-compute01.localdomain
++--------------------------------------+------+---------------+----------------------------------+--------+--------+
+| ID                                   | Name | Status        | Networks                         | Image  | Flavor |
++--------------------------------------+------+---------------+----------------------------------+--------+--------+
+| df8d9837-f627-4e9e-b3d1-3c252b010988 | test | VERIFY_RESIZE | test=192.168.123.245, 10.0.0.124 | cirros |        |
++--------------------------------------+------+---------------+----------------------------------+--------+--------+
+
+(overcloud) [stack@undercloud ~]$ openstack server resize confirm df8d9837-f627-4e9e-b3d1-3c252b010988
+
+(overcloud) [stack@undercloud ~]$ openstack server list --all-projects --host lab-compute01.localdomain
++--------------------------------------+------+--------+----------------------------------+--------+--------+
+| ID                                   | Name | Status | Networks                         | Image  | Flavor |
++--------------------------------------+------+--------+----------------------------------+--------+--------+
+| df8d9837-f627-4e9e-b3d1-3c252b010988 | test | ACTIVE | test=192.168.123.245, 10.0.0.124 | cirros |        |
++--------------------------------------+------+--------+----------------------------------+--------+--------+
+
+(undercloud) [stack@undercloud ~]$ openstack server list
++--------------------------------------+------------------+--------+----------------------+----------------+---------+
+| ID                                   | Name             | Status | Networks             | Image          | Flavor  |
++--------------------------------------+------------------+--------+----------------------+----------------+---------+
+| 5cc91431-4764-48d4-967f-aed6518902e8 | lab-controller02 | ACTIVE | ctlplane=192.0.2.202 | overcloud-full | control |
+| ed500b04-67f6-429d-b1b2-7a4a3f6cb5c8 | lab-controller01 | ACTIVE | ctlplane=192.0.2.201 | overcloud-full | control |
+| f12b28d7-8c70-434b-9819-4a801a4ab012 | lab-controller03 | ACTIVE | ctlplane=192.0.2.203 | overcloud-full | control |
+| 3c30899e-d9ba-446f-a3da-706443d3b424 | lab-compute02    | ACTIVE | ctlplane=192.0.2.212 | overcloud-full | compute |
+| 8c158b18-a76d-4a3f-9f9a-9ed9adfb057b | lab-compute01    | ACTIVE | ctlplane=192.0.2.211 | overcloud-full | compute |
++--------------------------------------+------------------+--------+----------------------+----------------+---------+
+
+(undercloud) [stack@undercloud ~]$ time openstack overcloud node delete 3c30899e-d9ba-446f-a3da-706443d3b424
+...
+PLAY RECAP *********************************************************************
+lab-compute02              : ok=13   changed=4    unreachable=0    failed=0    skipped=2    rescued=0    ignored=0
+
+Wednesday 23 September 2020  01:39:18 -0400 (0:00:00.061)       0:00:27.364 ***
+===============================================================================
+
+Ansible passed.
+Scale-down configuration completed.
+Waiting for messages on queue 'tripleo' with no timeout.
+sys:1: ResourceWarning: unclosed <ssl.SSLSocket fd=4, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=6, laddr=('192.0.2.2', 40786)>
+sys:1: ResourceWarning: unclosed <ssl.SSLSocket fd=5, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=6, laddr=('192.0.2.2', 43794)>
+sys:1: ResourceWarning: unclosed <ssl.SSLSocket fd=7, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=6, laddr=('192.0.2.2', 45230)>
+
+real    8m50.590s
+user    0m2.042s
+sys     0m0.463s
+
+(undercloud) [stack@undercloud ~]$ openstack server list
++--------------------------------------+------------------+--------+----------------------+----------------+---------+
+| ID                                   | Name             | Status | Networks             | Image          | Flavor  |
++--------------------------------------+------------------+--------+----------------------+----------------+---------+
+| 5cc91431-4764-48d4-967f-aed6518902e8 | lab-controller02 | ACTIVE | ctlplane=192.0.2.202 | overcloud-full | control |
+| ed500b04-67f6-429d-b1b2-7a4a3f6cb5c8 | lab-controller01 | ACTIVE | ctlplane=192.0.2.201 | overcloud-full | control |
+| f12b28d7-8c70-434b-9819-4a801a4ab012 | lab-controller03 | ACTIVE | ctlplane=192.0.2.203 | overcloud-full | control |
+| 8c158b18-a76d-4a3f-9f9a-9ed9adfb057b | lab-compute01    | ACTIVE | ctlplane=192.0.2.211 | overcloud-full | compute |
++--------------------------------------+------------------+--------+----------------------+----------------+---------+
+
+(undercloud) [stack@undercloud ~]$ openstack baremetal node list
++--------------------------------------+---------------------+--------------------------------------+-------------+--------------------+-------------+
+| UUID                                 | Name                | Instance UUID                        | Power State | Provisioning State | Maintenance |
++--------------------------------------+---------------------+--------------------------------------+-------------+--------------------+-------------+
+| ad3e3612-fa87-499b-bda4-f29f5d99952f | overcloud-compute01 | None                                 | power off   | available          | False       |
+| 87f78af7-20af-41d0-860b-e206cac5ea87 | overcloud-compute02 | 8c158b18-a76d-4a3f-9f9a-9ed9adfb057b | power on    | active             | False       |
+| 629e932c-e32c-438e-a3c8-403eac0e363d | overcloud-ctrl01    | ed500b04-67f6-429d-b1b2-7a4a3f6cb5c8 | power on    | active             | False       |
+| a7aeee1d-af3a-4b18-86b6-24e8c4ba1ed4 | overcloud-ctrl02    | f12b28d7-8c70-434b-9819-4a801a4ab012 | power on    | active             | False       |
+| 436da99c-88a9-42f9-ba17-1e38ac3e4a89 | overcloud-ctrl03    | 5cc91431-4764-48d4-967f-aed6518902e8 | power on    | active             | False       |
+| fdebcc21-49e6-4a6d-bb28-eca45a3985c8 | overcloud-networker | None                                 | power off   | available          | False       |
+| acf56624-065a-4dd0-acb2-ecc3079c62fd | overcloud-stor01    | None                                 | power off   | available          | False       |
++--------------------------------------+---------------------+--------------------------------------+-------------+--------------------+-------------+
+
+[root@pool08-iad ~]# /bin/bash -x setup-env-osp16-compute03.sh 
+
+[root@pool08-iad ~]# vbmc list
++---------------------+---------+-------------+------+
+|     Domain name     |  Status |   Address   | Port |
++---------------------+---------+-------------+------+
+| overcloud-compute01 | running | 192.168.1.1 | 6234 |
+| overcloud-compute02 | running | 192.168.1.1 | 6235 |
+| overcloud-compute03 | running | 192.168.1.1 | 6240 |
+|   overcloud-ctrl01  | running | 192.168.1.1 | 6231 |
+|   overcloud-ctrl02  | running | 192.168.1.1 | 6232 |
+|   overcloud-ctrl03  | running | 192.168.1.1 | 6233 |
+| overcloud-networker | running | 192.168.1.1 | 6239 |
+|   overcloud-stor01  | running | 192.168.1.1 | 6236 |
+|      undercloud     | running | 192.168.1.1 | 6230 |
++---------------------+---------+-------------+------+
+Exception TypeError: "'NoneType' object is not callable" in <function _removeHandlerRef at 0x7fb41f1cbb90> ignored
+
+[root@pool08-iad ~]# virsh list --all 
+ Id    Name                           State
+----------------------------------------------------
+ 23    undercloud                     running
+ 30    workstation                    running
+ 40    ceph-node01                    running
+ 41    ceph-node02                    running
+ 42    ceph-node03                    running
+ 43    crc                            running
+ 49    overcloud-compute02            running
+ 51    overcloud-ctrl02               running
+ 52    overcloud-ctrl03               running
+ 54    overcloud-ctrl01               running
+ -     overcloud-compute01            shut off
+ -     overcloud-compute03            shut off
+ -     overcloud-networker            shut off
+ -     overcloud-stor01               shut off
+
+
+[root@pool08-iad ~]# /bin/bash -x ./gen_instackenv_compute03.sh 
+
+[root@pool08-iad ~]# 
+cat > instackenv_compute03.json << EOF
+{
+  "nodes": [
+    {
+      "pm_user": "admin",
+      "pm_type": "pxe_ipmitool",
+      "pm_password": "password",
+      "pm_port": "6240",
+      "pm_addr": "192.168.1.1",
+      "name": "overcloud-compute03",
+      "mac": [
+        "52:54:00:19:68:bb"
+      ]
+    }
+  ]
+}
+EOF
+
+[root@pool08-iad ~]# scp instackenv_compute03.json stack@undercloud.example.com:~/nodes_compute03.json
+
+(undercloud) [stack@undercloud ~]$ openstack overcloud node import --validate-only nodes_compute03.json  
+
+(undercloud) [stack@undercloud ~]$ openstack overcloud node import --introspect --provide nodes_compute03.json 
+
+(undercloud) [stack@undercloud ~]$ openstack baremetal node list
++--------------------------------------+---------------------+--------------------------------------+-------------+--------------------+-------------+
+| UUID                                 | Name                | Instance UUID                        | Power State | Provisioning State | Maintenance |
++--------------------------------------+---------------------+--------------------------------------+-------------+--------------------+-------------+
+| ad3e3612-fa87-499b-bda4-f29f5d99952f | overcloud-compute01 | None                                 | power off   | available          | False       |
+| 87f78af7-20af-41d0-860b-e206cac5ea87 | overcloud-compute02 | 8c158b18-a76d-4a3f-9f9a-9ed9adfb057b | power on    | active             | False       |
+| 629e932c-e32c-438e-a3c8-403eac0e363d | overcloud-ctrl01    | ed500b04-67f6-429d-b1b2-7a4a3f6cb5c8 | power on    | active             | False       |
+| a7aeee1d-af3a-4b18-86b6-24e8c4ba1ed4 | overcloud-ctrl02    | f12b28d7-8c70-434b-9819-4a801a4ab012 | power on    | active             | False       |
+| 436da99c-88a9-42f9-ba17-1e38ac3e4a89 | overcloud-ctrl03    | 5cc91431-4764-48d4-967f-aed6518902e8 | power on    | active             | False       |
+| fdebcc21-49e6-4a6d-bb28-eca45a3985c8 | overcloud-networker | None                                 | power off   | available          | False       |
+| acf56624-065a-4dd0-acb2-ecc3079c62fd | overcloud-stor01    | None                                 | power off   | available          | False       |
+| 0c523f61-cc33-4e99-8f06-4fa1690b97d8 | overcloud-compute03 | None                                 | power off   | available          | False       |
++--------------------------------------+---------------------+--------------------------------------+-------------+--------------------+-------------+
+
+(undercloud) [stack@undercloud ~]$ openstack baremetal node set --property capabilities=profile:compute overcloud-compute03
+
+(undercloud) [stack@undercloud ~]$ openstack baremetal node maintenance set overcloud-compute01 
+
+(undercloud) [stack@undercloud ~]$ openstack baremetal node list
++--------------------------------------+---------------------+--------------------------------------+-------------+--------------------+-------------+
+| UUID                                 | Name                | Instance UUID                        | Power State | Provisioning State | Maintenance |
++--------------------------------------+---------------------+--------------------------------------+-------------+--------------------+-------------+
+| ad3e3612-fa87-499b-bda4-f29f5d99952f | overcloud-compute01 | None                                 | power off   | available          | True        |
+| 87f78af7-20af-41d0-860b-e206cac5ea87 | overcloud-compute02 | 8c158b18-a76d-4a3f-9f9a-9ed9adfb057b | power on    | active             | False       |
+| 629e932c-e32c-438e-a3c8-403eac0e363d | overcloud-ctrl01    | ed500b04-67f6-429d-b1b2-7a4a3f6cb5c8 | power on    | active             | False       |
+| a7aeee1d-af3a-4b18-86b6-24e8c4ba1ed4 | overcloud-ctrl02    | f12b28d7-8c70-434b-9819-4a801a4ab012 | power on    | active             | False       |
+| 436da99c-88a9-42f9-ba17-1e38ac3e4a89 | overcloud-ctrl03    | 5cc91431-4764-48d4-967f-aed6518902e8 | power on    | active             | False       |
+| fdebcc21-49e6-4a6d-bb28-eca45a3985c8 | overcloud-networker | None                                 | power off   | available          | False       |
+| acf56624-065a-4dd0-acb2-ecc3079c62fd | overcloud-stor01    | None                                 | power off   | available          | False       |
+| 0c523f61-cc33-4e99-8f06-4fa1690b97d8 | overcloud-compute03 | None                                 | power off   | available          | False       |
++--------------------------------------+---------------------+--------------------------------------+-------------+--------------------+-------------+
+
+(undercloud) [stack@undercloud ~]$ openstack overcloud profiles list
++--------------------------------------+---------------------+-----------------+-----------------+-------------------+
+| Node UUID                            | Node Name           | Provision State | Current Profile | Possible Profiles |
++--------------------------------------+---------------------+-----------------+-----------------+-------------------+
+| 87f78af7-20af-41d0-860b-e206cac5ea87 | overcloud-compute02 | active          | compute         |                   |
+| 629e932c-e32c-438e-a3c8-403eac0e363d | overcloud-ctrl01    | active          | control         |                   |
+| a7aeee1d-af3a-4b18-86b6-24e8c4ba1ed4 | overcloud-ctrl02    | active          | control         |                   |
+| 436da99c-88a9-42f9-ba17-1e38ac3e4a89 | overcloud-ctrl03    | active          | control         |                   |
+| fdebcc21-49e6-4a6d-bb28-eca45a3985c8 | overcloud-networker | available       | None            |                   |
+| acf56624-065a-4dd0-acb2-ecc3079c62fd | overcloud-stor01    | available       | None            |                   |
+| 0c523f61-cc33-4e99-8f06-4fa1690b97d8 | overcloud-compute03 | available       | compute         |                   |
++--------------------------------------+---------------------+-----------------+-----------------+-------------------+
+
+(undercloud) [stack@undercloud ~]$ time /bin/bash -x deploy-with-ext-ceph-stf.sh
+
+(undercloud) [stack@undercloud ~]$ 
+cat > ~/templates/HostnameMap.yaml << EOF
+parameter_defaults:
+  HostnameMap:
+    overcloud-controller-0: lab-controller01
+    overcloud-controller-1: lab-controller02
+    overcloud-controller-2: lab-controller03
+    overcloud-novacompute-0: lab-compute01
+    overcloud-novacompute-5: lab-compute02
+EOF
+
+(undercloud) [stack@undercloud ~]$ openstack server list
++--------------------------------------+-------------------------+--------+----------------------+----------------+---------+
+| ID                                   | Name                    | Status | Networks             | Image          | Flavor  |
++--------------------------------------+-------------------------+--------+----------------------+----------------+---------+
+| b58f5fa9-257f-4b86-8ece-d3e3054ac0a3 | overcloud-novacompute-2 | ACTIVE | ctlplane=192.0.2.8   | overcloud-full | compute |
+| 5cc91431-4764-48d4-967f-aed6518902e8 | lab-controller02        | ACTIVE | ctlplane=192.0.2.202 | overcloud-full | control |
+| ed500b04-67f6-429d-b1b2-7a4a3f6cb5c8 | lab-controller01        | ACTIVE | ctlplane=192.0.2.201 | overcloud-full | control |
+| f12b28d7-8c70-434b-9819-4a801a4ab012 | lab-controller03        | ACTIVE | ctlplane=192.0.2.203 | overcloud-full | control |
+| 8c158b18-a76d-4a3f-9f9a-9ed9adfb057b | lab-compute01           | ACTIVE | ctlplane=192.0.2.211 | overcloud-full | compute |
++--------------------------------------+-------------------------+--------+----------------------+----------------+---------+
+
+(undercloud) [stack@undercloud ~]$ 
+cat > ~/templates/HostnameMap.yaml << EOF
+parameter_defaults:
+  HostnameMap:
+    overcloud-controller-0: lab-controller01
+    overcloud-controller-1: lab-controller02
+    overcloud-controller-2: lab-controller03
+    overcloud-novacompute-0: lab-compute01
+    overcloud-novacompute-5: lab-compute02
+EOF
+
+# 参见：https://access.redhat.com/documentation/en-us/red_hat_openstack_platform/16.1/html/advanced_overcloud_customization/sect-controlling_node_placement
+(undercloud) [stack@undercloud ~]$ 
+cat > ~/templates/ips-from-pool-all.yaml <<EOF
+parameter_defaults:
+  ControllerIPs:
+    # Each controller will get an IP from the lists below, first controller, first IP
+    ctlplane:
+    - 192.0.2.201
+    - 192.0.2.202
+    - 192.0.2.203
+    external:
+    - 10.0.0.201
+    - 10.0.0.202
+    - 10.0.0.203
+    internal_api:
+    - 172.17.0.201
+    - 172.17.0.202
+    - 172.17.0.203
+    storage:
+    - 172.18.0.201
+    - 172.18.0.202
+    - 172.18.0.203
+    storage_mgmt:
+    - 172.19.0.201
+    - 172.19.0.202
+    - 172.19.0.203
+    tenant:
+    - 172.16.0.201
+    - 172.16.0.202
+    - 172.16.0.203
+    #management:
+    #management:
+    #- 172.16.4.251
+  ComputeIPs:
+    # Each compute will get an IP from the lists below, first compute, first IP
+    ctlplane:
+    - 192.0.2.211
+    - DELETED
+    - DELETED
+    - DELETED
+    - DELETED
+    - 192.0.2.212
+    external:
+    - 10.0.0.211
+    - DELETED
+    - DELETED
+    - DELETED
+    - DELETED
+    - 10.0.0.212
+    internal_api:
+    - 172.17.0.211
+    - DELETED
+    - DELETED
+    - DELETED
+    - DELETED
+    - 172.17.0.212
+    storage:
+    - 172.18.0.211
+    - DELETED
+    - DELETED
+    - DELETED
+    - DELETED
+    - 172.18.0.212
+    storage_mgmt:
+    - 172.19.0.211
+    - DELETED
+    - DELETED
+    - DELETED
+    - DELETED
+    - 172.19.0.212
+    tenant:
+    - 172.16.0.211
+    - DELETED
+    - DELETED
+    - DELETED
+    - DELETED
+    - 172.16.0.212
+    #management:
+    #- 172.16.4.252
+### VIPs ###
+
+  ControlFixedIPs: [{'ip_address':'192.0.2.150'}]
+  InternalApiVirtualFixedIPs: [{'ip_address':'172.17.0.150'}]
+  PublicVirtualFixedIPs: [{'ip_address':'10.0.0.150'}]
+  StorageVirtualFixedIPs: [{'ip_address':'172.18.0.150'}]
+  StorageMgmtVirtualFixedIPs: [{'ip_address':'172.19.0.150'}]
+  RedisVirtualFixedIPs: [{'ip_address':'172.17.0.151'}]
+EOF
 
 ### day 4
 

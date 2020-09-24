@@ -4016,6 +4016,355 @@ EOF
 
 (undercloud) [stack@undercloud ~]$ patch ~/templates-custom/roles_data.yaml < patch-roles-data-templates-custom 
 
+# Render TripleO Templates
+(undercloud) [stack@undercloud ~]$ mkdir ~/rendered-custom
+(undercloud) [stack@undercloud openstack-tripleo-heat-templates]$ tools/process-templates.py -r ~/templates-custom/roles_data.yaml -n ~/templates-custom/network_data.yaml -o ~/rendered-custom
+(undercloud) [stack@undercloud openstack-tripleo-heat-templates]$ cd ~
+
+# Customize Network Configuration Templates for Selected Roles
+(undercloud) [stack@undercloud ~]$ cp -rp ~/rendered-custom/network ~/templates-custom/
+(undercloud) [stack@undercloud ~]$ mkdir -p ~/templates-custom/environments
+(undercloud) [stack@undercloud ~]$ cp ~/rendered-custom/environments/net-bond-with-vlans.yaml ~/templates-custom/environments
+
+(undercloud) [stack@undercloud ~]$ cp ~/templates-custom/network/config/bond-with-vlans/computeinstanceha.yaml ~/templates-custom/network/config/bond-with-vlans/computeinstanceha.yaml.orig
+
+cat > patch-network-config-computeinstanceha-templates-custom << EOF
+--- /home/stack/templates-custom/network/config/bond-with-vlans/computeinstanceha.yaml.orig     2020-09-24 01:01:20.684023347 -0400
++++ /home/stack/templates-custom/network/config/bond-with-vlans/computeinstanceha.yaml  2020-09-24 01:03:28.965943346 -0400
+@@ -242,17 +242,15 @@
+                   routes:
+                     list_concat_unique:
+                       - get_param: TenantInterfaceRoutes
+-                - type: vlan
+-                  mtu:
+-                    get_param: ProviderNetworkMtu
+-                  vlan_id:
+-                    get_param: ProviderNetworkNetworkVlanID
+-                  addresses:
+-                  - ip_netmask:
+-                      get_param: ProviderNetworkIpSubnet
+-                  routes:
+-                    list_concat_unique:
+-                      - get_param: ProviderNetworkInterfaceRoutes
++              - type: ovs_bridge
++                name: br-provider
++                use_dhcp: false
++                addresses:
++                - ip_netmask:
++                    get_param: ProviderNetworkIpSubnet
++                members:
++                - type: interface
++                  name: nic4
+ outputs:
+   OS::stack_id:
+     description: The OsNetConfigImpl resource.
+EOF
+
+(undercloud) [stack@undercloud ~]$ patch ~/templates-custom/network/config/bond-with-vlans/computeinstanceha.yaml < patch-network-config-computeinstanceha-templates-custom 
+
+(undercloud) [stack@undercloud ~]$ cp ~/templates-custom/network/config/bond-with-vlans/networker.yaml ~/templates-custom/network/config/bond-with-vlans/networker.yaml.orig
+
+(undercloud) [stack@undercloud ~]$ 
+cat > patch-network-networker-templates-custom << EOF
+--- /home/stack/templates-custom/network/config/bond-with-vlans/networker.yaml.orig     2020-09-24 01:05:59.594501008 -0400
++++ /home/stack/templates-custom/network/config/bond-with-vlans/networker.yaml  2020-09-24 01:06:37.073893305 -0400
+@@ -208,17 +208,15 @@
+                   routes:
+                     list_concat_unique:
+                       - get_param: TenantInterfaceRoutes
+-                - type: vlan
+-                  mtu:
+-                    get_param: ProviderNetworkMtu
+-                  vlan_id:
+-                    get_param: ProviderNetworkNetworkVlanID
+-                  addresses:
+-                  - ip_netmask:
+-                      get_param: ProviderNetworkIpSubnet
+-                  routes:
+-                    list_concat_unique:
+-                      - get_param: ProviderNetworkInterfaceRoutes
++              - type: ovs_bridge
++                name: br-provider
++                use_dhcp: false
++                addresses:
++                - ip_netmask:
++                    get_param: ProviderNetworkIpSubnet
++                members:
++                - type: interface
++                  name: nic4
+ outputs:
+   OS::stack_id:
+     description: The OsNetConfigImpl resource.
+EOF
+
+(undercloud) [stack@undercloud ~]$ patch ~/templates-custom/network/config/bond-with-vlans/networker.yaml < patch-network-networker-templates-custom 
+
+(undercloud) [stack@undercloud ~]$ cp ~/rendered-custom/environments/network-environment.yaml ~/templates-custom/environments/
+
+(undercloud) [stack@undercloud ~]$ cp ~/templates-custom/environments/network-environment.yaml ~/templates-custom/environments/network-environment.yaml.orig
+
+(undercloud) [stack@undercloud ~]$ 
+cat > patch-network-environment-templates-custom << EOF
+--- /home/stack/templates-custom/environments/network-environment.yaml.orig     2020-09-24 01:10:47.331835549 -0400
++++ /home/stack/templates-custom/environments/network-environment.yaml  2020-09-24 01:14:17.825422297 -0400
+@@ -106,6 +106,9 @@
+   NeutronNetworkType: 'geneve,vlan'
+   # Neutron VLAN ranges per network, for example 'datacentre:1:499,tenant:500:1000':
+   NeutronNetworkVLANRanges: 'datacentre:1:1000'
++  NeutronBridgeMappings: datacentre:br-ex,provider:br-provider
++  NeutronFlatNetworks: datacentre,provider
++  NeutronEnableDVR: false
+   # Customize bonding options, e.g. "mode=4 lacp_rate=1 updelay=1000 miimon=100"
+   # for Linux bonds w/LACP, or "bond_mode=active-backup" for OVS active/backup.
+-  BondInterfaceOvsOptions: "bond_mode=active-backup"
+\ No newline at end of file
++  BondInterfaceOvsOptions: "bond_mode=active-backup"
+EOF
+
+(undercloud) [stack@undercloud ~]$ patch ~/templates-custom/environments/network-environment.yaml < patch-network-environment-templates-custom 
+
+(undercloud) [stack@undercloud ~]$ 
+cat > ~/templates-custom/node-info.yaml << EOF
+parameter_defaults:
+  NetworkDeploymentActions: ['CREATE','UPDATE']
+
+  ControllerCount: 1
+  OvercloudControllerFlavor: control
+
+  ComputeInstanceHACount: 2
+  OvercloudComputeInstanceHAFlavor: compute-instance-ha
+
+  ObjectStorageCount: 1
+  OvercloudObjectStorageFlavor: swift-storage
+
+  NetworkerCount: 1
+  OvercloudNetworkerFlavor: networker
+
+  # additional settings
+
+  NovaReservedHostMemory: 1024
+  podmanPuppetProcessCount: 1
+
+  SwiftRawDisks: {"vdb": {}}
+
+  # No shared storage for InstanceHA
+  ExtraConfig:
+    tripleo::instanceha::no_shared_storage: true
+EOF
+
+(undercloud) [stack@undercloud ~]$ openstack flavor list
++--------------------------------------+---------------+------+------+-----------+-------+-----------+
+| ID                                   | Name          |  RAM | Disk | Ephemeral | VCPUs | Is Public |
++--------------------------------------+---------------+------+------+-----------+-------+-----------+
+| 27a5f6b9-2fac-4f74-97b8-8e6ad61c46a2 | compute       | 4096 |   40 |         0 |     1 | True      |
+| 32c3ad44-df66-41f3-96f2-4cfd84bd8bd8 | control       | 4096 |   40 |         0 |     1 | True      |
+| 3dc0e4e9-370b-487f-9a8b-43e2af2b05c3 | block-storage | 4096 |   40 |         0 |     1 | True      |
+| 51858309-1c97-4ab3-b216-af700165c69b | ceph-storage  | 4096 |   40 |         0 |     1 | True      |
+| 5371eebd-5cf1-4d37-b142-1e952808e634 | baremetal     | 4096 |   40 |         0 |     1 | True      |
+| fe9011fd-a177-4bf8-b213-098d1a63b656 | swift-storage | 4096 |   40 |         0 |     1 | True      |
++--------------------------------------+---------------+------+------+-----------+-------+-----------+
+
+(undercloud) [stack@undercloud ~]$ openstack flavor create --id auto --ram 4096 --disk 40 --vcpus 1 networker
+(undercloud) [stack@undercloud ~]$ openstack flavor set --property "cpu_arch"="x86_64" --property "capabilities:boot_option"="local" --property "capabilities:profile"="networker" networker
+(undercloud) [stack@undercloud ~]$ openstack flavor set --property resources:VCPU=0 --property resources:MEMORY_MB=0 --property resources:DISK_GB=0 --property resources:CUSTOM_BAREMETAL=1 networker
+
+(undercloud) [stack@undercloud ~]$ openstack flavor create --id auto --ram 4096 --disk 40 --vcpus 1 compute-instance-ha
+(undercloud) [stack@undercloud ~]$ openstack flavor set --property "cpu_arch"="x86_64" --property "capabilities:boot_option"="local" --property "capabilities:profile"="compute-instance-ha" compute-instance-ha
+(undercloud) [stack@undercloud ~]$ openstack flavor set --property resources:VCPU=0 --property resources:MEMORY_MB=0 --property resources:DISK_GB=0 --property resources:CUSTOM_BAREMETAL=1 compute-instance-ha
+
+(undercloud) [stack@undercloud ~]$ openstack overcloud profiles list
++--------------------------------------+---------------------+-----------------+-----------------+-------------------+
+| Node UUID                            | Node Name           | Provision State | Current Profile | Possible Profiles |
++--------------------------------------+---------------------+-----------------+-----------------+-------------------+
+| ad3e3612-fa87-499b-bda4-f29f5d99952f | overcloud-compute01 | available       | None            |                   |
+| 87f78af7-20af-41d0-860b-e206cac5ea87 | overcloud-compute02 | available       | None            |                   |
+| 629e932c-e32c-438e-a3c8-403eac0e363d | overcloud-ctrl01    | available       | None            |                   |
+| a7aeee1d-af3a-4b18-86b6-24e8c4ba1ed4 | overcloud-ctrl02    | available       | None            |                   |
+| 436da99c-88a9-42f9-ba17-1e38ac3e4a89 | overcloud-ctrl03    | available       | None            |                   |
+| fdebcc21-49e6-4a6d-bb28-eca45a3985c8 | overcloud-networker | available       | None            |                   |
+| acf56624-065a-4dd0-acb2-ecc3079c62fd | overcloud-stor01    | available       | None            |                   |
+| 0c523f61-cc33-4e99-8f06-4fa1690b97d8 | overcloud-compute03 | available       | compute         |                   |
++--------------------------------------+---------------------+-----------------+-----------------+-------------------+
+
+(undercloud) [stack@undercloud ~]$ openstack baremetal node set overcloud-ctrl01 --property capabilities=profile:control,boot_option:local
+(undercloud) [stack@undercloud ~]$ openstack baremetal node set overcloud-compute01 --property capabilities=profile:compute-instance-ha,boot_option:local
+(undercloud) [stack@undercloud ~]$ openstack baremetal node set overcloud-compute02 --property capabilities=profile:compute-instance-ha,boot_option:local
+(undercloud) [stack@undercloud ~]$ openstack baremetal node set overcloud-stor01 --property capabilities=profile:swift-storage,boot_option:local
+(undercloud) [stack@undercloud ~]$ openstack baremetal node set overcloud-networker --property capabilities=profile:networker,boot_option:local
+
+(undercloud) [stack@undercloud ~]$ openstack baremetal node unset overcloud-compute03 --property capabilities
+
+(undercloud) [stack@undercloud ~]$ openstack overcloud profiles list
++--------------------------------------+---------------------+-----------------+---------------------+-------------------+
+| Node UUID                            | Node Name           | Provision State | Current Profile     | Possible Profiles |
++--------------------------------------+---------------------+-----------------+---------------------+-------------------+
+| ad3e3612-fa87-499b-bda4-f29f5d99952f | overcloud-compute01 | available       | compute-instance-ha |                   |
+| 87f78af7-20af-41d0-860b-e206cac5ea87 | overcloud-compute02 | available       | compute-instance-ha |                   |
+| 629e932c-e32c-438e-a3c8-403eac0e363d | overcloud-ctrl01    | available       | control             |                   |
+| a7aeee1d-af3a-4b18-86b6-24e8c4ba1ed4 | overcloud-ctrl02    | available       | None                |                   |
+| 436da99c-88a9-42f9-ba17-1e38ac3e4a89 | overcloud-ctrl03    | available       | None                |                   |
+| fdebcc21-49e6-4a6d-bb28-eca45a3985c8 | overcloud-networker | available       | networker           |                   |
+| acf56624-065a-4dd0-acb2-ecc3079c62fd | overcloud-stor01    | available       | swift-storage       |                   |
+| 0c523f61-cc33-4e99-8f06-4fa1690b97d8 | overcloud-compute03 | available       | None                |                   |
++--------------------------------------+---------------------+-----------------+---------------------+-------------------+
+
+(undercloud) [stack@undercloud ~]$ openstack overcloud generate fencing --ipmi-lanplus --ipmi-level administrator --output ~/templates-custom/fencing.yaml ~/nodes.json
+
+(undercloud) [stack@undercloud ~]$ 
+cat > ~/deploy-custom.sh << 'EOF'
+#!/bin/bash
+THT=/usr/share/openstack-tripleo-heat-templates/
+CNF=~/templates-custom/
+
+source ~/stackrc
+openstack overcloud deploy --templates $THT \
+-r $CNF/roles_data.yaml \
+-n $CNF/network_data.yaml \
+-e $THT/environments/network-isolation.yaml \
+-e $THT/environments/disable-telemetry.yaml \
+-e $THT/environments/compute-instanceha.yaml \
+-e $CNF/environments/network-environment.yaml \
+-e $CNF/environments/net-bond-with-vlans.yaml \
+-e ~/containers-prepare-parameter.yaml \
+-e $CNF/node-info.yaml \
+-e $CNF/fencing.yaml
+EOF
+
+(undercloud) [stack@undercloud ~]$ time /bin/bash -x ~/deploy-custom.sh 
+...
+PLAY RECAP *********************************************************************
+overcloud-controller-0     : ok=341  changed=202  unreachable=0    failed=0    skipped=127  rescued=0    ignored=0
+overcloud-networker-0      : ok=264  changed=145  unreachable=0    failed=0    skipped=114  rescued=0    ignored=0
+overcloud-novacomputeiha-0 : ok=303  changed=175  unreachable=0    failed=0    skipped=123  rescued=0    ignored=0
+overcloud-novacomputeiha-1 : ok=299  changed=175  unreachable=0    failed=0    skipped=123  rescued=0    ignored=0
+overcloud-objectstorage-0  : ok=273  changed=151  unreachable=0    failed=0    skipped=113  rescued=0    ignored=0
+undercloud                 : ok=87   changed=39   unreachable=0    failed=0    skipped=57   rescued=0    ignored=0
+
+Thursday 24 September 2020  02:16:33 -0400 (0:00:00.061)       0:33:12.522 ****
+===============================================================================
+Waiting for messages on queue 'tripleo' with no timeout.
+Host 10.0.0.246 not found in /home/stack/.ssh/known_hosts
+
+Ansible passed.
+Overcloud configuration completed.
+Overcloud Endpoint: http://10.0.0.246:5000
+Overcloud Horizon Dashboard URL: http://10.0.0.246:80/dashboard
+Overcloud rc file: /home/stack/overcloudrc
+Overcloud Deployed
+sys:1: ResourceWarning: unclosed <ssl.SSLSocket fd=4, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=6, laddr=('192.0.2.2', 49416)>
+sys:1: ResourceWarning: unclosed <ssl.SSLSocket fd=5, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=6, laddr=('192.0.2.2', 47250), raddr=('192.0.2.2', 13004)>
+sys:1: ResourceWarning: unclosed <ssl.SSLSocket fd=7, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=6, laddr=('192.0.2.2', 39924), raddr=('192.0.2.2', 13989)>
+
+real    46m29.188s
+user    0m9.811s
+sys     0m1.324s
+
+(undercloud) [stack@undercloud ~]$ openstack server list
++--------------------------------------+----------------------------+--------+---------------------+----------------+---------------------+
+| ID                                   | Name                       | Status | Networks            | Image          | Flavor              |
++--------------------------------------+----------------------------+--------+---------------------+----------------+---------------------+
+| 0aceed1e-fb31-4b13-be2e-c7a2f8b2efdb | overcloud-controller-0     | ACTIVE | ctlplane=192.0.2.21 | overcloud-full | control             |
+| 872fb535-3880-42c4-8725-eff214a17b18 | overcloud-novacomputeiha-0 | ACTIVE | ctlplane=192.0.2.18 | overcloud-full | compute-instance-ha |
+| 911f79bd-7e7e-4a9e-bb43-864ce306fab2 | overcloud-novacomputeiha-1 | ACTIVE | ctlplane=192.0.2.11 | overcloud-full | compute-instance-ha |
+| 256094d3-f141-45bd-be6a-edb41fb72f00 | overcloud-objectstorage-0  | ACTIVE | ctlplane=192.0.2.9  | overcloud-full | swift-storage       |
+| ddf360d5-b250-4845-8b9e-d0d0d9e048c0 | overcloud-networker-0      | ACTIVE | ctlplane=192.0.2.13 | overcloud-full | networker           |
++--------------------------------------+----------------------------+--------+---------------------+----------------+---------------------+
+
+(undercloud) [stack@undercloud ~]$ openstack baremetal node list
++--------------------------------------+---------------------+--------------------------------------+-------------+--------------------+-------------+
+| UUID                                 | Name                | Instance UUID                        | Power State | Provisioning State | Maintenance |
++--------------------------------------+---------------------+--------------------------------------+-------------+--------------------+-------------+
+| ad3e3612-fa87-499b-bda4-f29f5d99952f | overcloud-compute01 | 911f79bd-7e7e-4a9e-bb43-864ce306fab2 | power on    | active             | False       |
+| 87f78af7-20af-41d0-860b-e206cac5ea87 | overcloud-compute02 | 872fb535-3880-42c4-8725-eff214a17b18 | power on    | active             | False       |
+| 629e932c-e32c-438e-a3c8-403eac0e363d | overcloud-ctrl01    | 0aceed1e-fb31-4b13-be2e-c7a2f8b2efdb | power on    | active             | False       |
+| a7aeee1d-af3a-4b18-86b6-24e8c4ba1ed4 | overcloud-ctrl02    | None                                 | power off   | available          | False       |
+| 436da99c-88a9-42f9-ba17-1e38ac3e4a89 | overcloud-ctrl03    | None                                 | power off   | available          | False       |
+| fdebcc21-49e6-4a6d-bb28-eca45a3985c8 | overcloud-networker | ddf360d5-b250-4845-8b9e-d0d0d9e048c0 | power on    | active             | False       |
+| acf56624-065a-4dd0-acb2-ecc3079c62fd | overcloud-stor01    | 256094d3-f141-45bd-be6a-edb41fb72f00 | power on    | active             | False       |
+| 0c523f61-cc33-4e99-8f06-4fa1690b97d8 | overcloud-compute03 | None                                 | power off   | available          | False       |
++--------------------------------------+---------------------+--------------------------------------+-------------+--------------------+-------------+
+
+(overcloud) [stack@undercloud ~]$ source ~/overcloudrc
+(overcloud) [stack@undercloud ~]$ openstack network create --provider-network-type flat --provider-physical-network provider provnetwork
+
+(overcloud) [stack@undercloud ~]$ openstack subnet create  --gateway 192.168.3.1  --allocation-pool start=192.168.3.151,end=192.168.3.200  --network provnetwork --subnet-range 192.168.3.0/24 provsubnet
+
+(overcloud) [stack@undercloud ~]$ openstack keypair create --public-key ~/.ssh/id_rsa.pub stack
+
+(overcloud) [stack@undercloud ~]$ openstack flavor create m1.tiny --vcpus 1 --ram 64 --disk 1
+
+(overcloud) [stack@undercloud ~]$ sg_id=$(openstack security group list --project admin -c ID -f value)
+(overcloud) [stack@undercloud ~]$ openstack security group rule create --proto icmp $sg_id
+(overcloud) [stack@undercloud ~]$ openstack security group rule create --dst-port 22 --proto tcp $sg_id
+
+(overcloud) [stack@undercloud ~]$ openstack image create cirros --public --file cirros-0.4.0-x86_64-disk.raw
+(overcloud) [stack@undercloud ~]$ openstack server create --flavor m1.tiny --image cirros --key-name stack --security-group $sg_id --nic net-id=provnetwork vmprov --config-drive true
+
+(overcloud) [stack@undercloud ~]$ openstack server list
+
+(overcloud) [stack@undercloud ~]$ provnetip=$( openstack server show vmprov -c addresses -f value | awk -F'='  '{print $2}' )
+
+(overcloud) [stack@undercloud ~]$ ssh cirros@${provnetip}
+
+(undercloud) [stack@undercloud ~]$ openstack server list
++--------------------------------------+----------------------------+--------+---------------------+----------------+---------------------+
+| ID                                   | Name                       | Status | Networks            | Image          | Flavor              |
++--------------------------------------+----------------------------+--------+---------------------+----------------+---------------------+
+| 0aceed1e-fb31-4b13-be2e-c7a2f8b2efdb | overcloud-controller-0     | ACTIVE | ctlplane=192.0.2.21 | overcloud-full | control             |
+| 872fb535-3880-42c4-8725-eff214a17b18 | overcloud-novacomputeiha-0 | ACTIVE | ctlplane=192.0.2.18 | overcloud-full | compute-instance-ha |
+| 911f79bd-7e7e-4a9e-bb43-864ce306fab2 | overcloud-novacomputeiha-1 | ACTIVE | ctlplane=192.0.2.11 | overcloud-full | compute-instance-ha |
+| 256094d3-f141-45bd-be6a-edb41fb72f00 | overcloud-objectstorage-0  | ACTIVE | ctlplane=192.0.2.9  | overcloud-full | swift-storage       |
+| ddf360d5-b250-4845-8b9e-d0d0d9e048c0 | overcloud-networker-0      | ACTIVE | ctlplane=192.0.2.13 | overcloud-full | networker           |
++--------------------------------------+----------------------------+--------+---------------------+----------------+---------------------+
+
+(undercloud) [stack@undercloud ~]$ 
+cat > ~/.ssh/config << EOF
+Host *
+  StrictHostKeyChecking no
+EOF
+
+(undercloud) [stack@undercloud ~]$ 
+chmod 400 ~/.ssh/config
+
+[heat-admin@overcloud-objectstorage-0 ~]$ df /dev/vdb
+Filesystem     1K-blocks   Used Available Use% Mounted on
+/dev/vdb        62883840 485548  62398292   1% /srv/node/vdb
+
+[heat-admin@overcloud-objectstorage-0 ~]$ sudo podman exec -ti  swift_object_server swift-ring-builder /etc/swift/object.builder
+/etc/swift/object.builder, build version 2, id f0295f682ad545b28baf2ce69743b76c
+1024 partitions, 1.000000 replicas, 1 regions, 1 zones, 1 devices, 0.00 balance, 0.00 dispersion
+The minimum number of hours before a partition can be reassigned is 1 (0:11:11 remaining)
+The overload factor is 0.00% (0.000000)
+Ring file /etc/swift/object.ring.gz is up-to-date
+Devices:   id region zone   ip address:port replication ip:port  name weight partitions balance flags meta
+            0      1    1 172.19.0.137:6000   172.19.0.137:6000   vdb 100.00       1024    0.00     
+
+[heat-admin@overcloud-objectstorage-0 ~]$ ip a s | grep 172.19
+    inet 172.19.0.137/24 brd 172.19.0.255 scope global vlan40    
+
+# Testing Evacuation with Instance HA
+(overcloud) [stack@undercloud ~]$ openstack server list --long
++--------------------------------------+--------+--------+------------+-------------+---------------------------+------------+--------------------------------------+-------------+-----------+-------------------+----------------------------------------+------------+
+| ID                                   | Name   | Status | Task State | Power State | Networks                  | Image Name | Image ID                             | Flavor Name | Flavor ID | Availability Zone | Host                                   | Properties |
++--------------------------------------+--------+--------+------------+-------------+---------------------------+------------+--------------------------------------+-------------+-----------+-------------------+----------------------------------------+------------+
+| 55bd143b-1a70-42f4-a368-95c9138a33e1 | vmprov | ACTIVE | None       | Running     | provnetwork=192.168.3.184 | cirros     | 278b273d-3b2e-454a-87cc-60f3ed74a1e0 |             |           | nova              | overcloud-novacomputeiha-0.localdomain |            |
++--------------------------------------+--------+--------+------------+-------------+---------------------------+------------+--------------------------------------+-------------+-----------+-------------------+----------------------------------------+------------+
+
+[heat-admin@overcloud-novacomputeiha-0 ~]$ sudo -i
+[root@overcloud-novacomputeiha-0 ~]# echo c > /proc/sysrq-trigger
+
+(overcloud) [stack@undercloud ~]$ openstack server list --long
++--------------------------------------+--------+--------+------------+-------------+---------------------------+------------+--------------------------------------+-------------+-----------+-------------------+----------------------------------------+------------+
+| ID                                   | Name   | Status | Task State | Power State | Networks                  | Image Name | Image ID                             | Flavor Name | Flavor ID | Availability Zone | Host                                   | Properties |
++--------------------------------------+--------+--------+------------+-------------+---------------------------+------------+--------------------------------------+-------------+-----------+-------------------+----------------------------------------+------------+
+| 55bd143b-1a70-42f4-a368-95c9138a33e1 | vmprov | ACTIVE | None       | Running     | provnetwork=192.168.3.184 | cirros     | 278b273d-3b2e-454a-87cc-60f3ed74a1e0 |             |           | nova              | overcloud-novacomputeiha-1.localdomain |            |
++--------------------------------------+--------+--------+------------+-------------+---------------------------+------------+--------------------------------------+-------------+-----------+-------------------+----------------------------------------+------------+
+
+[heat-admin@overcloud-novacomputeiha-0 ~]$ w
+ 06:54:23 up 1 min,  1 user,  load average: 1.97, 0.74, 0.26
+USER     TTY      FROM             LOGIN@   IDLE   JCPU   PCPU WHAT
+heat-adm pts/0    192.0.2.1        06:54    2.00s  0.01s  0.01s w
+
 
 ### day 4
 

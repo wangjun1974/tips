@@ -3944,6 +3944,77 @@ volume-7b556f01-3871-4b64-b578-22bd22bce7fe.backup.4e5b4f95-276d-4506-ab9c-027e7
 # Composable Roles Lab
 (undercloud) [stack@undercloud ~]$ source ~/stackrc
 (undercloud) [stack@undercloud ~]$ openstack overcloud delete overcloud --yes
+(undercloud) [stack@undercloud ~]$ openstack stack list
+
+(undercloud) [stack@undercloud ~]$ openstack stack list
+
+(undercloud) [stack@undercloud ~]$ openstack overcloud plan list
+
+(undercloud) [stack@undercloud ~]$ openstack overcloud role list
+
+(undercloud) [stack@undercloud ~]$ openstack overcloud role show ComputeInstanceHA
+
+(undercloud) [stack@undercloud ~]$ mkdir -p ~/templates-custom/templates/
+
+(undercloud) [stack@undercloud ~]$ openstack overcloud roles generate -o ~/templates-custom/roles_data.yaml Controller ComputeInstanceHA Networker ObjectStorage
+
+(undercloud) [stack@undercloud ~]$ cp ~/templates/network_data.yaml ~/templates-custom/
+
+# Add parameters of a new provider network into the ~/templates-custom/network_data.yaml file
+(undercloud) [stack@undercloud ~]$ 
+cat >> ~/templates-custom/network_data.yaml << EOF
+- name: ProviderNetwork
+  vip: false
+  name_lower: provider_network
+  vlan: 70
+  ip_subnet: '192.168.3.0/24'
+  allocation_pools: [{'start': '192.168.3.4', 'end': '192.168.3.250'}]
+  gateway_ip: '192.168.3.1'
+EOF
+
+(undercloud) [stack@undercloud ~]$ cp ~/templates-custom/roles_data.yaml ~/templates-custom/roles_data.yaml.orig
+(undercloud) [stack@undercloud ~]$ 
+cat > patch-roles-data-templates-custom << EOF
+--- /home/stack/templates-custom/roles_data.yaml.orig   2020-09-24 00:48:18.831700531 -0400
++++ /home/stack/templates-custom/roles_data.yaml        2020-09-24 00:51:06.340984487 -0400
+@@ -21,8 +21,6 @@
+       subnet: storage_subnet
+     StorageMgmt:
+       subnet: storage_mgmt_subnet
+-    Tenant:
+-      subnet: tenant_subnet
+   # For systems with both IPv4 and IPv6, you may specify a gateway network for
+   # each, such as ['ControlPlane', 'External']
+   default_route_networks: ['External']
+@@ -181,7 +179,6 @@
+     - OS::TripleO::Services::SwiftProxy
+     - OS::TripleO::Services::SwiftDispersion
+     - OS::TripleO::Services::SwiftRingBuilder
+-    - OS::TripleO::Services::SwiftStorage
+     - OS::TripleO::Services::Timesync
+     - OS::TripleO::Services::Timezone
+     - OS::TripleO::Services::TripleoFirewall
+@@ -203,6 +200,8 @@
+       subnet: tenant_subnet
+     Storage:
+       subnet: storage_subnet
++    ProviderNetwork:
++      subnet: provider_network_subnet
+   HostnameFormatDefault: '%stackname%-novacomputeiha-%index%'
+   RoleParametersDefault:
+     TunedProfileName: "virtual-host"
+@@ -267,6 +266,8 @@
+       subnet: internal_api_subnet
+     Tenant:
+       subnet: tenant_subnet
++    ProviderNetwork:
++      subnet: provider_network_subnet
+   tags:
+     - external_bridge
+   HostnameFormatDefault: '%stackname%-networker-%index%'
+EOF
+
+(undercloud) [stack@undercloud ~]$ patch ~/templates-custom/roles_data.yaml < patch-roles-data-templates-custom 
 
 
 ### day 4

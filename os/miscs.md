@@ -2530,3 +2530,51 @@ https://mellowhost.com/blog/quick-how-to-finding-io-abuser-in-kvm-vm.html<br>
 ```
 virt-top -o blockwrrq -3 
 ```
+
+### Patch code under linux
+参考：https://www.cyberciti.biz/faq/appy-patch-file-using-patch-command/
+```
+(undercloud) [stack@undercloud ~]$ cp ~/templates-custom/roles_data.yaml ~/templates-custom/roles_data.yaml.orig
+(undercloud) [stack@undercloud ~]$ 
+cat > patch-roles-data-templates-custom << EOF
+--- /home/stack/templates-custom/roles_data.yaml.orig   2020-09-24 00:48:18.831700531 -0400
++++ /home/stack/templates-custom/roles_data.yaml        2020-09-24 00:51:06.340984487 -0400
+@@ -21,8 +21,6 @@
+       subnet: storage_subnet
+     StorageMgmt:
+       subnet: storage_mgmt_subnet
+-    Tenant:
+-      subnet: tenant_subnet
+   # For systems with both IPv4 and IPv6, you may specify a gateway network for
+   # each, such as ['ControlPlane', 'External']
+   default_route_networks: ['External']
+@@ -181,7 +179,6 @@
+     - OS::TripleO::Services::SwiftProxy
+     - OS::TripleO::Services::SwiftDispersion
+     - OS::TripleO::Services::SwiftRingBuilder
+-    - OS::TripleO::Services::SwiftStorage
+     - OS::TripleO::Services::Timesync
+     - OS::TripleO::Services::Timezone
+     - OS::TripleO::Services::TripleoFirewall
+@@ -203,6 +200,8 @@
+       subnet: tenant_subnet
+     Storage:
+       subnet: storage_subnet
++    ProviderNetwork:
++      subnet: provider_network_subnet
+   HostnameFormatDefault: '%stackname%-novacomputeiha-%index%'
+   RoleParametersDefault:
+     TunedProfileName: "virtual-host"
+@@ -267,6 +266,8 @@
+       subnet: internal_api_subnet
+     Tenant:
+       subnet: tenant_subnet
++    ProviderNetwork:
++      subnet: provider_network_subnet
+   tags:
+     - external_bridge
+   HostnameFormatDefault: '%stackname%-networker-%index%'
+EOF
+
+(undercloud) [stack@undercloud ~]$ patch ~/templates-custom/roles_data.yaml < patch-roles-data-templates-custom 
+```

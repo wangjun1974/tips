@@ -4421,6 +4421,7 @@ sudo openstack tripleo deploy \
   -e $HOME/standalone_parameters.yaml \
   --output-dir $HOME \
   --standalone
+
 ### day 5
 
 ### sync repo

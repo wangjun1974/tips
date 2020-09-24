@@ -3759,6 +3759,117 @@ d143bf9382b2  undercloud.ctlplane.example.com:8787/rhosp-rhel8/openstack-barbica
 | 0f69c4d7c3b33f2c99bfe82761812fdd20a87ec74a0bf553390e8a8ac1be9605 | student |
 +------------------------------------------------------------------+---------+
 
+(overcloud) [stack@undercloud ~]$ openstack project create project_gpte --domain gpte
+
+(overcloud) [stack@undercloud ~]$ openstack role add --user student --project project_gpte --user-domain gpte member
+
+(overcloud) [stack@undercloud ~]$ 
+cat > overcloudrc_student << 'EOF'
+# Clear any old environment that may conflict.
+for key in $( set | awk '{FS="="}  /^OS_/ {print $1}' ); do unset $key ; done
+export OS_NO_CACHE=True
+export COMPUTE_API_VERSION=1.1
+export OS_USERNAME=student
+export no_proxy=,192.168.0.150,192.168.0.250,192.168.0.150,192.168.0.250,192.168.0.150,192.168.0.250
+export OS_USER_DOMAIN_NAME=gpte
+export OS_VOLUME_API_VERSION=3
+export OS_CLOUDNAME=overcloud_student
+export OS_AUTH_URL=https://overcloud.example.com:13000//v3
+export NOVA_VERSION=1.1
+export OS_IMAGE_API_VERSION=2
+export OS_PASSWORD=r3dh4t1!
+export OS_PROJECT_DOMAIN_NAME=gpte
+export OS_IDENTITY_API_VERSION=3
+export OS_PROJECT_NAME=project_gpte
+export OS_AUTH_TYPE=password
+export PYTHONWARNINGS="ignore:Certificate has no, ignore:A true SSLContext object is not available"
+
+# Add OS_CLOUDNAME to PS1
+if [ -z "${CLOUDPROMPT_ENABLED:-}" ]; then
+    export PS1=${PS1:-""}
+    export PS1=\${OS_CLOUDNAME:+"(\$OS_CLOUDNAME)"}\ $PS1
+    export CLOUDPROMPT_ENABLED=1
+fi
+EOF
+
+(overcloud) [stack@undercloud ~]$ source overcloudrc_student 
+(overcloud_student) [stack@undercloud ~]$   
+
+(overcloud_student) [stack@undercloud ~]$ openstack network create net1
+
+overcloud_student) [stack@undercloud ~]$ 
+openstack subnet create subnet1 \
+  --network net1 \
+  --dns-nameserver 8.8.4.4 --gateway 172.116.1.1 \
+  --subnet-range 172.116.1.0/24
+
+(overcloud_student) [stack@undercloud ~]$ openstack security group create sg_web 
+
+(overcloud_student) [stack@undercloud ~]$ openstack security group list                          
+(overcloud_student) [stack@undercloud ~]$ SGID=$(openstack security group list | grep  sg_web | awk '{print $2}')
+
+openstack security group rule create --proto icmp $SGID
+openstack security group rule create --dst-port 22 --proto tcp $SGID
+openstack security group rule create --dst-port 80 --proto tcp $SGID
+
+cat > webserver.sh << 'EOF'
+#!/bin/sh
+
+MYIP=$(/sbin/ifconfig eth0|grep 'inet addr'|awk -F: '{print $2}'| awk '{print $1}');
+OUTPUT_STR="Welcome to $MYIP\r"
+OUTPUT_LEN=${#OUTPUT_STR}
+
+while true; do
+    echo -e "HTTP/1.0 200 OK\r\nContent-Length: ${OUTPUT_LEN}\r\n\r\n${OUTPUT_STR}" | sudo nc -l -p 80
+done
+EOF
+
+(overcloud_student) [stack@undercloud ~]$ source ~/overcloudrc
+(overcloud) [stack@undercloud ~]$ openstack flavor create m1.nano --vcpus 1 --ram 64 --disk 1
+(overcloud) [stack@undercloud ~]$ source ~/overcloudrc_student 
+
+openstack server create --image cirros --flavor m1.nano --network net1 --security-group sg_web --user-data webserver.sh web01 --wait
+openstack server create --image cirros --flavor m1.nano --network net1 --security-group sg_web --user-data webserver.sh web02 --wait
+
+(overcloud_student) [stack@undercloud ~]$ openstack loadbalancer create --name lbweb --vip-subnet-id subnet1 --provider ovn
+
+(overcloud_student) [stack@undercloud ~]$ openstack loadbalancer list
++--------------------------------------+-------+----------------------------------+---------------+---------------------+----------+
+| id                                   | name  | project_id                       | vip_address   | provisioning_status | provider |
++--------------------------------------+-------+----------------------------------+---------------+---------------------+----------+
+| 55e86b30-1714-4f6c-90fd-92553a543bcb | lbweb | a98e9e44a10d40198c5e99155b864679 | 172.116.1.242 | ACTIVE              | ovn      |
++--------------------------------------+-------+----------------------------------+---------------+---------------------+----------+
+
+(overcloud_student) [stack@undercloud ~]$ openstack loadbalancer listener create --name listenerweb --protocol TCP --protocol-port 80 lbweb
+
+(overcloud_student) [stack@undercloud ~]$ openstack loadbalancer listener show listenerweb 
+
+(overcloud_student) [stack@undercloud ~]$ openstack loadbalancer pool create --name poolweb --protocol TCP  --listener listenerweb --lb-algorithm SOURCE_IP_PORT
+
+(overcloud_student) [stack@undercloud ~]$ IPWEB01=$(openstack server show web01 -c addresses -f value | cut -d"=" -f2)
+(overcloud_student) [stack@undercloud ~]$ IPWEB02=$(openstack server show web02 -c addresses -f value | cut -d"=" -f2)
+(overcloud_student) [stack@undercloud ~]$ SUBNETID=$(openstack subnet show subnet1 -c id -f value)
+
+(overcloud_student) [stack@undercloud ~]$ openstack loadbalancer member create --name web01 --address $IPWEB01 --subnet-id $SUBNETID --protocol-port 80 poolweb
+
+(overcloud_student) [stack@undercloud ~]$ openstack loadbalancer member create --name web02 --address $IPWEB02 --subnet-id $SUBNETID --protocol-port 80 poolweb
+
+(overcloud) [stack@undercloud ~]$ openstack network set --share public 
+
+(overcloud_student) [stack@undercloud ~]$ openstack router create router1
+
+(overcloud_student) [stack@undercloud ~]$ openstack router add subnet router1 subnet1
+(overcloud_student) [stack@undercloud ~]$ openstack router set router1 --external-gateway public
+
+VIP=$(openstack loadbalancer show lbweb -c vip_address -f value)
+PORTID=$(openstack port list --fixed-ip ip-address=$VIP -c ID -f value)
+openstack floating ip create --port $PORTID public
+
+FLOATINGID=$(openstack floating ip list | grep $VIP | awk '{print $2}')
+FLOATINGIP=$(openstack floating ip show $FLOATINGID -c floating_ip_address -f value)
+
+curl $FLOATINGIP
+curl $FLOATINGIP
 
 ### day 4
 

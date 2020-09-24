@@ -3328,6 +3328,437 @@ real    50m30.240s
 user    0m16.124s
 sys     0m1.580s
 
+# Advanced Overcloud Deployed Lab
+
+[root@pool08-iad ~]# for i in {1..3}; do virsh shutdown ceph-node0$i; done
+Domain ceph-node01 is being shutdown
+
+Domain ceph-node02 is being shutdown
+
+Domain ceph-node03 is being shutdown
+
+[root@pool08-iad ~]# virsh shutdown workstation
+Domain workstation is being shutdown
+
+[root@pool08-iad ~]# /bin/bash -x ./setup-env-ipa.sh 
+
+[root@pool08-iad ~]# ssh root@192.168.0.252
+
+[root@ipa ~]# yum module enable idm:DL1 -y
+rhel-8-for-x86_64-baseos-eus-rpms                                                                                        78 MB/s |  20 MB     00:00    
+rhel-8-for-x86_64-appstream-eus-rpms                                                                                     79 MB/s |  18 MB     00:00    
+rhel-8-for-x86_64-highavailability-eus-rpms                                                                              60 MB/s | 1.7 MB     00:00    
+ansible-2.9-for-rhel-8-x86_64-rpms                                                                                       47 MB/s | 835 kB     00:00    
+fast-datapath-for-rhel-8-x86_64-rpms                                                                                    6.8 MB/s |  91 kB     00:00    
+openstack-16.1-for-rhel-8-x86_64-rpms                                                                                    55 MB/s | 1.1 MB     00:00    
+rhceph-4-tools-for-rhel-8-x86_64-rpms                                                                                    14 MB/s | 120 kB     00:00    
+Dependencies resolved.
+========================================================================================================================================================
+ Package                             Architecture                       Version                               Repository                           Size
+========================================================================================================================================================
+Enabling module streams:
+ 389-ds                                                                 1.4                                                                            
+ httpd                                                                  2.4                                                                            
+ idm                                                                    DL1                                                                            
+ pki-core                                                               10.6                                                                           
+ pki-deps                                                               10.6                                                                           
+
+Transaction Summary
+========================================================================================================================================================
+
+Complete!
+
+[root@ipa ~]# yum distro-sync -y
+
+[root@ipa ~]# yum module install idm:DL1/dns -y
+
+[root@ipa ~]# echo "192.168.0.252 ipa.example.com" >> /etc/hosts
+
+[root@ipa ~]# ipa-server-install -a r3dh4t1\! --hostname=ipa.example.com -r EXAMPLE.COM -p r3dh4t1\!  -n example.com -U --setup-dns  --allow-zone-overlap --auto-forwarders
+
+[root@ipa ~]# echo 'r3dh4t1!' | kinit admin
+[root@ipa ~]# ipa dnsrecord-add example.com overcloud --a-ip-address=192.168.0.150
+
+[root@ipa ~]# ipa dnsrecord-add example.com overcloud.ctlplane --a-ip-address=192.0.2.150
+[root@ipa ~]# ipa dnsrecord-add example.com overcloud.internalapi --a-ip-address=172.17.0.150
+[root@ipa ~]# ipa dnsrecord-add example.com overcloud.storage --a-ip-address=172.18.0.150
+[root@ipa ~]# ipa dnsrecord-add example.com overcloud.storagemgmt --a-ip-address=172.19.0.150
+[root@ipa ~]# ipa dnsrecord-add example.com classroom --a-ip-address=10.149.23.10
+
+[root@ipa ~]# echo 'r3dh4t1!' | ipa user-add --first=Student --last=OpenStack student --password
+[root@ipa ~]# sed -ie 's|^#RewriteRule |RewriteRule |' /etc/httpd/conf.d/ipa-pki-proxy.conf
+[root@ipa ~]# cat /etc/httpd/conf.d/ipa-pki-proxy.conf | grep Rewrite
+[root@ipa ~]# systemctl reload httpd
+
+# Configure Keystone LDAP Backend
+(undercloud) [stack@undercloud ~]$ 
+cat > ~/templates/keystone_domain_specific_ldap_backend.yaml <<EOF
+parameter_defaults:
+  KeystoneLDAPDomainEnable: true
+  KeystoneLDAPBackendConfigs:
+    gpte:
+      url: ldap://192.168.0.252
+      user: uid=admin,cn=users,cn=compat,dc=example,dc=com
+      password: r3dh4t1!
+      suffix: dc=example,dc=com
+      user_tree_dn: cn=users,cn=accounts,dc=example,dc=com
+      user_filter: ""
+      user_objectclass: person
+      user_id_attribute: uid
+      user_name_attribute: uid
+      user_allow_create: false
+      user_allow_update: false
+      user_allow_delete: false
+EOF
+
+# Enable TLS on Internal Endpoints
+(undercloud) [stack@undercloud ~]$ sudo dnf install python3-novajoin -y
+
+(undercloud) [stack@undercloud ~]$ sudo sed -i 's/192.168.0.1/192.168.0.252/' /etc/resolv.conf
+
+(undercloud) [stack@undercloud ~]$ 
+sudo /usr/libexec/novajoin-ipa-setup \
+    --principal admin \
+    --password r3dh4t1\! \
+    --server ipa.example.com \
+    --realm EXAMPLE.COM \
+    --domain example.com \
+    --hostname undercloud.example.com \
+    --precreate
+0BaiwLSPpZBEd2APgnd1DGw4BYa4f6MwrUK5QTJlNVv6
+
+(undercloud) [stack@undercloud ~]$ sudo yum install -y crudini
+
+(undercloud) [stack@undercloud ~]$ crudini --set ~/undercloud.conf DEFAULT enable_novajoin true
+(undercloud) [stack@undercloud ~]$ crudini --set ~/undercloud.conf DEFAULT overcloud_domain_name example.com
+(undercloud) [stack@undercloud ~]$ crudini --set ~/undercloud.conf DEFAULT undercloud_hostname undercloud.example.com
+(undercloud) [stack@undercloud ~]$ crudini --set ~/undercloud.conf DEFAULT undercloud_nameservers 192.168.0.252
+(undercloud) [stack@undercloud ~]$ crudini --set ~/undercloud.conf DEFAULT ipa_otp 0BaiwLSPpZBEd2APgnd1DGw4BYa4f6MwrUK5QTJlNVv6
+
+(undercloud) [stack@undercloud ~]$ openstack undercloud install
+
+(undercloud) [stack@undercloud ~]$ openstack subnet show ctlplane-subnet -c dns_nameservers -f value
+
+(undercloud) [stack@undercloud ~]$ sed -i 's/  DnsServers: \[\]/  DnsServers: ["192.168.0.252"]/' ~/templates/environments/network-environment.yaml
+
+(undercloud) [stack@undercloud ~]$ grep DnsServers ~/templates/environments/network-environment.yaml
+
+(undercloud) [stack@undercloud ~]$ THT=/usr/share/openstack-tripleo-heat-templates/
+
+(undercloud) [stack@undercloud ~]$ sed 's/localdomain/example.com/' $THT/environments/predictable-placement/custom-domain.yaml | tee ~/templates/custom-domain.yaml
+
+# Enable TLS on Overcloud Public Endpoints
+(undercloud) [stack@undercloud ~]$ grep PublicVirtualFixedIPs ~/templates/ips-from-pool-all.yaml
+
+(undercloud) [stack@undercloud ~]$ cp ~/rendered/environments/ssl/enable-tls.yaml ~/templates
+
+(undercloud) [stack@undercloud ~]$ cp ~/rendered/environments/ssl/inject-trust-anchor.yaml ~/templates/inject-trust-anchor.yaml
+
+(undercloud) [stack@undercloud ~]$ sed -i 's#\.\./\.\.#/usr/share/openstack-tripleo-heat-templates#' ~/templates/inject-trust-anchor.yaml
+
+(undercloud) [stack@undercloud ~]$ grep NodeTLSCAData ~/templates/inject-trust-anchor.yaml
+
+(undercloud) [stack@undercloud ~]$ openssl genrsa -out ~/templates/overcloud-privkey.pem 2048
+
+(undercloud) [stack@undercloud ~]$ openssl req -new -x509 -key ~/templates/overcloud-privkey.pem -out ~/templates/overcloud-cacert.pem -days 365 -subj '/C=US/ST=NC/L=Raleigh/O=Red Hat/OU=QE/CN=overcloud.example.com'
+
+(undercloud) [stack@undercloud ~]$ openssl x509 -in ~/templates/overcloud-cacert.pem -text -noout
+
+(undercloud) [stack@undercloud ~]$ cat ~/templates/overcloud-cacert.pem /etc/ipa/ca.crt  > ~/cacert.pem
+
+(undercloud) [stack@undercloud ~]$ sudo cp ~/cacert.pem /etc/pki/ca-trust/source/anchors/ca.crt.pem
+
+(undercloud) [stack@undercloud ~]$ sudo update-ca-trust extract
+
+(undercloud) [stack@undercloud ~]$ cd ~/templates
+
+(undercloud) [stack@undercloud ~]$ sed -i -e '/The contents of your certificate go here/r overcloud-cacert.pem' -e '/The contents of your certificate go here/ d' enable-tls.yaml 
+
+(undercloud) [stack@undercloud ~]$ sed -i  -e '/-----BEGIN CERT/,/-----END CERT/{s/^/    /g}' enable-tls.yaml 
+
+(undercloud) [stack@undercloud templates]$ sed -i -e '/The contents of the private key go here/r overcloud-privkey.pem' -e '/The contents of the private key go here/ d' enable-tls.yaml
+
+(undercloud) [stack@undercloud templates]$ sed -i -e '/-----BEGIN RSA/,/-----END RSA/{s/^/    /g}' enable-tls.yaml
+
+(undercloud) [stack@undercloud templates]$ sed -i "s#InternalTLSCAFile: ''#InternalTLSCAFile: '/etc/pki/ca-trust/source/anchors/ca.crt.pem'#" enable-tls.yaml
+
+(undercloud) [stack@undercloud templates]$ sed -i -e '/The contents of your certificate go here/r /home/stack/cacert.pem' -e '/The contents of your certificate go here/ d' inject-trust-anchor.yaml
+
+(undercloud) [stack@undercloud templates]$ sed -i  -e '/-----BEGIN CERT/,/-----END CERT/{s/^/    /g}' inject-trust-anchor.yaml
+
+(undercloud) [stack@undercloud templates]$ cat enable-tls.yaml
+
+(undercloud) [stack@undercloud templates]$ cat inject-trust-anchor.yaml
+
+(undercloud) [stack@undercloud templates]$ cd 
+(undercloud) [stack@undercloud ~]$ 
+cat > ~/templates/ceph-config.yaml <<EOF
+parameter_defaults:
+  CephConfigOverrides:
+    osd_pool_default_size: 2
+    osd_pool_default_min_size: 1
+    mon_max_pg_per_osd: 1000
+  CephAnsibleDisksConfig:
+    osd_scenario: collocated
+    devices:
+      - /dev/vdb
+EOF
+
+# Specify Node Counts and Other Options
+(undercloud) [stack@undercloud ~]$ 
+cat > ~/templates/node-info.yaml <<EOF
+parameter_defaults:
+  OvercloudControlFlavor: baremetal
+  OvercloudComputeHCIFlavor: baremetal
+  ControllerCount: 3
+  ComputeHCICount: 2
+  BarbicanSimpleCryptoGlobalDefault: true
+EOF
+
+(undercloud) [stack@undercloud ~]$ sed -i 's/Compute/ComputeHCI/' templates/environments/net-bond-with-vlans.yaml templates/environments/network-environment.yaml templates/ips-from-pool-all.yaml
+
+(undercloud) [stack@undercloud ~]$ openstack overcloud roles generate Controller ComputeHCI -o templates/roles_data.yaml
+
+# add External and external_subnet to networks section
+(undercloud) [stack@undercloud ~]$ 
+cat ~/templates/roles_data.yaml
+...
+- name: ComputeHCI
+  description: |
+    Compute Node role hosting Ceph OSD too
+  networks:
+    External:
+      subnet: external_subnet
+    InternalApi:
+      subnet: internal_api_subnet
+    Tenant:
+      subnet: tenant_subnet
+    Storage:
+      subnet: storage_subnet
+    StorageMgmt:
+      subnet: storage_mgmt_subnet
+...
+
+(undercloud) [stack@undercloud ~]$ THT=/usr/share/openstack-tripleo-heat-templates/
+
+[stack@undercloud openstack-tripleo-heat-templates]$ tools/process-templates.py -r ~/templates/roles_data.yaml -n ~/templates/network_data.yaml -o ~/rendered
+
+(undercloud) [stack@undercloud openstack-tripleo-heat-templates]$ cp ~/rendered/environments/network-isolation.yaml ~/templates/environments/
+(undercloud) [stack@undercloud openstack-tripleo-heat-templates]$ cp ~/rendered/environments/net-bond-with-vlans.yaml ~/templates/environments/
+(undercloud) [stack@undercloud openstack-tripleo-heat-templates]$ cp ~/rendered/network/config/bond-with-vlans/computehci.yaml ~/templates/network/config/bond-with-vlans/
+
+# Configure Node Placement
+(undercloud) [stack@undercloud openstack-tripleo-heat-templates]$ cd 
+(undercloud) [stack@undercloud ~]$ 
+
+(undercloud) [stack@undercloud ~]$ 
+cat > ~/templates/scheduler-hints.yaml <<EOF
+parameter_defaults:
+  ControllerSchedulerHints:
+    'capabilities:node': 'controller-%index%'
+  ComputeHCISchedulerHints:
+    'capabilities:node': 'compute-%index%'
+EOF
+
+(undercloud) [stack@undercloud ~]$ source ~/stackrc
+(undercloud) [stack@undercloud ~]$ openstack baremetal node list
++--------------------------------------+---------------------+---------------+-------------+--------------------+-------------+
+| UUID                                 | Name                | Instance UUID | Power State | Provisioning State | Maintenance |
++--------------------------------------+---------------------+---------------+-------------+--------------------+-------------+
+| ad3e3612-fa87-499b-bda4-f29f5d99952f | overcloud-compute01 | None          | power off   | available          | False       |
+| 87f78af7-20af-41d0-860b-e206cac5ea87 | overcloud-compute02 | None          | power off   | available          | False       |
+| 629e932c-e32c-438e-a3c8-403eac0e363d | overcloud-ctrl01    | None          | power off   | available          | False       |
+| a7aeee1d-af3a-4b18-86b6-24e8c4ba1ed4 | overcloud-ctrl02    | None          | power off   | available          | False       |
+| 436da99c-88a9-42f9-ba17-1e38ac3e4a89 | overcloud-ctrl03    | None          | power off   | available          | False       |
+| fdebcc21-49e6-4a6d-bb28-eca45a3985c8 | overcloud-networker | None          | power off   | available          | False       |
+| acf56624-065a-4dd0-acb2-ecc3079c62fd | overcloud-stor01    | None          | power off   | available          | False       |
+| 0c523f61-cc33-4e99-8f06-4fa1690b97d8 | overcloud-compute03 | None          | power off   | available          | False       |
++--------------------------------------+---------------------+---------------+-------------+--------------------+-------------+
+
+(undercloud) [stack@undercloud ~]$ openstack baremetal introspection list
+
+(undercloud) [stack@undercloud ~]$ openstack baremetal node set overcloud-ctrl01 --property capabilities=node:controller-0,boot_option:local
+(undercloud) [stack@undercloud ~]$ openstack baremetal node set overcloud-ctrl02 --property capabilities=node:controller-1,boot_option:local
+(undercloud) [stack@undercloud ~]$ openstack baremetal node set overcloud-ctrl03 --property capabilities=node:controller-2,boot_option:local
+(undercloud) [stack@undercloud ~]$ openstack baremetal node set overcloud-compute01 --property capabilities=node:compute-0,boot_option:local
+(undercloud) [stack@undercloud ~]$ openstack baremetal node set overcloud-compute02 --property capabilities=node:compute-1,boot_option:local
+
+(undercloud) [stack@undercloud ~]$ 
+cat > ~/deploy-with-hci.sh << 'EOF'
+#!/bin/bash
+THT=/usr/share/openstack-tripleo-heat-templates/
+CNF=~/templates/
+
+source ~/stackrc
+openstack overcloud deploy --templates $THT \
+-r $CNF/roles_data.yaml \
+-n $CNF/network_data.yaml \
+-e $THT/environments/ips-from-pool-all.yaml \
+-e $THT/environments/cinder-backup.yaml \
+-e $THT/environments/ceph-ansible/ceph-rgw.yaml \
+-e $THT/environments/ceph-ansible/ceph-ansible.yaml \
+-e $THT/environments/ssl/enable-internal-tls.yaml \
+-e $THT/environments/ssl/tls-everywhere-endpoints-dns.yaml \
+-e $THT/environments/services/barbican.yaml \
+-e $THT/environments/barbican-backend-simple-crypto.yaml \
+-e $THT/environments/services/octavia.yaml \
+-e $CNF/environments/network-isolation.yaml \
+-e $CNF/environments/network-environment.yaml \
+-e $CNF/environments/net-bond-with-vlans.yaml \
+-e ~/containers-prepare-parameter.yaml \
+-e $CNF/custom-domain.yaml \
+-e $CNF/node-info.yaml \
+-e $CNF/HostnameMap.yaml \
+-e $CNF/ips-from-pool-all.yaml \
+-e $CNF/stf-connectors.yaml \
+-e $CNF/fencing.yaml \
+-e $CNF/enable-tls.yaml \
+-e $CNF/inject-trust-anchor.yaml \
+-e $CNF/keystone_domain_specific_ldap_backend.yaml \
+-e $CNF/scheduler-hints.yaml \
+-e $CNF/ceph-config.yaml \
+-e $CNF/fix-nova-reserved-host-memory.yaml
+EOF
+
+(undercloud) [stack@undercloud ~]$ time /bin/bash -x ./deploy-with-hci.sh 
+...
+PLAY RECAP *********************************************************************
+lab-controller01           : ok=362  changed=208  unreachable=0    failed=0    skipped=137  rescued=0    ignored=0
+lab-controller02           : ok=344  changed=208  unreachable=0    failed=0    skipped=140  rescued=0    ignored=0
+lab-controller03           : ok=344  changed=208  unreachable=0    failed=0    skipped=140  rescued=0    ignored=0
+overcloud-computehci-0     : ok=312  changed=174  unreachable=0    failed=0    skipped=135  rescued=0    ignored=0
+overcloud-computehci-1     : ok=308  changed=174  unreachable=0    failed=0    skipped=135  rescued=0    ignored=0
+undercloud                 : ok=188  changed=67   unreachable=0    failed=0    skipped=210  rescued=0    ignored=0
+
+Wednesday 23 September 2020  10:37:35 -0400 (0:00:00.066)       0:54:47.318 ***
+===============================================================================
+
+Ansible passed.
+Overcloud configuration completed.
+Overcloud Endpoint: https://overcloud.example.com:13000
+Overcloud Horizon Dashboard URL: https://overcloud.example.com:443/dashboard
+Overcloud rc file: /home/stack/overcloudrc
+Overcloud Deployed
+sys:1: ResourceWarning: unclosed <ssl.SSLSocket fd=4, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=6, laddr=('192.0.2.2', 53242)>
+sys:1: ResourceWarning: unclosed <ssl.SSLSocket fd=5, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=6, laddr=('192.0.2.2', 49444), raddr=('192.0.2.2', 13004)>
+sys:1: ResourceWarning: unclosed <ssl.SSLSocket fd=7, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=6, laddr=('192.0.2.2', 42068), raddr=('192.0.2.2', 13989)>
+
+real    69m36.804s
+user    0m16.171s
+sys     0m1.396s
+
+# Review Overcloud Deployment
+(undercloud) [stack@undercloud ~]$ source ~/overcloudrc
+(overcloud) [stack@undercloud ~]$ 
+
+(overcloud) [stack@undercloud ~]$ cat ~/overcloudrc
+(overcloud) [stack@undercloud ~]$ openstack flavor create --ram 512 --vcpus 1 m1.tiny
+(overcloud) [stack@undercloud ~]$ openstack image create cirros --disk-format raw --container-format bare --public --file cirros-0.4.0-x86_64-disk.raw
+
+(overcloud) [stack@undercloud ~]$ 
+openstack network create public \
+  --external --provider-physical-network datacentre \
+  --provider-network-type vlan --provider-segment 10
+
+(overcloud) [stack@undercloud ~]$
+openstack subnet create public-subnet \
+  --no-dhcp --network public --subnet-range 10.0.0.0/24 \
+  --allocation-pool start=10.0.0.100,end=10.0.0.200  \
+  --gateway 10.0.0.1 --dns-nameserver 8.8.8.8
+
+(overcloud) [stack@undercloud ~]$ openstack network agent list
+
+(overcloud) [stack@undercloud ~]$ openstack catalog list
+
+(overcloud) [stack@undercloud ~]$ grep OS_AUTH_URL ~/overcloudrc
+export OS_AUTH_URL=https://overcloud.example.com:13000
+
+[heat-admin@lab-controller01 ~]$ sudo podman exec -ti haproxy-bundle-podman-0 grep "ssl crt" /etc/haproxy/haproxy.cfg
+
+[heat-admin@lab-controller01 ~]$ sudo netstat -plnt | grep ":13.."
+
+[heat-admin@lab-controller01 ~]$ sudo file /etc/pki/tls/private/overcloud_endpoint.pem
+/etc/pki/tls/private/overcloud_endpoint.pem: PEM certificate
+
+[heat-admin@lab-controller01 ~]$ sudo openssl x509 -noout -subject -in /etc/pki/tls/private/overcloud_endpoint.pem
+
+# Review templates used by Barbican
+(undercloud) [stack@undercloud ~]$ cat /usr/share/openstack-tripleo-heat-templates/environments/services/barbican.yaml
+
+(undercloud) [stack@undercloud ~]$ cat /usr/share/openstack-tripleo-heat-templates/environments/barbican-backend-simple-crypto.yaml
+
+[heat-admin@lab-controller01 ~]$ sudo podman ps -f "name=barbican*"
+CONTAINER ID  IMAGE                                                                                          COMMAND      CREATED       STATUS           PORTS  NAMES
+68a7593e383d  undercloud.ctlplane.example.com:8787/rhosp-rhel8/openstack-barbican-worker:16.1-45             kolla_start  10 hours ago  Up 10 hours ago         barbican_worker
+8442fd36b6b8  undercloud.ctlplane.example.com:8787/rhosp-rhel8/openstack-barbican-keystone-listener:16.1-45  kolla_start  10 hours ago  Up 10 hours ago         barbican_keystone_listener
+d143bf9382b2  undercloud.ctlplane.example.com:8787/rhosp-rhel8/openstack-barbican-api:16.1-45                kolla_start  10 hours ago  Up 10 hours ago         barbican_api
+
+(overcloud) [stack@undercloud ~]$ openstack secret store --name rootPassword --payload 'r3dh4t1!'
++---------------+-------------------------------------------------------------------------------------+
+| Field         | Value                                                                               |
++---------------+-------------------------------------------------------------------------------------+
+| Secret href   | https://overcloud.example.com:13311/v1/secrets/41e39909-3b18-4dfc-bc99-73aa5a5f8b08 |
+| Name          | rootPassword                                                                        |
+| Created       | None                                                                                |
+| Status        | None                                                                                |
+| Content types | None                                                                                |
+| Algorithm     | aes                                                                                 |
+| Bit length    | 256                                                                                 |
+| Secret type   | opaque                                                                              |
+| Mode          | cbc                                                                                 |
+| Expiration    | None                                                                                |
++---------------+-------------------------------------------------------------------------------------+
+
+(overcloud) [stack@undercloud ~]$ openstack secret get  $(openstack secret list -f value -c "Secret href" --name rootPassword) --payload
+
+(overcloud) [stack@undercloud ~]$ openstack volume type create --encryption-provider nova.volume.encryptors.luks.LuksEncryptor --encryption-cipher aes-xts-plain64 --encryption-key-size 256 --encryption-control-location front-end encryptedvolume
++-------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Field       | Value                                                                                                                                                                              |
++-------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| description | None                                                                                                                                                                               |
+| encryption  | cipher='aes-xts-plain64', control_location='front-end', encryption_id='12168c04-9c50-4cfe-97d0-9e465b0b9259', key_size='256', provider='nova.volume.encryptors.luks.LuksEncryptor' |
+| id          | da0a1448-daba-4654-9663-6267fe3d21cc                                                                                                                                               |
+| is_public   | True                                                                                                                                                                               |
+| name        | encryptedvolume                                                                                                                                                                    |
++-------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+
+(overcloud) [stack@undercloud ~]$ openstack volume create --size 1 --type encryptedvolume volume_encrypted_example
+
+(overcloud) [stack@undercloud ~]$ openstack secret list
++-------------------------------------------------------------------------------------+--------------+---------------------------+--------+-----------------------------------------+-----------+------------+-------------+------+------------+
+| Secret href                                                                         | Name         | Created                   | Status | Content types                           | Algorithm | Bit length | Secret type | Mode | Expiration |
++-------------------------------------------------------------------------------------+--------------+---------------------------+--------+-----------------------------------------+-----------+------------+-------------+------+------------+
+| https://overcloud.example.com:13311/v1/secrets/ccee9936-f129-431e-be48-e34b8d49ac6a | None         | 2020-09-24T00:41:55+00:00 | ACTIVE | {'default': 'application/octet-stream'} | aes       |        256 | symmetric   | None | None       |
+| https://overcloud.example.com:13311/v1/secrets/41e39909-3b18-4dfc-bc99-73aa5a5f8b08 | rootPassword | 2020-09-24T00:39:27+00:00 | ACTIVE | {'default': 'text/plain'}               | aes       |        256 | opaque      | cbc  | None       |
++-------------------------------------------------------------------------------------+--------------+---------------------------+--------+-----------------------------------------+-----------+------------+-------------+------+------------+
+
+(overcloud) [stack@undercloud ~]$ openstack volume list
++--------------------------------------+--------------------------+-----------+------+-------------+
+| ID                                   | Name                     | Status    | Size | Attached to |
++--------------------------------------+--------------------------+-----------+------+-------------+
+| 6713e7fe-12e8-44d8-a4e5-b21b41ed9752 | volume_encrypted_example | available |    1 |             |
++--------------------------------------+--------------------------+-----------+------+-------------+
+
+(overcloud) [stack@undercloud ~]$ openstack volume show volume_encrypted_example
+
+# IdM authentication
+(overcloud) [stack@undercloud ~]$ openstack domain list
++----------------------------------+------------+---------+--------------------+
+| ID                               | Name       | Enabled | Description        |
++----------------------------------+------------+---------+--------------------+
+| 3322c2894a8244b49f73da89e3fcd32b | gpte       | True    |                    |
+| 3e665220f0c34bcea9d4460cbb33ae26 | heat_stack | True    |                    |
+| default                          | Default    | True    | The default domain |
++----------------------------------+------------+---------+--------------------+
+
+(overcloud) [stack@undercloud ~]$ openstack user list --domain gpte
++------------------------------------------------------------------+---------+
+| ID                                                               | Name    |
++------------------------------------------------------------------+---------+
+| d28497c25b649ae6a89a467829af92eb50305e22031db281de0127835af53c84 | admin   |
+| 0f69c4d7c3b33f2c99bfe82761812fdd20a87ec74a0bf553390e8a8ac1be9605 | student |
++------------------------------------------------------------------+---------+
+
 
 ### day 4
 

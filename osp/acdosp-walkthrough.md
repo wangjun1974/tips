@@ -4367,7 +4367,60 @@ heat-adm pts/0    192.0.2.1        06:54    2.00s  0.01s  0.01s w
 
 
 ### day 4
+# Deploy All in One Openstack
+[root@pool08-iad ~]# /bin/sh -x /root/setup-env-allinone.sh 
+...
++ virsh start allinone
+Domain allinone started
 
+[root@pool08-iad ~]# ssh-copy-id root@192.168.122.253
+[root@pool08-iad ~]# ssh root@192.168.122.253
+
+[root@allinone ~]# useradd stack
+[root@allinone ~]# passwd stack
+[root@allinone ~]# echo "stack ALL=(root) NOPASSWD:ALL" | tee -a /etc/sudoers.d/stack
+[root@allinone ~]# logout
+[root@pool08-iad ~]# ssh-copy-id stack@192.168.122.253
+[root@pool08-iad ~]# ssh stack@192.168.122.253
+
+[stack@allinone ~]$ sudo dnf install -y python3-tripleoclient
+[stack@allinone ~]$ openstack tripleo container image prepare default   --local-push-destination   --output-env-file containers-prepare-parameter.yaml
+[stack@allinone ~]$ sudo curl -o /etc/pki/ca-trust/source/anchors/classroom-ca.pem http://classroom.example.com/ca.crt
+[stack@allinone ~]$ sudo update-ca-trust extract
+[stack@allinone ~]$ sed -i "s/registry.redhat.io/classroom.example.com:5000/" containers-prepare-parameter.yaml
+
+[stack@allinone ~]$ 
+cat <<EOF > $HOME/standalone_parameters.yaml
+parameter_defaults:
+  CloudName: 192.0.2.253
+  ControlPlaneStaticRoutes: []
+  Debug: true
+  DeploymentUser: $USER
+  DnsServers:
+    - 192.0.2.254
+  DockerInsecureRegistryAddress:
+    - allinone.ctlplane.localdomain:8787
+    - localhost:8787
+  NeutronPublicInterface: eth1
+  NeutronDnsDomain: localdomain
+  NeutronBridgeMappings: datacentre:br-ctlplane
+  NeutronPhysicalBridge: br-ctlplane
+  StandaloneEnableRoutedNetworks: false
+  StandaloneHomeDir: $HOME
+  StandaloneLocalMtu: 1500
+EOF
+
+[stack@allinone ~]$ 
+sudo openstack tripleo deploy \
+  --templates \
+  --local-ip=192.0.2.253/24 \
+  -e /usr/share/openstack-tripleo-heat-templates/environments/standalone/standalone-tripleo.yaml \
+  -e /usr/share/openstack-tripleo-heat-templates/environments/services/neutron-ovs.yaml \
+  -r /usr/share/openstack-tripleo-heat-templates/roles/Standalone.yaml \
+  -e $HOME/containers-prepare-parameter.yaml \
+  -e $HOME/standalone_parameters.yaml \
+  --output-dir $HOME \
+  --standalone
 ### day 5
 
 ### sync repo

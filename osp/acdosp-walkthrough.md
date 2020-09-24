@@ -3871,6 +3871,81 @@ FLOATINGIP=$(openstack floating ip show $FLOATINGID -c floating_ip_address -f va
 curl $FLOATINGIP
 curl $FLOATINGIP
 
+[heat-admin@lab-controller01 ~]$ sudo podman exec -ti ovn_controller /bin/sh
+()[root@lab-controller01 /]$ ovn-nbctl set-ssl /etc/openvswitch/northdb-privkey.pem /etc/openvswitch/northdb-cert.pem /var/lib/openvswitch/pki/
+()[root@lab-controller01 /]$ ovn-nbctl set-connection pssl:6641
+
+()[root@lab-controller01 /]$ ovn-nbctl list load_balancer
+
+[heat-admin@lab-controller01 ~]$ sudo podman exec -ti ceph-mon-lab-controller01 ceph -s 
+  cluster:
+    id:     b48b21da-90b0-40e1-a511-02c61b1504cd
+    health: HEALTH_WARN
+            too many PGs per OSD (1024 > max 1000)
+ 
+  services:
+    mon: 3 daemons, quorum lab-controller01,lab-controller02,lab-controller03 (age 12h)
+    mgr: lab-controller01(active, since 12h), standbys: lab-controller02, lab-controller03
+    osd: 2 osds: 2 up (since 12h), 2 in (since 12h)
+    rgw: 3 daemons active (lab-controller01.rgw0, lab-controller02.rgw0, lab-controller03.rgw0)
+ 
+  task status:
+ 
+  data:
+    pools:   8 pools, 1024 pgs
+    objects: 889 objects, 3.4 GiB
+    usage:   8.4 GiB used, 112 GiB / 120 GiB avail
+    pgs:     1024 active+clean
+
+
+[heat-admin@lab-controller01 ~]$ sudo podman exec -it openstack-cinder-backup-podman-0 cat /etc/cinder/cinder.conf | grep backup | grep -v "^#"
+backup_ceph_conf=/etc/ceph/ceph.conf
+backup_ceph_user=openstack
+backup_ceph_chunk_size=134217728
+backup_ceph_pool=backups
+backup_ceph_stripe_unit=0
+backup_ceph_stripe_count=0
+backup_driver=cinder.backup.drivers.ceph.CephBackupDriver
+
+(overcloud_student) [stack@undercloud ~]$ openstack volume create --size 1 1gb-vol
+(overcloud_student) [stack@undercloud ~]$ openstack volume backup create 1gb-vol --force --name 1gb-vol-backup
++-------+--------------------------------------+
+| Field | Value                                |
++-------+--------------------------------------+
+| id    | 4e5b4f95-276d-4506-ab9c-027e7447d2e7 |
+| name  | 1gb-vol-backup                       |
++-------+--------------------------------------+
+
+(overcloud_student) [stack@undercloud ~]$ openstack volume backup show 1gb-vol-backup
++-----------------------+--------------------------------------+
+| Field                 | Value                                |
++-----------------------+--------------------------------------+
+| availability_zone     | nova                                 |
+| container             | backups                              |
+| created_at            | 2020-09-24T02:43:53.000000           |
+| data_timestamp        | 2020-09-24T02:43:53.000000           |
+| description           | None                                 |
+| fail_reason           | None                                 |
+| has_dependent_backups | False                                |
+| id                    | 4e5b4f95-276d-4506-ab9c-027e7447d2e7 |
+| is_incremental        | False                                |
+| name                  | 1gb-vol-backup                       |
+| object_count          | 0                                    |
+| size                  | 1                                    |
+| snapshot_id           | None                                 |
+| status                | available                            |
+| updated_at            | 2020-09-24T02:44:00.000000           |
+| volume_id             | 7b556f01-3871-4b64-b578-22bd22bce7fe |
++-----------------------+--------------------------------------+
+
+[heat-admin@lab-controller01 ~]$ sudo podman exec -ti ceph-mon-lab-controller01 rbd --id openstack -p backups ls
+volume-7b556f01-3871-4b64-b578-22bd22bce7fe.backup.4e5b4f95-276d-4506-ab9c-027e7447d2e7
+
+# Composable Roles Lab
+(undercloud) [stack@undercloud ~]$ source ~/stackrc
+(undercloud) [stack@undercloud ~]$ openstack overcloud delete overcloud --yes
+
+
 ### day 4
 
 ### day 5

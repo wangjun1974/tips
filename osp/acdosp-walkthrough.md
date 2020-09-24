@@ -4410,6 +4410,11 @@ parameter_defaults:
   StandaloneLocalMtu: 1500
 EOF
 
+# https://medium.com/@achchusnulchikam2/how-to-install-all-in-one-red-hat-openstack-platform-16-proof-of-concept-rhosp-e917b5b58e4b
+
+[stack@allinone ~]$ sudo dnf update -y
+[stack@allinone ~]$ sudo reboot
+
 [stack@allinone ~]$ 
 sudo openstack tripleo deploy \
   --templates \
@@ -4421,6 +4426,77 @@ sudo openstack tripleo deploy \
   -e $HOME/standalone_parameters.yaml \
   --output-dir $HOME \
   --standalone
+
+...
+########################################################
+
+Deployment successful!
+
+########################################################
+
+##########################################################
+
+Useful files:
+
+The clouds.yaml file is at ~/.config/openstack/clouds.yaml
+
+Use "export OS_CLOUD=standalone" before running the
+openstack command.
+
+##########################################################
+
+Writing the stack virtual update mark file /var/lib/tripleo-heat-installer/update_mark_standalone
+
+[stack@allinone ~]$ export OS_CLOUD=standalone
+[stack@allinone ~]$ export GATEWAY=192.0.2.254
+[stack@allinone ~]$ export PUBLIC_NETWORK_CIDR=192.0.2.0/24
+[stack@allinone ~]$ export PRIVATE_NETWORK_CIDR=192.168.100.0/24
+[stack@allinone ~]$ export PUBLIC_NET_START=192.0.2.50
+[stack@allinone ~]$ export PUBLIC_NET_END=192.0.2.60
+[stack@allinone ~]$ export DNS_SERVER=1.1.1.1
+
+[stack@allinone ~]$ openstack flavor create --ram 512 --disk 1 --vcpu 1 --public tiny
+[stack@allinone ~]$ curl -O -L https://download.cirros-cloud.net/0.4.0/cirros-0.4.0-x86_64-disk.img
+[stack@allinone ~]$ openstack image create cirros --container-format bare --disk-format qcow2 --public --file cirros-0.4.0-x86_64-disk.img
+
+[stack@allinone ~]$ ssh-keygen -t rsa -f ~/.ssh/id_rsa -N ''
+[stack@allinone ~]$ openstack keypair create --public-key ~/.ssh/id_rsa.pub default
+
+[stack@allinone ~]$ openstack security group create basic
+[stack@allinone ~]$ openstack security group rule create basic --protocol tcp --dst-port 22:22 --remote-ip 0.0.0.0/0
+[stack@allinone ~]$ openstack security group rule create --protocol icmp basic
+[stack@allinone ~]$ openstack security group rule create --protocol udp --dst-port 53:53 basic
+
+[stack@allinone ~]$ openstack network create --external --provider-physical-network datacentre --provider-network-type flat public
+
+[stack@allinone ~]$ openstack network create --internal private
+
+[stack@allinone ~]$ openstack subnet create public-net \
+    --subnet-range $PUBLIC_NETWORK_CIDR \
+    --no-dhcp \
+    --gateway $GATEWAY \
+    --allocation-pool start=$PUBLIC_NET_START,end=$PUBLIC_NET_END \
+    --network public
+
+[stack@allinone ~]$ openstack subnet create private-net \
+    --subnet-range $PRIVATE_NETWORK_CIDR \
+    --network private
+
+[stack@allinone ~]$ openstack router create vrouter
+[stack@allinone ~]$ openstack router set vrouter --external-gateway public
+[stack@allinone ~]$ openstack router add subnet vrouter private-net
+
+[stack@allinone ~]$ openstack floating ip create public
+
+[stack@allinone ~]$ sudo setenforce 0
+
+[stack@allinone ~]$ openstack server create --flavor tiny --image cirros --key-name default --network private --security-group basic myserver
+
+[stack@allinone ~]$ FIP=$(openstack floating ip list -c "Floating IP Address" -f value)
+
+[stack@allinone ~]$ openstack server add floating ip myserver $FIP
+
+[stack@allinone ~]$ ssh cirros@$FIP
 
 ### day 5
 

@@ -4498,6 +4498,201 @@ Writing the stack virtual update mark file /var/lib/tripleo-heat-installer/updat
 
 [stack@allinone ~]$ ssh cirros@$FIP
 
+# Deploy OpenStack on Pre-Installed Servers
+
+[root@pool08-iad ~]# /bin/sh -x ~/setup-env-osp16-predeployed.sh
+
+[root@pool08-iad ~]# virsh destroy allinone
+
+[root@pool08-iad ~]# virsh destroy crc
+
+# Configure the VMs
+[stack@undercloud ~]$ ssh-copy-id root@192.0.2.81
+[stack@undercloud ~]$ ssh-copy-id root@192.0.2.91
+
+[stack@undercloud ~]$ ssh root@192.0.2.81 sudo yum -y install python3-heat-agent*
+[stack@undercloud ~]$ ssh root@192.0.2.91 sudo yum -y install python3-heat-agent*
+
+[root@overcloud2-ctrl01 ~]# useradd stack
+[root@overcloud2-ctrl01 ~]# passwd stack
+Changing password for user stack.
+New password: 
+Retype new password: 
+passwd: all authentication tokens updated successfully.
+[root@overcloud2-ctrl01 ~]# echo "stack ALL=(root) NOPASSWD:ALL" | tee -a /etc/sudoers.d/stack
+stack ALL=(root) NOPASSWD:ALL
+[root@overcloud2-ctrl01 ~]# chmod 0440 /etc/sudoers.d/stack
+
+[root@overcloud2-compute01 ~]# useradd stack
+[root@overcloud2-compute01 ~]# passwd stack
+Changing password for user stack.
+New password: 
+Retype new password: 
+passwd: all authentication tokens updated successfully.
+[root@overcloud2-compute01 ~]# echo "stack ALL=(root) NOPASSWD:ALL" | tee -a /etc/sudoers.d/stack
+stack ALL=(root) NOPASSWD:ALL
+[root@overcloud2-compute01 ~]# chmod 0440 /etc/sudoers.d/stack
+
+[stack@undercloud ~]$ ssh-copy-id stack@192.0.2.81
+[stack@undercloud ~]$ ssh-copy-id stack@192.0.2.91
+
+[stack@undercloud ~]$ source ~/stackrc 
+(undercloud) [stack@undercloud ~]$ mkdir -p ~/templates_pre/environments/
+(undercloud) [stack@undercloud ~]$ cd templates_pre/
+
+(undercloud) [stack@undercloud templates_pre]$ 
+cat >ctlplane.yaml <<EOF
+resource_registry:
+  OS::TripleO::DeployedServer::ControlPlanePort: /usr/share/openstack-tripleo-heat-templates/deployed-server/deployed-neutron-port.yaml
+
+parameter_defaults:
+  DeployedServerPortMap:
+    overcloud2-ctrl01-ctlplane:
+      fixed_ips:
+        - ip_address: 192.0.2.81
+      subnets:
+        - cidr: 192.0.2.0/24
+
+    overcloud2-compute01-ctlplane:
+      fixed_ips:
+        - ip_address: 192.0.2.91
+      subnets:
+        - cidr: 192.0.2.0/24
+EOF
+
+(undercloud) [stack@undercloud templates_pre]$ 
+cat >~/templates_pre/environments/net-bond-with-vlans.yaml <<EOF
+# This template configures each role to use a pair of bonded nics (nic2 and
+# nic3) and configures an IP address on each relevant isolated network
+# for each role. This template assumes use of network-isolation.yaml.
+#
+# FIXME: if/when we add functionality to heatclient to include heat
+# environment files we should think about using it here to automatically
+# include network-isolation.yaml.
+#
+# There is no longer a requirement to use net-bond-with-vlans-v6.yaml for
+# nodes when deploying with IPv6. You may now define both an IPv4 network
+# and an IPv6 network as default routes by adding both networks to the
+# default_route_networks list for the Controller role in roles_data.yaml.
+# Then include this environment file to use bond-with-vlans NIC configs.
+
+resource_registry:
+  # Network configuration assignments for the Controller
+  OS::TripleO::Controller::Net::SoftwareConfig: ../network/config/bond-with-vlans/controller.yaml
+  # Network configuration assignments for the ComputeHCI
+  OS::TripleO::Compute::Net::SoftwareConfig: ../network/config/bond-with-vlans/compute.yaml
+EOF
+
+(undercloud) [stack@undercloud templates_pre]$ 
+cat > ~/templates_pre/hostname-map.yaml << EOF
+parameter_defaults:
+  HostnameMap:
+    overcloud-pre-controller-0: overcloud2-ctrl01
+    overcloud-pre-novacompute-0: overcloud2-compute01
+EOF
+
+(undercloud) [stack@undercloud templates_pre]$ cp -ar ~/templates/network ~/templates_pre/
+(undercloud) [stack@undercloud templates_pre]$ cp /usr/share/openstack-tripleo-heat-templates/deployed-server/deployed-server-roles-data.yaml .
+(undercloud) [stack@undercloud templates_pre]$ cp ~/templates/network_data.yaml  .
+(undercloud) [stack@undercloud templates_pre]$ cp ~/templates/environments/network-environment.yaml  environments/
+
+(undercloud) [stack@undercloud templates_pre]$ sed -i -E 's/name_lower: (.*)/name_lower: \1_1/' network_data.yaml
+(undercloud) [stack@undercloud templates_pre]$ sed -i -E 's!172.1(.).0!172.1\1.1!g' network_data.yaml
+(undercloud) [stack@undercloud templates_pre]$ sed -i -E 's!172.1(.).0!172.1\1.1!g' environments/network-environment.yaml
+(undercloud) [stack@undercloud templates_pre]$ sed -i 's/_subnet/_1_subnet/' deployed-server-roles-data.yaml
+
+(undercloud) [stack@undercloud templates_pre]$ cp ~/templates_pre/environments/network-environment.yaml ~/templates_pre/environments/network-environment.yaml.orig
+
+(undercloud) [stack@undercloud templates_pre]$ 
+cat > ~/patch-network-environment-predeploy << EOF
+--- /home/stack/templates_pre/environments/network-environment.yaml.orig        2020-09-24 05:17:05.147290317 -0400
++++ /home/stack/templates_pre/environments/network-environment.yaml     2020-09-24 05:18:00.555390134 -0400
+@@ -91,6 +91,10 @@
+   ManagementNetworkVlanID: 60
+ 
+ 
++  NetworkDeploymentActions: ['CREATE','UPDATE']
++  ControlPlaneDefaultRoute: 192.0.2.254
++
++
+   # Define the DNS servers (maximum 2) for the overcloud nodes
+   # When the list is not set or empty, the nameservers on the ctlplane subnets will be used.
+   # (ctlplane subnets nameservers are controlled by the ``undercloud_nameservers`` option in ``undercloud.conf``)
+@@ -101,4 +105,4 @@
+   NeutronNetworkVLANRanges: 'datacentre:1:1000'
+   # Customize bonding options, e.g. "mode=4 lacp_rate=1 updelay=1000 miimon=100"
+   # for Linux bonds w/LACP, or "bond_mode=active-backup" for OVS active/backup.
+-  BondInterfaceOvsOptions: "bond_mode=active-backup"
+\ No newline at end of file
++  BondInterfaceOvsOptions: "bond_mode=active-backup"
+EOF
+
+(undercloud) [stack@undercloud templates_pre]$ patch ~/templates_pre/environments/network-environment.yaml < ~/patch-network-environment-predeploy 
+
+(undercloud) [stack@undercloud templates_pre]$ cd ~
+(undercloud) [stack@undercloud ~]$ 
+cat > ~/deploy-pre.sh << 'EOF'
+#!/bin/bash
+THT=/usr/share/openstack-tripleo-heat-templates/
+CNF=~/templates_pre/
+
+source ~/stackrc
+openstack overcloud deploy --stack overcloud-pre --templates $THT \
+-r $CNF/deployed-server-roles-data.yaml \
+-n $CNF/network_data.yaml \
+-e $THT/environments/deployed-server-environment.yaml \
+-e $THT/environments/network-isolation.yaml \
+-e $CNF/environments/network-environment.yaml \
+-e $CNF/environments/net-bond-with-vlans.yaml \
+-e ~/containers-prepare-parameter.yaml \
+-e $CNF/ctlplane.yaml \
+-e $CNF/hostname-map.yaml \
+--overcloud-ssh-user stack \
+--overcloud-ssh-key ~/.ssh/id_rsa \
+--disable-validations
+EOF
+
+[stack@undercloud ~]$ source ~/stackrc
+(undercloud) [stack@undercloud ~]$ /bin/bash -x ~/deploy-pre.sh
+
+(undercloud) [stack@undercloud ~]$ openstack overcloud plan list
++---------------+
+| Plan Name     |
++---------------+
+| overcloud-pre |
+| overcloud     |
++---------------+
+
+(undercloud) [stack@undercloud ~]$ openstack network list
++--------------------------------------+------------------+--------------------------------------+
+| ID                                   | Name             | Subnets                              |
++--------------------------------------+------------------+--------------------------------------+
+| 25af4239-a0d2-4935-8183-f4040bab8190 | storage          | 0823930f-3b51-40ce-b1dc-33d5784cf8c9 |
+| 332d16e2-35e0-4405-b0ea-16bbb1c60407 | external         | f0ce0f32-f4f2-441c-9222-bde2525e9f6e |
+| 3671e11d-3ed1-4248-a3a9-99eb95bce0b1 | management       | 882e6251-df70-4d2d-a48f-17fd9a04e1fb |
+| 524bf9e2-5270-4a19-83ba-480fc2b0b6cf | internal_api     | 06a648a4-19fa-4089-9e13-8b715a7d7dc9 |
+| 666da9e5-1cbe-4c3c-9263-5c45c03c4233 | tenant           | 77aae352-598b-42d8-ad20-0ffa94e4d291 |
+| 8f62fe95-4ddf-4d9f-af89-cf251302d282 | provider_network | c13b8bff-8074-4b4a-8618-95bf83dab6d0 |
+| 9089c502-4e84-4637-9482-6963a165585e | storage_mgmt     | 478cc501-0d71-48de-9c5f-aacf12220869 |
+| a09c8328-66e1-424a-810b-4b5593e47444 | ctlplane         | 437f7ef9-54e2-461f-a8c2-73132e5c3139 |
++--------------------------------------+------------------+--------------------------------------+
+
+(undercloud) [stack@undercloud ~]$ openstack subnet list
++--------------------------------------+-------------------------+--------------------------------------+----------------+
+| ID                                   | Name                    | Network                              | Subnet         |
++--------------------------------------+-------------------------+--------------------------------------+----------------+
+| 06a648a4-19fa-4089-9e13-8b715a7d7dc9 | internal_api_subnet     | 524bf9e2-5270-4a19-83ba-480fc2b0b6cf | 172.17.0.0/24  |
+| 0823930f-3b51-40ce-b1dc-33d5784cf8c9 | storage_subnet          | 25af4239-a0d2-4935-8183-f4040bab8190 | 172.18.0.0/24  |
+| 437f7ef9-54e2-461f-a8c2-73132e5c3139 | ctlplane-subnet         | a09c8328-66e1-424a-810b-4b5593e47444 | 192.0.2.0/24   |
+| 478cc501-0d71-48de-9c5f-aacf12220869 | storage_mgmt_subnet     | 9089c502-4e84-4637-9482-6963a165585e | 172.19.0.0/24  |
+| 77aae352-598b-42d8-ad20-0ffa94e4d291 | tenant_subnet           | 666da9e5-1cbe-4c3c-9263-5c45c03c4233 | 172.16.0.0/24  |
+| 882e6251-df70-4d2d-a48f-17fd9a04e1fb | management_subnet       | 3671e11d-3ed1-4248-a3a9-99eb95bce0b1 | 10.0.1.0/24    |
+| c13b8bff-8074-4b4a-8618-95bf83dab6d0 | provider_network_subnet | 8f62fe95-4ddf-4d9f-af89-cf251302d282 | 192.168.3.0/24 |
+| f0ce0f32-f4f2-441c-9222-bde2525e9f6e | external_subnet         | 332d16e2-35e0-4405-b0ea-16bbb1c60407 | 10.0.0.0/24    |
++--------------------------------------+-------------------------+--------------------------------------+----------------+
+
+
+
 ### day 5
 
 ### sync repo

@@ -4654,6 +4654,30 @@ EOF
 
 [stack@undercloud ~]$ source ~/stackrc
 (undercloud) [stack@undercloud ~]$ /bin/bash -x ~/deploy-pre.sh
+...
+PLAY RECAP *********************************************************************
+overcloud2-compute01       : ok=298  changed=170  unreachable=0    failed=0    skipped=134  rescued=0    ignored=0   
+overcloud2-ctrl01          : ok=351  changed=208  unreachable=0    failed=0    skipped=138  rescued=0    ignored=0   
+undercloud                 : ok=87   changed=39   unreachable=0    failed=0    skipped=57   rescued=0    ignored=0   
+
+Thursday 24 September 2020  06:05:19 -0400 (0:00:00.061)       0:32:05.365 **** 
+=============================================================================== 
+Waiting for messages on queue 'tripleo' with no timeout.
+Host 192.0.2.22 not found in /home/stack/.ssh/known_hosts
+
+Ansible passed.
+Overcloud configuration completed.
+Overcloud Endpoint: http://192.0.2.22:5000
+Overcloud Horizon Dashboard URL: http://192.0.2.22:80/dashboard
+Overcloud rc file: /home/stack/overcloud-prerc
+Overcloud Deployed
+sys:1: ResourceWarning: unclosed <ssl.SSLSocket fd=4, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=6, laddr=('192.0.2.2', 49218)>
+sys:1: ResourceWarning: unclosed <ssl.SSLSocket fd=5, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=6, laddr=('192.0.2.2', 33172), raddr=('192.0.2.2', 13004)>
+sys:1: ResourceWarning: unclosed <ssl.SSLSocket fd=7, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=6, laddr=('192.0.2.2', 54076), raddr=('192.0.2.2', 13989)>
+
+real    40m49.881s
+user    0m7.576s
+sys     0m1.110s
 
 (undercloud) [stack@undercloud ~]$ openstack overcloud plan list
 +---------------+
@@ -4691,7 +4715,139 @@ EOF
 | f0ce0f32-f4f2-441c-9222-bde2525e9f6e | external_subnet         | 332d16e2-35e0-4405-b0ea-16bbb1c60407 | 10.0.0.0/24    |
 +--------------------------------------+-------------------------+--------------------------------------+----------------+
 
+(undercloud) [stack@undercloud ~]$ source overcloud-prerc 
+(overcloud-pre) [stack@undercloud ~]$ openstack network agent list
++--------------------------------------+----------------------+----------------------------------+-------------------+-------+-------+-------------------------------+
+| ID                                   | Agent Type           | Host                             | Availability Zone | Alive | State | Binary                        |
++--------------------------------------+----------------------+----------------------------------+-------------------+-------+-------+-------------------------------+
+| b3470bba-07e1-4ef1-8a0e-4da7354b86a4 | OVN Controller agent | overcloud2-compute01.localdomain | n/a               | :-)   | UP    | ovn-controller                |
+| b252cb35-e386-4f4a-be53-cc2cc50528b5 | OVN Metadata agent   | overcloud2-compute01.localdomain | n/a               | :-)   | UP    | networking-ovn-metadata-agent |
+| e42c7f0f-fa85-4a48-b193-565a4a25e0ec | OVN Controller agent | overcloud2-ctrl01.localdomain    | n/a               | :-)   | UP    | ovn-controller                |
++--------------------------------------+----------------------+----------------------------------+-------------------+-------+-------+-------------------------------+
 
+(overcloud-pre) [stack@undercloud ~]$ openstack compute service list
++--------------------------------------+----------------+----------------------------------+----------+---------+-------+----------------------------+
+| ID                                   | Binary         | Host                             | Zone     | Status  | State | Updated At                 |
++--------------------------------------+----------------+----------------------------------+----------+---------+-------+----------------------------+
+| 64506979-bd23-4edc-9f16-2ada7d131c53 | nova-conductor | overcloud2-ctrl01.localdomain    | internal | enabled | up    | 2020-09-24T10:19:59.000000 |
+| 0ee75580-b21b-445c-abae-8f270aa93eed | nova-scheduler | overcloud2-ctrl01.localdomain    | internal | enabled | up    | 2020-09-24T10:19:54.000000 |
+| 166964ad-3d06-4671-abbb-0e6c2368386e | nova-compute   | overcloud2-compute01.localdomain | nova     | enabled | up    | 2020-09-24T10:19:53.000000 |
++--------------------------------------+----------------+----------------------------------+----------+---------+-------+----------------------------+
+
+[root@overcloud2-ctrl01 ~]# ovs-vsctl show 
+b131ceb5-bdb8-4660-b081-0d4440bf6ffe
+    Bridge br-ex
+        fail_mode: standalone
+        Port bond1
+            Interface eth1
+            Interface eth2
+        Port vlan40
+            tag: 40
+            Interface vlan40
+                type: internal
+        Port br-ex
+            Interface br-ex
+                type: internal
+        Port vlan30
+            tag: 30
+            Interface vlan30
+                type: internal
+        Port vlan50
+            tag: 50
+            Interface vlan50
+                type: internal
+        Port vlan20
+            tag: 20
+            Interface vlan20
+                type: internal
+        Port vlan10
+            tag: 10
+            Interface vlan10
+                type: internal
+    Bridge br-int
+        fail_mode: secure
+        Port ovn-b3470b-0
+            Interface ovn-b3470b-0
+                type: geneve
+                options: {csum="true", key=flow, remote_ip="192.0.2.91"}
+        Port br-int
+            Interface br-int
+                type: internal
+    ovs_version: "2.13.0"
+
+(overcloud-pre) [stack@undercloud ~]$ 
+openstack network create public \
+  --external --provider-physical-network datacentre \
+  --provider-network-type vlan --provider-segment 10
+
+(overcloud-pre) [stack@undercloud ~]$ 
+openstack subnet create public-subnet \
+  --no-dhcp --network public --subnet-range 10.0.0.0/24 \
+  --allocation-pool start=10.0.0.100,end=10.0.0.200  \
+  --gateway 10.0.0.1 --dns-nameserver 8.8.8.8
+
+(overcloud-pre) [stack@undercloud ~]$ 
+openstack network create private
+
+(overcloud-pre) [stack@undercloud ~]$ 
+openstack subnet create private-subnet \
+  --network private \
+  --dns-nameserver 8.8.4.4 --gateway 172.16.1.1 \
+  --subnet-range 172.16.1.0/24
+
+(overcloud-pre) [stack@undercloud ~]$ openstack router create router1
+
+(overcloud-pre) [stack@undercloud ~]$ openstack router add subnet router1 private-subnet
+
+(overcloud-pre) [stack@undercloud ~]$ openstack router set router1 --external-gateway public
+
+[root@overcloud2-ctrl01 ~]# podman exec -ti ovn_controller ovn-nbctl --db=tcp:$IP:6641 show
+switch 395e63e8-4b8a-40ac-9839-e42626ea2280 (neutron-4a27788e-2dee-4d52-8645-76c9bba43bdb) (aka private)
+    port 91189608-dbdc-4f38-8544-8e2beffdd82d
+        type: localport
+        addresses: ["fa:16:3e:7f:e8:04 172.16.1.2"]
+    port ab6916cf-9f3d-40bb-8232-00312f75756f
+        type: router
+        router-port: lrp-ab6916cf-9f3d-40bb-8232-00312f75756f
+switch ec62ae1e-6849-43b7-8d92-612b61431449 (neutron-dd22086f-d277-4a09-a9a7-dc7093ec08af) (aka public)
+    port e0f0e187-3ce3-4bd7-9132-e72670e7137e
+        type: router
+        router-port: lrp-e0f0e187-3ce3-4bd7-9132-e72670e7137e
+    port 43927e85-4b91-4c3b-ad53-7a3a9968835f
+        type: localport
+        addresses: ["fa:16:3e:f8:96:ea"]
+    port provnet-dd22086f-d277-4a09-a9a7-dc7093ec08af
+        type: localnet
+        tag: 10
+        addresses: ["unknown"]
+router 9e504d9d-12d7-4008-a5d3-f81f7ff865e9 (neutron-361e1933-2b49-4f21-b186-c55fd68e9e36) (aka router1)
+    port lrp-ab6916cf-9f3d-40bb-8232-00312f75756f
+        mac: "fa:16:3e:77:c8:94"
+        networks: ["172.16.1.1/24"]
+    port lrp-e0f0e187-3ce3-4bd7-9132-e72670e7137e
+        mac: "fa:16:3e:21:ae:10"
+        networks: ["10.0.0.192/24"]
+        gateway chassis: [b3470bba-07e1-4ef1-8a0e-4da7354b86a4 e42c7f0f-fa85-4a48-b193-565a4a25e0ec]
+    nat 56aeaed2-e5d1-49c6-9afe-201dff659898
+        external ip: "10.0.0.192"
+        logical ip: "172.16.1.0/24"
+        type: "snat"
+
+(overcloud-pre) [stack@undercloud ~]$ openstack flavor create m1.nano --vcpus 1 --ram 64 --disk 1
+
+(overcloud-pre) [stack@undercloud ~]$ SGID=$(openstack security group list --project admin -c ID -f value)
+(overcloud-pre) [stack@undercloud ~]$ openstack security group rule create --proto icmp $SGID
+(overcloud-pre) [stack@undercloud ~]$ openstack security group rule create --dst-port 22 --proto tcp $SGID
+
+(overcloud-pre) [stack@undercloud ~]$ openstack image create cirros --public --file cirros-0.4.0-x86_64-disk.raw
+
+(overcloud-pre) [stack@undercloud ~]$ openstack keypair create --public-key ~/.ssh/id_rsa.pub stack
+
+(overcloud-pre) [stack@undercloud ~]$ 
+openstack server create  --flavor m1.nano \
+ --image cirros  --key-name stack \
+ --security-group $SGID \
+ --network private test
 
 ### day 5
 

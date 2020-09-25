@@ -4848,6 +4848,7 @@ openstack server create  --flavor m1.nano \
  --image cirros  --key-name stack \
  --security-group $SGID \
  --network private test
+```
 
 ### day 5
 
@@ -4891,7 +4892,7 @@ Validation
 ```
 
 
-
+```
 ### sync repo
 # underlcoud
 sudo -i

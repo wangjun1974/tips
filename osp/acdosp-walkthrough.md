@@ -4851,6 +4851,47 @@ openstack server create  --flavor m1.nano \
 
 ### day 5
 
+```
+Final Lab Instructions
+  Deploy Overcloud with 3 controllers and 2 compute nodes
+
+Networking
+  Overcloud should use IPv4 for the provisioning network
+
+Overcloud should use IPV6, ranges are defined below:
+  provisioning: Used for control plane (provisioning) to provide PXE/DHCP to overcloud bare metal nodes. Subnet: 192.0.2.0/24
+  trunk: Used by Overcloud for network separation:
+    External - VLAN 10 - 2001:db8:fd00:1000::/64
+    Internal API - VLAN 20 - fd00:fd00:fd00:2000::/64
+    Storage - VLAN 30 - fd00:fd00:fd00:3000::/64
+    Storage Management - VLAN 40 - fd00:fd00:fd00:4000::/64
+    Tenant - VLAN 50 - fd00:fd00:fd00:5000::/64
+
+Overcloud nodes (controller and compute) should use 192.0.2.1 as default GW instead VLAN 10
+
+Documentation: https://access.redhat.com/documentation/en-us/red_hat_openstack_platform/16.1/html-single/ipv6_networking_for_the_overcloud/index
+
+Storage
+Use the external ceph (start the VMS)
+
+Configure the active-active cinder: https://access.redhat.com/documentation/en-us/red_hat_openstack_platform/16.1/html/storage_guide/ch-cinder#active-active-deployment-for-high-availability
+
+Customization
+  Configure the /etc/yum.repos.d/open.repo using Swift artifacts: http://hardysteven.blogspot.com/2016/08/tripleo-deploy-artifacts-and-puppet.html
+
+Configure the TimeZone of the nodes to CEST
+  Disable telemetry
+
+Validation
+  Ensure /etc/yum.repos.d/open.repo is on the nodes
+  Ensure the timezone on the nodes
+  Review pacemaker about the active-active Cinder
+  Create a public network using IPv6, VLAN 10 and gateway 2001:db8:fd00:1000::1 (configured on interface virbr2.10 in the hypervisor)
+  Create a VM and access using the FIP from workstation
+```
+
+
+
 ### sync repo
 # underlcoud
 sudo -i

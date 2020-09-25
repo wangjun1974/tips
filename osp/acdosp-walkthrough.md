@@ -4891,12 +4891,370 @@ Validation
   Create a VM and access using the FIP from workstation
 ```
 
-
 ```
-### sync repo
-# underlcoud
-sudo -i
-dnf repolist | grep -v "repo id" | awk '{print $1}' | while read i ; do reposync -p /var/www/html --download-metadata --repo=$i ; done 
+# destroy current overcloud and overcloud-pre(undercloud) 
+# list current overcloud stacks
+(undercloud) [stack@undercloud ~]$ openstack stack list
++--------------------------------------+---------------+----------------------------------+-----------------+----------------------+--------------+
+| ID                                   | Stack Name    | Project                          | Stack Status    | Creation Time        | Updated Time |
++--------------------------------------+---------------+----------------------------------+-----------------+----------------------+--------------+
+| f9c155b3-1b15-459d-a262-37db4ff30c67 | overcloud-pre | 4785aebf2a7146b0b10c04eaf0c63566 | CREATE_COMPLETE | 2020-09-24T09:28:24Z | None         |
+| 371952f7-25ae-40d7-9b6a-28d544c20074 | overcloud     | 4785aebf2a7146b0b10c04eaf0c63566 | CREATE_COMPLETE | 2020-09-24T05:33:55Z | None         |
++--------------------------------------+---------------+----------------------------------+-----------------+----------------------+--------------+
 
+# delete stack overcloud 
+[stack@undercloud ~]$ openstack overcloud delete overcloud --yes
+Undeploying stack overcloud...
+Waiting for messages on queue 'tripleo' with no timeout.
+Deleting plan overcloud...
+Success.
+
+# show remain overcloud stack
+(undercloud) [stack@undercloud ~]$ openstack stack list
++--------------------------------------+---------------+----------------------------------+-----------------+----------------------+--------------+
+| ID                                   | Stack Name    | Project                          | Stack Status    | Creation Time        | Updated Time |
++--------------------------------------+---------------+----------------------------------+-----------------+----------------------+--------------+
+| f9c155b3-1b15-459d-a262-37db4ff30c67 | overcloud-pre | 4785aebf2a7146b0b10c04eaf0c63566 | CREATE_COMPLETE | 2020-09-24T09:28:24Z | None         |
++--------------------------------------+---------------+----------------------------------+-----------------+----------------------+--------------+
+
+# delete stack overcloud-pre
+[stack@undercloud ~]$ openstack overcloud delete overcloud-pre --yes
+Undeploying stack overcloud-pre... 
+Waiting for messages on queue 'tripleo' with no timeout.
+Deleting plan overcloud-pre...
+Success.
+
+# list overcloud stack
+(undercloud) [stack@undercloud ~]$ openstack stack list
+
+(undercloud) [stack@undercloud ~]$ 
+
+# list overcloud plan
+(undercloud) [stack@undercloud ~]$ openstack overcloud plan list
+
+(undercloud) [stack@undercloud ~]$ 
+
+
+# Configuring an IPv6 Address on the Undercloud
+(undercloud) [stack@undercloud ~]$ sudo ovs-vsctl add-port br-ctlplane vlan10 tag=10 -- set interface vlan10 type=internal
+(undercloud) [stack@undercloud ~]$ sudo ip l set dev vlan10 up; sudo ip addr add 2001:db8:fd00:1000::1/64 dev vlan10
+(undercloud) [stack@undercloud ~]$ sudo ip a s dev vlan10
+9: vlan10: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UNKNOWN group default qlen 1000
+    link/ether 2a:6f:d6:e0:56:a7 brd ff:ff:ff:ff:ff:ff
+    inet6 2001:db8:fd00:1000::1/64 scope global 
+       valid_lft forever preferred_lft forever
+    inet6 fe80::286f:d6ff:fee0:56a7/64 scope link 
+       valid_lft forever preferred_lft forever
+
+# make sure barematal node is power: off, provisioning: available and maintenance: false
+(undercloud) [stack@undercloud ~]$ openstack baremetal node list
++--------------------------------------+---------------------+---------------+-------------+--------------------+-------------+
+| UUID                                 | Name                | Instance UUID | Power State | Provisioning State | Maintenance |
++--------------------------------------+---------------------+---------------+-------------+--------------------+-------------+
+| ad3e3612-fa87-499b-bda4-f29f5d99952f | overcloud-compute01 | None          | power off   | available          | False       |
+| 87f78af7-20af-41d0-860b-e206cac5ea87 | overcloud-compute02 | None          | power off   | available          | False       |
+| 629e932c-e32c-438e-a3c8-403eac0e363d | overcloud-ctrl01    | None          | power off   | available          | False       |
+| a7aeee1d-af3a-4b18-86b6-24e8c4ba1ed4 | overcloud-ctrl02    | None          | power off   | available          | False       |
+| 436da99c-88a9-42f9-ba17-1e38ac3e4a89 | overcloud-ctrl03    | None          | power off   | available          | False       |
+| fdebcc21-49e6-4a6d-bb28-eca45a3985c8 | overcloud-networker | None          | power off   | available          | False       |
+| acf56624-065a-4dd0-acb2-ecc3079c62fd | overcloud-stor01    | None          | power off   | available          | False       |
+| 0c523f61-cc33-4e99-8f06-4fa1690b97d8 | overcloud-compute03 | None          | power off   | available          | False       |
++--------------------------------------+---------------------+---------------+-------------+--------------------+-------------+
+
+# tag baremetal node with control and compute profile
+(undercloud) [stack@undercloud ~]$ openstack baremetal node set --property capabilities=profile:control overcloud-ctrl01
+(undercloud) [stack@undercloud ~]$ openstack baremetal node set --property capabilities=profile:control overcloud-ctrl02
+(undercloud) [stack@undercloud ~]$ openstack baremetal node set --property capabilities=profile:control overcloud-ctrl03
+(undercloud) [stack@undercloud ~]$ openstack baremetal node set --property capabilities=profile:compute overcloud-compute01
+(undercloud) [stack@undercloud ~]$ openstack baremetal node set --property capabilities=profile:compute overcloud-compute02
+
+# unset property capabilities from overcloud-networker and overcloud-stor01
+(undercloud) [stack@undercloud ~]$ openstack baremetal node unset overcloud-networker --property capabilities
+(undercloud) [stack@undercloud ~]$ openstack baremetal node unset overcloud-stor01 --property capabilities
+
+# list overcloud profiles to check again
+(undercloud) [stack@undercloud ~]$ openstack overcloud profiles list
++--------------------------------------+---------------------+-----------------+-----------------+-------------------+
+| Node UUID                            | Node Name           | Provision State | Current Profile | Possible Profiles |
++--------------------------------------+---------------------+-----------------+-----------------+-------------------+
+| ad3e3612-fa87-499b-bda4-f29f5d99952f | overcloud-compute01 | available       | compute         |                   |
+| 87f78af7-20af-41d0-860b-e206cac5ea87 | overcloud-compute02 | available       | compute         |                   |
+| 629e932c-e32c-438e-a3c8-403eac0e363d | overcloud-ctrl01    | available       | control         |                   |
+| a7aeee1d-af3a-4b18-86b6-24e8c4ba1ed4 | overcloud-ctrl02    | available       | control         |                   |
+| 436da99c-88a9-42f9-ba17-1e38ac3e4a89 | overcloud-ctrl03    | available       | control         |                   |
+| fdebcc21-49e6-4a6d-bb28-eca45a3985c8 | overcloud-networker | available       | None            |                   |
+| acf56624-065a-4dd0-acb2-ecc3079c62fd | overcloud-stor01    | available       | None            |                   |
+| 0c523f61-cc33-4e99-8f06-4fa1690b97d8 | overcloud-compute03 | available       | None            |                   |
++--------------------------------------+---------------------+-----------------+-----------------+-------------------+
+
+# remove old templates directory and create it again
+(undercloud) [stack@undercloud ~]$ rm -rf ~/templates
+(undercloud) [stack@undercloud ~]$ mkdir -p ~/templates/environments
+
+# create node-info.yaml in ~/templates
+(undercloud) [stack@undercloud ~]$ cat > /home/stack/templates/node-info.yaml << EOF
+parameter_defaults:
+  OvercloudControlFlavor: control
+  OvercloudComputeFlavor: compute
+  ControllerCount: 3
+  ComputeCount: 2
+EOF
+
+# create fix-nova-reserved-host-memory.yaml in ~/templates
+(undercloud) [stack@undercloud ~]$ 
+cat > ~/templates/fix-nova-reserved-host-memory.yaml << EOF
+parameter_defaults:
+  NovaReservedHostMemory: 1024
+EOF
+
+# Copy roles_data.yaml and network_data.yaml into ~/templates
+(undercloud) [stack@undercloud ~]$ THT=/usr/share/openstack-tripleo-heat-templates
+(undercloud) [stack@undercloud ~]$ cp $THT/roles_data.yaml ~/templates
+(undercloud) [stack@undercloud ~]$ cp $THT/network_data.yaml ~/templates
+
+# generate ~/templates/network_data.yaml as requirement
+#    External - VLAN 10 - 2001:db8:fd00:1000::/64
+#    Internal API - VLAN 20 - fd00:fd00:fd00:2000::/64
+#    Storage - VLAN 30 - fd00:fd00:fd00:3000::/64
+#    Storage Management - VLAN 40 - fd00:fd00:fd00:4000::/64
+#    Tenant - VLAN 50 - fd00:fd00:fd00:5000::/64
+#    
+#    Overcloud nodes (controller and compute) should use 192.0.2.1 as default GW instead VLAN 10
+#    I'm not sure Tenant network does work with ipv6 only so include ipv4 content there
+(undercloud) [stack@undercloud ~]$ 
+cat > /home/stack/templates/network_data.yaml << EOF
+- name: Storage
+  vip: true
+  vlan: 30
+  name_lower: storage
+  ipv6: true
+  ipv6_subnet: 'fd00:fd00:fd00:3000::/64'
+  ipv6_allocation_pools: [{'start': 'fd00:fd00:fd00:3000::10', 'end': 'fd00:fd00:fd00:3000:ffff:ffff:ffff:fffe'}]
+- name: StorageMgmt
+  name_lower: storage_mgmt
+  vip: true
+  vlan: 40
+  ipv6: true
+  ipv6_subnet: 'fd00:fd00:fd00:4000::/64'
+  ipv6_allocation_pools: [{'start': 'fd00:fd00:fd00:4000::10', 'end': 'fd00:fd00:fd00:4000:ffff:ffff:ffff:fffe'}]
+- name: InternalApi
+  name_lower: internal_api
+  vip: true
+  vlan: 20
+  ipv6: true
+  ipv6_subnet: 'fd00:fd00:fd00:2000::/64'
+  ipv6_allocation_pools: [{'start': 'fd00:fd00:fd00:2000::10', 'end': 'fd00:fd00:fd00:2000:ffff:ffff:ffff:fffe'}]
+- name: Tenant
+  vip: false  # Tenant network does not use VIPs
+  name_lower: tenant
+  vlan: 50
+  ipv6: true
+  ipv6_subnet: 'fd00:fd00:fd00:5000::/64'
+  ipv6_allocation_pools: [{'start': 'fd00:fd00:fd00:5000::10', 'end': 'fd00:fd00:fd00:5000:ffff:ffff:ffff:fffe'}]
+- name: External
+  vip: true
+  name_lower: external
+  vlan: 10
+  ipv6: true
+  ipv6_subnet: '2001:db8:fd00:1000::/64'
+  ipv6_allocation_pools: [{'start': '2001:db8:fd00:1000::10', 'end': '2001:db8:fd00:1000:ffff:ffff:ffff:fffe'}]
+- name: Management
+  # Management network is enabled by default for backwards-compatibility, but
+  # is not included in any roles by default. Add to role definitions to use.
+  enabled: true
+  vip: false  # Management network does not use VIPs
+  name_lower: management
+  vlan: 60
+  ipv6: true
+  ipv6_subnet: 'fd00:fd00:fd00:6000::/64'
+  ipv6_allocation_pools: [{'start': 'fd00:fd00:fd00:6000::10', 'end': 'fd00:fd00:fd00:6000:ffff:ffff:ffff:fffe'}]
+EOF
+
+# remove rendered directory and recreate it
+(undercloud) [stack@undercloud ~]$ rm -rf ~/rendered
+(undercloud) [stack@undercloud ~]$ mkdir ~/rendered
+
+# generate rendered templates with roles_data.yaml and network_data.yaml
+(undercloud) [stack@undercloud ~]$ cd $THT
+(undercloud) [stack@undercloud openstack-tripleo-heat-templates]$ tools/process-templates.py -r ~/templates/roles_data.yaml -n ~/templates/network_data.yaml -o ~/rendered
+...
+jinja2 rendering role template role.role.j2.yaml
+jinja2 rendering roles Controller,Compute,BlockStorage,ObjectStorage,CephStorage
+rendering j2 template to file: /home/stack/rendered/./puppet/controller-role.yaml
+rendering j2 template to file: /home/stack/rendered/./puppet/compute-role.yaml
+rendering j2 template to file: /home/stack/rendered/./puppet/blockstorage-role.yaml
+rendering j2 template to file: /home/stack/rendered/./puppet/objectstorage-role.yaml
+rendering j2 template to file: /home/stack/rendered/./puppet/cephstorage-role.yaml
+
+# copy rendered file into ~/templates
+(undercloud) [stack@undercloud openstack-tripleo-heat-templates]$ cd ~/rendered
+(undercloud) [stack@undercloud rendered]$ cp environments/network-environment.yaml ~/templates/environments
+(undercloud) [stack@undercloud rendered]$ cp -rp network ~/templates
+(undercloud) [stack@undercloud rendered]$ cp environments/net-bond-with-vlans.yaml ~/templates/environments/
+(undercloud) [stack@undercloud rendered]$ cd
+
+# define network environment parameters as below 
+# see also: https://access.redhat.com/documentation/en-us/red_hat_openstack_platform/16.1/html-single/ipv6_networking_for_the_overcloud/index
+# see also: https://access.redhat.com/solutions/2213711
+cat > ~/templates/network-environment-addon.yaml << EOF
+parameter_defaults:
+  DnsServers: ["8.8.8.8","8.8.4.4"]
+  ControlPlaneDefaultRoute: 192.0.2.1
+  ControlPlaneSubnetCidr: "24"
+  EC2MetadataIp: 192.0.2.1
+  NetworkDeploymentActions: ['CREATE','UPDATE']
+EOF
+
+# make backup of network/config/bond-with-vlans/controller.yaml
+(undercloud) [stack@undercloud ~]$ cp templates/network/config/bond-with-vlans/controller.yaml templates/network/config/bond-with-vlans/controller.yaml.orig
+
+# generate patch file for network/config/bond-with-vlans/controller.yaml
+# this patch file will setup default route on controlplane
+(undercloud) [stack@undercloud ~]$ 
+cat > patch-network-config-bond-with-vlan-controller << EOF
+--- /home/stack/templates/network/config/bond-with-vlans/controller.yaml.orig   2020-09-25 03:16:56.580784872 -0400
++++ /home/stack/templates/network/config/bond-with-vlans/controller.yaml        2020-09-25 03:23:11.001684779 -0400
+@@ -210,6 +210,9 @@
+                 routes:
+                   list_concat_unique:
+                     - get_param: ControlPlaneStaticRoutes
++                    - - default: true
++                        next_hop:
++                          get_param: ControlPlaneDefaultRoute
+               - type: ovs_bridge
+                 name: bridge_name
+                 dns_servers:
+@@ -288,9 +291,6 @@
+                   routes:
+                     list_concat_unique:
+                       - get_param: ExternalInterfaceRoutes
+-                      - - default: true
+-                          next_hop:
+-                            get_param: ExternalInterfaceDefaultRoute
+ outputs:
+   OS::stack_id:
+     description: The OsNetConfigImpl resource.
+EOF
+
+# apply patch to ~/templates/network/config/bond-with-vlans/controller.yaml
+(undercloud) [stack@undercloud ~]$ patch ~/templates/network/config/bond-with-vlans/controller.yaml < patch-network-config-bond-with-vlan-controller 
+patching file /home/stack/templates/network/config/bond-with-vlans/controller.yaml
+
+# Storage
+#   Use the external ceph (start the VMS)
+
+# start workstaion and ceph-node01:03 on pool08-iad
+[root@pool08-iad ~]# virsh start workstation
+Domain workstation started
+
+[root@pool08-iad ~]# for i in `seq 1 3`; do virsh start ceph-node0$i ; done 
+Domain ceph-node01 started
+
+Domain ceph-node02 started
+
+Domain ceph-node03 started
+
+# ssh login into workstation
+[root@pool08-iad ~]# ssh root@192.0.2.249
+
+# check ceph cluster status 
+[root@workstation ~]# ceph -s
+  cluster:
+    id:     eb0670c0-e359-4cb3-bf11-c650b82118ef
+    health: HEALTH_WARN
+            application not enabled on 2 pool(s)
+ 
+  services:
+    mon: 3 daemons, quorum ceph-node01,ceph-node02,ceph-node03 (age 81s)
+    mgr: ceph-node02(active, since 70s), standbys: ceph-node01, ceph-node03
+    osd: 6 osds: 6 up (since 69s), 6 in (since 2d)
+    rgw: 3 daemons active (ceph-node01.rgw0, ceph-node02.rgw0, ceph-node03.rgw0)
+ 
+  task status:
+ 
+  data:
+    pools:   9 pools, 288 pgs
+    objects: 369 objects, 249 MiB
+    usage:   6.4 GiB used, 54 GiB / 60 GiB avail
+    pgs:     288 active+clean
+
+# check external-ceph.yaml on workstation
+[root@workstation ~]# cat ceph-external.yaml 
+parameter_defaults:
+ CephClientKey: AQB/u2lf5h5cLBAA0x8fp0sbn+mgJkNJOOTZUA==
+ CephClusterFSID: eb0670c0-e359-4cb3-bf11-c650b82118ef
+ CephExternalMonHost: 172.18.0.61,172.18.0.62,172.18.0.63
+
+# copy ceph-external.yaml from workstation to undercloud on hypervisor
+[root@pool08-iad ~]# ssh 192.0.2.249 cat ceph-external.yaml | ssh stack@undercloud "tee templates/ceph-external.yaml"
+parameter_defaults:
+ CephClientKey: AQB/u2lf5h5cLBAA0x8fp0sbn+mgJkNJOOTZUA==
+ CephClusterFSID: eb0670c0-e359-4cb3-bf11-c650b82118ef
+ CephExternalMonHost: 172.18.0.61,172.18.0.62,172.18.0.63
+
+# Configure the active-active cinder: https://access.redhat.com/documentation/en-us/red_hat_openstack_platform/16.1/html/storage_guide/ch-cinder#active-active-deployment-for-high-availability
+# will add environment template into deployment scripts
+# -e $THT/environments/cinder-volume-active-active.yaml \
+
+# generate open.repo artifacts
+(undercloud) [stack@undercloud ~]$ tar zcvf openrepo.tgz /etc/yum.repos.d/open.repo 
+tar: Removing leading `/' from member names
+/etc/yum.repos.d/open.repo
+
+# upload open.repo artifacts into swift
+(undercloud) [stack@undercloud ~]$ upload-swift-artifacts -f openrepo.tgz
+Creating new Swift Temp-Url-Key for container: overcloud-artifacts
+Creating heat environment file: /home/stack/.tripleo/environments/deployment-artifacts.yaml
+Uploading file to swift: openrepo.tgz
++--------------+---------------------+----------------------------------+
+| object       | container           | etag                             |
++--------------+---------------------+----------------------------------+
+| openrepo.tgz | overcloud-artifacts | 3ad2df7b98401871f38ad23046cab117 |
++--------------+---------------------+----------------------------------+
+Upload complete.
+
+# check file /home/stack/.tripleo/environments/deployment-artifacts.yaml content
+(undercloud) [stack@undercloud ~]$ cat /home/stack/.tripleo/environments/deployment-artifacts.yaml
+# Heat environment to deploy artifacts via Swift Temp URL(s)
+parameter_defaults:
+    DeployArtifactURLs:
+    - 'http://192.0.2.3:8080/v1/AUTH_4785aebf2a7146b0b10c04eaf0c63566/overcloud-artifacts/openrepo.tgz?temp_url_sig=cfa0bbf7d2ac316dbf4c5fad2613ca2bb4ec84c0&temp_url_expires=1632549614'
+
+# Configure the TimeZone of the nodes to CEST
+(undercloud) [stack@undercloud ~]$ 
+cat > ~/templates/timezone.yaml << EOF
+parameter_defaults:
+  TimeZone: 'CEST'
+EOF
+
+# Disable telemetry 
+# with -e /usr/share/openstack-tripleo-heat-templates/environments/disable-telemetry.yaml in deploy script
+
+# generate deployment script
+cat > ~/deploy-final.sh <<\EOF
+#!/bin/bash
+THT=/usr/share/openstack-tripleo-heat-templates/
+CNF=~/templates/
+
+source ~/stackrc
+openstack overcloud deploy --templates $THT \
+-r $CNF/roles_data.yaml \
+-n $CNF/network_data.yaml \
+-e $THT/environments/network-isolation.yaml \
+-e $THT/environments/ceph-ansible/ceph-ansible-external.yaml \
+-e $THT/environments/cinder-volume-active-active.yaml \
+-e $THT/environments/disable-telemetry.yaml \
+-e $CNF/environments/network-environment.yaml \
+-e $CNF/network-environment-addon.yaml \
+-e $CNF/environments/net-bond-with-vlans.yaml \
+-e ~/containers-prepare-parameter.yaml \
+-e $CNF/node-info.yaml \
+-e $CNF/ceph-external.yaml \
+-e $CNF/timezone.yaml \
+-e $CNF/fix-nova-reserved-host-memory.yaml
+EOF
+
+# run deploy script
+(undercloud) [stack@undercloud ~]$ time /bin/bash -x deploy-final.sh
 
 ```

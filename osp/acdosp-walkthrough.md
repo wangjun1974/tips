@@ -5224,7 +5224,7 @@ parameter_defaults:
 (undercloud) [stack@undercloud ~]$ 
 cat > ~/templates/timezone.yaml << EOF
 parameter_defaults:
-  TimeZone: 'CEST'
+  TimeZone: 'CST'
 EOF
 
 # Disable telemetry 

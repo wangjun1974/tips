@@ -2578,3 +2578,43 @@ EOF
 
 (undercloud) [stack@undercloud ~]$ patch ~/templates-custom/roles_data.yaml < patch-roles-data-templates-custom 
 ```
+
+### OpenShift/OLM 下，如何通过 yaml 安装 operator 
+
+```
+Basically, OperatorGroup is required to specify where the required permission to create for an Operator, and what namespaces are required to watch the CR for an Operator.
+
+In other words, if you want to install ArgoCD Operator to "argocd" namespace, CSV checks the OperatorGroup in target namespace to decide what namespaces need to create RBAC for deploying Operator pod and CRDs. If "InstallMode" is "OwnNamespace", create role and rolebinding at the namespace, if "AllNamespaces", create clusterrole and clusterrolebinding for the Operator. 
+
+After installing the Operator, the Operator watches its custom resources based on the namespaces specified in the OperatorGroup.
+
+Further information is here: Operator Multitenancy with OperatorGroups
+
+For instance, if you create #1, #2, #3 in order, then InstallPlan is created in "argocd" -> the CSV which will create CRD, RBAC, Serviceaccount in the "argocd" targetNamespace belong to "og-for-argocd" OperatorGroup is also created by it. 
+Finally, the Operator is created in the same namespace, the Operator watch if CR is created or not at only the target "argocd" namespace specified Operatorgroup. If CR is created, the Operator create required resources for ArgoCD.
+
+#1 Create namespace(project)
+apiVersion: v1
+ kind: Namespace
+ metadata:
+   name: argocd
+   
+#2 Create OperatorGroup which is matched with the InstallMode.
+kind: OperatorGroup
+apiVersion: operators.coreos.com/v1
+metadata:
+  name: og-for-argocd
+  namespace: argocd
+spec:
+  targetNamespaces:
+  - argocd            <--- CSV is looking at this, then it creates required permission resources for installing the Operator.
+ 
+#3 Create Subscription of the Operator
+apiVersion: operators.coreos.com/v1alpha1
+ kind: Subscription
+ metadata:
+   name: argocd-operator
+   namespace: argocd
+:
+
+```

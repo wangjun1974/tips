@@ -215,3 +215,246 @@ oc adm must-gather -h
 
 
 ```
+
+
+###  OCS 培训脚本
+脚本 /opt/app-root/src/support/machineset-generator.sh
+```
+[~] $ cat /opt/app-root/src/support/machineset-generator.sh
+#!/bin/bash
+export AMI=$(oc get machineset -n openshift-machine-api -o jsonpath='{.items[0].spec.template.s
+pec.providerSpec.value.ami.id}')
+export CLUSTERID=$(oc get infrastructures.config.openshift.io cluster -o jsonpath='{.status.inf
+rastructureName}')
+export REGION=$(oc get infrastructures.config.openshift.io cluster -o jsonpath='{.status.platfo
+rmStatus.aws.region}')
+export COUNT=${1:-3}
+export NAME=${2:-workerocs}
+export SCALE=${3:-1}
+
+$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )/machineset-cli -scale $SCALE
+-name $NAME -count $COUNT -ami $AMI -clusterID $CLUSTERID -region $REGION
+```
+
+脚本 /opt/app-root/src/support/machineset-generator.sh 执行输出，生成了 3 个 MachineSet定义，每个 MachineSet 对应 1 个 AZ
+```
+[~] $ /bin/bash /opt/app-root/src/support/machineset-generator.sh 3 workerocs 0
+
+---
+apiVersion: machine.openshift.io/v1beta1
+kind: MachineSet
+metadata:
+  labels:
+    machine.openshift.io/cluster-api-cluster: cluster-beijing-01c5-nxpff
+    machine.openshift.io/cluster-api-machine-role: workerocs
+    machine.openshift.io/cluster-api-machine-type: workerocs
+  name: cluster-beijing-01c5-nxpff-workerocs-us-east-2a
+  namespace: openshift-machine-api
+spec:
+  replicas: 0
+  selector:
+    matchLabels:
+      machine.openshift.io/cluster-api-cluster: cluster-beijing-01c5-nxpff
+      machine.openshift.io/cluster-api-machineset: cluster-beijing-01c5-nxpff-workerocs-us-east
+-2a
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        machine.openshift.io/cluster-api-cluster: cluster-beijing-01c5-nxpff
+        machine.openshift.io/cluster-api-machine-role: workerocs
+        machine.openshift.io/cluster-api-machine-type: workerocs
+        machine.openshift.io/cluster-api-machineset: cluster-beijing-01c5-nxpff-workerocs-us-ea
+st-2a
+    spec:
+      metadata:
+        creationTimestamp: null
+        labels:
+          role: storage-node
+          node-role.kubernetes.io/worker: ""
+      providerSpec:
+        value:
+          ami:
+            id: ami-0d8f77b753c0d96dd
+          apiVersion: awsproviderconfig.openshift.io/v1beta1
+          blockDevices:
+          - ebs:
+              iops: 0
+              volumeSize: 120
+              volumeType: gp2
+          credentialsSecret:
+            name: aws-cloud-credentials
+          deviceIndex: 0
+          iamInstanceProfile:
+            id: cluster-beijing-01c5-nxpff-worker-profile
+          instanceType: m5.4xlarge
+          kind: AWSMachineProviderConfig
+          metadata:
+            creationTimestamp: null
+          placement:
+            availabilityZone: us-east-2a
+            region: us-east-2
+          publicIp: null
+          securityGroups:
+          - filters:
+            - name: tag:Name
+              values:
+              - cluster-beijing-01c5-nxpff-worker-sg
+          subnet:
+            filters:
+            - name: tag:Name
+              values:
+              - cluster-beijing-01c5-nxpff-private-us-east-2a
+          tags:
+          - name: kubernetes.io/cluster/cluster-beijing-01c5-nxpff
+            value: owned
+          userDataSecret:
+            name: worker-user-data
+      versions:
+    kubelet: ""
+---
+apiVersion: machine.openshift.io/v1beta1
+kind: MachineSet
+metadata:
+  labels:
+    machine.openshift.io/cluster-api-cluster: cluster-beijing-01c5-nxpff
+    machine.openshift.io/cluster-api-machine-role: workerocs
+    machine.openshift.io/cluster-api-machine-type: workerocs
+  name: cluster-beijing-01c5-nxpff-workerocs-us-east-2b
+  namespace: openshift-machine-api
+spec:
+  replicas: 0
+  selector:
+    matchLabels:
+      machine.openshift.io/cluster-api-cluster: cluster-beijing-01c5-nxpff
+      machine.openshift.io/cluster-api-machineset: cluster-beijing-01c5-nxpff-workerocs-us-east
+-2b
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        machine.openshift.io/cluster-api-cluster: cluster-beijing-01c5-nxpff
+        machine.openshift.io/cluster-api-machine-role: workerocs
+        machine.openshift.io/cluster-api-machine-type: workerocs
+        machine.openshift.io/cluster-api-machineset: cluster-beijing-01c5-nxpff-workerocs-us-ea
+st-2b
+    spec:
+      metadata:
+        creationTimestamp: null
+        labels:
+          role: storage-node
+          node-role.kubernetes.io/worker: ""
+      providerSpec:
+        value:
+          ami:
+            id: ami-0d8f77b753c0d96dd
+          apiVersion: awsproviderconfig.openshift.io/v1beta1
+          blockDevices:
+          - ebs:
+              iops: 0
+              volumeSize: 120
+              volumeType: gp2
+          credentialsSecret:
+            name: aws-cloud-credentials
+          deviceIndex: 0
+          iamInstanceProfile:
+            id: cluster-beijing-01c5-nxpff-worker-profile
+          instanceType: m5.4xlarge
+          kind: AWSMachineProviderConfig
+          metadata:
+            creationTimestamp: null
+          placement:
+            availabilityZone: us-east-2b
+            region: us-east-2
+          publicIp: null
+          securityGroups:
+          - filters:
+            - name: tag:Name
+              values:
+              - cluster-beijing-01c5-nxpff-worker-sg
+          subnet:
+            filters:
+            - name: tag:Name
+              values:
+              - cluster-beijing-01c5-nxpff-private-us-east-2b
+          tags:
+          - name: kubernetes.io/cluster/cluster-beijing-01c5-nxpff
+            value: owned
+          userDataSecret:
+            name: worker-user-data
+      versions:
+    kubelet: ""
+---
+apiVersion: machine.openshift.io/v1beta1
+kind: MachineSet
+metadata:
+  labels:
+    machine.openshift.io/cluster-api-cluster: cluster-beijing-01c5-nxpff
+    machine.openshift.io/cluster-api-machine-role: workerocs
+    machine.openshift.io/cluster-api-machine-type: workerocs
+  name: cluster-beijing-01c5-nxpff-workerocs-us-east-2c
+  namespace: openshift-machine-api
+spec:
+  replicas: 0
+  selector:
+    matchLabels:
+      machine.openshift.io/cluster-api-cluster: cluster-beijing-01c5-nxpff
+      machine.openshift.io/cluster-api-machineset: cluster-beijing-01c5-nxpff-workerocs-us-east
+-2c
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        machine.openshift.io/cluster-api-cluster: cluster-beijing-01c5-nxpff
+        machine.openshift.io/cluster-api-machine-role: workerocs
+        machine.openshift.io/cluster-api-machine-type: workerocs
+        machine.openshift.io/cluster-api-machineset: cluster-beijing-01c5-nxpff-workerocs-us-ea
+st-2c
+    spec:
+      metadata:
+        creationTimestamp: null
+        labels:
+          role: storage-node
+          node-role.kubernetes.io/worker: ""
+      providerSpec:
+        value:
+          ami:
+            id: ami-0d8f77b753c0d96dd
+          apiVersion: awsproviderconfig.openshift.io/v1beta1
+          blockDevices:
+          - ebs:
+              iops: 0
+              volumeSize: 120
+              volumeType: gp2
+          credentialsSecret:
+            name: aws-cloud-credentials
+          deviceIndex: 0
+          iamInstanceProfile:
+            id: cluster-beijing-01c5-nxpff-worker-profile
+          instanceType: m5.4xlarge
+          kind: AWSMachineProviderConfig
+          metadata:
+            creationTimestamp: null
+          placement:
+            availabilityZone: us-east-2c
+            region: us-east-2
+          publicIp: null
+          securityGroups:
+          - filters:
+            - name: tag:Name
+              values:
+              - cluster-beijing-01c5-nxpff-worker-sg
+          subnet:
+            filters:
+            - name: tag:Name
+              values:
+              - cluster-beijing-01c5-nxpff-private-us-east-2c
+          tags:
+          - name: kubernetes.io/cluster/cluster-beijing-01c5-nxpff
+            value: owned
+          userDataSecret:
+            name: worker-user-data
+      versions:
+    kubelet: ""
+[~] $
+```

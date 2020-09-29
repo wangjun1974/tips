@@ -2618,3 +2618,14 @@ apiVersion: operators.coreos.com/v1alpha1
 :
 
 ```
+
+### OpenShift: 维护模式下把工作负载迁移到其他节点上 
+https://www.techbeatly.com/2018/11/openshift-cluster-how-to-drain-or-evacuate-a-node-for-maintenance.html#.X3A3M9MzbOQ
+
+```
+oc adm manage-node compute-102 --schedulable=false
+oc adm drain compute-102 --delete-local-data --ignore-daemonsets  --force
+oc adm manage-node compute-102 --list-pods
+# do maintenance work here
+oc adm manage-node compute-102 --schedulable=true
+```

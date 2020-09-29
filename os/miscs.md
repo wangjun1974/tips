@@ -2629,3 +2629,6 @@ oc adm manage-node compute-102 --list-pods
 # do maintenance work here
 oc adm manage-node compute-102 --schedulable=true
 ```
+
+### 关于 Pod Disruption Budget 的说明
+https://jimmysong.io/kubernetes-handbook/concepts/pod-disruption-budget.html

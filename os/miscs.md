@@ -2632,3 +2632,8 @@ oc adm manage-node compute-102 --schedulable=true
 
 ### 关于 Pod Disruption Budget 的说明
 https://jimmysong.io/kubernetes-handbook/concepts/pod-disruption-budget.html
+
+### Velero 面向 Kuberenetes 的备份恢复 API
+https://velero.io/<br>
+https://github.com/vmware-tanzu/velero<br>
+

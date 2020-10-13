@@ -2660,3 +2660,40 @@ engine-config --get StorageDomainFailureTimeoutInMinutes
 # set engine config about StorageDomainFailureTimeoutInMinutes to 10
 engine-config --set StorageDomainFailureTimeoutInMinutes=10
 ```
+
+### 通过 ovirt-shell 访问 rhv
+https://www.ovirt.org/develop/release-management/features/infra/cli.html
+```
+cat > ~/.ovirtshellrc << EOF
+[ovirt-shell]
+username = admin@internal
+url = https://rhvm.rhcnsa.org/ovirt-engine/api
+#insecure = False
+#filter = False
+#timeout = -1
+password = 321321
+EOF
+
+# download ca.pem from rhv manager
+curl -k 'https://rhvm.rhcnsa.org/ovirt-engine/services/pki-resource?resource=ca-certificate&format=X509-PEM-CA' -o /tmp/ca.pem
+
+# test connection
+ovirt-shell -c -A /tmp/ca.pem
+
+for i in bootstrap master-0 worker-0 worker-1 
+do 
+cat > ovirt-shell-cmd << EOF
+list disks --parent-vm-name jwang-$i 
+EOF
+
+diskid=$(ovirt-shell -c -A /tmp/ca.pem -f ovirt-shell-cmd | grep id | awk '{print $3}' )
+
+cat > ovirt-shell-cmd << EOF
+remove disk $diskid
+EOF
+
+ovirt-shell -c -A /tmp/ca.pem -f ovirt-shell-cmd
+
+done
+
+```

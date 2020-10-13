@@ -312,10 +312,10 @@ additionalTrustBundle: |
 $( cat /etc/pki/ca-trust/source/anchors/domain.crt | sed 's/^/  /g' )
 imageContentSources:
 - mirrors:
-  - helper.cluster-0001.rhcnsa.org:5000/ocp-release
+  - helper.cluster-0001.rhcnsa.org:5000/ocp4/openshift4
   source: quay.io/openshift-release-dev/ocp-release
 - mirrors:
-  - helper.cluster-0001.rhcnsa.org:5000/ocp-release
+  - helper.cluster-0001.rhcnsa.org:5000/ocp4/openshift4
   source: quay.io/openshift-release-dev/ocp-v4.0-art-dev
 EOF
 
@@ -324,6 +324,7 @@ cp /var/www/html/install-config.yaml.orig install-config.yaml
 
 # create ignition file
 rm -f *.ign
+#/bin/rm -rf *.ign .openshift_install_state.json auth bootstrap master-0 master-1 master-2 worker-0 worker-1 worker-2
 openshift-install create ignition-configs --dir=/root/ocp4
 
 # generate ignition file
@@ -358,6 +359,16 @@ modify_cfg(){
   for file in "EFI/redhat/grub.cfg" "isolinux/isolinux.cfg"; do
     # Append the proper image and ignition urls
     sed -e '/coreos.inst=yes/s|$| coreos.inst.install_dev=vda coreos.inst.image_url='"${URL}"'\/install\/'"${BIOSMODE}"'.raw.gz coreos.inst.ignition_url='"${URL}"'\/ignition\/'"${NODE}"'.ign ip='"${IP}"'::'"${GATEWAY}"':'"${NETMASK}"':'"${FQDN}"':'"${NET_INTERFACE}"':none:'"${DNS}"' nameserver='"${DNS}"'|' ${file} > $(pwd)/${NODE}_${file##*/}
+    # Boot directly in the installation
+    sed -i -e 's/default vesamenu.c32/default linux/g' -e 's/timeout 600/timeout 10/g' $(pwd)/${NODE}_${file##*/}
+  done
+}
+
+# Helper function to modify the config files - using sda as hard disk device (optional)
+modify_cfg(){
+  for file in "EFI/redhat/grub.cfg" "isolinux/isolinux.cfg"; do
+    # Append the proper image and ignition urls
+    sed -e '/coreos.inst=yes/s|$| coreos.inst.install_dev=sda coreos.inst.image_url='"${URL}"'\/install\/'"${BIOSMODE}"'.raw.gz coreos.inst.ignition_url='"${URL}"'\/ignition\/'"${NODE}"'.ign ip='"${IP}"'::'"${GATEWAY}"':'"${NETMASK}"':'"${FQDN}"':'"${NET_INTERFACE}"':none:'"${DNS}"' nameserver='"${DNS}"'|' ${file} > $(pwd)/${NODE}_${file##*/}
     # Boot directly in the installation
     sed -i -e 's/default vesamenu.c32/default linux/g' -e 's/timeout 600/timeout 10/g' $(pwd)/${NODE}_${file##*/}
   done

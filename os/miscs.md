@@ -2701,7 +2701,7 @@ done
 for i in bootstrap master-0 worker-0 worker-1 
 do 
 cat > ovirt-shell-cmd << EOF
-add disk --parent-vm-name jwang-$i --provisioned_size 85899345920 --interface virtio_scsi --format cow --storage_domains-storage_domain storage_domain.name=DS11
+add disk --parent-vm-name jwang-$i --provisioned_size 85899345920 --interface virtio_scsi --format cow --storage_domains-storage_domain storage_domain.name=DS11 --bootable true --wipe_after_delete true
 EOF
 
 ovirt-shell -c -A /tmp/ca.pem -f ovirt-shell-cmd

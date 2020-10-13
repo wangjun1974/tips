@@ -295,7 +295,7 @@ controlPlane:
   name: master
   replicas: 1
 metadata:
-  name: ocp4
+  name: cluster-0001
 networking:
   clusterNetworks:
   - cidr: 10.254.0.0/16
@@ -334,7 +334,7 @@ rm -f /var/www/html/ignition/*
 #/bin/cp -f master.ign /var/www/html/ignition/master-2.ign
 /bin/cp -f worker.ign /var/www/html/ignition/worker-0.ign
 /bin/cp -f worker.ign /var/www/html/ignition/worker-1.ign
-/bin/cp -f worker.ign /var/www/html/ignition/worker-2.ign
+#/bin/cp -f worker.ign /var/www/html/ignition/worker-2.ign
 chmod 644 /var/www/html/ignition/*
 
 yum install -y libguestfs libguestfs-tools genisoimage
@@ -530,5 +530,13 @@ EOF
 #exit
 #EOF
 
+# (PoC) before install delete old files
+# (PoC) no need run every time 
+# (PoC) only run when cleanup and do a new poc
+cd /root/ocp4
+#/bin/rm -rf *.ign .openshift_install_state.json auth bootstrap master-0 master-1 master-2 worker-0 worker-1 worker-2
+
+# start openshift-install bootstrap
+openshift-install --dir=/root/ocp4 wait-for bootstrap-complete --log-level debug
 
 ```

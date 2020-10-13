@@ -99,7 +99,7 @@ workers:
     ipaddr: "10.66.208.144"
 EOF
 
-ansible-playbook -e @vars.yaml tasks/main.yml
+ansible-playbook -e @vars.yml tasks/main.yml
 ```
 
 #### disconnected env change ignore_errors to yes (optional)

@@ -2656,4 +2656,7 @@ engine-config -a
 
 # get engine config about StorageDomainFailureTimeoutInMinutes
 engine-config --get StorageDomainFailureTimeoutInMinutes
+
+# set engine config about StorageDomainFailureTimeoutInMinutes to 10
+engine-config --set StorageDomainFailureTimeoutInMinutes=10
 ```

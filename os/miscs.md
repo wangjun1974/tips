@@ -2647,3 +2647,13 @@ warning: Layer size mismatch for sha256:c9fa7d57b9028d4bd02b51cef3c3039fa7b23a8b
 
 find /opt/registry/mirror -name "sha256:c9fa*" -exec rm {} \;
 ```
+
+### 获取 Engine 配置，设置 Engine 配置
+https://www.ovirt.org/develop/developer-guide/engine/engine-config-options.html
+```
+# get all engine config 
+engine-config -a
+
+# get engine config about StorageDomainFailureTimeoutInMinutes
+engine-config --get StorageDomainFailureTimeoutInMinutes
+```

@@ -281,77 +281,6 @@ oc adm catalog mirror \
 mkdir -p /root/ocp4
 cd /root/ocp4
 
-cat > install-config.yaml.orig << 'EOF'
-apiVersion: v1
-baseDomain: rhcnsa.com
-compute:
-- hyperthreading: Enabled
-  name: worker
-  replicas: 2
-controlPlane:
-  hyperthreading: Enabled
-  name: master
-  replicas: 1
-metadata:
-  name: ocp4
-networking:
-  clusterNetworks:
-  - cidr: 10.254.0.0/16
-    hostPrefix: 24
-  networkType: OpenShiftSDN
-  serviceNetwork:
-  - 172.30.0.0/16
-platform:
-  none: {}
-pullSecret: '{"auths":{"helper.cluster-0001.rhcnsa.com:5000": {"auth": "ZHVtbXk6ZHVtbXk=","email": "noemail@localhost"}}}'
-sshKey: 'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCxT6A/FrkwtkAGJPUHsbAKqURvdRxOOoWF71dle7Or7OZkRUO2w0Dmc8D0PrWe16dLLw5Kg0SwtU/76ljDkhZDl/WGGMRzvWnypSzL/gGzWsg6IOwmqOdgMpAAa3K/f3MxaAX0tNaqEhb2flfjMUjymzKvI7/z6XbvfWryO+s1VcXZgOLMAwJMmgTtME174kixCNHfZpIqZbNS5byXlpPHQRKV+Ra1VDnz3WElg+TkhyYxRz6JA7FoHXkXbDgU0xc1TisLhadQHXVonkpXCp2OinT/J/j4y/DkTyjNHw9sBAvSf9GXthhyiCUk7pmbfJx89CEa2HtBKk0KOnJ57kgh root@cluster-0001-helper.rhcnsa.org'
-additionalTrustBundle: |
-  -----BEGIN CERTIFICATE-----
-  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
-  dA==
-  -----END CERTIFICATE-----
-  imageContentSources:
-- mirrors:
-  - helper.cluster-0001.rhcnsa.org:5000/ocp-release
-  source: quay.io/openshift-release-dev/ocp-release
-- mirrors:
-  - helper.cluster-0001.rhcnsa.org:5000/ocp-release
-  source: quay.io/openshift-release-dev/ocp-v4.0-art-dev
-EOF
-
-cp install-config.yaml.orig /var/www/html
-cp /var/www/html/install-config.yaml.orig install-config.yaml
-
 ssh-keygen -t rsa -f ~/.ssh/id_rsa -N '' 
 
 cat > install-config.yaml.orig << EOF
@@ -378,9 +307,9 @@ platform:
   none: {}
 pullSecret: '{"auths":{"helper.cluster-0001.rhcnsa.com:5000": {"auth": "ZHVtbXk6ZHVtbXk=","email": "noemail@localhost"}}}'
 sshKey: |
-$( cat /root/.ssh/id_rsa.pub | sed 's/^/   /g' )
+$( cat /root/.ssh/id_rsa.pub | sed 's/^/  /g' )
 additionalTrustBundle: |
-$( cat /etc/pki/ca-trust/source/anchors/domain.crt | sed 's/^/   /g' )
+$( cat /etc/pki/ca-trust/source/anchors/domain.crt | sed 's/^/  /g' )
 imageContentSources:
 - mirrors:
   - helper.cluster-0001.rhcnsa.org:5000/ocp-release
@@ -392,5 +321,214 @@ EOF
 
 cp install-config.yaml.orig /var/www/html
 cp /var/www/html/install-config.yaml.orig install-config.yaml
+
+# create ignition file
+rm -f *.ign
+openshift-install create ignition-configs --dir=/root/ocp4
+
+# generate ignition file
+rm -f /var/www/html/ignition/*
+/bin/cp -f bootstrap.ign /var/www/html/ignition/bootstrap-static.ign
+/bin/cp -f master.ign /var/www/html/ignition/master-0.ign
+#/bin/cp -f master.ign /var/www/html/ignition/master-1.ign
+#/bin/cp -f master.ign /var/www/html/ignition/master-2.ign
+/bin/cp -f worker.ign /var/www/html/ignition/worker-0.ign
+/bin/cp -f worker.ign /var/www/html/ignition/worker-1.ign
+/bin/cp -f worker.ign /var/www/html/ignition/worker-2.ign
+chmod 644 /var/www/html/ignition/*
+
+yum install -y libguestfs libguestfs-tools genisoimage
+systemctl start libvirtd
+
+cd /root
+export NGINX_DIRECTORY=/var/www/html
+export RHCOSVERSION=4.5.6
+export VOLID=$(isoinfo -d -i ${NGINX_DIRECTORY}/rhcos-${RHCOSVERSION}-x86_64-installer.x86_64.iso | awk '/Volume id/ { print $3 }')
+TEMPDIR=$(mktemp -d)
+echo $VOLID
+echo $TEMPDIR
+
+cd ${TEMPDIR}
+# Extract the ISO content using guestfish (to avoid sudo mount)
+guestfish -a ${NGINX_DIRECTORY}/rhcos-${RHCOSVERSION}-x86_64-installer.x86_64.iso \
+  -m /dev/sda tar-out / - | tar xvf -
+
+# Helper function to modify the config files
+modify_cfg(){
+  for file in "EFI/redhat/grub.cfg" "isolinux/isolinux.cfg"; do
+    # Append the proper image and ignition urls
+    sed -e '/coreos.inst=yes/s|$| coreos.inst.install_dev=vda coreos.inst.image_url='"${URL}"'\/install\/'"${BIOSMODE}"'.raw.gz coreos.inst.ignition_url='"${URL}"'\/ignition\/'"${NODE}"'.ign ip='"${IP}"'::'"${GATEWAY}"':'"${NETMASK}"':'"${FQDN}"':'"${NET_INTERFACE}"':none:'"${DNS}"' nameserver='"${DNS}"'|' ${file} > $(pwd)/${NODE}_${file##*/}
+    # Boot directly in the installation
+    sed -i -e 's/default vesamenu.c32/default linux/g' -e 's/timeout 600/timeout 10/g' $(pwd)/${NODE}_${file##*/}
+  done
+}
+
+URL="http://10.66.208.138:8080/"
+GATEWAY="10.66.208.254"
+NETMASK="255.255.255.0"
+DNS="10.66.208.138"
+
+# BOOTSTRAP
+# TYPE="bootstrap"
+NODE="bootstrap-static"
+IP="10.66.208.139"
+FQDN="bootstrap"
+BIOSMODE="bios"
+NET_INTERFACE="ens3"
+modify_cfg
+
+# MASTERS
+# TYPE="master"
+# MASTER-0
+NODE="master-0"
+IP="10.66.208.140"
+FQDN="master-0"
+BIOSMODE="bios"
+NET_INTERFACE="ens3"
+modify_cfg
+
+# MASTER-1
+#NODE="master-1"
+#IP="192.168.7.14"
+#FQDN="master-1"
+#BIOSMODE="bios"
+#NET_INTERFACE="ens3"
+#modify_cfg
+
+# MASTER-2
+#NODE="master-2"
+#IP="192.168.7.15"
+#FQDN="master-2"
+#BIOSMODE="bios"
+#NET_INTERFACE="ens3"
+#modify_cfg
+
+# WORKERS
+NODE="worker-0"
+IP="10.66.208.143"
+FQDN="worker-0"
+BIOSMODE="bios"
+NET_INTERFACE="ens3"
+modify_cfg
+
+NODE="worker-1"
+IP="10.66.208.144"
+FQDN="worker-1"
+BIOSMODE="bios"
+NET_INTERFACE="ens3"
+modify_cfg
+#
+#NODE="worker-2"
+#IP="192.168.7.18"
+#FQDN="worker-2"
+#BIOSMODE="bios"
+#NET_INTERFACE="ens3"
+#modify_cfg
+# Generate the images, one per node as the IP configuration is different...
+# https://github.com/coreos/coreos-assembler/blob/master/src/cmd-buildextend-installer#L97-L103
+
+for node in master-0 master-1 master-2 worker-0 worker-1 worker-2 bootstrap-static; do
+  # Overwrite the grub.cfg and isolinux.cfg files for each node type
+  for file in "EFI/redhat/grub.cfg" "isolinux/isolinux.cfg"; do
+    /bin/cp -f $(pwd)/${node}_${file##*/} ${file}
+  done
+  # As regular user!
+  genisoimage -verbose -rock -J -joliet-long -volset ${VOLID} \
+    -eltorito-boot isolinux/isolinux.bin -eltorito-catalog isolinux/boot.cat \
+    -no-emul-boot -boot-load-size 4 -boot-info-table \
+    -eltorito-alt-boot -efi-boot images/efiboot.img -no-emul-boot \
+    -o ${NGINX_DIRECTORY}/${node}.iso .
+done
+
+# Optionally, clean up
+cd
+rm -Rf ${TEMPDIR}
+
+cd /var/www/html
+
+# on upload machine first download iso from helper node
+curl http://10.66.208.138:8080/bootstrap-static.iso -o bootstrap-static.iso
+curl http://10.66.208.138:8080/master-0.iso -o master-0.iso
+#curl http://10.66.208.138:8080/master-1.iso -o master-1.iso
+#curl http://10.66.208.138:8080/master-2.iso -o master-2.iso
+curl http://10.66.208.138:8080/worker-0.iso -o worker-0.iso
+curl http://10.66.208.138:8080/worker-1.iso -o worker-1.iso
+#curl http://10.66.208.138:8080/worker-2.iso -o worker-2.iso
+
+# upload iso to iso domain
+yum install -y expect
+prog=/usr/bin/engine-iso-uploader
+mypass="<password>"
+
+args="-i ISO11 upload bootstrap-static.iso --force"
+/usr/bin/expect <<EOF
+set timeout -1
+spawn "$prog" $args
+expect "Please provide the REST API password for the admin@internal oVirt Engine user (CTRL+D to abort): "
+send "$mypass\r"
+expect eof
+exit
+EOF
+
+args="-i ISO11 upload master-0.iso --force"
+/usr/bin/expect <<EOF
+set timeout -1
+spawn "$prog" $args
+expect "Please provide the REST API password for the admin@internal oVirt Engine user (CTRL+D to abort): "
+send "$mypass\r"
+expect eof
+exit
+EOF
+
+#args="-i ISO11 upload master-1.iso --force"
+#/usr/bin/expect <<EOF
+#set timeout -1
+#spawn "$prog" $args
+#expect "Please provide the REST API password for the admin@internal oVirt Engine user (CTRL+D #to abort): "
+#send "$mypass\r"
+#expect eof
+#exit
+#EOF
+
+#args="-i ISO11 upload master-2.iso --force"
+#/usr/bin/expect <<EOF
+#set timeout -1
+#spawn "$prog" $args
+#expect "Please provide the REST API password for the admin@internal oVirt Engine user (CTRL+D #to abort): "
+#send "$mypass\r"
+#expect eof
+#exit
+#EOF
+
+args="-i ISO11 upload worker-0.iso --force"
+/usr/bin/expect <<EOF
+set timeout -1
+spawn "$prog" $args
+expect "Please provide the REST API password for the admin@internal oVirt Engine user (CTRL+D to abort): "
+send "$mypass\r"
+expect eof
+exit
+EOF
+
+args="-i ISO11 upload worker-1.iso --force"
+/usr/bin/expect <<EOF
+set timeout -1
+spawn "$prog" $args
+expect "Please provide the REST API password for the admin@internal oVirt Engine user (CTRL+D to abort): "
+send "$mypass\r"
+expect eof
+exit
+EOF
+
+#args="-i ISO11 upload worker-2.iso --force"
+#/usr/bin/expect <<EOF
+#set timeout -1
+#spawn "$prog" $args
+#expect "Please provide the REST API password for the admin@internal oVirt Engine user (CTRL+D #to abort): "
+#send "$mypass\r"
+#expect eof
+#exit
+#EOF
+
 
 ```

@@ -255,7 +255,7 @@ oc adm catalog mirror \
   -a ${LOCAL_SECRET_JSON} \
   --filter-by-os='linux/amd64'
 
-# ToDo: I could not go through this process ... 
+# ToDo: I could not go through this process ... (optional)
 # copy catalog relate content into disconnect env
 # 1. $oc adm catalog build --appregistry-org redhat-operators --from=registry.redhat.io/openshift4/ose-operator-registry:vXX  --dir=<YOUR_DIR> --to=file://offline/redhat-operators:vXX
 # 2. $oc adm catalog mirror --manifests-only=true --from-dir=<YOUR_DIR> file://offline/redhat-operators:vXX localhost
@@ -277,5 +277,120 @@ oc adm catalog mirror \
   -a ${LOCAL_SECRET_JSON} \
   --filter-by-os='linux/amd64' 
 
+# install install directory
+mkdir -p /root/ocp4
+cd /root/ocp4
+
+cat > install-config.yaml.orig << 'EOF'
+apiVersion: v1
+baseDomain: rhcnsa.com
+compute:
+- hyperthreading: Enabled
+  name: worker
+  replicas: 2
+controlPlane:
+  hyperthreading: Enabled
+  name: master
+  replicas: 1
+metadata:
+  name: ocp4
+networking:
+  clusterNetworks:
+  - cidr: 10.254.0.0/16
+    hostPrefix: 24
+  networkType: OpenShiftSDN
+  serviceNetwork:
+  - 172.30.0.0/16
+platform:
+  none: {}
+pullSecret: '{"auths":{"helper.cluster-0001.rhcnsa.com:5000": {"auth": "ZHVtbXk6ZHVtbXk=","email": "noemail@localhost"}}}'
+sshKey: 'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCxT6A/FrkwtkAGJPUHsbAKqURvdRxOOoWF71dle7Or7OZkRUO2w0Dmc8D0PrWe16dLLw5Kg0SwtU/76ljDkhZDl/WGGMRzvWnypSzL/gGzWsg6IOwmqOdgMpAAa3K/f3MxaAX0tNaqEhb2flfjMUjymzKvI7/z6XbvfWryO+s1VcXZgOLMAwJMmgTtME174kixCNHfZpIqZbNS5byXlpPHQRKV+Ra1VDnz3WElg+TkhyYxRz6JA7FoHXkXbDgU0xc1TisLhadQHXVonkpXCp2OinT/J/j4y/DkTyjNHw9sBAvSf9GXthhyiCUk7pmbfJx89CEa2HtBKk0KOnJ57kgh root@cluster-0001-helper.rhcnsa.org'
+additionalTrustBundle: |
+  -----BEGIN CERTIFICATE-----
+  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
+  dA==
+  -----END CERTIFICATE-----
+  imageContentSources:
+- mirrors:
+  - helper.cluster-0001.rhcnsa.org:5000/ocp-release
+  source: quay.io/openshift-release-dev/ocp-release
+- mirrors:
+  - helper.cluster-0001.rhcnsa.org:5000/ocp-release
+  source: quay.io/openshift-release-dev/ocp-v4.0-art-dev
+EOF
+
+cp install-config.yaml.orig /var/www/html
+cp /var/www/html/install-config.yaml.orig install-config.yaml
+
+ssh-keygen -t rsa -f ~/.ssh/id_rsa -N '' 
+
+cat > install-config.yaml.orig << EOF
+apiVersion: v1
+baseDomain: rhcnsa.com
+compute:
+- hyperthreading: Enabled
+  name: worker
+  replicas: 2
+controlPlane:
+  hyperthreading: Enabled
+  name: master
+  replicas: 1
+metadata:
+  name: ocp4
+networking:
+  clusterNetworks:
+  - cidr: 10.254.0.0/16
+    hostPrefix: 24
+  networkType: OpenShiftSDN
+  serviceNetwork:
+  - 172.30.0.0/16
+platform:
+  none: {}
+pullSecret: '{"auths":{"helper.cluster-0001.rhcnsa.com:5000": {"auth": "ZHVtbXk6ZHVtbXk=","email": "noemail@localhost"}}}'
+sshKey: |
+$( cat /root/.ssh/id_rsa.pub | sed 's/^/   /g' )
+additionalTrustBundle: |
+$( cat /etc/pki/ca-trust/source/anchors/domain.crt | sed 's/^/   /g' )
+imageContentSources:
+- mirrors:
+  - helper.cluster-0001.rhcnsa.org:5000/ocp-release
+  source: quay.io/openshift-release-dev/ocp-release
+- mirrors:
+  - helper.cluster-0001.rhcnsa.org:5000/ocp-release
+  source: quay.io/openshift-release-dev/ocp-v4.0-art-dev
+EOF
+
+cp install-config.yaml.orig /var/www/html
+cp /var/www/html/install-config.yaml.orig install-config.yaml
 
 ```

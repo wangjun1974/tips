@@ -233,6 +233,22 @@ To upload local images to a registry, run:
 
 Configmap signature file /opt/registry/mirror/config/signature-sha256-8d104847fc2371a9.yaml created
 
+# get content works with install-iso
+export OCP_RELEASE="4.5.0"
+export LOCAL_REGISTRY='helper.cluster-0001.rhsacn.org:5000'
+export LOCAL_REPOSITORY='ocp4/openshift4'
+export PRODUCT_REPO='openshift-release-dev'
+export LOCAL_SECRET_JSON="${HOME}/pull-secret-2.json"
+export RELEASE_NAME='ocp-release'
+export ARCHITECTURE="x86_64"
+export REMOVABLE_MEDIA_PATH='/opt/registry'
+
+# mirror to local registry
+oc adm -a ${LOCAL_SECRET_JSON} release mirror \
+--from=quay.io/${PRODUCT_REPO}/${RELEASE_NAME}:${OCP_RELEASE}-${ARCHITECTURE} \
+--to=${LOCAL_REGISTRY}/${LOCAL_REPOSITORY} \
+--to-release-image=${LOCAL_REGISTRY}/${LOCAL_REPOSITORY}:${OCP_RELEASE}-${ARCHITECTURE}
+
 # Take the media to the restricted network environment and upload the images to the local container registry.
 oc image mirror -a ${LOCAL_SECRET_JSON} --from-dir=${REMOVABLE_MEDIA_PATH}/mirror "file://openshift/release:${OCP_RELEASE}*" ${LOCAL_REGISTRY}/${LOCAL_REPOSITORY}
 

@@ -305,7 +305,7 @@ networking:
   - 172.30.0.0/16
 platform:
   none: {}
-pullSecret: '{"auths":{"helper.cluster-0001.rhcnsa.org:5000": {"auth": "ZHVtbXk6ZHVtbXk=","email": "noemail@localhost"}}}'
+pullSecret: '{"auths":{"helper.cluster-0001.rhsacn.org:5000": {"auth": "ZHVtbXk6ZHVtbXk=","email": "noemail@localhost"}}}'
 sshKey: |
 $( cat /root/.ssh/id_rsa.pub | sed 's/^/  /g' )
 additionalTrustBundle: |

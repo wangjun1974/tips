@@ -233,7 +233,7 @@ To upload local images to a registry, run:
 
 Configmap signature file /opt/registry/mirror/config/signature-sha256-8d104847fc2371a9.yaml created
 
-# get content works with install-iso
+# get content works with install-iso - i guess 4.5.0 iso only works with 4.5.0 OCP_RELEASE
 export OCP_RELEASE="4.5.0"
 export LOCAL_REGISTRY='helper.cluster-0001.rhsacn.org:5000'
 export LOCAL_REPOSITORY='ocp4/openshift4'

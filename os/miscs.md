@@ -2637,3 +2637,13 @@ https://jimmysong.io/kubernetes-handbook/concepts/pod-disruption-budget.html
 https://velero.io/<br>
 https://github.com/vmware-tanzu/velero<br>
 
+### 删除可能存在问题的文件
+```
+...
+
+info: Planning completed in 570ms
+uploading: helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4 sha256:c9fa7d57b9028d4bd02b51cef3c3039fa7b23a8b2d9d26a6ce66b3428f6e2457 72.71MiB
+warning: Layer size mismatch for sha256:c9fa7d57b9028d4bd02b51cef3c3039fa7b23a8b2d9d26a6ce66b3428f6e2457: had 76247035, wrote 78250687
+
+find /opt/registry/mirror -name "sha256:c9fa*" -exec rm {} \;
+```

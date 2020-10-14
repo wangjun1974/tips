@@ -571,4 +571,24 @@ cd /root/ocp4
 # start openshift-install bootstrap
 openshift-install --dir=/root/ocp4 wait-for bootstrap-complete --log-level debug
 
+# check time sync on bootstrap/masters if there is x509 relate error
+date
+openssl s_client -connect api.crc.testing:6443 | openssl x509 -noout -dates
+
+oc get nodes
+
+# patch ingresscontroller
+oc label node worker0.cluster-0001.rhsacn.org node-role.kubernetes.io/infra=""
+oc label node worker1.cluster-0001.rhsacn.org node-role.kubernetes.io/infra=""
+oc patch ingresscontroller default -n openshift-ingress-operator --type=merge --patch='{"spec":{"nodePlacement":{"nodeSelector": {"matchLabels":{"node-role.kubernetes.io/infra":""}}}}}'
+
+openshift-install --dir=/root/ocp4 wait-for install-complete --log-level debug
+
+helpernodecheck nfs-setup 
+oc create -f /usr/local/src/registry-pvc.yaml -n openshift-image-registry
+oc patch configs.imageregistry.operator.openshift.io cluster --type=json -p '[{"op": "remove", "path": "/spec/storage/emptyDir" }]'
+oc patch configs.imageregistry.operator.openshift.io cluster --type merge --patch '{"spec":{"storage":{"pvc":{ "claim": "registry-pvc"}}}}'
+
+
+
 ```

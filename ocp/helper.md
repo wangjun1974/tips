@@ -6,7 +6,7 @@ nmcli con down 'eth0' && nmcli con up 'eth0'
 
 hostnamectl set-hostname helper.cluster-0001.rhsacn.org
 
-sed -i '/^10.66.xxx.xxx helper.cluster-0001.rhcnsa.org*/d' /etc/hosts
+sed -i '/^10.66.xxx.xxx helper.cluster-0001.rhsacn.org*/d' /etc/hosts
 
 cat >> /etc/hosts << 'EOF'
 10.66.xxx.xxx helper.cluster-0001.rhsacn.org

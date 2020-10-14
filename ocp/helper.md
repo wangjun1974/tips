@@ -579,7 +579,7 @@ openssl s_client -connect api.crc.testing:6443 | openssl x509 -noout -dates
 oc get nodes
 export KUBECONFIG=/root/ocp4/auth/kubeconfig
 /usr/local/bin/oc get csr --no-headers | /usr/bin/awk '{print $1}' | xargs /usr/local/bin/oc adm certificate approve
-
+watch oc get nodes
 
 # patch ingresscontroller
 oc label node worker0.cluster-0001.rhsacn.org node-role.kubernetes.io/infra=""

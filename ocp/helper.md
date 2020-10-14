@@ -90,12 +90,12 @@ bootstrap:
   name: "bootstrap"
   ipaddr: "10.66.208.139"
 masters:
-  - name: "master0"
+  - name: "master-0"
     ipaddr: "10.66.208.140"
 workers:
-  - name: "worker0"
+  - name: "worker-0"
     ipaddr: "10.66.208.143"
-  - name: "worker1"
+  - name: "worker-1"
     ipaddr: "10.66.208.144"
 EOF
 

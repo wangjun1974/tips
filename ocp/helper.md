@@ -90,12 +90,16 @@ bootstrap:
   name: "bootstrap"
   ipaddr: "10.66.208.139"
 masters:
-  - name: "master-0"
+  - name: "master0"
     ipaddr: "10.66.208.140"
+  - name: "master1"
+    ipaddr: "10.66.208.141"  
+  - name: "master2"
+    ipaddr: "10.66.208.142"  
 workers:
-  - name: "worker-0"
+  - name: "worker0"
     ipaddr: "10.66.208.143"
-  - name: "worker-1"
+  - name: "worker1"
     ipaddr: "10.66.208.144"
 EOF
 
@@ -309,7 +313,7 @@ compute:
 controlPlane:
   hyperthreading: Enabled
   name: master
-  replicas: 1
+  replicas: 3
 metadata:
   name: cluster-0001
 networking:
@@ -347,8 +351,8 @@ openshift-install create ignition-configs --dir=/root/ocp4
 rm -f /var/www/html/ignition/*
 /bin/cp -f bootstrap.ign /var/www/html/ignition/bootstrap-static.ign
 /bin/cp -f master.ign /var/www/html/ignition/master-0.ign
-#/bin/cp -f master.ign /var/www/html/ignition/master-1.ign
-#/bin/cp -f master.ign /var/www/html/ignition/master-2.ign
+/bin/cp -f master.ign /var/www/html/ignition/master-1.ign
+/bin/cp -f master.ign /var/www/html/ignition/master-2.ign
 /bin/cp -f worker.ign /var/www/html/ignition/worker-0.ign
 /bin/cp -f worker.ign /var/www/html/ignition/worker-1.ign
 #/bin/cp -f worker.ign /var/www/html/ignition/worker-2.ign
@@ -399,7 +403,7 @@ DNS="10.66.208.138"
 # TYPE="bootstrap"
 NODE="bootstrap-static"
 IP="10.66.208.139"
-FQDN="bootstrap"
+FQDN="bootstrap.cluster-0001.rhsacn.org"
 BIOSMODE="bios"
 NET_INTERFACE="ens3"
 modify_cfg
@@ -409,45 +413,45 @@ modify_cfg
 # MASTER-0
 NODE="master-0"
 IP="10.66.208.140"
-FQDN="master-0"
+FQDN="master0.cluster-0001.rhsacn.org"
 BIOSMODE="bios"
 NET_INTERFACE="ens3"
 modify_cfg
 
 # MASTER-1
-#NODE="master-1"
-#IP="192.168.7.14"
-#FQDN="master-1"
-#BIOSMODE="bios"
+NODE="master-1"
+IP="10.66.208.141"
+FQDN="master1.cluster-0001.rhsacn.org"
+BIOSMODE="bios"
 #NET_INTERFACE="ens3"
 #modify_cfg
 
 # MASTER-2
-#NODE="master-2"
-#IP="192.168.7.15"
-#FQDN="master-2"
-#BIOSMODE="bios"
-#NET_INTERFACE="ens3"
-#modify_cfg
+NODE="master-2"
+IP="192.168.7.15"
+FQDN="master2.cluster-0001.rhsacn.org"
+BIOSMODE="bios"
+NET_INTERFACE="ens3"
+modify_cfg
 
 # WORKERS
 NODE="worker-0"
 IP="10.66.208.143"
-FQDN="worker-0"
+FQDN="worker0.cluster-0001.rhsacn.org"
 BIOSMODE="bios"
 NET_INTERFACE="ens3"
 modify_cfg
 
 NODE="worker-1"
 IP="10.66.208.144"
-FQDN="worker-1"
+FQDN="worker1.cluster-0001.rhsacn.org"
 BIOSMODE="bios"
 NET_INTERFACE="ens3"
 modify_cfg
 #
 #NODE="worker-2"
 #IP="192.168.7.18"
-#FQDN="worker-2"
+#FQDN="worker2.cluster-0001.rhsacn.org"
 #BIOSMODE="bios"
 #NET_INTERFACE="ens3"
 #modify_cfg
@@ -476,8 +480,8 @@ cd /var/www/html
 # on upload machine first download iso from helper node
 curl http://10.66.208.138:8080/bootstrap-static.iso -o bootstrap-static.iso
 curl http://10.66.208.138:8080/master-0.iso -o master-0.iso
-#curl http://10.66.208.138:8080/master-1.iso -o master-1.iso
-#curl http://10.66.208.138:8080/master-2.iso -o master-2.iso
+curl http://10.66.208.138:8080/master-1.iso -o master-1.iso
+curl http://10.66.208.138:8080/master-2.iso -o master-2.iso
 curl http://10.66.208.138:8080/worker-0.iso -o worker-0.iso
 curl http://10.66.208.138:8080/worker-1.iso -o worker-1.iso
 #curl http://10.66.208.138:8080/worker-2.iso -o worker-2.iso
@@ -507,25 +511,25 @@ expect eof
 exit
 EOF
 
-#args="-i ISO11 upload master-1.iso --force"
-#/usr/bin/expect <<EOF
-#set timeout -1
-#spawn "$prog" $args
-#expect "Please provide the REST API password for the admin@internal oVirt Engine user (CTRL+D #to abort): "
-#send "$mypass\r"
-#expect eof
-#exit
-#EOF
+args="-i ISO11 upload master-1.iso --force"
+/usr/bin/expect <<EOF
+set timeout -1
+spawn "$prog" $args
+expect "Please provide the REST API password for the admin@internal oVirt Engine user (CTRL+D to abort): "
+send "$mypass\r"
+expect eof
+exit
+EOF
 
-#args="-i ISO11 upload master-2.iso --force"
-#/usr/bin/expect <<EOF
-#set timeout -1
-#spawn "$prog" $args
-#expect "Please provide the REST API password for the admin@internal oVirt Engine user (CTRL+D #to abort): "
-#send "$mypass\r"
-#expect eof
-#exit
-#EOF
+args="-i ISO11 upload master-2.iso --force"
+/usr/bin/expect <<EOF
+set timeout -1
+spawn "$prog" $args
+expect "Please provide the REST API password for the admin@internal oVirt Engine user (CTRL+D to abort): "
+send "$mypass\r"
+expect eof
+exit
+EOF
 
 args="-i ISO11 upload worker-0.iso --force"
 /usr/bin/expect <<EOF

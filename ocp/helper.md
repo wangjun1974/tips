@@ -575,7 +575,11 @@ openshift-install --dir=/root/ocp4 wait-for bootstrap-complete --log-level debug
 date
 openssl s_client -connect api.crc.testing:6443 | openssl x509 -noout -dates
 
+# approve worker csr
 oc get nodes
+export KUBECONFIG=/root/ocp4/auth/kubeconfig
+/usr/local/bin/oc get csr --no-headers | /usr/bin/awk '{print $1}' | xargs /usr/local/bin/oc adm certificate approve
+
 
 # patch ingresscontroller
 oc label node worker0.cluster-0001.rhsacn.org node-role.kubernetes.io/infra=""

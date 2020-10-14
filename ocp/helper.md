@@ -428,7 +428,7 @@ modify_cfg
 
 # MASTER-2
 NODE="master-2"
-IP="192.168.7.15"
+IP="10.66.208.142"
 FQDN="master2.cluster-0001.rhsacn.org"
 BIOSMODE="bios"
 NET_INTERFACE="ens3"

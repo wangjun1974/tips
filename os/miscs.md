@@ -2731,7 +2731,7 @@ pods from crictl ps -a using crictl logs <id>
 ```
 
 ### 检查目标主机的事件和 ocp 证书过期时间
-对于证书过期报错，请检查节点时间和证书过期时间
+对于证书过期报错，请检查节点时间和证书过期时间，see also: https://bugzilla.redhat.com/show_bug.cgi?id=1760181
 ```
 date
 openssl s_client -connect api.crc.testing:6443 | openssl x509 -noout -dates

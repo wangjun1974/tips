@@ -2736,3 +2736,9 @@ pods from crictl ps -a using crictl logs <id>
 date
 openssl s_client -connect api.crc.testing:6443 | openssl x509 -noout -dates
 ```
+
+### 检查 rhcos 的日志
+```
+sudo journalctl > /tmp/err
+cat /tmp/err | grep -Ev "I1014|kernel:|systemd|ignition|dracut|multipathd|iscsid|rhcos-fips|coreos-cryptfs|ostree-prepare-root|ostree-remount|restorecon|auditd|augenrules|chronyd|NetworkManager|sssd|dbus-daemon|network-manager|rpc.statd|rhcos-growpart|sshd|rpm-ostree|polkitd|dbus-daemon|machine-config-daemon" | more
+```

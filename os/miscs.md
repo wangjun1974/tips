@@ -2707,4 +2707,13 @@ EOF
 ovirt-shell -c -A /tmp/ca.pem -f ovirt-shell-cmd
 done
 
+# stop vm 
+for i in bootstrap master-0 worker-0 worker-1 
+do 
+cat > ovirt-shell-cmd << EOF
+action vm jwang-$i start --async true
+EOF
+
+ovirt-shell -c -A /tmp/ca.pem -f ovirt-shell-cmd
+done
 ```

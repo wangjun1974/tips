@@ -301,7 +301,7 @@ ssh-keygen -t rsa -f ~/.ssh/id_rsa -N ''
 
 cat > install-config.yaml.orig << EOF
 apiVersion: v1
-baseDomain: rhcnsa.com
+baseDomain: rhsacn.org
 compute:
 - hyperthreading: Enabled
   name: worker

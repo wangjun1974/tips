@@ -298,6 +298,7 @@ oc adm catalog mirror \
   --filter-by-os='linux/amd64' 
 
 # install install directory
+rm -rf /root/ocp4
 mkdir -p /root/ocp4
 cd /root/ocp4
 
@@ -325,7 +326,7 @@ networking:
   - 172.30.0.0/16
 platform:
   none: {}
-pullSecret: '{"auths":{"helper.cluster-0001.rhsacn.org:5000": {"auth": "ZHVtbXk6ZHVtbXk=","email": "noemail@localhost"}}}'
+pullSecret: '{"auths":{"helper.cluster-0001.rhsacn.org:5000": {"auth": "ZHVtbXk6ZHVtbXk=","email": "noemail@localhost",'$(cat /root/pull-secret.json | sed -e 's|^{"auths":{||')'}}}'
 sshKey: |
 $( cat /root/.ssh/id_rsa.pub | sed 's/^/  /g' )
 additionalTrustBundle: |

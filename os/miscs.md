@@ -2723,3 +2723,9 @@ EOF
 ovirt-shell -c -A /tmp/ca.pem -f ovirt-shell-cmd
 done
 ```
+
+# 检查 OpenShift master 节点启动日志
+```
+journalctl -u kubelet -u crio
+pods from crictl ps -a using crictl logs <id>
+```

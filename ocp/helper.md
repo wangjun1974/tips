@@ -4,9 +4,9 @@
 nmcli con mod 'eth0' ipv4.method 'manual' ipv4.address '10.66.xxx.xxx/24' ipv4.gateway '10.66.xxx.xxx' ipv4.dns '127.0.0.1 10.xx.xx.xx' ipv4.dns-search 'cluster-0001.rhsacn.org'
 nmcli con down 'eth0' && nmcli con up 'eth0'
 
-hostnamectl set-hostname helper.cluster-0001.rhcnsa.org
+hostnamectl set-hostname helper.cluster-0001.rhsacn.org
 
-sed -i '/^10.66.xxx.xxx helper.cluster-0001.rhsacn.org*/d' /etc/hosts
+sed -i '/^10.66.xxx.xxx helper.cluster-0001.rhcnsa.org*/d' /etc/hosts
 
 cat >> /etc/hosts << 'EOF'
 10.66.xxx.xxx helper.cluster-0001.rhsacn.org

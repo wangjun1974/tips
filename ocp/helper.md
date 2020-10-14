@@ -328,10 +328,10 @@ additionalTrustBundle: |
 $( cat /etc/pki/ca-trust/source/anchors/domain.crt | sed 's/^/  /g' )
 imageContentSources:
 - mirrors:
-  - helper.cluster-0001.rhcnsa.org:5000/ocp4/openshift4
+  - helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4
   source: quay.io/openshift-release-dev/ocp-release
 - mirrors:
-  - helper.cluster-0001.rhcnsa.org:5000/ocp4/openshift4
+  - helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4
   source: quay.io/openshift-release-dev/ocp-v4.0-art-dev
 EOF
 

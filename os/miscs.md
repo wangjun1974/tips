@@ -2661,6 +2661,12 @@ engine-config --get StorageDomainFailureTimeoutInMinutes
 engine-config --set StorageDomainFailureTimeoutInMinutes=10
 ```
 
+### 查看 Ansible Task 的文件情况
+```
+ansible_task_pid=$(ps awx | grep "/usr/bin/python.*\.ansible/tmp" | grep -Ev "/bin/sh|grep"  | awk '{print $1}')
+watch ls -l $(lsof -p $ansible_task_pid | grep ".ansible/tmp" | grep -Ev "grep" | awk '{print $9}')
+```
+
 ### 通过 ovirt-shell 访问 rhv
 https://www.ovirt.org/develop/release-management/features/infra/cli.html
 ```

@@ -355,7 +355,7 @@ rm -f /var/www/html/ignition/*
 /bin/cp -f master.ign /var/www/html/ignition/master-2.ign
 /bin/cp -f worker.ign /var/www/html/ignition/worker-0.ign
 /bin/cp -f worker.ign /var/www/html/ignition/worker-1.ign
-#/bin/cp -f worker.ign /var/www/html/ignition/worker-2.ign
+/bin/cp -f worker.ign /var/www/html/ignition/worker-2.ign
 chmod 644 /var/www/html/ignition/*
 
 yum install -y libguestfs libguestfs-tools genisoimage

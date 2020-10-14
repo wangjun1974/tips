@@ -182,7 +182,7 @@ tar -xzf /var/www/html/openshift-install-linux-${BUILDNUMBER}.tar.gz -C /usr/loc
 
 # download bios and iso
 MAJORBUILDNUMBER=4.5
-EXTRABUILDNUMBER=4.5.6
+EXTRABUILDNUMBER=4.5.2
 wget https://mirror.openshift.com/pub/openshift-v4/dependencies/rhcos/${MAJORBUILDNUMBER}/${EXTRABUILDNUMBER}/rhcos-${EXTRABUILDNUMBER}-x86_64-installer.x86_64.iso -P /var/www/html/
 wget https://mirror.openshift.com/pub/openshift-v4/dependencies/rhcos/${MAJORBUILDNUMBER}/${EXTRABUILDNUMBER}/rhcos-${EXTRABUILDNUMBER}-x86_64-metal.x86_64.raw.gz -P /var/www/html/
 
@@ -234,7 +234,7 @@ To upload local images to a registry, run:
 Configmap signature file /opt/registry/mirror/config/signature-sha256-8d104847fc2371a9.yaml created
 
 # get content works with install-iso - i guess 4.5.0 iso only works with 4.5.0 OCP_RELEASE
-export OCP_RELEASE="4.5.0"
+export OCP_RELEASE="4.5.2"
 export LOCAL_REGISTRY='helper.cluster-0001.rhsacn.org:5000'
 export LOCAL_REPOSITORY='ocp4/openshift4'
 export PRODUCT_REPO='openshift-release-dev'
@@ -359,7 +359,7 @@ systemctl start libvirtd
 
 cd /root
 export NGINX_DIRECTORY=/var/www/html
-export RHCOSVERSION=4.5.6
+export RHCOSVERSION=4.5.2
 export VOLID=$(isoinfo -d -i ${NGINX_DIRECTORY}/rhcos-${RHCOSVERSION}-x86_64-installer.x86_64.iso | awk '/Volume id/ { print $3 }')
 TEMPDIR=$(mktemp -d)
 echo $VOLID

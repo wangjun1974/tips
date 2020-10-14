@@ -423,8 +423,8 @@ NODE="master-1"
 IP="10.66.208.141"
 FQDN="master1.cluster-0001.rhsacn.org"
 BIOSMODE="bios"
-#NET_INTERFACE="ens3"
-#modify_cfg
+NET_INTERFACE="ens3"
+modify_cfg
 
 # MASTER-2
 NODE="master-2"

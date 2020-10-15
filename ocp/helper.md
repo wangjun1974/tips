@@ -175,18 +175,18 @@ curl -u dummy:dummy -s -X GET https://$REPO_URL/v2/_catalog \
 
 ### prepare artifacts
 ```
-export BUILDNUMBER=$(curl -s https://mirror.openshift.com/pub/openshift-v4/clients/ocp/4.5.0/release.txt | grep 'Name:' | awk '{print $NF}')
-echo ${BUILDNUMBER}
+MAJORBUILDNUMBER=4.5
+EXTRABUILDNUMBER=4.5.6
 
-wget https://mirror.openshift.com/pub/openshift-v4/clients/ocp/${BUILDNUMBER}/openshift-client-linux-${BUILDNUMBER}.tar.gz -P /var/www/html/
-wget https://mirror.openshift.com/pub/openshift-v4/clients/ocp/${BUILDNUMBER}/openshift-install-linux-${BUILDNUMBER}.tar.gz -P /var/www/html/
+wget https://mirror.openshift.com/pub/openshift-v4/clients/ocp/${EXTRABUILDNUMBER}/openshift-client-linux-${EXTRABUILDNUMBER}.tar.gz -P /var/www/html/
+wget https://mirror.openshift.com/pub/openshift-v4/clients/ocp/${EXTRABUILDNUMBER}/openshift-install-linux-${EXTRABUILDNUMBER}.tar.gz -P /var/www/html/
 
-tar -xzf /var/www/html/openshift-client-linux-${BUILDNUMBER}.tar.gz -C /usr/local/bin/
-tar -xzf /var/www/html/openshift-install-linux-${BUILDNUMBER}.tar.gz -C /usr/local/bin/
+tar -xzf /var/www/html/openshift-client-linux-${EXTRABUILDNUMBER}.tar.gz -C /usr/local/bin/
+tar -xzf /var/www/html/openshift-install-linux-${EXTRABUILDNUMBER}.tar.gz -C /usr/local/bin/
 
 # download bios and iso
 MAJORBUILDNUMBER=4.5
-EXTRABUILDNUMBER=4.5.2
+EXTRABUILDNUMBER=4.5.6
 wget https://mirror.openshift.com/pub/openshift-v4/dependencies/rhcos/${MAJORBUILDNUMBER}/${EXTRABUILDNUMBER}/rhcos-${EXTRABUILDNUMBER}-x86_64-installer.x86_64.iso -P /var/www/html/
 wget https://mirror.openshift.com/pub/openshift-v4/dependencies/rhcos/${MAJORBUILDNUMBER}/${EXTRABUILDNUMBER}/rhcos-${EXTRABUILDNUMBER}-x86_64-metal.x86_64.raw.gz -P /var/www/html/
 
@@ -201,7 +201,7 @@ podman login -u wang.jun.1974 -p ****** registry.connect.redhat.com
 
 # setup env and record imageContentSources section from output
 # see: https://docs.openshift.com/container-platform/4.5/installing/install_config/installing-restricted-networks-preparations.html
-export OCP_RELEASE="4.5.13"
+export OCP_RELEASE="4.5.6"
 export LOCAL_REGISTRY='helper.cluster-0001.rhsacn.org:5000'
 export LOCAL_REPOSITORY='ocp4/openshift4'
 export PRODUCT_REPO='openshift-release-dev'
@@ -272,8 +272,8 @@ oc adm catalog build \
 oc adm catalog mirror \
   ${LOCAL_REGISTRY}/olm/redhat-operators:v${OPERATOR_OCP_RELEASE} \
   ${LOCAL_REGISTRY} \
-  -a ${LOCAL_SECRET_JSON} \
-  --filter-by-os='linux/amd64'
+  --filter-by-os='linux/amd64' \
+  -a ${LOCAL_SECRET_JSON}
 
 # ToDo: I could not go through this process ... (optional)
 # copy catalog relate content into disconnect env

@@ -452,7 +452,7 @@ modify_cfg
 #
 NODE="worker-2"
 IP="10.66.208.145"
-#FQDN="worker2.cluster-0001.rhsacn.org"
+FQDN="worker2.cluster-0001.rhsacn.org"
 BIOSMODE="bios"
 NET_INTERFACE="ens3"
 modify_cfg

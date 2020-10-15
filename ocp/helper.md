@@ -593,6 +593,18 @@ oc create -f /usr/local/src/registry-pvc.yaml -n openshift-image-registry
 oc patch configs.imageregistry.operator.openshift.io cluster --type=json -p '[{"op": "remove", "path": "/spec/storage/emptyDir" }]'
 oc patch configs.imageregistry.operator.openshift.io cluster --type merge --patch '{"spec":{"storage":{"pvc":{ "claim": "registry-pvc"}}}}'
 
+# single master refer to 
+# https://gist.github.com/williamcaban/7d4fa16c91cf597517e5778428e74658
 
+oc patch clusterversion/version --type='merge' -p "$(cat <<- EOF
+spec:
+  overrides:
+    - group: apps/v1
+      kind: Deployment
+      name: etcd-quorum-guard
+      namespace: openshift-machine-config-operator
+      unmanaged: true
+EOF
+)"
 
 ```

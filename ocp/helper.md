@@ -267,10 +267,10 @@ oc adm catalog build \
   --from=registry.redhat.io/openshift4/ose-operator-registry:v${OPERATOR_OCP_RELEASE} \
   --filter-by-os='linux/amd64' \
   -a ${LOCAL_SECRET_JSON} \
-  --to=${LOCAL_REGISTRY}/olm/redhat-operators:redhat-v${OPERATOR_OCP_RELEASE}-$(date -I)
+  --to=${LOCAL_REGISTRY}/olm/operator-catalog:redhat-${OPERATOR_OCP_RELEASE}-$(date -I)
 
 oc adm catalog mirror \
-  ${LOCAL_REGISTRY}/olm/redhat-operators:redhat-v${OPERATOR_OCP_RELEASE}-$(date -I) \
+  ${LOCAL_REGISTRY}/olm/operator-catalog:redhat-${OPERATOR_OCP_RELEASE}-$(date -I) \
   ${LOCAL_REGISTRY} \
   --filter-by-os='linux/amd64' \
   -a ${LOCAL_SECRET_JSON}
@@ -280,10 +280,10 @@ oc adm catalog build \
   --from=registry.redhat.io/openshift4/ose-operator-registry:v${OPERATOR_OCP_RELEASE} \
   --filter-by-os='linux/amd64' \
   -a ${LOCAL_SECRET_JSON} \
-  --to=${LOCAL_REGISTRY}/olm/certified-operators:certified-v${OPERATOR_OCP_RELEASE}-$(date -I)
+  --to=${LOCAL_REGISTRY}/olm/operator-catalog:certified-${OPERATOR_OCP_RELEASE}-$(date -I)
 
 oc adm catalog mirror \
-  ${LOCAL_REGISTRY}/olm/certified-operators:certified-v${OPERATOR_OCP_RELEASE}-$(date -I) \
+  ${LOCAL_REGISTRY}/olm/operator-catalog:certified-${OPERATOR_OCP_RELEASE}-$(date -I) \
   ${LOCAL_REGISTRY} \
   --filter-by-os='linux/amd64' \
   -a ${LOCAL_SECRET_JSON}
@@ -293,10 +293,10 @@ oc adm catalog build \
   --from=registry.redhat.io/openshift4/ose-operator-registry:v${OPERATOR_OCP_RELEASE} \
   --filter-by-os='linux/amd64' \
   -a ${LOCAL_SECRET_JSON} \
-  --to=${LOCAL_REGISTRY}/olm/community-operators:community-v${OPERATOR_OCP_RELEASE}-$(date -I)
+  --to=${LOCAL_REGISTRY}/olm/operator-catalog:community-${OPERATOR_OCP_RELEASE}-$(date -I)
 
 oc adm catalog mirror \
-  ${LOCAL_REGISTRY}/olm/community-operators:community-v${OPERATOR_OCP_RELEASE}-$(date -I) \
+  ${LOCAL_REGISTRY}/olm/operator-catalog:community-${OPERATOR_OCP_RELEASE}-$(date -I) \
   ${LOCAL_REGISTRY} \
   --filter-by-os='linux/amd64' \
   -a ${LOCAL_SECRET_JSON}

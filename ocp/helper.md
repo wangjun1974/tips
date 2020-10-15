@@ -450,12 +450,12 @@ BIOSMODE="bios"
 NET_INTERFACE="ens3"
 modify_cfg
 #
-#NODE="worker-2"
-#IP="192.168.7.18"
+NODE="worker-2"
+IP="10.66.208.145"
 #FQDN="worker2.cluster-0001.rhsacn.org"
-#BIOSMODE="bios"
-#NET_INTERFACE="ens3"
-#modify_cfg
+BIOSMODE="bios"
+NET_INTERFACE="ens3"
+modify_cfg
 # Generate the images, one per node as the IP configuration is different...
 # https://github.com/coreos/coreos-assembler/blob/master/src/cmd-buildextend-installer#L97-L103
 
@@ -485,7 +485,7 @@ curl http://10.66.208.138:8080/master-1.iso -o master-1.iso
 curl http://10.66.208.138:8080/master-2.iso -o master-2.iso
 curl http://10.66.208.138:8080/worker-0.iso -o worker-0.iso
 curl http://10.66.208.138:8080/worker-1.iso -o worker-1.iso
-#curl http://10.66.208.138:8080/worker-2.iso -o worker-2.iso
+curl http://10.66.208.138:8080/worker-2.iso -o worker-2.iso
 
 # upload iso to iso domain
 yum install -y expect
@@ -552,15 +552,15 @@ expect eof
 exit
 EOF
 
-#args="-i ISO11 upload worker-2.iso --force"
-#/usr/bin/expect <<EOF
-#set timeout -1
-#spawn "$prog" $args
-#expect "Please provide the REST API password for the admin@internal oVirt Engine user (CTRL+D #to abort): "
-#send "$mypass\r"
-#expect eof
-#exit
-#EOF
+args="-i ISO11 upload worker-2.iso --force"
+/usr/bin/expect <<EOF
+set timeout -1
+spawn "$prog" $args
+expect "Please provide the REST API password for the admin@internal oVirt Engine user (CTRL+D to abort): "
+send "$mypass\r"
+expect eof
+exit
+EOF
 
 # (PoC) before install delete old files
 # (PoC) no need run every time 
@@ -595,6 +595,7 @@ oc patch configs.imageregistry.operator.openshift.io cluster --type merge --patc
 
 # single master refer to 
 # https://gist.github.com/williamcaban/7d4fa16c91cf597517e5778428e74658
+# test: this method does not works in ocp 4.5.2
 
 oc patch clusterversion/version --type='merge' -p "$(cat <<- EOF
 spec:
@@ -606,5 +607,11 @@ spec:
       unmanaged: true
 EOF
 )"
+
+oc scale --replicas=1 deployment/etcd-quorum-guard -n openshift-machine-config-operator
+
+oc scale --replicas=1 deployment.apps/packageserver -n openshift-operator-lifecycle-manager
+
+
 
 ```

@@ -2687,7 +2687,7 @@ curl -k 'https://rhvm.rhcnsa.org/ovirt-engine/services/pki-resource?resource=ca-
 ovirt-shell -c -A /tmp/ca.pem
 
 # remove disk
-for i in bootstrap master-0 master-1 master-2 worker-0 worker-1 
+for i in bootstrap master-0 master-1 master-2 worker-0 worker-1 worker-2
 do 
 cat > ovirt-shell-cmd << EOF
 list disks --parent-vm-name jwang-$i 
@@ -2704,7 +2704,7 @@ ovirt-shell -c -A /tmp/ca.pem -f ovirt-shell-cmd
 done
 
 # add disk
-for i in bootstrap master-0 master-1 master-2 worker-0 worker-1 
+for i in bootstrap master-0 master-1 master-2 worker-0 worker-1 worker-2
 do 
 cat > ovirt-shell-cmd << EOF
 add disk --parent-vm-name jwang-$i --provisioned_size 85899345920 --interface virtio_scsi --format cow --storage_domains-storage_domain storage_domain.name=DS11 --bootable true --wipe_after_delete true
@@ -2714,7 +2714,7 @@ ovirt-shell -c -A /tmp/ca.pem -f ovirt-shell-cmd
 done
 
 # stop vm 
-for i in bootstrap master-0 master-1 master-2 worker-0 worker-1 
+for i in bootstrap master-0 master-1 master-2 worker-0 worker-1 worker-2
 do 
 cat > ovirt-shell-cmd << EOF
 action vm jwang-$i stop --async true

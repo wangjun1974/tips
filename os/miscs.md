@@ -2723,6 +2723,16 @@ EOF
 ovirt-shell -c -A /tmp/ca.pem -f ovirt-shell-cmd
 done
 
+# activate Disk2 on workers
+for i in worker-0 worker-1 worker-2
+do 
+cat > ovirt-shell-cmd << EOF
+action disk jwang-${i}_Disk2 activate --parent-vm-name jwang-$i 
+EOF
+
+ovirt-shell -c -A /tmp/ca.pem -f ovirt-shell-cmd
+done
+
 # stop vm 
 for i in bootstrap master-0 master-1 master-2 worker-0 worker-1 worker-2
 do 

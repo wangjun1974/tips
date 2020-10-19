@@ -610,7 +610,9 @@ oc completion bash | sudo tee /etc/bash_completion.d/openshift > /dev/null
 /usr/local/bin/oc get csr --no-headers | /usr/bin/awk '{print $1}' | xargs /usr/local/bin/oc adm certificate approve
 watch oc get nodes
 
-# patch ingresscontroller
+# see: https://github.com/wangzheng422/docker_env/blob/master/redhat/ocp4/4.5/4.5.disconnect.operator.md
+
+# patch ingresscontroller (optional with questions)
 oc label node worker0.cluster-0001.rhsacn.org node-role.kubernetes.io/infra=""
 oc label node worker1.cluster-0001.rhsacn.org node-role.kubernetes.io/infra=""
 oc label node worker2.cluster-0001.rhsacn.org node-role.kubernetes.io/infra=""

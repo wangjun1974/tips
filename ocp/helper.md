@@ -975,5 +975,104 @@ oc create -f icsp-support-tools.yaml
 # patch sample image stream refer to https://raw.githubusercontent.com/wangzheng422/docker_env/master/redhat/ocp4/files/4.2/docker_images/is.patch.sh
 oc debug node/worker0.cluster-0001.rhsacn.org --image="helper.cluster-0001.rhsacn.org:5000/rhel7/support-tools:latest"
 
+# label nodes used for ocs
+oc label nodes worker0.cluster-0001.rhsacn.org cluster.ocs.openshift.io/openshift-storage=''
+oc label nodes worker1.cluster-0001.rhsacn.org cluster.ocs.openshift.io/openshift-storage=''
+oc label nodes worker2.cluster-0001.rhsacn.org cluster.ocs.openshift.io/openshift-storage=''
 
+# see: https://access.redhat.com/documentation/en-us/red_hat_openshift_container_storage/4.5/html-single/deploying_openshift_container_storage_on_vmware_vsphere/index
+
+# install ocs operators
+# see: https://www.cnblogs.com/ericnie/p/11777384.html?from=timeline&isappinstalled=0
+curl https://quay.io/cnr/api/v1/packages?namespace=redhat-operators > packages.txt
+
+# 获得关心的 operator 的内容，例如
+cat packages.txt  | sed -e 's|,"name"|\n"name"|g'  | grep ocs
+"name":"redhat-operators/ocs-operator","namespace":"redhat-operators","releases":["9.0.0","8.0.0","7.0.0","6.0.0","5.0.0","4.0.0","3.0.0","2.0.0","1.0.0"],"updated_at":"2020-09-15T10:15:20","visibility":"public"},{"channels":null,"created_at":"2020-01-23T05:10:18","default":"52.0.0","manifests":["helm"]
+
+# 拼出 ocs-operator 的链接后 curl 一下获取下载地址
+curl https://quay.io/cnr/api/v1/packages/redhat-operators/ocs-operator/9.0.0
+[{"content":{"digest":"cebb11d2ebd7f6afee6175067e5c48fef0a63caedca12789454613a78060c81d","mediaType":"application/vnd.cnr.package.helm.v0.tar+gzip","size":124244,"urls":[]},"created_at":"2020-09-15T10:15:20","digest":"sha256:8a7a0885b402285fb8d486ead874c8b4a546a0b99bfd8f2aeaa45c2a8b8c03b5","mediaType":"application/vnd.cnr.package-manifest.helm.v0.json","metadata":null,"package":"redhat-operators/ocs-operator","release":"9.0.0"}]
+
+digest=$(curl -s https://quay.io/cnr/api/v1/packages/redhat-operators/ocs-operator/9.0.0 | jq -r '.[]|.content.digest' )
+# 将 operator 的内容保存为1个 tar.gz 的包
+curl -XGET https://quay.io/cnr/api/v1/packages/redhat-operators/ocs-operator/blobs/sha256/${digest} \
+    -o ocs-operator.tar.gz
+
+# 建立文件夹，然后解压缩
+mkdir -p manifests/ 
+tar -xf ocs-operator.tar.gz -C manifests/
+
+# 重新命名后 tree 一下结构
+
+tree manifests/
+...
+
+# 查看 ocs-operator.package.yaml 
+cat manifests/ocs-operator-nsmvdm_u/ocs-operator.package.yaml 
+packageName: ocs-operator
+defaultChannel: stable-4.5
+channels:
+- name: stable-4.3
+  currentCSV: ocs-operator.v4.3.0
+- name: stable-4.4
+  currentCSV: ocs-operator.v4.4.2
+- name: stable-4.5
+  currentCSV: ocs-operator.v4.5.0
+
+cat manifests/ocs-operator-nsmvdm_u/4.5.0/ocs-operator.v4.5.0.clusterserviceversion.yaml  | grep image | awk '{print $3}' | grep registry
+
+export LOCAL_REG="helper.cluster-0001.rhsacn.org:5000"
+export LOCAL_SECRET_JSON="${HOME}/pull-secret-2.json"
+export OCS_OPERATOR_VERSION="4.5.0"
+cat manifests/ocs-operator-nsmvdm_u/4.5.0/ocs-operator.v4.5.0.clusterserviceversion.yaml  | grep registry | sed -e "s|^.*value: ||g" -e "s|^.*image: ||" | sort -u | while read i ; 
+do 
+  echo oc image mirror --filter-by-os=\'.*\' -a ${LOCAL_SECRET_JSON} ${i} $(echo $i | sed -e "s|registry.redhat.io|${LOCAL_REG}|" -e "s|@sha256.*$|:${OCS_OPERATOR_VERSION}|")
+done | tee /tmp/sync-ocs-operator-images.sh
+
+podman login registry.redhat.io
+podman login helper.cluster-0001.rhsacn.org:5000
+
+/bin/bash -x /tmp/sync-ocs-operator-images.sh
+
+cat > custom-registry.Dockerfile << EOF
+FROM registry.redhat.io/openshift4/ose-operator-registry:v4.5.0 AS builder
+
+COPY manifests manifests
+
+RUN /bin/initializer -o ./bundles.db;sleep 20 
+
+#FROM scratch
+
+#COPY --from=builder /registry/bundles.db /bundles.db
+#COPY --from=builder /bin/registry-server /registry-server
+#COPY --from=builder /bin/grpc_health_probe /bin/grpc_health_probe
+
+EXPOSE 50051
+
+ENTRYPOINT ["/bin/registry-server"]
+
+CMD ["--database", "/registry/bundles.db"]
+EOF
+
+oc patch OperatorHub cluster --type json \
+    -p '[{"op": "add", "path": "/spec/disableAllDefaultSources", "value": true}]'
+
+podman build -f custom-registry.Dockerfile  -t helper.cluster-0001.rhsacn.org:5000/ocp4/custom-registry 
+
+podman push helper.cluster-0001.rhsacn.org:5000/ocp4/custom-registry
+
+cat > my-ocs-operator-catalog.yaml << EOF 
+apiVersion: operators.coreos.com/v1alpha1
+kind: CatalogSource
+metadata:
+  name: my-ocs-operator-catalog
+  namespace: openshift-marketplace
+spec:
+  displayName: My OCS Operator Catalog
+  sourceType: grpc
+  image: helper.cluster-0001.rhsacn.org:5000/ocp4/custom-registry:latest
+EOF
+
+oc create -f my-ocs-operator-catalog.yaml
 ```

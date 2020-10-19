@@ -2799,3 +2799,119 @@ umount /mnt
 
 ### Variations on imagestreams in OpenShift 4
 https://itnext.io/variations-on-imagestreams-in-openshift-4-f8ee5e8be633
+
+### build custom operator catalog in disconnect ocp4 
+# see: https://www.cnblogs.com/ericnie/p/11777384.html
+```
+mkdir -p ${HOME}/redhat-operators/build/manifests
+cd ${HOME}/redhat-operators
+
+curl https://quay.io/cnr/api/v1/packages?namespace=redhat-operators > packages.txt
+
+cat packages.txt | sed -e 's|,"name"|\n"name"|g'  | grep local
+"name":"redhat-operators/local-storage-operator","namespace":"redhat-operators","releases":["79.0.0","78.0.0","77.0.0","76.0.0","75.0.0","74.0.0","73.0.0","72.0.0","71.0.0","70.0.0","69.0.0","68.0.0","67.0.0","66.0.0","65.0.0","64.0.0","63.0.0","62.0.0","61.0.0","60.0.0","59.0.0","58.0.0","57.0.0","56.0.0","55.0.0","54.0.0","53.0.0","52.0.0","51.0.0","50.0.0","49.0.0","48.0.0","47.0.0","46.0.0","45.0.0","44.0.0","43.0.0","42.0.0","41.0.0","40.0.0","39.0.0","38.0.0","37.0.0","36.0.0","35.0.0","34.0.0","33.0.0","32.0.0","31.0.0","30.0.0","29.0.0","28.0.0","27.0.0","26.0.0","25.0.0","24.0.0","23.0.0","22.0.0","21.0.0","20.0.0","19.0.0","18.0.0","17.0.0","16.0.0","15.0.0","14.0.0","13.0.0","12.0.0","11.0.0","10.0.0","9.0.0","8.0.0","7.0.0","6.0.0","5.0.0","4.0.0","3.0.0","2.0.0","1.0.0"],"updated_at":"2020-10-05T05:06:33","visibility":"public"},{"channels":null,"created_at":"2019-10-16T20:37:32","default":"79.0.0","manifests":["helm"]
+
+curl https://quay.io/cnr/api/v1/packages/redhat-operators/local-storage-operator/79.0.0
+
+digest=$(curl -s https://quay.io/cnr/api/v1/packages/redhat-operators/local-storage-operator/79.0.0 | jq -r '.[]|.content.digest' )
+
+# 将 operator 的内容保存为1个 tar.gz 的包
+curl -XGET https://quay.io/cnr/api/v1/packages/redhat-operators/local-storage-operator/blobs/sha256/${digest} \
+    -o local-storage-operator.tar.gz
+
+mkdir -p manifests/ 
+tar -xf local-storage-operator.tar.gz -C manifests/
+
+tree manifests/
+manifests/
+`-- local-storage-operator-12k64npz
+    |-- 4.2
+    |   |-- local-storage-operator.v4.2.0.clusterserviceversion.yaml
+    |   `-- local-volumes.crd.yaml
+    |-- 4.2-s390x
+    |   |-- local-storage-operator.v4.2.0.clusterserviceversion.yaml
+    |   `-- local-volumes.crd.yaml
+    |-- 4.3
+    |   |-- local-storage-operator.v4.3.0.clusterserviceversion.yaml
+    |   `-- local-volumes.crd.yaml
+    |-- 4.4
+    |   |-- local-storage-operator.v4.4.0.clusterserviceversion.yaml
+    |   `-- local-volumes.crd.yaml
+    |-- 4.5
+    |   |-- local-storage-operator.v4.5.0.clusterserviceversion.yaml
+    |   `-- local-volumes.crd.yaml
+    `-- local-storage-operator.package.yaml
+
+cat manifests/local-storage-operator.package.yaml
+channels:
+- currentCSV: local-storage-operator.4.2.36-202006230600.p0
+  name: '4.2'
+- currentCSV: local-storage-operator.4.2.36-202006230600.p0-s390x
+  name: 4.2-s390x
+- currentCSV: local-storage-operator.4.3.37-202009151447.p0
+  name: '4.3'
+- currentCSV: local-storage-operator.4.4.0-202009161309.p0
+  name: '4.4'
+- currentCSV: local-storage-operator.4.5.0-202009161248.p0
+  name: '4.5'
+defaultChannel: '4.5'
+
+export LOCAL_REG="helper.cluster-0001.rhsacn.org:5000"
+export LOCAL_SECRET_JSON="${HOME}/pull-secret-2.json"
+export OCS_OPERATOR_VERSION="4.5"
+
+cat manifests/local-storage-operator-12k64npz/4.5/local-storage-operator.v4.5.0.clusterserviceversion.yaml  | grep registry | sed -e "s|^.*value: ||g" -e "s|^.*image: ||g" -e "s|^.*containerImage: ||g" | sort -u | while read i ; 
+do 
+  echo oc image mirror --filter-by-os=\'.*\' -a ${LOCAL_SECRET_JSON} ${i} $(echo $i | sed -e "s|registry.redhat.io|${LOCAL_REG}|" -e "s|@sha256.*$|:${OCS_OPERATOR_VERSION}|")
+done | tee /tmp/sync-local-storage-operator-images.sh
+
+podman login registry.redhat.io
+podman login helper.cluster-0001.rhsacn.org:5000
+
+/bin/bash -x /tmp/sync-local-storage-operator-images.sh
+
+sed -ie 's|registry.redhat.io|helper.cluster-0001.rhsacn.org:5000|g' manifests/local-storage-operator-12k64npz/4.5/local-storage-operator.v4.5.0.clusterserviceversion.yaml
+sed -ie 's|@sha256.*$|:4.5|g' manifests/local-storage-operator-12k64npz/4.5/local-storage-operator.v4.5.0.clusterserviceversion.yaml
+
+rm -f manifests/local-storage-operator-12k64npz/4.5/local-storage-operator.v4.5.0.clusterserviceversion.yamle
+
+mv manifests/local-storage-operator-12k64npz /root/redhat-operators/build/manifests/
+
+cd /root/redhat-operators/build
+
+cat > custom-registry.Dockerfile << EOF
+FROM registry.redhat.io/openshift4/ose-operator-registry:v4.5.0 AS builder
+
+COPY manifests manifests
+
+RUN /bin/initializer -o ./bundles.db;sleep 20 
+
+EXPOSE 50051
+
+ENTRYPOINT ["/bin/registry-server"]
+
+CMD ["--database", "/registry/bundles.db"]
+EOF
+
+oc patch OperatorHub cluster --type json \
+    -p '[{"op": "add", "path": "/spec/disableAllDefaultSources", "value": true}]'
+
+podman build -f custom-registry.Dockerfile  -t helper.cluster-0001.rhsacn.org:5000/ocp4/custom-registry 
+
+podman push helper.cluster-0001.rhsacn.org:5000/ocp4/custom-registry
+
+cat > my-operator-catalog.yaml << EOF 
+apiVersion: operators.coreos.com/v1alpha1
+kind: CatalogSource
+metadata:
+  name: my-operator-catalog
+  namespace: openshift-marketplace
+spec:
+  displayName: My Operator Catalog
+  sourceType: grpc
+  image: helper.cluster-0001.rhsacn.org:5000/ocp4/custom-registry:latest
+EOF
+
+oc create -f my-operator-catalog.yaml
+
+```

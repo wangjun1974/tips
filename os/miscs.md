@@ -2693,7 +2693,7 @@ cat > ovirt-shell-cmd << EOF
 list disks --parent-vm-name jwang-$i 
 EOF
 
-diskid=$(ovirt-shell -c -A /tmp/ca.pem -f ovirt-shell-cmd | grep id | awk '{print $3}' )
+diskid=$(ovirt-shell -c -A /tmp/ca.pem -f ovirt-shell-cmd | grep id | head -1 | awk '{print $3}' )
 
 cat > ovirt-shell-cmd << EOF
 remove disk $diskid

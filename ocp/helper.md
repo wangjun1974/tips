@@ -610,7 +610,10 @@ watch oc get nodes
 # patch ingresscontroller
 oc label node worker0.cluster-0001.rhsacn.org node-role.kubernetes.io/infra=""
 oc label node worker1.cluster-0001.rhsacn.org node-role.kubernetes.io/infra=""
+oc label node worker2.cluster-0001.rhsacn.org node-role.kubernetes.io/infra=""
+
 oc patch ingresscontroller default -n openshift-ingress-operator --type=merge --patch='{"spec":{"nodePlacement":{"nodeSelector": {"matchLabels":{"node-role.kubernetes.io/infra":""}}}}}'
+oc patch ingresscontroller default -n openshift-ingress-operator --type=merge --patch='{"spec":{"replicas":3}}'
 
 openshift-install --dir=/root/ocp4 wait-for install-complete --log-level debug
 

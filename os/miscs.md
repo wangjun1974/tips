@@ -2703,6 +2703,23 @@ ovirt-shell -c -A /tmp/ca.pem -f ovirt-shell-cmd
 
 done
 
+# remove another disk from workers
+for i in worker-0 worker-1 worker-2
+do 
+cat > ovirt-shell-cmd << EOF
+list disks --parent-vm-name jwang-$i 
+EOF
+
+diskid=$(ovirt-shell -c -A /tmp/ca.pem -f ovirt-shell-cmd | grep id | awk '{print $3}' )
+
+cat > ovirt-shell-cmd << EOF
+remove disk $diskid
+EOF
+
+ovirt-shell -c -A /tmp/ca.pem -f ovirt-shell-cmd
+
+done
+
 # add disk
 for i in bootstrap master-0 master-1 master-2 worker-0 worker-1 worker-2
 do 

@@ -601,6 +601,14 @@ openshift-install --dir=/root/ocp4 wait-for bootstrap-complete --log-level debug
 date
 openssl s_client -connect api.crc.testing:6443 | openssl x509 -noout -dates
 
+# remove bootstrap from openshift-api-server and machine-config-server
+sed -ie 's|^    server bootstrap|    #server bootstrap|g' /etc/haproxy/haproxy.cfg
+systemctl restart haproxy
+
+# add bootstrap to openshift-api-server and machine-config-server
+sed -ie 's|^    #server bootstrap|    server bootstrap|g' /etc/haproxy/haproxy.cfg
+systemctl restart haproxy
+
 # approve worker csr
 oc get nodes
 export KUBECONFIG=/root/ocp4/auth/kubeconfig
@@ -612,6 +620,9 @@ watch oc get nodes
 
 # see: https://github.com/wangzheng422/docker_env/blob/master/redhat/ocp4/4.5/4.5.disconnect.operator.md
 
+# oc get nodes , all nodes ready
+# oc get clusteroperator image-registry, image-registry available
+
 # patch ingresscontroller (optional with questions)
 oc label node worker0.cluster-0001.rhsacn.org node-role.kubernetes.io/infra=""
 oc label node worker1.cluster-0001.rhsacn.org node-role.kubernetes.io/infra=""
@@ -621,13 +632,110 @@ oc patch ingresscontroller default -n openshift-ingress-operator --type=merge --
 
 openshift-install --dir=/root/ocp4 wait-for install-complete --log-level debug
 
-# remove bootstrap from openshift-api-server and machine-config-server
-sed -ie 's|^    server bootstrap|    #server bootstrap|g' /etc/haproxy/haproxy.cfg
-systemctl restart haproxy
+# setup nfs privioner from helper node
+bash /root/ocp4-helpernode/files/nfs-provisioner-setup.sh
+oc patch configs.imageregistry.operator.openshift.io cluster -p '{"spec":{"managementState": "Managed","storage":{"pvc":{"claim":""}}}}' --type=merge
+oc patch configs.imageregistry.operator.openshift.io cluster -p '{"spec":{"managementState": "Removed"}}' --type=merge
+oc get clusteroperator image-registry
+oc get configs.imageregistry.operator.openshift.io cluster -o yaml
 
-# add bootstrap to openshift-api-server and machine-config-server
-sed -ie 's|^    #server bootstrap|    server bootstrap|g' /etc/haproxy/haproxy.cfg
-systemctl restart haproxy
+# stop imagepruner
+# https://bugzilla.redhat.com/show_bug.cgi?id=1852501#c24
+oc patch imagepruner.imageregistry/cluster --patch '{"spec":{"suspend":true}}' --type=merge
+oc -n openshift-image-registry delete jobs --all
+
+oc get configs.samples.operator.openshift.io/cluster -o yaml
+oc patch configs.samples.operator.openshift.io/cluster -p '{"spec":{"managementState": "Managed"}}' --type=merge
+oc patch configs.samples.operator.openshift.io/cluster -p '{"spec":{"managementState": "Unmanaged"}}' --type=merge
+oc patch configs.samples.operator.openshift.io/cluster -p '{"spec":{"managementState": "Removed"}}' --type=merge
+
+
+# operator hub disconnected
+# see: https://github.com/wangzheng422/docker_env/blob/master/redhat/ocp4/4.5/4.5.disconnect.operator.md
+oc project openshift-config
+oc create configmap ca.for.registry -n openshift-config \
+    --from-file=helper.cluster-0001.rhsacn.org..5000=/opt/registry/certs/domain.crt
+oc patch image.config.openshift.io/cluster -p '{"spec":{"additionalTrustedCA":{"name":"ca.for.registry"}}}'  --type=merge
+oc get image.config.openshift.io/cluster -o yaml
+
+oc patch OperatorHub cluster --type json \
+    -p '[{"op": "add", "path": "/spec/disableAllDefaultSources", "value": true}]'
+oc get OperatorHub cluster -o yaml
+
+cat > image.registries.conf << 'EOF'
+unqualified-search-registries = ["registry.access.redhat.com", "docker.io"]
+
+[[registry]]
+  prefix = ""
+  location = "quay.io/openshift-release-dev/ocp-release"
+  mirror-by-digest-only = true
+
+  [[registry.mirror]]
+    location = "helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4"
+
+[[registry]]
+  prefix = ""
+  location = "quay.io/openshift-release-dev/ocp-v4.0-art-dev"
+  mirror-by-digest-only = true
+
+  [[registry.mirror]]
+    location = "helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4"
+
+[[registry]]
+  location = "helper.cluster-0001.rhsacn.org:5000"
+  insecure = true
+  blocked = false
+  mirror-by-digest-only = false
+  prefix = ""
+EOF
+
+config_source=$(cat ./image.registries.conf | python3 -c "import sys, urllib.parse; print(urllib.parse.quote(''.join(sys.stdin.readlines())))"  )
+
+cat <<EOF > 99-worker-zzz-container-registries.yaml
+apiVersion: machineconfiguration.openshift.io/v1
+kind: MachineConfig
+metadata:
+  labels:
+    machineconfiguration.openshift.io/role: worker
+  name: 99-worker-zzz-container-registries
+spec:
+  config:
+    ignition:
+      version: 2.2.0
+    storage:
+      files:
+      - contents:
+          source: data:text/plain,${config_source}
+          verification: {}
+        filesystem: root
+        mode: 420
+        path: /etc/containers/registries.conf
+EOF
+
+cat <<EOF > 99-master-zzz-container-registries.yaml
+apiVersion: machineconfiguration.openshift.io/v1
+kind: MachineConfig
+metadata:
+  labels:
+    machineconfiguration.openshift.io/role: master
+  name: 99-master-zzz-container-registries
+spec:
+  config:
+    ignition:
+      version: 2.2.0
+    storage:
+      files:
+      - contents:
+          source: data:text/plain,${config_source}
+          verification: {}
+        filesystem: root
+        mode: 420
+        path: /etc/containers/registries.conf
+EOF
+
+oc apply -f ./99-worker-zzz-container-registries.yaml -n openshift-config
+oc apply -f ./99-master-zzz-container-registries.yaml -n openshift-config
+
 
 # add redhat operator
 cat <<EOF > redhat-operator-catalog.yaml

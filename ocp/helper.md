@@ -665,6 +665,26 @@ oc scale --replicas=1 deployment/etcd-quorum-guard -n openshift-machine-config-o
 
 oc scale --replicas=1 deployment.apps/packageserver -n openshift-operator-lifecycle-manager
 
+# copy support-tools into local registry
+podman login registry.redhat.io
+podman login helper.cluster-0001.rhsacn.org:5000
+skopeo copy docker://registry.redhat.io/rhel7/support-tools:latest docker://helper.cluster-0001.rhsacn.org:5000/rhel7/support-tools:latest
 
+cat > icsp-support-tools.yaml <<EOF
+apiVersion: operator.openshift.io/v1alpha1
+kind: ImageContentSourcePolicy
+metadata:
+  name: icsp-support-tools
+spec:
+  repositoryDigestMirrors:
+  - mirrors:
+    - helper.cluster-0001.rhsacn.org:5000/rhel7/support-tools
+    source: registry.redhat.io/rhel7/support-tools
+EOF
+
+oc create -f icsp-support-tools.yaml
+
+# connect worker0
+oc debug node/worker0.cluster-0001.rhsacn.org
 
 ```

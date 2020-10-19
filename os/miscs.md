@@ -2779,3 +2779,6 @@ showmount -e <nfs-server>
 mount -t nfs <nfs-server>:<share> /mnt
 umount /mnt
 ```
+
+### Variations on imagestreams in OpenShift 4
+https://itnext.io/variations-on-imagestreams-in-openshift-4-f8ee5e8be633

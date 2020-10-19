@@ -646,6 +646,88 @@ oc create -f /usr/local/src/registry-pvc.yaml -n openshift-image-registry
 oc patch configs.imageregistry.operator.openshift.io cluster --type=json -p '[{"op": "remove", "path": "/spec/storage/emptyDir" }]'
 oc patch configs.imageregistry.operator.openshift.io cluster --type merge --patch '{"spec":{"storage":{"pvc":{ "claim": "registry-pvc"}}}}'
 
+
+# patch image stream
+# refer to  https://raw.githubusercontent.com/wangzheng422/docker_env/master/redhat/ocp4/files/4.2/docker_images/is.patch.sh
+cat > is.patch.sh << 'EOF'
+#!/usr/bin/env bash
+
+set -e
+# set -x
+
+export LOCAL_REG='helper.cluster-0001.rhsacn.org:5000'
+
+# var_json=$(oc get is -n openshift -l samples.operator.openshift.io/managed=true -o json)
+var_json=$(oc get is -n openshift -o json)
+
+var_i=0
+for var_is_name in $(echo $var_json | jq -r '.items[].metadata.name' ); do
+    var_j=0
+    for var_is_tag in $(echo $var_json | jq -r ".items[${var_i}].spec.tags[].name"); do
+
+        var_is_image_name=$(echo $var_json | jq -r ".items[${var_i}].spec.tags[${var_j}].from.name")
+        
+        var_is_image_kind=$(echo $var_json | jq -r ".items[${var_i}].spec.tags[${var_j}].from.kind")
+        
+        if [[ $var_is_image_kind =~ 'DockerImage'  ]]; then
+
+            if [[ $var_is_image_name == "${LOCAL_REG}"* ]]; then
+                echo "already localization..."
+            elif [[ $var_is_image_name == 'quay.io/openshift-release-dev/ocp-v4.0-art-dev@sha256:'* ]]; then
+
+                var_new_is_image_name=$(echo $var_is_image_name | sed "s|quay.io/openshift-release-dev/ocp-v4.0-art-dev|${LOCAL_REG}/ocp4/openshift4|g")
+
+                echo "###############################"
+                echo $var_is_name
+                echo $var_is_tag
+                echo $var_is_image_name
+                echo $var_is_image_kind
+
+                echo $var_new_is_image_name
+
+                set -x
+
+                oc patch -n openshift is ${var_is_name} --type='json' -p="[{\"op\": \"replace\", \"path\": \"/spec/tags/${var_j}/from/name\", \"value\":\"${var_new_is_image_name}\"}]"
+
+                set +x
+
+            elif [[ $var_is_image_name =~ ^.*\.(io|com|org)/.* ]]; then
+
+                var_new_is_image_name="${LOCAL_REG}/$var_is_image_name"
+                
+                echo "###############################"
+                echo $var_is_name
+                echo $var_is_tag
+                echo $var_is_image_name
+                echo $var_is_image_kind
+
+                echo $var_new_is_image_name
+
+                set -x
+
+                oc patch -n openshift is ${var_is_name} --type='json' -p="[{\"op\": \"replace\", \"path\": \"/spec/tags/${var_j}/from/name\", \"value\":\"${var_new_is_image_name}\"}]"
+
+                # oc patch -n openshift is ${var_is_name} -p "{\"spec\":{\"tags\" : [ { \"name\" : \"$var_is_tag\", \"from\" :{\"name\" : \"${var_new_is_image_name}\" , \"kind\" : \"DockerImage\" } } ] } }" --type=merge 
+
+                set +x
+            fi
+
+        fi
+
+        var_j=$((var_j+1))
+    done
+    var_i=$((var_i+1))
+done
+EOF
+
+
+
+
+
+
+
+
+
 # single master refer to 
 # https://gist.github.com/williamcaban/7d4fa16c91cf597517e5778428e74658
 # test: this method does not works in ocp 4.5.2
@@ -685,6 +767,8 @@ EOF
 oc create -f icsp-support-tools.yaml
 
 # connect worker0
+# see: https://bugzilla.redhat.com/show_bug.cgi?id=1860168
+# patch sample image stream refer to https://raw.githubusercontent.com/wangzheng422/docker_env/master/redhat/ocp4/files/4.2/docker_images/is.patch.sh
 oc debug node/worker0.cluster-0001.rhsacn.org
 
 ```

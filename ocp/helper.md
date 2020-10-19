@@ -769,6 +769,7 @@ oc create -f icsp-support-tools.yaml
 # connect worker0
 # see: https://bugzilla.redhat.com/show_bug.cgi?id=1860168
 # patch sample image stream refer to https://raw.githubusercontent.com/wangzheng422/docker_env/master/redhat/ocp4/files/4.2/docker_images/is.patch.sh
-oc debug node/worker0.cluster-0001.rhsacn.org
+oc debug node/worker0.cluster-0001.rhsacn.org --image="helper.cluster-0001.rhsacn.org:5000/rhel7/support-tools:latest"
+
 
 ```

@@ -624,6 +624,23 @@ systemctl restart haproxy
 sed -ie 's|^    #server bootstrap|    server bootstrap|g' /etc/haproxy/haproxy.cfg
 systemctl restart haproxy
 
+# add redhat operator
+cat <<EOF > redhat-operator-catalog.yaml
+apiVersion: operators.coreos.com/v1alpha1
+kind: CatalogSource
+metadata:
+  name: redhat-operator-catalog
+  namespace: openshift-marketplace
+spec:
+  displayName: Redhat Operator Catalog
+  sourceType: grpc
+  image: helper.cluster-0001.rhsacn.org:5000/olm/operator-catalog:redhat-4.5-20201014
+  publisher: Red Hat
+EOF
+oc create -f redhat-operator-catalog.yaml
+
+
+
 helpernodecheck nfs-setup 
 oc create -f /usr/local/src/registry-pvc.yaml -n openshift-image-registry
 oc patch configs.imageregistry.operator.openshift.io cluster --type=json -p '[{"op": "remove", "path": "/spec/storage/emptyDir" }]'

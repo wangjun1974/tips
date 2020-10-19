@@ -781,7 +781,7 @@ rtcsync
 logdir /var/log/chrony
 EOF
 
-config_source=$(cat ./time.sync.conf | python3 -c "import sys, urllib.parse; print(urllib.parse.quote(''.join(sys.stdin.readlines())))"  )
+config_source=$(cat ./time.sync.conf | base64 -w 0 )
 
 # see: https://openshift.tips/machine-config/
 cat << EOF > ./99-master-zzz-chrony-configuration.yaml
@@ -804,7 +804,7 @@ spec:
     storage:
       files:
       - contents:
-          source: data:text/plain;${config_source}
+          source: data:text/plain;charset=utf-8;base64,${config_source}
           verification: {}
         filesystem: root
         mode: 420
@@ -832,7 +832,7 @@ spec:
     storage:
       files:
       - contents:
-          source: data:text/plain;${config_source}
+          source: data:text/plain;charset=utf-8;base64,${config_source}
           verification: {}
         filesystem: root
         mode: 420

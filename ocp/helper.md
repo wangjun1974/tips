@@ -611,11 +611,18 @@ watch oc get nodes
 oc label node worker0.cluster-0001.rhsacn.org node-role.kubernetes.io/infra=""
 oc label node worker1.cluster-0001.rhsacn.org node-role.kubernetes.io/infra=""
 oc label node worker2.cluster-0001.rhsacn.org node-role.kubernetes.io/infra=""
-
 oc patch ingresscontroller default -n openshift-ingress-operator --type=merge --patch='{"spec":{"nodePlacement":{"nodeSelector": {"matchLabels":{"node-role.kubernetes.io/infra":""}}}}}'
 oc patch ingresscontroller default -n openshift-ingress-operator --type=merge --patch='{"spec":{"replicas":3}}'
 
 openshift-install --dir=/root/ocp4 wait-for install-complete --log-level debug
+
+# remove bootstrap from openshift-api-server and machine-config-server
+sed -ie 's|^    server bootstrap|    #server bootstrap|g' /etc/haproxy/haproxy.conf
+systemctl restart haproxy
+
+# add bootstrap to openshift-api-server and machine-config-server
+sed -ie 's|^    #server bootstrap|    server bootstrap|g' /etc/haproxy/haproxy.conf
+systemctl restart haproxy
 
 helpernodecheck nfs-setup 
 oc create -f /usr/local/src/registry-pvc.yaml -n openshift-image-registry

@@ -2914,4 +2914,56 @@ EOF
 
 oc create -f my-operator-catalog.yaml
 
+export OCP_RELEASE="4.5.2"
+export LOCAL_REGISTRY='helper.cluster-0001.rhsacn.org:5000'
+export LOCAL_REPOSITORY='ocp4/openshift4'
+export PRODUCT_REPO='openshift-release-dev'
+export LOCAL_SECRET_JSON="${HOME}/pull-secret-2.json"
+export RELEASE_NAME='ocp-release'
+export ARCHITECTURE="x86_64"
+export REMOVABLE_MEDIA_PATH='/opt/registry'
+export OPERATOR_OCP_RELEASE="4.5"
+
+oc adm catalog build \
+  --appregistry-org redhat-operators \
+  --from=registry.redhat.io/openshift4/ose-operator-registry:v${OPERATOR_OCP_RELEASE}  \
+  --filter-by-os='linux/amd64' \
+  -a ${LOCAL_SECRET_JSON} \
+  --to=${LOCAL_REGISTRY}/olm/operator-catalog:redhat-${OPERATOR_OCP_RELEASE}-v1
+
+oc adm catalog mirror \
+  ${LOCAL_REGISTRY}/olm/operator-catalog:redhat-${OPERATOR_OCP_RELEASE}-v1 \
+  ${LOCAL_REGISTRY} \
+  --filter-by-os='.*' \
+  -a ${LOCAL_SECRET_JSON} \
+  --manifests-only=true 
+
+oc image mirror \
+    -a ${LOCAL_SECRET_JSON} \
+    -f ./redhat-operators-manifests/mapping.txt
+
+# see: https://docs.openshift.com/container-platform/4.3/operators/olm-restricted-networks.html
+
+oc apply -f ./redhat-operators-manifests/imageContentSourcePolicy.yaml
+
+cat > catalogsource.yaml << EOF
+apiVersion: operators.coreos.com/v1alpha1
+kind: CatalogSource
+metadata:
+  name: my-operator-catalog
+  namespace: openshift-marketplace
+spec:
+  sourceType: grpc
+  image: ${LOCAL_REGISTRY}/olm/operator-catalog:redhat-${OPERATOR_OCP_RELEASE}-v1 
+  displayName: My Operator Catalog
+  publisher: grpc
+EOF
+
+oc apply -f catalogsource.yaml 
+
+oc delete secret pull-secret
+
+oc create secret generic pull-secret --from-file=.dockerconfigjson=${HOME}/pull-secret-2.json --type=kubernetes.io/dockerconfigjson
+
+
 ```

@@ -1075,4 +1075,7 @@ spec:
 EOF
 
 oc create -f my-ocs-operator-catalog.yaml
+
+oc delete secret pull-secret
+
 ```

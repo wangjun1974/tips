@@ -662,6 +662,7 @@ oc patch OperatorHub cluster --type json \
     -p '[{"op": "add", "path": "/spec/disableAllDefaultSources", "value": true}]'
 oc get OperatorHub cluster -o yaml
 
+# see: https://github.com/wangzheng422/docker_env/blob/master/redhat/ocp4/4.5/scripts/image.registries.conf.sh
 cat > image.registries.conf << 'EOF'
 unqualified-search-registries = ["registry.access.redhat.com", "docker.io"]
 
@@ -751,6 +752,96 @@ spec:
   publisher: Red Hat
 EOF
 oc create -f redhat-operator-catalog.yaml
+
+# or add redhat operator
+cat <<EOF > redhat-operator-catalog.yaml
+apiVersion: operators.coreos.com/v1alpha1
+kind: CatalogSource
+metadata:
+  name: redhat-operator-catalog
+  namespace: openshift-marketplace
+spec:
+  displayName: Redhat Operator Catalog
+  sourceType: grpc
+  image: helper.cluster-0001.rhsacn.org:5000/olm/redhat-operators:v4.5
+  publisher: Red Hat
+EOF
+oc create -f redhat-operator-catalog.yaml
+
+oc get pods -n openshift-marketplace
+oc get catalogsource -n openshift-marketplace
+oc get packagemanifest -n openshift-marketplace
+
+# time sync configuration
+cat > time.sync.conf << EOF
+server helper.cluster-0001.rhsacn.org iburst
+driftfile /var/lib/chrony/drift
+makestep 1.0 3
+rtcsync
+logdir /var/log/chrony
+EOF
+
+config_source=$(cat ./time.sync.conf | python3 -c "import sys, urllib.parse; print(urllib.parse.quote(''.join(sys.stdin.readlines())))"  )
+
+# see: https://openshift.tips/machine-config/
+cat << EOF > ./99-master-zzz-chrony-configuration.yaml
+apiVersion: machineconfiguration.openshift.io/v1
+kind: MachineConfig
+metadata:
+  labels:
+    machineconfiguration.openshift.io/role: master
+  name: masters-chrony-configuration
+spec:
+  config:
+    ignition:
+      config: {}
+      security:
+        tls: {}
+      timeouts: {}
+      version: 2.2.0
+    networkd: {}
+    passwd: {}
+    storage:
+      files:
+      - contents:
+          source: data:text/plain;${config_source}
+          verification: {}
+        filesystem: root
+        mode: 420
+        path: /etc/chrony.conf
+  osImageURL: ""
+EOF
+
+cat << EOF > ./99-worker-zzz-chrony-configuration.yaml
+apiVersion: machineconfiguration.openshift.io/v1
+kind: MachineConfig
+metadata:
+  labels:
+    machineconfiguration.openshift.io/role: worker
+  name: workers-chrony-configuration
+spec:
+  config:
+    ignition:
+      config: {}
+      security:
+        tls: {}
+      timeouts: {}
+      version: 2.2.0
+    networkd: {}
+    passwd: {}
+    storage:
+      files:
+      - contents:
+          source: data:text/plain;${config_source}
+          verification: {}
+        filesystem: root
+        mode: 420
+        path: /etc/chrony.conf
+  osImageURL: ""
+EOF
+
+oc apply -f ./99-master-zzz-chrony-configuration.yaml
+oc apply -f ./99-worker-zzz-chrony-configuration.yaml
 
 
 

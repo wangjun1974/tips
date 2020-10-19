@@ -2743,3 +2743,19 @@ https://access.redhat.com/articles/4292081
 sudo journalctl > /tmp/err
 cat /tmp/err | grep -Ev "I1014|kernel:|systemd|ignition|dracut|multipathd|iscsid|rhcos-fips|coreos-cryptfs|ostree-prepare-root|ostree-remount|restorecon|auditd|augenrules|chronyd|NetworkManager|sssd|dbus-daemon|network-manager|rpc.statd|rhcos-growpart|sshd|rpm-ostree|polkitd|dbus-daemon|machine-config-daemon" | more
 ```
+
+### 输出 RHEL 7 nfs server 和尝试挂载 nfs 文件系统
+```
+# on nfs server 
+systemctl restart nfs-server
+
+# export nfs share on nfs server
+exportfs -r 
+
+# check nfs exports
+showmount -e <nfs-server>
+
+# mount nfs share on nfs client
+mount -t nfs <nfs-server>:<share> /mnt
+umount /mnt
+```

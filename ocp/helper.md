@@ -604,6 +604,9 @@ openssl s_client -connect api.crc.testing:6443 | openssl x509 -noout -dates
 # approve worker csr
 oc get nodes
 export KUBECONFIG=/root/ocp4/auth/kubeconfig
+echo "export KUBECONFIG=/root/ocp4/auth/kubeconfig" >> ~/.bashrc
+oc completion bash | sudo tee /etc/bash_completion.d/openshift > /dev/null
+
 /usr/local/bin/oc get csr --no-headers | /usr/bin/awk '{print $1}' | xargs /usr/local/bin/oc adm certificate approve
 watch oc get nodes
 

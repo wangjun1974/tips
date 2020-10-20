@@ -1076,4 +1076,48 @@ EOF
 
 oc create -f my-ocs-operator-catalog.yaml
 
+# see: https://access.redhat.com/documentation/en-us/red_hat_openshift_container_storage/4.5/html-single/deploying_openshift_container_storage_on_vmware_vsphere/index
+cat > local-storage-block.yaml << EOF
+apiVersion: local.storage.openshift.io/v1
+kind: LocalVolume
+metadata:
+  name: local-block
+  namespace: local-storage
+  labels:
+    app: ocs-storagecluster
+spec:
+  nodeSelector:
+    nodeSelectorTerms:
+    - matchExpressions:
+        - key: cluster.ocs.openshift.io/openshift-storage
+          operator: In
+          values:
+          - ""
+  storageClassDevices:
+    - storageClassName: localblock
+      volumeMode: Block
+      devicePaths:
+        - /dev/disk/by-id/scsi-SQEMU_QEMU_HARDDISK_a8419e91-8336-4ed0-905d-82af91fb27f0
+        - /dev/disk/by-id/scsi-SQEMU_QEMU_HARDDISK_de0ab0ba-2ca0-49d6-b301-23423aeddb41
+        - /dev/disk/by-id/scsi-SQEMU_QEMU_HARDDISK_b0f94547-2bbb-48d3-bb34-0c8cae341e0c
+EOF
+
+oc create -f local-storage-block.yaml 
+
+oc -n local-storage get pods
+
+oc get sc | grep localblock
+localblock                          kubernetes.io/no-provisioner   Delete          WaitForFirstConsumer   false                  70s
+
+oc get pv
+NAME                CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS      CLAIM   STORAGECLASS   REASON   AGE
+local-pv-8ebcac77   80Gi       RWO            Delete           Available           localblock              33s
+local-pv-a07ed3e8   80Gi       RWO            Delete           Available           localblock              41s
+local-pv-a4482bcd   80Gi       RWO            Delete           Available           localblock              45s
+
+oc get csv -n openshift-storage
+NAME                  DISPLAY                       VERSION   REPLACES   PHASE
+ocs-operator.v4.5.0   OpenShift Container Storage   4.5.0                Succeeded
+
+
 ```

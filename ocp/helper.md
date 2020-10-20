@@ -662,6 +662,9 @@ oc patch OperatorHub cluster --type json \
     -p '[{"op": "add", "path": "/spec/disableAllDefaultSources", "value": true}]'
 oc get OperatorHub cluster -o yaml
 
+oc patch machineconfigpools.machineconfiguration.openshift.io/master -p '{"spec":{"paused":true}}' --type=merge
+oc patch machineconfigpools.machineconfiguration.openshift.io/worker -p '{"spec":{"paused":true}}' --type=merge
+
 # see: https://github.com/wangzheng422/docker_env/blob/master/redhat/ocp4/4.5/scripts/image.registries.conf.sh
 cat > image.registries.conf << 'EOF'
 unqualified-search-registries = ["registry.access.redhat.com", "docker.io"]
@@ -843,6 +846,8 @@ EOF
 oc apply -f ./99-master-zzz-chrony-configuration.yaml
 oc apply -f ./99-worker-zzz-chrony-configuration.yaml
 
+oc patch machineconfigpools.machineconfiguration.openshift.io/master -p '{"spec":{"paused":false}}' --type=merge
+oc patch machineconfigpools.machineconfiguration.openshift.io/worker -p '{"spec":{"paused":false}}' --type=merge
 
 
 helpernodecheck nfs-setup 

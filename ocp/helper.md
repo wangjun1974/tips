@@ -1119,5 +1119,6 @@ oc get csv -n openshift-storage
 NAME                  DISPLAY                       VERSION   REPLACES   PHASE
 ocs-operator.v4.5.0   OpenShift Container Storage   4.5.0                Succeeded
 
+oc set data secret/pull-secret -n openshift-config --from-file=.dockerconfigjson=/root/pull-secret-2.json
 
 ```

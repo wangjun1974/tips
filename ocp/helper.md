@@ -932,10 +932,6 @@ EOF
 /bin/bash -x is.patch.sh
 
 
-
-
-
-
 # single master refer to 
 # https://gist.github.com/williamcaban/7d4fa16c91cf597517e5778428e74658
 # test: this method does not works in ocp 4.5.2

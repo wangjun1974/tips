@@ -609,6 +609,8 @@ systemctl restart haproxy
 sed -ie 's|^    #server bootstrap|    server bootstrap|g' /etc/haproxy/haproxy.cfg
 systemctl restart haproxy
 
+openshift-install --dir=/root/ocp4 wait-for install-complete --log-level debug
+
 # approve worker csr
 oc get nodes
 export KUBECONFIG=/root/ocp4/auth/kubeconfig
@@ -629,8 +631,6 @@ oc label node worker1.cluster-0001.rhsacn.org node-role.kubernetes.io/infra=""
 oc label node worker2.cluster-0001.rhsacn.org node-role.kubernetes.io/infra=""
 oc patch ingresscontroller default -n openshift-ingress-operator --type=merge --patch='{"spec":{"nodePlacement":{"nodeSelector": {"matchLabels":{"node-role.kubernetes.io/infra":""}}}}}'
 oc patch ingresscontroller default -n openshift-ingress-operator --type=merge --patch='{"spec":{"replicas":3}}'
-
-openshift-install --dir=/root/ocp4 wait-for install-complete --log-level debug
 
 # setup nfs privioner from helper node
 bash /root/ocp4-helpernode/files/nfs-provisioner-setup.sh

@@ -929,8 +929,7 @@ for var_is_name in $(echo $var_json | jq -r '.items[].metadata.name' ); do
 done
 EOF
 
-
-
+/bin/bash -x is.patch.sh
 
 
 

@@ -852,6 +852,10 @@ oc patch machineconfigpools.machineconfiguration.openshift.io/worker -p '{"spec"
 oc patch configs.samples.operator.openshift.io cluster --type merge \
   --patch '{"spec":{"samplesRegistry": "helper.cluster-0001.rhsacn.org:5000", "managementState": "Managed"}}'
 
+# test is works here
+oc get nodes
+oc debug node/<worker0>
+
 helpernodecheck nfs-setup 
 oc create -f /usr/local/src/registry-pvc.yaml -n openshift-image-registry
 oc patch configs.imageregistry.operator.openshift.io cluster --type=json -p '[{"op": "remove", "path": "/spec/storage/emptyDir" }]'

@@ -1123,3 +1123,8 @@ ocs-operator.v4.5.0   OpenShift Container Storage   4.5.0                Succeed
 oc set data secret/pull-secret -n openshift-config --from-file=.dockerconfigjson=/root/pull-secret-2.json
 
 ```
+
+### 同步 operatorhub 到另外一个镜像仓库
+https://github.com/arvin-a/openshift-disconnected-operators
+
+

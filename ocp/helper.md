@@ -635,7 +635,6 @@ oc patch ingresscontroller default -n openshift-ingress-operator --type=merge --
 # setup nfs privioner from helper node
 bash /root/ocp4-helpernode/files/nfs-provisioner-setup.sh
 oc patch configs.imageregistry.operator.openshift.io cluster -p '{"spec":{"managementState": "Managed","storage":{"pvc":{"claim":""}}}}' --type=merge
-oc patch configs.imageregistry.operator.openshift.io cluster -p '{"spec":{"managementState": "Removed"}}' --type=merge
 oc get clusteroperator image-registry
 oc get configs.imageregistry.operator.openshift.io cluster -o yaml
 
@@ -849,6 +848,9 @@ oc apply -f ./99-worker-zzz-chrony-configuration.yaml
 oc patch machineconfigpools.machineconfiguration.openshift.io/master -p '{"spec":{"paused":false}}' --type=merge
 oc patch machineconfigpools.machineconfiguration.openshift.io/worker -p '{"spec":{"paused":false}}' --type=merge
 
+# patch samples operator samplesRegistry
+oc patch configs.samples.operator.openshift.io cluster --type merge \
+  --patch '{"spec":{"samplesRegistry": "helper.cluster-0001.rhsacn.org:5000", "managementState": "Managed"}}'
 
 helpernodecheck nfs-setup 
 oc create -f /usr/local/src/registry-pvc.yaml -n openshift-image-registry
@@ -930,6 +932,7 @@ done
 EOF
 
 /bin/bash -x is.patch.sh
+
 
 
 # single master refer to 

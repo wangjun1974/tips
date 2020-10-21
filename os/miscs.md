@@ -2768,6 +2768,16 @@ EOF
 
 ovirt-shell -c -A /tmp/ca.pem -f ovirt-shell-cmd
 done
+
+# start vm
+for i in master-0 master-1 master-2 worker-0 worker-1 worker-2
+do 
+cat > ovirt-shell-cmd << EOF
+action vm jwang-$i start --async true
+EOF
+
+ovirt-shell -c -A /tmp/ca.pem -f ovirt-shell-cmd
+done
 ```
 
 # 检查 OpenShift master 节点启动日志

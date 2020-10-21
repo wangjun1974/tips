@@ -651,10 +651,7 @@ oc patch configs.samples.operator.openshift.io/cluster -p '{"spec":{"managementS
 
 # operator hub disconnected
 # see: https://github.com/wangzheng422/docker_env/blob/master/redhat/ocp4/4.5/4.5.disconnect.operator.md
-oc project openshift-config
-oc create configmap ca.for.registry -n openshift-config \
-    --from-file=helper.cluster-0001.rhsacn.org..5000=/opt/registry/certs/domain.crt
-oc patch image.config.openshift.io/cluster -p '{"spec":{"additionalTrustedCA":{"name":"ca.for.registry"}}}'  --type=merge
+oc patch image.config.openshift.io/cluster -p '{"spec":{"additionalTrustedCA":{"name":"user-ca-bundle"}}}'  --type=merge
 oc get image.config.openshift.io/cluster -o yaml
 
 oc patch OperatorHub cluster --type json \

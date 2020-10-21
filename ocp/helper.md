@@ -779,7 +779,7 @@ oc get packagemanifest -n openshift-marketplace
 cat > time.sync.conf << EOF
 server helper.cluster-0001.rhsacn.org iburst
 driftfile /var/lib/chrony/drift
-makestep 1.0 3
+makestep 1.0 10
 rtcsync
 logdir /var/log/chrony
 EOF
@@ -1097,9 +1097,9 @@ spec:
     - storageClassName: localblock
       volumeMode: Block
       devicePaths:
-        - /dev/disk/by-id/scsi-SQEMU_QEMU_HARDDISK_a8419e91-8336-4ed0-905d-82af91fb27f0
-        - /dev/disk/by-id/scsi-SQEMU_QEMU_HARDDISK_de0ab0ba-2ca0-49d6-b301-23423aeddb41
-        - /dev/disk/by-id/scsi-SQEMU_QEMU_HARDDISK_b0f94547-2bbb-48d3-bb34-0c8cae341e0c
+        - /dev/disk/by-id/scsi-SQEMU_QEMU_HARDDISK_14d16de8-0565-4e98-9510-ded9c98f25b1
+        - /dev/disk/by-id/scsi-SQEMU_QEMU_HARDDISK_9c1ec803-fb38-42ee-86a5-3a114f3cf82e
+        - /dev/disk/by-id/scsi-SQEMU_QEMU_HARDDISK_c466f3c4-5bc0-402b-b1b5-4c81669fbadf
 EOF
 
 oc create -f local-storage-block.yaml 
@@ -1119,6 +1119,7 @@ oc get csv -n openshift-storage
 NAME                  DISPLAY                       VERSION   REPLACES   PHASE
 ocs-operator.v4.5.0   OpenShift Container Storage   4.5.0                Succeeded
 
+# 更新 pull-secret 
 oc set data secret/pull-secret -n openshift-config --from-file=.dockerconfigjson=/root/pull-secret-2.json
 
 ```

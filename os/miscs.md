@@ -2696,10 +2696,12 @@ EOF
 diskid=$(ovirt-shell -c -A /tmp/ca.pem -f ovirt-shell-cmd | grep id | head -1 | awk '{print $3}' )
 
 cat > ovirt-shell-cmd << EOF
-remove disk $diskid
+remove disk $diskid --async
 EOF
 
 ovirt-shell -c -A /tmp/ca.pem -f ovirt-shell-cmd
+
+sleep 5
 
 done
 
@@ -2713,10 +2715,12 @@ EOF
 diskid=$(ovirt-shell -c -A /tmp/ca.pem -f ovirt-shell-cmd | grep id | awk '{print $3}' )
 
 cat > ovirt-shell-cmd << EOF
-remove disk $diskid
+remove disk $diskid --async
 EOF
 
 ovirt-shell -c -A /tmp/ca.pem -f ovirt-shell-cmd
+
+sleep 5
 
 done
 

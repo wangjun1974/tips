@@ -853,6 +853,37 @@ oc label nodes worker2.cluster-0001.rhsacn.org cluster.ocs.openshift.io/openshif
 
 # see: https://access.redhat.com/documentation/en-us/red_hat_openshift_container_storage/4.5/html-single/deploying_openshift_container_storage_on_vmware_vsphere/index
 
+# see: https://github.com/wangjun1974/tips/blob/master/ocp/operatorhub-disconnected.md
+export LOCAL_REGISTRY='helper.cluster-0001.rhsacn.org:5000'
+
+cat > catalogsource.yaml << EOF
+apiVersion: operators.coreos.com/v1alpha1
+kind: CatalogSource
+metadata:
+  name: my-operator-catalog
+  namespace: openshift-marketplace
+spec:
+  sourceType: grpc
+  image: ${LOCAL_REGISTRY}/olm/redhat-operators:v1
+  displayName: My Operator Catalog
+  publisher: grpc
+EOF
+
+oc apply -f catalogsource.yaml
+
+# 创建 /tmp/ImageContentSourcePolicy.yaml 文件
+cat <<EOF > /tmp/ImageContentSourcePolicy.yaml
+apiVersion: operator.openshift.io/v1alpha1
+kind: ImageContentSourcePolicy
+metadata:
+  name: redhat-operators
+spec:
+  repositoryDigestMirrors:
+$(cat /tmp/image-policy.txt)
+EOF
+
+oc apply -f /tmp/ImageContentSourcePolicy.yaml
+
 # create local-storage namespace and install local storage operator
 
 # install ocs operators

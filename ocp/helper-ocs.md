@@ -101,6 +101,8 @@ workers:
     ipaddr: "10.66.208.143"
   - name: "worker1"
     ipaddr: "10.66.208.144"
+  - name: "worker2"
+    ipaddr: "10.66.208.145"    
 EOF
 
 ansible-playbook -e @vars.yml tasks/main.yml
@@ -622,10 +624,12 @@ watch oc get nodes
 
 # see: https://github.com/wangzheng422/docker_env/blob/master/redhat/ocp4/4.5/4.5.disconnect.operator.md
 
-# oc get nodes , all nodes ready
-# oc get clusteroperator image-registry, image-registry available
+# oc get nodes 
+#   all nodes ready
+# oc get clusteroperator image-registry
+#   image-registry available
 
-# patch ingresscontroller (optional with questions)
+# label worker as infra node and patch ingresscontroller (optional with questions)
 oc label node worker0.cluster-0001.rhsacn.org node-role.kubernetes.io/infra=""
 oc label node worker1.cluster-0001.rhsacn.org node-role.kubernetes.io/infra=""
 oc label node worker2.cluster-0001.rhsacn.org node-role.kubernetes.io/infra=""
@@ -640,17 +644,12 @@ oc get configs.imageregistry.operator.openshift.io cluster -o yaml
 
 # stop imagepruner
 # https://bugzilla.redhat.com/show_bug.cgi?id=1852501#c24
-oc patch imagepruner.imageregistry/cluster --patch '{"spec":{"suspend":true}}' --type=merge
-oc -n openshift-image-registry delete jobs --all
-
-oc get configs.samples.operator.openshift.io/cluster -o yaml
-oc patch configs.samples.operator.openshift.io/cluster -p '{"spec":{"managementState": "Managed"}}' --type=merge
-oc patch configs.samples.operator.openshift.io/cluster -p '{"spec":{"managementState": "Unmanaged"}}' --type=merge
-oc patch configs.samples.operator.openshift.io/cluster -p '{"spec":{"managementState": "Removed"}}' --type=merge
-
+# oc patch imagepruner.imageregistry/cluster --patch '{"spec":{"suspend":true}}' --type=merge
+# oc -n openshift-image-registry delete jobs --all
 
 # operator hub disconnected
 # see: https://github.com/wangzheng422/docker_env/blob/master/redhat/ocp4/4.5/4.5.disconnect.operator.md
+# add additionalTrustedCA to image.config.openshift.io/cluster (optioanl)
 oc patch image.config.openshift.io/cluster -p '{"spec":{"additionalTrustedCA":{"name":"user-ca-bundle"}}}'  --type=merge
 oc get image.config.openshift.io/cluster -o yaml
 
@@ -670,6 +669,7 @@ oc patch sa default -n openshift-marketplace --type='json' -p='[{"op":"add","pat
 oc patch machineconfigpools.machineconfiguration.openshift.io/master -p '{"spec":{"paused":true}}' --type=merge
 oc patch machineconfigpools.machineconfiguration.openshift.io/worker -p '{"spec":{"paused":true}}' --type=merge
 
+# change registry.conf file (optional)
 # see: https://github.com/wangzheng422/docker_env/blob/master/redhat/ocp4/4.5/scripts/image.registries.conf.sh
 cat > image.registries.conf << 'EOF'
 unqualified-search-registries = ["registry.access.redhat.com", "docker.io"]
@@ -744,41 +744,6 @@ EOF
 
 oc apply -f ./99-worker-zzz-container-registries.yaml -n openshift-config
 oc apply -f ./99-master-zzz-container-registries.yaml -n openshift-config
-
-
-# add redhat operator
-cat <<EOF > redhat-operator-catalog.yaml
-apiVersion: operators.coreos.com/v1alpha1
-kind: CatalogSource
-metadata:
-  name: redhat-operator-catalog
-  namespace: openshift-marketplace
-spec:
-  displayName: Redhat Operator Catalog
-  sourceType: grpc
-  image: helper.cluster-0001.rhsacn.org:5000/olm/operator-catalog:redhat-4.5-20201014
-  publisher: Red Hat
-EOF
-oc create -f redhat-operator-catalog.yaml
-
-# or add redhat operator
-cat <<EOF > redhat-operator-catalog.yaml
-apiVersion: operators.coreos.com/v1alpha1
-kind: CatalogSource
-metadata:
-  name: redhat-operator-catalog
-  namespace: openshift-marketplace
-spec:
-  displayName: Redhat Operator Catalog
-  sourceType: grpc
-  image: helper.cluster-0001.rhsacn.org:5000/olm/redhat-operators:v4.5
-  publisher: Red Hat
-EOF
-oc create -f redhat-operator-catalog.yaml
-
-oc get pods -n openshift-marketplace
-oc get catalogsource -n openshift-marketplace
-oc get packagemanifest -n openshift-marketplace
 
 # time sync configuration
 cat > time.sync.conf << EOF
@@ -862,112 +827,10 @@ oc patch configs.samples.operator.openshift.io cluster --type merge \
 oc get nodes
 oc debug node/<worker0>
 
-helpernodecheck nfs-setup 
-oc create -f /usr/local/src/registry-pvc.yaml -n openshift-image-registry
-oc patch configs.imageregistry.operator.openshift.io cluster --type=json -p '[{"op": "remove", "path": "/spec/storage/emptyDir" }]'
-oc patch configs.imageregistry.operator.openshift.io cluster --type merge --patch '{"spec":{"storage":{"pvc":{ "claim": "registry-pvc"}}}}'
-
-
-# patch image stream
-# refer to  https://raw.githubusercontent.com/wangzheng422/docker_env/master/redhat/ocp4/files/4.2/docker_images/is.patch.sh
-cat > is.patch.sh << 'EOF'
-#!/usr/bin/env bash
-
-set -e
-# set -x
-
-export LOCAL_REG='helper.cluster-0001.rhsacn.org:5000'
-
-# var_json=$(oc get is -n openshift -l samples.operator.openshift.io/managed=true -o json)
-var_json=$(oc get is -n openshift -o json)
-
-var_i=0
-for var_is_name in $(echo $var_json | jq -r '.items[].metadata.name' ); do
-    var_j=0
-    for var_is_tag in $(echo $var_json | jq -r ".items[${var_i}].spec.tags[].name"); do
-
-        var_is_image_name=$(echo $var_json | jq -r ".items[${var_i}].spec.tags[${var_j}].from.name")
-        
-        var_is_image_kind=$(echo $var_json | jq -r ".items[${var_i}].spec.tags[${var_j}].from.kind")
-        
-        if [[ $var_is_image_kind =~ 'DockerImage'  ]]; then
-
-            if [[ $var_is_image_name == "${LOCAL_REG}"* ]]; then
-                echo "already localization..."
-            elif [[ $var_is_image_name == 'quay.io/openshift-release-dev/ocp-v4.0-art-dev@sha256:'* ]]; then
-
-                var_new_is_image_name=$(echo $var_is_image_name | sed "s|quay.io/openshift-release-dev/ocp-v4.0-art-dev|${LOCAL_REG}/ocp4/openshift4|g")
-
-                echo "###############################"
-                echo $var_is_name
-                echo $var_is_tag
-                echo $var_is_image_name
-                echo $var_is_image_kind
-
-                echo $var_new_is_image_name
-
-                set -x
-
-                oc patch -n openshift is ${var_is_name} --type='json' -p="[{\"op\": \"replace\", \"path\": \"/spec/tags/${var_j}/from/name\", \"value\":\"${var_new_is_image_name}\"}]"
-
-                set +x
-
-            elif [[ $var_is_image_name =~ ^.*\.(io|com|org)/.* ]]; then
-
-                var_new_is_image_name="${LOCAL_REG}/$var_is_image_name"
-                
-                echo "###############################"
-                echo $var_is_name
-                echo $var_is_tag
-                echo $var_is_image_name
-                echo $var_is_image_kind
-
-                echo $var_new_is_image_name
-
-                set -x
-
-                oc patch -n openshift is ${var_is_name} --type='json' -p="[{\"op\": \"replace\", \"path\": \"/spec/tags/${var_j}/from/name\", \"value\":\"${var_new_is_image_name}\"}]"
-
-                # oc patch -n openshift is ${var_is_name} -p "{\"spec\":{\"tags\" : [ { \"name\" : \"$var_is_tag\", \"from\" :{\"name\" : \"${var_new_is_image_name}\" , \"kind\" : \"DockerImage\" } } ] } }" --type=merge 
-
-                set +x
-            fi
-
-        fi
-
-        var_j=$((var_j+1))
-    done
-    var_i=$((var_i+1))
-done
-EOF
-
-/bin/bash -x is.patch.sh
-
-
-
-# single master refer to 
-# https://gist.github.com/williamcaban/7d4fa16c91cf597517e5778428e74658
-# test: this method does not works in ocp 4.5.2
-
-oc patch clusterversion/version --type='merge' -p "$(cat <<- EOF
-spec:
-  overrides:
-    - group: apps/v1
-      kind: Deployment
-      name: etcd-quorum-guard
-      namespace: openshift-machine-config-operator
-      unmanaged: true
-EOF
-)"
-
-oc scale --replicas=1 deployment/etcd-quorum-guard -n openshift-machine-config-operator
-
-oc scale --replicas=1 deployment.apps/packageserver -n openshift-operator-lifecycle-manager
-
-# copy support-tools into local registry
+# copy support-tools into local registry (optional)
 podman login registry.redhat.io
 podman login helper.cluster-0001.rhsacn.org:5000
-skopeo copy docker://registry.redhat.io/rhel7/support-tools:latest docker://helper.cluster-0001.rhsacn.org:5000/rhel7/support-tools:latest
+skopeo copy --all docker://registry.redhat.io/rhel7/support-tools:latest docker://helper.cluster-0001.rhsacn.org:5000/rhel7/support-tools:latest
 
 cat > icsp-support-tools.yaml <<EOF
 apiVersion: operator.openshift.io/v1alpha1
@@ -983,11 +846,6 @@ EOF
 
 oc create -f icsp-support-tools.yaml
 
-# connect worker0
-# see: https://bugzilla.redhat.com/show_bug.cgi?id=1860168
-# patch sample image stream refer to https://raw.githubusercontent.com/wangzheng422/docker_env/master/redhat/ocp4/files/4.2/docker_images/is.patch.sh
-oc debug node/worker0.cluster-0001.rhsacn.org --image="helper.cluster-0001.rhsacn.org:5000/rhel7/support-tools:latest"
-
 # label nodes used for ocs
 oc label nodes worker0.cluster-0001.rhsacn.org cluster.ocs.openshift.io/openshift-storage=''
 oc label nodes worker1.cluster-0001.rhsacn.org cluster.ocs.openshift.io/openshift-storage=''
@@ -995,101 +853,11 @@ oc label nodes worker2.cluster-0001.rhsacn.org cluster.ocs.openshift.io/openshif
 
 # see: https://access.redhat.com/documentation/en-us/red_hat_openshift_container_storage/4.5/html-single/deploying_openshift_container_storage_on_vmware_vsphere/index
 
+# create local-storage namespace and install local storage operator
+
 # install ocs operators
-# see: https://www.cnblogs.com/ericnie/p/11777384.html?from=timeline&isappinstalled=0
-curl https://quay.io/cnr/api/v1/packages?namespace=redhat-operators > packages.txt
 
-# 获得关心的 operator 的内容，例如
-cat packages.txt  | sed -e 's|,"name"|\n"name"|g'  | grep ocs
-"name":"redhat-operators/ocs-operator","namespace":"redhat-operators","releases":["9.0.0","8.0.0","7.0.0","6.0.0","5.0.0","4.0.0","3.0.0","2.0.0","1.0.0"],"updated_at":"2020-09-15T10:15:20","visibility":"public"},{"channels":null,"created_at":"2020-01-23T05:10:18","default":"52.0.0","manifests":["helm"]
-
-# 拼出 ocs-operator 的链接后 curl 一下获取下载地址
-curl https://quay.io/cnr/api/v1/packages/redhat-operators/ocs-operator/9.0.0
-[{"content":{"digest":"cebb11d2ebd7f6afee6175067e5c48fef0a63caedca12789454613a78060c81d","mediaType":"application/vnd.cnr.package.helm.v0.tar+gzip","size":124244,"urls":[]},"created_at":"2020-09-15T10:15:20","digest":"sha256:8a7a0885b402285fb8d486ead874c8b4a546a0b99bfd8f2aeaa45c2a8b8c03b5","mediaType":"application/vnd.cnr.package-manifest.helm.v0.json","metadata":null,"package":"redhat-operators/ocs-operator","release":"9.0.0"}]
-
-digest=$(curl -s https://quay.io/cnr/api/v1/packages/redhat-operators/ocs-operator/9.0.0 | jq -r '.[]|.content.digest' )
-# 将 operator 的内容保存为1个 tar.gz 的包
-curl -XGET https://quay.io/cnr/api/v1/packages/redhat-operators/ocs-operator/blobs/sha256/${digest} \
-    -o ocs-operator.tar.gz
-
-# 建立文件夹，然后解压缩
-mkdir -p manifests/ 
-tar -xf ocs-operator.tar.gz -C manifests/
-
-# 重新命名后 tree 一下结构
-
-tree manifests/
-...
-
-# 查看 ocs-operator.package.yaml 
-cat manifests/ocs-operator-nsmvdm_u/ocs-operator.package.yaml 
-packageName: ocs-operator
-defaultChannel: stable-4.5
-channels:
-- name: stable-4.3
-  currentCSV: ocs-operator.v4.3.0
-- name: stable-4.4
-  currentCSV: ocs-operator.v4.4.2
-- name: stable-4.5
-  currentCSV: ocs-operator.v4.5.0
-
-cat manifests/ocs-operator-nsmvdm_u/4.5.0/ocs-operator.v4.5.0.clusterserviceversion.yaml  | grep image | awk '{print $3}' | grep registry
-
-export LOCAL_REG="helper.cluster-0001.rhsacn.org:5000"
-export LOCAL_SECRET_JSON="${HOME}/pull-secret-2.json"
-export OCS_OPERATOR_VERSION="4.5.0"
-cat manifests/ocs-operator-nsmvdm_u/4.5.0/ocs-operator.v4.5.0.clusterserviceversion.yaml  | grep registry | sed -e "s|^.*value: ||g" -e "s|^.*image: ||" | sort -u | while read i ; 
-do 
-  echo oc image mirror --filter-by-os=\'.*\' -a ${LOCAL_SECRET_JSON} ${i} $(echo $i | sed -e "s|registry.redhat.io|${LOCAL_REG}|" -e "s|@sha256.*$|:${OCS_OPERATOR_VERSION}|")
-done | tee /tmp/sync-ocs-operator-images.sh
-
-podman login registry.redhat.io
-podman login helper.cluster-0001.rhsacn.org:5000
-
-/bin/bash -x /tmp/sync-ocs-operator-images.sh
-
-cat > custom-registry.Dockerfile << EOF
-FROM registry.redhat.io/openshift4/ose-operator-registry:v4.5.0 AS builder
-
-COPY manifests manifests
-
-RUN /bin/initializer -o ./bundles.db;sleep 20 
-
-#FROM scratch
-
-#COPY --from=builder /registry/bundles.db /bundles.db
-#COPY --from=builder /bin/registry-server /registry-server
-#COPY --from=builder /bin/grpc_health_probe /bin/grpc_health_probe
-
-EXPOSE 50051
-
-ENTRYPOINT ["/bin/registry-server"]
-
-CMD ["--database", "/registry/bundles.db"]
-EOF
-
-oc patch OperatorHub cluster --type json \
-    -p '[{"op": "add", "path": "/spec/disableAllDefaultSources", "value": true}]'
-
-podman build -f custom-registry.Dockerfile  -t helper.cluster-0001.rhsacn.org:5000/ocp4/custom-registry 
-
-podman push helper.cluster-0001.rhsacn.org:5000/ocp4/custom-registry
-
-cat > my-ocs-operator-catalog.yaml << EOF 
-apiVersion: operators.coreos.com/v1alpha1
-kind: CatalogSource
-metadata:
-  name: my-ocs-operator-catalog
-  namespace: openshift-marketplace
-spec:
-  displayName: My OCS Operator Catalog
-  sourceType: grpc
-  image: helper.cluster-0001.rhsacn.org:5000/ocp4/custom-registry:latest
-EOF
-
-oc create -f my-ocs-operator-catalog.yaml
-
-# see: https://access.redhat.com/documentation/en-us/red_hat_openshift_container_storage/4.5/html-single/deploying_openshift_container_storage_on_vmware_vsphere/index
+# create local-storage-block.yaml and change dev/by-id
 cat > local-storage-block.yaml << EOF
 apiVersion: local.storage.openshift.io/v1
 kind: LocalVolume
@@ -1115,29 +883,29 @@ spec:
         - /dev/disk/by-id/scsi-SQEMU_QEMU_HARDDISK_c466f3c4-5bc0-402b-b1b5-4c81669fbadf
 EOF
 
+# create local volume
 oc create -f local-storage-block.yaml 
 
+# get pod in local-storage namespace
 oc -n local-storage get pods
 
+# get storage class
 oc get sc | grep localblock
 localblock                          kubernetes.io/no-provisioner   Delete          WaitForFirstConsumer   false                  70s
 
+# get pv
 oc get pv
 NAME                CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS      CLAIM   STORAGECLASS   REASON   AGE
 local-pv-8ebcac77   80Gi       RWO            Delete           Available           localblock              33s
 local-pv-a07ed3e8   80Gi       RWO            Delete           Available           localblock              41s
 local-pv-a4482bcd   80Gi       RWO            Delete           Available           localblock              45s
 
+# get csv in namespace openshift-storage
 oc get csv -n openshift-storage
 NAME                  DISPLAY                       VERSION   REPLACES   PHASE
 ocs-operator.v4.5.0   OpenShift Container Storage   4.5.0                Succeeded
 
-# 更新 pull-secret 
-oc set data secret/pull-secret -n openshift-config --from-file=.dockerconfigjson=/root/pull-secret-2.json
-
 ```
 
-### 同步 operatorhub 到另外一个镜像仓库
-https://github.com/arvin-a/openshift-disconnected-operators
 
 

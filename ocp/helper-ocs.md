@@ -657,7 +657,7 @@ oc patch OperatorHub cluster --type json \
     -p '[{"op": "add", "path": "/spec/disableAllDefaultSources", "value": true}]'
 oc get OperatorHub cluster -o yaml
 
-# add local pull secret into openshift-marketplace namespace
+# add local pull secret into openshift-marketplace namespace. 这步非常重要
 oc create secret docker-registry local-pull-secret \
     --namespace openshift-marketplace \
     --docker-server=helper.cluster-0001.rhsacn.org:5000 \

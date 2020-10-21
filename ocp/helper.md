@@ -661,6 +661,15 @@ oc patch OperatorHub cluster --type json \
     -p '[{"op": "add", "path": "/spec/disableAllDefaultSources", "value": true}]'
 oc get OperatorHub cluster -o yaml
 
+# add local pull secret into openshift-marketplace namespace
+oc create secret docker-registry local-pull-secret \
+    --namespace openshift-marketplace \
+    --docker-server=helper.cluster-0001.rhsacn.org:5000 \
+    --docker-username=dummy \
+    --docker-password=dummy
+oc patch sa default -n openshift-marketplace --type='json' -p='[{"op":"add","path":"/imagePullSecrets/-", "value":{"name":"local-pull-secret"}}]'
+
+# pause node reboot for machineconfig
 oc patch machineconfigpools.machineconfiguration.openshift.io/master -p '{"spec":{"paused":true}}' --type=merge
 oc patch machineconfigpools.machineconfiguration.openshift.io/worker -p '{"spec":{"paused":true}}' --type=merge
 

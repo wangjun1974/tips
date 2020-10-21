@@ -2696,12 +2696,10 @@ EOF
 diskid=$(ovirt-shell -c -A /tmp/ca.pem -f ovirt-shell-cmd | grep id | head -1 | awk '{print $3}' )
 
 cat > ovirt-shell-cmd << EOF
-remove disk $diskid --async
+remove disk $diskid
 EOF
 
 ovirt-shell -c -A /tmp/ca.pem -f ovirt-shell-cmd
-
-sleep 5
 
 done
 
@@ -2715,26 +2713,15 @@ EOF
 diskid=$(ovirt-shell -c -A /tmp/ca.pem -f ovirt-shell-cmd | grep id | awk '{print $3}' )
 
 cat > ovirt-shell-cmd << EOF
-remove disk $diskid --async
+remove disk $diskid
 EOF
 
 ovirt-shell -c -A /tmp/ca.pem -f ovirt-shell-cmd
-
-sleep 5
 
 done
 
 # add disk
-for i in bootstrap master-0 master-1 master-2
-do 
-cat > ovirt-shell-cmd << EOF
-add disk --parent-vm-name jwang-$i --provisioned_size 85899345920 --interface virtio_scsi --format cow --storage_domains-storage_domain storage_domain.name=DS11 --bootable true --wipe_after_delete false
-EOF
-
-ovirt-shell -c -A /tmp/ca.pem -f ovirt-shell-cmd
-done
-
-for i in worker-0 worker-1 worker-2
+for i in bootstrap master-0 master-1 master-2 worker-0 worker-1 worker-2
 do 
 cat > ovirt-shell-cmd << EOF
 add disk --parent-vm-name jwang-$i --provisioned_size 85899345920 --interface virtio_scsi --format cow --storage_domains-storage_domain storage_domain.name=DS31 --bootable true --wipe_after_delete false

@@ -3035,3 +3035,14 @@ skopeo inspect --authfile /root/pull-secret-2.json docker://registry.redhat.io/o
 
 
 ```
+
+### 如何暂时设置 Operator 对 CR 的管理
+https://docs.openshift.com/container-platform/4.5/architecture/architecture-installation.html#unmanaged-operators_architecture-installation
+
+### 处理 Failing to create pod sandbox on OpenShift 3 and 4 的问题
+https://access.redhat.com/solutions/4321791
+
+报错：'  Failed create pod sandbox: rpc error code: = Unknown desc = [failed to set up sandbox container.'
+
+1. 首先尝试删除有问题的 pod，问题仍然存在
+2. 然后尝试重启机器，看问题是否仍然在

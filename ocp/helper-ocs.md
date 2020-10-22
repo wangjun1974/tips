@@ -898,9 +898,9 @@ spec:
     - storageClassName: localblock
       volumeMode: Block
       devicePaths:
-        - /dev/disk/by-id/scsi-SQEMU_QEMU_HARDDISK_14d16de8-0565-4e98-9510-ded9c98f25b1
-        - /dev/disk/by-id/scsi-SQEMU_QEMU_HARDDISK_9c1ec803-fb38-42ee-86a5-3a114f3cf82e
-        - /dev/disk/by-id/scsi-SQEMU_QEMU_HARDDISK_c466f3c4-5bc0-402b-b1b5-4c81669fbadf
+        - /dev/disk/by-id/$(ssh core@10.66.208.143 'ls -l /dev/disk/by-id ' 2>&1 | grep sdb | tail -1 | awk '{print $9}')
+        - /dev/disk/by-id/$(ssh core@10.66.208.144 'ls -l /dev/disk/by-id ' 2>&1 | grep sdb | tail -1 | awk '{print $9}')
+        - /dev/disk/by-id/$(ssh core@10.66.208.145 'ls -l /dev/disk/by-id ' 2>&1 | grep sdb | tail -1 | awk '{print $9}')
 EOF
 
 # create local volume

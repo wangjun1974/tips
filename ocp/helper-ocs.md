@@ -936,6 +936,7 @@ oc rsh -n openshift-storage $TOOLS_POD
 # lower ocs requirement
 # 以下链接有 Internal OCS 的资源需求，最小要求 30 CPU
 # https://access.redhat.com/documentation/en-us/red_hat_openshift_container_storage/4.5/html-single/planning_your_deployment/index
+# https://rook.io/docs/rook/v1.4/ceph-cluster-crd.html
 # 尝试通过设置以下参数降低 ocs 4 对 cpu 的需求
 oc patch StorageCluster ocs-storagecluster -n openshift-storage --type=merge --patch='{"spec":{"resources":{"mds": {"Limit": {"cpu": "500m"}}}}}'
 oc patch StorageCluster ocs-storagecluster -n openshift-storage --type=merge --patch='{"spec":{"resources":{"mds": {"Request": {"cpu": "500m"}}}}}'

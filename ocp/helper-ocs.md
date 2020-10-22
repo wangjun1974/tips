@@ -819,32 +819,21 @@ oc apply -f ./99-worker-zzz-chrony-configuration.yaml
 oc patch machineconfigpools.machineconfiguration.openshift.io/master -p '{"spec":{"paused":false}}' --type=merge
 oc patch machineconfigpools.machineconfiguration.openshift.io/worker -p '{"spec":{"paused":false}}' --type=merge
 
-# patch samples operator samplesRegistry
+# patch samples operator samplesRegistry (optional)
+# 当本地有 imagestream 镜像时执行此命令
 oc patch configs.samples.operator.openshift.io cluster --type merge \
   --patch '{"spec":{"samplesRegistry": "helper.cluster-0001.rhsacn.org:5000", "managementState": "Managed"}}'
+# 如果错误执行上述命令，openshift-samples operator 可能处于 DEGRADED 状态
+# 对于 connected cluster，可执行以下命令将状态修正成正常状态
+oc patch configs.samples.operator.openshift.io cluster --type merge \
+  --patch '{"spec":{"samplesRegistry": "", "managementState": "Managed"}}'
+
+# 对于 disconnected cluster，可参考 https://access.redhat.com/solutions/5067531，同步所需镜像
+# 并做相关设置
 
 # test is works here
 oc get nodes
 oc debug node/<worker0>
-
-# copy support-tools into local registry (optional)
-podman login registry.redhat.io
-podman login helper.cluster-0001.rhsacn.org:5000
-skopeo copy --all docker://registry.redhat.io/rhel7/support-tools:latest docker://helper.cluster-0001.rhsacn.org:5000/rhel7/support-tools:latest
-
-cat > icsp-support-tools.yaml <<EOF
-apiVersion: operator.openshift.io/v1alpha1
-kind: ImageContentSourcePolicy
-metadata:
-  name: icsp-support-tools
-spec:
-  repositoryDigestMirrors:
-  - mirrors:
-    - helper.cluster-0001.rhsacn.org:5000/rhel7/support-tools
-    source: registry.redhat.io/rhel7/support-tools
-EOF
-
-oc create -f icsp-support-tools.yaml
 
 # label nodes used for ocs
 oc label nodes worker0.cluster-0001.rhsacn.org cluster.ocs.openshift.io/openshift-storage=''
@@ -960,6 +949,36 @@ oc patch StorageCluster ocs-storagecluster -n openshift-storage --type=merge --p
 oc patch StorageCluster ocs-storagecluster -n openshift-storage --type=merge --patch='{"spec":{"resources":{"rgw": {"Limit":null}}}}'
 oc patch StorageCluster ocs-storagecluster -n openshift-storage --type=merge --patch='{"spec":{"resources":{"rgw": {"Request":null}}}}'
 
+
+
+
+# when delete namespace and namespace could not delete 
+# Get all resource in this namespace
+oc api-resources | grep true | awk '{print $1}'  | while read i ; do echo oc get $i -n openshift-storage ; oc get $i -n openshift-storage ; echo ; done | tee /tmp/err
+
+# check resource 
+cat /tmp/err | grep -Ev "No resources found|My Operator Catalog" | more
+
+# patch resource finalizers to []
+oc patch CephBlockPool ocs-storagecluster-cephblockpool -n openshift-storage -p '{"metadata":{"finalizers":[]}}' --type=merge
+
+oc patch cephfilesystems ocs-storagecluster-cephfilesystem  -n openshift-storage -p '{"metadata":{"finalizers":[]}}' --type=merge
+
+oc patch cephobjectstores ocs-storagecluster-cephobjectstore -n openshift-storage -p '{"metadata":{"finalizers":[]}}' --type=merge
+
+oc patch cephclusters ocs-storagecluster-cephcluster -n openshift-storage -p '{"metadata":{"finalizers":[]}}' --type=merge
+
+oc patch backingstores noobaa-default-backing-store -n openshift-storage -p '{"metadata":{"finalizers":[]}}' --type=merge
+
+oc patch bucketclasses noobaa-default-bucket-class -n openshift-storage -p '{"metadata":{"finalizers":[]}}' --type=merge
+
+oc patch noobaas noobaa -n openshift-storage -p '{"metadata":{"finalizers":[]}}' --type=merge
+
+oc patch storageclusters ocs-storagecluster -n openshift-storage -p '{"metadata":{"finalizers":[]}}' --type=merge
+
+oc patch cephobjectstoreusers noobaa-ceph-objectstore-user -n openshift-storage -p '{"metadata":{"finalizers":[]}}' --type=merge
+
+oc patch cephobjectstoreusers ocs-storagecluster-cephobjectstoreuser -n openshift-storage -p '{"metadata":{"finalizers":[]}}' --type=merge
 ```
 
 

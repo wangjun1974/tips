@@ -3046,3 +3046,35 @@ https://access.redhat.com/solutions/4321791
 
 1. 首先尝试删除有问题的 pod，问题仍然存在
 2. 然后尝试重启机器，看问题是否仍然在
+
+### 替换不健康的 etcd member
+https://docs.openshift.com/container-platform/4.4/backup_and_restore/replacing-unhealthy-etcd-member.html
+
+```
+检查 etcd 成员健康状态
+oc -n openshift-etcd get etcd -o=jsonpath='{range .items[0].status.conditions[?(@.type=="EtcdMembersAvailable")]}{.message}{"\n"}'a
+2 of 3 members are available, master1.cluster-0001.rhsacn.org is unhealthy
+
+检查节点是否 stopped，如果节点是 stopped，则执行替换过程
+oc get machines -A -ojsonpath='{range .items[*]}{@.status.nodeRef.name}{"\t"}{@.status.providerStatus.instanceState}{"\n"}' | grep -v running
+
+如果节点是 running，则接着检查 node 是否 ready
+oc get nodes -o jsonpath='{range .items[*]}{"\n"}{.metadata.name}{"\t"}{range .spec.taints[*]}{.key}{" "}' | grep unreachable
+
+```
+
+```
+nodes=$(oc get node --no-headers -o custom-columns=NAME:.metadata.name)
+
+for node in $nodes; do
+  echo "Node: $node"
+  oc describe node "$node" | awk '/machineconfiguration.openshift.io/'
+  echo
+done
+```
+
+### 如何关闭 OpenShift 4 虚拟机，如何恢复 OpenShift 4 虚拟机
+出于安全考虑，bootstrap 证书有效期为 24 小时，之后每 30 天自动更换一次证书。因此在刚部署的 25 小时内不要关闭集群，在此后可关闭集群虚拟机，并且请在 30 天内启动虚拟机。
+
+参考以下链接：
+https://www.openshift.com/blog/enabling-openshift-4-clusters-to-stop-and-resume-cluster-vms

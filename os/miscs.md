@@ -3078,3 +3078,6 @@ done
 
 参考以下链接：
 https://www.openshift.com/blog/enabling-openshift-4-clusters-to-stop-and-resume-cluster-vms
+
+### 理解 OpenShift Machine Config Operator
+https://www.redhat.com/en/blog/openshift-container-platform-4-how-does-machine-config-pool-work

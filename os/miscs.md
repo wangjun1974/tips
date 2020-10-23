@@ -3194,3 +3194,34 @@ Warning: Permanently added '10.66.208.145' (ECDSA) to the list of known hosts.
 Fri Oct 23 03:16:17 UTC 2020
 Fri Oct 23 03:16:22 UTC 2020
 ```
+
+### 检查 ocs toolbox 无法查看 ceph status 的问题
+```
+TOOLS_POD=$(oc get pods -n openshift-storage -l app=rook-ceph-tools -o name)
+oc rsh -n openshift-storage $TOOLS_POD
+
+# 查看 ceph status 报错
+sh-4.4# ceph status
+[errno 1] error connecting to the cluster
+
+# 查看 toolbox 的 mon_host
+sh-4.4# cat /etc/ceph/ceph.conf | grep mon_host
+mon_host = 172.30.171.41:6789,172.30.241.175:6789,172.30.232.250:6789
+
+# 从 svc 的输出看 mon
+
+oc get svc -n openshift-storage --no-headers | grep mon
+
+rook-ceph-mon-a                                    ClusterIP      172.30.241.175   <none>      6789/TCP,3300/TCP                                          13h
+rook-ceph-mon-c                                    ClusterIP      172.30.232.250   <none>      6789/TCP,3300/TCP                                          13h
+rook-ceph-mon-d                                    ClusterIP      172.30.171.41    <none>      6789/TCP,3300/TCP                                          85m
+
+
+```
+
+### 在升级或者更新 machineconfig 时删除 ocs 的 pdb
+https://bugzilla.redhat.com/show_bug.cgi?id=1861104
+```
+删除 ocs pdb
+oc get pdb -n openshift-storage --no-headers | awk '{print $1}'  | while read i ; do echo oc delete pdb $i -n openshift-storage ; oc delete pdb $i -n openshift-storage ; echo ; done  
+```

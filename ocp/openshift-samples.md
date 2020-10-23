@@ -2,7 +2,7 @@
 ### 参考知识库文档
 https://access.redhat.com/solutions/5067531
 
-### 设置 cluster-samples 指向本地镜像仓库
+### 设置 openshift-samples 指向本地镜像仓库
 ```
 # 生成所需同步的镜像列表
 for i in `oc get is -n openshift --no-headers | awk '{print $1}'`; do oc get is $i -n openshift -o json | jq .spec.tags[].from.name | grep registry.redhat.io | sed -e 's/"//g' | cut -d"/" -f2-; done | tee /tmp/samples-imagelist.txt

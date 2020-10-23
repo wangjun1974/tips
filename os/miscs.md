@@ -3159,3 +3159,38 @@ B%5Bregistry%5D%5D%0A%20%20prefix%20%3D%20%22%22%0A%20%20location%20%3D%20%22reg
 # 这部分内容是在执行 oc apply -f oc apply -f /tmp/ImageContentSourcePolicy.yaml 之后产生的
 # 谜团解开了
 ```
+
+### 检查 master worker 时间同步情况 
+```
+for i in `seq 140 145` ; do echo 10.66.208.${i} ; ssh core@10.66.208.${i} date -u ; date -u ; echo ; done 
+
+10.66.208.140
+Warning: Permanently added '10.66.208.140' (ECDSA) to the list of known hosts.
+Fri Oct 23 03:16:12 UTC 2020
+Fri Oct 23 03:16:17 UTC 2020
+
+10.66.208.141
+Warning: Permanently added '10.66.208.141' (ECDSA) to the list of known hosts.
+Fri Oct 23 03:16:13 UTC 2020
+Fri Oct 23 03:16:19 UTC 2020
+
+10.66.208.142
+Warning: Permanently added '10.66.208.142' (ECDSA) to the list of known hosts.
+Fri Oct 23 03:16:14 UTC 2020
+Fri Oct 23 03:16:20 UTC 2020
+
+10.66.208.143
+Warning: Permanently added '10.66.208.143' (ECDSA) to the list of known hosts.
+Fri Oct 23 03:16:15 UTC 2020
+Fri Oct 23 03:16:21 UTC 2020
+
+10.66.208.144
+Warning: Permanently added '10.66.208.144' (ECDSA) to the list of known hosts.
+Fri Oct 23 03:16:13 UTC 2020
+Fri Oct 23 03:16:21 UTC 2020
+
+10.66.208.145
+Warning: Permanently added '10.66.208.145' (ECDSA) to the list of known hosts.
+Fri Oct 23 03:16:17 UTC 2020
+Fri Oct 23 03:16:22 UTC 2020
+```

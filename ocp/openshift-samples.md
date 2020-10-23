@@ -2,7 +2,7 @@
 ### 参考知识库文档
 https://access.redhat.com/solutions/5067531
 
-### 在本地同步 openshift-samples operator 所需的镜像
+### 设置 cluster-samples 指向本地镜像仓库
 ```
 # 生成所需同步的镜像列表
 for i in `oc get is -n openshift --no-headers | awk '{print $1}'`; do oc get is $i -n openshift -o json | jq .spec.tags[].from.name | grep registry.redhat.io | sed -e 's/"//g' | cut -d"/" -f2-; done | tee /tmp/samples-imagelist.txt
@@ -21,7 +21,7 @@ $ oc create configmap registry-config --from-file=${MIRROR_ADDR_HOSTNAME}..5000=
 $ oc patch image.config.openshift.io/cluster --patch '{"spec":{"additionalTrustedCA":{"name":"registry-config"}}}' --type=merge
 
 # 设置 openshift-samples operator 的对象的 spec samplesRegistry，指向本地镜像仓库 
-oc patch configs.samples.operator.openshift.io/cluster --patch '{"spec":{"samplesRegistry": "${LOCAL_REGISTRY}" }}' --type=merge
+oc patch configs.samples.operator.openshift.io/cluster --patch '{"spec":{"samplesRegistry": "helper.cluster-0001.rhsacn.org:5000" }}' --type=merge
 
 # 当 samplesRegistry spec 被修改，将触发导入过程，如果此过程未发生，则可执行以下命令触发导入过程（可选）
 $ oc patch configs.samples.operator.openshift.io/cluster --patch '{"spec":{"managementState": "Removed" }}' --type merge

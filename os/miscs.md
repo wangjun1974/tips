@@ -3081,3 +3081,81 @@ https://www.openshift.com/blog/enabling-openshift-4-clusters-to-stop-and-resume-
 
 ### 理解 OpenShift Machine Config Operator
 https://www.redhat.com/en/blog/openshift-container-platform-4-how-does-machine-config-pool-work
+
+```
+# 查看 rendered-worker 文件数量
+
+oc -n openshift-machine-api get machineconfig | grep render | grep worker | awk '{print $1}' | while read i ; do echo $i ; oc -n openshift-machine-api get machineconfig $i -o json | jq .spec.config.storage.files[].path | wc -l ; done | more  
+
+# 查看 rendered-worker CreateTime
+
+oc -n openshift-machine-api get machineconfig | grep render | grep worker | awk '{print $1}' | while read i ; do echo $i ; oc -n openshift-machine-api get machineconfig $i -o json | jq .metadata.creationTimestamp  ; done
+
+rendered-worker-79175908d2f255d95306f589824c79a6
+"2020-10-22T12:14:44Z"
+rendered-worker-c75a95deaa58ece09cc7322019f9a0f0
+"2020-10-22T11:42:12Z"
+rendered-worker-d97677145fe5c3ccd616b684c725e90c
+"2020-10-22T11:42:10Z"
+rendered-worker-f6e7aa257f819b7f364bf9d1b7c87d20
+"2020-10-22T12:30:40Z"
+
+# 最新时间是 2020-10-22T12:30:40Z，看看哪个 machineconfig 的时间与此时间接近
+
+oc -n openshift-machine-api get machineconfig --no-headers | grep -Ev "render" | awk '{print $1}' | while read i ; do echo $i ; oc -n openshift-machine-api get machineconfig $i -o json | jq .metadata.creationTimestamp  ; done
+
+00-master
+"2020-10-22T11:42:08Z"
+00-worker
+"2020-10-22T11:42:09Z"
+01-master-container-runtime
+"2020-10-22T11:42:09Z"
+01-master-kubelet
+"2020-10-22T11:42:09Z"
+01-worker-container-runtime
+"2020-10-22T11:42:09Z"
+01-worker-kubelet
+"2020-10-22T11:42:09Z"
+99-master-f1635907-11d6-42f8-b36f-c9aeff7455bc-registries
+"2020-10-22T11:42:09Z"
+99-master-ssh
+"2020-10-22T11:37:55Z"
+99-worker-ea37cbd1-675c-497b-9758-dc64224b8a27-registries
+"2020-10-22T11:42:10Z"
+99-worker-ssh
+"2020-10-22T11:37:55Z"
+masters-chrony-configuration
+"2020-10-22T12:14:35Z"
+workers-chrony-configuration
+"2020-10-22T12:14:39Z"
+
+# 没有 2020-10-22T12:30:40Z 的 machineconfig，那为什么生成了新的 rendered 呢?
+
+oc -n openshift-machine-api get machineconfig rendered-worker-79175908d2f255d95306f589824c79a6 -o yaml | tee /tmp/rendered-worker-79175908d2f255d95306f589824c79a6
+
+oc -n openshift-machine-api get machineconfig rendered-worker-f6e7aa257f819b7f364bf9d1b7c87d20 -o yaml | tee /tmp/rendered-worker-f6e7aa257f819b7f364bf9d1b7c87d20
+
+diff -urN /tmp/rendered-worker-79175908d2f255d95306f589824c79a6 /tmp/rendered-worker-f6e7aa257f819b7f364bf9d1b7c87d20
+...
+@@ -160,7 +160,7 @@
+         mode: 420
+         path: /etc/kubernetes/kubelet.conf
+       - contents:
+-          source: data:text/plain,unqualified-search-registries%20%3D%20%5B%22registry.access.redhat.com%22%2C%20%22docker.io%22%5D%0A%0A%5B%5Bregistry%
+5D%5D%0A%20%20prefix%20%3D%20%22%22%0A%20%20location%20%3D%20%22quay.io%2Fopenshift-release-dev%2Focp-release%22%0A%20%20mirror-by-digest-only%20%3D%20tr
+ue%0A%0A%20%20%5B%5Bregistry.mirror%5D%5D%0A%20%20%20%20location%20%3D%20%22helper.cluster-0001.rhsacn.org%3A5000%2Focp4%2Fopenshift4%22%0A%0A%5B%5Bregis
+try%5D%5D%0A%20%20prefix%20%3D%20%22%22%0A%20%20location%20%3D%20%22quay.io%2Fopenshift-release-dev%2Focp-v4.0-art-dev%22%0A%20%20mirror-by-digest-only%2
+0%3D%20true%0A%0A%20%20%5B%5Bregistry.mirror%5D%5D%0A%20%20%20%20location%20%3D%20%22helper.cluster-0001.rhsacn.org%3A5000%2Focp4%2Fopenshift4%22%0A
++          source: data:text/plain,unqualified-search-registries%20%3D%20%5B%22registry.access.redhat.com%22%2C%20%22docker.io%22%5D%0A%0A%5B%5Bregistry%
+5D%5D%0A%20%20prefix%20%3D%20%22%22%0A%20%20location%20%3D%20%22quay.io%2Fopenshift-release-dev%2Focp-release%22%0A%20%20mirror-by-digest-only%20%3D%20tr
+ue%0A%0A%20%20%5B%5Bregistry.mirror%5D%5D%0A%20%20%20%20location%20%3D%20%22helper.cluster-0001.rhsacn.org%3A5000%2Focp4%2Fopenshift4%22%0A%0A%5B%5Bregis
+try%5D%5D%0A%20%20prefix%20%3D%20%22%22%0A%20%20location%20%3D%20%22quay.io%2Fopenshift-release-dev%2Focp-v4.0-art-dev%22%0A%20%20mirror-by-digest-only%2
+0%3D%20true%0A%0A%20%20%5B%5Bregistry.mirror%5D%5D%0A%20%20%20%20location%20%3D%20%22helper.cluster-0001.rhsacn.org%3A5000%2Focp4%2Fopenshift4%22%0A%0A%5
+B%5Bregistry%5D%5D%0A%20%20prefix%20%3D%20%22%22%0A%20%20location%20%3D%20%22registry.redhat.io%2Focs4%2Fcephcsi-rhel8%22%0A%20%20mirror-by-digest-only%2
+0%3D%20true%0A%0A%20%20%5B%5Bregistry.mirror%5D%5D%0A%20%20%20%20location%20%3D%20%22helper.cluster-0001.rhsacn.org%3A5000%2F...
+
+# 可以看到 /etc/kubernetes/kubelet.conf 这部分内容变化了
+# 增加了新的容器镜像仓库 mirror 内容
+# 这部分内容是在执行 oc apply -f oc apply -f /tmp/ImageContentSourcePolicy.yaml 之后产生的
+# 谜团解开了
+```

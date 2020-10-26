@@ -872,6 +872,8 @@ $(cat /tmp/image-policy.txt)
 EOF
 
 oc apply -f /tmp/ImageContentSourcePolicy.yaml
+# 等待 machineconfigpool 更新完成
+watch oc get mcp
 
 # create local-storage namespace and install local storage operator
 

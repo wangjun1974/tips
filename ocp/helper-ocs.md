@@ -1025,6 +1025,49 @@ oc patch storageclusters ocs-storagecluster -n openshift-storage -p '{"metadata"
 oc patch cephobjectstoreusers noobaa-ceph-objectstore-user -n openshift-storage -p '{"metadata":{"finalizers":[]}}' --type=merge
 
 oc patch cephobjectstoreusers ocs-storagecluster-cephobjectstoreuser -n openshift-storage -p '{"metadata":{"finalizers":[]}}' --type=merge
+
+
+# 检查 openshift-storage 有哪些 pods  
+[root@helper ocp4]# oc get pods -n openshift-storage
+NAME                                                              READY   STATUS      RESTARTS   AGE
+csi-cephfsplugin-48lnf                                            3/3     Running     0          144m
+csi-cephfsplugin-ccxrx                                            3/3     Running     0          144m
+csi-cephfsplugin-provisioner-5f8b66cc96-hll2d                     5/5     Running     2          144m
+csi-cephfsplugin-provisioner-5f8b66cc96-ln64m                     5/5     Running     0          78m
+csi-cephfsplugin-trc6b                                            3/3     Running     0          144m
+csi-rbdplugin-provisioner-66f66699c8-fpswm                        5/5     Running     0          78m
+csi-rbdplugin-provisioner-66f66699c8-mkkf5                        5/5     Running     0          144m
+csi-rbdplugin-qvzmr                                               3/3     Running     0          144m
+csi-rbdplugin-tqzmd                                               3/3     Running     0          144m
+csi-rbdplugin-xq9kz                                               3/3     Running     0          144m
+noobaa-core-0                                                     1/1     Running     0          143m
+noobaa-db-0                                                       1/1     Running     0          143m
+noobaa-endpoint-b78d759f-49l6k                                    1/1     Running     0          141m
+noobaa-operator-65cb6dcf6c-mfg6v                                  1/1     Running     0          78m
+ocs-operator-f95cdd554-lnc5x                                      1/1     Running     0          78m
+rook-ceph-crashcollector-worker0.cluster-0001.rhsacn.org-55hz7z   1/1     Running     0          143m
+rook-ceph-crashcollector-worker1.cluster-0001.rhsacn.org-8x7xql   1/1     Running     0          78m
+rook-ceph-crashcollector-worker2.cluster-0001.rhsacn.org-6xx4hb   1/1     Running     0          147m
+rook-ceph-drain-canary-worker0.cluster-0001.rhsacn.org-7787pq9q   1/1     Running     0          143m
+rook-ceph-drain-canary-worker1.cluster-0001.rhsacn.org-56d5g8gm   1/1     Running     0          78m
+rook-ceph-drain-canary-worker2.cluster-0001.rhsacn.org-5fc99n7z   1/1     Running     0          143m
+rook-ceph-mds-ocs-storagecluster-cephfilesystem-a-5b5ddc68z8lnf   1/1     Running     0          78m
+rook-ceph-mds-ocs-storagecluster-cephfilesystem-b-55cbcb76xts4g   1/1     Running     0          143m
+rook-ceph-mgr-a-695895dbb9-5pgh8                                  1/1     Running     0          143m
+rook-ceph-mon-a-7dd968f9bc-c6llt                                  1/1     Running     0          144m
+rook-ceph-mon-b-6d49cdfc9d-kjddv                                  1/1     Running     0          78m
+rook-ceph-mon-c-5b48599579-rv8zd                                  1/1     Running     0          144m
+rook-ceph-mon-d-canary-6bdc7df6b7-92rkg                           0/1     Pending     0          86s
+rook-ceph-operator-7b469677f6-t7c5c                               1/1     Running     1          144m
+rook-ceph-osd-0-cbbfff44c-z4476                                   1/1     Running     0          143m
+rook-ceph-osd-1-7fb75ffb49-htrz5                                  1/1     Running     0          78m
+rook-ceph-osd-2-d7f669475-nd5lz                                   1/1     Running     0          143m
+rook-ceph-osd-prepare-ocs-deviceset-1-data-0-gmkrk-cjt6m          0/1     Completed   0          143m
+rook-ceph-osd-prepare-ocs-deviceset-2-data-0-z2pxh-jzmhm          0/1     Completed   0          143m
+rook-ceph-rgw-ocs-storagecluster-cephobjectstore-a-78b8999wgmt2   1/1     Running     0          142m
+rook-ceph-rgw-ocs-storagecluster-cephobjectstore-b-6b759b89jwsz   1/1     Running     0          78m
+rook-ceph-tools-7fcff79f44-djknd                                  1/1     Running     0          59s
+
 ```
 
 

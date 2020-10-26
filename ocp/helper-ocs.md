@@ -992,6 +992,12 @@ oc patch StorageCluster ocs-storagecluster -n openshift-storage --type=merge --p
 oc patch StorageCluster ocs-storagecluster -n openshift-storage --type=merge --patch='{"spec":{"resources":{"prepareosd": {"Limit": {"memory": "512Mi"}}}}}'
 oc patch StorageCluster ocs-storagecluster -n openshift-storage --type=merge --patch='{"spec":{"resources":{"prepareosd": {"Request": {"memory": "512Mi"}}}}}'
 
+oc patch StorageCluster ocs-storagecluster -n openshift-storage --type=merge --patch='{"spec":{"resources":{"crashcollector": {"Limit": {"memory": "512Mi"}}}}}'  
+oc patch StorageCluster ocs-storagecluster -n openshift-storage --type=merge --patch='{"spec":{"resources":{"crashcollector": {"Request": {"memory": "512Mi"}}}}}'
+
+oc patch StorageCluster ocs-storagecluster -n openshift-storage --type=merge --patch='{"spec":{"resources":{"cleanup": {"Limit": {"memory": "512Mi"}}}}}'
+oc patch StorageCluster ocs-storagecluster -n openshift-storage --type=merge --patch='{"spec":{"resources":{"cleanup": {"Request": {"memory": "512Mi"}}}}}'
+
 # when delete namespace and namespace could not delete 
 # Get all resource in this namespace
 oc api-resources | grep true | awk '{print $1}'  | while read i ; do echo oc get $i -n openshift-storage ; oc get $i -n openshift-storage ; echo ; done | tee /tmp/err

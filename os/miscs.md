@@ -3235,9 +3235,14 @@ https://sites.google.com/site/syscookbook/rhel/rhel-kdump-rhel7<br>
     kernel-devel - 和当前的内核相同版本
     kernel-debuginfo - 和当前的内核相同版本
     kernel-debuginfo-common - 和当前的内核相同版本
+yum localinstall -y kernel-devel-3.10.0-862.el7.x86_64.rpm kernel-debuginfo-3.10.0-862.el7.x86_64.rpm kernel-debuginfo-common-x86_64-3.10.0-862.el7.x86_64.rpm
 
 2. 安装 crash 
 yum install -y crash
 
+3. 执行 crash 分析
+crash /usr/lib/debug/lib/modules/3.10.0-862.el7.x86_64/vmlinux \
+   /var/crash/127.0.0.1-2020-10-15-14\:01\:14/vmcore
 
+4. 参考 https://sites.google.com/site/syscookbook/rhel/rhel-kdump-rhel7 继续分析
 ```

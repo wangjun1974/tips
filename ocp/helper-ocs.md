@@ -1136,7 +1136,13 @@ oc set volume deployment/file-uploader --add --name=my-shared-storage \
 oc get route file-uploader -n my-shared-storage -o jsonpath --template="{.spec.host}"
 
 # 访问 route http://file-uploader-my-shared-storage.apps.cluster-0001.rhsacn.org
+# 上传文件
 
+# 扩展 pvc my-shared-storage
+oc patch pvc my-shared-storage -n my-shared-storage --type json --patch  '[{ "op": "replace", "path": "/spec/resources/requests/storage", "value": "5Gi" }]'
+
+# 确认 pvc 已扩展，cephfs pvc 扩展对应于增大 quota，ocs 4.5 不支持减小 pvc
+echo $(oc get pvc my-shared-storage -n my-shared-storage -o jsonpath='{.status.capacity.storage}')
 
 ```
 

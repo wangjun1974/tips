@@ -1144,6 +1144,18 @@ oc patch pvc my-shared-storage -n my-shared-storage --type json --patch  '[{ "op
 # 确认 pvc 已扩展，cephfs pvc 扩展对应于增大 quota，ocs 4.5 不支持减小 pvc
 echo $(oc get pvc my-shared-storage -n my-shared-storage -o jsonpath='{.status.capacity.storage}')
 
+# 安装 noobaa client
+curl -sLO https://github.com/noobaa/noobaa-operator/releases/download/v2.3.0/noobaa-linux-v2.3.0 ; chmod +x noobaa-linux-v2.3.0 ; sudo mv noobaa-linux-v2.3.0 /usr/bin/noobaa
+
+# 检查 noobaa version
+noobaa version
+INFO[0000] CLI version: 2.3.0                           
+INFO[0000] noobaa-image: noobaa/noobaa-core:5.5.0       
+INFO[0000] operator-image: noobaa/noobaa-operator:2.3.0 
+
+# 检查 Multi Cloud Gateway 状态
+noobaa status -n openshift-storage
+
 ```
 
 

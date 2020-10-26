@@ -1098,6 +1098,45 @@ oc get pv
 pvc-9b2e86b4-0b00-4202-aa8e-07e32f7c74c5   50Gi       RWO            Delete           Bound    openshift-storage/db-noobaa-db-0                  ocs-storagecluster-ceph-rbd            149m
 
 # 下载应用
+# 参考：https://red-hat-storage.github.io/ocs-training/training/ocs4/ocs.html
+# 创建项目
+oc new-project my-shared-storage
+
+# 新建应用，基于 https://github.com/christianh814/openshift-php-upload-demo git repo，采用 php:7.2 builder
+oc new-app openshift/php:7.2~https://github.com/christianh814/openshift-php-upload-demo --name=file-uploader
+
+# 查看 s2i build 镜像日志
+oc logs -f bc/file-uploader -n my-shared-storage
+...
+Writing manifest to image destination
+Storing signatures
+Successfully pushed image-registry.openshift-image-registry.svc:5000/my-shared-storage/file-uploader@sha256:74029bb63e4b7cb33602eb037d45d3d27245ffbfc105fd2a4587037c6b063183
+Push successful
+
+# 生成 svc/file-uploader 对应的 route
+oc expose svc/file-uploader -n my-shared-storage
+
+# 将 deployment/file-uploader 扩展为 3 副本
+oc scale --replicas=3 deployment/file-uploader -n my-shared-storage
+
+# 确认 3 个 pod 都处于 Running 状态
+oc get pods -n my-shared-storage
+
+# 为 deployment/file-uploader 添加 claim-mode 为 RWX 的 pvc
+# pvc 的名字是 my-shared-storage
+# pvc 对应的 storage class 是 ocs-storagecluster-cephfs
+# 加载位置为 /opt/app-root/src/uploaded
+oc set volume deployment/file-uploader --add --name=my-shared-storage \
+-t pvc --claim-mode=ReadWriteMany --claim-size=1Gi \
+--claim-name=my-shared-storage --claim-class=ocs-storagecluster-cephfs \
+--mount-path=/opt/app-root/src/uploaded \
+-n my-shared-storage
+
+# 获取 route
+oc get route file-uploader -n my-shared-storage -o jsonpath --template="{.spec.host}"
+
+# 访问 route http://file-uploader-my-shared-storage.apps.cluster-0001.rhsacn.org
+
 
 ```
 

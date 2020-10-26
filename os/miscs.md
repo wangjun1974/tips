@@ -3225,3 +3225,19 @@ https://bugzilla.redhat.com/show_bug.cgi?id=1861104
 删除 ocs pdb
 oc get pdb -n openshift-storage --no-headers | awk '{print $1}'  | while read i ; do echo oc delete pdb $i -n openshift-storage ; oc delete pdb $i -n openshift-storage ; echo ; done  
 ```
+
+### RHEL7 如何配置 crash dump 和 分析 crash dump
+https://www.thegeekdiary.com/centos-rhel-7-how-to-configure-kdump/<br>
+https://sites.google.com/site/syscookbook/rhel/rhel-kdump-rhel7<br>
+
+```
+1. 安装如下rpm包：
+    kernel-devel - 和当前的内核相同版本
+    kernel-debuginfo - 和当前的内核相同版本
+    kernel-debuginfo-common - 和当前的内核相同版本
+
+2. 安装 crash 
+yum install -y crash
+
+
+```

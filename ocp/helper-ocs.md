@@ -1068,6 +1068,37 @@ rook-ceph-rgw-ocs-storagecluster-cephobjectstore-a-78b8999wgmt2   1/1     Runnin
 rook-ceph-rgw-ocs-storagecluster-cephobjectstore-b-6b759b89jwsz   1/1     Running     0          78m
 rook-ceph-tools-7fcff79f44-djknd                                  1/1     Running     0          59s
 
+# 查询包含 ocs label 的节点
+oc get nodes --show-labels | grep ocs |cut -d' ' -f1
+
+# 查询 storagecluster 状态 
+oc get storagecluster -n openshift-storage
+NAME                 AGE    PHASE   EXTERNAL   CREATED AT             VERSION
+ocs-storagecluster   152m   Ready              2020-10-26T05:30:33Z   4.5.0
+
+# 检查 storagecluster 状态是否为 Ready
+oc get storagecluster -n openshift-storage ocs-storagecluster -o jsonpath='{.status.phase}{"\n"}'
+
+# 查询 storageclass 
+oc -n openshift-storage get sc
+NAME                                PROVISIONER                             RECLAIMPOLICY   VOLUMEBINDINGMODE      ALLOWVOLUMEEXPANSION   AGE
+localblock                          kubernetes.io/no-provisioner            Delete          WaitForFirstConsumer   false                  4h40m
+nfs-storage-provisioner (default)   nfs-storage                             Delete          Immediate              false                  5h19m
+ocs-storagecluster-ceph-rbd         openshift-storage.rbd.csi.ceph.com      Delete          Immediate              true                   153m
+ocs-storagecluster-ceph-rgw         openshift-storage.ceph.rook.io/bucket   Delete          Immediate              false                  153m
+ocs-storagecluster-cephfs           openshift-storage.cephfs.csi.ceph.com   Delete          Immediate              true                   153m
+openshift-storage.noobaa.io         openshift-storage.noobaa.io/obc         Delete          Immediate              false                  3h23m
+
+# noobaa-db 是 storageclass ocs-storagecluster-ceph-rbd 的用户
+# storageclass 为 ocs-storagecluster-ceph-rbd
+# pvc 为 openshift-storage/db-noobaa-db-0
+# pv 为 pvc-9b2e86b4-0b00-4202-aa8e-07e32f7c74c5
+oc get pv
+...
+pvc-9b2e86b4-0b00-4202-aa8e-07e32f7c74c5   50Gi       RWO            Delete           Bound    openshift-storage/db-noobaa-db-0                  ocs-storagecluster-ceph-rbd            149m
+
+# 下载应用
+
 ```
 
 

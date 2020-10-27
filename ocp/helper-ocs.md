@@ -819,6 +819,9 @@ oc apply -f ./99-worker-zzz-chrony-configuration.yaml
 oc patch machineconfigpools.machineconfiguration.openshift.io/master -p '{"spec":{"paused":false}}' --type=merge
 oc patch machineconfigpools.machineconfiguration.openshift.io/worker -p '{"spec":{"paused":false}}' --type=merge
 
+# 检查时间同步情况
+for i in $(seq 140 145); do echo 10.66.208.${i} ; ssh core@10.66.208.${i} date -u ; date -u ; echo ; done
+
 # patch samples operator samplesRegistry (optional)
 # 当本地有 imagestream 镜像时执行此命令
 oc patch configs.samples.operator.openshift.io cluster --type merge \

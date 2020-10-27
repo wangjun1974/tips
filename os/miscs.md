@@ -3246,3 +3246,15 @@ crash /usr/lib/debug/lib/modules/3.10.0-862.el7.x86_64/vmlinux \
 
 4. 参考 https://sites.google.com/site/syscookbook/rhel/rhel-kdump-rhel7 继续分析
 ```
+
+### 检查 RHCoreOS 系统日志
+```
+# 生成文件
+sudo journalctl > /tmp/system.log
+
+# 过滤信息
+sudo cat /tmp/system.log  | grep -Ev "kernel: | systemd| multipathd| ignition| coreos| dracut| iscsid| ostree| restorecon| augenrules| NetworkManager| rhcos| machine-config-daemon| I1026 | auditd| chronyd| dbus| network-manager| rpc.statd| sssd| polkitd| rpm-ostree| dbus-daemon" | mor
+
+# 删除临时文件
+sudo rm -f /tmp/system.log
+```

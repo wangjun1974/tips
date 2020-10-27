@@ -114,7 +114,15 @@ metadata:
   namespace: openshift-storage
 spec:
   manageNodes: false
-  monDataDirHostPath: /var/lib/rook
+  monPVCTemplate:
+     spec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 10Gi
+      storageClassName: gp2
+      volumeMode: Filesystem
   storageDeviceSets:
   - config: {}
     count: 1

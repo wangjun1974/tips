@@ -1269,6 +1269,93 @@ POOL_APP_NOT_ENABLED application not enabled on 1 pool(s)
     application not enabled on pool 'ocs-storagecluster-cephobjectstore.rgw.control'
 
 ceph osd pool application enable ocs-storagecluster-cephobjectstore.rgw.control rgw
+
+
+# 配置 openshift-monitoring 使用 ocs 存储
+# 在 openshift-monitoring 的 namespace 下生成 configmap cluster-monitoring-config
+# 配置内容为 
+# prometheusK8s 的 volumeClaimTemplate 使用 storageclass ocs-storagecluster-ceph-rbd 请求 40 Gi 存储
+# alertmanagerMain 的 volumeClaimTemplate 使用 storageclass ocs-storagecluster-ceph-rbd 请求 40 Gi 存储
+
+cat > ocslab-cluster-monitoring-noinfra.yaml << EOF
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cluster-monitoring-config
+  namespace: openshift-monitoring
+data:
+  config.yaml: |
+    prometheusK8s:
+      volumeClaimTemplate:
+        metadata:
+          name: prometheusdb
+        spec:
+          storageClassName: ocs-storagecluster-ceph-rbd
+          resources:
+            requests:
+              storage: 40Gi
+    alertmanagerMain:
+      volumeClaimTemplate:
+        metadata:
+          name: alertmanager
+        spec:
+          storageClassName: ocs-storagecluster-ceph-rbd
+          resources:
+            requests:
+              storage: 40Gi
+EOF
+oc create -f ocslab-cluster-monitoring-noinfra.yaml
+
+# 如果配置了 infranode 可考虑采用如下的 yaml 文件
+# 里面配置了对应的 nodeSelector 选择 infra 节点
+cat > ocslab-cluster-monitoring-withinfra.yaml << EOF
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cluster-monitoring-config
+  namespace: openshift-monitoring
+data:
+  config.yaml: |+
+    alertmanagerMain:
+      nodeSelector:
+        node-role.kubernetes.io/infra: ""
+      volumeClaimTemplate:
+        metadata:
+          name: alertmanager
+        spec:
+          storageClassName: ocs-storagecluster-ceph-rbd
+          resources:
+            requests:
+              storage: 40Gi
+    prometheusK8s:
+      nodeSelector:
+        node-role.kubernetes.io/infra: ""
+      volumeClaimTemplate:
+        metadata:
+          name: prometheusdb
+        spec:
+          storageClassName: ocs-storagecluster-ceph-rbd
+          resources:
+            requests:
+              storage: 40Gi
+    prometheusOperator:
+      nodeSelector:
+        node-role.kubernetes.io/infra: ""
+    grafana:
+      nodeSelector:
+        node-role.kubernetes.io/infra: ""
+    k8sPrometheusAdapter:
+      nodeSelector:
+        node-role.kubernetes.io/infra: ""
+    kubeStateMetrics:
+      nodeSelector:
+        node-role.kubernetes.io/infra: ""
+    telemeterClient:
+      nodeSelector:
+        node-role.kubernetes.io/infra: ""
+EOF
+
+oc create -f ocslab-cluster-monitoring-withinfra.yaml
 ```
 
 

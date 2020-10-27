@@ -1156,6 +1156,114 @@ INFO[0000] operator-image: noobaa/noobaa-operator:2.3.0
 # 检查 Multi Cloud Gateway 状态
 noobaa status -n openshift-storage
 
+# create storage cluster
+# see: https://red-hat-storage.github.io/ocs-training/training/ocs4/ocs4-install-no-ui.html#_create_cluster
+cat > storagecluster.yaml << 'EOF'
+apiVersion: ocs.openshift.io/v1
+kind: StorageCluster
+metadata:
+  name: ocs-storagecluster
+  namespace: openshift-storage
+spec:
+  manageNodes: false
+  monDataDirHostPath: /var/lib/rook
+  resources:
+    mds:
+      limits:
+        cpu: "500m"
+        memory: "512Mi"
+      requests:
+        cpu: "500m"
+        memory: "512Mi"
+    mon:
+      limits:
+        cpu: "500m"
+        memory: "512Mi"
+      requests:
+        cpu: "500m"
+        memory: "512Mi"
+    mgr:
+      limits:
+        cpu: "500m"
+        memory: "512Mi"
+      requests:
+        cpu: "500m"
+        memory: "512Mi"
+    osd:
+      limits:
+        cpu: "500m"
+        memory: "512Mi"
+      requests:
+        cpu: "500m"
+        memory: "512Mi"
+    rgw:
+      limits:
+        cpu: "500m"
+        memory: "512Mi"
+      requests:
+        cpu: "500m"
+        memory: "512Mi"
+    noobaa-db:
+      limits:
+        cpu: "500m"
+        memory: "512Mi"
+      requests:
+        cpu: "500m"
+        memory: "512Mi"
+    noobaa-core:
+      limits:
+        cpu: "500m"
+        memory: "512Mi"
+      requests:
+        cpu: "500m"
+        memory: "512Mi"
+    prepareosd:
+      limits:
+        cpu: "500m"
+        memory: "50Mi"
+      requests:
+        cpu: "500m"
+        memory: "50Mi"
+    crashcollector:
+      limits:
+        cpu: "500m"
+        memory: "60Mi"
+      requests:
+        cpu: "500m"
+        memory: "60Mi"
+    cleanup:
+      limits:
+        cpu: "500m"
+        memory: "60Mi"
+      requests:
+        cpu: "500m"
+        memory: "60Mi"       
+  storageDeviceSets:
+  - config: {}
+    count: 1   
+    dataPVCTemplate:
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: "1"
+        storageClassName: localblock
+        volumeMode: Block
+    name: ocs-deviceset
+    placement: {}
+    replica: 3
+    resources:
+      limits:
+        cpu: "500m"
+        memory: "512Mi"
+      requests:
+        cpu: "500m"
+        memory: "512Mi"
+  version: 4.5.0
+EOF
+
+oc create -f storagecluster.yaml
 ```
 
 

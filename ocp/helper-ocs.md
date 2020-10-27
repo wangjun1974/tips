@@ -1259,6 +1259,16 @@ spec:
 EOF
 
 oc create -f storagecluster.yaml
+
+# 当集群状态为降级时，可以登录 TOOLBOX，执行以下命令检查具体错误
+ceph health detail 
+
+# 对于 health: HEALTH_WARN application not enabled on 1 pool(s) 的报错
+HEALTH_WARN application not enabled on 1 pool(s)
+POOL_APP_NOT_ENABLED application not enabled on 1 pool(s)
+    application not enabled on pool 'ocs-storagecluster-cephobjectstore.rgw.control'
+
+ceph osd pool application enable ocs-storagecluster-cephobjectstore.rgw.control rgw
 ```
 
 

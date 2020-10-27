@@ -3258,3 +3258,6 @@ sudo cat /tmp/system.log  | grep -Ev "kernel: | systemd| multipathd| ignition| c
 # 删除临时文件
 sudo rm -f /tmp/system.log
 ```
+
+### 重新生成节点 certificate
+https://access.redhat.com/solutions/4923031

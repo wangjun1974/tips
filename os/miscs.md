@@ -3451,3 +3451,6 @@ oc get pv | egrep 'ocs-storagecluster-ceph-rbd|ocs-storagecluster-cephfs'
 13. 删除 ocs 相关 crd（optional，彻底删除时执行）
 oc delete crd backingstores.noobaa.io bucketclasses.noobaa.io cephblockpools.ceph.rook.io cephclusters.ceph.rook.io cephfilesystems.ceph.rook.io cephnfses.ceph.rook.io cephobjectstores.ceph.rook.io cephobjectstoreusers.ceph.rook.io noobaas.noobaa.io ocsinitializations.ocs.openshift.io  storageclusterinitializations.ocs.openshift.io storageclusters.ocs.openshift.io cephclients.ceph.rook.io --wait=true --timeout=5m
 ```
+
+### 博客 Deploying OpenShift Container Storage using Local Devices
+https://www.openshift.com/blog/deploying-openshift-container-storage-using-local-devices

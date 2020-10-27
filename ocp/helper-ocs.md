@@ -1165,7 +1165,7 @@ metadata:
   name: ocs-storagecluster
   namespace: openshift-storage
 spec:
-  manageNodes: false
+  externalStorage: {}
   monDataDirHostPath: /var/lib/rook
   resources:
     mds:
@@ -1253,14 +1253,6 @@ spec:
     name: ocs-deviceset
     placement: {}
     replica: 3
-    resources:
-      limits:
-        cpu: "500m"
-        memory: "512Mi"
-      requests:
-        cpu: "500m"
-        memory: "512Mi"
-  version: 4.5.0
 EOF
 
 oc create -f storagecluster.yaml

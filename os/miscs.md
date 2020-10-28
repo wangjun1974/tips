@@ -3497,3 +3497,13 @@ cp <backup/install-config.yaml> <new_empty_directory>
 cd <new_empty_directory>
 openshift-install create ignition-configs --dir=`pwd`
 ```
+
+### 如何创建 serviceaccount 并且授予 anyuid 策略，然后将此 serviceaccount 与 dc/myapp 关联起来
+```
+# Create a ServiceAccount to let our container startup as a privileged pod
+oc create serviceaccount mysa
+# As `cluster-admin`, give the ServiceAccount the permission start as an anyuid pod
+oc adm policy add-scc-to-user anyuid -z mysa
+# Apply the ServiceAccount to the DeploymentConfig
+oc patch dc/myapp --patch '{"spec":{"template":{"spec":{"serviceAccountName": "mysa"}}}}'
+```

@@ -3477,3 +3477,10 @@ https://github.com/openshift/cluster-samples-operator<br>
 
 ### OpenShift Container Platform 4.x Tested Integrations (for x86_x64)
 https://access.redhat.com/articles/4763741<br>
+
+### 重新安装 OCP 4 的 worker
+Remove it from the cluster first (cordon -> drain -> oc delete node).  Then reinstall CoreOS however you like (ISO, PXE, whatever) using the same worker ignition
+
+### 博客：在资源超分配情况下 OpenShift 如何处理 worker 节点资源 
+How to Handle OpenShift Worker Nodes Resources in Overcommitted State<br>
+https://www.openshift.com/blog/how-to-handle-openshift-worker-nodes-resources-in-overcommitted-state

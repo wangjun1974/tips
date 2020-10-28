@@ -3474,3 +3474,6 @@ ToDo: 需要仔细阅读一下这篇博客
 ### OpenShift Smaple Operator
 https://github.com/openshift/cluster-samples-operator<br>
 用来管理以 RHEL 镜像为基础的 ImageStream 和 Templates<br>
+
+### OpenShift Container Platform 4.x Tested Integrations (for x86_x64)
+https://access.redhat.com/articles/4763741<br>

@@ -3455,7 +3455,16 @@ oc delete crd backingstores.noobaa.io bucketclasses.noobaa.io cephblockpools.cep
 ### 博客 Deploying OpenShift Container Storage using Local Devices
 https://www.openshift.com/blog/deploying-openshift-container-storage-using-local-devices
 
-### 找到 OpenShift namespace openshift-monitoring 下无法删除的资源的命令
+### 找到 OpenShift4 namespace openshift-monitoring 下无法删除的资源的命令
 ```
 oc api-resources --verbs=list --namespaced -o name | xargs -n 1 oc get --show-kind --ignore-not-found -n openshift-monitoring
 ```
+
+关于 finalizer 值得详细阅读的博客<br>
+这篇博客讲述了：<br>
+ * 什么是 finalizer <br>
+ * 为什么要有 finalizer <br>
+ * 如果不使用 finalizer 可能会有什么问题 <br>
+ * 如何找到 namespace 下等待删除的资源 <br>
+ * 如果不通过 API，而是通过直接查询 etcd 该怎么做 <br>
+https://www.openshift.com/blog/the-hidden-dangers-of-terminating-namespaces

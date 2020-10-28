@@ -3454,3 +3454,8 @@ oc delete crd backingstores.noobaa.io bucketclasses.noobaa.io cephblockpools.cep
 
 ### 博客 Deploying OpenShift Container Storage using Local Devices
 https://www.openshift.com/blog/deploying-openshift-container-storage-using-local-devices
+
+### 找到 OpenShift namespace openshift-monitoring 下无法删除的资源的命令
+```
+oc api-resources --verbs=list --namespaced -o name | xargs -n 1 oc get --show-kind --ignore-not-found -n openshift-monitoring
+```

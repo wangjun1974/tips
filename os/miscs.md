@@ -3484,3 +3484,16 @@ Remove it from the cluster first (cordon -> drain -> oc delete node).  Then rein
 ### 博客：在资源超分配情况下 OpenShift 如何处理 worker 节点资源 
 How to Handle OpenShift Worker Nodes Resources in Overcommitted State<br>
 https://www.openshift.com/blog/how-to-handle-openshift-worker-nodes-resources-in-overcommitted-state
+
+### 生成新的 ignition 文件的步骤
+https://docs.openshift.com/container-platform/4.1/installing/installing_bare_metal/installing-bare-metal.html
+
+1. 创建新的空的目录
+2. 拷贝备份好的 install-config.yaml 文件到此目录下
+3. 执行命令
+```
+mkdir -p <new_empty_directory>
+cp <backup/install-config.yaml> <new_empty_directory>
+cd <new_empty_directory>
+openshift-install create ignition-configs --dir=`pwd`
+```

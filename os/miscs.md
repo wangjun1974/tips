@@ -3468,3 +3468,7 @@ oc api-resources --verbs=list --namespaced -o name | xargs -n 1 oc get --show-ki
  * 如何找到 namespace 下等待删除的资源 <br>
  * 如果不通过 API，而是通过直接查询 etcd 该怎么做 <br>
 https://www.openshift.com/blog/the-hidden-dangers-of-terminating-namespaces
+
+### OpenShift Smaple Operator
+https://github.com/openshift/cluster-samples-operator<br>
+用来管理以 RHEL 镜像为基础的 ImageStream 和 Templates<br>

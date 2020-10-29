@@ -3540,3 +3540,8 @@ $(which skopeo) copy --all docker://${BASH_REMATCH[1]} docker://${BASH_REMATCH[2
 done
 EOF
 ```
+
+### 查看某节点上的 pod
+```
+oc get pods -o wide --all-namespaces | grep worker0 
+```

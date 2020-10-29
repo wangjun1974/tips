@@ -3508,7 +3508,8 @@ oc adm policy add-scc-to-user anyuid -z mysa
 oc patch dc/myapp --patch '{"spec":{"template":{"spec":{"serviceAccountName": "mysa"}}}}'
 ```
 
-### openshift-install 也是支持 explain 命令的
+### openshift-install 也是支持 explain 命令
+这个命令可以让我们了解 installconfig 在特定平台上的支持能力
 ```
 $ openshift-install explain installconfig.platform.azure.resourceGroupName
 KIND:     InstallConfig

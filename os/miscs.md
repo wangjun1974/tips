@@ -3545,3 +3545,25 @@ EOF
 ```
 oc get pods -o wide --all-namespaces | grep worker0 
 ```
+
+### 问题 Error: error creating container storage: layer not known 的处理方式
+划重点：这个问题在异常掉电重启时经常会遇到<br>
+划重点：这个问题在异常掉电重启时经常会遇到<br>
+划重点：这个问题在异常掉电重启时经常会遇到<br>
+
+解决方案参考：
+https://bugzilla.redhat.com/show_bug.cgi?id=1857224<br>
+
+https://github.com/openshift/okd/issues/297<br>
+After rebooting a node, it sometimes never transitions to the Ready state.  This may happen more frequently under load.  Typical messages are:<br>
+Jun 25 14:08:07 worker-2.ostest.test.metalkube.org podman[1424]: Error: error creating container storage: layer not known<br>
+
+```
+ssh core@<workerip>
+
+sudo systemctl stop kubelet
+sudo systemctl stop crio
+sudo rm -rf /var/lib/containers
+sudo systemctl start crio
+sudo systemctl start kubelet
+```

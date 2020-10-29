@@ -3521,3 +3521,22 @@ RESOURCE: <string>
 
 ### OCP 4.6 RHV UPI document
 https://github.com/openshift/installer/blob/master/docs/user/ovirt/install_upi.md
+
+### 拷贝镜像的脚本，因为采用了 skopeo copy --all，因此拷贝前和拷贝后 sha256 不变
+https://gitlab.cee.redhat.com/ltitov/openshift-disconnected-stuff/-/blob/master/copy-images.sh 
+```
+cat > copy-images.sh << 'EOF'
+#!/bin/bash
+
+REGEX="(.*)=(.*)"
+while read p; do
+
+# echo $p
+
+[[ $p =~ $REGEX ]]
+echo "Copy ${BASH_REMATCH[1]} to ${BASH_REMATCH[2]}"
+$(which skopeo) copy --all docker://${BASH_REMATCH[1]} docker://${BASH_REMATCH[2]}
+
+done
+EOF
+```

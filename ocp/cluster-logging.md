@@ -61,7 +61,7 @@ oc get pod -n openshift-logging --selector component=elasticsearch --no-headers 
 
 # 参考 Bug 1866490
 # https://bugzilla.redhat.com/show_bug.cgi?id=1866490
-
+# https://blog.csdn.net/weixin_43902588/article/details/105586460
 
 ```
 
@@ -113,6 +113,18 @@ oc -n openshift-logging get logforwarding $(oc get logforwarding -n openshift-lo
 # Create Kibana Visualizations from the new index patterns.
 https://bugzilla.redhat.com/show_bug.cgi?id=1867137<br>
 https://docs.openshift.com/container-platform/4.5/logging/cluster-logging-upgrading.html<br>
+https://medium.com/getting-started-with-the-elk-stack/introducing-kibana-59c6ddb3d085
 
+首先确认 es 有 indices，在 kibana 里创建完 indices pattern 后，可调整 kibana Discover 页面的 Time Range 查看日志内容
+
+另外遇到的问题包括
+# https://bugzilla.redhat.com/show_bug.cgi?id=1866019
+$ oc get pods -n openshift-logging | grep Error
+elasticsearch-delete-infra-1603961100-54d7r     0/1     Error       0          58m
+
+$ oc logs elasticsearch-delete-infra-1603961100-54d7r -n openshift-logging
+oc logs elasticsearch-delete-infra-1603961100-54d7r -n openshift-logging                       
+{"error":{"root_cause":[{"type":"security_exception","reason":"Unexpected exception indices:admin/aliases/get"}],"type":"security_exception","reason":"Unexpected exception indices:admin/aliases/get"},"status":500}
+Error while attemping to determine the active write alias: {"error":{"root_cause":[{"type":"security_exception","reason":"Unexpected exception indices:admin/aliases/get"}],"type":"security_exception","reason":"Unexpected exception indices:admin/aliases/get"},"status":500}
 
 ```

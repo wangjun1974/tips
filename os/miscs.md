@@ -3567,3 +3567,6 @@ sudo rm -rf /var/lib/containers
 sudo systemctl start crio
 sudo systemctl start kubelet
 ```
+
+### 介绍 OpenShift Logging 的博客
+https://blog.csdn.net/weixin_43902588/article/details/105586460

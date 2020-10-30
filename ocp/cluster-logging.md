@@ -47,7 +47,83 @@ spec:
 EOF
 
 oc apply -f ./clo-instance.yaml
+
+默认 cluster logging operator 没有启用 audit log 
+原因是内部 es 的存储不是加密存储
+如果想启用 cluster logging operator 的 audit log，需要在 ClusterLogging instance 的 metadata 里添加 annotations: clusterlogging.openshift.io/logforwardingtechpreview: enabled
+
+cat > clo-instance.yaml << EOF
+apiVersion: "logging.openshift.io/v1"
+kind: "ClusterLogging"
+metadata:
+  annotations:
+    clusterlogging.openshift.io/logforwardingtechpreview: enabled
+  name: "instance" 
+  namespace: "openshift-logging"
+spec:
+  managementState: "Managed"  
+  logStore:
+    type: "elasticsearch"  
+    retentionPolicy: 
+      application:
+        maxAge: 1h
+      infra:
+        maxAge: 1h
+      audit:
+        maxAge: 1h
+    elasticsearch:
+      nodeCount: 3 
+      storage:
+        storageClassName: "nfs-storage-provisioner" 
+        size: 10G
+      redundancyPolicy: "SingleRedundancy"
+  visualization:
+    type: "kibana"  
+    kibana:
+      replicas: 1
+  curation:
+    type: "curator"
+    curator:
+      schedule: "30 3 * * *" 
+  collection:
+    logs:
+      type: "fluentd"  
+      fluentd: {}
+EOF
+
+延续上一个话题，在 Cluster Logging 里启用 audit log，还需要定义 LogForwarding，在 pipeline 里添加 audit.pipeline
+
+cat > clo-logforwarding-withaudit.yaml << EOF
+apiVersion: logging.openshift.io/v1alpha1
+kind: LogForwarding
+metadata:
+  name: instance
+  namespace: openshift-logging
+spec:
+  disableDefaultForwarding: true
+  outputs:
+    - name: clo-es
+      type: elasticsearch
+      endpoint: 'elasticsearch.openshift-logging.svc:9200' 
+      secret:
+        name: fluentd
+  pipelines:
+    - name: audit-pipeline 
+      inputSource: logs.audit
+      outputRefs:
+        - clo-es
+    - name: app-pipeline 
+      inputSource: logs.app
+      outputRefs:
+        - clo-es
+    - name: infra-pipeline 
+      inputSource: logs.infra
+      outputRefs:
+        - clo-es
+EOF
 ```
+
+
 
 ```
 确认安装是否正确

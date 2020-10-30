@@ -3578,3 +3578,5 @@ Your ImageStream should point to the external repo and the DC/Deployment should 
 The image itself is only cached the first time a Pod needs it (it's "pullthrough") <br>
 
 
+### 使用 fio 测试您的存储是否满足 etcd 的响应及时延要求
+https://www.ibm.com/cloud/blog/using-fio-to-tell-whether-your-storage-is-fast-enough-for-etcd

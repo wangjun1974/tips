@@ -57,6 +57,7 @@ spec:
 apiVersion: route.openshift.io/v1
 kind: Route
 metadata:
+  name: fiotools-etcd
   labels:
     name: fiotools-etcd
 spec:

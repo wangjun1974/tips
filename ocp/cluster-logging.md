@@ -48,9 +48,10 @@ EOF
 
 oc apply -f ./clo-instance.yaml
 
-默认 cluster logging operator 没有启用 audit log 
-原因是内部 es 的存储不是加密存储
-如果想启用 cluster logging operator 的 audit log，需要在 ClusterLogging instance 的 metadata 里添加 annotations: clusterlogging.openshift.io/logforwardingtechpreview: enabled
+默认 cluster logging operator 没有启用 audit log <br>
+原因是内部 es 的存储不是加密存储 <br>
+如果想启用 cluster logging operator 的 audit log，需要在 ClusterLogging instance 的 metadata 里添加 annotations: clusterlogging.openshift.io/logforwardingtechpreview: enabled<br>
+参见：https://docs.openshift.com/container-platform/4.5/logging/cluster-logging-external.html#cluster-logging-collector-log-forward-enable_cluster-logging-external
 
 cat > clo-instance.yaml << EOF
 apiVersion: "logging.openshift.io/v1"

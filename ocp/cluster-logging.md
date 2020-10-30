@@ -121,6 +121,8 @@ spec:
       outputRefs:
         - clo-es
 EOF
+
+oc apply -f clo-logforwarding-withaudit.yaml
 ```
 
 

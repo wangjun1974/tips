@@ -3570,3 +3570,11 @@ sudo systemctl start kubelet
 
 ### 介绍 OpenShift Logging 的博客
 https://blog.csdn.net/weixin_43902588/article/details/105586460
+
+### 如何在 OpenShift 下实现首次 Deployment 从外部 registry 获取 image，再次则从本地 cache 获取 image
+问题： Question regarding the image registry: Suppose i want to deploy an image coming from quay.io/myproject/myapp:latest ? Will this image be cached in the registry so next time i will redeploy it the deployment will be potentially faster? <br>
+回答：You can achieve this with ImageStream --reference-policy=local <br>
+Your ImageStream should point to the external repo and the DC/Deployment should point to the internal registry url <br>
+The image itself is only cached the first time a Pod needs it (it's "pullthrough") <br>
+
+

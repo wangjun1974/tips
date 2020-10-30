@@ -9,7 +9,7 @@
 
 ```
 创建 Cluster Logging Instance
-
+cat > clo-instance.yaml << EOF
 apiVersion: "logging.openshift.io/v1"
 kind: "ClusterLogging"
 metadata:
@@ -21,11 +21,11 @@ spec:
     type: "elasticsearch"  
     retentionPolicy: 
       application:
-        maxAge: 1d
+        maxAge: 1h
       infra:
-        maxAge: 1d
+        maxAge: 1h
       audit:
-        maxAge: 1d
+        maxAge: 1h
     elasticsearch:
       nodeCount: 3 
       storage:
@@ -44,6 +44,9 @@ spec:
     logs:
       type: "fluentd"  
       fluentd: {}
+EOF
+
+oc apply -f ./clo-instance.yaml
 ```
 
 ```
@@ -127,4 +130,15 @@ oc logs elasticsearch-delete-infra-1603961100-54d7r -n openshift-logging
 {"error":{"root_cause":[{"type":"security_exception","reason":"Unexpected exception indices:admin/aliases/get"}],"type":"security_exception","reason":"Unexpected exception indices:admin/aliases/get"},"status":500}
 Error while attemping to determine the active write alias: {"error":{"root_cause":[{"type":"security_exception","reason":"Unexpected exception indices:admin/aliases/get"}],"type":"security_exception","reason":"Unexpected exception indices:admin/aliases/get"},"status":500}
 
+
+删除 indices 
+oc get pod -n openshift-logging --selector component=elasticsearch --no-headers | awk '{print $1}' | head -1 | while read pod ; do echo oc -n openshift-logging exec -c elasticsearch ${pod} -- es_util --query=infra-000002 -XDELETE; done 
+
+确认 es indices
+oc get pod -n openshift-logging --selector component=elasticsearch --no-headers | awk '{print $1}' | while read i ; do oc exec -n openshift-logging -c elasticsearch  ${i} -- indices ; done
+
+fluentd 报错
+oc logs fluentd-xh2z8 -n openshift-logging
+
+2020-10-29 10:03:15 +0000 [warn]: [clo_default_output_es] failed to flush the buffer. retry_time=6 next_retry_seconds=2020-10-29 10:03:47 +0000 chunk="5b2cabb59c6178a072dd8eeebf3d9b22" error_class=Fluent::Plugin::ElasticsearchOutput::RecoverableRequestFailure error="could not push logs to Elasticsearch cluster ({:host=>\"elasticsearch.openshift-logging.svc.cluster.local\", :port=>9200, :scheme=>\"https\", :user=>\"fluentd\", :password=>\"obfuscated\"}): [400] {\"error\":{\"root_cause\":[{\"type\":\"illegal_argument_exception\",\"reason\":\"no write index is defined for alias [infra-write]. The write index may be explicitly disabled using is_write_index=false or the alias points to multiple indices without one being designated as a write index\"}],\"type\":\"illegal_argument_exception\",\"reason\":\"no write index is defined for alias [infra-write]. The write index may be explicitly disabled using is_write_index=false or the alias points to multiple indices without one being designated as a write index\"},\"status\":400}"
 ```

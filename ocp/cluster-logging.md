@@ -153,34 +153,10 @@ oc get pod -n openshift-logging --selector component=elasticsearch --no-headers 
 $ oc auth can-i get pods/logs -n default
 yes
 
-# The audit logs are not stored in the internal OpenShift Container Platform Elasticsearch instance by default. To view the audit logs in Kibana, you must use the Log Forwarding API to configure a pipeline that uses the default output for audit logs.
+# The audit logs are not stored in the internal OpenShift Container Platform Elasticsearch instance by default. To view the audit logs in Kibana, you must use the Log Forwarding API to configure a pipeline that uses the default output for audit logs. <br>
+
+# See: https://docs.openshift.com/container-platform/4.5/logging/config/cluster-logging-log-store.html
 # See: https://examples.openshift.pub/logging/forwarding-demo/
-oc create -f - <<EOF
-apiVersion: logging.openshift.io/v1alpha1
-kind: LogForwarding
-metadata:
-  name: instance
-  namespace: openshift-logging
-spec:
-  disableDefaultForwarding: true
-  outputs:
-    - name: fluentd-created-by-user
-      type: forward
-      endpoint: 'fluentd.fluentd.svc.cluster.local:24224'
-  pipelines:
-    - name: app-pipeline
-      inputSource: logs.app
-      outputRefs:
-        - fluentd-created-by-user
-    - name: infra-pipeline
-      inputSource: logs.infra
-      outputRefs:
-        - fluentd-created-by-user
-    - name: clo-default-audit-pipeline
-      inputSource: logs.audit
-      outputRefs:
-        - fluentd-created-by-user
-EOF
 
 # 获取 logforwanding
 oc -n openshift-logging get logforwarding $(oc get logforwarding -n openshift-logging -o jsonpath='{.items[0].metadata.name}{"\n"}') -o yaml
@@ -198,7 +174,8 @@ https://medium.com/getting-started-with-the-elk-stack/introducing-kibana-59c6ddb
 
 首先确认 es 有 indices，在 kibana 里创建完 indices pattern 后，可调整 kibana Discover 页面的 Time Range 查看日志内容
 
-另外遇到的问题包括
+
+之前测试中遇到的问题
 # https://bugzilla.redhat.com/show_bug.cgi?id=1866019
 $ oc get pods -n openshift-logging | grep Error
 elasticsearch-delete-infra-1603961100-54d7r     0/1     Error       0          58m
@@ -214,6 +191,7 @@ oc get pod -n openshift-logging --selector component=elasticsearch --no-headers 
 
 确认 es indices
 oc get pod -n openshift-logging --selector component=elasticsearch --no-headers | awk '{print $1}' | while read i ; do oc exec -n openshift-logging -c elasticsearch  ${i} -- indices ; done
+
 
 fluentd 报错
 oc logs fluentd-xh2z8 -n openshift-logging

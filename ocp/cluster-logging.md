@@ -199,3 +199,20 @@ oc logs fluentd-xh2z8 -n openshift-logging
 
 2020-10-29 10:03:15 +0000 [warn]: [clo_default_output_es] failed to flush the buffer. retry_time=6 next_retry_seconds=2020-10-29 10:03:47 +0000 chunk="5b2cabb59c6178a072dd8eeebf3d9b22" error_class=Fluent::Plugin::ElasticsearchOutput::RecoverableRequestFailure error="could not push logs to Elasticsearch cluster ({:host=>\"elasticsearch.openshift-logging.svc.cluster.local\", :port=>9200, :scheme=>\"https\", :user=>\"fluentd\", :password=>\"obfuscated\"}): [400] {\"error\":{\"root_cause\":[{\"type\":\"illegal_argument_exception\",\"reason\":\"no write index is defined for alias [infra-write]. The write index may be explicitly disabled using is_write_index=false or the alias points to multiple indices without one being designated as a write index\"}],\"type\":\"illegal_argument_exception\",\"reason\":\"no write index is defined for alias [infra-write]. The write index may be explicitly disabled using is_write_index=false or the alias points to multiple indices without one being designated as a write index\"},\"status\":400}"
 ```
+
+```
+遇到如下错误：
+openshift-logging                                  elasticsearch-delete-app-1604283300-nh2tw                  0/1     Error              0          7m39s   10.254.3.39     worker1.cluster-0001.rhsacn.org   <none>           <none>
+openshift-logging                                  elasticsearch-delete-audit-1604283300-jmkpr                0/1     Error              0          7m39s   10.254.3.40     worker1.cluster-0001.rhsacn.org   <none>           <none>
+openshift-logging                                  elasticsearch-delete-infra-1604283300-xpjct                0/1     Error              0          7m39s   10.254.3.41     worker1.cluster-0001.rhsacn.org   <none>           <none>
+openshift-logging                                  elasticsearch-rollover-app-1604283300-sb8vt                0/1     Error              0          7m39s   10.254.3.42     worker1.cluster-0001.rhsacn.org   <none>           <none>
+openshift-logging                                  elasticsearch-rollover-audit-1604283300-mndrw              0/1     Error              0          7m39s   10.254.3.43     worker1.cluster-0001.rhsacn.org   <none>           <none>
+openshift-logging                                  elasticsearch-rollover-infra-1604283300-6nkmp              0/1     Error              0          7m39s   10.254.3.44     worker1.cluster-0001.rhsacn.org   <none>           <none>
+
+
+参考以下链接：
+https://access.redhat.com/solutions/5410091
+https://bugzilla.redhat.com/show_bug.cgi?id=1866019
+
+
+```

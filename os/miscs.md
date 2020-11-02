@@ -3580,3 +3580,17 @@ The image itself is only cached the first time a Pod needs it (it's "pullthrough
 
 ### 使用 fio 测试您的存储是否满足 etcd 的响应及时延要求
 https://www.ibm.com/cloud/blog/using-fio-to-tell-whether-your-storage-is-fast-enough-for-etcd
+
+
+### 24 小时后添加 worker nodes 到 openshift 4 集群
+Adding worker nodes to the OCP 4 UPI cluster existing 24+ hours<br>
+https://access.redhat.com/solutions/4799921
+
+```
+export MCS=api-int.cluster-0001.rhsacn.org:22623
+
+echo "q" | openssl s_client -connect $MCS  -showcerts | awk '/-----BEGIN CERTIFICATE-----/,/-----END CERTIFICATE-----/' | base64 --wrap=0 | tee ./api-int.base64 && \
+sed --regexp-extended --in-place=.backup "s%base64,[^,]+%base64,$(cat ./api-int.base64)\"%" ./worker.ign
+
+# upload worker.ign to web server
+```

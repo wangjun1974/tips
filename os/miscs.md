@@ -3594,3 +3594,8 @@ sed --regexp-extended --in-place=.backup "s%base64,[^,]+%base64,$(cat ./api-int.
 
 # upload worker.ign to web server
 ```
+
+更推荐的方式是，这种方法更不容易出错
+```
+oc extract -n openshift-machine-api secret/worker-user-data --keys=userData --to=-
+```

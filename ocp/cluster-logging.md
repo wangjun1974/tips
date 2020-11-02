@@ -262,7 +262,7 @@ $ oc delete clusterlogging instance -n openshift-logging
 $ oc delete pvc --all -n openshift-logging
 
 重新安装 clusterlogging 和 logforwarding
-oc create -f ./clo-instance.yaml
-oc create -f ./clo-logforwarding-withaudit.yaml
+$ oc create -f ./clo-instance.yaml
+$ oc create -f ./clo-logforwarding-withaudit.yaml
 
 ```

@@ -246,4 +246,18 @@ Using NODE_OPTIONS: '--max_old_space_size=368' Memory setting is in MB
 {"type":"log","@timestamp":"2020-11-02T00:37:14Z","tags":["status","plugin:elasticsearch@6.8.1","error"],"pid":121,"state":"red","message":"Status changed from red to red - Unable to connect to Elasticsearch.","prevState":"red","prevMsg":"Request Timeout after 3000ms"}
 {"type":"log","@timestamp":"2020-11-02T00:37:30Z","tags":["status","plugin:elasticsearch@6.8.1","error"],"pid":121,"state":"red","message":"Status changed from red to red - Request Timeout after 3000ms","prevState":"red","prevMsg":"Unable to connect to Elasticsearch."}
 
+oc get events -n openshift-logging
+...
+21m         Warning   FailedToUpdateEndpointSlices   service/kibana                                                     Error updating Endpoint Slices for Service openshift-logging/kibana: node "worker2.cluster-0001.rhsacn.org" not found
+
+```
+
+```
+删除 cluster-logging
+
+https://docs.openshift.com/container-platform/4.2/logging/cluster-logging-uninstall.html
+
+$ oc delete clusterlogging instance -n openshift-logging
+$ oc delete pvc --all -n openshift-logging
+
 ```

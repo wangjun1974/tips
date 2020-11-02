@@ -213,6 +213,37 @@ openshift-logging                                  elasticsearch-rollover-infra-
 参考以下链接：
 https://access.redhat.com/solutions/5410091
 https://bugzilla.redhat.com/show_bug.cgi?id=1866019
+https://bugzilla.redhat.com/show_bug.cgi?id=1890126
 
+
+kibana 报如下错误
+Kibana server is not ready yet
+
+kibana pod 日志报如下错误
+{"type":"log","@timestamp":"2020-11-02T00:37:30Z","tags":["status","plugin:elasticsearch@6.8.1","error"],"pid":121,"state":"red","message":"Status changed from red to red - Request Timeout after 3000ms","prevState":"red","prevMsg":"Unable to connect to Elasticsearch."}
+
+elasticsearch pod 报如下错误
+[2020-11-02T02:52:06,376][ERROR][c.a.o.s.a.BackendRegistry] [elasticsearch-cdm-voqnz0en-1] Not yet initialized 
+
+oc -n openshift-logging logs elasticsearch-cdm-voqnz0en-1-7bbdc55f5b-v9nlj -c elasticsearch
+...
+[2020-11-02T00:42:34,338][DEBUG][o.e.a.a.i.e.i.TransportIndicesExistsAction] [elasticsearch-cdm-voqnz0en-1] timed out while retrying [indices:admin/exists] after failure 
+...
+[2020-11-02T00:42:34,338][DEBUG][o.e.a.a.i.e.i.TransportIndicesExistsAction] [elasticsearch-cdm-voqnz0en-1] timed out while retrying [indices:admin/exists] after failure 
+(timeout [1m])
+
+
+oc -n openshift-logging logs kibana-7598944597-x8ks6 -c kibana
+
+#The following values dynamically added from environment variable overrides:
+Using NODE_OPTIONS: '--max_old_space_size=368' Memory setting is in MB
+{"type":"log","@timestamp":"2020-11-02T00:32:12Z","tags":["status","plugin:elasticsearch@6.8.1","error"],"pid":121,"state":"red","message":"Status changed from yellow to red - Request Timeout after 3000ms","prevState":"yellow","prevMsg":"Waiting for Elasticsearch"}
+{"type":"log","@timestamp":"2020-11-02T00:32:27Z","tags":["error","elasticsearch","admin"],"pid":121,"message":"Request error, retrying\nHEAD https://elasticsearch.openshift-logging.svc.cluster.local:9200/ => connect ECONNREFUSED 172.30.132.206:9200"}
+{"type":"log","@timestamp":"2020-11-02T00:32:28Z","tags":["status","plugin:elasticsearch@6.8.1","error"],"pid":121,"state":"red","message":"Status changed from red to red - Unable to connect to Elasticsearch.","prevState":"red","prevMsg":"Request Timeout after 3000ms"}
+{"type":"log","@timestamp":"2020-11-02T00:35:40Z","tags":["status","plugin:elasticsearch@6.8.1","error"],"pid":121,"state":"red","message":"Status changed from red to red - Request Timeout after 3000ms","prevState":"red","prevMsg":"Unable to connect to Elasticsearch."}
+{"type":"log","@timestamp":"2020-11-02T00:35:44Z","tags":["status","plugin:elasticsearch@6.8.1","error"],"pid":121,"state":"red","message":"Status changed from red to red - Unable to connect to Elasticsearch.","prevState":"red","prevMsg":"Request Timeout after 3000ms"}
+{"type":"log","@timestamp":"2020-11-02T00:35:49Z","tags":["status","plugin:elasticsearch@6.8.1","error"],"pid":121,"state":"red","message":"Status changed from red to red - Request Timeout after 3000ms","prevState":"red","prevMsg":"Unable to connect to Elasticsearch."}
+{"type":"log","@timestamp":"2020-11-02T00:37:14Z","tags":["status","plugin:elasticsearch@6.8.1","error"],"pid":121,"state":"red","message":"Status changed from red to red - Unable to connect to Elasticsearch.","prevState":"red","prevMsg":"Request Timeout after 3000ms"}
+{"type":"log","@timestamp":"2020-11-02T00:37:30Z","tags":["status","plugin:elasticsearch@6.8.1","error"],"pid":121,"state":"red","message":"Status changed from red to red - Request Timeout after 3000ms","prevState":"red","prevMsg":"Unable to connect to Elasticsearch."}
 
 ```

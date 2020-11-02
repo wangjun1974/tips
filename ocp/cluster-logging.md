@@ -253,12 +253,16 @@ oc get events -n openshift-logging
 ```
 
 ```
-删除 cluster-logging
+删除 clusterlogging 实例
 
 https://docs.openshift.com/container-platform/4.2/logging/cluster-logging-uninstall.html
 
 $ oc delete logforwarding instance -n openshift-logging
 $ oc delete clusterlogging instance -n openshift-logging
 $ oc delete pvc --all -n openshift-logging
+
+重新安装 clusterlogging 和 logforwarding
+oc create -f ./clo-instance.yaml
+oc create -f ./clo-logforwarding-withaudit.yaml
 
 ```

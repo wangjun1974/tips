@@ -253,7 +253,7 @@ oc get events -n openshift-logging
 ```
 
 ```
-删除 clusterlogging 实例
+删除 logforwarding 和 clusterlogging 实例
 
 https://docs.openshift.com/container-platform/4.2/logging/cluster-logging-uninstall.html
 

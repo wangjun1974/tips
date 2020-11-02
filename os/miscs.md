@@ -3709,3 +3709,10 @@ for master:
 for worker: 
   oc extract -n openshift-machine-api secret/worker-user-data --keys=userData --to=-
 ```
+
+### OpenShift 4 如何创建定制化 catalog
+https://docs.openshift.com/container-platform/4.5/operators/admin/olm-managing-custom-catalogs.html
+
+### 部署 openshift 相关
+部署 openshift 到已经存在的 vpc (aws) <br>
+https://www.openshift.com/blog/deploy-openshift-to-existing-vpc-on-aws

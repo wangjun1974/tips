@@ -257,6 +257,7 @@ oc get events -n openshift-logging
 
 https://docs.openshift.com/container-platform/4.2/logging/cluster-logging-uninstall.html
 
+$ oc delete logforwarding instance -n openshift-logging
 $ oc delete clusterlogging instance -n openshift-logging
 $ oc delete pvc --all -n openshift-logging
 

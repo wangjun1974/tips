@@ -266,3 +266,9 @@ $ oc create -f ./clo-instance.yaml
 $ oc create -f ./clo-logforwarding-withaudit.yaml
 
 ```
+
+```
+也是日志相关的话题，将日志转发到 splunk
+https://www.openshift.com/blog/forwarding-logs-to-splunk-using-the-openshift-log-forwarding-api
+
+```

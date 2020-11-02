@@ -3597,5 +3597,8 @@ sed --regexp-extended --in-place=.backup "s%base64,[^,]+%base64,$(cat ./api-int.
 
 更推荐的方式是，这种方法更不容易出错
 ```
-oc extract -n openshift-machine-api secret/worker-user-data --keys=userData --to=-
+for master: 
+  oc extract -n openshift-machine-api secret/master-user-data --keys=userData --to=-
+for worker: 
+  oc extract -n openshift-machine-api secret/worker-user-data --keys=userData --to=-
 ```

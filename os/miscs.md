@@ -3832,7 +3832,7 @@ spec:
           source: data:text/plain;charset=utf-8;base64,${config_source}
           verification: {}
         filesystem: root
-        mode: 644
+        mode: 0644
         path: /etc/systemd/system.conf.d/10-default-env-godebug.conf
   osImageURL: ""
 EOF
@@ -3860,7 +3860,7 @@ spec:
           source: data:text/plain;charset=utf-8;base64,${config_source}
           verification: {}
         filesystem: root
-        mode: 644
+        mode: 0644
         path: /etc/systemd/system.conf.d/10-default-env-godebug.conf
   osImageURL: ""
 EOF
@@ -3869,21 +3869,39 @@ oc apply -f ./99-master-zzz-env-godebug-configuration.yaml
 oc apply -f ./99-worker-zzz-env-godebug-configuration.yaml
 ```
 
-### 报错处理 Deployment openshift-machine-config-operator/etcd-quorum-guard has not matched the expected number of replicas for longer than 15 minutes.
 
+### 取消无法调度状态，恢复节点可调度状态
 ```
-
-```
-
-### 报错处理
-Cluster operator machine-config has not been available for 10 mins. Operator may be down or disabled, cluster will not be kept up to date and upgrades will not be possible.
-
-```
-```
-
-### 取消
-```
-
 oc adm uncordon master0.cluster-0001.rhsacn.org
 oc adm uncordon worker0.cluster-0001.rhsacn.org
 ```
+
+### 报错处理 openshift Node degraded due to mode mismatch for file in Openshift 4
+参考：https://access.redhat.com/solutions/4773161
+主要的原因是 machine config 的 mode 写得不对，需要有前置的0
+```
+oc get mcp 
+NAME     CONFIG                                             UPDATED   UPDATING   DEGRADED   MACHINECOUNT   READYMACHINECOUNT   UPDATEDMACHINECOUNT   DEGRADEDMACHINECOUNT   AGE
+master   rendered-master-4ba5557b6c737373715cef560abd8dca   True      False      False      3              3                   3                     0                      8d
+worker   rendered-worker-6f412baf4efc9602db15fcb966744d8b   False     True       True       3              2                   2                     1                      8d
+
+oc get mcp -o yaml 
+...
+      message: 'Node worker0.cluster-0001.rhsacn.org is reporting: "unexpected on-disk state validating against rendered-worker-ae2022de78a3537d63e5acbf4bc63fb1"'
+      reason: 1 nodes are reporting degraded status on sync
+      status: "True"
+      type: NodeDegraded
+...
+
+oc logs machine-config-daemon-2574b -n openshift-machine-config-operator -c machine-config-daemon 
+...
+I1103 08:17:30.257285    1925 daemon.go:1013] Validating against pending config rendered-worker-ae2022de78a3537d63e5acbf4bc63fb1
+E1103 08:17:30.471840    1925 daemon.go:1403] mode mismatch for file: "/etc/systemd/system.conf.d/10-default-env-godebug.conf"; expected: --w----r--; received: --w----r--
+E1103 08:17:30.471870    1925 writer.go:135] Marking Degraded due to: unexpected on-disk state validating against rendered-worker-ae2022de78a3537d63e5acbf4bc63fb1
+```
+
+### 报错处理 MachineConfigPool stuck in degraded after applying a modification in OpenShift Container Platform 4.x
+这个步骤是处理上述报错的<br>
+https://access.redhat.com/solutions/4773161
+
+解决方法参考：https://access.redhat.com/solutions/5414371

@@ -3833,7 +3833,7 @@ spec:
           verification: {}
         filesystem: root
         mode: 644
-        path: /etc/systemd/system.conf.d
+        path: /etc/systemd/system.conf.d/10-default-env-godebug.conf
   osImageURL: ""
 EOF
 
@@ -3861,7 +3861,7 @@ spec:
           verification: {}
         filesystem: root
         mode: 644
-        path: /etc/systemd/system.conf.d
+        path: /etc/systemd/system.conf.d/10-default-env-godebug.conf
   osImageURL: ""
 EOF
 

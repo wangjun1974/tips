@@ -272,3 +272,8 @@ $ oc create -f ./clo-logforwarding-withaudit.yaml
 https://www.openshift.com/blog/forwarding-logs-to-splunk-using-the-openshift-log-forwarding-api
 https://www.youtube.com/watch?v=IasUYbfmSSY
 ```
+
+```
+在 Kibana Discover Tab 里查询，在 >_ 位置输入以下过滤条件，查看 router 相关的 pod 日志
+kubernetes.pod_name:router*
+```

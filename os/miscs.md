@@ -3842,7 +3842,7 @@ apiVersion: machineconfiguration.openshift.io/v1
 kind: MachineConfig
 metadata:
   labels:
-    machineconfiguration.openshift.io/role: master
+    machineconfiguration.openshift.io/role: worker
   name: workers-env-godebug-configuration
 spec:
   config:
@@ -3867,4 +3867,23 @@ EOF
 
 oc apply -f ./99-master-zzz-env-godebug-configuration.yaml
 oc apply -f ./99-worker-zzz-env-godebug-configuration.yaml
+```
+
+### 报错处理 Deployment openshift-machine-config-operator/etcd-quorum-guard has not matched the expected number of replicas for longer than 15 minutes.
+
+```
+
+```
+
+### 报错处理
+Cluster operator machine-config has not been available for 10 mins. Operator may be down or disabled, cluster will not be kept up to date and upgrades will not be possible.
+
+```
+```
+
+### 取消
+```
+
+oc adm uncordon master0.cluster-0001.rhsacn.org
+oc adm uncordon worker0.cluster-0001.rhsacn.org
 ```

@@ -3783,3 +3783,6 @@ storage                                    4.5.16    True        False         F
 
 
 ```
+
+### 如何查看 OpenShift 升级路径
+https://access.redhat.com/solutions/4583231

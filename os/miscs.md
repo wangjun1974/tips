@@ -3867,6 +3867,9 @@ EOF
 
 oc apply -f ./99-master-zzz-env-godebug-configuration.yaml
 oc apply -f ./99-worker-zzz-env-godebug-configuration.yaml
+
+检查生效情况
+for i in `seq 140 145` ; do echo 10.66.208.$i ; ssh core@10.66.208.$i sudo systemctl show-environment ; echo ; done 
 ```
 
 

@@ -3786,3 +3786,85 @@ storage                                    4.5.16    True        False         F
 
 ### 如何查看 OpenShift 升级路径
 https://access.redhat.com/solutions/4583231
+
+### OCP 4.6 报错 x509: certificate relies on legacy Common Name field, use SANs or temporarily enable Common Name matching with GODEBUG=x509ignoreCN=0 的解决方法
+```
+Q:
+Hi Team i'm trying to install OCP 4.6 in disconnected env over BM I see that cluster-version-operator-7989744785-q4mzc pod is in ImagePullBackOff with error Failed to pull image "magna012.ceph.redhat.com:5000/ocp-release@sha256:0eccf7eb882bc524b91e8b8197249080dbbb9c63ed48cabfa3f6375a8982b346": rpc error: code = Unknown desc = error pinging docker registry magna012.ceph.redhat.com:5000: Get "https://magna012.ceph.redhat.com:5000/v2/": x509: certificate relies on legacy Common Name field, use SANs or temporarily enable Common Name matching with GODEBUG=x509ignoreCN=0
+
+A:
+It tells you the error: certificate relies on legacy Common Name field.  Seems that Go 1.15 added a "feature"[0] which throws an error when there is only a CN and no SAN (Subject Alternative Name) in the certificate.  See here[1] for an example with a SAN.
+
+[0] https://github.com/golang/go/issues/39568
+[1] https://somoit.net/security/security-create-self-signed-san-certificate-openssl
+
+```
+
+参考：https://github.com/openshift/machine-config-operator/pull/2141
+```
+cat > 10-default-env-godebug.conf << EOF
+[Manager]
+DefaultEnvironment="GODEBUG=x509ignoreCN=0"
+EOF
+
+config_source=$(cat ./10-default-env-godebug.conf | base64 -w 0 )
+
+cat << EOF > ./99-master-zzz-env-godebug-configuration.yaml
+apiVersion: machineconfiguration.openshift.io/v1
+kind: MachineConfig
+metadata:
+  labels:
+    machineconfiguration.openshift.io/role: master
+  name: masters-env-godebug-configuration
+spec:
+  config:
+    ignition:
+      config: {}
+      security:
+        tls: {}
+      timeouts: {}
+      version: 2.2.0
+    networkd: {}
+    passwd: {}
+    storage:
+      files:
+      - contents:
+          source: data:text/plain;charset=utf-8;base64,${config_source}
+          verification: {}
+        filesystem: root
+        mode: 644
+        path: /etc/systemd/system.conf.d
+  osImageURL: ""
+EOF
+
+cat << EOF > ./99-worker-zzz-env-godebug-configuration.yaml
+apiVersion: machineconfiguration.openshift.io/v1
+kind: MachineConfig
+metadata:
+  labels:
+    machineconfiguration.openshift.io/role: master
+  name: workers-env-godebug-configuration
+spec:
+  config:
+    ignition:
+      config: {}
+      security:
+        tls: {}
+      timeouts: {}
+      version: 2.2.0
+    networkd: {}
+    passwd: {}
+    storage:
+      files:
+      - contents:
+          source: data:text/plain;charset=utf-8;base64,${config_source}
+          verification: {}
+        filesystem: root
+        mode: 644
+        path: /etc/systemd/system.conf.d
+  osImageURL: ""
+EOF
+
+oc apply -f ./99-master-zzz-env-godebug-configuration.yaml
+oc apply -f ./99-worker-zzz-env-godebug-configuration.yaml
+```

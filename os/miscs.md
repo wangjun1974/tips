@@ -3740,3 +3740,46 @@ oc patch prioritylevelconfiguration global-default --type=merge -p '{"spec":{"li
 
 
 ```
+
+### 升级 OCP 4.5.2 到 4.5.16
+```
+oc get clusterversions 
+NAME      VERSION   AVAILABLE   PROGRESSING   SINCE   STATUS
+version   4.5.16    True        False         71m     Cluster version is 4.5.16
+
+
+oc get clusteroperators
+NAME                                       VERSION   AVAILABLE   PROGRESSING   DEGRADED   SINCE
+authentication                             4.5.16    True        False         False      22h
+cloud-credential                           4.5.16    True        False         False      8d
+cluster-autoscaler                         4.5.16    True        False         False      8d
+config-operator                            4.5.16    True        False         False      8d
+console                                    4.5.16    True        False         False      150m
+csi-snapshot-controller                    4.5.16    True        False         False      20m
+dns                                        4.5.16    True        False         False      4d1h
+etcd                                       4.5.16    True        False         False      8d
+image-registry                             4.5.16    True        False         False      102m
+ingress                                    4.5.16    True        False         False      22h
+insights                                   4.5.16    True        False         False      8d
+kube-apiserver                             4.5.16    True        False         False      8d
+kube-controller-manager                    4.5.16    True        False         False      8d
+kube-scheduler                             4.5.16    True        False         False      8d
+kube-storage-version-migrator              4.5.16    True        False         False      29m
+machine-api                                4.5.16    True        False         False      8d
+machine-approver                           4.5.16    True        False         False      8d
+machine-config                             4.5.16    True        False         False      29m
+marketplace                                4.5.16    True        False         False      86m
+monitoring                                 4.5.16    True        False         False      28m
+network                                    4.5.16    True        False         False      8d
+node-tuning                                4.5.16    True        False         False      149m
+openshift-apiserver                        4.5.16    True        False         False      9m33s
+openshift-controller-manager               4.5.16    True        False         False      79m
+openshift-samples                          4.5.16    True        False         False      147m
+operator-lifecycle-manager                 4.5.16    True        False         False      8d
+operator-lifecycle-manager-catalog         4.5.16    True        False         False      8d
+operator-lifecycle-manager-packageserver   4.5.16    True        False         False      77m
+service-ca                                 4.5.16    True        False         False      8d
+storage                                    4.5.16    True        False         False      157m
+
+
+```

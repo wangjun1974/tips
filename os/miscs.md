@@ -3716,3 +3716,27 @@ https://docs.openshift.com/container-platform/4.5/operators/admin/olm-managing-c
 ### 部署 openshift 相关
 部署 openshift 到已经存在的 vpc (aws) <br>
 https://www.openshift.com/blog/deploy-openshift-to-existing-vpc-on-aws
+
+### 跟踪 API Priority and Fairness Alpha featureGates
+API Priority and Fairness Alpha featureGates in OpenShift v4.5 <br>
+https://access.redhat.com/solutions/5448851
+
+```
+升级的时候可能会遇到 controller-manager 不断重启的报错
+这个时候很有可能遇到了Bug: https://bugzilla.redhat.com/show_bug.cgi?id=1883589
+解决办法参考: https://access.redhat.com/solutions/5448851
+
+按照 workaround 1 操作
+
+curl https://bugzilla.redhat.com/attachment.cgi?id=1721522 -o apf-configuration.yaml
+
+oc apply -f apf-configuration.yaml
+
+oc get flowschema
+
+oc patch flowschema service-accounts --type=merge -p '{"spec":{"priorityLevelConfiguration":{"name":"workload-low"}}}'
+oc patch prioritylevelconfiguration workload-low --type=merge -p '{"spec":{"limited":{"assuredConcurrencyShares": 100}}}'
+oc patch prioritylevelconfiguration global-default --type=merge -p '{"spec":{"limited":{"assuredConcurrencyShares": 20}}}'
+
+
+```

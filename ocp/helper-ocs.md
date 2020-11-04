@@ -1035,10 +1035,10 @@ spec:
     mgr:
       limits:
         cpu: "250m"
-        memory: "256Mi"
+        memory: "512Mi"
       requests:
         cpu: "250m"
-        memory: "256Mi"
+        memory: "512Mi"
     osd:
       limits:
         cpu: "500m"

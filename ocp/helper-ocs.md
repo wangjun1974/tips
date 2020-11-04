@@ -1190,6 +1190,8 @@ oc patch StorageCluster ocs-storagecluster -n openshift-storage --type=merge --p
 oc patch StorageCluster ocs-storagecluster -n openshift-storage --type=merge --patch='{"spec":{"resources":{"cleanup": {"Request": {"memory": "512Mi"}}}}}'
 EOF
 
+sh -x patchstoragecluster.sh
+
 # 查看容器及日志
 oc -n openshift-storage get pods
 oc -n openshift-storage logs $(oc get pods -n openshift-storage | grep rook-ceph-operator | awk '{print $1}' )

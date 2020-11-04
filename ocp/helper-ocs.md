@@ -1105,7 +1105,7 @@ spec:
     replica: 3
 EOF
 
-# 测试
+# 没有资源限制时创建集群的方式
 cat > storagecluster.yaml << 'EOF'
 apiVersion: ocs.openshift.io/v1
 kind: StorageCluster
@@ -1133,6 +1133,10 @@ spec:
 EOF
 
 oc create -f storagecluster.yaml
+
+# 查看容器及日志
+oc -n openshift-storage get pods
+oc -n openshift-storage logs $(oc get pods -n openshift-storage | grep rook-ceph-operator | awk '{print $1}' )
 
 ...
 # add rook toolbox

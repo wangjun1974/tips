@@ -1028,10 +1028,10 @@ spec:
     mon:
       limits:
         cpu: "500m"
-        memory: "512Mi"
+        memory: "1024Mi"
       requests:
         cpu: "500m"
-        memory: "512Mi"
+        memory: "1024Mi"
     mgr:
       limits:
         cpu: "250m"
@@ -1076,11 +1076,11 @@ spec:
         memory: "50Mi"
     crashcollector:
       limits:
-        cpu: "250m"
-        memory: "60Mi"
+        cpu: "500m"
+        memory: "256Mi"
       requests:
-        cpu: "250m"
-        memory: "60Mi"
+        cpu: "500m"
+        memory: "256Mi"
     cleanup:
       limits:
         cpu: "250m"

@@ -912,7 +912,7 @@ spec:
   channel: "4.5"
   installPlanApproval: Automatic
   name: local-storage-operator
-  source: redhat-operators
+  source: my-operator-catalog
   sourceNamespace: openshift-marketplace
 EOF
 
@@ -997,7 +997,7 @@ spec:
   channel: "stable-4.5"
   installPlanApproval: Automatic
   name: ocs-operator
-  source: redhat-operators
+  source: my-operator-catalog
   sourceNamespace: openshift-marketplace
 EOF
 

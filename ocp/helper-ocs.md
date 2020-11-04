@@ -1077,10 +1077,10 @@ spec:
     crashcollector:
       limits:
         cpu: "500m"
-        memory: "256Mi"
+        memory: "512Mi"
       requests:
         cpu: "500m"
-        memory: "256Mi"
+        memory: "512Mi"
     cleanup:
       limits:
         cpu: "250m"

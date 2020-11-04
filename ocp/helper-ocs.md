@@ -879,8 +879,45 @@ oc apply -f /tmp/ImageContentSourcePolicy.yaml
 watch oc get mcp
 
 # create local-storage namespace and install local storage operator
+cat <<EOF | oc apply -f -
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: local-storage
+spec: {}
+EOF
 
-# install ocs operators
+# 创建 Local Storage Operator 的 OperatorGroup
+cat <<EOF | oc apply -f -
+apiVersion: operators.coreos.com/v1
+kind: OperatorGroup
+metadata:
+  annotations:
+    olm.providedAPIs: LocalVolume.v1.local.storage.openshift.io
+  name: local-storage
+  namespace: local-storage
+spec:
+  targetNamespaces:
+  - local-storage
+EOF
+
+# 订阅 Local Storage Operator
+cat <<EOF | oc apply -f -
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: local-storage-operator
+  namespace: local-storage
+spec:
+  channel: "4.5"
+  installPlanApproval: Automatic
+  name: local-storage-operator
+  source: redhat-operators
+  sourceNamespace: openshift-marketplace
+EOF
+
+# 确认有 OCP node 有 OCS 所需的 label
+oc get nodes -l cluster.ocs.openshift.io/openshift-storage=
 
 # create local-storage-block.yaml and change dev/by-id
 cat > local-storage-block.yaml << EOF
@@ -925,10 +962,150 @@ local-pv-8ebcac77   80Gi       RWO            Delete           Available        
 local-pv-a07ed3e8   80Gi       RWO            Delete           Available           localblock              41s
 local-pv-a4482bcd   80Gi       RWO            Delete           Available           localblock              45s
 
+# install ocs operators
+# 创建 openshift-storage namespace
+cat <<EOF | oc apply -f -
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    openshift.io/cluster-monitoring: "true"
+  name: openshift-storage
+spec: {}
+EOF
+
+# 创建 OCS Operator 的 Operator Group
+cat <<EOF | oc apply -f -
+apiVersion: operators.coreos.com/v1
+kind: OperatorGroup
+metadata:
+  name: openshift-storage-operatorgroup
+  namespace: openshift-storage
+spec:
+  targetNamespaces:
+  - openshift-storage
+EOF
+
+# 订阅 OCS Operator
+cat <<EOF | oc apply -f -
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: ocs-operator
+  namespace: openshift-storage
+spec:
+  channel: "stable-4.5"
+  installPlanApproval: Automatic
+  name: ocs-operator
+  source: redhat-operators
+  sourceNamespace: openshift-marketplace
+EOF
+
+
 # get csv in namespace openshift-storage
 oc get csv -n openshift-storage
 NAME                  DISPLAY                       VERSION   REPLACES   PHASE
 ocs-operator.v4.5.0   OpenShift Container Storage   4.5.0                Succeeded
+
+# 创建 Storage Cluster ocs-storagecluster
+cat > storagecluster.yaml << 'EOF'
+apiVersion: ocs.openshift.io/v1
+kind: StorageCluster
+metadata:
+  name: ocs-storagecluster
+  namespace: openshift-storage
+spec:
+  externalStorage: {}
+  monDataDirHostPath: /var/lib/rook
+  resources:
+    mds:
+      limits:
+        cpu: "500m"
+        memory: "512Mi"
+      requests:
+        cpu: "500m"
+        memory: "512Mi"
+    mon:
+      limits:
+        cpu: "500m"
+        memory: "512Mi"
+      requests:
+        cpu: "500m"
+        memory: "512Mi"
+    mgr:
+      limits:
+        cpu: "250m"
+        memory: "256Mi"
+      requests:
+        cpu: "250m"
+        memory: "256Mi"
+    osd:
+      limits:
+        cpu: "500m"
+        memory: "512Mi"
+      requests:
+        cpu: "500m"
+        memory: "512Mi"
+    rgw:
+      limits:
+        cpu: "250m"
+        memory: "256Mi"
+      requests:
+        cpu: "250m"
+        memory: "256Mi"
+    noobaa-db:
+      limits:
+        cpu: "500m"
+        memory: "512Mi"
+      requests:
+        cpu: "500m"
+        memory: "512Mi"
+    noobaa-core:
+      limits:
+        cpu: "500m"
+        memory: "512Mi"
+      requests:
+        cpu: "500m"
+        memory: "512Mi"
+    prepareosd:
+      limits:
+        cpu: "250m"
+        memory: "50Mi"
+      requests:
+        cpu: "250m"
+        memory: "50Mi"
+    crashcollector:
+      limits:
+        cpu: "250m"
+        memory: "60Mi"
+      requests:
+        cpu: "250m"
+        memory: "60Mi"
+    cleanup:
+      limits:
+        cpu: "250m"
+        memory: "60Mi"
+      requests:
+        cpu: "250m"
+        memory: "60Mi"       
+  storageDeviceSets:
+  - config: {}
+    count: 1   
+    dataPVCTemplate:
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: "1"
+        storageClassName: localblock
+        volumeMode: Block
+    name: ocs-deviceset
+    placement: {}
+    replica: 3
+EOF
+
+oc create -f storagecluster.yaml
 
 ...
 # add rook toolbox

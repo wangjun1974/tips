@@ -1025,13 +1025,6 @@ spec:
       requests:
         cpu: "500m"
         memory: "512Mi"
-    mon:
-      limits:
-        cpu: "500m"
-        memory: "1024Mi"
-      requests:
-        cpu: "500m"
-        memory: "1024Mi"
     mgr:
       limits:
         cpu: "250m"
@@ -1137,7 +1130,7 @@ oc create -f storagecluster.yaml
 # 查看容器及日志
 oc -n openshift-storage get pods
 oc -n openshift-storage logs $(oc get pods -n openshift-storage | grep rook-ceph-operator | awk '{print $1}' )
-
+oc -n openshift-storage logs $(oc get pods -n openshift-storage | grep rook-ceph-mon-b | awk '{print $1}' )
 ...
 # add rook toolbox
 oc patch OCSInitialization ocsinit -n openshift-storage --type json --patch  '[{ "op": "replace", "path": "/spec/enableCephTools", "value": true }]'

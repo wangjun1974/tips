@@ -1070,10 +1070,10 @@ spec:
     prepareosd:
       limits:
         cpu: "250m"
-        memory: "50Mi"
+        memory: "256Mi"
       requests:
         cpu: "250m"
-        memory: "50Mi"
+        memory: "256Mi"
     crashcollector:
       limits:
         cpu: "500m"
@@ -1084,10 +1084,10 @@ spec:
     cleanup:
       limits:
         cpu: "250m"
-        memory: "60Mi"
+        memory: "256Mi"
       requests:
         cpu: "250m"
-        memory: "60Mi"       
+        memory: "256Mi"       
   storageDeviceSets:
   - config: {}
     count: 1   

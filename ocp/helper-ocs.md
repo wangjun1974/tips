@@ -1025,6 +1025,13 @@ spec:
       requests:
         cpu: "500m"
         memory: "512Mi"
+    mon:
+      limits:
+        cpu: "500m"
+        memory: "512Mi"
+      requests:
+        cpu: "500m"
+        memory: "512Mi"        
     mgr:
       limits:
         cpu: "250m"

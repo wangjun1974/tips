@@ -1631,6 +1631,38 @@ EOF
 oc create -f ocslab-cluster-monitoring-withinfra.yaml
 ```
 
+### External Cluster Example
+```
+cat << EOF > ocs-storagecluster-crd-external.yaml
+apiVersion: ocs.openshift.io/v1
+kind: StorageCluster
+metadata:
+  name: ocs-external-storagecluster
+  namespace: openshift-storage
+spec:
+  externalStorage:
+    enable: true
+  labelSelector: {}
+EOF
+
+oc create -f ocs-storagecluster-crd-external.yaml
+
+cat > ocs-secret-crd-external.yaml << EOF
+kind: Secret
+apiVersion: v1
+metadata:
+  name: rook-ceph-external-cluster-details
+  namespace: openshift-storage
+data:
+  external_cluster_details: >-
+    W3sibmFtZSI6ICJyb29rLWNlc........
+type: Opaque
+EOF
+
+oc create -f ocs-secret-crd-external.yaml
+```
+
+
 ### 扩展 pvc 的例子
 
 ```

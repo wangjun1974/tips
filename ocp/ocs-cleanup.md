@@ -48,6 +48,9 @@ done
 
 6. 删除 storagecluster
 oc delete -n openshift-storage storagecluster --all --wait=true
+(optional)
+oc delete pvc --all -n openshift-storage
+
 
 7. 删除 namespace 等待删除结束
 oc project default

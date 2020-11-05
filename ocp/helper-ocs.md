@@ -1028,10 +1028,10 @@ spec:
     mon:
       limits:
         cpu: "500m"
-        memory: "512Mi"
+        memory: "1024Mi"
       requests:
         cpu: "500m"
-        memory: "512Mi"        
+        memory: "1024Mi"        
     mgr:
       limits:
         cpu: "250m"

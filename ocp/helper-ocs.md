@@ -1632,4 +1632,11 @@ oc create -f ocslab-cluster-monitoring-withinfra.yaml
 ```
 
 
+### 问题记录
+```
+Nov 05 01:44:39 worker1.cluster-0001.rhsacn.org hyperkube[1502]: E1105 01:44:39.713378    1502 nestedpendingoperations.go:301] Operation for "{volumeName:kubernetes.io/secret/2634af6d-4050-4064-9505-4f87a2a6c834-rook-ceph-crash-collector-keyring podName:2634af6d-4050-4064-9505-4f87a2a6c834 nodeName:}" failed. No retries permitted until 2020-11-05 01:46:41.713350343 +0000 UTC m=+125013.791657772 (durationBeforeRetry 2m2s). Error: "MountVolume.SetUp failed for volume \"rook-ceph-crash-collector-keyring\"
+ 
+错误的原因是在删除集群时，没有清理干净磁盘和节点上的/var/lib/rook目录
+```
+
 

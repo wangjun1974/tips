@@ -1631,6 +1631,13 @@ EOF
 oc create -f ocslab-cluster-monitoring-withinfra.yaml
 ```
 
+### 扩展 pvc 的例子
+
+```
+将 pvc db-noobaa-db-0 的 大小调整为 61Gi 
+oc patch pvc db-noobaa-db-0 -n openshift-storage --type=merge --patch='{"spec":{"resources":{"request": {"storage": "61Gi"}}}}'
+```
+
 
 ### 问题记录
 ```

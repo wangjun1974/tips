@@ -183,8 +183,8 @@ ceph_conf_overrides:
   global:
     osd_pool_default_pg_num: 128
     osd_pool_default_pgp_num: 128
-    osd_pool_default_size: 3
-    osd_pool_default_min_size: 2
+    osd_pool_default_size: 1
+    osd_pool_default_min_size: 1
     mon_max_pg_per_osd: 512
 EOF
 

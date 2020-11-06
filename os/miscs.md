@@ -3908,3 +3908,45 @@ E1103 08:17:30.471870    1925 writer.go:135] Marking Degraded due to: unexpected
 https://access.redhat.com/solutions/4773161
 
 解决方法参考：https://access.redhat.com/solutions/5414371
+
+### How to Find All Failed SSH login Attempts in Linux
+https://www.tecmint.com/find-failed-ssh-login-attempts-in-linux/
+```
+cat /var/log/secure | grep "Failed password"
+grep "authentication failure" /var/log/secure
+grep "Failed password" /var/log/secure | awk '{print $11}' | uniq -c | sort -nr
+
+journalctl _SYSTEMD_UNIT=sshd.service | grep "failure"
+journalctl _SYSTEMD_UNIT=sshd.service | grep "Failed"
+```
+
+### How To Protect SSH With Fail2Ban on CentOS 7
+https://www.digitalocean.com/community/tutorials/how-to-protect-ssh-with-fail2ban-on-centos-7
+
+```
+wget https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm -P /tmp
+
+sudo yum localinstall -y /tmp/epel-release-latest-7.noarch.rpm
+sudo yum install -y fail2ban
+
+sudo yum-config-manager --disable epel
+
+cat > /tmp/jail.local << EOF
+[DEFAULT]
+# Ban hosts for one hour:
+bantime = 3600
+
+# Override /etc/fail2ban/jail.d/00-firewalld.conf:
+banaction = iptables-multiport
+
+[sshd]
+enabled = true
+EOF
+
+echo y | sudo cp /tmp/jail.local /etc/fail2ban/jail.local 
+
+sudo systemctl enable fail2ban
+
+sudo systemctl restart fail2ban
+
+```

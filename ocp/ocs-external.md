@@ -93,9 +93,6 @@ ceph04 ansible_host=10.66.208.125 ansible_user=root
 [rgws]
 ceph04 ansible_host=10.66.208.125 ansible_user=root
 
-[grafana-server]
-ceph04 ansible_host=10.66.208.125 ansible_user=root
-
 EOF
 
 # 配置 ssh authentication
@@ -165,6 +162,7 @@ radosgw_interface: eth0
 ceph_docker_image: "rhceph/rhceph-4-rhel8"
 ceph_docker_image_tag: latest
 containerized_deployment: true
+dashboard_enabled: false
 ceph_docker_registry: helper.cluster-0001.rhsacn.org:5000
 ceph_docker_registry_auth: true
 ceph_docker_registry_username: dummy

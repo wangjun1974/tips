@@ -148,6 +148,8 @@ echo y | cp site.yml.sample site.yml
 echo y | cp site-docker.yml.sample site-docker.yml
 
 # 生成 all.yml 文件
+# 因为资源紧张，设置 dashboard_enabled 为 false
+# 当 groupname 包含非法字符时，ansible 2.8+ 报警。例如 groupname: grafana-server
 cat > group_vars/all.yml << EOF
 ---
 dummy:

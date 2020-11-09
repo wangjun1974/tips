@@ -213,4 +213,15 @@ docker exec -it ceph-mon-ceph04 ceph osd lspools
 
 # 列出已有的 pool 的详细信息
 docker exec -it ceph-mon-ceph04 ceph osd pool ls detail
+
+# 拷贝文件到 
+docker cp /root/ceph-external-cluster-details-exporter.py ceph-mon-ceph04:/ceph-external-cluster-details-exporter.py
+
+# 确认 python3 在容器里
+docker exec -it ceph-mon-ceph04 python3 /ceph-external-cluster-details-exporter.py  --rbd-data-pool-name rbd --rgw-endpoint 10.66.208.125:8080
+
+# 保存输出的内容到 external-ceph-connectioninfo.json
+# 创建 OCS Storage Cluster 时，选择 external mode 同时选择这个 json 文件
+
+
 ```

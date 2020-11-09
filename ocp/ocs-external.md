@@ -185,7 +185,7 @@ ceph_conf_overrides:
     osd_pool_default_pgp_num: 128
     osd_pool_default_size: 1
     osd_pool_default_min_size: 1
-    mon_max_pg_per_osd: 512
+    mon_max_pg_per_osd: 1024
 EOF
 
 # 生成 group_vars/osds.yml
@@ -223,5 +223,10 @@ docker exec -it ceph-mon-ceph04 python3 /ceph-external-cluster-details-exporter.
 # 保存输出的内容到 external-ceph-connectioninfo.json
 # 创建 OCS Storage Cluster 时，选择 external mode 同时选择这个 json 文件
 
+# 另外一种方法是在安装节点上安装 ceph-common 
+# 必要时从 mon 拷贝 相关 keyring，然后执行 ceph-external-cluster-details-exporter.py
+yum install -y ceph-common
+python /root/ceph-external-cluster-details-exporter.py --rbd-data-pool-name rbd --rgw-endpoint 10.66.208.125:8080 
+[{"kind": "ConfigMap", "data": {"maxMonId": "0", "data": "ceph04=10.66.208.125:6789", "mapping": "{}"}, "name": "rook-ceph-mon-endpoints"}, {"kind": "Secret", "data": {"mon-secret": "mon-secret", "fsid": "3d773288-f2b5-4dd6-9edd-00490df48f26", "cluster-name": "openshift-storage", "admin-secret": "admin-secret"}, "name": "rook-ceph-mon"}, {"kind": "Secret", "data": {"userKey": "AQDTqahfQ6DHExAA7MJGOpY2MEE6CH5eTK5olw==", "userID": "client.healthchecker"}, "name": "rook-ceph-operator-creds"}, {"kind": "Secret", "data": {"userKey": "AQDTqahf2t0DFRAAaKynlMK48jDVPgJX6s0Rdw==", "userID": "csi-rbd-node"}, "name": "rook-csi-rbd-node"}, {"kind": "StorageClass", "data": {"pool": "rbd"}, "name": "ceph-rbd"}, {"kind": "Secret", "data": {"userKey": "AQDTqahfAI7bFRAAibJ9GlNABldWrF72GBRrqQ==", "userID": "csi-rbd-provisioner"}, "name": "rook-csi-rbd-provisioner"}, {"kind": "Secret", "data": {"adminID": "csi-cephfs-provisioner", "adminKey": "AQDTqahfBIdFFxAAOWjsZRZLl9o13t8Nc5jzuw=="}, "name": "rook-csi-cephfs-provisioner"}, {"kind": "Secret", "data": {"adminID": "csi-cephfs-node", "adminKey": "AQDTqahfjaeWFhAAgZAmCfzwt1lzt4sjQxB6QA=="}, "name": "rook-csi-cephfs-node"}, {"kind": "StorageClass", "data": {"pool": "cephfs_data", "fsName": "cephfs"}, "name": "cephfs"}, {"kind": "StorageClass", "data": {"endpoint": "10.66.208.125:8080", "poolPrefix": "default"}, "name": "ceph-rgw"}]
 
 ```

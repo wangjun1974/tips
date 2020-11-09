@@ -3950,3 +3950,14 @@ sudo systemctl enable fail2ban
 sudo systemctl restart fail2ban
 
 ```
+
+### 获取 pods 里容器的名称
+```
+oc get pods csi-cephfsplugin-provisioner-5f8b66cc96-xg9q4 -n openshift-storage -o jsonpath='{.spec.containers[*].name}*'
+
+csi-attacher csi-resizer csi-provisioner csi-cephfsplugin liveness-prometheus*
+
+oc get pods csi-rbdplugin-provisioner-66f66699c8-98wph -n openshift-storage -o jsonpath='{.spec.containers[*].name}*'
+
+csi-provisioner csi-resizer csi-attacher csi-rbdplugin liveness-prometheus*
+```

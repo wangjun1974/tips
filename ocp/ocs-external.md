@@ -229,4 +229,33 @@ yum install -y ceph-common
 python /root/ceph-external-cluster-details-exporter.py --rbd-data-pool-name rbd --rgw-endpoint 10.66.208.125:8080 
 [{"kind": "ConfigMap", "data": {"maxMonId": "0", "data": "ceph04=10.66.208.125:6789", "mapping": "{}"}, "name": "rook-ceph-mon-endpoints"}, {"kind": "Secret", "data": {"mon-secret": "mon-secret", "fsid": "3d773288-f2b5-4dd6-9edd-00490df48f26", "cluster-name": "openshift-storage", "admin-secret": "admin-secret"}, "name": "rook-ceph-mon"}, {"kind": "Secret", "data": {"userKey": "AQDTqahfQ6DHExAA7MJGOpY2MEE6CH5eTK5olw==", "userID": "client.healthchecker"}, "name": "rook-ceph-operator-creds"}, {"kind": "Secret", "data": {"userKey": "AQDTqahf2t0DFRAAaKynlMK48jDVPgJX6s0Rdw==", "userID": "csi-rbd-node"}, "name": "rook-csi-rbd-node"}, {"kind": "StorageClass", "data": {"pool": "rbd"}, "name": "ceph-rbd"}, {"kind": "Secret", "data": {"userKey": "AQDTqahfAI7bFRAAibJ9GlNABldWrF72GBRrqQ==", "userID": "csi-rbd-provisioner"}, "name": "rook-csi-rbd-provisioner"}, {"kind": "Secret", "data": {"adminID": "csi-cephfs-provisioner", "adminKey": "AQDTqahfBIdFFxAAOWjsZRZLl9o13t8Nc5jzuw=="}, "name": "rook-csi-cephfs-provisioner"}, {"kind": "Secret", "data": {"adminID": "csi-cephfs-node", "adminKey": "AQDTqahfjaeWFhAAgZAmCfzwt1lzt4sjQxB6QA=="}, "name": "rook-csi-cephfs-node"}, {"kind": "StorageClass", "data": {"pool": "cephfs_data", "fsName": "cephfs"}, "name": "cephfs"}, {"kind": "StorageClass", "data": {"endpoint": "10.66.208.125:8080", "poolPrefix": "default"}, "name": "ceph-rgw"}]
 
+
+# 创建 rook ceph external cluster detail secret
+cat > secret-rook-ceph-external-cluster-details.yaml << EOF
+apiVersion: v1
+data:
+  external_cluster_details: W3sibmFtZSI6ICJyb29rLWNlcGgtbW9uLWVuZHBvaW50cyIsICJraW5kIjogIkNvbmZpZ01hcCIsICJkYXRhIjogeyJkYXRhIjogImNlcGgwND0xMC42Ni4yMDguMTI1OjY3ODkiLCAibWF4TW9uSWQiOiAiMCIsICJtYXBwaW5nIjogInt9In19LCB7Im5hbWUiOiAicm9vay1jZXBoLW1vbiIsICJraW5kIjogIlNlY3JldCIsICJkYXRhIjogeyJhZG1pbi1zZWNyZXQiOiAiYWRtaW4tc2VjcmV0IiwgImNsdXN0ZXItbmFtZSI6ICJvcGVuc2hpZnQtc3RvcmFnZSIsICJmc2lkIjogIjNkNzczMjg4LWYyYjUtNGRkNi05ZWRkLTAwNDkwZGY0OGYyNiIsICJtb24tc2VjcmV0IjogIm1vbi1zZWNyZXQifX0sIHsibmFtZSI6ICJyb29rLWNlcGgtb3BlcmF0b3ItY3JlZHMiLCAia2luZCI6ICJTZWNyZXQiLCAiZGF0YSI6IHsidXNlcklEIjogImNsaWVudC5oZWFsdGhjaGVja2VyIiwgInVzZXJLZXkiOiAiQVFEVHFhaGZRNkRIRXhBQTdNSkdPcFkyTUVFNkNINWVUSzVvbHc9PSJ9fSwgeyJuYW1lIjogInJvb2stY3NpLXJiZC1ub2RlIiwgImtpbmQiOiAiU2VjcmV0IiwgImRhdGEiOiB7InVzZXJJRCI6ICJjc2ktcmJkLW5vZGUiLCAidXNlcktleSI6ICJBUURUcWFoZjJ0MERGUkFBYUt5bmxNSzQ4akRWUGdKWDZzMFJkdz09In19LCB7Im5hbWUiOiAiY2VwaC1yYmQiLCAia2luZCI6ICJTdG9yYWdlQ2xhc3MiLCAiZGF0YSI6IHsicG9vbCI6ICJyYmQifX0sIHsibmFtZSI6ICJyb29rLWNzaS1yYmQtcHJvdmlzaW9uZXIiLCAia2luZCI6ICJTZWNyZXQiLCAiZGF0YSI6IHsidXNlcklEIjogImNzaS1yYmQtcHJvdmlzaW9uZXIiLCAidXNlcktleSI6ICJBUURUcWFoZkFJN2JGUkFBaWJKOUdsTkFCbGRXckY3MkdCUnJxUT09In19LCB7Im5hbWUiOiAicm9vay1jc2ktY2VwaGZzLXByb3Zpc2lvbmVyIiwgImtpbmQiOiAiU2VjcmV0IiwgImRhdGEiOiB7ImFkbWluSUQiOiAiY3NpLWNlcGhmcy1wcm92aXNpb25lciIsICJhZG1pbktleSI6ICJBUURUcWFoZkJJZEZGeEFBT1dqc1pSWkxsOW8xM3Q4TmM1anp1dz09In19LCB7Im5hbWUiOiAicm9vay1jc2ktY2VwaGZzLW5vZGUiLCAia2luZCI6ICJTZWNyZXQiLCAiZGF0YSI6IHsiYWRtaW5JRCI6ICJjc2ktY2VwaGZzLW5vZGUiLCAiYWRtaW5LZXkiOiAiQVFEVHFhaGZqYWVXRmhBQWdaQW1DZnp3dDFsenQ0c2pReEI2UUE9PSJ9fSwgeyJuYW1lIjogImNlcGhmcyIsICJraW5kIjogIlN0b3JhZ2VDbGFzcyIsICJkYXRhIjogeyJmc05hbWUiOiAiY2VwaGZzIiwgInBvb2wiOiAiY2VwaGZzX2RhdGEifX0sIHsibmFtZSI6ICJjZXBoLXJndyIsICJraW5kIjogIlN0b3JhZ2VDbGFzcyIsICJkYXRhIjogeyJlbmRwb2ludCI6ICIxMC42Ni4yMDguMTI1OjgwODAiLCAicG9vbFByZWZpeCI6ICJkZWZhdWx0In19XQo=
+kind: Secret
+metadata:
+  name: rook-ceph-external-cluster-details
+  namespace: openshift-storage
+type: Opaque
+EOF
+
+oc create -f secret-rook-ceph-external-cluster-details.yaml
+
+# 创建 ocs external cluster
+cat > ocs-external-cluster.yaml << EOF
+- apiVersion: ocs.openshift.io/v1
+  kind: StorageCluster
+  metadata:
+    name: ocs-independent-storagecluster
+    namespace: openshift-storage
+  spec:
+    externalStorage:
+      enable: true
+    labelSelector: {}
+EOF
+
+oc create -f ocs-external-cluster.yaml
 ```

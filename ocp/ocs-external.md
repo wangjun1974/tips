@@ -245,16 +245,16 @@ EOF
 oc create -f secret-rook-ceph-external-cluster-details.yaml
 
 # 创建 ocs external cluster
-cat > ocs-external-cluster.yaml << EOF
-- apiVersion: ocs.openshift.io/v1
-  kind: StorageCluster
-  metadata:
-    name: ocs-independent-storagecluster
-    namespace: openshift-storage
-  spec:
-    externalStorage:
-      enable: true
-    labelSelector: {}
+cat << EOF > ocs-storagecluster-crd.yaml
+apiVersion: ocs.openshift.io/v1
+kind: StorageCluster
+metadata:
+  name: ocs-independent-storagecluster
+  namespace: openshift-storage
+spec:
+  externalStorage:
+    enable: true
+  labelSelector: {}
 EOF
 
 oc create -f ocs-external-cluster.yaml

@@ -197,4 +197,20 @@ EOF
 
 # 安装
 ansible-playbook site-container.yml
+
+# 检查集群健康状态
+docker exec -it ceph-mon-ceph04 ceph status 
+docker exec -it ceph-mon-ceph04 ceph health detail 
+
+# 列出已有的 pool
+docker exec -it ceph-mon-ceph04 ceph osd lspools
+
+# 创建 rbd pool
+docker exec -it ceph-mon-ceph04 ceph osd pool create rbd 128 128
+
+# 列出已有的 pool
+docker exec -it ceph-mon-ceph04 ceph osd lspools
+
+# 列出已有的 pool 的详细信息
+docker exec -it ceph-mon-ceph04 ceph osd pool ls detail
 ```

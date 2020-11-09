@@ -3961,3 +3961,9 @@ oc get pods csi-rbdplugin-provisioner-66f66699c8-98wph -n openshift-storage -o j
 
 csi-provisioner csi-resizer csi-attacher csi-rbdplugin liveness-prometheus*
 ```
+
+### 查看系统最近重启的记录
+see: https://www.cyberciti.biz/tips/linux-last-reboot-time-and-date-find-out.html
+```
+ssh root@x.x.x.x last reboot | less
+```

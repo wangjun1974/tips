@@ -245,7 +245,7 @@ EOF
 oc create -f secret-rook-ceph-external-cluster-details.yaml
 
 # 创建 ocs external cluster
-cat << EOF > ocs-storagecluster-crd.yaml
+cat << EOF > ocs-external-cluster.yaml
 apiVersion: ocs.openshift.io/v1
 kind: StorageCluster
 metadata:
@@ -258,4 +258,5 @@ spec:
 EOF
 
 oc create -f ocs-external-cluster.yaml
+
 ```

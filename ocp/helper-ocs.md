@@ -659,6 +659,9 @@ oc get configs.imageregistry.operator.openshift.io cluster -o yaml
 oc patch image.config.openshift.io/cluster -p '{"spec":{"additionalTrustedCA":{"name":"user-ca-bundle"}}}'  --type=merge
 oc get image.config.openshift.io/cluster -o yaml
 
+# 检查 configmaps user-ca-bundle 的内容
+oc get configmaps user-ca-bundle -n openshift-config -o jsonpath='{.data.ca-bundle\.crt}' | openssl x509 -text -noout | more
+
 oc patch OperatorHub cluster --type json \
     -p '[{"op": "add", "path": "/spec/disableAllDefaultSources", "value": true}]'
 oc get OperatorHub cluster -o yaml

@@ -3979,3 +3979,7 @@ skopeo inspect docker://registry.redhat.io/rhel7/support-tools:latest | jq .Dige
 skopeo inspect --creds dummy:dummy docker://helper.cluster-0001.rhsacn.org:5000/rhel7/support-tools | jq .Digest | sed -e 's|"||g' 
 
 ```
+
+### 问题： [disconnected] 'registry.redhat.io/rhel7/support-tools' image is being pulled when running `oc debug node/xxx` in disconnected install.
+https://bugzilla.redhat.com/show_bug.cgi?id=1728135
+

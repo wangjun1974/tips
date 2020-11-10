@@ -833,7 +833,8 @@ for i in $(seq 140 145); do echo 10.66.208.${i} ; ssh core@10.66.208.${i} date -
 
 # patch samples operator samplesRegistry (optional)
 # 当本地有 imagestream 镜像时执行此命令
-oc patch configs.samples.operator.openshift.io cluster --type merge \
+# (这个命令在我目前的配置下无需执行)
+# oc patch configs.samples.operator.openshift.io cluster --type merge \
   --patch '{"spec":{"samplesRegistry": "helper.cluster-0001.rhsacn.org:5000", "managementState": "Managed"}}'
 # 如果错误执行上述命令，openshift-samples operator 可能处于 DEGRADED 状态
 # 对于 connected cluster，可执行以下命令将状态修正成正常状态
@@ -842,6 +843,13 @@ oc patch configs.samples.operator.openshift.io cluster --type merge \
 
 # 检查 configs.samples.operator.openshift.io cluster 的 spec sampleRegistry
 oc get configs.samples.operator.openshift.io cluster -o jsonpath='{ .spec.samplesRegistry }{"\n"}'
+
+# 重新导入 image steam tools
+oc import-image tools -n openshift
+
+# 查看 image stream
+oc get is tools -n openshift -o yaml
+
 
 
 # 对于 disconnected cluster，可参考 https://access.redhat.com/solutions/5067531，同步所需镜像

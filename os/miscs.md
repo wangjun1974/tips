@@ -3975,5 +3975,7 @@ $ skopeo inspect --creds "username:password" docker://waisbrot/wait:latest
 # 例如：获取镜像 support-tools:latest 的 sha256 Digest
 skopeo inspect docker://registry.redhat.io/rhel7/support-tools:latest | jq .Digest | sed -e 's|"||g' 
 
+# 查看本地镜像的 sha256 Digest
+skopeo inspect --creds dummy:dummy docker://helper.cluster-0001.rhsacn.org:5000/rhel7/support-tools | jq .Digest | sed -e 's|"||g' 
 
 ```

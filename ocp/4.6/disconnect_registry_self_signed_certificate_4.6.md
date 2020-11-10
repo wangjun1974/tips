@@ -27,7 +27,7 @@ countryName = CN
 stateOrProvinceName = BJ
 localityName = BJ
 organizationName = Global Security
-organizationUnitName = IT Department
+organizationalUnitName = IT Department
 commonName = *.cluster-0001.rhsacn.org
 
 [req_ext]

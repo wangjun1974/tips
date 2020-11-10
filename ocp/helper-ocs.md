@@ -613,6 +613,9 @@ systemctl restart haproxy
 
 openshift-install --dir=/root/ocp4 wait-for install-complete --log-level debug
 
+# 检查 openshift-kube-scheduler-operator 日志
+oc -n openshift-kube-scheduler-operator logs $(oc get pods -n openshift-kube-scheduler-operator -o jsonpath='{ .items[*].metadata.name }')
+
 # approve worker csr
 oc get nodes
 export KUBECONFIG=/root/ocp4/auth/kubeconfig

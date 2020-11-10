@@ -840,6 +840,10 @@ oc patch configs.samples.operator.openshift.io cluster --type merge \
 oc patch configs.samples.operator.openshift.io cluster --type merge \
   --patch '{"spec":{"samplesRegistry": "", "managementState": "Managed"}}'
 
+# 检查 configs.samples.operator.openshift.io cluster 的 spec sampleRegistry
+oc get configs.samples.operator.openshift.io cluster -o jsonpath='{ .spec.samplesRegistry }{"\n"}'
+
+
 # 对于 disconnected cluster，可参考 https://access.redhat.com/solutions/5067531，同步所需镜像
 # 并做相关设置
 

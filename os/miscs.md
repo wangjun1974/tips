@@ -3967,3 +3967,13 @@ see: https://www.cyberciti.biz/tips/linux-last-reboot-time-and-date-find-out.htm
 ```
 ssh root@x.x.x.x last reboot | less
 ```
+
+### 获得 image 的 digest
+```
+$ skopeo inspect --creds "username:password" docker://waisbrot/wait:latest
+
+# 例如：获取镜像 support-tools:latest 的 sha256 Digest
+skopeo inspect docker://registry.redhat.io/rhel7/support-tools:latest | jq .Digest | sed -e 's|"||g' 
+
+
+```

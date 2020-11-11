@@ -656,6 +656,7 @@ oc get configs.imageregistry.operator.openshift.io cluster -o yaml
 # operator hub disconnected
 # see: https://github.com/wangzheng422/docker_env/blob/master/redhat/ocp4/4.5/4.5.disconnect.operator.md
 # add additionalTrustedCA to image.config.openshift.io/cluster (optioanl)
+# https://docs.openshift.com/container-platform/4.5/security/certificate-types-descriptions.html#proxy-certificates_ocp-certificates
 oc patch image.config.openshift.io/cluster -p '{"spec":{"additionalTrustedCA":{"name":"user-ca-bundle"}}}'  --type=merge
 oc get image.config.openshift.io/cluster -o yaml
 

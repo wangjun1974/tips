@@ -3983,3 +3983,10 @@ skopeo inspect --creds dummy:dummy docker://helper.cluster-0001.rhsacn.org:5000/
 ### 问题： [disconnected] 'registry.redhat.io/rhel7/support-tools' image is being pulled when running `oc debug node/xxx` in disconnected install.
 https://bugzilla.redhat.com/show_bug.cgi?id=1728135
 
+### 如何 ping link local ipv6 地址
+https://access.redhat.com/solutions/3550082
+```
+# ping6 -I ethX fe80::xxx:xxxx:xxxx:xxxx
+PING fe80::xxx:xxxx:xxxx:xxxx%ethX(fe80::xxx:xxxx:xxxx:xxxx) 56 data bytes
+64 bytes from fe80::xxx:xxxx:xxxx:xxxx: icmp_seq=1 ttl=64 time=0.206 ms
+```

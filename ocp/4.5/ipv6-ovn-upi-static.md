@@ -60,9 +60,46 @@ virt-install --name="jwang-ocp452-aHelper" --vcpus=2 --ram=4096 \
 --disk path=/data/kvm/jwang-ocp452-aHelper.qcow2,bus=virtio,size=800 \
 --os-variant centos7.0 --network network=openshift4,model=virtio \
 --boot menu=on --location /data/rhel-server-7.6-x86_64-dvd.iso \
---initrd-inject /tmp/helper-ks.cfg --extra-args "inst.ks=file:/tmp/helper-ks.cfg" \
 --graphics none \
---console pty,target_type=serial --extra-args='console=ttyS0'
+--console pty,target_type=serial \
+--initrd-inject /tmp/helper-ks.cfg \
+--extra-args='inst.ks=file:/helper-ks.cfg console=ttyS0' --dry-run
+
+# 拷贝老的 helper 虚拟机磁盘
+rsync --info=progress2 /var/lib/libvirt/images/helper-sda /data/kvm/jwang-ocp452-aHelper.qcow2
+
+# 为 Hypervisor 添加 ipv6 地址
+nmcli con modify openshift4 ipv6.addresses "2001:db8::1/64" gw6 "2001:db8::1" ipv6.method manual
+nmcli connection down openshift4 && nmcli connection up openshift4
+
+nmcli con modify br0 ipv6.addresses "2001:db8::2/64" gw6 "2001:db8::1" ipv6.method manual
+nmcli connection down br0 && nmcli connection up br0
+
+# 
+export MAJORBUILDNUMBER=4.5
+export EXTRABUILDNUMBER=4.5.2
+mkdir -p /data/ocp4/${EXTRABUILDNUMBER}
+
+wget https://mirror.openshift.com/pub/openshift-v4/dependencies/rhcos/${MAJORBUILDNUMBER}/${EXTRABUILDNUMBER}/rhcos-${EXTRABUILDNUMBER}-x86_64-installer.x86_64.iso -P /data/ocp4/${EXTRABUILDNUMBER}
+wget https://mirror.openshift.com/pub/openshift-v4/dependencies/rhcos/${MAJORBUILDNUMBER}/${EXTRABUILDNUMBER}/rhcos-${EXTRABUILDNUMBER}-x86_64-metal.x86_64.raw.gz -P /data/ocp4/${EXTRABUILDNUMBER}
+
+# 参考 https://github.com/wangzheng422/docker_env/blob/master/redhat/ocp4/4.5/4.5.disconnect.operator.md 制作启动光盘
+
+export NGINX_DIRECTORY=/data/ocp4/${EXTRABUILDNUMBER}
+export RHCOSVERSION=4.5.2
+export VOLID=$(isoinfo -d -i ${NGINX_DIRECTORY}/rhcos-${RHCOSVERSION}-x86_64-installer.x86_64.iso | awk '/Volume id/ { print $3 }')
+
+TEMPDIR=$(mktemp -d)
+echo $VOLID
+echo $TEMPDIR
+
+cd ${TEMPDIR}
+# Extract the ISO content using guestfish (to avoid sudo mount)
+guestfish -a ${NGINX_DIRECTORY}/rhcos-${RHCOSVERSION}-x86_64-installer.x86_64.iso \
+  -m /dev/sda tar-out / - | tar xvf -
+
+
+
 
 
 

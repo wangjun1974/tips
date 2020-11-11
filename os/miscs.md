@@ -3997,3 +3997,54 @@ https://www.thegeekdiary.com/centos-rhel-7-how-to-disable-ipv6-on-a-specific-int
 sysctl -w net.ipv6.conf.br0.disable_ipv6=1
 ```
 
+```
+sysctl -w net.ipv6.conf.openshift4.autoconf=0
+sysctl -w net.ipv6.conf.openshift4.accept_ra=0
+nmcli c down openshift4 && nmcli c up openshift4
+
+ipv6.method:                            manual
+ipv6.dns:                               --
+ipv6.dns-search:                        --
+ipv6.dns-options:                       ""
+ipv6.dns-priority:                      100
+ipv6.addresses:                         2001:db8::1/64
+ipv6.gateway:                           2001:db8::1
+ipv6.routes:                            --
+ipv6.route-metric:                      -1
+ipv6.route-table:                       0 (unspec)
+ipv6.routing-rules:                     --
+ipv6.ignore-auto-routes:                no
+ipv6.ignore-auto-dns:                   no
+ipv6.never-default:                     no
+ipv6.may-fail:                          yes
+ipv6.ip6-privacy:                       -1 (unknown)
+ipv6.addr-gen-mode:                     stable-privacy
+ipv6.dhcp-duid:                         --
+ipv6.dhcp-send-hostname:                yes
+ipv6.dhcp-hostname:                     --
+ipv6.token:                             --
+
+# 为 Hypervisor 添加 ipv6 地址
+nmcli con modify openshift4 ipv6.addresses "2001:db8::1/64" gw6 "2001:db8::1" ipv6.method manual
+nmcli connection down openshift4 && nmcli connection up openshift4
+
+nmcli con modify br0 remove ipv6.addresses "2001:db8::2/64" gw6 "2001:db8::1" ipv6.method manual
+nmcli connection down br0 && nmcli connection up br0
+
+nmcli con modify br0 -ipv6.gateway  ''
+nmcli con modify br0 ipv6.addresses '' ipv6.method 'auto'
+nmcli connection down br0 && nmcli connection up br0
+
+nmcli con modify openshift4 -ipv6.gateway  ''
+nmcli con modify openshift4 ipv6.addresses '' ipv6.method 'auto'
+nmcli connection down openshift4 && nmcli connection up openshift4
+
+nmcli con modify openshift4v6 ipv6.addresses "2001:db8::1/64" gw6 "2001:db8::1" ipv6.method manual
+nmcli connection down openshift4v6 && nmcli connection up openshift4v6
+
+nmcli con add con-name openshift4v6 type bridge ifname openshift4v6  
+nmcli con modify openshift4v6 ipv6.addresses "2001:db8::1/64" gw6 "2001:db8::1" ipv6.method manual
+nmcli connection down openshift4v6 && nmcli connection up openshift4v6
+```
+
+

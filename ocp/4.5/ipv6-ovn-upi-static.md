@@ -68,19 +68,27 @@ virt-install --name="jwang-ocp452-aHelper" --vcpus=2 --ram=4096 \
 # 拷贝老的 helper 虚拟机磁盘
 rsync --info=progress2 /var/lib/libvirt/images/helper-sda /data/kvm/jwang-ocp452-aHelper.qcow2
 
-# 为 Hypervisor 添加 ipv6 地址
-nmcli con modify openshift4 ipv6.addresses "2001:db8::1/64" gw6 "2001:db8::1" ipv6.method manual
-nmcli connection down openshift4 && nmcli connection up openshift4
+# 创建新的 libvirt network openshift4v6
+cat << EOF >  /data/virt-net-v6.xml
+<network>
+  <name>openshift4v6</name>
+  <forward mode='nat'>
+    <nat>
+      <port start='1024' end='65535'/>
+    </nat>
+  </forward>
+  <bridge name='openshift4v6' stp='on' delay='0'/>
+  <domain name='openshift4v6'/>
+  <ip address='192.168.8.1' netmask='255.255.255.0'>
+  </ip> 
+  <ip family="ipv6" address="2001:db8::1" prefix="64">
+  </ip>
+</network>
+EOF
 
-nmcli con modify br0 remove ipv6.addresses "2001:db8::2/64" gw6 "2001:db8::1" ipv6.method manual
-nmcli connection down br0 && nmcli connection up br0
-
-nmcli con modify br0 -ipv6.gateway  ''
-nmcli con modify br0 ipv6.addresses '' ipv6.method 'auto'
-nmcli connection down br0 && nmcli connection up br0
-
-# 禁用 br0 接口上的 ipv6 
-sysctl -w net.ipv6.conf.br0.disable_ipv6=1
+virsh net-define /data/virt-net-v6.xml
+virsh net-start openshift4v6
+virsh net-autostart --network openshift4v6
 
 # 
 export MAJORBUILDNUMBER=4.5

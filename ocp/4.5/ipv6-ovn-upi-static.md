@@ -72,8 +72,15 @@ rsync --info=progress2 /var/lib/libvirt/images/helper-sda /data/kvm/jwang-ocp452
 nmcli con modify openshift4 ipv6.addresses "2001:db8::1/64" gw6 "2001:db8::1" ipv6.method manual
 nmcli connection down openshift4 && nmcli connection up openshift4
 
-nmcli con modify br0 ipv6.addresses "2001:db8::2/64" gw6 "2001:db8::1" ipv6.method manual
+nmcli con modify br0 remove ipv6.addresses "2001:db8::2/64" gw6 "2001:db8::1" ipv6.method manual
 nmcli connection down br0 && nmcli connection up br0
+
+nmcli con modify br0 -ipv6.gateway  ''
+nmcli con modify br0 ipv6.addresses '' ipv6.method 'auto'
+nmcli connection down br0 && nmcli connection up br0
+
+# 禁用 br0 接口上的 ipv6 
+sysctl -w net.ipv6.conf.br0.disable_ipv6=1
 
 # 
 export MAJORBUILDNUMBER=4.5

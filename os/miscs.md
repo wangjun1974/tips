@@ -3990,3 +3990,10 @@ https://access.redhat.com/solutions/3550082
 PING fe80::xxx:xxxx:xxxx:xxxx%ethX(fe80::xxx:xxxx:xxxx:xxxx) 56 data bytes
 64 bytes from fe80::xxx:xxxx:xxxx:xxxx: icmp_seq=1 ttl=64 time=0.206 ms
 ```
+
+禁用接口上的 ipv6 
+https://www.thegeekdiary.com/centos-rhel-7-how-to-disable-ipv6-on-a-specific-interface-only/
+```
+sysctl -w net.ipv6.conf.br0.disable_ipv6=1
+```
+

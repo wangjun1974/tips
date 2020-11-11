@@ -55,16 +55,6 @@ autopart --type=lvm --fstype=xfs
 %end
 EOF
 
-# 安装 helper 虚拟机
-virt-install --name="jwang-ocp452-aHelper" --vcpus=2 --ram=4096 \
---disk path=/data/kvm/jwang-ocp452-aHelper.qcow2,bus=virtio,size=800 \
---os-variant centos7.0 --network network=openshift4,model=virtio \
---boot menu=on --location /data/rhel-server-7.6-x86_64-dvd.iso \
---graphics none \
---console pty,target_type=serial \
---initrd-inject /tmp/helper-ks.cfg \
---extra-args='inst.ks=file:/helper-ks.cfg console=ttyS0' --dry-run
-
 # 拷贝老的 helper 虚拟机磁盘
 rsync --info=progress2 /var/lib/libvirt/images/helper-sda /data/kvm/jwang-ocp452-aHelper.qcow2
 
@@ -90,7 +80,14 @@ virsh net-define /data/virt-net-v6.xml
 virsh net-start openshift4v6
 virsh net-autostart --network openshift4v6
 
-# 
+# 安装 helper 虚拟机
+virt-install --import --name="jwang-ocp452-aHelper" --vcpus=2 --ram=4096 \
+--disk path=/data/kvm/jwang-ocp452-aHelper.qcow2,bus=virtio \
+--os-variant centos7.0 --network network=openshift4v6,model=virtio \
+--graphics spice \
+--noautoconsole
+
+# 下载所需软件
 export MAJORBUILDNUMBER=4.5
 export EXTRABUILDNUMBER=4.5.2
 mkdir -p /data/ocp4/${EXTRABUILDNUMBER}

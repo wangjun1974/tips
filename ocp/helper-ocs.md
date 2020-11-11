@@ -659,7 +659,7 @@ oc get configs.imageregistry.operator.openshift.io cluster -o yaml
 # https://docs.openshift.com/container-platform/4.5/security/
 certificate-types-descriptions.html#proxy-certificates_ocp-certificates
 # 可以试试以下方法设置 Proxy Certificate
-# oc get proxy cluster -n openshift -o yaml
+# oc get proxy.config.openshift.io/cluster -o yaml
 # oc patch proxy.config.openshift.io/cluster -p '{"spec":{"trustedCA":{"name":"user-ca-bundle"}}}'  --type=merge
 oc patch image.config.openshift.io/cluster -p '{"spec":{"additionalTrustedCA":{"name":"user-ca-bundle"}}}'  --type=merge
 oc get image.config.openshift.io/cluster -o yaml

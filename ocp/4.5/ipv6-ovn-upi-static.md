@@ -109,7 +109,6 @@ zone "0.0.0.0.8.b.d.0.1.0.0.2.ip6.arpa." IN {
         file    "0000.0db8.2001.reverse.db";
 };      
 
-
 # 创建 0000.0db8.2001.reverse.db 文件
 cat > /var/named/0000.0db8.2001.reverse.db <<'EOF'
 $TTL 1W
@@ -141,6 +140,42 @@ $ORIGIN 0.0.0.0.8.b.d.0.1.0.0.2.ip6.arpa.
 1.8.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0       IN      PTR     worker3.ocp4.example.com.
 ;
 EOF
+
+# 添加 ipv6 正向解析到 /var/named/zonefile.db
+
+;IPv6 part
+ns1     IN      AAAA       2001:db8::11
+smtp    IN      AAAA       2001:db8::11
+;
+helper  IN      AAAA       2001:db8::11
+;
+; The api points to the IP of your load balancer
+api             IN      AAAA       2001:db8::11
+api-int         IN      AAAA       2001:db8::11
+;
+; The wildcard also points to the load balancer
+*.apps          IN      AAAA       2001:db8::11
+;
+; Create entry for the private registry
+registry        IN      AAAA       2001:db8::11
+;
+; Create entry for the bootstrap host
+bootstrap       IN      AAAA       2001:db8::12
+;
+; Create entries for the master hosts
+master1         IN      AAAA       2001:db8::13
+master2         IN      AAAA       2001:db8::14
+master3         IN      AAAA       2001:db8::15
+;
+; Create entries for the worker hosts
+worker1         IN      AAAA       2001:db8::16
+worker2         IN      AAAA       2001:db8::17
+worker3         IN      AAAA       2001:db8::18
+;
+; The ETCd cluster lives on the masters...so point these to the IP of the masters
+etcd-0  IN      AAAA       2001:db8::13
+etcd-1  IN      AAAA       2001:db8::14
+etcd-2  IN      AAAA       2001:db8::15
 
 
 # 下载所需软件

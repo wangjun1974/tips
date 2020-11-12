@@ -4377,3 +4377,5 @@ SEARCH=ipv6test.iiit.ac.in
 
 ```
 
+### dig 的用法
+https://www.hostinger.com/tutorials/how-to-use-the-dig-command-in-linux/

@@ -4054,7 +4054,326 @@ oc adm top nodes
 # 而不是直接登录节点，执行 free 或者查看 Prometheus 所提供的资源占用情况
 # 背后的原因是 oc adm top nodes 查看的是从 kubernetes scheduler 视角出发的资源占用情况，
 # 这里面包括了对 cpu/memory 资源的 requests ，而不是实际已使用资源情况
-# 因为从实际已使用资源出发是满足 kubernetes scheduler 做调度的需要的
+# 因为从实际已使用资源出发是满足 kubernetes scheduler 做调度的
 ```
 
+### named ipv6 正向解析和反向解析的例子
+https://www.sbarjatiya.com/notes_wiki/index.php/Configuring_IPv6_and_IPv4,_forward_and_reverse_DNS
+
+```
+# Sample 'named.conf' would look like
+cat > /etc/named.conf <<EOF
+options
+{
+	directory "/var/named"; // the default
+	dump-file 		"data/cache_dump.db";
+        statistics-file 	"data/named_stats.txt";
+        memstatistics-file 	"data/named_mem_stats.txt";
+	forwarders  { 192.168.36.222; 192.168.36.204; };
+	forward first;
+	allow-transfer {localhost; 192.168.0.0/16; };
+	recursion yes;
+	listen-on { any; };
+	listen-on-v6 {  any; };
+	max-cache-size 10M;
+	files 10000;
+	recursive-clients 100;
+	tcp-clients 20;
+	tcp-listen-queue 5;
+	cleaning-interval 60;
+	interface-interval 60;
+	rrset-order { order cyclic; };
+	edns-udp-size 4096;
+	version none;
+	hostname none;
+	server-id none;
+
+};
+
+
+logging 
+{
+        channel default {
+                file "data/default.log" versions 10 size 5M;
+                severity dynamic;
+		print-category yes;
+		print-severity yes;
+		print-time yes;
+        };
+        channel general {
+                file "data/general.log" versions 10 size 5M;
+                severity dynamic;
+		print-category yes;
+		print-severity yes;
+		print-time yes;
+        };
+        channel security {
+                file "data/security.log" versions 10 size 5M;
+                severity dynamic;
+		print-category yes;
+		print-severity yes;
+		print-time yes;
+        };
+        channel config {
+                file "data/config.log" versions 10 size 5M;
+                severity dynamic;
+		print-category yes;
+		print-severity yes;
+		print-time yes;
+        };
+        channel resolver {
+                file "data/resolver.log" versions 10 size 5M;
+                severity dynamic;
+		print-category yes;
+		print-severity yes;
+		print-time yes;
+        };
+        channel xfer-in {
+                file "data/xfer-in.log" versions 10 size 5M;
+                severity dynamic;
+		print-category yes;
+		print-severity yes;
+		print-time yes;
+        };
+        channel xfer-out {
+                file "data/xfer-out.log" versions 10 size 5M;
+                severity dynamic;
+		print-category yes;
+		print-severity yes;
+		print-time yes;
+        };
+        channel client {
+                file "data/client.log" versions 10 size 5M;
+                severity dynamic;
+		print-category yes;
+		print-severity yes;
+		print-time yes;
+        };
+        channel unmatched {
+                file "data/unmatched.log" versions 10 size 5M;
+                severity dynamic;
+		print-category yes;
+		print-severity yes;
+		print-time yes;
+        };
+        channel network {
+                file "data/network.log" versions 10 size 5M;
+                severity dynamic;
+		print-category yes;
+		print-severity yes;
+		print-time yes;
+        };
+        channel queries {
+                file "data/queries.log" versions 10 size 5M;
+                severity dynamic;
+		print-category yes;
+		print-severity yes;
+		print-time yes;
+        };
+        channel lame-servers {
+                file "data/lame-servers.log" versions 10 size 5M;
+                severity dynamic;
+		print-category yes;
+		print-severity yes;
+		print-time yes;
+        };
+
+	category default {default; };
+	category general {general; };
+	category security {security; };
+	category config {config; };
+	category resolver {resolver; };
+	category xfer-in {xfer-in; };
+	category xfer-out {xfer-out; };
+	category client {client; };
+	category unmatched {unmatched; };
+	category network {network; };
+	category queries {queries; };
+	category lame-servers {lame-servers; };
+};
+
+
+view "localhost_resolver"
+{
+	match-clients 		{ 127.0.0.1; ::1; };
+	match-destinations	{ 127.0.0.1; ::1; };
+	recursion yes;
+
+	zone "168.192.in-addr.arpa." {
+		type master;
+		file "192.168.reverse.db";
+	};
+	zone "ipv6test.iiit.ac.in." { 
+		type master;
+		file "ipv6test.iiit.ac.in.zone.db";
+	};
+	zone "4.9.f.4.9.2.d.1.7.5.d.f.ip6.arpa." {
+		type master;
+		file "fd57.1d29.4f94.reverse.db";
+	};
+
+	include "/etc/named.root.hints";
+	include "/etc/named.rfc1912.zones";
+};
+
+
+view "internal"
+{
+	match-clients		{ localnets; 192.168.0.0/16; fd57:1d29:4f94::/48; };
+	recursion yes;
+
+	zone "168.192.in-addr.arpa." {
+		type master;
+		file "192.168.reverse.db";
+	};
+	zone "ipv6test.iiit.ac.in." { 
+		type master;
+		file "ipv6test.iiit.ac.in.zone.db";
+	};
+	zone "4.9.f.4.9.2.d.1.7.5.d.f.ip6.arpa." {
+		type master;
+		file "fd57.1d29.4f94.reverse.db";
+	};
+	include "/etc/named.root.hints";
+};
+
+
+key ddns_key
+{
+	algorithm hmac-md5;
+#	secret "use /usr/sbin/dns-keygen to generate TSIG keys";
+	secret "MlXuMXqk1WKEzxom7APg6q5MlkfFcZwiYh1BAutyZa7ButPw90fizzS1WPmN";
+};
+
+
+view    "external"
+{
+	match-clients		{ any; };
+	match-destinations	{ any; };
+
+	recursion no;
+	allow-query-cache { none; };
+
+	include "/etc/named.root.hints";
+};
+EOF
+
+# Default files
+named.rfc1912.zones
+named.root.hints
+localdomain.zone
+named.broadcast
+named.local
+named.zero
+localhost.zone
+named.ip6.local
+named.root
+
+# Forward zone file
+cat > /var/named/chroot/var/named/ipv6test.iiit.ac.in.zone.db <<EOF
+$TTL 3600
+@ SOA	ns.ipv6test.iiit.ac.in. root.ipv6test.iiit.ac.in. (1 15m 5m 30d 1h)
+	NS ns.ipv6test.iiit.ac.in.
+
+localhost	IN	A 	127.0.0.1
+localhost	IN	AAAA 	::1
+
+vm1		IN	A	192.168.201.244
+vm1.ipv4	IN	A	192.168.201.244
+vm1		IN	AAAA	fd57:1d29:4f94:1:216:36ff:fe00:1
+vm1		IN	AAAA	fd57:1d29:4f94:a:216:36ff:fe00:1
+vm1.ipv6	IN	AAAA	fd57:1d29:4f94:1:216:36ff:fe00:1
+vm1.ipv6	IN	AAAA	fd57:1d29:4f94:a:216:36ff:fe00:1
+ns		IN	CNAME	vm1
+
+vm2		IN	A	192.168.201.4
+vm2.ipv4	IN	A	192.168.201.4
+vm2		IN	AAAA	fd57:1d29:4f94:1:216:36ff:fe00:2
+vm2		IN	AAAA	fd57:1d29:4f94:a:216:36ff:fe00:2
+vm2.ipv6	IN	AAAA	fd57:1d29:4f94:1:216:36ff:fe00:2
+vm2.ipv6	IN	AAAA	fd57:1d29:4f94:a:216:36ff:fe00:2
+vm2		IN	A	192.168.202.17
+vm2.ipv4	IN	A	192.168.202.17
+vm2		IN	AAAA	fd57:1d29:4f94:2:216:36ff:fe00:3
+vm2		IN	AAAA	fd57:1d29:4f94:b:216:36ff:fe00:3
+vm2.ipv6	IN	AAAA	fd57:1d29:4f94:2:216:36ff:fe00:3
+vm2.ipv6	IN	AAAA	fd57:1d29:4f94:b:216:36ff:fe00:3
+
+vm3		IN	A	192.168.202.30
+vm3.ipv4	IN	A	192.168.202.30
+vm3		IN	AAAA	fd57:1d29:4f94:2:216:36ff:fe00:4
+vm3		IN	AAAA	fd57:1d29:4f94:b:216:36ff:fe00:4
+vm3.ipv6	IN	AAAA	fd57:1d29:4f94:2:216:36ff:fe00:4
+vm3.ipv6	IN	AAAA	fd57:1d29:4f94:b:216:36ff:fe00:4
+EOF
+
+
+# ipv4 Reverse zone files
+cat > /var/named/chroot/var/named/192.168.reverse.db <<EOF
+$TTL 3600
+@ SOA	ns.ipv6test.iiit.ac.in. root.ipv6test.iiit.ac.in. (1 15m 5m 30d 1h)
+	NS ns.ipv6test.iiit.ac.in.
+
+244.201		PTR	vm1.ipv4.ipv6test.iiit.ac.in.
+244.201		PTR	vm1.ipv6test.iiit.ac.in.
+4.201		PTR	vm2.ipv4.ipv6test.iiit.ac.in.
+4.201		PTR	vm2.ipv6test.iiit.ac.in.
+17.202		PTR	vm2.ipv4.ipv6test.iiit.ac.in.
+17.202		PTR	vm2.ipv6test.iiit.ac.in.
+30.202		PTR	vm3.ipv4.ipv6test.iiit.ac.in.
+30.202		PTR	vm3.ipv6test.iiit.ac.in.
+EOF
+
+
+# ipv6 Reverse zone files
+
+cat > /var/named/chrooot/var/named/fd57.1d29.4f94.reverse.db <<EOF
+$TTL 3600
+@ SOA	ns.ipv6test.iiit.ac.in. root.ipv6test.iiit.ac.in. (1 15m 5m 30d 1h)
+	NS ns.ipv6test.iiit.ac.in.
+
+$ORIGIN 1.0.0.0.4.9.f.4.9.2.d.1.7.5.d.f.ip6.arpa.
+;                 1 1 1 1 1 1 1
+; 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6
+
+1.0.0.0.0.0.e.f.f.f.6.3.6.1.2.0	PTR	vm1.ipv6.ipv6test.iiit.ac.in.
+1.0.0.0.0.0.e.f.f.f.6.3.6.1.2.0	PTR	vm1.ipv6test.iiit.ac.in.
+2.0.0.0.0.0.e.f.f.f.6.3.6.1.2.0	PTR	vm2.ipv6.ipv6test.iiit.ac.in.
+2.0.0.0.0.0.e.f.f.f.6.3.6.1.2.0	PTR	vm2.ipv6test.iiit.ac.in.
+
+
+
+$ORIGIN a.0.0.0.4.9.f.4.9.2.d.1.7.5.d.f.ip6.arpa.
+;                 1 1 1 1 1 1 1
+; 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6
+
+1.0.0.0.0.0.e.f.f.f.6.3.6.1.2.0	PTR	vm1.ipv6.ipv6test.iiit.ac.in.
+1.0.0.0.0.0.e.f.f.f.6.3.6.1.2.0	PTR	vm1.ipv6test.iiit.ac.in.
+2.0.0.0.0.0.e.f.f.f.6.3.6.1.2.0	PTR	vm2.ipv6.ipv6test.iiit.ac.in.
+2.0.0.0.0.0.e.f.f.f.6.3.6.1.2.0	PTR	vm2.ipv6test.iiit.ac.in.
+
+
+
+$ORIGIN 2.0.0.0.4.9.f.4.9.2.d.1.7.5.d.f.ip6.arpa.
+;                 1 1 1 1 1 1 1
+; 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6
+
+
+3.0.0.0.0.0.e.f.f.f.6.3.6.1.2.0	PTR	vm2.ipv6.ipv6test.iiit.ac.in.
+3.0.0.0.0.0.e.f.f.f.6.3.6.1.2.0	PTR	vm2.ipv6test.iiit.ac.in.
+4.0.0.0.0.0.e.f.f.f.6.3.6.1.2.0	PTR	vm3.ipv6.ipv6test.iiit.ac.in.
+4.0.0.0.0.0.e.f.f.f.6.3.6.1.2.0	PTR	vm3.ipv6test.iiit.ac.in.
+EOF
+
+
+# Client configuration
+# ipv4
+DNS1=192.168.201.244
+SEARCH=ipv6test.iiit.ac.in
+# ipv6
+DNS1=fd57:1d29:4f94:1:216:36ff:fe00:1
+DNS2=fd57:1d29:4f94:a:216:36ff:fe00:1
+SEARCH=ipv6test.iiit.ac.in
+
+```
 

@@ -89,8 +89,13 @@ virt-install --import --name="jwang-ocp452-aHelper" --vcpus=2 --ram=4096 \
 
 # 登录虚拟机 jwang-ocp452-aHelper，改变虚拟机 ip 地址
 nmcli con mod 'ocp4' ipv4.method 'manual' ipv4.address '192.168.8.11/24' ipv4.gateway '192.168.8.1' 
+nmcli con mod 'ocp4' ipv6.method 'manual' ipv6.address '2001:db8::11/64' ipv6.gateway '2001:db8::1'
 nmcli con down ocp4 && nmcli con up ocp4 
 
+cat >> /etc/hosts <<EOF
+2001:db8::11 helper.ocp4.example.com helper
+2001:db8::1 yum.redhat.ren
+EOF
 
 # 下载所需软件
 export MAJORBUILDNUMBER=4.5

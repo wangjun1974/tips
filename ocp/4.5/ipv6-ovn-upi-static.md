@@ -97,6 +97,52 @@ cat >> /etc/hosts <<EOF
 2001:db8::1 yum.redhat.ren
 EOF
 
+# 按照正常方法准备 ocp4-helpernode 或者 ocp4-upi-helpernode
+
+# 添加以下内容到 /etc/named.conf 文件
+# 这里使用的网络是 2001:db8::1/64 
+# 对应的网络前缀是 2001:0db8:0000
+# 参考: http://www.gestioip.net/cgi-bin/subnet_calculator.cgi
+
+zone "0.0.0.0.8.b.d.0.1.0.0.2.ip6.arpa." IN {
+        type    master;
+        file    "0000.0db8.2001.reverse.db";
+};      
+
+
+# 创建 0000.0db8.2001.reverse.db 文件
+cat > /var/named/0000.0db8.2001.reverse.db <<'EOF'
+$TTL 1W
+@       IN      SOA     ns1.ocp4.example.com.   root (
+                        2020010747      ; serial
+                        3H              ; refresh (3 hours)
+                        30M             ; retry (30 minutes)
+                        2W              ; expiry (2 weeks)
+                        1W )            ; minimum (1 week)
+        IN      NS      ns1.ocp4.example.com.
+;
+; syntax is "last octet" and the host must have fqdn with trailing dot
+;
+$ORIGIN 0.0.0.0.8.b.d.0.1.0.0.2.ip6.arpa.
+;
+1.3.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0       IN      PTR     master1.ocp4.example.com.
+1.4.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0       IN      PTR     master2.ocp4.example.com.
+1.4.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0       IN      PTR     master3.ocp4.example.com.
+;
+1.1.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0       IN      PTR     registry.ocp4.example.com.
+;
+1.2.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0       IN      PTR     bootstrap.ocp4.example.com.
+;
+1.1.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0       IN      PTR     api.ocp4.example.com.
+1.1.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0       IN      PTR     api-int.ocp4.example.com.
+;
+1.6.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0       IN      PTR     worker1.ocp4.example.com.
+1.7.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0       IN      PTR     worker2.ocp4.example.com.
+1.8.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0       IN      PTR     worker3.ocp4.example.com.
+;
+EOF
+
+
 # 下载所需软件
 export MAJORBUILDNUMBER=4.5
 export EXTRABUILDNUMBER=4.5.2

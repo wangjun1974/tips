@@ -87,6 +87,11 @@ virt-install --import --name="jwang-ocp452-aHelper" --vcpus=2 --ram=4096 \
 --graphics spice \
 --noautoconsole
 
+# 登录虚拟机 jwang-ocp452-aHelper，改变虚拟机 ip 地址
+nmcli con mod 'ocp4' ipv4.method 'manual' ipv4.address '192.168.8.11/24' ipv4.gateway '192.168.8.1' 
+nmcli con down ocp4 && nmcli con up ocp4 
+
+
 # 下载所需软件
 export MAJORBUILDNUMBER=4.5
 export EXTRABUILDNUMBER=4.5.2

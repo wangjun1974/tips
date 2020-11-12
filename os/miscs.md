@@ -4047,4 +4047,14 @@ nmcli con modify openshift4v6 ipv6.addresses "2001:db8::1/64" gw6 "2001:db8::1" 
 nmcli connection down openshift4v6 && nmcli connection up openshift4v6
 ```
 
+### OpenShift 建议的查看节点资源占用情况的方法
+```
+# 执行命令
+oc adm top nodes
+# 而不是直接登录节点，执行 free 或者查看 Prometheus 所提供的资源占用情况
+# 背后的原因是 oc adm top nodes 查看的是从 kubernetes scheduler 视角出发的资源占用情况，
+# 这里面包括了对 cpu/memory 资源的 requests ，而不是实际已使用资源情况
+# 因为从实际已使用资源出发是满足 kubernetes scheduler 做调度的需要的
+```
+
 

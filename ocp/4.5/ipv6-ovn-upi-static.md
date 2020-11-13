@@ -390,7 +390,7 @@ rm -Rf ${TEMPDIR}
 mkdir -p /root/ocp4/ins452
 cd /root/ocp4/ins452
 
-cat > install-config.yaml << 'EOF'
+cat > install-config.yaml.ipv6 << 'EOF'
 apiVersion: v1
 baseDomain: example.com
 compute:
@@ -427,13 +427,27 @@ imageContentSources:
   source: quay.io/openshift-release-dev/ocp-v4.0-art-dev
 EOF
 
+cp install-config.yaml.ipv6 install-config.yaml
 
+# 生成 ingition 文件 
+openshift-install create ignition-configs --dir=/root/ocp4/ins452
+
+# 拷贝 ignition 文件
+rm -f /var/www/html/ignition/*
+/bin/cp -f bootstrap.ign /var/www/html/ignition/bootstrap-static.ign
+/bin/cp -f master.ign /var/www/html/ignition/master-0.ign
+/bin/cp -f master.ign /var/www/html/ignition/master-1.ign
+/bin/cp -f master.ign /var/www/html/ignition/master-2.ign
+/bin/cp -f worker.ign /var/www/html/ignition/worker-0.ign
+/bin/cp -f worker.ign /var/www/html/ignition/worker-1.ign
+/bin/cp -f worker.ign /var/www/html/ignition/worker-2.ign
+chmod 644 /var/www/html/ignition/*
 
 # finally, we can start install :)
 # 你可以一口气把虚拟机都创建了，然后喝咖啡等着。
 # 从这一步开始，到安装完毕，大概30分钟。
 virt-install --name=jwang-ocp452-bootstrap --vcpus=4 --ram=8192 \
---disk path=/data/kvm/ocp4-bootstrap.qcow2,bus=virtio,size=120 \
+--disk path=/data/kvm/jwang-ocp452-bootstrap.qcow2,bus=virtio,size=120 \
 --os-variant rhel8.0 --network network=openshift4v6,model=virtio \
 --boot menu=on --cdrom ${NGINX_DIRECTORY}/bootstrap-static.iso 
 
@@ -442,32 +456,32 @@ virt-install --name=jwang-ocp452-bootstrap --vcpus=4 --ram=8192 \
 # journalctl -b -f -u bootkube.service
 
 virt-install --name=jwang-ocp452-master0 --vcpus=4 --ram=32768 \
---disk path=/data/kvm/ocp4-master0.qcow2,bus=virtio,size=120 \
+--disk path=/data/kvm/jwang-ocp452-master0.qcow2,bus=virtio,size=120 \
 --os-variant rhel8.0 --network network=openshift4v6,model=virtio \
 --boot menu=on --cdrom ${NGINX_DIRECTORY}/master-0.iso 
 
 virt-install --name=jwang-ocp452-master1 --vcpus=4 --ram=32768 \
---disk path=/data/kvm/ocp4-master1.qcow2,bus=virtio,size=120 \
+--disk path=/data/kvm/jwang-ocp452-master1.qcow2,bus=virtio,size=120 \
 --os-variant rhel8.0 --network network=openshift4v6,model=virtio \
 --boot menu=on --cdrom ${NGINX_DIRECTORY}/master-1.iso 
 
 virt-install --name=jwang-ocp452-master2 --vcpus=4 --ram=32768 \
---disk path=/data/kvm/ocp4-master2.qcow2,bus=virtio,size=120 \
+--disk path=/data/kvm/jwang-ocp452-master2.qcow2,bus=virtio,size=120 \
 --os-variant rhel8.0 --network network=openshift4v6,model=virtio \
 --boot menu=on --cdrom ${NGINX_DIRECTORY}/master-2.iso 
 
 virt-install --name=jwang-ocp452-worker0 --vcpus=4 --ram=32768 \
---disk path=/data/kvm/ocp4-worker0.qcow2,bus=virtio,size=120 \
+--disk path=/data/kvm/jwang-ocp452-worker0.qcow2,bus=virtio,size=120 \
 --os-variant rhel8.0 --network network=openshift4v6,model=virtio \
 --boot menu=on --cdrom ${NGINX_DIRECTORY}/worker-0.iso 
 
 virt-install --name=jwang-ocp452-worker1 --vcpus=4 --ram=32768 \
---disk path=/data/kvm/ocp4-worker1.qcow2,bus=virtio,size=120 \
+--disk path=/data/kvm/jwang-ocp452-worker1.qcow2,bus=virtio,size=120 \
 --os-variant rhel8.0 --network network=openshift4v6,model=virtio \
 --boot menu=on --cdrom ${NGINX_DIRECTORY}/worker-1.iso 
 
 virt-install --name=jwang-ocp452-worker2 --vcpus=4 --ram=32768 \
---disk path=/data/kvm/ocp4-worker2.qcow2,bus=virtio,size=120 \
+--disk path=/data/kvm/jwang-ocp452-worker2.qcow2,bus=virtio,size=120 \
 --os-variant rhel8.0 --network network=openshift4v6,model=virtio \
 --boot menu=on --cdrom ${NGINX_DIRECTORY}/worker-2.iso 
 ```

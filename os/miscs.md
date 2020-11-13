@@ -4401,3 +4401,95 @@ ovirt-aaa-jdbc-tool user unlock admin
 ### 使用 filetranspiler 更新 ignition 文件
 https://www.openshift.com/blog/advanced-network-customizations-for-openshift-install
 
+### 检查 openshift etcd  
+参考：https://docs.openshift.com/container-platform/4.4/backup_and_restore/replacing-unhealthy-etcd-member.html
+```
+oc get etcd -o=jsonpath='{range .items[0].status.conditions[?(@.type=="EtcdMembersAvailable")]}{.message}{"\n"}'
+```
+
+### ocp 4.5.2 ipv6 cluster 报错 
+```
+oc -n openshift-kube-apiserver-operator logs $(oc get pods -n openshift-kube-apiserver-operator -o jsonpath='{ .items[*].metadata.name }')
+...
+E1113 09:06:12.019969       1 base_controller.go:180] "ConfigObserver" controller failed to sync "key", err: configmaps openshift-etcd/etcd-endpoints: no etcd endpoint addresses found
+
+# 实际情况是 
+oc get configmaps etcd-endpoints -n openshift-etcd -o yaml 
+apiVersion: v1
+data:
+  MjAwMTpkYjg6OjE0: 2001:db8::14
+  MjAwMTpkYjg6OjE1: 2001:db8::15
+  MjAwMTpkYjg6OjEz: 2001:db8::13
+kind: ConfigMap
+metadata:
+  annotations:
+    alpha.installer.openshift.io/etcd-bootstrap: 2001:db8::12
+  creationTimestamp: "2020-11-13T05:58:58Z"
+  managedFields:
+  - apiVersion: v1
+    fieldsType: FieldsV1
+    fieldsV1:
+      f:metadata:
+        f:annotations:
+          .: {}
+          f:alpha.installer.openshift.io/etcd-bootstrap: {}
+    manager: cluster-bootstrap
+    operation: Update
+    time: "2020-11-13T05:58:58Z"
+  - apiVersion: v1
+    fieldsType: FieldsV1
+    fieldsV1:
+      f:data:
+        .: {}
+        f:MjAwMTpkYjg6OjE0: {}
+        f:MjAwMTpkYjg6OjE1: {}
+        f:MjAwMTpkYjg6OjEz: {}
+    manager: cluster-etcd-operator
+    operation: Update
+    time: "2020-11-13T06:20:57Z"
+  name: etcd-endpoints
+  namespace: openshift-etcd
+  resourceVersion: "6646"
+  selfLink: /api/v1/namespaces/openshift-etcd/configmaps/etcd-endpoints
+  uid: 1bce3cd5-1f79-442d-a5ec-bd89f7d03474
+
+```
+
+# 为 RHCOS core 用户添加口令
+参考：https://bugzilla.redhat.com/show_bug.cgi?id=1801153
+参考：https://www.thelinuxfaq.com/504-generate-md5-sha-256-sha-512-encrypted-passwords-linux-command
+
+```
+$ core_user_password=$(python2 -c 'import crypt; print(crypt.crypt("changeme", crypt.mksalt(crypt.METHOD_SHA512)))')
+
+$ mkdir -p bootstrap-user
+
+$ cat > bootstrap-user/config-core-pwhash.ign << EOF
+{
+    "ignition": {
+        "config": {},
+        "security": {
+            "tls": {}
+        },
+        "timeouts": {},
+        "version": "2.2.0"
+    },
+    "passwd": {
+        "users": [
+            {
+                "name": "core",
+                "groups": [
+                    "sudo",
+                    "wheel"
+                ],
+                "passwordHash": ‘"’${core_user_password}‘"’
+            }
+        ]
+    }
+}
+EOF
+
+filetranspiler -i bootstrap.ign -f bootstrap-user -o bootstrap-static.ign
+
+echo y | cp bootstrap-static.ign /var/www/html/ignition/bootstrap-static.ign 
+```

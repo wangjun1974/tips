@@ -1,7 +1,6 @@
 
 # 参考： https://jamielinux.com/docs/libvirt-networking-handbook/nat-based-network.html
 
-
 ```
 # 生成 /tmp/helper-ks.cfg 文件
 cat > /tmp/helper-ks.cfg << 'EOF'
@@ -271,13 +270,7 @@ backend ingress-https
     server worker3-https-router3 2001:db8::18:443 check
 
 
-
-
-
-
-
-
-
+# 登录 Hypervisor 生成光盘
 
 # 下载所需软件
 export MAJORBUILDNUMBER=4.5
@@ -392,6 +385,48 @@ done
 # Optionally, clean up
 cd
 rm -Rf ${TEMPDIR}
+
+# 登录 Helper
+mkdir -p /root/ocp4/ins452
+cd /root/ocp4/ins452
+
+cat > install-config.yaml << 'EOF'
+apiVersion: v1
+baseDomain: example.com
+compute:
+- hyperthreading: Enabled
+  name: worker
+  replicas: 0
+controlPlane:
+  hyperthreading: Enabled
+  name: master
+  replicas: 3
+metadata:
+  name: ocp4
+networking:
+  networkType: OVNKubernetes
+  clusterNetwork:
+  - cidr: fd01::/48
+    hostPrefix: 64
+  serviceNetwork:
+  - fd02::/112
+platform:
+  none: {}
+pullSecret: '{"auths":{"registry.ocp4.example.com:5443":{"auth":"YTph"}}}'
+sshKey: |
+$( cat /root/.ssh/id_rsa.pub | sed 's/^/  /g' )
+additionalTrustBundle: |
+$( cat /etc/pki/ca-trust/source/anchors/ocp4.example.com.crt | sed 's/^/  /g' )
+imageContentSources:
+- mirrors:
+  - registry.ocp4.example.com:5443/openshift-release-dev/ocp-release
+  source: quay.io/openshift-release-dev/ocp-release
+- mirrors:
+  - registry.ocp4.example.com:5443/openshift-release-dev/ocp-release
+  source: quay.io/openshift-release-dev/ocp-v4.0-art-dev
+EOF
+
+
 
 # finally, we can start install :)
 # 你可以一口气把虚拟机都创建了，然后喝咖啡等着。

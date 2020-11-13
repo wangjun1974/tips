@@ -404,6 +404,7 @@ controlPlane:
 metadata:
   name: ocp4
 networking:
+  machineCIDR: 2001:0DB8::/64
   networkType: OVNKubernetes
   clusterNetwork:
   - cidr: fd01::/48

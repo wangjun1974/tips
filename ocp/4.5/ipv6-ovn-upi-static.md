@@ -374,5 +374,64 @@ BIOSMODE="bios"
 NET_INTERFACE="ens3"
 modify_cfg
 
+# Generate the images, one per node as the IP configuration is different...
+# https://github.com/coreos/coreos-assembler/blob/master/src/cmd-buildextend-installer#L97-L103
+for node in master-0 master-1 master-2 worker-0 worker-1 worker-2 bootstrap-static; do
+  # Overwrite the grub.cfg and isolinux.cfg files for each node type
+  for file in "EFI/redhat/grub.cfg" "isolinux/isolinux.cfg"; do
+    /bin/cp -f $(pwd)/${node}_${file##*/} ${file}
+  done
+  # As regular user!
+  genisoimage -verbose -rock -J -joliet-long -volset ${VOLID} \
+    -eltorito-boot isolinux/isolinux.bin -eltorito-catalog isolinux/boot.cat \
+    -no-emul-boot -boot-load-size 4 -boot-info-table \
+    -eltorito-alt-boot -efi-boot images/efiboot.img -no-emul-boot \
+    -o ${NGINX_DIRECTORY}/${node}.iso .
+done
 
+# Optionally, clean up
+cd
+rm -Rf ${TEMPDIR}
+
+# finally, we can start install :)
+# 你可以一口气把虚拟机都创建了，然后喝咖啡等着。
+# 从这一步开始，到安装完毕，大概30分钟。
+virt-install --name=jwang-ocp452-bootstrap --vcpus=4 --ram=8192 \
+--disk path=/data/kvm/ocp4-bootstrap.qcow2,bus=virtio,size=120 \
+--os-variant rhel8.0 --network network=openshift4v6,model=virtio \
+--boot menu=on --cdrom ${NGINX_DIRECTORY}/bootstrap-static.iso 
+
+# 想登录进coreos一探究竟？那么这么做
+# ssh core@[2001:db8::12] 
+# journalctl -b -f -u bootkube.service
+
+virt-install --name=jwang-ocp452-master0 --vcpus=4 --ram=32768 \
+--disk path=/data/kvm/ocp4-master0.qcow2,bus=virtio,size=120 \
+--os-variant rhel8.0 --network network=openshift4v6,model=virtio \
+--boot menu=on --cdrom ${NGINX_DIRECTORY}/master-0.iso 
+
+virt-install --name=jwang-ocp452-master1 --vcpus=4 --ram=32768 \
+--disk path=/data/kvm/ocp4-master1.qcow2,bus=virtio,size=120 \
+--os-variant rhel8.0 --network network=openshift4v6,model=virtio \
+--boot menu=on --cdrom ${NGINX_DIRECTORY}/master-1.iso 
+
+virt-install --name=jwang-ocp452-master2 --vcpus=4 --ram=32768 \
+--disk path=/data/kvm/ocp4-master2.qcow2,bus=virtio,size=120 \
+--os-variant rhel8.0 --network network=openshift4v6,model=virtio \
+--boot menu=on --cdrom ${NGINX_DIRECTORY}/master-2.iso 
+
+virt-install --name=jwang-ocp452-worker0 --vcpus=4 --ram=32768 \
+--disk path=/data/kvm/ocp4-worker0.qcow2,bus=virtio,size=120 \
+--os-variant rhel8.0 --network network=openshift4v6,model=virtio \
+--boot menu=on --cdrom ${NGINX_DIRECTORY}/worker-0.iso 
+
+virt-install --name=jwang-ocp452-worker1 --vcpus=4 --ram=32768 \
+--disk path=/data/kvm/ocp4-worker1.qcow2,bus=virtio,size=120 \
+--os-variant rhel8.0 --network network=openshift4v6,model=virtio \
+--boot menu=on --cdrom ${NGINX_DIRECTORY}/worker-1.iso 
+
+virt-install --name=jwang-ocp452-worker2 --vcpus=4 --ram=32768 \
+--disk path=/data/kvm/ocp4-worker2.qcow2,bus=virtio,size=120 \
+--os-variant rhel8.0 --network network=openshift4v6,model=virtio \
+--boot menu=on --cdrom ${NGINX_DIRECTORY}/worker-2.iso 
 ```

@@ -177,6 +177,157 @@ etcd-0  IN      AAAA       2001:db8::13
 etcd-1  IN      AAAA       2001:db8::14
 etcd-2  IN      AAAA       2001:db8::15
 
+# 更改 /etc/haproxy/haproxy.conf 的配置
+
+# 在 ipv6 地址上监听 
+listen stats
+    bind :9000
+    bind :::9000
+    mode http
+    stats enable
+    stats uri /
+    monitor-uri /healthz
+
+# 修改 frontend openshift-api-server 适配 ipv6
+frontend openshift-api-server
+    bind :::6443
+    acl worker src 2001:db8::16 2001:db8::17 2001:db8::18
+    use_backend openshift-api-server-on-master if worker
+    default_backend openshift-api-server
+    mode tcp
+    option tcplog
+
+# 修改 backend openshift-api-server-on-master 适配 ipv6
+backend openshift-api-server-on-master
+    balance source
+    mode tcp
+    server master1 2001:db8::13:6443 check
+    server master2 2001:db8::14:6443 check
+    server master3 2001:db8::15:6443 check
+
+# 修改 backend openshift-api-server 适配 ipv6
+backend openshift-api-server
+    balance source
+    mode tcp
+    server bootstrap 2001:db8::12:6443 check
+    server master1 2001:db8::13:6443 check
+    server master2 2001:db8::14:6443 check
+    server master3 2001:db8::15:6443 check
+
+# 
+frontend machine-config-server
+    bind :::22623
+    acl worker src 2001:db8::16 2001:db8::17 2001:db8::18
+    use_backend machine-config-server-on-master if worker
+    default_backend machine-config-server
+    mode tcp
+    option tcplog
+
+# 
+backend machine-config-server-on-master
+    balance source
+    mode tcp
+    server master1 2001:db8::13:22623 check
+    server master2 2001:db8::14:22623 check
+    server master3 2001:db8::15:22623 check
+
+# 
+backend machine-config-server
+    balance source
+    mode tcp
+    server bootstrap 2001:db8::12:22623 check
+    server master1 2001:db8::13:22623 check
+    server master2 2001:db8::14:22623 check
+    server master3 2001:db8::15:22623 check
+
+# 
+frontend ingress-http
+    bind :::80
+    default_backend ingress-http
+    mode tcp
+    option tcplog
+
+#
+backend ingress-http
+    balance source
+    mode tcp
+    server worker1-http-router1 2001:db8::16:80 check
+    server worker2-http-router2 2001:db8::17:80 check
+    server worker3-http-router3 2001:db8::18:80 check
+    server master1-http-router1 2001:db8::13:80 check
+    server master2-http-router2 2001:db8::14:80 check
+    server master3-http-router3 2001:db8::15:80 check
+
+ # 
+ frontend ingress-https
+    bind :::443
+    default_backend ingress-https
+    mode tcp
+    option tcplog
+
+#
+backend ingress-https
+    balance source
+    mode tcp
+    server worker1-https-router1 2001:db8::16:443 check
+    server worker2-https-router2 2001:db8::17:443 check
+    server worker3-https-router3 2001:db8::18:443 check
+    server master1-https-router1 2001:db8::13:443 check
+    server master2-https-router2 2001:db8::14:443 check
+    server master3-https-router3 2001:db8::15:443 check
+
+#
+listen mysql
+    bind :::3306
+    balance source
+    mode tcp
+    option tcplog
+    server worker1-tcp-router1 2001:db8::16:3306 check
+    server worker2-tcp-router2 2001:db8::17:3306 check
+    server worker3-tcp-router3 2001:db8::18:3306 check
+    server master1-tcp-router1 2001:db8::13:3306 check
+    server master2-tcp-router2 2001:db8::14:3306 check
+    server master3-tcp-router3 2001:db8::15:3306 check
+
+#
+listen cockroach
+    bind :::26257
+    balance source
+    mode tcp
+    option tcplog
+    server worker1-tcp-router1 2001:db8::16:26257 check
+    server worker2-tcp-router2 2001:db8::17:26257 check
+    server worker3-tcp-router3 2001:db8::18:26257 check
+    server master1-tcp-router1 2001:db8::13:26257 check
+    server master2-tcp-router2 2001:db8::14:26257 check
+    server master3-tcp-router3 2001:db8::15:26257 check
+
+#
+listen pxc
+    bind :::13306
+    balance source
+    mode tcp
+    option tcplog
+    server worker1-tcp-router1 2001:db8::16:13306 check
+    server worker2-tcp-router2 2001:db8::17:13306 check
+    server worker3-tcp-router3 2001:db8::18:13306 check
+    server master1-tcp-router1 2001:db8::13:13306 check
+    server master2-tcp-router2 2001:db8::14:13306 check
+    server master3-tcp-router3 2001:db8::15:13306 check
+
+#
+listen redis
+    bind :::6379
+    balance source
+    mode tcp
+    option tcplog
+    server worker1-tcp-router1 2001:db8::16:6379 check
+    server worker2-tcp-router2 2001:db8::17:6379 check
+    server worker3-tcp-router3 2001:db8::18:6379 check
+    server master1-tcp-router1 2001:db8::13:6379 check
+    server master2-tcp-router2 2001:db8::14:6379 check
+    server master3-tcp-router3 2001:db8::15:6379 check
+       
 
 # 下载所需软件
 export MAJORBUILDNUMBER=4.5

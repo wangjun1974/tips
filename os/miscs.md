@@ -4379,3 +4379,11 @@ SEARCH=ipv6test.iiit.ac.in
 
 ### dig 的用法
 https://www.hostinger.com/tutorials/how-to-use-the-dig-command-in-linux/
+```
+dig -6 _etcd-server-ssl._tcp.ocp4.example.com ANY
+dig -6 master1.ocp4.example.com ANY
+dig -6 -x 2001:db8::11 ANY
+```
+
+### kubernetes network policies
+https://banzaicloud.com/blog/network-policy/

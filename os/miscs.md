@@ -4387,3 +4387,13 @@ dig -6 -x 2001:db8::11 ANY
 
 ### kubernetes network policies
 https://banzaicloud.com/blog/network-policy/
+
+### rhv admin 用户被 lock 的处理方法
+参见：https://lists.ovirt.org/pipermail/users/2017-January/079032.html
+```
+# 查看锁定状态
+ovirt-aaa-jdbc-tool user show admin
+
+# 解除锁定状态
+ovirt-aaa-jdbc-tool user unlock admin
+```

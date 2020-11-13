@@ -214,7 +214,7 @@ backend openshift-api-server
     server master2 2001:db8::14:6443 check
     server master3 2001:db8::15:6443 check
 
-# 
+# 修改 frontend machine-config-server 适配 ipv6
 frontend machine-config-server
     bind :::22623
     acl worker src 2001:db8::16 2001:db8::17 2001:db8::18
@@ -223,7 +223,7 @@ frontend machine-config-server
     mode tcp
     option tcplog
 
-# 
+# 修改 backend machine-config-server-on-master 适配 ipv6
 backend machine-config-server-on-master
     balance source
     mode tcp
@@ -231,7 +231,7 @@ backend machine-config-server-on-master
     server master2 2001:db8::14:22623 check
     server master3 2001:db8::15:22623 check
 
-# 
+# 修改 backend machine-config-server 适配 ipv6
 backend machine-config-server
     balance source
     mode tcp
@@ -240,94 +240,44 @@ backend machine-config-server
     server master2 2001:db8::14:22623 check
     server master3 2001:db8::15:22623 check
 
-# 
+# 修改 frontend ingress-http 适配 ipv6
 frontend ingress-http
     bind :::80
     default_backend ingress-http
     mode tcp
     option tcplog
 
-#
+# 修改 backend ingress-http 适配 ipv6
 backend ingress-http
     balance source
     mode tcp
     server worker1-http-router1 2001:db8::16:80 check
     server worker2-http-router2 2001:db8::17:80 check
     server worker3-http-router3 2001:db8::18:80 check
-    server master1-http-router1 2001:db8::13:80 check
-    server master2-http-router2 2001:db8::14:80 check
-    server master3-http-router3 2001:db8::15:80 check
 
- # 
+ # 修改 frontend ingress-https 适配 ipv6
  frontend ingress-https
     bind :::443
     default_backend ingress-https
     mode tcp
     option tcplog
 
-#
+# 修改 backend ingress-https 适配 ipv6
 backend ingress-https
     balance source
     mode tcp
     server worker1-https-router1 2001:db8::16:443 check
     server worker2-https-router2 2001:db8::17:443 check
     server worker3-https-router3 2001:db8::18:443 check
-    server master1-https-router1 2001:db8::13:443 check
-    server master2-https-router2 2001:db8::14:443 check
-    server master3-https-router3 2001:db8::15:443 check
 
-#
-listen mysql
-    bind :::3306
-    balance source
-    mode tcp
-    option tcplog
-    server worker1-tcp-router1 2001:db8::16:3306 check
-    server worker2-tcp-router2 2001:db8::17:3306 check
-    server worker3-tcp-router3 2001:db8::18:3306 check
-    server master1-tcp-router1 2001:db8::13:3306 check
-    server master2-tcp-router2 2001:db8::14:3306 check
-    server master3-tcp-router3 2001:db8::15:3306 check
 
-#
-listen cockroach
-    bind :::26257
-    balance source
-    mode tcp
-    option tcplog
-    server worker1-tcp-router1 2001:db8::16:26257 check
-    server worker2-tcp-router2 2001:db8::17:26257 check
-    server worker3-tcp-router3 2001:db8::18:26257 check
-    server master1-tcp-router1 2001:db8::13:26257 check
-    server master2-tcp-router2 2001:db8::14:26257 check
-    server master3-tcp-router3 2001:db8::15:26257 check
 
-#
-listen pxc
-    bind :::13306
-    balance source
-    mode tcp
-    option tcplog
-    server worker1-tcp-router1 2001:db8::16:13306 check
-    server worker2-tcp-router2 2001:db8::17:13306 check
-    server worker3-tcp-router3 2001:db8::18:13306 check
-    server master1-tcp-router1 2001:db8::13:13306 check
-    server master2-tcp-router2 2001:db8::14:13306 check
-    server master3-tcp-router3 2001:db8::15:13306 check
 
-#
-listen redis
-    bind :::6379
-    balance source
-    mode tcp
-    option tcplog
-    server worker1-tcp-router1 2001:db8::16:6379 check
-    server worker2-tcp-router2 2001:db8::17:6379 check
-    server worker3-tcp-router3 2001:db8::18:6379 check
-    server master1-tcp-router1 2001:db8::13:6379 check
-    server master2-tcp-router2 2001:db8::14:6379 check
-    server master3-tcp-router3 2001:db8::15:6379 check
-       
+
+
+
+
+
 
 # 下载所需软件
 export MAJORBUILDNUMBER=4.5
@@ -352,9 +302,77 @@ cd ${TEMPDIR}
 guestfish -a ${NGINX_DIRECTORY}/rhcos-${RHCOSVERSION}-x86_64-installer.x86_64.iso \
   -m /dev/sda tar-out / - | tar xvf -
 
+# Helper function to modify the config files
+modify_cfg(){
+  for file in "EFI/redhat/grub.cfg" "isolinux/isolinux.cfg"; do
+    # Append the proper image and ignition urls
+    sed -e '/coreos.inst=yes/s|$| coreos.inst.install_dev=vda coreos.inst.image_url='"${URL}"'\/install\/'"${BIOSMODE}"'.raw.gz coreos.inst.ignition_url='"${URL}"'\/ignition\/'"${NODE}"'.ign ip='"${IP}"'::'"${GATEWAY}"':'"${NETMASK}"':'"${FQDN}"':'"${NET_INTERFACE}"':none:'"${DNS}"' nameserver='"${DNS}"'|' ${file} > $(pwd)/${NODE}_${file##*/}
+    # Boot directly in the installation
+    sed -i -e 's/default vesamenu.c32/default linux/g' -e 's/timeout 600/timeout 10/g' $(pwd)/${NODE}_${file##*/}
+  done
+}
 
+URL="http://[2001:db8::11]:8080/"
+GATEWAY="[2001:db8::11]"
+NETMASK="64"
+DNS="[2001:db8::11]"
 
+# BOOTSTRAP
+# TYPE="bootstrap"
+NODE="bootstrap-static"
+IP="[2001:db8::12]"
+FQDN="bootstrap.ocp4.example.com"
+BIOSMODE="bios"
+NET_INTERFACE="ens3"
+modify_cfg
 
+# MASTERS
+# TYPE="master"
+# MASTER-0
+NODE="master-0"
+IP="[2001:db8::13]"
+FQDN="master1.ocp4.example.com"
+BIOSMODE="bios"
+NET_INTERFACE="ens3"
+modify_cfg
+
+# MASTER-1
+NODE="master-1"
+IP="[2001:db8::14]"
+FQDN="master2.ocp4.example.com"
+BIOSMODE="bios"
+NET_INTERFACE="ens3"
+modify_cfg
+
+# MASTER-2
+NODE="master-2"
+IP="[2001:db8::15]"
+FQDN="master3.ocp4.example.com"
+BIOSMODE="bios"
+NET_INTERFACE="ens3"
+modify_cfg
+
+# WORKERS
+NODE="worker-0"
+IP="[2001:db8::16]"
+FQDN="worker1.ocp4.example.com"
+BIOSMODE="bios"
+NET_INTERFACE="ens3"
+modify_cfg
+
+NODE="worker-1"
+IP="[2001:db8::17]"
+FQDN="worker2.ocp4.example.com"
+BIOSMODE="bios"
+NET_INTERFACE="ens3"
+modify_cfg
+
+NODE="worker-2"
+IP="[2001:db8::18]"
+FQDN="worker3.ocp4.example.com"
+BIOSMODE="bios"
+NET_INTERFACE="ens3"
+modify_cfg
 
 
 ```

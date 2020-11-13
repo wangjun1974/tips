@@ -4397,3 +4397,7 @@ ovirt-aaa-jdbc-tool user show admin
 # 解除锁定状态
 ovirt-aaa-jdbc-tool user unlock admin
 ```
+
+### 使用 filetranspiler 更新 ignition 文件
+https://www.openshift.com/blog/advanced-network-customizations-for-openshift-install
+

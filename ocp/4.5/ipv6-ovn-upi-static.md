@@ -250,6 +250,9 @@ frontend ingress-http
 backend ingress-http
     balance source
     mode tcp
+    server master1-http-router1 2001:db8::13:80 check
+    server master2-http-router2 2001:db8::14:80 check
+    server master3-http-router3 2001:db8::15:80 check
     server worker1-http-router1 2001:db8::16:80 check
     server worker2-http-router2 2001:db8::17:80 check
     server worker3-http-router3 2001:db8::18:80 check
@@ -265,6 +268,9 @@ backend ingress-http
 backend ingress-https
     balance source
     mode tcp
+    server master1-https-router1 2001:db8::13:443 check
+    server master2-https-router2 2001:db8::14:443 check
+    server master3-https-router3 2001:db8::15:443 check
     server worker1-https-router1 2001:db8::16:443 check
     server worker2-https-router2 2001:db8::17:443 check
     server worker3-https-router3 2001:db8::18:443 check
@@ -431,6 +437,81 @@ cp install-config.yaml.ipv6 install-config.yaml
 
 # 生成 ingition 文件 
 openshift-install create ignition-configs --dir=/root/ocp4/ins452
+
+mkdir -p template_vm/etc/sysconfig/network-scripts/
+touch template_vm/etc/sysconfig/network-scripts/ifcfg-ens3
+cat <<EOF > template_vm/etc/sysconfig/network-scripts/ifcfg-ens3
+TYPE="Ethernet"
+PROXY_METHOD="none"
+BROWSER_ONLY="no"
+BOOTPROTO="none"
+DEFROUTE="yes"
+IPV4_FAILURE_FATAL="no"
+IPV6INIT="yes"
+IPV6_AUTOCONF="yes"
+IPV6_DEFROUTE="yes"
+IPV6_FAILURE_FATAL="no"
+IPV6_ADDR_GEN_MODE="stable-privacy"
+NAME="ens3"
+DEVICE="ens3"
+ONBOOT="yes"
+IPADDR="changemeipaddr"
+PREFIX="24"
+GATEWAY="192.168.8.1"
+IPV6_PRIVACY="no"
+DNS1=2001:db8::11
+IPV6ADDR=changemeipv6/64
+IPV6_DEFAULTGW=2001:db8::11
+DOMAIN=ocp4.example.com
+EOF
+
+# 生成7台虚拟机的网卡配置.
+cp -r template_vm bootstrap
+sed -i 's/changemeipaddr/192.168.8.12/g' bootstrap/etc/sysconfig/network-scripts/ifcfg-ens3
+sed -i 's/changemeipv6/2001:0DB8:0000:0000:0000:0000:0000:0012/g' bootstrap/etc/sysconfig/network-scripts/ifcfg-ens3
+
+cp -r template_vm master-0
+sed -i 's/changemeipaddr/192.168.8.13/g' master-0/etc/sysconfig/network-scripts/ifcfg-ens3
+sed -i 's/changemeipv6/2001:0DB8:0000:0000:0000:0000:0000:0013/g' master-0/etc/sysconfig/network-scripts/ifcfg-ens3
+
+cp -r template_vm master-1
+sed -i 's/changemeipaddr/192.168.8.14/g' master-1/etc/sysconfig/network-scripts/ifcfg-ens3
+sed -i 's/changemeipv6/2001:0DB8:0000:0000:0000:0000:0000:0014/g' master-1/etc/sysconfig/network-scripts/ifcfg-ens3
+
+cp -r template_vm master-2
+sed -i 's/changemeipaddr/192.168.8.15/g' master-2/etc/sysconfig/network-scripts/ifcfg-ens3
+sed -i 's/changemeipv6/2001:0DB8:0000:0000:0000:0000:0000:0015/g' master-2/etc/sysconfig/network-scripts/ifcfg-ens3
+
+cp -r template_vm worker-0
+sed -i 's/changemeipaddr/192.168.8.16/g' worker-0/etc/sysconfig/network-scripts/ifcfg-ens3
+sed -i 's/changemeipv6/2001:0DB8:0000:0000:0000:0000:0000:0016/g' worker-0/etc/sysconfig/network-scripts/ifcfg-ens3
+
+cp -r template_vm worker-1
+sed -i 's/changemeipaddr/192.168.8.17/g' worker-1/etc/sysconfig/network-scripts/ifcfg-ens3
+sed -i 's/changemeipv6/2001:0DB8:0000:0000:0000:0000:0000:0017/g' worker-1/etc/sysconfig/network-scripts/ifcfg-ens3
+
+cp -r template_vm worker-2
+sed -i 's/changemeipaddr/192.168.8.18/g' worker-2/etc/sysconfig/network-scripts/ifcfg-ens3
+sed -i 's/changemeipv6/2001:0DB8:0000:0000:0000:0000:0000:0018/g' worker-2/etc/sysconfig/network-scripts/ifcfg-ens3
+
+# 生成 ignition 文件
+filetranspiler -i bootstrap.ign -f bootstrap -o bootstrap-static.ign
+filetranspiler -i master.ign -f master-0 -o master-0.ign
+filetranspiler -i master.ign -f master-1 -o master-1.ign
+filetranspiler -i master.ign -f master-2 -o master-2.ign
+filetranspiler -i worker.ign -f worker-0 -o worker-0.ign
+filetranspiler -i worker.ign -f worker-1 -o worker-1.ign
+filetranspiler -i worker.ign -f worker-2 -o worker-2.ign
+
+# 拷贝生成的 ignition 文件到 /var/www/html/ignition 目录下
+echo y | cp bootstrap-static.ign /var/www/html/ignition/bootstrap-static.ign 
+echo y | cp master-0.ign /var/www/html/ignition/master-0.ign
+echo y | cp master-1.ign /var/www/html/ignition/master-1.ign
+echo y | cp master-2.ign /var/www/html/ignition/master-2.ign
+echo y | cp worker-0.ign /var/www/html/ignition/worker-0.ign
+echo y | cp worker-1.ign /var/www/html/ignition/worker-1.ign
+echo y | cp worker-2.ign /var/www/html/ignition/worker-2.ign
+
 
 # 拷贝 ignition 文件
 rm -f /var/www/html/ignition/*

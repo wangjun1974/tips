@@ -4515,7 +4515,18 @@ $ cat > bootstrap-user/config-core-pwhash.ign << EOF
         "sshAuthorizedKeys": [
           "${core_user_sshkey}"
         ]
-      }
+      },
+      {
+        "groups": [
+          "wheel",
+          "sudo"
+        ],
+        "name": "user1",
+        "passwordHash": "${core_user_password}",
+        "sshAuthorizedKeys": [
+          "${core_user_sshkey}"
+        ]
+      }      
     ]
   },
   "storage": {},

@@ -4584,3 +4584,44 @@ $ jq -c . file.json
 
 ### OCP4 Static IP 设置方法
 https://zhimin-wen.medium.com/static-ip-for-ocp4-d2e4c1da5de
+
+### 查看 registry 的 repository 的方法和 tags 的方法
+```
+# 查看 registry 的 repository 的方法
+curl -u dummy:dummy https://registry.ocp4.example.com:5443/v2/_catalog | jq . 
+...
+    "catalog/certified-operators",
+    "catalog/community-operators",
+    "catalog/redhat-operators",
+...
+
+# 查看 repository 'catalog/redhat-operators' 的 tags
+curl -u dummy:dummy https://registry.ocp4.example.com:5443/v2/catalog/redhat-operators/tags/list
+{"name":"catalog/redhat-operators","tags":["4.5.2-20200726"]}
+
+# 查看 repository 'catalog/certified-operators' 的 tags
+curl -u dummy:dummy https://registry.ocp4.example.com:5443/v2/catalog/certified-operators/tags/list
+{"name":"catalog/certified-operators","tags":["4.5.2-20200726"]}
+
+# 查看 repository 'catalog/community-operators' 的 tags
+curl -u dummy:dummy https://registry.ocp4.example.com:5443/v2/catalog/community-operators/tags/list
+
+# 参见：https://docs.openshift.com/container-platform/4.5/operators/admin/olm-managing-custom-catalogs.html
+
+# grpcurl 工具可以此网址下载：https://github.com/fullstorydev/grpcurl/releases/download/v1.5.0/grpcurl_1.5.0_linux_x86_64.tar.gz
+
+# wget https://github.com/fullstorydev/grpcurl/releases/download/v1.5.0/grpcurl_1.5.0_linux_x86_64.tar.gz -P ~/Downloads
+# tar zxvf ~/grpcurl_1.5.0_linux_x86_64.tar.gz -C /usr/local/bin
+
+# 将 catalog registry images 下载到本地
+podman pull registry.ocp4.example.com:5443/catalog/redhat-operators:4.5.2-20200726
+
+# 在本地运行 catalog registry image
+podman run -p 50051:50051 -it registry.ocp4.example.com:5443/catalog/redhat-operators:4.5.2-20200726
+
+# 查询可用 Packages
+grpcurl -plaintext localhost:50051 api.Registry/ListPackages
+
+
+```
+

@@ -4581,3 +4581,6 @@ $ jq -c . file.json
 # The -c flag to jq is the short version of the --compact-output flag and will prompt jq to generate the most compact output possible. The dot is a simple pass-through filter that won't modify any of the data.
 
 ```
+
+### OCP4 Static IP 设置方法
+https://zhimin-wen.medium.com/static-ip-for-ocp4-d2e4c1da5de

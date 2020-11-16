@@ -4462,8 +4462,11 @@ metadata:
 ```
 $ core_user_password=$(python2 -c 'import crypt; print(crypt.crypt("changeme", crypt.mksalt(crypt.METHOD_SHA512)))')
 
+$ core_user_sshkey=$(cat ~/.ssh/id_rsa.pub)
+
 $ mkdir -p bootstrap-user
 
+# 这个文件有报错，工作起来不正常
 $ cat > bootstrap-user/config-core-pwhash.ign << EOF
 {
     "ignition": {
@@ -4487,9 +4490,41 @@ $ cat > bootstrap-user/config-core-pwhash.ign << EOF
         ]
     }
 }
+
+# 试试这个文件
+$ cat > bootstrap-user/config-core-pwhash.ign << EOF
+{
+  "ignition": {
+    "config": {},
+    "timeouts": {},
+    "version": "2.1.0"
+  },
+  "networkd": {},
+  "passwd": {
+    "users": [
+      {
+        "groups": [
+          "wheel",
+          "sudo"
+        ],
+        "name": "core",
+        "passwordHash": ‘"’${core_user_password}‘"’,
+        "sshAuthorizedKeys": [
+          ‘"’${core_user_sshkey}‘"’
+        ],        
+      }
+    ]
+  },
+  "storage": {},
+  "systemd": {}
+}
 EOF
 
-filetranspiler -i bootstrap.ign -f bootstrap-user -o bootstrap-static.ign
+# 这个工具如果需要合并 ign 文件，可以使用以下仓库里的工具版本
+# https://github.com/wangzheng422/filetranspiler
+
+mkdir -p fake
+filetranspiler -i bootstrap.ign -m bootstrap-user/config-core-pwhash.ign -f fake -o bootstrap-test.ign
 
 echo y | cp bootstrap-static.ign /var/www/html/ignition/bootstrap-static.ign 
 ```

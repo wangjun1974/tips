@@ -440,6 +440,8 @@ openshift-install create ignition-configs --dir=/root/ocp4/ins452
 
 mkdir -p template_vm/etc/sysconfig/network-scripts/
 touch template_vm/etc/sysconfig/network-scripts/ifcfg-ens3
+
+# dual stack
 cat <<EOF > template_vm/etc/sysconfig/network-scripts/ifcfg-ens3
 TYPE="Ethernet"
 PROXY_METHOD="none"
@@ -458,6 +460,28 @@ ONBOOT="yes"
 IPADDR="changemeipaddr"
 PREFIX="24"
 GATEWAY="192.168.8.1"
+IPV6_PRIVACY="no"
+DNS1=2001:db8::11
+IPV6ADDR=changemeipv6/64
+IPV6_DEFAULTGW=2001:db8::11
+DOMAIN=ocp4.example.com
+EOF
+
+# single stack ipv6
+cat <<EOF > template_vm/etc/sysconfig/network-scripts/ifcfg-ens3
+TYPE="Ethernet"
+PROXY_METHOD="none"
+BROWSER_ONLY="no"
+BOOTPROTO="none"
+IPV4_FAILURE_FATAL="no"
+IPV6INIT="yes"
+IPV6_AUTOCONF="yes"
+IPV6_DEFROUTE="yes"
+IPV6_FAILURE_FATAL="no"
+IPV6_ADDR_GEN_MODE="stable-privacy"
+NAME="ens3"
+DEVICE="ens3"
+ONBOOT="yes"
 IPV6_PRIVACY="no"
 DNS1=2001:db8::11
 IPV6ADDR=changemeipv6/64

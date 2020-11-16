@@ -4571,3 +4571,13 @@ echo y | cp bootstrap-test.ign /var/www/html/ignition/bootstrap-static.ign
 Password: 
 Login Succeeded!
 ```
+
+### 如何从 tree 格式的 json 文件，生成一行压缩格式的 json 文件
+```
+# 参见 https://unix.stackexchange.com/questions/365614/how-to-convert-a-jsons-file-tree-structure-into-a-single-line
+
+$ jq -c . file.json
+
+# The -c flag to jq is the short version of the --compact-output flag and will prompt jq to generate the most compact output possible. The dot is a simple pass-through filter that won't modify any of the data.
+
+```

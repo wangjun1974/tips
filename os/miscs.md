@@ -4511,7 +4511,7 @@ $ cat > bootstrap-user/config-core-pwhash.ign << EOF
         "passwordHash": "${core_user_password}",
         "sshAuthorizedKeys": [
           "${core_user_sshkey}"
-        ],        
+        ]
       }
     ]
   },

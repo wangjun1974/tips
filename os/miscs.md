@@ -4497,7 +4497,7 @@ $ cat > bootstrap-user/config-core-pwhash.ign << EOF
   "ignition": {
     "config": {},
     "timeouts": {},
-    "version": "2.1.0"
+    "version": "2.2.0"
   },
   "networkd": {},
   "passwd": {

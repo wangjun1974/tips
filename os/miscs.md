@@ -4494,7 +4494,7 @@ $ cat > bootstrap-user/config-core-pwhash.ign << EOF
     }
 }
 
-# 试试这个文件
+# 试试这个文件，也不工作
 $ cat > bootstrap-user/config-core-pwhash.ign << EOF
 {
   "ignition": {
@@ -4506,10 +4506,6 @@ $ cat > bootstrap-user/config-core-pwhash.ign << EOF
   "passwd": {
     "users": [
       {
-        "groups": [
-          "wheel",
-          "sudo"
-        ],
         "name": "core",
         "passwordHash": "${core_user_password}",
         "sshAuthorizedKeys": [
@@ -4527,6 +4523,28 @@ $ cat > bootstrap-user/config-core-pwhash.ign << EOF
           "${core_user_sshkey}"
         ]
       }      
+    ]
+  },
+  "storage": {},
+  "systemd": {}
+}
+EOF
+
+# 试试这个文件
+$ cat > bootstrap-user/config-core-pwhash.ign << EOF
+{
+  "ignition": {
+    "config": {},
+    "timeouts": {},
+    "version": "2.2.0"
+  },
+  "networkd": {},
+  "passwd": {
+    "users": [
+      {
+        "name": "core",
+        "passwordHash": "${core_user_password}"
+      }
     ]
   },
   "storage": {},

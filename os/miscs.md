@@ -4493,3 +4493,14 @@ filetranspiler -i bootstrap.ign -f bootstrap-user -o bootstrap-static.ign
 
 echo y | cp bootstrap-static.ign /var/www/html/ignition/bootstrap-static.ign 
 ```
+
+### 如何通过命令获取 Certificate 内容
+```
+# 用 openssl 访问网址，然后使用 sed 获取 certificate 内容
+[core@worker0 ~]$ echo "" | openssl s_client -connect rhel7vm.ocp4.freebsd.us:5000 -prexit 2>/dev/null | sed -n -e '/BEGIN\ CERTIFICATE/,/END\ CERTIFICATE/ p' >> ssl.crt
+
+# 指定 cert-dir 参数，用 certificate 登录 registry
+[core@worker0 ~]$ podman login -u admin rhel7vm.ocp4.freebsd.us:5000 --cert-dir=.
+Password: 
+Login Succeeded!
+```

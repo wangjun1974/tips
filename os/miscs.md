@@ -4508,9 +4508,9 @@ $ cat > bootstrap-user/config-core-pwhash.ign << EOF
           "sudo"
         ],
         "name": "core",
-        "passwordHash": ‘"’${core_user_password}‘"’,
+        "passwordHash": "${core_user_password}",
         "sshAuthorizedKeys": [
-          ‘"’${core_user_sshkey}‘"’
+          "${core_user_sshkey}"
         ],        
       }
     ]

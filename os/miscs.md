@@ -4529,7 +4529,7 @@ EOF
 mkdir -p fake
 filetranspiler -i bootstrap.ign -m bootstrap-user/config-core-pwhash.ign -f fake -o bootstrap-test.ign
 
-echo y | cp bootstrap-static.ign /var/www/html/ignition/bootstrap-static.ign 
+echo y | cp bootstrap-test.ign /var/www/html/ignition/bootstrap-static.ign 
 ```
 
 ### 如何通过命令获取 Certificate 内容

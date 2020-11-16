@@ -4462,6 +4462,9 @@ metadata:
 ```
 $ core_user_password=$(python2 -c 'import crypt; print(crypt.crypt("changeme", crypt.mksalt(crypt.METHOD_SHA512)))')
 
+# 尝试一下用 openssl 生成 password hash
+$ core_user_password=$( echo "redhat\nredhat" | xargs openssl passwd -1 )
+
 $ core_user_sshkey=$(cat ~/.ssh/id_rsa.pub)
 
 $ mkdir -p bootstrap-user

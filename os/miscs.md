@@ -4762,3 +4762,13 @@ TLDR: the CatalogSource image built using the official documentation [1] is usin
 
 
 ```
+
+
+### 探索一下 OpenShfit Service Mesh 
+```
+# 安装 OpenShift Service Mesh on OCP 4.x
+https://docs.openshift.com/container-platform/4.5/service_mesh/v1x/preparing-ossm-installation.html
+
+# Openshift Service Mesh 应用
+https://docs.openshift.com/container-platform/4.5/service_mesh/v1x/prepare-to-deploy-applications-ossm.html#ossm-tutorial-bookinfo-install_deploying-applications-ossm-v1x
+```

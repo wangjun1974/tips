@@ -4651,7 +4651,9 @@ echo "select * from related_image;" | sqlite3 -line ./bundles.db
 
 ```
 # sqlite 的使用
-# 参见：https://www.sqlitetutorial.net/sqlite-tutorial/sqlite-show-tables/
+# 参见：
+# https://www.sqlitetutorial.net/
+# https://www.sqlitetutorial.net/sqlite-tutorial/sqlite-show-tables/
 
 echo ".tables" | sqlite3 -line ./bundles.db 
 ```

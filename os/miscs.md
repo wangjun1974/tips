@@ -4622,6 +4622,96 @@ podman run -p 50051:50051 -it registry.ocp4.example.com:5443/catalog/redhat-oper
 # 查询可用 Packages
 grpcurl -plaintext localhost:50051 api.Registry/ListPackages
 
+# 查询最新某个 channel 里的 opeartor bundle 
+grpcurl -plaintext -d '{"pkgName":"ocs-operator","channelName":"4.5"}' localhost:50051 api.Registry/GetBundleForChannel
 
+# 从容器内拷贝 bundles.db 到本地
+# 参考 jq 的使用：https://shapeshed.com/jq-json/
+podman cp $(podman ps --format json | jq '.[] | .ID ' | sed -e 's|"||g'):/bundles.db .
+
+# 查询 bundles.db 内容
+echo "select * from related_image \
+    where operatorbundle_name like 'clusterlogging.4%';" \
+    | sqlite3 -line ./bundles.db 
+
+echo "select * from related_image \
+    where operatorbundle_name like 'local-storage-operator.4.5%';" \
+    | sqlite3 -line ./bundles.db 
+
+# 查询 bundles.db 有哪些 tables 
+echo ".tables" | sqlite3 -line ./bundles.db 
+
+api                channel            package          
+api_provider       channel_entry      related_image    
+api_requirer       operatorbundle     schema_migrations
+
+# 查询 bundles.db 的 table related_image 的内容
+echo "select * from related_image;" | sqlite3 -line ./bundles.db
 ```
 
+```
+# sqlite 的使用
+# 参见：https://www.sqlitetutorial.net/sqlite-tutorial/sqlite-show-tables/
+
+echo ".tables" | sqlite3 -line ./bundles.db 
+```
+
+```
+在另外的地方看到以下讨论内容，对解决在本地运行 
+
+IHAC trying to use OLM in disconnected environment (cluster version is 4.3.0)
+After successfully building the catalog, mirroring the operators images, and deploying the catalogsource object, no packagemanifest object can be found.
+
+
+➜ oc get pods -n openshift-marketplace
+NAME                                    READY   STATUS    RESTARTS   AGE
+marketplace-operator-664f66c947-9l5l8   1/1     Running   0          92m
+my-operator-catalog-crt56               1/1     Running   0          22m
+
+➜ oc get catalogsource -n openshift-marketplace
+NAME                  DISPLAY               TYPE   PUBLISHER   AGE
+my-operator-catalog   My Operator Catalog   grpc   grpc        42m
+
+➜ oc get packagemanifest -n openshift-marketplace
+No resources found in openshift-marketplace namespace.
+
+
+Any hint to debug this please ?
+
+Another symptom when testing the catalog using grpc (https://docs.openshift.com/container-platform/4.3/operators/olm-restricted-networks.html#olm-testing-operator-catalog-image_olm-restricted-networks):
+
+
+➜ grpcurl -plaintext localhost:50051 api.Registry/ListPackages
+{
+  "name": "3scale-operator"
+}
+[...]
+{
+  "name": "sriov-network-operator"
+}
+
+➜ grpcurl -plaintext -d '{"pkgName":"cluster-logging","channelName":"4.3"}' localhost:50051 api.Registry/GetBundleForChannel
+ERROR:
+  Code: Unknown
+  Message: no such column: api_provider.operatorbundle_name
+
+
+A small update:
+The catalog pod in the openshift-marketplace was showing some error:
+
+➜ oc logs my-operator-catalog-wtl9s
+WARN[0000] unable to set termination log path            error="open /dev/termination-log: permission denied"
+WARN[0000] couldn't migrate db                           database=/bundles.db error="attempt to write a readonly database" port=50051
+INFO[0000] serving registry                              database=/bundles.db port=50051
+
+
+It appears it cannot update the schema of db, therefore leading to the grpcurl error regarding the column api_provider.operatorbundle_name. 
+We created a new image based on that one, onto which we switch from user 1001 (hardcoded inside the original image) to user root.
+We then use that modified image for our CatalogSource. Now the pod is no more showing error and the command oc get packagemanifest is working properly.
+
+TLDR: the CatalogSource image built using the official documentation [1] is using a unprivileged user which is not allowed to migrate its internal database. This leads to the unavailability of getting packagemanifest. Using custom image with root user fixes this issue.
+
+[1] https://docs.openshift.com/container-platform/4.3/operators/olm-restricted-networks.html
+
+
+```

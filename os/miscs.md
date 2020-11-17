@@ -4771,4 +4771,54 @@ https://docs.openshift.com/container-platform/4.5/service_mesh/v1x/preparing-oss
 
 # Openshift Service Mesh 应用
 https://docs.openshift.com/container-platform/4.5/service_mesh/v1x/prepare-to-deploy-applications-ossm.html#ossm-tutorial-bookinfo-install_deploying-applications-ossm-v1x
+
+# Service Mesh Control Plane
+https://maistra.io/docs/installation/controlplane/
+
+# Install service mesh control plane by command line
+https://access.redhat.com/documentation/en-us/openshift_container_platform/4.6/html/service_mesh/service-mesh-2-x#ossm-control-plane-deploy_installing-ossm
+
+oc create namespace istio-system
+
+cat > istio-installation-v2.yaml << EOF
+apiVersion: maistra.io/v2
+kind: ServiceMeshControlPlane
+metadata:
+  name: basic
+  namespace: istio-system
+spec:
+  version: v2.0
+  tracing:
+    type: Jaeger
+    sampling: 10000
+  addons:
+    jaeger:
+      name: jaeger
+      install:
+        storage:
+          type: Memory
+    kiali:
+      enabled: true
+      name: kiali
+    grafana:
+      enabled: true
+EOF
+
+oc create -f ./istio-installation-v2.yaml
+
+# 查看 istio operator 日志
+# 每行输出一条，参见：https://downey.io/notes/dev/kubectl-jsonpath-new-lines/
+oc -n openshift-operators logs $(oc get pods -n openshift-operators -o jsonpath='{ range .items[*]}{.metadata.name}{"\n"}{end}' | grep istio-operator )
+
+# 日志显示
+...
+{"level":"info","ts":1605607188.4549549,"logger":"servicemeshcontrolplane-controller","msg":"Completed ServiceMeshControlPlane processing","ServiceMeshControlPlane":"istio-system/basic"}
+
+
+# 获取 service mesh control plane 信息
+oc get smcp -n istio-system
+
+NAME    READY   STATUS            PROFILES    VERSION   AGE
+basic   9/9     ComponentsReady   [default]   2.0.0.1   10m
+
 ```

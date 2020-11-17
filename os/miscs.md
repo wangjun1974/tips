@@ -4653,21 +4653,25 @@ mkdir -p ./tmp
 echo "select * from related_image \
     where operatorbundle_name like 'local-storage-operator.4.5%';"     | sqlite3 -line ./bundles.db | grep -o 'image =.*' | awk '{print $3}' > ./tmp/registry-images.lst
 
+# 补充上 ocs-operator 对应的镜像到同步镜像清单
 echo "select * from related_image \
     where operatorbundle_name like 'ocs-operator.v4.5.2%';"     | sqlite3 -line ./bundles.db | grep -o 'image =.*' | awk '{print $3}' >> ./tmp/registry-images.lst
 
+# 基于同步镜像清单生成 mapping.txt 
 cat /dev/null > ./tmp/mapping.txt
   for source in `cat ./tmp/registry-images.lst`; do  local=`echo $source|awk -F'@' '{print $1}'|sed 's|registry.redhat.io|helper.cluster-0001.rhsacn.org:5000|g'`   ; echo "$source=$local" >> ./tmp/mapping.txt; done
 
+# 生成 image-policy.txt
 cat /dev/null > ./tmp/image-policy.txt
   for source in `cat ./tmp/registry-images.lst`; do  local=`echo $source|awk -F'@' '{print $1}'|sed 's/registry.redhat.io/helper.cluster-0001.rhsacn.org:5000/g'` ; mirror=`echo $source|awk -F'@' '{print $1}'`; echo "  - mirrors:" >> ./tmp/image-policy.txt; echo "    - $local" >> ./tmp/image-policy.txt; echo "    source: $mirror" >> ./tmp/image-policy.txt; done
 
-# 拷贝镜像
+# 同步镜像到本地镜像仓库
 export LOCAL_SECRET_JSON=/root/pull-secret-2.json
 
 for source in `cat ./tmp/registry-images.lst`; do  local=`echo $source|awk -F'@' '{print $1}'|sed 's/registry.redhat.io/helper.cluster-0001.rhsacn.org:5000/g'`   ; 
 echo skopeo copy --format v2s2 --authfile ${LOCAL_SECRET_JSON} --all docker://$source docker://$local; skopeo copy --format v2s2 --authfile ${LOCAL_SECRET_JSON} --all docker://$source docker://$local; echo; done
 
+# 基于 image-policy.txt 生成 ImageContentSourcePolicy
 cat <<EOF > ./tmp/ImageContentSourcePolicy.yaml
 apiVersion: operator.openshift.io/v1alpha1
 kind: ImageContentSourcePolicy

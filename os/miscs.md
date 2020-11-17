@@ -4647,6 +4647,38 @@ api_requirer       operatorbundle     schema_migrations
 
 # 查询 bundles.db 的 table related_image 的内容
 echo "select * from related_image;" | sqlite3 -line ./bundles.db
+
+# 以 local-storage-operator 为例，同步所需镜像到本地
+mkdir -p ./tmp
+echo "select * from related_image \
+    where operatorbundle_name like 'local-storage-operator.4.5%';"     | sqlite3 -line ./bundles.db | grep -o 'image =.*' | awk '{print $3}' > ./tmp/registry-images.lst
+
+echo "select * from related_image \
+    where operatorbundle_name like 'ocs-operator.v4.5.2%';"     | sqlite3 -line ./bundles.db | grep -o 'image =.*' | awk '{print $3}' >> ./tmp/registry-images.lst
+
+cat /dev/null > ./tmp/mapping.txt
+  for source in `cat ./tmp/registry-images.lst`; do  local=`echo $source|awk -F'@' '{print $1}'|sed 's|registry.redhat.io|helper.cluster-0001.rhsacn.org:5000|g'`   ; echo "$source=$local" >> ./tmp/mapping.txt; done
+
+cat /dev/null > ./tmp/image-policy.txt
+  for source in `cat ./tmp/registry-images.lst`; do  local=`echo $source|awk -F'@' '{print $1}'|sed 's/registry.redhat.io/helper.cluster-0001.rhsacn.org:5000/g'` ; mirror=`echo $source|awk -F'@' '{print $1}'`; echo "  - mirrors:" >> ./tmp/image-policy.txt; echo "    - $local" >> ./tmp/image-policy.txt; echo "    source: $mirror" >> ./tmp/image-policy.txt; done
+
+# 拷贝镜像
+export LOCAL_SECRET_JSON=/root/pull-secret-2.json
+
+for source in `cat ./tmp/registry-images.lst`; do  local=`echo $source|awk -F'@' '{print $1}'|sed 's/registry.redhat.io/helper.cluster-0001.rhsacn.org:5000/g'`   ; 
+echo skopeo copy --format v2s2 --authfile ${LOCAL_SECRET_JSON} --all docker://$source docker://$local; skopeo copy --format v2s2 --authfile ${LOCAL_SECRET_JSON} --all docker://$source docker://$local; echo; done
+
+cat <<EOF > ./tmp/ImageContentSourcePolicy.yaml
+apiVersion: operator.openshift.io/v1alpha1
+kind: ImageContentSourcePolicy
+metadata:
+  name: redhat-operators
+spec:
+  repositoryDigestMirrors:
+$(cat ./tmp/image-policy.txt)
+EOF
+
+oc create -f ./tmp/ImageContentSourcePolicy.yaml
 ```
 
 ```
@@ -4656,6 +4688,15 @@ echo "select * from related_image;" | sqlite3 -line ./bundles.db
 # https://www.sqlitetutorial.net/sqlite-tutorial/sqlite-show-tables/
 
 echo ".tables" | sqlite3 -line ./bundles.db 
+```
+
+```
+# 从容器内拷贝 bundles.db 到本地
+# 参考 jq 的使用：https://shapeshed.com/jq-json/
+# 另外参考 https://www.openshift.com/blog/transferring-files-in-and-out-of-containers-in-openshift-part-1-manually-copying-files
+oc -n openshift-marketplace rsync $( oc -n openshift-marketplace get pods | grep my | awk '{print $1}'):/bundles.db .
+
+
 ```
 
 ```

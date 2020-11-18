@@ -4892,19 +4892,15 @@ curl -o /dev/null -s -w "%{http_code}\n" http://$GATEWAY_URL/productpage
 |namesserver=||
 
 
-### 获取 opm 命令行工具
+### 获取 opm 命令行工具并且在 RHEL 7 上运行
 opm 是 Operator Framework 提供的用来处理 Operator Bundle Format 的命令行工具
 https://docs.openshift.com/container-platform/4.6/cli_reference/opm-cli.html#opm-cli
+
 ```
 
 export REG_CREDS=/root/pull-secret-2.json
 
 podman login registry.redhat.io
-
-oc image extract registry.redhat.io/openshift4/ose-operator-registry:v4.6 \
-    -a ${REG_CREDS} \
-    --path /usr/bin/opm:. \
-    --confirm
 
 mkdir -p opm-test
 pushd opm-test

@@ -4892,3 +4892,53 @@ curl -o /dev/null -s -w "%{http_code}\n" http://$GATEWAY_URL/productpage
 |namesserver=||
 
 
+### 获取 opm 命令行工具
+opm 是 Operator Framework 提供的用来处理 Operator Bundle Format 的命令行工具
+https://docs.openshift.com/container-platform/4.6/cli_reference/opm-cli.html#opm-cli
+```
+
+export REG_CREDS=/root/pull-secret-2.json
+
+podman login registry.redhat.io
+
+oc image extract registry.redhat.io/openshift4/ose-operator-registry:v4.6 \
+    -a ${REG_CREDS} \
+    --path /usr/bin/opm:. \
+    --confirm
+
+mkdir -p opm-test
+pushd opm-test
+
+oc image extract registry.redhat.io/openshift4/ose-operator-registry:v4.6 \
+    -a ${REG_CREDS} \
+    --path /usr/bin/opm:. \
+    --confirm
+
+cat > Dockerfile << EOF
+FROM registry.redhat.io/ubi8/ubi
+
+COPY opm /usr/bin/opm
+
+RUN chmod a+x /usr/bin/opm
+
+ENTRYPOINT ["/usr/bin/opm"]
+EOF
+
+podman build . -t opm:latest
+
+cat > /usr/local/bin/opm << 'EOF'
+#!/bin/bash
+#
+# Doing it this way is just easier than trying to install python3 on EL7
+podman run --rm -ti localhost/opm:latest $*
+##
+##
+EOF
+
+chmod a+x /usr/local/bin/opm
+
+```
+
+### Dockerfile 参考
+https://docs.docker.com/engine/reference/builder/
+

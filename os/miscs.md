@@ -4821,4 +4821,60 @@ oc get smcp -n istio-system
 NAME    READY   STATUS            PROFILES    VERSION   AGE
 basic   9/9     ComponentsReady   [default]   2.0.0.1   10m
 
+# 创建 bookinfo namespace
+oc new-project bookinfo
+
+# 创建 ServiceMeshMemberRoll 添加 bookinfo namespace
+cat > bookinfo-servicemeshmemberroll.yaml << EOF
+apiVersion: maistra.io/v1
+kind: ServiceMeshMemberRoll
+metadata:
+  name: default
+spec:
+  members:
+  - bookinfo
+EOF
+
+oc create -f ./bookinfo-servicemeshmemberroll.yaml
+
+# (optional) 另外一种将 namespace bookinfo 添加到 ServiceMeshMemberRoll 的方法
+oc -n istio-system patch --type='json' smmr default -p '[{"op": "add", "path": "/spec/members", "value":["'"bookinfo"'"]}]'
+
+# 部署 bookinfo 应用
+oc apply -n bookinfo -f https://raw.githubusercontent.com/Maistra/istio/maistra-2.0/samples/bookinfo/platform/kube/bookinfo.yaml
+
+service/details created
+serviceaccount/bookinfo-details created
+deployment.apps/details-v1 created
+service/ratings created
+serviceaccount/bookinfo-ratings created
+deployment.apps/ratings-v1 created
+service/reviews created
+serviceaccount/bookinfo-reviews created
+deployment.apps/reviews-v1 created
+deployment.apps/reviews-v2 created
+deployment.apps/reviews-v3 created
+service/productpage created
+serviceaccount/bookinfo-productpage created
+deployment.apps/productpage-v1 created
+
+# 创建 ingressgateway bookinfo-gateway 和 virtualservice bookinfo
+oc apply -n bookinfo -f https://raw.githubusercontent.com/Maistra/istio/maistra-2.0/samples/bookinfo/networking/bookinfo-gateway.yaml
+
+gateway.networking.istio.io/bookinfo-gateway created
+virtualservice.networking.istio.io/bookinfo created
+
+# 设置 GATEWAY_URL
+export GATEWAY_URL=$(oc -n istio-system get route istio-ingressgateway -o jsonpath='{.spec.host}')
+
+# 创建 destination rules，在这个例子里面，没有启用 mutual TLS
+oc apply -n bookinfo -f https://raw.githubusercontent.com/Maistra/istio/maistra-2.0/samples/bookinfo/networking/destination-rule-all.yaml
+
+destinationrule.networking.istio.io/productpage created
+destinationrule.networking.istio.io/reviews created
+destinationrule.networking.istio.io/ratings created
+destinationrule.networking.istio.io/details created
+
+# 访问 bookinfo
+curl -o /dev/null -s -w "%{http_code}\n" http://$GATEWAY_URL/productpage
 ```

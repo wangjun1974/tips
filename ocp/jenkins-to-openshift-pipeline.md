@@ -1,6 +1,6 @@
 ### RHTR 2020
 
-jenkins pipeline
+jenkins pipeline in lab
 ```
 pipeline {
   agent {

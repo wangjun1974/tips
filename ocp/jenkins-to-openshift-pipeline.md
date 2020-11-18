@@ -1,0 +1,161 @@
+### RHTR 2020
+
+jenkins pipeline
+```
+pipeline {
+  agent {
+      label 'maven'
+  }
+  environment {
+    devProjectIsNew  = "false"
+    prodProjectIsNew = "false"
+  }
+  stages {
+    stage('Build App') {
+      steps {
+        withCredentials([usernamePassword(credentialsId: env.GITSECRET, usernameVariable: 'username', passwordVariable: 'password')]) {
+          git branch: 'main', url: env.REPO, credentialsId: env.GITSECRET
+        }
+        sh "mvn install -DskipTests=true"
+      }
+    }
+    stage('Test') {
+      steps {
+        sh "mvn test"
+        step([$class: 'JUnitResultArchiver', testResults: '**/target/surefire-reports/TEST-*.xml'])
+      }
+    }           
+    stage('Create Builder') {
+      when {
+        expression {
+          openshift.withCluster() {
+            openshift.withProject(env.DEV_PROJECT) {
+              return !openshift.selector("bc","petclinic").exists();
+            }
+          }
+        }
+      }
+      steps {
+        script {
+          openshift.withCluster() {
+            openshift.withProject(env.DEV_PROJECT) {
+              openshift.newBuild("--name=petclinic", "--image-stream=openshift/redhat-openjdk18-openshift:1.8", "--binary")
+            }
+          }
+        }
+      }
+    }
+    stage('Build Image') {
+      steps {
+        sh "cp target/*.jar target/petclinic.jar"
+        script {
+          openshift.withCluster() {
+            openshift.withProject(env.DEV_PROJECT) {
+              openshift.selector("bc", "petclinic").startBuild("--from-file=target/petclinic.jar", "--wait=true")
+            }
+          }
+        }
+      }
+    }
+    stage('Create DeploymentConfig for DEV') {
+      when {
+        expression {
+          openshift.withCluster() {
+            openshift.withProject(env.DEV_PROJECT) {
+              return !openshift.selector("deploymentconfig","petclinic").exists();
+            }
+          }
+        }
+      }
+      steps {
+        script {
+          openshift.withCluster() {
+            openshift.withProject(env.DEV_PROJECT) {
+              def app = openshift.newApp("petclinic:latest", "--as-deployment-config=true")
+              app.narrow("svc").expose();
+  
+              def dc = openshift.selector("dc", "petclinic")
+              while (dc.object().spec.replicas != dc.object().status.readyReplicas) {
+                sleep 10
+              }
+              openshift.set("triggers", "dc/petclinic", "--manual")
+              devProjectIsNew = "true"
+            }
+          }
+        }
+      }
+    }
+    stage('Deploy DEV') {
+      when {
+        expression {
+          return devProjectIsNew == "false"
+        }
+      }
+      steps {
+        script {
+          openshift.withCluster() {
+            openshift.withProject(env.DEV_PROJECT) {
+              openshift.selector("deploymentconfig", "petclinic").rollout().latest();
+            }
+          }
+        }
+      }
+    }
+    stage('Promote to PROD?') {
+      steps {
+        script {
+          openshift.withCluster() {
+            openshift.tag("${env.DEV_PROJECT}/petclinic:latest", "${env.PROD_PROJECT}/petclinic:prod")
+          }
+        }
+      }
+    }
+    stage('Create DeploymentConfig for PROD') {
+      when {
+        expression {
+          openshift.withCluster() {
+            openshift.withProject(env.PROD_PROJECT) {
+             return !openshift.selector("deploymentconfig","petclinic").exists();
+            }
+          }
+        }
+      }
+      steps {
+        script {
+          openshift.withCluster() {
+            openshift.withProject(env.PROD_PROJECT) {
+              def app = openshift.newApp("petclinic:prod", "--as-deployment-config=true")
+              app.narrow("svc").expose();
+  
+              def dc = openshift.selector("dc", "petclinic")
+              while (dc.object().spec.replicas != dc.object().status.availableReplicas) {
+                sleep 10
+              }
+              openshift.set("triggers", "dc/petclinic", "--manual")
+
+              prodProjectIsNew = "true"
+            }
+          }
+        }
+      }
+    }
+    stage('Deploy PROD') {
+      when {
+        expression {
+          return prodProjectIsNew == "false"
+        }
+      }
+      steps {
+        script {
+          openshift.withCluster() {
+            openshift.withProject(env.PROD_PROJECT) {
+              openshift.selector("deploymentconfig", "petclinic").rollout().latest();
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+```

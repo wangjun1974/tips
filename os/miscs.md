@@ -4879,7 +4879,7 @@ destinationrule.networking.istio.io/details created
 curl -o /dev/null -s -w "%{http_code}\n" http://$GATEWAY_URL/productpage
 ```
 
-### RHCOS 的裸金属离线启动参数
+### OCP 4.6 RHCOS 的裸金属离线启动参数
 
 |参数|说明|
 |---|---|

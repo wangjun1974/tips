@@ -4878,3 +4878,17 @@ destinationrule.networking.istio.io/details created
 # 访问 bookinfo
 curl -o /dev/null -s -w "%{http_code}\n" http://$GATEWAY_URL/productpage
 ```
+
+### RHCOS 的裸金属离线启动参数
+
+|参数|说明|
+|---|---|
+|coreos.liveiso=|${LIVEISO_VOLID}|
+|ignition.firstboot||
+|ignition.platform.id=|metal|
+|coreos.inst.install_dev=|sda|
+|coreos.inst.ignition_url=|http://10.66.208.138:8080/ignition/bootstrap-static.ign|
+|ip=||
+|namesserver=||
+
+

@@ -589,4 +589,14 @@ virt-install --name=jwang-ocp452-worker2 --vcpus=4 --ram=32768 \
 --disk path=/data/kvm/jwang-ocp452-worker2.qcow2,bus=virtio,size=120 \
 --os-variant rhel8.0 --network network=openshift4v6,model=virtio \
 --boot menu=on --cdrom ${NGINX_DIRECTORY}/worker-2.iso 
+
+
+# clean disk
+qemu-img create -f qcow2 /data/kvm/jwang-ocp452-bootstrap.qcow2 120G
+qemu-img create -f qcow2 /data/kvm/jwang-ocp452-master0.qcow2 120G
+qemu-img create -f qcow2 /data/kvm/jwang-ocp452-master1.qcow2 120G
+qemu-img create -f qcow2 /data/kvm/jwang-ocp452-master2.qcow2 120G
+qemu-img create -f qcow2 /data/kvm/jwang-ocp452-worker0.qcow2 120G
+qemu-img create -f qcow2 /data/kvm/jwang-ocp452-worker1.qcow2 120G
+qemu-img create -f qcow2 /data/kvm/jwang-ocp452-worker2.qcow2 120G
 ```

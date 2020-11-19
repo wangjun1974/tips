@@ -4938,3 +4938,45 @@ chmod a+x /usr/local/bin/opm
 ### Dockerfile 参考
 https://docs.docker.com/engine/reference/builder/
 
+### 在本地添加 bookinfo 的镜像
+```
+# 获取所需 pod 名称
+oc get pods -n bookinfo -o jsonpath='{ range .items[*]}{.metadata.name}{"\n"}{end}' 
+
+# 获取所需镜像 
+oc get pods -n bookinfo -o jsonpath='{ range .items[*]}{.metadata.name}{"\n"}{end}' | while read i ; do oc -n bookinfo describe pod ${i} | grep 'pulling image' | tail -1 | sed -e 's|^.*Back-off pulling image "||' -e 's|"||' ; done
+
+# pull image from server
+
+# 生成镜像下载列表文件
+cat > bookinfo.image.lst << EOF
+maistra/examples-bookinfo-details-v1:1.2.0
+maistra/examples-bookinfo-productpage-v1:1.2.0
+maistra/examples-bookinfo-ratings-v1:1.2.0
+maistra/examples-bookinfo-reviews-v1:1.2.0
+maistra/examples-bookinfo-reviews-v2:1.2.0
+maistra/examples-bookinfo-reviews-v3:1.2.0
+EOF
+
+# pull image
+cat bookinfo.image.lst | while read i ; do podman pull ${i} ; done
+
+# 保存 image
+mkdir -p maistra-examples-bookinfo
+
+cat bookinfo.image.lst | while read i ; do
+  basename=$(echo $i | awk -F'/' '{print $2}' | awk -F':' '{print $1}' )
+  podman save -o maistra-examples-bookinfo/${basename}.tar ${i}
+done
+
+tar zcvf maistra-examples-bookinfo.tar.gz maistra-examples-bookinfo/ 
+
+# 拷贝 maistra-examples-bookinfo.tar.gz 到目标环境
+
+# 加载镜像到目标
+tar zxvf maistra-examples-bookinfo.tar.gz
+
+for i in maistra-examples-bookinfo/*.tar ; do
+  podman load < $i
+done
+```

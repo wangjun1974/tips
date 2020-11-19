@@ -599,4 +599,15 @@ qemu-img create -f qcow2 /data/kvm/jwang-ocp452-master2.qcow2 120G
 qemu-img create -f qcow2 /data/kvm/jwang-ocp452-worker0.qcow2 120G
 qemu-img create -f qcow2 /data/kvm/jwang-ocp452-worker1.qcow2 120G
 qemu-img create -f qcow2 /data/kvm/jwang-ocp452-worker2.qcow2 120G
+
+# single stack 在 ocp 4.5.2 上不工作
+# 参见如下报错
+[core@bootstrap ~]$ sudo podman login registry.ocp4.example.com:5443
+Authenticating with existing credentials...
+Existing credentials are invalid, please enter valid username and password
+Username (a): a
+Password: 
+Error: error authenticating creds for "registry.ocp4.example.com:5443": error pinging docker registry registry.ocp4.example.com:5443: Get https://registry.ocp4.example.com:5443/v2/: dial tcp 192.168.7.11:5443: connect: network is unreachable
+
+
 ```

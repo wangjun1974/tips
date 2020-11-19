@@ -590,8 +590,13 @@ virt-install --name=jwang-ocp452-worker2 --vcpus=4 --ram=32768 \
 --os-variant rhel8.0 --network network=openshift4v6,model=virtio \
 --boot menu=on --cdrom ${NGINX_DIRECTORY}/worker-2.iso 
 
+# 停止虚拟机
+for vm in bootstrap master0 master1 master2 worker0 worker1 worker2 
+do
+  virsh destroy jwang-ocp452-${vm}
+done
 
-# clean disk
+# 清理磁盘
 qemu-img create -f qcow2 /data/kvm/jwang-ocp452-bootstrap.qcow2 120G
 qemu-img create -f qcow2 /data/kvm/jwang-ocp452-master0.qcow2 120G
 qemu-img create -f qcow2 /data/kvm/jwang-ocp452-master1.qcow2 120G
@@ -599,6 +604,12 @@ qemu-img create -f qcow2 /data/kvm/jwang-ocp452-master2.qcow2 120G
 qemu-img create -f qcow2 /data/kvm/jwang-ocp452-worker0.qcow2 120G
 qemu-img create -f qcow2 /data/kvm/jwang-ocp452-worker1.qcow2 120G
 qemu-img create -f qcow2 /data/kvm/jwang-ocp452-worker2.qcow2 120G
+
+# 启动虚拟机
+for vm in bootstrap master0 master1 master2 worker0 worker1 worker2 
+do
+  virsh start jwang-ocp452-${vm}
+done
 
 # single stack 在 ocp 4.5.2 上不工作
 # 参见如下报错

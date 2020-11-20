@@ -4989,3 +4989,18 @@ oc -n openshift-monitoring logs $(oc get pods -n openshift-monitoring -o jsonpat
 # 查看 kube-apiserver-operator 日志
 oc -n openshift-kube-apiserver-operator logs $(oc get pods -n openshift-kube-apiserver-operator -o jsonpath='{ range .items[*]}{.metadata.name}{"\n"}{end}' | grep kube-apiserver-operator ) 
 ```
+
+### Ceph placement groups autoscale
+https://avengermojo.medium.com/ceph-placement-groups-autoscale-9981aeccbc21
+```
+ceph osd pool set rbd pg_num 64
+ceph osd pool autoscale-status
+ceph osd pool set rbd target_size_ratio 0.3
+ceph osd pool set rbd pg_num_min 64
+ceph mgr module enable pg_autoscaler
+ceph osd pool autoscale-status
+ceph osd pool set rbd target_size_ratio 0.1
+ceph osd pool set rbd pg_autoscale_mode on
+ceph osd pool stats
+ceph health detail
+```

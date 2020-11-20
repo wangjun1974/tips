@@ -4980,3 +4980,12 @@ for i in maistra-examples-bookinfo/*.tar ; do
   podman load < $i
 done
 ```
+
+### OpenShift 安装过程中查看日志
+```
+# 查看 cluster-monitoring-operator 日志
+oc -n openshift-monitoring logs $(oc get pods -n openshift-monitoring -o jsonpath='{ range .items[*]}{.metadata.name}{"\n"}{end}' | grep cluster-monitoring-operator ) -c cluster-monitoring-operator
+
+# 查看 kube-apiserver-operator 日志
+oc -n openshift-kube-apiserver-operator logs $(oc get pods -n openshift-kube-apiserver-operator -o jsonpath='{ range .items[*]}{.metadata.name}{"\n"}{end}' | grep kube-apiserver-operator ) 
+```

@@ -4977,8 +4977,63 @@ tar zcvf maistra-examples-bookinfo.tar.gz maistra-examples-bookinfo/
 tar zxvf maistra-examples-bookinfo.tar.gz
 
 for i in maistra-examples-bookinfo/*.tar ; do
-  podman load < $i
+  podman load -i $i
 done
+
+export LOCAL_REGISTRY='helper.cluster-0001.rhsacn.org:5000'
+export LOCAL_SECRET_JSON="${HOME}/pull-secret-2.json"
+
+cat bookinfo.image.lst | while read i 
+do 
+  repo=$( echo $i | awk -F'/' '{print $1}' )
+  imagename=$( echo $i | awk -F'/' '{print $2}' | awk -F':' '{print $1}' )
+  tag=$( echo $i | awk -F':' '{print $2}' )
+
+  podman tag docker.io/${repo}/${imagename}:${tag} ${LOCAL_REGISTRY}/${repo}/${imagename}:${tag}
+
+  podman push --authfile ${LOCAL_SECRET_JSON} ${LOCAL_REGISTRY}/${repo}/${imagename}:${tag}
+done
+
+
+cat bookinfo.image.lst | while read i 
+do
+  source="docker.io"
+  repo=$( echo $i | awk -F'/' '{print $1}' )
+  imagename=$( echo $i | awk -F'/' '{print $2}' | awk -F':' '{print $1}' )
+  tag=$( echo $i | awk -F':' '{print $2}' )
+
+  shadigits=$( skopeo inspect --authfile /root/pull-secret-2.json docker://${LOCAL_REGISTRY}/${i} | jq .Digest | sed -e 's|"||g' )
+
+  echo ${source}/${repo}/${imagename}@${shadigits}
+done
+
+cat > tmp/registry-images-bookinfo.lst << EOF
+docker.io/maistra/examples-bookinfo-details-v1@sha256:fb77fb2dcd8da1d51de2a65ead8c4532a631bf2e981630dae9c602bf390814c7
+docker.io/maistra/examples-bookinfo-productpage-v1@sha256:c9047b8f5cb22371eac4d882750538bd0215f32676af8901b012860bd905a8bd
+docker.io/maistra/examples-bookinfo-ratings-v1@sha256:494db38a595aa6eeeb1ece74404a6f06af5b68013b7cc7fff273898ee74a10d5
+docker.io/maistra/examples-bookinfo-reviews-v1@sha256:a61a9a11a573571ae9095a85c62c04d2d542e816ce5a7f0428cedd572033683e
+docker.io/maistra/examples-bookinfo-reviews-v2@sha256:ecdd959b758baa2c1d4d511d3a9ae402ce8a54964459a04611948c3c14e2724b
+docker.io/maistra/examples-bookinfo-reviews-v3@sha256:491a6a0af78ddd935dfcc7b309d73aaef33b40c3c725714bbec3f7348a2529e0
+EOF
+
+cat /dev/null > ./tmp/mapping-bookinfo.txt
+  for source in `cat ./tmp/registry-images-bookinfo.lst`; do  local=`echo $source|awk -F'@' '{print $1}'|sed 's|docker.io|helper.cluster-0001.rhsacn.org:5000|g'`   ; echo "$source=$local" >> ./tmp/mapping-bookinfo.txt; done
+
+cat /dev/null > ./tmp/image-policy-bookinfo.txt
+  for source in `cat ./tmp/registry-images-bookinfo.lst`; do  local=`echo $source|awk -F'@' '{print $1}'|sed 's/docker.io/helper.cluster-0001.rhsacn.org:5000/g'` ; mirror=`echo $source|awk -F'@' '{print $1}'`; echo "  - mirrors:" >> ./tmp/image-policy-bookinfo.txt; echo "    - $local" >> ./tmp/image-policy-bookinfo.txt; echo "    source: $mirror" >> ./tmp/image-policy-bookinfo.txt; done
+
+cat <<EOF > ./tmp/bookinfo-ImageContentSourcePolicy.yaml
+apiVersion: operator.openshift.io/v1alpha1
+kind: ImageContentSourcePolicy
+metadata:
+  name: bookinfo
+spec:
+  repositoryDigestMirrors:
+$(cat ./tmp/image-policy-bookinfo.txt)
+EOF
+
+oc apply -f ./tmp/bookinfo-ImageContentSourcePolicy.yaml 
+
 ```
 
 ### OpenShift 安装过程中查看日志

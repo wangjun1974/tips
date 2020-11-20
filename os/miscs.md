@@ -5004,3 +5004,12 @@ ceph osd pool set rbd pg_autoscale_mode on
 ceph osd pool stats
 ceph health detail
 ```
+
+### 高级命令 OpenShift oc 
+```
+# 根据需要显示 .metadata.name 和 kubernetes.io/arch 相关的 .metadata.labels
+oc get nodes --template='{{ range .items }}{{ .metadata.name }}{{ printf " - %s\n" (index .metadata.labels "kubernetes.io/arch")}}{{ end }}'
+
+# 同上并且打印所需标题
+oc get nodes --template='{{ printf "Node\t\t\t\tArch\n" }}{{ range .items }}{{ printf "%s\t" .metadata.name }}{{ printf "%s\n" (index .metadata.labels "kubernetes.io/arch")}}{{ end }}'
+```

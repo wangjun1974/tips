@@ -5068,3 +5068,33 @@ oc get nodes --template='{{ range .items }}{{ .metadata.name }}{{ printf " - %s\
 # 同上并且打印所需标题
 oc get nodes --template='{{ printf "Node\t\t\t\tArch\n" }}{{ range .items }}{{ printf "%s\t" .metadata.name }}{{ printf "%s\n" (index .metadata.labels "kubernetes.io/arch")}}{{ end }}'
 ```
+
+### 修改建议
+```
+
+6.3.2.3
+预制条件 - 建议添加
+中心镜像仓库和本地镜像仓库对接完成
+
+6.3.2.4
+将“测试组网”内容调整到“测试目的”
+
+6.8.1
+将“测试组网”内容调整到“测试目的”
+预期结果：
+3. 总共有13个pod
+测试步骤：
+14. 并恢复某个历史版本
+
+6.8.2
+将“测试组网”内容调整到“测试目的”
+并删除“区别于第8.7.11章定义的自动伸缩器，”
+
+6.9.1
+将“测试组网”内容调整到“测试目的”
+
+6.9.2.1
+将“测试组网”内容调整到“测试目的”
+
+
+```

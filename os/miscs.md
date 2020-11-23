@@ -5293,3 +5293,6 @@ https://docs.openshift.com/container-platform/4.4/applications/pruning-objects.h
 oc patch imagepruner.imageregistry/cluster --patch '{"spec":{"suspend":true}}' --type=merge
 oc -n openshift-image-registry delete jobs --all
 ```
+
+### How to use entitled image builds to build DriverContainers with UBI on OpenShift
+https://www.openshift.com/blog/how-to-use-entitled-image-builds-to-build-drivercontainers-with-ubi-on-openshift

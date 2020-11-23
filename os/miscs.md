@@ -5285,6 +5285,7 @@ oc delete secret -n openshift-etcd etcd-serving-metrics-master1.cluster-0001.rhs
 ```
 
 ### 报错处理 openshift-image-registry/image-pruner 相关的报错处理
+https://docs.openshift.com/container-platform/4.4/applications/pruning-objects.html
 ```
 # Job openshift-image-registry/image-pruner-1606089600 failed to complete.
 # 把imagepruner给停掉

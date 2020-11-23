@@ -5344,3 +5344,14 @@ oc get clusteroperator kube-scheduler -o yaml | grep -i status -A10
 
 ```
 
+### 问题分析: istio bookinfo example 访问 productpage 返回 503
+```
+$ curl -o /dev/null -s -w "%{http_code}\n" http://$GATEWAY_URL/productpage
+503
+$ env | grep GATEWAY
+GATEWAY_URL=istio-ingressgateway-istio-system.apps.cluster-0001.rhsacn.org
+
+# 网关信息
+kubectl get gateway -n istio-system -o yaml
+
+```

@@ -5215,3 +5215,71 @@ chmod +x ./find-busy-mnt.sh
 ./find-busy-mnt.sh 0bfafa146431771f6024dcb9775ef47f170edb2f152f71916ba44209ca6120a
 
 ```
+
+
+### 替换出问题的 master - OpenShift 4.5
+https://docs.openshift.com/container-platform/4.5/backup_and_restore/replacing-unhealthy-etcd-member.html
+```
+
+
+[root@helper postinstall]# oc get etcd -o=jsonpath='{range .items[0].status.conditions[?(@.type=="EtcdMembersAvailable")]}{.message}{"\n"}'
+2 of 3 members are available, master1.cluster-0001.rhsacn.org is unhealthy
+
+# 参考以下步骤替换一个不健康的 etcd member
+# https://docs.openshift.com/container-platform/4.5/backup_and_restore/replacing-unhealthy-etcd-member.html#restore-replace-stopped-etcd-member_replacing-unhealthy-etcd-member
+
+# 获取可用 etcd member
+[root@helper postinstall]# oc get pods -n openshift-etcd | grep etcd
+etcd-master0.cluster-0001.rhsacn.org                4/4     Running     0          13d
+etcd-master1.cluster-0001.rhsacn.org                0/4     Init:0/2    0          13d
+etcd-master2.cluster-0001.rhsacn.org                4/4     Running     0          13d
+
+# 登录可用 etcd member
+[root@helper postinstall]# oc rsh -n openshift-etcd etcd-master0.cluster-0001.rhsacn.org
+Defaulting container name to etcdctl.
+Use 'oc describe pod/etcd-master0.cluster-0001.rhsacn.org -n openshift-etcd' to see all of the containers in this pod.
+sh-4.2# 
+
+# 查看成员列表
+sh-4.2# etcdctl member list -w table
++------------------+---------+---------------------------------+----------------------------+----------------------------+------------+
+|        ID        | STATUS  |              NAME               |         PEER ADDRS         |        CLIENT ADDRS        | IS LEARNER |
++------------------+---------+---------------------------------+----------------------------+----------------------------+------------+
+|  8bfa54d4d3a93a1 | started | master2.cluster-0001.rhsacn.org | https://10.66.208.142:2380 | https://10.66.208.142:2379 |      false |
+| 5e7fc52a2e455265 | started | master0.cluster-0001.rhsacn.org | https://10.66.208.140:2380 | https://10.66.208.140:2379 |      false |
+| fbb0de49b9368d62 | started | master1.cluster-0001.rhsacn.org | https://10.66.208.141:2380 | https://10.66.208.141:2379 |      false |
++------------------+---------+---------------------------------+----------------------------+----------------------------+------------+
+
+# 移除有问题的 etcd 成员:
+sh-4.2# etcdctl member remove fbb0de49b9368d62
+Member fbb0de49b9368d62 removed from cluster b632277e7db1b57f
+
+# 再次确认 etcd 成员
+sh-4.2# etcdctl member list -w table
++------------------+---------+---------------------------------+----------------------------+----------------------------+------------+
+|        ID        | STATUS  |              NAME               |         PEER ADDRS         |        CLIENT ADDRS        | IS LEARNER |
++------------------+---------+---------------------------------+----------------------------+----------------------------+------------+
+|  8bfa54d4d3a93a1 | started | master2.cluster-0001.rhsacn.org | https://10.66.208.142:2380 | https://10.66.208.142:2379 |      false |
+| 5e7fc52a2e455265 | started | master0.cluster-0001.rhsacn.org | https://10.66.208.140:2380 | https://10.66.208.140:2379 |      false |
++------------------+---------+---------------------------------+----------------------------+----------------------------+------------+
+
+# 列出 old secret
+[root@helper postinstall]# oc get secrets -n openshift-etcd | grep master1
+etcd-peer-master1.cluster-0001.rhsacn.org              kubernetes.io/tls                     2      13d
+etcd-serving-master1.cluster-0001.rhsacn.org           kubernetes.io/tls                     2      13d
+etcd-serving-metrics-master1.cluster-0001.rhsacn.org   kubernetes.io/tls                     2      13d
+
+# 删除 peer setret
+oc delete secret -n openshift-etcd etcd-peer-master1.cluster-0001.rhsacn.org
+
+# 删除 serving secret
+oc delete secret -n openshift-etcd etcd-serving-master1.cluster-0001.rhsacn.org
+
+# 删除 metrics secret
+oc delete secret -n openshift-etcd etcd-serving-metrics-master1.cluster-0001.rhsacn.org
+
+# 执行 openshift-install create ignition-configs 重新生成 ign 文件
+# 更新 web server 上的 ign 文件
+# 重新安装 master
+# 重新批准 master node 的 csr
+```

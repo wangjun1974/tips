@@ -5283,3 +5283,12 @@ oc delete secret -n openshift-etcd etcd-serving-metrics-master1.cluster-0001.rhs
 # 重新安装 master
 # 重新批准 master node 的 csr
 ```
+
+### 报错处理 openshift-image-registry/image-pruner 相关的报错处理
+```
+# Job openshift-image-registry/image-pruner-1606089600 failed to complete.
+# 把imagepruner给停掉
+# https://bugzilla.redhat.com/show_bug.cgi?id=1852501#c24
+oc patch imagepruner.imageregistry/cluster --patch '{"spec":{"suspend":true}}' --type=merge
+oc -n openshift-image-registry delete jobs --all
+```

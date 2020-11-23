@@ -5296,3 +5296,51 @@ oc -n openshift-image-registry delete jobs --all
 
 ### How to use entitled image builds to build DriverContainers with UBI on OpenShift
 https://www.openshift.com/blog/how-to-use-entitled-image-builds-to-build-drivercontainers-with-ubi-on-openshift
+
+### 报错处理 Cluster operator kube-controller-manager has been degraded for 10 mins. Operator is degraded because StaticPods_Error and cluster upgrades will be unstable.
+错误消息
+```
+Cluster operator kube-controller-manager has been degraded for 10 mins. Operator is degraded because StaticPods_Error and cluster upgrades will be unstable.
+View details
+```
+
+处理方法参见：
+https://access.redhat.com/solutions/4382761
+```
+# 获取详细状态
+oc get clusteroperator kube-controller-manager -o yaml | grep -i status -A10
+status:
+  conditions:
+  - lastTransitionTime: "2020-11-23T07:47:23Z"
+    message: 'StaticPodsDegraded: pods "kube-controller-manager-master1.cluster-0001.rhsacn.org"
+      not found'
+    reason: StaticPods_Error
+# 重启对应 master 节点的 kubelet
+ssh core@<master1> sudo systemctl restart kubelet
+# 或者
+oc debug node/master1.cluster-0001.rhsacn.org -- chroot /host systemctl restart kubelet
+
+# 删除 openshift-kube-controller-manager-operator pod 触发重新创建 pod
+oc -n openshift-kube-controller-manager-operator delete pod $(oc -n openshift-kube-controller-manager-operator get pods -o jsonpath='{ range .items[*]}{.metadata.name}{"\n"}{end}' | grep kube-controller-manager-operator )
+
+# 获取 openshift-kube-controller-manager-operator 日志
+oc -n openshift-kube-controller-manager-operator logs $(oc -n openshift-kube-controller-manager-operator get pods -o jsonpath='{ range .items[*]}{.metadata.name}{"\n"}{end}' | grep kube-controller-manager-operator )
+
+# 实验检测不成功
+# 参考 https://access.redhat.com/solutions/4849711
+# 重新部署 static pods 
+
+# 重新部署 static pods kube-apiserver
+oc patch kubeapiserver/cluster --type merge -p "{\"spec\":{\"forceRedeploymentReason\":\"Forcing new revision with random number $RANDOM to make message unique\"}}"
+oc get clusteroperator kube-apiserver -o yaml | grep -i status -A10
+
+# 重新部署 static pods kube-controller-manager
+oc patch kubecontrollermanager/cluster --type merge -p "{\"spec\":{\"forceRedeploymentReason\":\"Forcing new revision with random number $RANDOM to make message unique\"}}"
+oc get clusteroperator kube-controller-manager -o yaml | grep -i status -A10
+
+# 重新部署 static pods kube-scheduler
+oc patch kubescheduler/cluster --type merge -p "{\"spec\":{\"forceRedeploymentReason\":\"Forcing new revision with random number $RANDOM to make message unique\"}}"
+oc get clusteroperator kube-scheduler -o yaml | grep -i status -A10
+
+```
+

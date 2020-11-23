@@ -5028,7 +5028,17 @@ cat /dev/null > ./tmp/mapping-bookinfo.txt
 for source in `cat ./tmp/registry-images-bookinfo.lst`; do  localdir="/root/tmp/mirror/"`echo $source|awk -F'@' '{print $1}'| awk -F'/' '{print $3}'`; mkdir -p $localdir; 
 echo skopeo copy --format v2s2 --authfile ${LOCAL_SECRET_JSON} --all docker://$source dir://$localdir; skopeo copy --format v2s2 --authfile ${LOCAL_SECRET_JSON} --all docker://$source dir://$localdir; echo; done
 
+# 生成压缩文件
+tar zcvf /root/tmp/bookinfo-mirror.tar.gz /root/tmp/mirror
 
+# 拷贝压缩文件到目标主机
+# 解压缩文件到指定目录
+mkdir -p /root/tmp/mirror
+tar zxvf bookinfo-mirror.tar.gz -C /root/tmp/mirror
+
+# 使用 skopeo copy --all 拷贝镜像，从本地目录上传到本地镜像仓库
+for source in `cat ./tmp/registry-images-bookinfo.lst`; do  localdir="/root/tmp/mirror/"`echo $source|awk -F'@' '{print $1}'| awk -F'/' '{print $3}'`; local=`echo $source|awk -F'@' '{print $1}'|sed 's/docker.io/helper.cluster-0001.rhsacn.org:5000/g'`; 
+echo skopeo copy --format v2s2 --authfile ${LOCAL_SECRET_JSON} --all dir://$localdir docker://$local; echo skopeo copy --format v2s2 --authfile ${LOCAL_SECRET_JSON} --all dir://$ dir://$localdir; echo; done
 
 cat /dev/null > ./tmp/image-policy-bookinfo.txt
   for source in `cat ./tmp/registry-images-bookinfo.lst`; do  local=`echo $source|awk -F'@' '{print $1}'|sed 's/docker.io/helper.cluster-0001.rhsacn.org:5000/g'` ; mirror=`echo $source|awk -F'@' '{print $1}'`; echo "  - mirrors:" >> ./tmp/image-policy-bookinfo.txt; echo "    - $local" >> ./tmp/image-policy-bookinfo.txt; echo "    source: $mirror" >> ./tmp/image-policy-bookinfo.txt; done

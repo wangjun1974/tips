@@ -5346,6 +5346,7 @@ oc get clusteroperator kube-scheduler -o yaml | grep -i status -A10
 
 ### 问题分析: istio bookinfo example 访问 productpage 返回 503
 ```
+# 参见：https://github.com/istio/istio/issues/7564
 $ curl -o /dev/null -s -w "%{http_code}\n" http://$GATEWAY_URL/productpage
 503
 $ env | grep GATEWAY

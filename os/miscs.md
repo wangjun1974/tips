@@ -5034,6 +5034,30 @@ EOF
 
 oc apply -f ./tmp/bookinfo-ImageContentSourcePolicy.yaml 
 
+# 使用 oc json type patch 方法
+# https://bierkowski.com/openshift-cli-morsels-updating-objects-non-interactively/
+oc patch deployment productpage-v1 -n bookinfo --type json \
+    -p '[{"op": "replace", "path": "/spec/template/spec/containers/image", "value": "docker.io/maistra/examples-bookinfo-productpage-v1:1.2.0"}]'
+
+oc patch deployment productpage-v1 -n bookinfo --patch='{"spec":{"template":{"spec":{"containers":[{"name": "productpage", "image":"docker.io/maistra/examples-bookinfo-productpage-v1:1.2.0"}]}}}}'
+
+oc patch deployment details-v1 -n bookinfo --patch='{"spec":{"template":{"spec":{"containers":[{"name": "details", "image":"docker.io/maistra/examples-bookinfo-details-v1:1.2.0"}]}}}}'
+
+oc patch deployment ratings-v1 -n bookinfo --patch='{"spec":{"template":{"spec":{"containers":[{"name": "ratings", "image":"docker.io/maistra/examples-bookinfo-ratings-v1:1.2.0"}]}}}}'
+
+oc patch deployment reviews-v1 -n bookinfo --patch='{"spec":{"template":{"spec":{"containers":[{"name": "reviews", "image":"docker.io/maistra/examples-bookinfo-reviews-v1:1.2.0"}]}}}}'
+
+oc patch deployment reviews-v2 -n bookinfo --patch='{"spec":{"template":{"spec":{"containers":[{"name": "reviews", "image":"docker.io/maistra/examples-bookinfo-reviews-v2:1.2.0"}]}}}}'
+
+oc patch deployment reviews-v3 -n bookinfo --patch='{"spec":{"template":{"spec":{"containers":[{"name": "reviews", "image":"docker.io/maistra/examples-bookinfo-reviews-v3:1.2.0"}]}}}}'
+
+oc create secret docker-registry local-pull-secret \
+    --namespace bookinfo \
+    --docker-server=helper.cluster-0001.rhsacn.org:5000 \
+    --docker-username=dummy \
+    --docker-password=dummy
+oc patch sa default -n bookinfo --type='json' -p='[{"op":"add","path":"/imagePullSecrets/-", "value":{"name":"local-pull-secret"}}]'
+
 ```
 
 ### OpenShift 安装过程中查看日志
@@ -5100,4 +5124,18 @@ oc get nodes --template='{{ printf "Node\t\t\t\tArch\n" }}{{ range .items }}{{ p
 
 6.9.3
 将“测试组网”内容调整到“测试目的”
+```
+
+### OpenShift 如何触发新的部署
+https://cookbook.openshift.org/application-lifecycle-management/how-can-i-trigger-a-new-deployment-of-an-application.html
+```
+# 如果使用 DeploymentConfig
+oc rollout latest dc/cookbook
+
+# 如果使用 Deployment, StatefulSet, DaemonSet, ReplicaSet or ReplicationController
+oc patch deployment/cookbook --patch \
+   "{\"spec\":{\"template\":{\"metadata\":{\"annotations\":{\"last-restart\":\"`date +'%s'`\"}}}}}"
+
+oc patch deployment/reviews-v2 -n bookinfo --patch \
+   "{\"spec\":{\"template\":{\"metadata\":{\"annotations\":{\"last-restart\":\"`date +'%s'`\"}}}}}"
 ```

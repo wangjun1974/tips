@@ -5071,9 +5071,9 @@ oc patch deployment ratings-v1 -n bookinfo --patch='{"spec":{"template":{"spec":
 
 oc patch deployment reviews-v1 -n bookinfo --patch='{"spec":{"template":{"spec":{"containers":[{"name": "reviews", "image":"docker.io/maistra/examples-bookinfo-reviews-v1:1.2.0"}]}}}}'
 
-oc patch deployment reviews-v2 -n bookinfo --patch='{"spec":{"template":{"spec":{"containers":[{"name": "reviews", "image":"docker.io/maistra/examples-bookinfo-reviews-v2:1.2.0"}]}}}}'
+oc patch deployment reviews-v2 -n bookinfo --patch='{"spec":{"template":{"spec":{"containers":[{"name": "reviews", "image":"helper.cluster-0001.rhsacn.org:5000/maistra/examples-bookinfo-reviews-v2:1.2.0"}]}}}}'
 
-oc patch deployment reviews-v3 -n bookinfo --patch='{"spec":{"template":{"spec":{"containers":[{"name": "reviews", "image":"docker.io/maistra/examples-bookinfo-reviews-v3:1.2.0"}]}}}}'
+oc patch deployment reviews-v3 -n bookinfo --patch='{"spec":{"template":{"spec":{"containers":[{"name": "reviews", "image":"helper.cluster-0001.rhsacn.org:5000/maistra/examples-bookinfo-reviews-v3:1.2.0"}]}}}}'
 
 oc create secret docker-registry local-pull-secret \
     --namespace bookinfo \
@@ -5172,4 +5172,6 @@ oc patch deployment/reviews-v2 -n bookinfo --patch \
 
 ### 关于 imagecontentsourcepolicy 的说明
 https://docs.openshift.com/container-platform/4.4/rest_api/operator_apis/imagecontentsourcepolicy-operator-openshift-io-v1alpha1.html
+
+repositoryDigestMirrors allows images referenced by image digests in pods to be pulled from alternative mirrored repository locations. The image pull specification provided to the pod will be compared to the source locations described in RepositoryDigestMirrors and the image may be pulled down from any of the mirrors in the list instead of the specified repository allowing administrators to choose a potentially faster mirror. Only image pull specifications that have an image disgest will have this behavior applied to them - tags will continue to be pulled from the specified repository in the pull spec. Each “source” repository is treated independently; configurations for different “source” repositories don’t interact. When multiple policies are defined for the same “source” repository, the sets of defined mirrors will be merged together, preserving the relative order of the mirrors, if possible. For example, if policy A has mirrors a, b, c and policy B has mirrors c, d, e, the mirrors will be used in the order a, b, c, d, e. If the orders of mirror entries conflict (e.g. a, b vs. b, a) the configuration is not rejected but the resulting order is unspecified.
 

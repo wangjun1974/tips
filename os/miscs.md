@@ -5175,3 +5175,43 @@ https://docs.openshift.com/container-platform/4.4/rest_api/operator_apis/imageco
 
 repositoryDigestMirrors allows images referenced by image digests in pods to be pulled from alternative mirrored repository locations. The image pull specification provided to the pod will be compared to the source locations described in RepositoryDigestMirrors and the image may be pulled down from any of the mirrors in the list instead of the specified repository allowing administrators to choose a potentially faster mirror. Only image pull specifications that have an image disgest will have this behavior applied to them - tags will continue to be pulled from the specified repository in the pull spec. Each “source” repository is treated independently; configurations for different “source” repositories don’t interact. When multiple policies are defined for the same “source” repository, the sets of defined mirrors will be merged together, preserving the relative order of the mirrors, if possible. For example, if policy A has mirrors a, b, c and policy B has mirrors c, d, e, the mirrors will be used in the order a, b, c, d, e. If the orders of mirror entries conflict (e.g. a, b vs. b, a) the configuration is not rejected but the resulting order is unspecified.
 
+
+### How to find and resolve devicemapper 'device or resource busy' error
+https://success.mirantis.com/article/how-to-find-and-resolve-devicemapper-device-or-resource-busy-error
+
+```
+cat > find-busy-mnt.sh << 'EOF'
+#!/bin/bash
+
+# A simple script to get information about mount points and pids and their
+# mount namespaces.
+
+if [ $# -ne 1 ];then
+  echo "Usage: $0 <devicemapper-device-id>"
+  exit 1
+fi
+
+ID=$1
+
+MOUNTS=`find /proc/*/mounts | xargs grep $ID 2>/dev/null`
+
+[ -z "$MOUNTS" ] &&  echo "No pids found" && exit 0
+
+printf "PID\tNAME\t\tMNTNS\n"
+echo "$MOUNTS" | while read LINE; do
+  PID=`echo $LINE | cut -d ":" -f1 | cut -d "/" -f3`
+  # Ignore self and thread-self
+  if [ "$PID" == "self" ] || [ "$PID" == "thread-self" ]; then
+    continue
+  fi
+  NAME=`ps -q $PID -o comm=`
+  MNTNS=`readlink /proc/$PID/ns/mnt`
+  printf "%s\t%s\t\t%s\n" "$PID" "$NAME" "$MNTNS"
+done
+EOF
+
+chmod +x ./find-busy-mnt.sh
+
+./find-busy-mnt.sh 0bfafa146431771f6024dcb9775ef47f170edb2f152f71916ba44209ca6120a
+
+```

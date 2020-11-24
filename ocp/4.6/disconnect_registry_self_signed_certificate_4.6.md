@@ -46,6 +46,7 @@ subjectKeyIdentifier    = hash
 
 [alt_names]
 DNS.1 = *.cluster-0001.rhsacn.org
+DNS.2 = helper.cluster-0001.rhsacn.org
 EOF
 
 # 使用生成的 ssl.conf 生成证书

@@ -4960,8 +4960,10 @@ oc get pods -n bookinfo -o jsonpath='{ range .items[*]}{.metadata.name}{"\n"}{en
 # 生成镜像下载列表文件
 cat > bookinfo.image.lst << EOF
 maistra/examples-bookinfo-details-v1:1.2.0
+maistra/examples-bookinfo-details-v2:1.2.0
 maistra/examples-bookinfo-productpage-v1:1.2.0
 maistra/examples-bookinfo-ratings-v1:1.2.0
+maistra/examples-bookinfo-ratings-v2:1.2.0
 maistra/examples-bookinfo-reviews-v1:1.2.0
 maistra/examples-bookinfo-reviews-v2:1.2.0
 maistra/examples-bookinfo-reviews-v3:1.2.0
@@ -5023,8 +5025,10 @@ done
 
 cat > tmp/registry-images-bookinfo.lst << EOF
 docker.io/maistra/examples-bookinfo-details-v1@sha256:f79c12fc7ea821ec7bca5697a6863d1cdb1ddb90bf9d5232c6d7aae6e3d47213
+docker.io/maistra/examples-bookinfo-details-v2@sha256:9102ba929ba9ea6425d91b9a51c7dda4fcb0c728700e23708014cccd43939d5a
 docker.io/maistra/examples-bookinfo-productpage-v1@sha256:82154b932cded17b6bdd45274e33472793a666ef33a576189a83d48ab8ea2348
 docker.io/maistra/examples-bookinfo-ratings-v1@sha256:20fe8ed83ec6282640488ee7d50d9c178e277230ae440cae29ed6d2ca8417730
+docker.io/maistra/examples-bookinfo-ratings-v2@sha256:33e9afa3067be55758c10cc65c0b84cc14949afba10d943df853250b6e275c54
 docker.io/maistra/examples-bookinfo-reviews-v1@sha256:48b555a04589a7bf64a8eb1390d18e4e2f1f95c3604b5ce92029ad0e92a955c1
 docker.io/maistra/examples-bookinfo-reviews-v2@sha256:a4306ef6cd1698639d3566b38bae7ed8987e9df3e2dc5da5940f542cdb0e3831
 docker.io/maistra/examples-bookinfo-reviews-v3@sha256:c94bb71b3fbc624d32351881c385aa931164edcb519c0cdf7a99728b660a2028
@@ -5091,9 +5095,6 @@ oc create secret docker-registry local-pull-secret \
     --docker-password=dummy
 oc patch sa default -n bookinfo --type='json' -p='[{"op":"add","path":"/imagePullSecrets/-", "value":{"name":"local-pull-secret"}}]'
 
-
-# 下载镜像
-mkdir -p maistra-mirror
 
 
 ```

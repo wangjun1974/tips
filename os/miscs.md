@@ -5063,13 +5063,13 @@ oc apply -f ./tmp/bookinfo-ImageContentSourcePolicy.yaml
 oc patch deployment productpage-v1 -n bookinfo --type json \
     -p '[{"op": "replace", "path": "/spec/template/spec/containers/image", "value": "docker.io/maistra/examples-bookinfo-productpage-v1:1.2.0"}]'
 
-oc patch deployment productpage-v1 -n bookinfo --patch='{"spec":{"template":{"spec":{"containers":[{"name": "productpage", "image":"docker.io/maistra/examples-bookinfo-productpage-v1:1.2.0"}]}}}}'
+oc patch deployment productpage-v1 -n bookinfo --patch='{"spec":{"template":{"spec":{"containers":[{"name": "productpage", "image":"helper.cluster-0001.rhsacn.org:5000/maistra/examples-bookinfo-productpage-v1:1.2.0"}]}}}}'
 
-oc patch deployment details-v1 -n bookinfo --patch='{"spec":{"template":{"spec":{"containers":[{"name": "details", "image":"docker.io/maistra/examples-bookinfo-details-v1:1.2.0"}]}}}}'
+oc patch deployment details-v1 -n bookinfo --patch='{"spec":{"template":{"spec":{"containers":[{"name": "details", "image":"helper.cluster-0001.rhsacn.org:5000/maistra/examples-bookinfo-details-v1:1.2.0"}]}}}}'
 
-oc patch deployment ratings-v1 -n bookinfo --patch='{"spec":{"template":{"spec":{"containers":[{"name": "ratings", "image":"docker.io/maistra/examples-bookinfo-ratings-v1:1.2.0"}]}}}}'
+oc patch deployment ratings-v1 -n bookinfo --patch='{"spec":{"template":{"spec":{"containers":[{"name": "ratings", "image":"helper.cluster-0001.rhsacn.org:5000/maistra/examples-bookinfo-ratings-v1:1.2.0"}]}}}}'
 
-oc patch deployment reviews-v1 -n bookinfo --patch='{"spec":{"template":{"spec":{"containers":[{"name": "reviews", "image":"docker.io/maistra/examples-bookinfo-reviews-v1:1.2.0"}]}}}}'
+oc patch deployment reviews-v1 -n bookinfo --patch='{"spec":{"template":{"spec":{"containers":[{"name": "reviews", "image":"helper.cluster-0001.rhsacn.org:5000/maistra/examples-bookinfo-reviews-v1:1.2.0"}]}}}}'
 
 oc patch deployment reviews-v2 -n bookinfo --patch='{"spec":{"template":{"spec":{"containers":[{"name": "reviews", "image":"helper.cluster-0001.rhsacn.org:5000/maistra/examples-bookinfo-reviews-v2:1.2.0"}]}}}}'
 

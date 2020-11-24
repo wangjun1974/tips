@@ -5220,8 +5220,6 @@ chmod +x ./find-busy-mnt.sh
 ### 替换出问题的 master - OpenShift 4.5
 https://docs.openshift.com/container-platform/4.5/backup_and_restore/replacing-unhealthy-etcd-member.html
 ```
-
-
 [root@helper postinstall]# oc get etcd -o=jsonpath='{range .items[0].status.conditions[?(@.type=="EtcdMembersAvailable")]}{.message}{"\n"}'
 2 of 3 members are available, master1.cluster-0001.rhsacn.org is unhealthy
 
@@ -5364,4 +5362,11 @@ GATEWAY_URL=istio-ingressgateway-istio-system.apps.cluster-0001.rhsacn.org
 # 网关信息
 kubectl get gateway -n istio-system -o yaml
 
+# 经过调查我的问题是没有创建 smmr 
+# 知道问题后处理起来就简单了，创建 smmr，然后触发新的部署
 ```
+
+### OpenShift 4.6 如何修剪 olm index image
+https://docs.openshift.com/container-platform/4.6/operators/admin/olm-restricted-networks.html#olm-pruning-index-image_olm-restricted-networks
+
+

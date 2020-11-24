@@ -5350,6 +5350,9 @@ oc get clusteroperator kube-scheduler -o yaml | grep -i status -A10
 sudo crictl ps -a 
 ```
 
+### OpenShift 4 与 CIFS
+https://www.openshift.com/blog/cifs-and-openshift-using-the-container-storage-interface-1
+
 ### 问题分析: istio bookinfo example 访问 productpage 返回 503
 ```
 # 参见：https://github.com/istio/istio/issues/7564

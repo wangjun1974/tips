@@ -4877,6 +4877,15 @@ destinationrule.networking.istio.io/details created
 
 # 访问 bookinfo
 curl -o /dev/null -s -w "%{http_code}\n" http://$GATEWAY_URL/productpage
+
+# 多次访问 productpage 后，会生成一些 tracing 数据
+for i in $(seq 1 50); do curl -o /dev/null -s -w "%{http_code}\n" http://$GATEWAY_URL/productpage ;done
+
+# 然后可以访问 jaeger，查看 tracing 数据
+export JAEGER_URL=$(oc get route -n istio-system jaeger -o jsonpath='{.spec.host}')
+
+# 然后可以访问 kiali，查看 Data visualization and observability
+export KIALI_URL=$(oc get route -n istio-system kiali -o jsonpath='{.spec.host}')
 ```
 
 ### OCP 4.6 RHCOS 的裸金属离线启动参数

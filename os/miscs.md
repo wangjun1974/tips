@@ -5344,6 +5344,12 @@ oc get clusteroperator kube-scheduler -o yaml | grep -i status -A10
 
 ```
 
+### 检查 openshift 部署问题
+```
+在 master 上执行命令，查看频繁重启的 pod 是哪个 
+sudo crictl ps -a 
+```
+
 ### 问题分析: istio bookinfo example 访问 productpage 返回 503
 ```
 # 参见：https://github.com/istio/istio/issues/7564

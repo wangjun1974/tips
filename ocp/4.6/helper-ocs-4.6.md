@@ -214,7 +214,7 @@ export ARCHITECTURE="x86_64"
 export REMOVABLE_MEDIA_PATH='/opt/registry'
 
 # 检查 release info
-oc adm release info quay.io/openshift-release-dev/ocp-release:4.6.1-x86_64
+oc adm release info quay.io/openshift-release-dev/ocp-release:4.6.5-x86_64
 
 oc adm -a ${LOCAL_SECRET_JSON} release mirror \
 --from=quay.io/${PRODUCT_REPO}/${RELEASE_NAME}:${OCP_RELEASE}-${ARCHITECTURE} \

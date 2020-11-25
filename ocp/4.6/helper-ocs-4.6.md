@@ -233,7 +233,7 @@ oc adm release mirror -a ${LOCAL_SECRET_JSON} --to-dir=${REMOVABLE_MEDIA_PATH}/m
 
 # mirror from local directory to local registry
 # 这个是本次测试采用的方式
-oc image mirror -a ${LOCAL_SECRET_JSON} --from-dir=/opt/registry/mirror 'file://openshift/release:4.6.1*' ${LOCAL_REGISTRY}/${LOCAL_REPOSITORY}
+oc image mirror -a ${LOCAL_SECRET_JSON} --from-dir=/opt/registry/mirror 'file://openshift/release:4.6.5*' ${LOCAL_REGISTRY}/${LOCAL_REPOSITORY}
 
 ...
 sha256:3e9704e62bb8ebaba3e9cda8176fa53de7b4e7e63b067eb94522bf6e5e93d4ea file://openshift/release:4.5.13-cluster-network-operator

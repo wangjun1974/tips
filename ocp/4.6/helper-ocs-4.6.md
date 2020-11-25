@@ -127,6 +127,7 @@ helpernodecheck nfs-info
 ```
 
 ### create helper node registry
+证书部分请参考：https://github.com/wangjun1974/tips/blob/master/ocp/4.6/disconnect_registry_self_signed_certificate_4.6.md
 ```
 yum -y install podman httpd httpd-tools wget jq
 
@@ -177,8 +178,8 @@ curl -u dummy:dummy -s -X GET https://$REPO_URL/v2/_catalog \
 
 ### prepare artifacts
 ```
-MAJORBUILDNUMBER=4.5
-EXTRABUILDNUMBER=4.5.6
+MAJORBUILDNUMBER=4.6
+EXTRABUILDNUMBER=4.6.5
 
 wget https://mirror.openshift.com/pub/openshift-v4/clients/ocp/${EXTRABUILDNUMBER}/openshift-client-linux-${EXTRABUILDNUMBER}.tar.gz -P /var/www/html/
 wget https://mirror.openshift.com/pub/openshift-v4/clients/ocp/${EXTRABUILDNUMBER}/openshift-install-linux-${EXTRABUILDNUMBER}.tar.gz -P /var/www/html/

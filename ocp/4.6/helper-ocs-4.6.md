@@ -315,18 +315,19 @@ oc adm catalog mirror \
 # 2. $oc adm catalog mirror --manifests-only=true --from-dir=<YOUR_DIR> file://offline/redhat-operators:vXX localhost
 # 3. $sed 's/=/=file:\/\//g' redhat-operators-manifests/mapping.txt > mapping-new.txt
 # 4. $oc image mirror  -f mappings-new.txt --dir=<YOUR_DIR>
-export OPERATOR_OCP_RELEASE="4.5"
+# 本次采用同步到本地的方法，再从本地上传到 local registry 的方法
+export OPERATOR_OCP_RELEASE="4.6"
 oc adm catalog build \
   --appregistry-org redhat-operators \
   --from=registry.redhat.io/openshift4/ose-operator-registry:v${OPERATOR_OCP_RELEASE} \
   --filter-by-os='linux/amd64' \
   -a ${LOCAL_SECRET_JSON} \
   --dir=${REMOVABLE_MEDIA_PATH} \
-  --to-db=file:///offline/redhat-operators:v1
+  --to-db=file:///offline/redhat-operators:4.6-v1
  
 oc adm catalog mirror \
   --manifests-only=true \
-  --from-dir=${REMOVABLE_MEDIA_PATH} file://offline/redhat-operators:v${OPERATOR_OCP_RELEASE} \
+  --from-dir=${REMOVABLE_MEDIA_PATH} file://offline/redhat-operators:4.6-v1 \
   ${LOCAL_REGISTRY} \
   -a ${LOCAL_SECRET_JSON} \
   --filter-by-os='linux/amd64' 

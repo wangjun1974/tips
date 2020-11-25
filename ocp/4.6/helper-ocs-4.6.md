@@ -188,9 +188,9 @@ tar -xzf /var/www/html/openshift-client-linux-${EXTRABUILDNUMBER}.tar.gz -C /usr
 tar -xzf /var/www/html/openshift-install-linux-${EXTRABUILDNUMBER}.tar.gz -C /usr/local/bin/
 
 # download bios and iso
-MAJORBUILDNUMBER=4.5
-EXTRABUILDNUMBER=4.5.6
-wget https://mirror.openshift.com/pub/openshift-v4/dependencies/rhcos/${MAJORBUILDNUMBER}/${EXTRABUILDNUMBER}/rhcos-${EXTRABUILDNUMBER}-x86_64-installer.x86_64.iso -P /var/www/html/
+MAJORBUILDNUMBER=4.6
+EXTRABUILDNUMBER=4.6.1
+wget https://mirror.openshift.com/pub/openshift-v4/dependencies/rhcos/${MAJORBUILDNUMBER}/${EXTRABUILDNUMBER}/rhcos-${EXTRABUILDNUMBER}-x86_64-live.x86_64.iso -P /var/www/html/
 wget https://mirror.openshift.com/pub/openshift-v4/dependencies/rhcos/${MAJORBUILDNUMBER}/${EXTRABUILDNUMBER}/rhcos-${EXTRABUILDNUMBER}-x86_64-metal.x86_64.raw.gz -P /var/www/html/
 
 # Get pull secret
@@ -198,13 +198,13 @@ wget http://10.66.208.115/rhel9osp/pull-secret.json -P /root
 jq '.auths += {"helper.cluster-0001.rhsacn.org:5000": {"auth": "ZHVtbXk6ZHVtbXk=","email": "noemail@localhost"}}' < /root/pull-secret.json > /root/pull-secret-2.json
 
 # login registries
-podman login -u wang.jun.1974 -p ****** registry.redhat.io
-podman login -u wang.jun.1974 -p ****** registry.access.redhat.com
-podman login -u wang.jun.1974 -p ****** registry.connect.redhat.com
+podman login --authfile /root/pull-secret-2.json registry.redhat.io
+podman login -u wang.jun.1974 registry.access.redhat.com
+podman login --authfile /root/pull-secret-2.json registry.connect.redhat.com
 
 # setup env and record imageContentSources section from output
 # see: https://docs.openshift.com/container-platform/4.5/installing/install_config/installing-restricted-networks-preparations.html
-export OCP_RELEASE="4.5.6"
+export OCP_RELEASE="4.6.1"
 export LOCAL_REGISTRY='helper.cluster-0001.rhsacn.org:5000'
 export LOCAL_REPOSITORY='ocp4/openshift4'
 export PRODUCT_REPO='openshift-release-dev'
@@ -225,7 +225,12 @@ oc adm -a ${LOCAL_SECRET_JSON} release mirror \
 --to-release-image=${LOCAL_REGISTRY}/${LOCAL_REPOSITORY}:${OCP_RELEASE}-${ARCHITECTURE} 
 
 # mirror to local directory (optional)
+# 这个是本次测试采用的方式
 oc adm release mirror -a ${LOCAL_SECRET_JSON} --to-dir=${REMOVABLE_MEDIA_PATH}/mirror quay.io/${PRODUCT_REPO}/${RELEASE_NAME}:${OCP_RELEASE}-${ARCHITECTURE}
+
+# mirror from local directory to local registry
+# 这个是本次测试采用的方式
+oc image mirror -a ${LOCAL_SECRET_JSON} --from-dir=/opt/registry/mirror 'file://openshift/release:4.6.1*' ${LOCAL_REGISTRY}/${LOCAL_REPOSITORY}
 
 ...
 sha256:3e9704e62bb8ebaba3e9cda8176fa53de7b4e7e63b067eb94522bf6e5e93d4ea file://openshift/release:4.5.13-cluster-network-operator

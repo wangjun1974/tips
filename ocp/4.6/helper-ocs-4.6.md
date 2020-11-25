@@ -246,7 +246,7 @@ To upload local images to a registry, run:
 Configmap signature file /opt/registry/mirror/config/signature-sha256-8d104847fc2371a9.yaml created
 
 # get content works with install-iso - i guess 4.5.0 iso only works with 4.5.0 OCP_RELEASE
-export OCP_RELEASE="4.5.2"
+export OCP_RELEASE="4.6.1"
 export LOCAL_REGISTRY='helper.cluster-0001.rhsacn.org:5000'
 export LOCAL_REPOSITORY='ocp4/openshift4'
 export PRODUCT_REPO='openshift-release-dev'
@@ -269,46 +269,6 @@ oc image mirror -a ${LOCAL_SECRET_JSON} --from-dir=${REMOVABLE_MEDIA_PATH}/mirro
 # cat $targetfile | while read line ;do echo ${line%=*};skopeo copy --format v2s2 --all docker://${line%=*} docker://${line#*=}; done
 
 
-OPERATOR_OCP_RELEASE="4.5"
-oc adm catalog build \
-  --appregistry-org redhat-operators \
-  --from=registry.redhat.io/openshift4/ose-operator-registry:v${OPERATOR_OCP_RELEASE} \
-  --filter-by-os='linux/amd64' \
-  -a ${LOCAL_SECRET_JSON} \
-  --to=${LOCAL_REGISTRY}/olm/operator-catalog:redhat-${OPERATOR_OCP_RELEASE}-$(date -I)
-
-oc adm catalog mirror \
-  ${LOCAL_REGISTRY}/olm/operator-catalog:redhat-${OPERATOR_OCP_RELEASE}-$(date -I) \
-  ${LOCAL_REGISTRY} \
-  --filter-by-os='linux/amd64' \
-  -a ${LOCAL_SECRET_JSON}
-
-oc adm catalog build \
-  --appregistry-org certified-operators \
-  --from=registry.redhat.io/openshift4/ose-operator-registry:v${OPERATOR_OCP_RELEASE} \
-  --filter-by-os='linux/amd64' \
-  -a ${LOCAL_SECRET_JSON} \
-  --to=${LOCAL_REGISTRY}/olm/operator-catalog:certified-${OPERATOR_OCP_RELEASE}-$(date -I)
-
-oc adm catalog mirror \
-  ${LOCAL_REGISTRY}/olm/operator-catalog:certified-${OPERATOR_OCP_RELEASE}-$(date -I) \
-  ${LOCAL_REGISTRY} \
-  --filter-by-os='linux/amd64' \
-  -a ${LOCAL_SECRET_JSON}
-
-oc adm catalog build \
-  --appregistry-org community-operators \
-  --from=registry.redhat.io/openshift4/ose-operator-registry:v${OPERATOR_OCP_RELEASE} \
-  --filter-by-os='linux/amd64' \
-  -a ${LOCAL_SECRET_JSON} \
-  --to=${LOCAL_REGISTRY}/olm/operator-catalog:community-${OPERATOR_OCP_RELEASE}-$(date -I)
-
-oc adm catalog mirror \
-  ${LOCAL_REGISTRY}/olm/operator-catalog:community-${OPERATOR_OCP_RELEASE}-$(date -I) \
-  ${LOCAL_REGISTRY} \
-  --filter-by-os='linux/amd64' \
-  -a ${LOCAL_SECRET_JSON}
-
 # ToDo: I could not go through this process ... (optional)
 # copy catalog relate content into disconnect env
 # 1. $oc adm catalog build --appregistry-org redhat-operators --from=registry.redhat.io/openshift4/ose-operator-registry:vXX  --dir=<YOUR_DIR> --to=file://offline/redhat-operators:vXX
@@ -316,21 +276,13 @@ oc adm catalog mirror \
 # 3. $sed 's/=/=file:\/\//g' redhat-operators-manifests/mapping.txt > mapping-new.txt
 # 4. $oc image mirror  -f mappings-new.txt --dir=<YOUR_DIR>
 # 本次采用同步到本地的方法，再从本地上传到 local registry 的方法
+# 保存到本地
 export OPERATOR_OCP_RELEASE="4.6"
-oc adm catalog build \
-  --appregistry-org redhat-operators \
-  --from=registry.redhat.io/openshift4/ose-operator-registry:v${OPERATOR_OCP_RELEASE} \
-  --filter-by-os='linux/amd64' \
-  -a ${LOCAL_SECRET_JSON} \
-  --dir=${REMOVABLE_MEDIA_PATH} \
-  --to-db=file:///offline/redhat-operators:4.6-v1
- 
-oc adm catalog mirror \
-  --manifests-only=true \
-  --from-dir=${REMOVABLE_MEDIA_PATH} file://offline/redhat-operators:4.6-v1 \
-  ${LOCAL_REGISTRY} \
-  -a ${LOCAL_SECRET_JSON} \
-  --filter-by-os='linux/amd64' 
+skopeo copy --format v2s2 --authfile ${LOCAL_SECRET_JSON} --all docker://registry.redhat.io/redhat/redhat-operator-index:v${OPERATOR_OCP_RELEASE} dir://offline
+
+# 从本地目录上传到 local registry
+skopeo copy --format v2s2 --authfile ${LOCAL_SECRET_JSON} --all dir://offline docker://${LOCAL_REGISTRY}/redhat/redhat-operator-index:v${OPERATOR_OCP_RELEASE}
+
 
 # install install directory
 rm -rf /root/ocp4
@@ -375,7 +327,7 @@ imageContentSources:
   source: quay.io/openshift-release-dev/ocp-v4.0-art-dev
 EOF
 
-cp install-config.yaml.orig /var/www/html
+echo y | cp install-config.yaml.orig /var/www/html
 cp /var/www/html/install-config.yaml.orig install-config.yaml
 
 # create ignition file

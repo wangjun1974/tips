@@ -366,7 +366,7 @@ guestfish -a ${NGINX_DIRECTORY}/rhcos-${RHCOSVERSION}-x86_64-live.x86_64.iso \
 modify_cfg(){
   for file in "EFI/redhat/grub.cfg" "isolinux/isolinux.cfg"; do
     # Append the proper image and ignition urls
-    sed -e '/ignition.platform.id=metal/s|$| coreos.inst.install_dev=vda coreos.inst.ignition_url='"${URL}"'\/ignition\/'"${NODE}"'.ign ip='"${IP}"'::'"${GATEWAY}"':'"${NETMASK}"':'"${FQDN}"':'"${NET_INTERFACE}"'::none nameserver='"${DNS}"'|' ${file} > $(pwd)/${NODE}_${file##*/}
+    sed -e '/ignition.platform.id=metal/s|$| coreos.inst.install_dev=vda coreos.inst.ignition_url='"${URL}"'ignition\/'"${NODE}"'.ign ip='"${IP}"'::'"${GATEWAY}"':'"${NETMASK}"':'"${FQDN}"':'"${NET_INTERFACE}"'::none nameserver='"${DNS}"'|' ${file} > $(pwd)/${NODE}_${file##*/}
   done
 }
 
@@ -374,7 +374,7 @@ modify_cfg(){
 modify_cfg(){
   for file in "EFI/redhat/grub.cfg" "isolinux/isolinux.cfg"; do
     # Append the proper image and ignition urls
-    sed -e '/ignition.platform.id=metal/s|$| coreos.inst.install_dev=sda coreos.inst.ignition_url='"${URL}"'\/ignition\/'"${NODE}"'.ign ip='"${IP}"'::'"${GATEWAY}"':'"${NETMASK}"':'"${FQDN}"':'"${NET_INTERFACE}"'::none nameserver='"${DNS}"'|' ${file} > $(pwd)/${NODE}_${file##*/}
+    sed -e '/ignition.platform.id=metal/s|$| coreos.inst.install_dev=sda coreos.inst.ignition_url='"${URL}"'ignition\/'"${NODE}"'.ign ip='"${IP}"'::'"${GATEWAY}"':'"${NETMASK}"':'"${FQDN}"':'"${NET_INTERFACE}"'::none nameserver='"${DNS}"'|' ${file} > $(pwd)/${NODE}_${file##*/}
   done
 }
 

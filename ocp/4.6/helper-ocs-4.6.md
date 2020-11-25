@@ -204,7 +204,7 @@ podman login --authfile /root/pull-secret-2.json registry.connect.redhat.com
 
 # setup env and record imageContentSources section from output
 # see: https://docs.openshift.com/container-platform/4.5/installing/install_config/installing-restricted-networks-preparations.html
-export OCP_RELEASE="4.6.1"
+export OCP_RELEASE="4.6.0"
 export LOCAL_REGISTRY='helper.cluster-0001.rhsacn.org:5000'
 export LOCAL_REPOSITORY='ocp4/openshift4'
 export PRODUCT_REPO='openshift-release-dev'
@@ -212,6 +212,9 @@ export LOCAL_SECRET_JSON="${HOME}/pull-secret-2.json"
 export RELEASE_NAME='ocp-release'
 export ARCHITECTURE="x86_64"
 export REMOVABLE_MEDIA_PATH='/opt/registry'
+
+# 检查 release info
+oc adm release info quay.io/openshift-release-dev/ocp-release:4.6.1-x86_64
 
 oc adm -a ${LOCAL_SECRET_JSON} release mirror \
 --from=quay.io/${PRODUCT_REPO}/${RELEASE_NAME}:${OCP_RELEASE}-${ARCHITECTURE} \

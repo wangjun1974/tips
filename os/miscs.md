@@ -5395,3 +5395,8 @@ oc patch proxy/cluster \
      --type=merge \
      --patch='{"spec":{"trustedCA":{"name":"user-ca-bundle"}}}'
 ```
+
+### check release info
+```
+oc adm release info quay.io/openshift-release-dev/ocp-release:4.6.1-x86_64
+```

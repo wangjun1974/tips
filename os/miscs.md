@@ -5381,3 +5381,17 @@ https://docs.openshift.com/container-platform/4.6/operators/admin/olm-restricted
 
 ### 使用 mutating admission webhook 来调整应用
 https://medium.com/ovni/writing-a-very-basic-kubernetes-mutating-admission-webhook-398dbbcb63ec
+
+### 更新证书
+
+
+```
+
+oc create configmap user-ca-bundle --from-file=ca-bundle.crt=/opt/registry/certs/domain.crt -n openshift-config -o yaml --dry-run | oc replace -f -
+
+oc patch proxy.config.openshift.io/cluster -p '{"spec":{"trustedCA":{"name":"user-ca-bundle"}}}'  --type=merge
+
+oc patch proxy/cluster \
+     --type=merge \
+     --patch='{"spec":{"trustedCA":{"name":"user-ca-bundle"}}}'
+```

@@ -359,7 +359,7 @@ echo $TEMPDIR
 
 cd ${TEMPDIR}
 # Extract the ISO content using guestfish (to avoid sudo mount)
-guestfish -a ${NGINX_DIRECTORY}/rhcos-${RHCOSVERSION}-x86_64-installer.x86_64.iso \
+guestfish -a ${NGINX_DIRECTORY}/rhcos-${RHCOSVERSION}-x86_64-live.x86_64.iso \
   -m /dev/sda tar-out / - | tar xvf -
 
 # Helper function to modify the config files

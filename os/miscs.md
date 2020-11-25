@@ -5396,7 +5396,7 @@ oc patch proxy/cluster \
      --patch='{"spec":{"trustedCA":{"name":"user-ca-bundle"}}}'
 ```
 
-### check release info
+### check release sha256 info
 ```
 oc adm release info quay.io/openshift-release-dev/ocp-release:4.6.1-x86_64
 ...

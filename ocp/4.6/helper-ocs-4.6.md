@@ -351,8 +351,8 @@ systemctl start libvirtd
 
 cd /root
 export NGINX_DIRECTORY=/var/www/html
-export RHCOSVERSION=4.5.2
-export VOLID=$(isoinfo -d -i ${NGINX_DIRECTORY}/rhcos-${RHCOSVERSION}-x86_64-installer.x86_64.iso | awk '/Volume id/ { print $3 }')
+export RHCOSVERSION=4.6.1
+export VOLID=$(isoinfo -d -i ${NGINX_DIRECTORY}/rhcos-${RHCOSVERSION}-x86_64-live.x86_64.iso | awk '/Volume id/ { print $3 }')
 TEMPDIR=$(mktemp -d)
 echo $VOLID
 echo $TEMPDIR

@@ -448,7 +448,7 @@ for node in master-0 master-1 master-2 worker-0 worker-1 worker-2 bootstrap-stat
     /bin/cp -f $(pwd)/${node}_${file##*/} ${file}
   done
   # As regular user!
-  genisoimage -verbose -rock -J -joliet-long -volset ${VOLID} \
+  genisoimage -verbose -rock -J -joliet-long -V ${VOLID} -volset ${VOLID} \
     -eltorito-boot isolinux/isolinux.bin -eltorito-catalog isolinux/boot.cat \
     -no-emul-boot -boot-load-size 4 -boot-info-table \
     -eltorito-alt-boot -efi-boot images/efiboot.img -no-emul-boot \

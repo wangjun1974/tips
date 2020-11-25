@@ -577,6 +577,9 @@ oc -n openshift-kube-scheduler-operator logs $(oc get pods -n openshift-kube-sch
 # 检查 openshift-kube-apiserver-operator 日志
 oc -n openshift-kube-apiserver-operator logs $(oc get pods -n openshift-kube-apiserver-operator -o jsonpath='{ .items[*].metadata.name }')
 
+# 检查 openshift-authentication-operator 日志
+oc -n openshift-authentication-operator logs $(oc get pods -n openshift-authentication-operator -o jsonpath='{ .items[*].metadata.name }')
+
 # approve worker csr
 oc get nodes
 export KUBECONFIG=/root/ocp4/auth/kubeconfig

@@ -5399,4 +5399,10 @@ oc patch proxy/cluster \
 ### check release info
 ```
 oc adm release info quay.io/openshift-release-dev/ocp-release:4.6.1-x86_64
+...
+oc adm release info quay.io/openshift-release-dev/ocp-release:4.6.5-x86_64
+
+# 另外可以在以下网址查询
+# https://mirror.openshift.com/pub/openshift-v4/clients/ocp/4.6.1/release.txt
+# https://mirror.openshift.com/pub/openshift-v4/clients/ocp/4.6.5/release.txt
 ```

@@ -1723,3 +1723,55 @@ oc apply -f /tmp/ImageContentSourcePolicy.yaml
 # 等待 machineconfigpool 更新完成
 watch oc get mcp
 ```
+
+### 在安装 local storage operator 时遇到问题
+这个问题的报错与 https://bugzilla.redhat.com/show_bug.cgi?id=1886881 非常类似
+```
+oc describe installplan.operators.coreos.com/install-gczhc -n openshift-local-storage
+...
+Spec:
+  Approval:  Automatic
+  Approved:  true
+  Cluster Service Version Names:
+    local-storage-operator.4.6.0-202011041933.p0
+  Generation:  1
+Status:
+  Bundle Lookups:
+    Catalog Source Ref:
+      Name:       my-operator-catalog
+      Namespace:  openshift-marketplace
+    Conditions:
+      Message:               bundle contents have not yet been persisted to installplan status
+      Reason:                BundleNotUnpacked
+      Status:                True
+      Type:                  BundleLookupNotPersisted
+      Last Transition Time:  2020-11-26T08:41:44Z
+      Message:               unpack job not completed
+      Reason:                JobIncomplete
+      Status:                True
+      Type:                  BundleLookupPending
+    Identifier:              local-storage-operator.4.6.0-202011041933.p0
+    Path:                    registry.redhat.io/openshift4/ose-local-storage-operator-bundle@sha256:1af6285a93e85bedacff3ec53c10072403cf80039e12d9a79b90adf91401645e
+    Properties:              {"properties":[{"type":"olm.gvk","value":{"group":"local.storage.openshift.io","kind":"LocalVolume","version":"v1"}},{"type":"olm.gvk","value":{"group":"local.storage.openshift.io","kind":"LocalVolumeDiscovery","version":"v1alpha1"}},{"type":"olm.gvk","value":{"group":"local.storage.openshift.io","kind":"LocalVolumeDiscoveryResult","version":"v1alpha1"}},{"type":"olm.gvk","value":{"group":"local.storage.openshift.io","kind":"LocalVolumeSet","version":"v1alpha1"}},{"type":"olm.package","value":{"packageName":"local-storage-operator","version":"4.6.0-202011041933.p0"}}]}
+    Replaces:                
+  Catalog Sources:
+  Phase:  Installing
+Events:   <none>
+
+感觉是在之前安装的时候没有配置好 catalog image content source policy.
+
+# 首先找出 namespaces 下的所有对象
+# oc api-resources --verbs=list --namespaced -o name | xargs -n 1 oc get --show-kind --ignore-not-found -n openshift-local-storage | tee /tmp/err 
+# 
+# 然后过滤掉自定义 catalogsource
+# cat /tmp/err | grep -Ev "My Operator Catalog" 
+# 
+# 删除剩余对象
+# oc delete installplan.operators.coreos.com/install-gczhc -n openshift-local-storage
+# oc delete installplan.operators.coreos.com/install-zzrdt -n openshift-local-storage
+# oc delete subscription.operators.coreos.com/local-storage-operator -n openshift-local-storage
+# oc delete operatorgroup.operators.coreos.com/openshift-local-storage-v6d79 -n openshift-local-storage
+# oc delete project openshift-local-storage --wait=true --timeout=5m 
+
+# 然后再重新安装一下试试
+```

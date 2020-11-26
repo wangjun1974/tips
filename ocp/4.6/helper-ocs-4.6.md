@@ -850,6 +850,9 @@ EOF
 
 oc apply -f catalogsource.yaml
 
+# 按照 https://github.com/wangjun1974/tips/blob/master/ocp/operatorhub-disconnected.md 里的方法同步镜像
+# 生成 image-policy.txt 文件
+
 # 创建 /tmp/ImageContentSourcePolicy.yaml 文件
 cat <<EOF > /tmp/ImageContentSourcePolicy.yaml
 apiVersion: operator.openshift.io/v1alpha1

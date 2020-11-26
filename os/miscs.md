@@ -5406,3 +5406,21 @@ oc adm release info quay.io/openshift-release-dev/ocp-release:4.6.5-x86_64
 # https://mirror.openshift.com/pub/openshift-v4/clients/ocp/4.6.1/release.txt
 # https://mirror.openshift.com/pub/openshift-v4/clients/ocp/4.6.5/release.txt
 ```
+
+### 安装 image builder
+参考：https://developers.redhat.com/blog/2019/05/08/red-hat-enterprise-linux-8-image-builder-building-custom-system-images/
+```
+# 安装 image builder on rhel8
+yum install -y lorax-composer composer-cli cockpit-composer
+
+# 开启防火墙
+firewall-cmd --add-service=cockpit && firewall-cmd --add-service=cockpit --permanent
+firewall-cmd --list-services
+
+# 启用并且启动服务 
+# 有些步骤并不准确，需要进一步检验
+systemctl enable lorax-composer.socket
+systemctl enable cockpit.socke
+systemctl start lorax-composer
+systemctl start cockpit
+```

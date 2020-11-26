@@ -843,7 +843,7 @@ metadata:
   namespace: openshift-marketplace
 spec:
   sourceType: grpc
-  image: ${LOCAL_REGISTRY}/olm/redhat-operators:v1
+  image: ${LOCAL_REGISTRY}/redhat/redhat-operator-index:v4.6
   displayName: My Operator Catalog
   publisher: grpc
 EOF

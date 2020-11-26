@@ -5428,3 +5428,8 @@ systemctl enable cockpit.socket
 # 配置 composer-cli bash 补齐
 source  /etc/bash_completion.d/composer-cli
 ```
+
+### 查看 machine-config-operator 的日志
+```
+oc -n openshift-machine-config-operator logs $(oc get pods -n openshift-machine-config-operator -o jsonpath='{ range .items[*]}{.metadata.name}{"\n"}{end}' | grep machine-config-operator)
+```

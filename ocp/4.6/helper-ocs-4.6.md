@@ -1680,3 +1680,46 @@ for i in $(oc get node -l cluster.ocs.openshift.io/openshift-storage= -o jsonpat
 ```
 
 
+
+### 4.6 同步 local storage operator 和 ocs operator 的步骤
+```
+mkdir -p ./tmp
+
+> ./tmp/registry-images.lst
+
+echo "select * from related_image \
+    where operatorbundle_name like 'local-storage-operator.4.6.0%';"     | sqlite3 -line ./index.db | grep -o 'image =.*' | awk '{print $3}' > ./tmp/registry-images.lst
+
+# 补充上 ocs-operator 对应的镜像到同步镜像清单
+echo "select * from related_image \
+    where operatorbundle_name like 'ocs-operator.v4.5.2%';"     | sqlite3 -line ./index.db | grep -o 'image =.*' | awk '{print $3}' >> ./tmp/registry-images.lst
+
+# 基于同步镜像清单生成 mapping.txt 
+cat /dev/null > ./tmp/mapping.txt
+  for source in `cat ./tmp/registry-images.lst`; do  local=`echo $source|awk -F'@' '{print $1}'|sed 's|registry.redhat.io|helper.cluster-0001.rhsacn.org:5000|g'`   ; echo "$source=$local" >> ./tmp/mapping.txt; done
+
+# 生成 image-policy.txt
+cat /dev/null > ./tmp/image-policy.txt
+  for source in `cat ./tmp/registry-images.lst`; do  local=`echo $source|awk -F'@' '{print $1}'|sed 's/registry.redhat.io/helper.cluster-0001.rhsacn.org:5000/g'` ; mirror=`echo $source|awk -F'@' '{print $1}'`; echo "  - mirrors:" >> ./tmp/image-policy.txt; echo "    - $local" >> ./tmp/image-policy.txt; echo "    source: $mirror" >> ./tmp/image-policy.txt; done
+
+# 同步镜像到本地镜像仓库
+export LOCAL_SECRET_JSON=/root/pull-secret-2.json
+
+for source in `cat ./tmp/registry-images.lst`; do  local=`echo $source|awk -F'@' '{print $1}'|sed 's/registry.redhat.io/helper.cluster-0001.rhsacn.org:5000/g'`   ; 
+echo skopeo copy --format v2s2 --authfile ${LOCAL_SECRET_JSON} --all docker://$source docker://$local; skopeo copy --format v2s2 --authfile ${LOCAL_SECRET_JSON} --all docker://$source docker://$local; echo; done
+
+# 创建 ./tmp/ImageContentSourcePolicy.yaml 文件
+cat <<EOF > ./tmp/ImageContentSourcePolicy.yaml
+apiVersion: operator.openshift.io/v1alpha1
+kind: ImageContentSourcePolicy
+metadata:
+  name: redhat-operators
+spec:
+  repositoryDigestMirrors:
+$(cat ./tmp/image-policy.txt)
+EOF
+
+oc apply -f /tmp/ImageContentSourcePolicy.yaml
+# 等待 machineconfigpool 更新完成
+watch oc get mcp
+```

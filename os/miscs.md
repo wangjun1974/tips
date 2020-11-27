@@ -5600,3 +5600,25 @@ ls -l
 -rw-r--r--. 1 root root 655616000 Nov 27 07:05 9100b821-d987-43f8-9471-c39da13b7698-commit.tar
 
 ```
+### 如何格式化 Google Chat 消息
+https://support.google.com/chat/answer/7649118?hl=en
+
+### sample operator 日志 
+```
+
+# OpenShift 4.6 console 上有如下报错
+# 应该是没有同步这些 imagestream 的镜像到本地
+Samples operator is detecting problems with imagestream image imports. You can look at the "openshift-samples" ClusterOperator object for details. Most likely there are issues with the external image registry hosting the images that needs to be investigated. Or you can consider marking samples opertaor Removed if you do not care about having sample imagestreams available. The list of ImageStreams for which samples operator is retrying imports: apicast-gateway apicurito-ui dotnet dotnet-runtime eap-cd-openshift eap-cd-runtime-openshift fuse-apicurito-generator fuse7-console fuse7-eap-openshift fuse7-java-openshift fuse7-karaf-openshift golang httpd java jboss-eap72-openjdk11-openshift-rhel8 jboss-eap73-openjdk11-openshift jboss-eap73-openjdk11-runtime-openshift jboss-eap73-openshift jboss-eap73-runtime-openshift jboss-webserver53-openjdk11-tomcat9-openshift jboss-webserver53-openjdk8-tomcat9-openshift jenkins-agent-base mariadb mysql nginx nodejs perl php postgresql python redis rhdm-decisioncentral-rhel8 rhdm-kieserver-rhel8 rhpam-businesscentral-monitoring-rhel8 rhpam-businesscentral-rhel8 rhpam-kieserver-rhel8 rhpam-smartrouter-rhel8 ruby ubi8-openjdk-11 ubi8-openjdk-8
+
+# 查看一下 imagestream 的镜像
+for i in apicast-gateway apicurito-ui dotnet dotnet-runtime eap-cd-openshift eap-cd-runtime-openshift fuse-apicurito-generator fuse7-console fuse7-eap-openshift fuse7-java-openshift fuse7-karaf-openshift golang httpd java jboss-eap72-openjdk11-openshift-rhel8 jboss-eap73-openjdk11-openshift jboss-eap73-openjdk11-runtime-openshift jboss-eap73-openshift jboss-eap73-runtime-openshift jboss-webserver53-openjdk11-tomcat9-openshift jboss-webserver53-openjdk8-tomcat9-openshift jenkins-agent-base mariadb mysql nginx nodejs perl php postgresql python redis rhdm-decisioncentral-rhel8 rhdm-kieserver-rhel8 rhpam-businesscentral-monitoring-rhel8 rhpam-businesscentral-rhel8 rhpam-kieserver-rhel8 rhpam-smartrouter-rhel8 ruby ubi8-openjdk-11 ubi8-openjdk-8; do oc get is $i -n openshift -o jsonpath='{ range .spec.tags[*]}{.from.name}{"\n"}{end}' ; done 
+
+# 尝试同步这些镜像到本地镜像仓库
+for i in apicast-gateway apicurito-ui dotnet dotnet-runtime eap-cd-openshift eap-cd-runtime-openshift fuse-apicurito-generator fuse7-console fuse7-eap-openshift fuse7-java-openshift fuse7-karaf-openshift golang httpd java jboss-eap72-openjdk11-openshift-rhel8 jboss-eap73-openjdk11-openshift jboss-eap73-openjdk11-runtime-openshift jboss-eap73-openshift jboss-eap73-runtime-openshift jboss-webserver53-openjdk11-tomcat9-openshift jboss-webserver53-openjdk8-tomcat9-openshift jenkins-agent-base mariadb mysql nginx nodejs perl php postgresql python redis rhdm-decisioncentral-rhel8 rhdm-kieserver-rhel8 rhpam-businesscentral-monitoring-rhel8 rhpam-businesscentral-rhel8 rhpam-kieserver-rhel8 rhpam-smartrouter-rhel8 ruby ubi8-openjdk-11 ubi8-openjdk-8; do oc get is $i -n openshift -o jsonpath='{ range .spec.tags[*]}{.from.name}{"\n"}{end}' ; done | grep helper.cluster-0001.rhsacn.org:5000 | sed -e 's|helper.cluster-0001.rhsacn.org:5000/||' | tee ./tmp/sample-imageslist.txt
+
+# 
+
+# 同步镜像
+for i in `cat ./tmp/sample-imageslist.txt`; do oc image mirror -a ${LOCAL_SECRET_JSON} registry.redhat.io/$i ${LOCAL_REGISTRY}/$i; done
+
+```

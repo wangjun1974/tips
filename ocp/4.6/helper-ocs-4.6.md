@@ -1774,4 +1774,8 @@ Events:   <none>
 # oc delete project openshift-local-storage --wait=true --timeout=5m 
 
 # 然后再重新安装一下试试
+# 重装发现这种方法处理完之后，缺少 operator-bundle image
+# 追加 operator-bundle 到 ./tmp/registry-images.lst
+oc -n openshift-local-storage get installplan -o jsonpath='{ range .items[*]}{.status.bundleLookups[0].path }{"\n"}{end}' >> ./tmp/registry-images.lst
+
 ```

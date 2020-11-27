@@ -1685,12 +1685,20 @@ for i in $(oc get node -l cluster.ocs.openshift.io/openshift-storage= -o jsonpat
 ```
 mkdir -p ./tmp
 
+# 对于 4.6 来说 operator 相关的表除了 related_image 之外，还有 operatorbundle 这张表
+# 从 operatorbundle 这张表里取 operator-bundle 对应的镜像
+# 从 related_image 这张表里取 operator 对应的镜像
 > ./tmp/registry-images.lst
+echo "select * from operatorbundle \
+    where bundlepath like '%ocs%' and version='4.5.2';" | sqlite3 -line ./index.db  | grep -o 'bundlepath =.*' | awk '{print $3}' > ./tmp/registry-images.lst
 
 echo "select * from related_image \
-    where operatorbundle_name like 'local-storage-operator.4.6.0%';"     | sqlite3 -line ./index.db | grep -o 'image =.*' | awk '{print $3}' > ./tmp/registry-images.lst
+    where operatorbundle_name like 'local-storage-operator.4.6.0%';"     | sqlite3 -line ./index.db | grep -o 'image =.*' | awk '{print $3}' >> ./tmp/registry-images.lst
 
 # 补充上 ocs-operator 对应的镜像到同步镜像清单
+echo "select * from operatorbundle \
+    where bundlepath like '%ocs%' and version='4.5.2';" | sqlite3 -line ./index.db  | grep -o 'bundlepath =.*' | awk '{print $3}' >> ./tmp/registry-images.lst
+
 echo "select * from related_image \
     where operatorbundle_name like 'ocs-operator.v4.5.2%';"     | sqlite3 -line ./index.db | grep -o 'image =.*' | awk '{print $3}' >> ./tmp/registry-images.lst
 
@@ -1776,10 +1784,9 @@ Events:   <none>
 # 然后再重新安装一下试试
 # 重装发现这种方法处理完之后，缺少 operator-bundle image
 # 追加 operator-bundle 到 ./tmp/registry-images.lst
-oc -n openshift-local-storage get installplan -o jsonpath='{ range .items[*]}{.status.bundleLookups[0].path }{"\n"}{end}' >> ./tmp/registry-images.lst
-
 # 参考 jsonpath 语法
 # https://support.smartbear.com/alertsite/docs/monitors/api/endpoint/jsonpath.html
-oc -n openshift-local-storage get installplan -o jsonpath='{ range .items[0]}{.status.bundleLookups[0].path }{"\n"}{end}'
+oc -n openshift-local-storage get installplan -o jsonpath='{ range .items[0]}{.status.bundleLookups[0].path }{"\n"}{end}' >> ./tmp/registry-images.lst
 
+oc -n openshift-storage get installplan -o jsonpath='{ range .items[0]}{.status.bundleLookups[0].path }{"\n"}{end}' >> ./tmp/registry-images.lst
 ```

@@ -259,4 +259,7 @@ EOF
 
 oc create -f ocs-external-cluster.yaml
 
+# 检查 ocs operator 日志
+oc -n openshift-storage logs $( oc -n openshift-storage get pods -o jsonpath='{ range .items[*]}{.metadata.name }{"\n"}' | grep ocs-operator)
+
 ```

@@ -5590,4 +5590,13 @@ composer-cli compose log $(composer-cli compose status | awk '{print $1}')
 
 # osbuild-composer 相关运行时文件
 find /var/lib/osbuild-composer
+
+# 当 compose 状态变成 FINISHED 之后，下载 image
+# 下载位置为 /var/lib/osbuild-composer/composer/results/<UUID>/compose/
+composer-cli compose image $(composer-cli compose status | awk '{print $1}')
+
+# 在工作目录下生成了格式为 UUID-commit.tar 的文件
+ls -l
+-rw-r--r--. 1 root root 655616000 Nov 27 07:05 9100b821-d987-43f8-9471-c39da13b7698-commit.tar
+
 ```

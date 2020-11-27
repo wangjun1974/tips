@@ -1778,4 +1778,7 @@ Events:   <none>
 # 追加 operator-bundle 到 ./tmp/registry-images.lst
 oc -n openshift-local-storage get installplan -o jsonpath='{ range .items[*]}{.status.bundleLookups[0].path }{"\n"}{end}' >> ./tmp/registry-images.lst
 
+# 参考 jsonpath 语法
+# https://support.smartbear.com/alertsite/docs/monitors/api/endpoint/jsonpath.html
+oc -n openshift-local-storage get installplan -o jsonpath='{ [0].status.bundleLookups[0].path }{"\n"}'
 ```

@@ -5577,9 +5577,17 @@ yum-config-manager --disable epel
 yum-config-manager --disable epel-modular
 
 
-# 生成 image
+# 生成 compose image
 composer-cli compose start blueprint_test_rhel_for_edge rhel-edge-commit
-2020-11-27 05:52:34,467: RHSM secrets not found on host
 
+# 检查 compose 状态
+composer-cli compose status
+9100b821-d987-43f8-9471-c39da13b7698 RUNNING  Fri Nov 27 06:49:23 2020 blueprint_test_rhel_for_edge 0.0.2 rhel-edge-commit 
 
+# 检查 compose info 和 日志
+composer-cli compose info $(composer-cli compose status | awk '{print $1}')
+composer-cli compose log $(composer-cli compose status | awk '{print $1}')
+
+# osbuild-composer 相关运行时文件
+find /var/lib/osbuild-composer
 ```

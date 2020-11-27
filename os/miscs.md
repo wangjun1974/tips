@@ -5436,3 +5436,33 @@ oc -n openshift-machine-config-operator logs $(oc get pods -n openshift-machine-
 # 查看 machine-config-operator 里的每个 pod 的日志
 oc get pods -n openshift-machine-config-operator -o jsonpath='{ range .items[*]}{.metadata.name}{"\n"}{end}' | while read pods ; do echo ${pods}; oc -n openshift-machine-config-operator logs ${pods} ; echo ; done
 ```
+
+### Building a RHEL gold image for Azure
+https://redhatsummitlabs.gitlab.io/building-a-rhel-gold-image-for-azure/
+
+### 如何启用 cockpit 的 debug 模式
+https://access.redhat.com/solutions/3387651
+
+具体步骤在 RHEL 8 上还没有实验过
+```
+# 生成 cockpit 配置目录
+mkdir -p /etc/systemd/system/cockpit.service.d
+
+# 生成 debug.conf
+printf '[Service]\nEnvironment=G_MESSAGES_DEBUG=cockpit-ws,cockpit-bridge\nUser=root\nGroup=\n' > /etc/systemd/system/cockpit.service.d/debug.conf
+
+# 重新加载并重启 cockpit
+systemctl daemon-reload
+systemctl restart cockpit
+
+# 查看 cockpit debug 日志
+journalctl -u cockpit.service
+
+# 禁用 cockpit debug 的步骤
+# 删除 debug.conf
+rm /etc/systemd/system/cockpit.service.d/debug.conf
+
+# 重新加载并重启 cockpit
+systemctl daemon-reload
+systemctl restart cockpit
+```

@@ -5599,6 +5599,56 @@ composer-cli compose image $(composer-cli compose status | awk '{print $1}')
 ls -l
 -rw-r--r--. 1 root root 655616000 Nov 27 07:05 9100b821-d987-43f8-9471-c39da13b7698-commit.tar
 
+# 拷贝 UUID-commit.tar 到另外一台主机
+mkdir -p /var/www/html/rhel-for-edge
+mv /root/9100b821-d987-43f8-9471-c39da13b7698-commit.tar /var/www/html/rhel-for-edge/
+
+# 切换工作目录到 /var/www/html/rhel-for-edge
+pushd /var/www/html/rhel-for-edge
+
+# 解压缩 
+tar xvf 9100b821-d987-43f8-9471-c39da13b7698-commit.tar
+
+# 列出解压缩后的文件及目录
+#  - compose.json 文件
+#  - repo 目录
+ls -ltr
+total 640256
+-rw-r--r--. 1 root root 655616000 Nov 30 10:48 9100b821-d987-43f8-9471-c39da13b7698-commit.tar
+-rw-r--r--. 1 root root       530 Nov 27 14:57 compose.json
+drwxr-xr-x. 7 root root       134 Nov 27 14:57 repo
+
+# 根据 compose.json 文件可以获取 ref 和 ostree-commit
+# ref: rhel/8/x86_64/edge
+# ostree-commit: b51ade2ec4700d27dd8858cb8f98930afbcdc346ff3a219204bff296178a94d5
+cat compose.json | jq . 
+{
+  "ref": "rhel/8/x86_64/edge",
+  "ostree-n-metadata-total": 9999,
+  "ostree-n-metadata-written": 3617,
+  "ostree-n-content-total": 28768,
+  "ostree-n-content-written": 24502,
+  "ostree-n-cache-hits": 0,
+  "ostree-content-bytes-written": 1444849186,
+  "ostree-commit": "b51ade2ec4700d27dd8858cb8f98930afbcdc346ff3a219204bff296178a94d5",
+  "ostree-content-checksum": "ac7a78905e6235186d09822134ee93852da5eeda8f400f2e8a82adf444f2d3a9",
+  "ostree-timestamp": "2020-11-27T06:57:01Z",
+  "rpm-ostree-inputhash": "725127140606eb8adce222a38ad3340d38b5e7655680dcd2d797d0058b3b8a87"
+}
+
+# 检查 commit 里包含的 rpm
+rpm-ostree db list rhel/8/x86_64/edge --repo=repo
+ostree commit: rhel/8/x86_64/edge (b51ade2ec4700d27dd8858cb8f98930afbcdc346ff3a219204bff296178a94d5)
+ ModemManager-1.10.8-2.el8.x86_64
+ ...
+ zlib-1.2.11-16.el8_2.x86_64
+
+
+# 参考 fedora atomic 的安装方式
+# 参考 https://www.projectatomic.io/docs/fedora_atomic_bare_metal_installation/
+
+
+
 ```
 ### 如何格式化 Google Chat 消息
 https://support.google.com/chat/answer/7649118?hl=en
@@ -5634,5 +5684,20 @@ for i in `cat ./tmp/sample-imageslist.txt`; do oc image mirror -a ${LOCAL_SECRET
 |PPS|Production Planning & Scheduling|生产计划调度系统||
 |MES|Manufacturing Execution System|制造执行系统||
 |PLM|Product Lifecycle Management|产品生命周期管理系统||
+|ERP|Enterprise Resource Planning|企业资源计划系统||
 
 
+### 如何采用 red hat subcsription entitlement 启用 repo 安装所需软件
+https://docs.openshift.com/container-platform/4.1/builds/running-entitled-builds.html
+
+```
+需要拷贝的文件包括
+ /etc/pki/entitlement/
+ /etc/rhsm/ca
+
+```
+
+另外类似的文章还包括
+https://success.mirantis.com/article/how-to-pass-red-hat-enterprise-linux-entitlements-to-a-container
+
+https://developers.redhat.com/blog/2019/05/31/working-with-red-hat-enterprise-linux-universal-base-images-ubi/

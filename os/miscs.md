@@ -5845,5 +5845,5 @@ EOF
 
 podman build . -t mkksiso:latest
 
-podman run -rm -ti mkksiso:latest /bin/bash
+podman run -rm -ti mkksiso:latest
 ```

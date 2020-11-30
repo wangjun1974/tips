@@ -5651,12 +5651,13 @@ ostree commit: rhel/8/x86_64/edge (b51ade2ec4700d27dd8858cb8f98930afbcdc346ff3a2
 # 参考 https://github.com/osbuild/rhel-for-edge-demo
 # 生成 edge.ks 文件
 
-# 制作启动 iso 
+# 制作启动 iso（可选）
 # 这个命令在 RHEL8 上没有
 # 这个命令在 fedora 里有
-mkksiso edge.ks rhel-8.3-x86_64-boot.iso boot.iso
+# mkksiso edge.ks rhel-8.3-x86_64-boot.iso boot.iso
 
 # 安装 rhel for edge
+# 用 virt-install 可以通过 --initrd-inject 和 --extra-args 传递 kickstart 文件
 virt-install --name="jwang-rhel-for-edge" --vcpus=2 --ram=4096 \
 --disk path=/data/kvm/jwang-rhel-for-edge-01.qcow2,bus=virtio,size=20 \
 --os-variant rhel8.0 --network network=openshift4v6,model=virtio \

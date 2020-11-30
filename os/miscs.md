@@ -5652,9 +5652,16 @@ ostree commit: rhel/8/x86_64/edge (b51ade2ec4700d27dd8858cb8f98930afbcdc346ff3a2
 # 生成 edge.ks 文件
 
 # 制作启动 iso 
+# 这个命令在 RHEL8 上没有
+# 这个命令在 fedora 里有
 mkksiso edge.ks rhel-8.3-x86_64-boot.iso boot.iso
 
-
+# 安装 rhel for edge
+virt-install --name="jwang-rhel-for-edge" --vcpus=2 --ram=4096 \
+--disk path=/data/kvm/jwang-rhel-for-edge-01.qcow2,bus=virtio,size=20 \
+--os-variant rhel8.0 --network network=openshift4v6,model=virtio \
+--boot menu=on --location /var/www/html/rhel-for-edge-repo/rhel-8.3-x86_64-boot.iso \
+--initrd-inject /tmp/edge.ks --extra-args='ks=file:/edge.ks'
 ```
 ### 如何格式化 Google Chat 消息
 https://support.google.com/chat/answer/7649118?hl=en
@@ -5830,7 +5837,21 @@ systemctl enable podman-auto-update.timer container-boinc.service
 %end
 EOFEOF
 
+# 测试使用简单一些的kickstart文件
+cat > /tmp/edge.ks << 'EOFEOF'
+lang en_US.UTF-8
+keyboard us
+timezone UTC
+zerombr
+clearpart --all --initlabel
+autopart --type=plain --fstype=xfs --nohome
+reboot
+text
+network --bootproto=static --device=ens3 --ip=192.168.8.111 --netmask 255.255.255.0 --gateway=192.168.8.1 --hostname=jwangtest.example.com
+user --name=core --groups=wheel --password=edge
 
+ostreesetup --nogpg --url=http://192.168.8.11:8080/rhel-for-edge-repo/ --osname=rhel --remote=edge --ref=rhel/8/x86_64/edge
+EOFEOF
 ```
 
 
@@ -5845,5 +5866,5 @@ EOF
 
 podman build . -t mkksiso:latest
 
-podman run -rm -ti mkksiso:latest
+podman run -rm -ti mkksiso:latestf
 ```

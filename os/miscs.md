@@ -5647,6 +5647,12 @@ ostree commit: rhel/8/x86_64/edge (b51ade2ec4700d27dd8858cb8f98930afbcdc346ff3a2
 # 参考 fedora atomic 的安装方式
 # 参考 https://www.projectatomic.io/docs/fedora_atomic_bare_metal_installation/
 
+# 真正需要借鉴的内容应来自
+# 参考 https://github.com/osbuild/rhel-for-edge-demo
+# 生成 edge.ks 文件
+
+# 制作启动 iso 
+mkksiso edge.ks rhel-8.3-x86_64-boot.iso boot.iso
 
 
 ```
@@ -5713,7 +5719,7 @@ mkdir -p /var/www/html/rhel-for-edge-repo
 pushd /var/www/html/rhel-for-edge-repo
 
 # 生成 kickstart 文件
-cat > edge.ks << 'EOF'
+cat > edge.ks << 'EOFEOF'
 lang en_US.UTF-8
 keyboard us
 timezone UTC
@@ -5822,7 +5828,22 @@ mkdir -p /opt/appdata/boinc/slots /opt/appdata/boinc/locale
 
 systemctl enable podman-auto-update.timer container-boinc.service
 %end
+EOFEOF
+
+
+```
+
+
+### 如何在系统上用容器的方式，运行 mkksiso 工具
+这个话题有待探索
+
+```
+cat > Dockerfile << EOF
+FROM registry.redhat.io/ubi7/ubi
+ENTRYPOINT ["/bin/bash"]
 EOF
 
+podman build . -t mkksiso:latest
 
+podman run -rm -ti mkksiso:latest /bin/bash
 ```

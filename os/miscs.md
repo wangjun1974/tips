@@ -5850,7 +5850,7 @@ text
 network --bootproto=static --device=ens3 --ip=192.168.8.111 --netmask 255.255.255.0 --gateway=192.168.8.1 --hostname=jwangtest.example.com
 user --name=core --groups=wheel --password=edge
 
-ostreesetup --nogpg --url=http://192.168.8.11:8080/rhel-for-edge-repo/ --osname=rhel --remote=edge --ref=rhel/8/x86_64/edge
+ostreesetup --nogpg --url=http://192.168.8.11:8080/rhel-for-edge-repo/ --osname=rhel --ref=rhel/8/x86_64/edge
 EOFEOF
 ```
 
@@ -5867,4 +5867,26 @@ EOF
 podman build . -t mkksiso:latest
 
 podman run -rm -ti mkksiso:latestf
+```
+
+### ostreesetup 的参数
+参见：
+https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/8/html/performing_an_advanced_rhel_installation/kickstart-commands-and-options-reference_installing-rhel-as-an-experienced-user
+
+
+```
+syntax
+  ostreesetup --osname=OSNAME [--remote=REMOTE] --url=URL --ref=REF [--nogpg]
+
+Mandatory options:
+  --osname=OSNAME - Management root for OS installation.
+  --url=URL - URL of the repository to install from.
+  --ref=REF - Name of the branch from the repository to be used for installation.
+
+Optional options:
+  --remote=REMOTE - Management root for OS installation.
+  --nogpg - Disable GPG key verification.
+
+ostreesetup --nogpg --url=http://192.168.8.11:8080/rhel-for-edge-repo/ --osname=rhel --remote=edge --ref=rhel/8/x86_64/edge
+
 ```

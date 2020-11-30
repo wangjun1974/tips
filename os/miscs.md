@@ -5577,7 +5577,7 @@ yum-config-manager --disable epel
 yum-config-manager --disable epel-modular
 
 
-# 生成 compose image
+# 生成 compose image，image 类型为 rhel-edge-commit
 composer-cli compose start blueprint_test_rhel_for_edge rhel-edge-commit
 
 # 检查 compose 状态

@@ -5850,7 +5850,7 @@ text
 network --bootproto=static --device=ens3 --ip=192.168.8.111 --netmask 255.255.255.0 --gateway=192.168.8.1 --hostname=jwangtest.example.com
 user --name=core --groups=wheel --password=edge
 
-ostreesetup --nogpg --url=http://192.168.8.11:8080/rhel-for-edge-repo/ --osname=rhel --ref=rhel/8/x86_64/edge
+ostreesetup --nogpg --url=http://192.168.8.11:8080/rhel-for-edge-repo/repo/ --osname=rhel --remote=edge --ref=rhel/8/x86_64/edge
 EOFEOF
 ```
 
@@ -5887,6 +5887,42 @@ Optional options:
   --remote=REMOTE - Management root for OS installation.
   --nogpg - Disable GPG key verification.
 
-ostreesetup --nogpg --url=http://192.168.8.11:8080/rhel-for-edge-repo/ --osname=rhel --remote=edge --ref=rhel/8/x86_64/edge
+ostreesetup --nogpg --url=http://192.168.8.11:8080/rhel-for-edge-repo/repo/ --osname=rhel --remote=edge --ref=rhel/8/x86_64/edge
+
+```
+
+
+```
+报错信息
+09:08:54,889 INF payload.rpmostreepayload: executing ostreesetup=<pykickstart.commands.ostreesetup.RHEL8_OSTreeSetup object at 0x7f30a7d87860>
+09:08:55,594 ERR payload.rpmostreepayload: Failed to pull from repository: g-io-error-quark: Server returned HTTP 404 (1)
+09:08:55,596 DBG simpleline: New signal SendMessageSignal enqueued with source TextUserInterface
+09:08:56,570 DBG simpleline: Pushing modal screen IpmiErrorDialog to stack
+09:08:56,574 DBG simpleline: Executing inner loop
+09:08:56,575 DBG simpleline: New signal RenderScreenSignal enqueued with source ScreenScheduler
+09:08:56,576 DBG simpleline: Processing screen ScreenData(IpmiErrorDialog,None,True)
+09:08:56,580 DBG simpleline: Input is required by ScreenData(IpmiErrorDialog,None,True) screen
+```
+
+参考内容
+https://github.com/rhinstaller/anaconda/blob/master/pyanaconda/payload/rpmostreepayload.py
+https://docs.fedoraproject.org/en-US/fedora-silverblue/_attachments/silverblue-cheatsheet.pdf
+
+```
+Build a rhel for edge web server
+
+cat > Dockerfile << 'EOF'
+FROM registry.access.redhat.com/ubi8/ubi
+RUN yum -y install httpd && yum clean all
+ADD edge.ks /var/www/html/
+ARG commit=commit.tar
+ADD $commit /var/www/html/
+EXPOSE 80
+CMD ["/usr/sbin/httpd", "-D", "FOREGROUND"]
+EOF
+
+iptables -I INPUT 1 -m state --state NEW -m tcp -p tcp --dport 8000 -j ACCEPT
+podman run --name edge-server -d -p 8000:80 edge-server
+
 
 ```

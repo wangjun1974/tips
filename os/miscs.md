@@ -5622,3 +5622,17 @@ for i in apicast-gateway apicurito-ui dotnet dotnet-runtime eap-cd-openshift eap
 for i in `cat ./tmp/sample-imageslist.txt`; do oc image mirror -a ${LOCAL_SECRET_JSON} registry.redhat.io/$i ${LOCAL_REGISTRY}/$i; done
 
 ```
+
+
+### 制造与边缘计算术语
+
+|缩写|英文全称|中文全称|备注|
+|---|---|---|---|
+|PLC|Programmable Logic Controller|可编程控制器||
+|HMI|Human Machine Interface|人机接口||
+|SCADA|Supervisory Control and Data Acquisition|数据采集和监视控制系统||
+|PPS|Production Planning & Scheduling|生产计划调度系统||
+|MES|Manufacturing Execution System|制造执行系统||
+|PLM|Product Lifecycle Management|产品生命周期管理系统||
+
+

@@ -5708,7 +5708,11 @@ https://developers.redhat.com/blog/2019/05/31/working-with-red-hat-enterprise-li
 https://github.com/osbuild/rhel-for-edge-demo/blob/master/edge2.ks
 
 ```
+# 创建测试目录
+mkdir -p /var/www/html/rhel-for-edge-repo
 pushd /var/www/html/rhel-for-edge-repo
+
+# 生成 kickstart 文件
 cat > edge.ks << 'EOF'
 lang en_US.UTF-8
 keyboard us
@@ -5819,4 +5823,6 @@ mkdir -p /opt/appdata/boinc/slots /opt/appdata/boinc/locale
 systemctl enable podman-auto-update.timer container-boinc.service
 %end
 EOF
+
+
 ```

@@ -5739,7 +5739,7 @@ text
 network --bootproto=static --device=ens3 --ip=192.168.8.111 --netmask 255.255.255.0 --gateway=192.168.8.1 --hostname=jwangtest.example.com
 user --name=core --groups=wheel --password=edge
 
-ostreesetup --nogpg --url=http://192.168.8.11:8080/rhel-for-edge-repo/ --osname=rhel --remote=edge --ref=rhel/8/x86_64/edge
+ostreesetup --nogpg --url=http://192.168.8.11:8080/rhel-for-edge-repo/repo/ --osname=rhel --remote=edge --ref=rhel/8/x86_64/edge
 %post
 
 #stage updates as they become available. This is highly recommended

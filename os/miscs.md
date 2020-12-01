@@ -5703,9 +5703,12 @@ composer-cli blueprints push blueprint_test_rhel_for_edge.toml
 # 查看 blueprints 变更历史
 composer-cli blueprints changes blueprint_test_rhel_for_edge
 
-# 生成 compose image，image 类型为 rhel-edge-commit
-composer-cli compose start blueprint_test_rhel_for_edge rhel-edge-commit
-Compose 4d7a5813-bb9e-403b-bd7b-28ee11402163 added to the queue
+# 生成 compose image
+# image 类型为 rhel-edge-commit
+# parent 为 rpm-ostree status 输出
+# 参考：https://weldr.io/lorax/composer-cli.html
+composer-cli compose start-ostree --parent b51ade2ec4700d27dd8858cb8f98930afbcdc346ff3a219204bff296178a94d5 blueprint_test_rhel_for_edge rhel-edge-commit
+Compose 2d09f4f3-fc22-4bec-adc6-5f94aa779b12 added to the queue
 
 # 检查 compose info 和 日志
 version="0.0.3"

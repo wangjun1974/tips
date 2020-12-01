@@ -5774,6 +5774,9 @@ https://developers.redhat.com/blog/2019/05/31/working-with-red-hat-enterprise-li
 参考这个链接
 https://github.com/osbuild/rhel-for-edge-demo/blob/master/edge2.ks
 
+关于定制化可以参考这个链接
+https://weldr.io/User-Configuration-With-Blueprints/
+
 ```
 # 创建测试目录
 mkdir -p /var/www/html/rhel-for-edge-repo

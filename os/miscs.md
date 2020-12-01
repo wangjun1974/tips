@@ -6055,4 +6055,9 @@ version = "0.0.1"
 modules = [ ]
 groups = [ ]
 EOF
+
+composer-cli blueprints push rhel-for-edge-demo.toml
+composer-cli blueprints list
+
+
 ```

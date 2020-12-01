@@ -6006,3 +6006,7 @@ podman run --name edge-server -d -p 8000:80 edge-server
 https://www.redhat.com/sysadmin/pxe-boot-uefi
 
 
+### rsync 时指定 ssh key 来进行身份认证
+```
+rsync -Pav -e "ssh -i $HOME/.ssh/somekey" username@hostname:/from/dir/ /to/dir/
+```

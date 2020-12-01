@@ -6186,3 +6186,10 @@ name = "root"
 key = "${ssh_key}"
 EOF
 ```
+
+### 从 deployment 上删除 requests / limits 约束
+参考：https://labs.consol.de/development/2019/04/08/oc-patch-unleashed.html
+```
+oc patch deployment rook-ceph-rgw-ocs-storagecluster-cephobjectstore-b -n openshift-storage --type json -p '[{ "op": "remove", "path": "/spec/template/spec/containers/0/resources/limits" }]'
+oc patch deployment rook-ceph-rgw-ocs-storagecluster-cephobjectstore-b -n openshift-storage --type json -p '[{ "op": "remove", "path": "/spec/template/spec/containers/0/resources/requests" }]'
+```

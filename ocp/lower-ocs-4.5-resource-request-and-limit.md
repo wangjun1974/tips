@@ -32,8 +32,15 @@ oc patch pod rook-ceph-rgw-ocs-storagecluster-cephobjectstore-b-6886cc8dhnlp -n 
 oc patch pod rook-ceph-rgw-ocs-storagecluster-cephobjectstore-b-6886cc8dhnlp -n openshift-storage --type=merge --patch='{"spec": {"containers": {"resources": {"limits": {"memory": "'${memory_limit}'"}}}}}'
 oc patch pod rook-ceph-rgw-ocs-storagecluster-cephobjectstore-b-6886cc8dhnlp -n openshift-storage --type=merge --patch='{"spec": {"containers": {"resources": {"requests": {"memory": "'${memory_request}'"}}}}}'
 
+# following command could remove requests/limits from pod and deployment but rgw still in pending status
+oc patch deployment rook-ceph-rgw-ocs-storagecluster-cephobjectstore-b -n openshift-storage --type json -p '[{ "op": "remove", "path": "/spec/template/spec/containers/0/resources/limits" }]'
+oc patch deployment rook-ceph-rgw-ocs-storagecluster-cephobjectstore-b -n openshift-storage --type json -p '[{ "op": "remove", "path": "/spec/template/spec/containers/0/resources/requests" }]'
+
+oc patch pod rook-ceph-rgw-ocs-storagecluster-cephobjectstore-b-678c5c8tcqcg -n openshift-storage --type json -p '[{ "op": "remove", "path": "/spec/containers/0/resources/limits" }]'
+oc patch pod rook-ceph-rgw-ocs-storagecluster-cephobjectstore-b-678c5c8tcqcg -n openshift-storage --type json -p '[{ "op": "remove", "path": "/spec/containers/0/resources/requests" }]'
 
 
+# original methods 
 # patch ocs cpu request and limit 
 oc patch StorageCluster ocs-storagecluster -n openshift-storage --type=merge --patch='{"spec":{"resources":{"mds": {"Limit": {"cpu": "500m"}}}}}'
 oc patch StorageCluster ocs-storagecluster -n openshift-storage --type=merge --patch='{"spec":{"resources":{"mds": {"Request": {"cpu": "500m"}}}}}'

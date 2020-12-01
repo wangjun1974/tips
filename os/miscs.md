@@ -6016,3 +6016,29 @@ https://www.redhat.com/sysadmin/pxe-boot-uefi
 ```
 rsync -Pav -e "ssh -i $HOME/.ssh/somekey" username@hostname:/from/dir/ /to/dir/
 ```
+
+### 检查 machineconfig 里包含哪些文件
+```
+# 使用命令 oc get machineconfig 获取相关内容
+oc get machineconfig 00-master -o jsonpath='{ range .spec.config.storage.files[*] }{ .path }{"\n"}{ end }'
+/etc/pki/ca-trust/source/anchors/openshift-config-user-ca-bundle.crt
+/etc/tmpfiles.d/cleanup-cni.conf
+/etc/kubernetes/static-pod-resources/configmaps/cloud-config/ca-bundle.pem
+/usr/local/bin/configure-ovs.sh
+/etc/containers/storage.conf
+/etc/NetworkManager/dispatcher.d/90-long-hostname
+/etc/systemd/system.conf.d/10-default-env-godebug.conf
+/etc/kubernetes/static-pod-resources/etcd-member/root-ca.crt
+/etc/modules-load.d/iptables.conf
+/etc/kubernetes/kubelet-ca.crt
+/etc/systemd/system.conf.d/kubelet-cgroups.conf
+/etc/NetworkManager/conf.d/sdn.conf
+/var/lib/kubelet/config.json
+/etc/kubernetes/manifests/recycler-pod.yaml
+/etc/kubernetes/ca.crt
+/etc/sysctl.d/forward.conf
+/etc/sysctl.d/inotify.conf
+/usr/local/bin/recover-kubeconfig.sh
+/usr/local/sbin/set-valid-hostname.sh
+/etc/kubernetes/kubelet-plugins/volume/exec/.dummy
+```

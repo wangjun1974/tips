@@ -6000,3 +6000,9 @@ podman run --name edge-server -d -p 8000:80 edge-server
     ]
   }  
 ```
+
+### How to set up PXE boot for UEFI hardware
+如何为 UEFI 硬件设置 PXE boot 启动
+https://www.redhat.com/sysadmin/pxe-boot-uefi
+
+

@@ -19,6 +19,21 @@ do
 done
 
 
+# rgw pod has limits/requests but i don't find method to correct it
+# bellow commands not works 
+cpu_limit="500m"
+cpu_request="500m"
+memory_limit="512Mi"
+memory_request="512Mi"
+
+oc patch pod rook-ceph-rgw-ocs-storagecluster-cephobjectstore-b-6886cc8dhnlp -n openshift-storage --type=merge --patch='{"spec": {"containers": {"resources": {"limits": {"cpu": "'${cpu_limit}'"}}}}}'
+oc patch pod rook-ceph-rgw-ocs-storagecluster-cephobjectstore-b-6886cc8dhnlp -n openshift-storage --type=merge --patch='{"spec": {"containers": {"resources": {"requests": {"cpu": "'${cpu_request}'"}}}}}'
+
+oc patch pod rook-ceph-rgw-ocs-storagecluster-cephobjectstore-b-6886cc8dhnlp -n openshift-storage --type=merge --patch='{"spec": {"containers": {"resources": {"limits": {"memory": "'${memory_limit}'"}}}}}'
+oc patch pod rook-ceph-rgw-ocs-storagecluster-cephobjectstore-b-6886cc8dhnlp -n openshift-storage --type=merge --patch='{"spec": {"containers": {"resources": {"requests": {"memory": "'${memory_request}'"}}}}}'
+
+
+
 # patch ocs cpu request and limit 
 oc patch StorageCluster ocs-storagecluster -n openshift-storage --type=merge --patch='{"spec":{"resources":{"mds": {"Limit": {"cpu": "500m"}}}}}'
 oc patch StorageCluster ocs-storagecluster -n openshift-storage --type=merge --patch='{"spec":{"resources":{"mds": {"Request": {"cpu": "500m"}}}}}'

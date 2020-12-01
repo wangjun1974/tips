@@ -11,11 +11,11 @@ memory_request="512Mi"
 
 for service in mds mgr mon osd noobaa-core noobaa-db rgw prepareosd crashcollector cleanup
 do
-  echo oc patch StorageCluster ocs-storagecluster -n openshift-storage --type=merge --patch='{"spec":{"resources":{"'${service}'": {"Limit": {"cpu": "'${cpu_limit}'"}}}}}'
-  echo oc patch StorageCluster ocs-storagecluster -n openshift-storage --type=merge --patch='{"spec":{"resources":{"'${service}'": {"Request": {"cpu": "'${cpu_request}'"}}}}}'
+  oc patch StorageCluster ocs-storagecluster -n openshift-storage --type=merge --patch='{"spec":{"resources":{"'${service}'": {"Limit": {"cpu": "'${cpu_limit}'"}}}}}'
+  oc patch StorageCluster ocs-storagecluster -n openshift-storage --type=merge --patch='{"spec":{"resources":{"'${service}'": {"Request": {"cpu": "'${cpu_request}'"}}}}}'
 
-  echo oc patch StorageCluster ocs-storagecluster -n openshift-storage --type=merge --patch='{"spec":{"resources":{"'${service}'": {"Limit": {"memory": "'${memory_limit}'"}}}}}'
-  echo oc patch StorageCluster ocs-storagecluster -n openshift-storage --type=merge --patch='{"spec":{"resources":{"'${service}'": {"Request": {"memory": "'${memory_request}'"}}}}}'  
+  oc patch StorageCluster ocs-storagecluster -n openshift-storage --type=merge --patch='{"spec":{"resources":{"'${service}'": {"Limit": {"memory": "'${memory_limit}'"}}}}}'
+  oc patch StorageCluster ocs-storagecluster -n openshift-storage --type=merge --patch='{"spec":{"resources":{"'${service}'": {"Request": {"memory": "'${memory_request}'"}}}}}'  
 done
 
 

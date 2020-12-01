@@ -5719,6 +5719,82 @@ composer-cli compose log $(composer-cli compose status | grep $version | awk '{p
 version="0.0.3"
 composer-cli compose image $(composer-cli compose status | grep $version | awk '{print $1}')
 
+# 将更新的 image 拷贝到 web 服务器上
+
+# 在 rhel for edge 服务器上查看可用更新
+rpm-ostree status -v 
+# 如果没有可用更新，则检查更新
+rpm-ostree upgrade --check
+
+note: automatic updates (stage) are enabled
+==== AUTHENTICATING FOR org.projectatomic.rpmostree1.upgrade ====
+Authentication is required to update software
+Multiple identities can be used for authentication:
+ 1.  admin
+ 2.  core
+Choose identity to authenticate as (1-2): 2
+Password: 
+==== AUTHENTICATION COMPLETE ====
+2 metadata, 0 content objects fetched; 15 KiB transferred in 0 seconds; 0 bytes content written
+AvailableUpdate:
+      Timestamp: 2020-12-01T06:27:25Z
+         Commit: 00513ef74be3018bf3c5eb7c3e1fdb2849d9d623ce74b6d1d611f71dd3be025d
+# 这个时候再次检查，应该可以检查到可用更新了
+rpm-ostree status -v 
+State: idle
+AutomaticUpdates: stage; rpm-ostreed-automatic.timer: inactive
+Deployments:
+* ostree://edge:rhel/8/x86_64/edge
+                 Timestamp: 2020-11-27T06:57:01Z
+                    Commit: b51ade2ec4700d27dd8858cb8f98930afbcdc346ff3a219204bff296178a94d5
+                    Staged: no
+                 StateRoot: rhel
+
+AvailableUpdate:
+      Timestamp: 2020-12-01T06:27:25Z
+         Commit: 00513ef74be3018bf3c5eb7c3e1fdb2849d9d623ce74b6d1d611f71dd3be025d
+
+# 更新 update 到 stage
+rpm-ostree update 
+
+note: automatic updates (stage) are enabled
+==== AUTHENTICATING FOR org.projectatomic.rpmostree1.upgrade ====
+Authentication is required to update software
+Multiple identities can be used for authentication:
+ 1.  admin
+ 2.  core
+Choose identity to authenticate as (1-2): 2 
+Password: 
+==== AUTHENTICATION COMPLETE ====
+Staging deployment... done
+Run "systemctl reboot" to start a reboot
+
+# 检查 rpm-ostree 
+# 新的 rpm-ostree 已经准备完毕. Staged: yes
+# 等待重启生效
+rpm-ostree status -v
+State: idle
+AutomaticUpdates: stage; rpm-ostreed-automatic.timer: inactive
+Deployments:
+  ostree://edge:rhel/8/x86_64/edge
+                 Timestamp: 2020-12-01T06:27:25Z
+                    Commit: 00513ef74be3018bf3c5eb7c3e1fdb2849d9d623ce74b6d1d611f71dd3be025d
+                    Staged: yes
+                 StateRoot: rhel
+
+* ostree://edge:rhel/8/x86_64/edge
+                 Timestamp: 2020-11-27T06:57:01Z
+                    Commit: b51ade2ec4700d27dd8858cb8f98930afbcdc346ff3a219204bff296178a94d5
+                 StateRoot: rhel
+
+# 重启系统
+$ systemctl reboot
+
+# 回退到更新之前的系统
+rpm-ostree rollback
+systemctl reboot
+
+
 ```
 ### 如何格式化 Google Chat 消息
 https://support.google.com/chat/answer/7649118?hl=en
@@ -6059,5 +6135,54 @@ EOF
 composer-cli blueprints push rhel-for-edge-demo.toml
 composer-cli blueprints list
 
+cat > rhel-for-edge-demo.toml <<EOF
+name = "rhel-for-edge-demo"
+description = "demo rhel for edge"
+version = "0.0.2"
+modules = []
+groups = []
 
+[[packages]]
+name = "bash"
+version = "*"
+
+[[packages]]
+name = "podman"
+version = "*"
+EOF
+
+composer-cli blueprints push rhel-for-edge-demo.toml
+composer-cli blueprints changes rhel-for-edge-demo.toml
+
+ssh-keygen -t rsa -f /root/.ssh/edge -N ''
+ssh_key=$(cat /root/.ssh/edge.pub)
+
+config_password=$(python3 -c 'import crypt; print(crypt.crypt("redhat", crypt.mksalt(crypt.METHOD_SHA512)))')
+
+cat > rhel-for-edge-demo.toml.toml <<EOF
+name = "rhel-for-edge-demo"
+description = "demo rhel for edge"
+version = "0.0.3"
+modules = []
+groups = []
+
+[[packages]]
+name = "bash"
+version = "*"
+
+[[packages]]
+name = "podman"
+version = "*"
+
+[[customizations.user]]
+name = "admin"
+description = "admin"
+password = "${config_password}"
+home = "/home/admin/"
+groups = ["wheel"]
+
+[[customizations.user]]
+name = "root"
+key = "${ssh_key}"
+EOF
 ```

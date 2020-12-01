@@ -5822,7 +5822,7 @@ OnCalendar=*-*-* 01:30:00
 WantedBy=multi-user.target
 EOF
 
-systemctl enable rpm-ostreed-automatic.timer applyupdate.timer
+systemctl enable applyupdate.timer applyupdate.timer
 %end
 
 %post

@@ -5663,6 +5663,59 @@ virt-install --name="jwang-rhel-for-edge" --vcpus=2 --ram=4096 \
 --os-variant rhel8.0 --network network=openshift4v6,model=virtio \
 --boot menu=on --location /var/www/html/rhel-for-edge-repo/rhel-8.3-x86_64-boot.iso \
 --initrd-inject /tmp/edge.ks --extra-args='ks=file:/edge.ks'
+
+# 更新一下 blueprint: 设置用户的口令，添加 root ssh_key
+ssh-keygen -t rsa -f /root/.ssh/edge -N ''
+ssh_key=$(cat /root/.ssh/edge.pub)
+
+config_password=$(python3 -c 'import crypt; print(crypt.crypt("redhat", crypt.mksalt(crypt.METHOD_SHA512)))')
+
+cat > blueprint_test_rhel_for_edge.toml <<EOF
+name = "blueprint_test_rhel_for_edge"
+description = "blueprint test rhel for edge"
+version = "0.0.3"
+modules = []
+groups = []
+
+[[packages]]
+name = "bash"
+version = "*"
+
+[[packages]]
+name = "podman"
+version = "*"
+
+[[customizations.user]]
+name = "admin"
+description = "admin"
+password = "${config_password}"
+home = "/home/admin/"
+groups = ["wheel"]
+
+[[customizations.user]]
+name = "root"
+key = "${ssh_key}"
+EOF
+
+# 提交 blueprints
+composer-cli blueprints push blueprint_test_rhel_for_edge.toml
+
+# 查看 blueprints 变更历史
+composer-cli blueprints changes blueprint_test_rhel_for_edge
+
+# 生成 compose image，image 类型为 rhel-edge-commit
+composer-cli compose start blueprint_test_rhel_for_edge rhel-edge-commit
+Compose 4d7a5813-bb9e-403b-bd7b-28ee11402163 added to the queue
+
+# 检查 compose info 和 日志
+version="0.0.3"
+composer-cli compose info $(composer-cli compose status | grep $version | awk '{print $1}')
+composer-cli compose log $(composer-cli compose status | grep $version | awk '{print $1}')
+
+# 当 compose 状态变成 FINISHED 之后，下载 image
+version="0.0.3"
+composer-cli compose image $(composer-cli compose status | grep $version | awk '{print $1}')
+
 ```
 ### 如何格式化 Google Chat 消息
 https://support.google.com/chat/answer/7649118?hl=en

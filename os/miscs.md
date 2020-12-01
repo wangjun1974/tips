@@ -6042,3 +6042,17 @@ oc get machineconfig 00-master -o jsonpath='{ range .spec.config.storage.files[*
 /usr/local/sbin/set-valid-hostname.sh
 /etc/kubernetes/kubelet-plugins/volume/exec/.dummy
 ```
+
+### 创建一个 blueprint 
+```
+mkdir -p blueprints
+pushd blueprints
+
+cat > rhel-for-edge-demo.toml << EOF
+name = "rhel-for-edge-demo"
+description = "demo rhel for edge"
+version = "0.0.1"
+modules = [ ]
+groups = [ ]
+EOF
+```

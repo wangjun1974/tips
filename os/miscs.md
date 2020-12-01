@@ -5927,3 +5927,23 @@ podman run --name edge-server -d -p 8000:80 edge-server
 
 
 ```
+
+### OpenShift RHCOS ignition snip to wipe disk (WIP)
+```
+  "storage": {
+    "disks": [
+      {
+        "device": "/dev/sdb",
+        "wipeTable": true
+      },
+      {
+        "device": "/dev/sdc",
+        "wipeTable": true
+      },
+      {
+        "device": "/dev/sdd",
+        "wipeTable": true
+      }
+    ]
+  }  
+```

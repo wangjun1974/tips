@@ -6215,6 +6215,8 @@ oc adm policy add-scc-to-user anyuid -z default
 关于默认的 service account 和 scc 可以参考以下链接
 https://docs.openshift.com/container-platform/3.6/dev_guide/service_accounts.html
 https://www.openshift.com/blog/managing-sccs-in-openshift
+https://docs.openshift.com/container-platform/3.4/admin_guide/manage_scc.html
+
 
 # 关于 scc 有关的 Bug 记录
 https://bugzilla.redhat.com/show_bug.cgi?id=1850148

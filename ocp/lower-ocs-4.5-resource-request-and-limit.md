@@ -3,7 +3,7 @@
 
 3 worker with 8 vcpu and 32 GB mem and it works in my environment.
 ```
-# patch ocs cpu/memory request and limit
+# patch ocs cpu/memory requests and limits
 cpu_limit="500m"
 cpu_request="500m"
 memory_limit="512Mi"

@@ -6456,3 +6456,94 @@ Choose identity to authenticate as (1-2): 2
 Password: 
 ==== AUTHENTICATION COMPLETE ====
 ```
+
+### openshift 下基于 image 创建 app 
+参考：https://docs.openshift.com/enterprise/3.0/dev_guide/new_app.html#specifying-an-image
+```
+
+# 基于 image 创建 app
+$ oc new-app image-registry.openshift-image-registry.svc:5000/openshift/mysql@sha256:809b45cb745a5e41a8f595f5991b1a9f4ec8e7c4088f82c3be8e6c461e8acd6d
+--> Found container image 5804f03 (4 weeks old) from image-registry.openshift-image-registry.svc:5000 for "image-registry.openshift-image-registry.svc:5000/openshift/mysql@sha256:809b45cb745a5e41a8f595f5991b1a9f4ec8e7c4088f82c3be8e6c461e8acd6d"
+
+    MySQL 8.0 
+    --------- 
+    MySQL is a multi-user, multi-threaded SQL database server. The container image provides a containerized packaging of the MySQL mysqld daemon and client application. The mysqld server daemon accepts connections from clients and provides access to content from MySQL databases on behalf of the clients.
+
+    Tags: database, mysql, mysql80, mysql-80
+
+    * An image stream tag will be created as "mysql:latest" that will track this image
+
+--> Creating resources ...
+    imagestream.image.openshift.io "mysql" created
+    deployment.apps "mysql" created
+    service "mysql" created
+--> Success
+    Application is not exposed. You can expose services to the outside world by executing one or more of the commands below:
+     'oc expose svc/mysql' 
+    Run 'oc status' to view your app.
+
+# 创建了以下资源 imagestream, deployment, replicaset, service, pod
+[junwang@JundeMacBook-Pro ~/tmp/ibm]$ oc get all 
+NAME                        READY   STATUS             RESTARTS   AGE
+pod/mysql-755969756-jjnjc   0/1     CrashLoopBackOff   2          31s
+
+NAME            TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)    AGE
+service/mysql   ClusterIP   172.30.181.146   <none>        3306/TCP   31s
+
+NAME                    READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/mysql   0/1     1            0           31s
+
+NAME                               DESIRED   CURRENT   READY   AGE
+replicaset.apps/mysql-755969756    1         1         0       31s
+replicaset.apps/mysql-77c9c667d5   1         0         0       31s
+
+NAME                                   IMAGE REPOSITORY                                              TAGS     UPDATED
+imagestream.image.openshift.io/mysql   image-registry.openshift-image-registry.svc:5000/test/mysql   latest   31 seconds ago
+
+# 创建的 pod 状态为 CrashLoopBackOff
+# 查看 pod 日志
+oc logs $(oc get pods -n test -o jsonpath='{ range .items[*]}{.metadata.name}{"\n"}{end}' | grep -v deploy)
+=> sourcing 20-validate-variables.sh ...
+You must either specify the following environment variables:
+  MYSQL_USER (regex: '^[a-zA-Z0-9_]+$')
+  MYSQL_PASSWORD (regex: '^[a-zA-Z0-9_~!@#$%^&*()-=<>,.?;:|]+$')
+  MYSQL_DATABASE (regex: '^[a-zA-Z0-9_]+$')
+Or the following environment variable:
+  MYSQL_ROOT_PASSWORD (regex: '^[a-zA-Z0-9_~!@#$%^&*()-=<>,.?;:|]+$')
+Or both.
+Optional Settings:
+  MYSQL_LOWER_CASE_TABLE_NAMES (default: 0)
+  MYSQL_LOG_QUERIES_ENABLED (default: 0)
+  MYSQL_MAX_CONNECTIONS (default: 151)
+  MYSQL_FT_MIN_WORD_LEN (default: 4)
+  MYSQL_FT_MAX_WORD_LEN (default: 20)
+  MYSQL_AIO (default: 1)
+  MYSQL_KEY_BUFFER_SIZE (default: 32M or 10% of available memory)
+  MYSQL_MAX_ALLOWED_PACKET (default: 200M)
+  MYSQL_TABLE_OPEN_CACHE (default: 400)
+  MYSQL_SORT_BUFFER_SIZE (default: 256K)
+  MYSQL_READ_BUFFER_SIZE (default: 8M or 5% of available memory)
+  MYSQL_INNODB_BUFFER_POOL_SIZE (default: 32M or 50% of available memory)
+  MYSQL_INNODB_LOG_FILE_SIZE (default: 8M or 15% of available memory)
+  MYSQL_INNODB_LOG_BUFFER_SIZE (default: 8M or 15% of available memory)
+
+For more information, see https://github.com/sclorg/mysql-container
+
+# 根据日志，知道 CrashLoopBackOff 的原因是需要指定参数
+# 删除 project
+oc project default
+oc delete project test --wait=true --timeout=5m
+oc get project test -o jsonpath='{.status}{"\n"}'
+# 获取 project 的 status
+oc get project test -o jsonpath='{.status}{"\n"}'
+Error from server (NotFound): namespaces "test" not found
+
+# 重建 project
+oc create namespace test
+oc project test
+
+# 带参数基于 image 创建 app
+oc new-app -e MYSQL_USER="mysql",MYSQL_PASSWORD="changeme",MYSQL_DATABASE="db1",MYSQL_ROOT_PASSWORD="changeme" image-registry.openshift-image-registry.svc:5000/openshift/mysql@sha256:809b45cb745a5e41a8f595f5991b1a9f4ec8e7c4088f82c3be8e6c461e8acd6d -e MYSQL_USER="mysql"
+
+
+```

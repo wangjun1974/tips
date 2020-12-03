@@ -85,8 +85,7 @@ objects:
           name: ${DATABASE_SERVICE_NAME}
       spec:
         containers:
-        - capabilities: {}
-          env:
+        - env:
           - name: MYSQL_USER
             valueFrom:
               secretKeyRef:
@@ -135,7 +134,6 @@ objects:
             limits:
               memory: ${MEMORY_LIMIT}
           securityContext:
-            capabilities: {}
             privileged: true
           terminationMessagePath: /dev/termination-log
           volumeMounts:

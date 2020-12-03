@@ -6427,6 +6427,9 @@ $ cat /etc/rpm-ostreed.conf
 AutomaticUpdatePolicy=stage
 
 # 启用 rpm-ostreed-automatic.timer 服务
+# 启用这个服务后，将定期检查更新，如果有更新会根据配置首先 stage 更新
+# 参见：https://www.mankier.com/8/rpm-ostreed-automatic.service
+
 $ systemctl enable rpm-ostreed-automatic.timer --now
 ==== AUTHENTICATING FOR org.freedesktop.systemd1.manage-unit-files ====
 Authentication is required to manage system service or unit files.

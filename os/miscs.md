@@ -6353,4 +6353,29 @@ oc get template mysql-ephemeral -n openshift -o yaml > new-mysql-ephemeral-templ
 
 处理方法参考：https://bugzilla.redhat.com/show_bug.cgi?id=1767393 
 ```
+# 尝试重现问题
+# 设置 mysql 的 global 变量 log_error_verbosity
+oc rsh pod/$(oc get pods -n test -o jsonpath='{ range .items[*]}{.metadata.name}{"\n"}{end}' | grep -v deploy) mysql -u root -e "set global log_error_verbosity=3;"
+
+# 查询 mysql 的 log_err 位置
+oc rsh pod/$(oc get pods -n test -o jsonpath='{ range .items[*]}{.metadata.name}{"\n"}{end}' | grep -v deploy) mysql -u root -e "select @@GLOBAL.log_error;"
++--------------------+
+| @@GLOBAL.log_error |
++--------------------+
+| stderr             |
++--------------------+
+
+# 查询 mysql 的 log_error_verbosity 级别
+oc rsh pod/$(oc get pods -n test -o jsonpath='{ range .items[*]}{.metadata.name}{"\n"}{end}' | grep -v deploy) mysql -u root -e "select @@GLOBAL.log_error_verbosity;"
++------------------------------+
+| @@GLOBAL.log_error_verbosity |
++------------------------------+
+|                            3 |
++------------------------------+
+
+# 查看 mysql pod 日志
+oc logs pod/$(oc get pods -n test -o jsonpath='{ range .items[*]}{.metadata.name}{"\n"}{end}' | grep -v deploy) 
+
+# 查看 mysql pod 的 yaml 文件
+oc get pod/$(oc get pods -n test -o jsonpath='{ range .items[*]}{.metadata.name}{"\n"}{end}' | grep -v deploy) -o yaml > $(oc get pods -n test -o jsonpath='{ range .items[*]}{.metadata.name}{"\n"}{end}' | grep -v deploy).yaml
 ```

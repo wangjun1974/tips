@@ -6413,4 +6413,43 @@ Password:
 AvailableUpdate:
       Timestamp: 2020-12-01T06:27:25Z
          Commit: 00513ef74be3018bf3c5eb7c3e1fdb2849d9d623ce74b6d1d611f71dd3be025d
+
+# 检查 /etc/rpm-ostreed.conf 文件内容
+# AutomaticUpdatePolicy 设置为 stage
+$ cat /etc/rpm-ostreed.conf
+# Entries in this file show the compile time defaults.
+# You can change settings by editing this file.
+# For option meanings, see rpm-ostreed.conf(5).
+
+[Daemon]
+#AutomaticUpdatePolicy=none
+#IdleExitTimeout=60
+AutomaticUpdatePolicy=stage
+
+# 启用 rpm-ostreed-automatic.timer 服务
+$ systemctl enable rpm-ostreed-automatic.timer --now
+==== AUTHENTICATING FOR org.freedesktop.systemd1.manage-unit-files ====
+Authentication is required to manage system service or unit files.
+Multiple identities can be used for authentication:
+ 1.  admin
+ 2.  core
+Choose identity to authenticate as (1-2): 2
+Password: 
+==== AUTHENTICATION COMPLETE ====
+==== AUTHENTICATING FOR org.freedesktop.systemd1.reload-daemon ====
+Authentication is required to reload the systemd state.
+Multiple identities can be used for authentication:
+ 1.  admin
+ 2.  core
+Choose identity to authenticate as (1-2): 2
+Password: 
+==== AUTHENTICATION COMPLETE ====
+==== AUTHENTICATING FOR org.freedesktop.systemd1.manage-units ====
+Authentication is required to start 'rpm-ostreed-automatic.timer'.
+Multiple identities can be used for authentication:
+ 1.  admin
+ 2.  core
+Choose identity to authenticate as (1-2): 2
+Password: 
+==== AUTHENTICATION COMPLETE ====
 ```

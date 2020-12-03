@@ -6543,7 +6543,7 @@ oc create namespace test
 oc project test
 
 # 带参数基于 image 创建 app
-oc new-app -e MYSQL_USER="mysql",MYSQL_PASSWORD="changeme",MYSQL_DATABASE="db1",MYSQL_ROOT_PASSWORD="changeme" image-registry.openshift-image-registry.svc:5000/openshift/mysql@sha256:809b45cb745a5e41a8f595f5991b1a9f4ec8e7c4088f82c3be8e6c461e8acd6d -e MYSQL_USER="mysql"
+oc new-app -e MYSQL_USER="mysql",MYSQL_PASSWORD="changeme",MYSQL_DATABASE="db1",MYSQL_ROOT_PASSWORD="changeme" image-registry.openshift-image-registry.svc:5000/openshift/mysql@sha256:809b45cb745a5e41a8f595f5991b1a9f4ec8e7c4088f82c3be8e6c461e8acd6d
 
 
 ```

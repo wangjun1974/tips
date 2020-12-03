@@ -6241,7 +6241,7 @@ oc patch dc/mysql --patch='{"spec": {"template": {"spec": {"securityContext": { 
 oc patch dc/mysql --patch='{"spec": {"template": {"spec": {"securityContext": { "privileged": true }}}}}' --type=merge
 
 
-oc export template mysql-ephemeral -n openshift -o yaml > my-new-mysql-ephemeral-template.yml
+oc export template mysql-ephemeral -n openshift -o yaml > new-mysql-ephemeral-template.yml
 
 oc patch dc/nginx --patch='{"spec": {"template": {"spec": {"securityContext": { "runAsUser": 0 }}}}}'
 

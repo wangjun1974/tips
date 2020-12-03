@@ -6344,3 +6344,13 @@ oc get template mysql-ephemeral -n openshift -o yaml > new-mysql-ephemeral-templ
 
 
 ```
+
+### OpenShift 下通过 template mysql-ephemeral 创建的容器里的日志里记录 
+```
+报错信息：
+2020-12-03T03:07:08.454518Z 259471 [Note] Got an error reading communication packets
+```
+
+处理方法参考：https://bugzilla.redhat.com/show_bug.cgi?id=1767393 
+```
+```

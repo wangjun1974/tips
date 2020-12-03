@@ -6379,3 +6379,38 @@ oc logs pod/$(oc get pods -n test -o jsonpath='{ range .items[*]}{.metadata.name
 # 查看 mysql pod 的 yaml 文件
 oc get pod/$(oc get pods -n test -o jsonpath='{ range .items[*]}{.metadata.name}{"\n"}{end}' | grep -v deploy) -o yaml > $(oc get pods -n test -o jsonpath='{ range .items[*]}{.metadata.name}{"\n"}{end}' | grep -v deploy).yaml
 ```
+
+### rpm-ostree 检查更新
+```
+# rpm-ostree 检查更新
+$ rpm-ostree upgrade --check 
+note: automatic updates (stage) are enabled
+==== AUTHENTICATING FOR org.projectatomic.rpmostree1.upgrade ====
+Authentication is required to update software
+Multiple identities can be used for authentication:
+ 1.  admin
+ 2.  core
+Choose identity to authenticate as (1-2): 2
+Password: 
+==== AUTHENTICATION COMPLETE ====
+1 metadata, 0 content objects fetched; 306 B transferred in 0 seconds; 0 bytes content written
+AvailableUpdate:
+      Timestamp: 2020-12-01T06:27:25Z
+         Commit: 00513ef74be3018bf3c5eb7c3e1fdb2849d9d623ce74b6d1d611f71dd3be025d
+
+# rpm-ostree 预览更新
+$ rpm-ostree upgrade --preview
+note: automatic updates (stage) are enabled
+==== AUTHENTICATING FOR org.projectatomic.rpmostree1.upgrade ====
+Authentication is required to update software
+Multiple identities can be used for authentication:
+ 1.  admin
+ 2.  core
+Choose identity to authenticate as (1-2): 2
+Password: 
+==== AUTHENTICATION COMPLETE ====
+1 metadata, 0 content objects fetched; 306 B transferred in 0 seconds; 0 bytes content written
+AvailableUpdate:
+      Timestamp: 2020-12-01T06:27:25Z
+         Commit: 00513ef74be3018bf3c5eb7c3e1fdb2849d9d623ce74b6d1d611f71dd3be025d
+```

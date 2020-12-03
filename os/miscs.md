@@ -6210,7 +6210,16 @@ nginx: [emerg] mkdir() "/var/cache/nginx/client_temp" failed (13: Permission den
 
 尝试解决：
 oc project infra
+oc adm policy add-scc-to-user privileged -z default
 oc adm policy add-scc-to-user anyuid -z default
+
+
+oc adm policy add-scc-to-user privileged -z default -n test
+oc adm policy who-can use scc privileged -n test | grep default
+...
+        system:serviceaccount:test:default
+
+
 
 关于默认的 service account 和 scc 可以参考以下链接
 https://docs.openshift.com/container-platform/3.6/dev_guide/service_accounts.html
@@ -6220,4 +6229,30 @@ https://docs.openshift.com/container-platform/3.4/admin_guide/manage_scc.html
 
 # 关于 scc 有关的 Bug 记录
 https://bugzilla.redhat.com/show_bug.cgi?id=1850148
+
+# patch dc/nginx securityContext
+https://github.com/sterburg/kubernetes-nginx-servicediscovery/blob/master/README.md
+oc patch dc/nginx --patch='{"spec": {"template": {"spec": {"securityContext": { "runAsUser": 0 }}}}}'
+
+# 清除 dc/mysql 的 securityContext
+oc patch deploymentconfig mysql -n test --type json -p '[{ "op": "remove", "path": "/spec/template/spec/securityContext" }]'
+
+oc patch dc/mysql --patch='{"spec": {"template": {"spec": {"securityContext": { "runAsUser": 0 }}}}}' --type=merge
+oc patch dc/mysql --patch='{"spec": {"template": {"spec": {"securityContext": { "privileged": true }}}}}' --type=merge
+
+
+oc export template mysql-ephemeral -n openshift -o yaml > my-new-mysql-ephemeral-template.yml
+
+oc patch dc/nginx --patch='{"spec": {"template": {"spec": {"securityContext": { "runAsUser": 0 }}}}}'
+
+oc get deployment mysql -n infra -o yaml | grep securityContext
+```
+
+### OpenShift 下使用模版部署 mysql
+https://techbloc.net/archives/2607
+
+```
+oc create namespace testing
+
+oc new-app mysql-ephemeral
 ```

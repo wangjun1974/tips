@@ -6606,4 +6606,22 @@ oc create secret docker-registry local-pull-secret \
 oc patch sa default -n test1 --type='json' -p='[{"op":"add","path":"/imagePullSecrets/-", "value":{"name":"local-pull-secret"}}]'
 oc patch sa deployer -n test1 --type='json' -p='[{"op":"add","path":"/imagePullSecrets/-", "value":{"name":"local-pull-secret"}}]'
 
+# 这个 Bug 可能与此有关
+# https://bugzilla.redhat.com/show_bug.cgi?id=1787112
+# 既然 imagecontentsourcepolicy 无法
+
+# 想到的办法是 patch is jenkins 指向本地镜像仓库
+oc patch is jenkins -n openshift --type json -p='[{"op": "replace", "path": "/spec/tags/0/from/name", "value":"helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4@sha256:5244eb131713eb9372a474a851a561f803c9c9b474e86f3903fc638d929f04b1"}]'
+```
+
+### kubectl cheatsheet
+https://unofficial-kubernetes.readthedocs.io/en/latest/user-guide/kubectl-cheatsheet/
+```
+$ kubectl patch node k8s-node-1 -p '{"spec":{"unschedulable":true}}' # Partially update a node
+
+# Update a container's image; spec.containers[*].name is required because it's a merge key
+$ kubectl patch pod valid-pod -p '{"spec":{"containers":[{"name":"kubernetes-serve-hostname","image":"new image"}]}}'
+
+# Update a container's image using a json patch with positional arrays
+$ kubectl patch pod valid-pod --type='json' -p='[{"op": "replace", "path": "/spec/containers/0/image", "value":"new image"}]'
 ```

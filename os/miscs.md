@@ -6547,3 +6547,6 @@ oc new-app -e MYSQL_USER="mysql" -e MYSQL_PASSWORD="changeme" -e MYSQL_DATABASE=
 
 
 ```
+
+### 学习 OpenShft4 上的 Jenkins 
+https://developers.redhat.com/blog/2019/05/02/get-started-with-jenkins-ci-cd-in-red-hat-openshift-4/

@@ -6592,4 +6592,15 @@ oc debug node/
 podman login -u kubeadmin -p $(oc whoami -t)  image-registry.openshift-image-registry.svc:5000
 
 podman pull image-registry.openshift-image-registry.svc:5000/openshift/jenkins@sha256:5244eb131713eb9372a474a851a561f803c9c9b474e86f3903fc638d929f04b1
+
+# 为 namespace test1 添加 pull secret
+oc project test1 
+oc create secret docker-registry local-pull-secret \
+    --namespace test1 \
+    --docker-server=helper.cluster-0001.rhsacn.org:5000 \
+    --docker-username=dummy \
+    --docker-password=dummy
+oc patch sa default -n test1 --type='json' -p='[{"op":"add","path":"/imagePullSecrets/-", "value":{"name":"local-pull-secret"}}]'
+oc patch sa deployer -n test1 --type='json' -p='[{"op":"add","path":"/imagePullSecrets/-", "value":{"name":"local-pull-secret"}}]'
+
 ```

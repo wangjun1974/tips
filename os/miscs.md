@@ -6612,6 +6612,40 @@ oc patch sa deployer -n test1 --type='json' -p='[{"op":"add","path":"/imagePullS
 
 # 想到的办法是 patch is jenkins 指向本地镜像仓库
 oc patch is jenkins -n openshift --type json -p='[{"op": "replace", "path": "/spec/tags/0/from/name", "value":"helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4@sha256:5244eb131713eb9372a474a851a561f803c9c9b474e86f3903fc638d929f04b1"}]'
+
+# 然后就可以参考 https://developers.redhat.com/blog/2019/05/02/get-started-with-jenkins-ci-cd-in-red-hat-openshift-4/ 里的 Get started with Jenkins CI/CD in Red Hat OpenShift 4
+
+# 创建 jenkins maven pipeline
+$ oc create -f https://raw.githubusercontent.com/openshift/origin/master/examples/jenkins/pipeline/maven-pipeline.yaml
+template.template.openshift.io/maven-pipeline created
+
+# 创建 maven pipeline
+oc new-app --template=maven-pipeline 
+--> Deploying template "test1/maven-pipeline" to project test1                                                                                                
+                                                                                                                                                              
+     * With parameters:                                                                                                                                       
+        * Application Name=openshift-jee-sample                                                                                                               
+        * Source URL=https://github.com/openshift/openshift-jee-sample.git                                                                                    
+        * Source Ref=master                                                                                                                                   
+        * GitHub Webhook Secret=Iq06B4Fel606W0EcyYWmfFpSyRevUjB8xQuREmI1 # generated                                                                          
+        * Generic Webhook Secret=xp1y2qDX2thgtSQVW27HFWfylQREwlJxFrrnniTA # generated                                                                         
+                                                                                                                                                              
+--> Creating resources ...                                                                                                                                    
+    imagestream.image.openshift.io "openshift-jee-sample" created                                                                                             
+    imagestream.image.openshift.io "wildfly" created                                                                                                          
+    buildconfig.build.openshift.io "openshift-jee-sample" created                                                                                             
+    buildconfig.build.openshift.io "openshift-jee-sample-docker" created                                                                                      
+    deploymentconfig.apps.openshift.io "openshift-jee-sample" created                                                                                         
+    service "openshift-jee-sample" created                                                                                                                    
+    route.route.openshift.io "openshift-jee-sample" created                                                                                                   
+--> Success                                                                                                                                                   
+JenkinsPipeline build strategy is deprecated. Use Jenkinsfiles directly on Jenkins or OpenShift Pipelines instead                                             
+    Use 'oc start-build openshift-jee-sample' to start a build.                                                                                               
+    Use 'oc start-build openshift-jee-sample-docker' to start a build.                                                                                        
+    Access your application via route 'openshift-jee-sample-test1.apps.cluster-0001.rhsacn.org'                                                               
+    Run 'oc status' to view your app.    
+        
+# 
 ```
 
 ### kubectl cheatsheet

@@ -6533,9 +6533,9 @@ For more information, see https://github.com/sclorg/mysql-container
 # 删除 project
 oc project default
 oc delete project test --wait=true --timeout=5m
-oc get project test -o jsonpath='{.status}{"\n"}'
-# 获取 project 的 status
-oc get project test -o jsonpath='{.status}{"\n"}'
+
+# 获取 project 的 信息，等待出现消息 Error from server (NotFound): namespaces "test" not found
+oc get project test 
 Error from server (NotFound): namespaces "test" not found
 
 # 重建 project

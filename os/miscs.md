@@ -6586,8 +6586,11 @@ oc -n test1 logs $(oc get pods -n test1 -o jsonpath='{ range .items[*]}{.metadat
 
 # 检查
 # 登录节点
-oc debug node/
-# 登录openshift
+oc debug node/worker0.cluster-0001.rhcnsa.org
+
+# 登录 openshift api
+oc login -u kubeadmin -p xxx https://api.cluster-0001.rhcnsa.org:6443
+
 # 从 拉取镜像
 podman login -u kubeadmin -p $(oc whoami -t)  image-registry.openshift-image-registry.svc:5000
 

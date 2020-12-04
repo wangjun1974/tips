@@ -6644,8 +6644,150 @@ JenkinsPipeline build strategy is deprecated. Use Jenkinsfiles directly on Jenki
     Use 'oc start-build openshift-jee-sample-docker' to start a build.                                                                                        
     Access your application via route 'openshift-jee-sample-test1.apps.cluster-0001.rhsacn.org'                                                               
     Run 'oc status' to view your app.    
-        
-# 
+
+# 了解一下为什么 maven 的 Pod 启动不起来
+oc describe pod maven-hxr6v
+...
+Events:
+  Type     Reason          Age               From                                      Message
+  ----     ------          ----              ----                                      -------
+  Normal   Scheduled       <unknown>                                                   Successfully assigned test1/maven-hxr6v to worker0.cluster-0001.rhsacn.org
+  Normal   AddedInterface  20s               multus                                    Add eth0 [10.254.4.28/24]
+  Normal   BackOff         19s               kubelet, worker0.cluster-0001.rhsacn.org  Back-off pulling image "image-registry.openshift-image-registry.svc:5000/openshift/jenkins-agent-maven:latest"
+  Warning  Failed          19s               kubelet, worker0.cluster-0001.rhsacn.org  Error: ImagePullBackOff
+  Normal   Pulling         6s (x2 over 20s)  kubelet, worker0.cluster-0001.rhsacn.org  Pulling image "image-registry.openshift-image-registry.svc:5000/openshift/jenkins-agent-maven:latest"
+  Warning  Failed          5s (x2 over 19s)  kubelet, worker0.cluster-0001.rhsacn.org  Failed to pull image "image-registry.openshift-image-registry.svc:5000/openshift/jenkins-agent-maven:latest": rpc error: code = Unknown desc = Error reading manifest latest in image-registry.openshift-image-registry.svc:5000/openshift/jenkins-agent-maven: unknown: unable to pull manifest from quay.io/openshift-release-dev/ocp-v4.0-art-dev@sha256:aeff0c6e915e8506bb10702431a3169a03608b43f1c41b7e157ad502a4857239: unauthorized: access to the requested resource is not authorized
+  Warning  Failed          5s (x2 over 19s)  kubelet, worker0.cluster-0001.rhsacn.org  Error: ErrImagePull
+
+# 获取 maven agent image 
+skopeo copy --format v2s2 --authfile /root/pull-secret-2.json --all docker://quay.io/openshift-release-dev/ocp-v4.0-art-dev@sha256:aeff0c6e915e8506bb10702431a3169a03608b43f1c41b7e157ad502a4857239 docker://helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4
+
+# 然后 patch image stream 
+oc patch is jenkins-agent-maven -n openshift --type json -p='[{"op": "replace", "path": "/spec/tags/1/from/name", "value":"helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4@sha256:aeff0c6e915e8506bb10702431a3169a03608b43f1c41b7e157ad502a4857239"}]'
+
+# 在 step Build Image 出错
+# 出错的阶段为 Build Image
+# Build Image 将执行 oc start-build ${appName}-docker --from-file=target/ROOT.war -n ${project}
+oc describe build.build.openshift.io/openshift-jee-sample-2 
+...
+Strategy: JenkinsPipeline
+Jenkinsfile contents:
+  try {
+     timeout(time: 20, unit: 'MINUTES') {
+        def appName="openshift-jee-sample"
+
+...
+        node {
+          stage("Build Image") {
+            unstash name:"war"
+            def status = sh(returnStdout: true, script: "oc start-build ${appName}-docker --from-file=target/ROOT.war -n ${project}")
+
+# 执行的是 buildconfig openshift-jee-sample-docker
+# buildconfig 的 builder image 是 ImageStreamTag wildfly:latest
+oc describe buildconfig openshift-jee-sample-docker         
+Name:     openshift-jee-sample-docker
+Namespace:      test1
+Created:  3 hours ago
+Labels:   app=openshift-jee-sample-docker
+Annotations:    openshift.io/generated-by=OpenShiftNewApp
+Latest Version: Never built
+
+Strategy: Docker
+Dockerfile:
+  FROM wildfly
+  COPY ROOT.war /wildfly/standalone/deployments/ROOT.war
+  CMD $STI_SCRIPTS_PATH/run
+From Image:     ImageStreamTag wildfly:latest
+Output to:      ImageStreamTag openshift-jee-sample:latest
+Binary:   provided as file "ROOT.war" on build
+
+Build Run Policy:      Serial
+Triggered by:          <none>
+Builds History Limit:
+        Successful:    5
+        Failed:        5
+
+# 因此首先需要看的是 imagestream wildfly 是否本地可以正常访问
+# imagestream wildfly 需要同步到本地
+oc get is wildfly  -o yaml
+...
+status:
+  dockerImageRepository: image-registry.openshift-image-registry.svc:5000/test1/wildfly
+  tags:
+  - conditions:
+    - generation: 2
+      lastTransitionTime: "2020-12-04T09:21:21Z"
+      message: 'Internal error occurred: docker.io/openshift/wildfly-101-centos7:latest: Get "https://production.cloudflare.docker.com/registry-v2/docker/registry/v2/blobs/sha256/42/42c046e05a707bc547fbe94eb22282563af69c849575fe769ca15f82121f1a6f/data?verify=1607076662-blh67Avgw%2FqMltCksA1wDFU%2BCfA%3D": net/http: TLS handshake timeout'
+
+# 在能下载 image 的地方，将 image wildfly-101-centos7:latest 保存到本地目录
+mkdir -p /root/tmp/mirror/wildfly
+skopeo copy --format v2s2 docker://docker.io/openshift/wildfly-101-centos7:latest dir:///root/tmp/mirror/wildfly
+
+# 将下载的目录内容同步到离线环境
+# 将载的目录内容导入到本地镜像仓库
+skopeo copy --format v2s2 --authfile /root/pull-secret-2.json dir:///root/tmp/mirror/wildfly docker://helper.cluster-0001.rhsacn.org:5000/openshift/wildfly-101-centos7:latest
+
+# patch imagestream wildfly
+oc -n test1 patch is wildfly --type json -p='[{"op": "replace", "path": "/spec/tags/0/from/name", "value":"helper.cluster-0001.rhsacn.org:5000/openshift/wildfly-101-centos7:latest"}]'
+
+# 测试可以用 imagestream wildfly start build
+oc start-build openshift-jee-sample-docker 
+
+oc logs $(oc get pods -n test1 -o jsonpath='{ range .items[*]}{.metadata.name}{"\n"}{end}' | grep build)
+...
+Adding cluster TLS certificate authority to trust store
+Caching blobs under "/var/cache/blobs".
+
+Pulling image helper.cluster-0001.rhsacn.org:5000/openshift/wildfly-101-centos7@sha256:7775d40f77e22897dc760b76f1656f67ef6bd5561b4d74fbb030b977f61d48e8 ...
+Getting image source signatures
+Copying blob sha256:2b5e13069964ce5fb3f2f20a2f296842239ea9785402ee9db00f7df0758e3880
+Copying blob sha256:8a3400b7e31a55323583e3d585b3b0be56d9f7ae563187aec96d47ef5419982a
+Copying blob sha256:734fb161cf896cf5c25a9a857a4b4d267bb5a59d5acf9ba846278ab3f3d1f5d5
+Copying blob sha256:1614fb52d93087dae86cc7c5072e724dc781b4bfeb8d36130edeaeed03a75929
+Copying blob sha256:45a2e645736c4c66ef34acce2407ded21f7a9b231199d3b92d6c9776df264729
+Copying blob sha256:43c7d7e0ab141d1e4c63343575f432aecd5028f73ba31467c9835a02bbaaf226
+Copying blob sha256:78efc9e155c4f5ac3665c4ef14339c305672468520dc0d5ad5a254ce90a1ec28
+Copying blob sha256:6b5d182bcccd850d3b6313e37abc89b43b3dfa992dfd1b3256fa80b2f22dd349
+Copying blob sha256:6889f5ec228fd15e1e4e8e99333405ea42a119c9899e47ce691c70a7fbf1ed67
+Copying blob sha256:0dd0f9a156c69e0224eba0dcaf0aa19bde2a58213bc7000e4982473b5056c3d7
+Copying blob sha256:1997c4647b2a44e91accefa73e019660f0f703c0193100ed4f1bf14d7a9a29c5
+Copying config sha256:42c046e05a707bc547fbe94eb22282563af69c849575fe769ca15f82121f1a6f
+Writing manifest to image destination
+Storing signatures
+STEP 1: FROM helper.cluster-0001.rhsacn.org:5000/openshift/wildfly-101-centos7@sha256:7775d40f77e22897dc760b76f1656f67ef6bd5561b4d74fbb030b977f61d48e8
+STEP 2: COPY ROOT.war /wildfly/standalone/deployments/ROOT.war
+error: build error: error building at STEP "COPY ROOT.war /wildfly/standalone/deployments/ROOT.war": error adding sources [/tmp/build/inputs/ROOT.war]: error checking on source /tmp/build/inputs/ROOT.war under "/tmp/build/inputs": copier: stat: "/ROOT.war": no such file or directory
+
+# 现在可以再次开始 pipeline
+# Build WAR 过程中查看 maven pod 的日志
+oc logs $(oc get pods -n test1 -o jsonpath='{ range .items[*]}{.metadata.name}{"\n"}{end}' | grep maven)
+
+# Build Image 过程中查看 build pod 的日志
+oc logs $(oc get pods -n test1 -o jsonpath='{ range .items[*]}{.metadata.name}{"\n"}{end}' | grep 2-build)
+...
+Copying blob sha256:971549cb69b1b3e618445e49fe6db2ab6db6c9105e6dc228d5ec4845b553d53c
+Copying config sha256:c728453253f67f9991850a672fbaf5e29ec84b49c1c4459bf2bf193ee52727b2
+Writing manifest to image destination
+Storing signatures
+Successfully pushed image-registry.openshift-image-registry.svc:5000/test1/openshift-jee-sample@sha256:100db8fa14d110966592ad20a3c1941779101ab7513607091379c685d9232851
+Push successful
+
+# 在 Deploy 阶段 Pod openshift-jee-sample-1-rbjwl 运行起来了
+oc logs $(oc get pods -n test1 -o jsonpath='{ range .items[*]}{.metadata.name}{"\n"}{end}' | grep openshift-jee-sample-1-rbjwl)
+...
+12:51:01,542 INFO  [org.jboss.as.server.deployment] (MSC service thread 1-2) WFLYSRV0027: Starting deployment of "ROOT.war" (runtime-name: "ROOT.war")
+12:51:01,958 INFO  [org.jboss.ws.common.management] (MSC service thread 1-5) JBWS022052: Starting JBossWS 5.1.5.Final (Apache CXF 3.1.6) 
+12:51:01,999 INFO  [org.infinispan.factories.GlobalComponentRegistry] (MSC service thread 1-6) ISPN000128: Infinispan version: Infinispan 'Chakra' 8.2.4.Final
+12:51:02,070 INFO  [org.infinispan.configuration.cache.EvictionConfigurationBuilder] (ServerService Thread Pool -- 58) ISPN000152: Passivation configured without an eviction policy being selected. Only manually evicted entities will be passivated.
+12:51:02,070 INFO  [org.infinispan.configuration.cache.EvictionConfigurationBuilder] (ServerService Thread Pool -- 59) ISPN000152: Passivation configured without an eviction policy being selected. Only manually evicted entities will be passivated.
+12:51:02,071 INFO  [org.infinispan.configuration.cache.EvictionConfigurationBuilder] (ServerService Thread Pool -- 59) ISPN000152: Passivation configured without an eviction policy being selected. Only manually evicted entities will be passivated.
+12:51:02,071 INFO  [org.infinispan.configuration.cache.EvictionConfigurationBuilder] (ServerService Thread Pool -- 58) ISPN000152: Passivation configured without an eviction policy being selected. Only manually evicted entities will be passivated.
+12:51:02,430 INFO  [org.wildfly.extension.undertow] (ServerService Thread Pool -- 61) WFLYUT0021: Registered web context: /
+12:51:02,457 INFO  [org.jboss.as.server] (ServerService Thread Pool -- 34) WFLYSRV0010: Deployed "ROOT.war" (runtime-name : "ROOT.war")
+12:51:02,547 INFO  [org.jboss.as] (Controller Boot Thread) WFLYSRV0060: Http management interface listening on http://0.0.0.0:9990/management
+12:51:02,548 INFO  [org.jboss.as] (Controller Boot Thread) WFLYSRV0051: Admin console listening on http://0.0.0.0:9990
+12:51:02,549 INFO  [org.jboss.as] (Controller Boot Thread) WFLYSRV0025: WildFly Full 10.1.0.Final (WildFly Core 2.2.0.Final) started in 3722ms - Started 398 of 647 services (400 services are lazy, passive or on-demand)
+
 ```
 
 ### kubectl cheatsheet

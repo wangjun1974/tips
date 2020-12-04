@@ -6549,4 +6549,47 @@ oc new-app -e MYSQL_USER="mysql" -e MYSQL_PASSWORD="changeme" -e MYSQL_DATABASE=
 ```
 
 ### 学习 OpenShft4 上的 Jenkins 
+
+Get started with Jenkins CI/CD in Red Hat OpenShift 4
 https://developers.redhat.com/blog/2019/05/02/get-started-with-jenkins-ci-cd-in-red-hat-openshift-4/
+
+```
+oc create namespace test1
+oc project test1
+oc new-app jenkins-ephemeral
+
+# copy jenkins images
+> ./tmp/registry-images-jenkins.lst
+for image in jenkins jenkins-agent-base jenkins-agent-maven jenkins-agent-nodejs
+do
+  oc get is ${image} -n openshift -o jsonpath='{.spec.tags[].from.name}{"\n"}' >> ./tmp/registry-images-jenkins.lst
+done
+
+for source in `cat ./tmp/registry-images-jenkins.lst`; do  local=`echo $source|awk -F'@' '{print $1}'|sed 's|quay.io/openshift-release-dev/ocp-v4.0-art-dev|helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4|g'`   ; 
+echo skopeo copy --format v2s2 --authfile ${LOCAL_SECRET_JSON} --all docker://$source docker://$local; echo skopeo copy --format v2s2 --authfile ${LOCAL_SECRET_JSON} --all docker://$source docker://$local; echo; done
+
+# 拷贝 jenkins image 到本地镜像仓库
+skopeo copy --format v2s2 --authfile /root/pull-secret-2.json --all docker://quay.io/openshift-release-dev/ocp-v4.0-art-dev@sha256:5244eb131713eb9372a474a851a561f803c9c9b474e86f3903fc638d929f04b1 docker://helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4
+# 根据报错，需要同步到本地这个位置
+skopeo copy --format v2s2 --authfile /root/pull-secret-2.json --all docker://quay.io/openshift-release-dev/ocp-v4.0-art-dev@sha256:5244eb131713eb9372a474a851a561f803c9c9b474e86f3903fc638d929f04b1 docker://helper.cluster-0001.rhsacn.org:5000/openshift/jenkins
+
+# import jenkins image
+oc import-image jenkins -n openshift
+
+# 触发新的部署
+oc rollout latest dc/jenkins
+
+# 查看 pod 日志
+oc -n test1 describe pod $(oc get pods -n test1 -o jsonpath='{ range .items[*]}{.metadata.name}{"\n"}{end}' | grep -v deploy)
+oc -n test1 logs $(oc get pods -n test1 -o jsonpath='{ range .items[*]}{.metadata.name}{"\n"}{end}' | grep -v deploy)
+...
+
+# 检查
+# 登录节点
+oc debug node/
+# 登录openshift
+# 从 拉取镜像
+podman login -u kubeadmin -p $(oc whoami -t)  image-registry.openshift-image-registry.svc:5000
+
+podman pull image-registry.openshift-image-registry.svc:5000/openshift/jenkins@sha256:5244eb131713eb9372a474a851a561f803c9c9b474e86f3903fc638d929f04b1
+```

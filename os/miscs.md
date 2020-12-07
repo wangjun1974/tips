@@ -6819,4 +6819,74 @@ oc rollout latest dc/jenkins-privilege
 oc -n infra logs $(oc get pods -n infra -o jsonpath='{ range .items[*]}{.metadata.name}{"\n"}{end}' | grep deploy)
 
 oc -n infra describe pod $(oc get pods -n infra -o jsonpath='{ range .items[*]}{.metadata.name}{"\n"}{end}' | grep -v deploy) | grep scc 
+
+# 这种修改并不能自动创建 pv
+oc patch pvc jenkins-privilege --type json -p '[{"op": "replace", "path": "/spec/storageclassname", "value": "nfs-storage-provisioner"}]'
+
+# 查看 pvc  
+oc describe pvc jenkins-privilege 
+Name:          jenkins-privilege
+Namespace:     infra
+StorageClass:  nfs-storage-provisioner
+Status:        Pending
+Volume:        
+Labels:        app=jenkins-persistent-privilege
+               template=jenkins-persistent-template-privilege
+Annotations:   openshift.io/generated-by: OpenShiftNewApp
+               volume.beta.kubernetes.io/storage-provisioner: nfs-storage
+Finalizers:    [kubernetes.io/pvc-protection]
+Capacity:      
+Access Modes:  
+VolumeMode:    Filesystem
+Mounted By:    jenkins-privilege-2-hxqnx
+Events:
+  Type    Reason                Age               From                         Message
+  ----    ------                ----              ----                         -------
+  Normal  ExternalProvisioning  7s (x4 over 41s)  persistentvolume-controller  waiting for a volume to be created, either by external provisioner "nfs-storage" or manually created by system administrator
+
+# 参考：https://blog.csdn.net/weixin_34306446/article/details/89690812
+# 添加 （这步应该不是必须的）
+cat > add-clusterrole-binding.yaml << EOF
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: run-nfs-provisioner
+subjects:
+  - kind: ServiceAccount
+    name: jenkins-privilege
+    namespace: infra
+roleRef:
+  kind: ClusterRole
+  name: nfs-provisioner-runner
+  apiGroup: rbac.authorization.k8s.io
+EOF
+
+oc apply -f ./add-clusterrole-binding.yaml
+
+# 查看日志
+oc -n nfs-provisioner describe pod nfs-client-provisioner-76dbdf68fd-sdhdf
+...
+  Warning  Failed          4h30m (x154 over 17h)  kubelet, worker1.cluster-0001.rhsacn.org  Failed to pull image "quay.io/external_storage/nfs-client-provisioner:latest": rpc error: code = Unknown desc = error pinging docker registry quay.io: Get "https://quay.io/v2/": dial tcp: lookup quay.io on 10.66.208.138:53: server misbehaving
+  Normal   Pulling         70m (x202 over 4d14h)  kubelet, worker1.cluster-0001.rhsacn.org  Pulling image "quay.io/external_storage/nfs-client-provisioner:latest"
+  Warning  Failed          20m (x4424 over 17h)   kubelet, worker1.cluster-0001.rhsacn.org  Error: ImagePullBackOff
+  Normal   BackOff         43s (x4508 over 17h)   kubelet, worker1.cluster-0001.rhsacn.org  Back-off pulling image "quay.io/external_storage/nfs-client-provisioner:latest"
+
+# 问题应该是由于离线镜像仓库里没有所需镜像造成的，在离线环境中同步所需镜像
+skopeo copy --format v2s2 --authfile /root/pull-secret-2.json --all docker://quay.io/external_storage/nfs-client-provisioner:latest docker://helper.cluster-0001.rhsacn.org:5000/external_storage/nfs-client-provisioner:latest
+
+# patch deployment nfs-client-provisioner 指向本地镜像仓库
+oc -n nfs-provisioner patch deployment nfs-client-provisioner --type json -p '[{"op": "replace", "path": "/spec/template/spec/containers/0/image", "value": "helper.cluster-0001.rhsacn.org:5000/external_storage/nfs-client-provisioner:latest"}]'
+
+# 触发新部署
+oc -n nfs-provisioner patch deployment/nfs-client-provisioner --patch \
+   "{\"spec\":{\"template\":{\"metadata\":{\"annotations\":{\"last-restart\":\"`date +'%s'`\"}}}}}"
+
+# 查看日志
+oc -n nfs-provisioner logs $(oc get pods -n nfs-provisioner -o jsonpath='{ range .items[*]}{.metadata.name}{"\n"}{end}')
+
+# rollout jenkins deploymentconfig
+oc rollout latest dc/jenkins-privilege -n infra
+
+# 查看 jenkins 日志
+oc -n infra logs $(oc get pods -n infra -o jsonpath='{ range .items[*]}{.metadata.name}{"\n"}{end}' | grep -v deploy)
 ```

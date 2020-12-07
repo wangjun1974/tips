@@ -6801,3 +6801,22 @@ $ kubectl patch pod valid-pod -p '{"spec":{"containers":[{"name":"kubernetes-ser
 # Update a container's image using a json patch with positional arrays
 $ kubectl patch pod valid-pod --type='json' -p='[{"op": "replace", "path": "/spec/containers/0/image", "value":"new image"}]'
 ```
+
+
+### 测试 jenkins template
+使用的 template 文件参见：
+```
+oc create namespace infra
+oc project infra
+
+oc new-app --file=jenkins_template-jwang.yaml
+oc adm policy add-scc-to-user privileged -z jenkins-privilege -n infra
+
+oc -n infra delete pod $(oc get pods -n infra -o jsonpath='{ range .items[*]}{.metadata.name}{"\n"}{end}' | grep deploy)
+
+oc rollout latest dc/jenkins-privilege
+
+oc -n infra logs $(oc get pods -n infra -o jsonpath='{ range .items[*]}{.metadata.name}{"\n"}{end}' | grep deploy)
+
+oc -n infra describe pod $(oc get pods -n infra -o jsonpath='{ range .items[*]}{.metadata.name}{"\n"}{end}' | grep -v deploy) | grep scc 
+```

@@ -6950,3 +6950,6 @@ oc -n infra rsh $(oc get pods -n infra -o jsonpath='{ range .items[*]}{.metadata
 
 ```
 
+### Enhancing your Builds on OpenShift: Chaining Builds
+这个 Blog 非常值得阅读。
+https://www.openshift.com/blog/chaining-builds

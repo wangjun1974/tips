@@ -1713,3 +1713,35 @@ for i in $(oc get node -l cluster.ocs.openshift.io/openshift-storage= -o jsonpat
 ```
 
 
+
+### 如何从 gp2 将 pv 迁移到 ocs 下
+一种在不同 storageclass 间迁移 pv 的思路
+```
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: rsyncftw
+spec:
+  template:
+    spec:
+      containers:
+      - name: rsyncftw
+        image: rsyncimg
+        command: ["rsync",  "-av", "/source/", "/target/"]
+        volumeMounts:
+        - name: source
+          mountPath: /source
+        - name: target
+          mountPath: /target
+      restartPolicy: Never
+      volumes:
+        - name: target
+          persistentVolumeClaim:
+            claimName: rbd-pvc
+             readOnly: false        
+        - name: source
+          persistentVolumeClaim:
+            claimName: gp2-pvc
+             readOnly: false
+  backoffLimit: 4
+```

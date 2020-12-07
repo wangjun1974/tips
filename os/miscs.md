@@ -6890,3 +6890,42 @@ oc rollout latest dc/jenkins-privilege -n infra
 # 查看 jenkins 日志
 oc -n infra logs $(oc get pods -n infra -o jsonpath='{ range .items[*]}{.metadata.name}{"\n"}{end}' | grep -v deploy)
 ```
+
+### 继续测试
+```
+# 登录 jenkins pod
+oc -n infra rsh $(oc get pods -n infra -o jsonpath='{ range .items[*]}{.metadata.name}{"\n"}{end}' | grep -v deploy)
+
+# 如何为 jenkins 选择合适的 jdk 版本呢
+# https://itnext.io/running-jenkins-builds-in-containers-458e90ff2a7b
+
+# 参考：https://bugzilla.redhat.com/show_bug.cgi?id=1848611
+# 将默认的 JDK 版本设置为 
+oc rsh maven-tkb34
+sh-4.2 $ update-alternatives --config java
+There are 2 programs which provide 'java'.
+
+  Selection    Command
+-----------------------------------------------
+ + 1           java-11-openjdk.x86_64 (/usr/lib/jvm/java-11-openjdk-11.0.9.11-0.el8_2.x86_64/bin/java)
+*  2           java-1.8.0-openjdk.x86_64 (/usr/lib/jvm/java-1.8.0-openjdk-1.8.0.272.b10-1.el8_2.x86_64/jre/bin/java)
+
+Enter to keep the current selection[+], or type selection number: 2
+
+sh-4.4$ java -version 
+openjdk version "1.8.0_272"
+OpenJDK Runtime Environment (build 1.8.0_272-b10)
+OpenJDK 64-Bit Server VM (build 25.272-b10, mixed mode)
+
+# 查询 java 版本
+oc -n infra rsh $(oc get pods -n infra -o jsonpath='{ range .items[*]}{.metadata.name}{"\n"}{end}' | grep -v deploy) java -version
+
+# update-alternatives --set 
+# 更新 java 到 1.8
+oc -n infra rsh $(oc get pods -n infra -o jsonpath='{ range .items[*]}{.metadata.name}{"\n"}{end}' | grep -v deploy) update-alternatives --set java /usr/lib/jvm/java-1.8.0-openjdk-1.8.0.272.b10-1.el8_2.x86_64/jre/bin/java
+
+# 查询 java 版本
+oc -n infra rsh $(oc get pods -n infra -o jsonpath='{ range .items[*]}{.metadata.name}{"\n"}{end}' | grep -v deploy) java -version
+
+```
+

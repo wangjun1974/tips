@@ -6920,6 +6920,27 @@ OpenJDK 64-Bit Server VM (build 25.272-b10, mixed mode)
 # 查询 java 版本
 oc -n infra rsh $(oc get pods -n infra -o jsonpath='{ range .items[*]}{.metadata.name}{"\n"}{end}' | grep -v deploy) java -version
 
+# update-alternatives 的帮助信息
+alternatives version 1.11 - Copyright (C) 2001 Red Hat, Inc.
+This may be freely redistributed under the terms of the GNU Public License.
+
+usage: alternatives --install <link> <name> <path> <priority>
+                    [--initscript <service>]
+                    [--family <family>]
+                    [--slave <slave_link> <slave_name> <slave_path>]*
+       alternatives --remove <name> <path>
+       alternatives --auto <name>
+       alternatives --config <name>
+       alternatives --display <name>
+       alternatives --set <name> <path>
+       alternatives --list
+       alternatives --remove-all <name>
+       alternatives --add-slave <name> <path> <slave_link> <slave_name> <slave_path>
+       alternatives --remove-slave <name> <path> <slave_name>
+
+common options: --verbose --test --help --usage --version --keep-missing
+                --altdir <directory> --admindir <directory>
+
 # update-alternatives --set 
 # 更新 java 到 1.8
 oc -n infra rsh $(oc get pods -n infra -o jsonpath='{ range .items[*]}{.metadata.name}{"\n"}{end}' | grep -v deploy) update-alternatives --set java /usr/lib/jvm/java-1.8.0-openjdk-1.8.0.272.b10-1.el8_2.x86_64/jre/bin/java

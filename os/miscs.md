@@ -6804,7 +6804,7 @@ $ kubectl patch pod valid-pod --type='json' -p='[{"op": "replace", "path": "/spe
 
 
 ### 测试 jenkins template
-使用的 template 文件参见：
+使用的 template 文件参见：https://raw.githubusercontent.com/wangjun1974/tips/master/ocp/files/jenkins_template-jwang.yaml
 ```
 oc create namespace infra
 oc project infra

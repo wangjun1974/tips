@@ -6988,3 +6988,8 @@ Image:Iregistry.access.redhat.com/openshift3/jenkins-2-rhel7@sha256:3a51056f6817
 15:38 <Catherine_H>       JNLP_SERVICE_NAME:IIjenkins-unimoni-jnlp
 15:39 <Catherine_H>       JAVA_HOME:III/usr/lib/jvm/java-1.8.0-openjdk-1.8.0.181-3.b13.el7_5.x86_64
 ```
+
+### OCP 4.6 baremetal non integration 安装
+来自王征所写的 OCP 4.6 baremetal non integration 安装 <br>
+https://github.com/wangzheng422/docker_env/blob/master/redhat/ocp4/4.6/4.6.disconnect.bm.upi.static.ip.on.rhel8.md
+

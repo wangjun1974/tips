@@ -6999,3 +6999,33 @@ https://github.com/wangzheng422/docker_env/blob/master/redhat/ocp4/4.6/4.6.disco
 
 ### OCS 4.5 的培训材料
 https://github.com/red-hat-storage/ocs-training/blob/pre-antora/ocs4postgresql/create_ocs_postgresql_template
+
+### 查看在 aws 下 openshift-install 支持哪些 installconfig 参数
+```
+$ openshift-install explain installconfig.platform.aws
+KIND:     InstallConfig
+VERSION:  v1
+
+RESOURCE: <object>
+  AWS is the configuration used when installing on AWS.
+
+FIELDS:
+    amiID <string>
+      AMIID is the AMI that should be used to boot machines for the cluster. If set, the AMI should belong to the same region as the cluster.
+
+    defaultMachinePlatform <object>
+      DefaultMachinePlatform is the default configuration used when installing on AWS for machine pools which do not define their own platform configuration.
+
+    region <string> -required-
+      Region specifies the AWS region where the cluster will be created.
+
+    serviceEndpoints <[]object>
+      ServiceEndpoints list contains custom endpoints which will override default service endpoint of AWS Services. There must be only one ServiceEndpoint for a service.
+      ServiceEndpoint store the configuration for services to override existing defaults of AWS Services.
+
+    subnets <[]string>
+      Subnets specifies existing subnets (by ID) where cluster resources will be created.  Leave unset to have the installer create subnets in a new VPC on your behalf.
+
+    userTags <object>
+      UserTags additional keys and values that the installer will add as tags to all resources that it creates. Resources created by the cluster itself may not include these tags.
+```

@@ -6953,3 +6953,38 @@ oc -n infra rsh $(oc get pods -n infra -o jsonpath='{ range .items[*]}{.metadata
 ### Enhancing your Builds on OpenShift: Chaining Builds
 这个 Blog 非常值得阅读。
 https://www.openshift.com/blog/chaining-builds
+
+
+### 检查集群健康状态
+```
+for i in $(seq 0 2)
+do
+  echo master${i} 
+  oc get pods --all-namespaces -o wide | grep master${i} | grep -Ev "Running|Complete"
+  echo
+done
+
+for i in $(seq 0 2)
+do
+  echo worker${i} 
+  oc get pods --all-namespaces -o wide | grep worker${i} | grep -Ev "Running|Complete"
+  echo
+done
+```
+
+### 设置 jenkins 使用 jdk 版本的方法
+```
+15:37 <Catherine_H> 找到两种方法 一个是在dc里面设置      
+                    JAVA_HOME:III/usr/lib/jvm/java-1.8.0-openjdk-1.8.0.181-3.b13.el7_5.x86_64，另一个是在jenkins UI里面说是可以指定jdk版本
+15:37 <Catherine_H> https://stackoverflow.com/questions/28810477/how-to-change-the-jdk-for-a-jenkins-job
+15:38 <Catherine_H>   Containers:
+15:38 <Catherine_H>    jenkins:
+15:38 <Catherine_H>     
+Image:Iregistry.access.redhat.com/openshift3/jenkins-2-rhel7@sha256:3a51056f6817d1e9d89e549b364fd36d0050e2414602bdce7b9079c5759f13df
+15:38 <Catherine_H>     Limits:
+15:38 <Catherine_H>       memory:I3G
+15:38 <Catherine_H>     Environment:
+15:38 <Catherine_H>       JENKINS_SERVICE_NAME:IIjenkins-unimoni
+15:38 <Catherine_H>       JNLP_SERVICE_NAME:IIjenkins-unimoni-jnlp
+15:39 <Catherine_H>       JAVA_HOME:III/usr/lib/jvm/java-1.8.0-openjdk-1.8.0.181-3.b13.el7_5.x86_64
+```

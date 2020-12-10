@@ -6993,5 +6993,9 @@ Image:Iregistry.access.redhat.com/openshift3/jenkins-2-rhel7@sha256:3a51056f6817
 来自王征所写的 OCP 4.6 baremetal non integration 安装 <br>
 https://github.com/wangzheng422/docker_env/blob/master/redhat/ocp4/4.6/4.6.disconnect.bm.upi.static.ip.on.rhel8.md
 
+来自王征所写的 OCP 4.6 baremetal ipi 安装 <br>
+https://github.com/wangzheng422/docker_env/blob/master/redhat/ocp4/4.6/4.6.disconnect.bm.ipi.on.rhel8.md
+
+
 ### OCS 4.5 的培训材料
 https://github.com/red-hat-storage/ocs-training/blob/pre-antora/ocs4postgresql/create_ocs_postgresql_template

@@ -7036,3 +7036,8 @@ https://github.com/openshift/installer/blob/release-4.6/upi/aws/cloudformation/0
 ### OpenShift 4.6 AWS IPI vpc 相关信息
 https://github.com/openshift/installer/tree/release-4.6/data/data/aws/vpc
 
+### 为 OpenShift Service Mesh 配置 ElasticSearch 存储 
+https://docs.openshift.com/container-platform/4.6/service_mesh/v2x/ossm-custom-resources.html#ossm-configuring-jaeger-elasticsearch_ossm-custom-resources-v2x
+
+为 OpenShift Service Mesh 配置外部 ElasticSearch<br>
+https://www.techbeatly.com/2020/06/openshift-4-ossm-jaegers-external-elasticsearch.html#.X9LKbVMzbOR

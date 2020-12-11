@@ -7029,3 +7029,10 @@ FIELDS:
     userTags <object>
       UserTags additional keys and values that the installer will add as tags to all resources that it creates. Resources created by the cluster itself may not include these tags.
 ```
+
+### OpenShift 4.6 AWS UPI vpc 相关信息
+https://github.com/openshift/installer/blob/release-4.6/upi/aws/cloudformation/01_vpc.yaml
+
+### OpenShift 4.6 AWS IPI vpc 相关信息
+https://github.com/openshift/installer/tree/release-4.6/data/data/aws/vpc
+

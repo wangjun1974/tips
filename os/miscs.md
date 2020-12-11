@@ -7041,3 +7041,140 @@ https://docs.openshift.com/container-platform/4.6/service_mesh/v2x/ossm-custom-r
 
 为 OpenShift Service Mesh 配置外部 ElasticSearch<br>
 https://www.techbeatly.com/2020/06/openshift-4-ossm-jaegers-external-elasticsearch.html#.X9LKbVMzbOR
+
+### PromQL query to find CPU and memory used for the last week
+如何查询在之前的某段时间内，namespace 的内存用量
+https://stackoverflow.com/questions/62770744/promql-query-to-find-cpu-and-memory-used-for-the-last-week
+```
+To check the percentage of memory used by each namespace you will need a query similar to the one below:
+
+sum( container_memory_working_set_bytes{container="", namespace=~".+"} )|
+by (namespace) / ignoring (namespace) group_left 
+sum( machine_memory_bytes{}) * 100 
+
+Disclaimers!:
+
+The screenshot above is from Grafana for better visibility.
+This query does not acknowledge changes in available RAM (changes in nodes, autoscaling of nodes, etc.).
+
+To get the metric over a period of time in PromQL you will need to use additional function like:
+
+avg_over_time(EXP[time]).
+To go back in time and calculate resources from specific point in time you will need to use:
+
+offset TIME
+Using above pointers query should combine to:
+
+avg_over_time( sum(container_memory_working_set_bytes{container="", namespace=~".+"} offset 45m) by (namespace)[120m:])  / ignoring (namespace) group_left 
+sum( machine_memory_bytes{}) 
+
+Above query will calculate the average percentage of memory used by each namespace and divide it by all memory in the cluster in the span of 120 minutes to present time. It will also start 45 minutes earlier from present time.
+
+Example:
+
+Time of running the query: 20:00
+avg_over_time(EXPR[2h:])
+offset 45 min
+
+Above example will start at 17:15 and it will run the query to the 19:15. You can modify it to include the whole week :).
+
+If you want to calculate the CPU usage by namespace you can replace this metrics with the one below:
+
+container_cpu_usage_seconds_total{} - please check rate() function when using this metric (counter)
+machine_cpu_cores{}
+
+You could also look on this network metrics:
+
+container_network_receive_bytes_total - please check rate() function when using this metric (counter)
+container_network_transmit_bytes_total - please check rate() function when using this metric (counter)
+
+I've included more explanation below with examples (memory), methodology of testing and dissection of used queries.
+
+Let's assume:
+
+Kubernetes cluster 1.18.6 (Kubespray) with 12GB of memory in total:
+master node with 2GB of memory
+worker-one node with 8GB of memory
+worker-two node with 2GB of memory
+
+Prometheus and Grafana installed with: Github.com: Coreos: Kube-prometheus
+Namespace kruk with single ubuntu pod set to generate artificial load with below command:
+
+$ stress-ng --vm 1 --vm-bytes <AMOUNT_OF_RAM_USED> --vm-method all -t 60m -v
+
+The artificial load was generated with stress-ng two times:
+
+60 minutes - 1GB of memory used
+60 minutes - 2GB of memory used
+
+The percentage of memory used by namespace kruk in this timespan:
+
+1GB which accounts for about ~8.5% of all memory in the cluster (12GB)
+2GB which accounts for about ~17.5% of all memory in the cluster (12GB)
+
+The load from Prometheus query for kruk namespace was looking like that:
+
+Calculation using avg_over_time(EXPR[time:]) / memory in the cluster showed the usage in the midst of about 13% ((17.5+8.5)/2) when querying the time the artificial load was generated. This should indicate that the query was correct:
+
+As for the used query:
+
+avg_over_time( sum( container_memory_working_set_bytes{container="", namespace="kruk"} offset 1380m )
+by (namespace)[120m:]) / ignoring (namespace) group_left 
+sum( machine_memory_bytes{}) * 100 
+
+Above query is really similar to the one in the beginning but I've made some changes to show only the kruk namespace.
+
+I divided the query explanation on 2 parts (dividend/divisor).
+
+Dividend
+container_memory_working_set_bytes{container="", namespace="kruk"}
+
+This metric will output records of memory usage in namespace kruk. If you were to query for all namespaces look on additional explanation:
+
+namespace=~".+" <- this regexp will match only when the value inside of namespace key is containing 1 or more characters. This is to avoid empty namespace result with aggregated metrics.
+
+container="" <- part is used to filter the metrics. If you were to query without it you would get multiple memory usage metrics for each container/pod like below. container="" will match only when container value is empty (last row in below citation).
+
+
+container_memory_working_set_bytes{container="POD",endpoint="https-metrics",id="/kubepods/podab1ed1fb-dc8c-47db-acc8-4a01e3f9ea1b/e249c12010a27f82389ebfff3c7c133f2a5da19799d2f5bb794bcdb5dc5f8bca",image="k8s.gcr.io/pause:3.2",instance="192.168.0.124:10250",job="kubelet",metrics_path="/metrics/cadvisor",name="k8s_POD_ubuntu_kruk_ab1ed1fb-dc8c-47db-acc8-4a01e3f9ea1b_0",namespace="kruk",node="worker-one",pod="ubuntu",service="kubelet"} 692224
+container_memory_working_set_bytes{container="ubuntu",endpoint="https-metrics",id="/kubepods/podab1ed1fb-dc8c-47db-acc8-4a01e3f9ea1b/fae287e7043ff00da16b6e6a8688bfba0bfe30634c52e7563fcf18ac5850f6d9",image="ubuntu@sha256:5d1d5407f353843ecf8b16524bc5565aa332e9e6a1297c73a92d3e754b8a636d",instance="192.168.0.124:10250",job="kubelet",metrics_path="/metrics/cadvisor",name="k8s_ubuntu_ubuntu_kruk_ab1ed1fb-dc8c-47db-acc8-4a01e3f9ea1b_0",namespace="kruk",node="worker-one",pod="ubuntu",service="kubelet"} 2186403840
+container_memory_working_set_bytes{endpoint="https-metrics",id="/kubepods/podab1ed1fb-dc8c-47db-acc8-4a01e3f9ea1b",instance="192.168.0.124:10250",job="kubelet",metrics_path="/metrics/cadvisor",namespace="kruk",node="worker-one",pod="ubuntu",service="kubelet"} 2187096064
+
+
+You can read more about pause container here:
+
+Ianlewis.org: Almighty pause container
+
+sum( container_memory_working_set_bytes{container="", namespace="kruk"} offset 1380m )
+by (namespace)
+
+This query will sum the results by their respective namespaces. offset 1380m is used to go back in time as the tests were made in the past.
+
+avg_over_time( sum( container_memory_working_set_bytes{container="", namespace="kruk"} offset 1380m )
+by (namespace)[120m:])
+
+This query will calculate average from memory metric across namespaces in the specified time (120m to now) starting 1380m earlier than present time.
+
+You can read more about avg_over_time() here:
+
+Prometheus.io: Aggregation over time
+Prometheus.io: Blog: Subquery support
+
+Divisor
+sum( machine_memory_bytes{})
+This metric will sum the memory available in each node in the cluster.
+
+EXPR / ignoring (namespace) group_left 
+sum( machine_memory_bytes{}) * 100 
+Focusing on:
+
+/ ignoring (namespace) group_left <- this expression will allow you to divide each "record" in the dividend (each namespace with their memory average across time) by a divisor (all memory in the cluster). You can read more about it here: Prometheus.io: Vector matching
+
+* 100 is rather self explanatory and will multiply the result by a 100 to look more like percentages.
+
+Additional resources:
+
+Prometheus.io: Querying: Basics
+Timber.io: Blog: Promql for humans
+Grafana.com: Dashboards: 315
+```

@@ -6957,6 +6957,7 @@ https://www.openshift.com/blog/chaining-builds
 
 ### 检查集群健康状态
 ```
+echo
 for i in $(seq 0 2)
 do
   echo master${i} 

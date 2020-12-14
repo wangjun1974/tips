@@ -7179,3 +7179,8 @@ Prometheus.io: Querying: Basics
 Timber.io: Blog: Promql for humans
 Grafana.com: Dashboards: 315
 ```
+
+### OpenShift 从 Thanos 里查询信息
+```
+curl -k -H "Authorization: Bearer $(oc whoami -t)" "https://$(oc get routes -n openshift-monitoring thanos-querier -o jsonpath='{ .spec.host'})/api/v1/query?query=kube_storageclass_info&dedup=true"
+```

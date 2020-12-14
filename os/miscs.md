@@ -7188,3 +7188,8 @@ curl -k -H "Authorization: Bearer $(oc whoami -t)" "https://$(oc get routes -n o
 # 查询 console 的 url
 curl -k -H "Authorization: Bearer $(oc whoami -t)" "https://$(oc get routes -n openshift-monitoring thanos-querier -o jsonpath='{ .spec.host'})/api/v1/query?query=console_url&dedup=true" | jq -r '.data.result[0].metric.url'
 ```
+
+### 检查 worker.ign 的证书
+```
+cat worker.ign | jq -r '.ignition.security.tls.certificateAuthorities[0].source' | sed -e 's|^.*base64,||'  | base64 -d | openssl x509 -text -noout -in /dev/stdin | grep -E "Not Before|Not After" 
+``` 

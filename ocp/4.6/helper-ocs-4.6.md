@@ -1795,4 +1795,75 @@ oc -n openshift-storage get installplan -o jsonpath='{ range .items[0]}{.status.
 检查节点 worker0 的磁盘 /sys/block/<device>/queue/rotational，如果返回为 1 为说明磁盘为 HDD，如果返回为 0 说明是磁盘是 SSD
 ```
 oc debug node/worker0.cluster-0001.rhsacn.org -- chroot /host cat /sys/block/sdb/queue/rotational
+
+
+# 设置 machine config 改变 device rotational 设置
+# 参见：https://www.redhat.com/en/blog/openshift-container-platform-4-how-does-machine-config-pool-work
+# 创建 machineconfigpool ocsworker
+# 经验证这个步骤不要添加
+cat > mcp-ocsworker.yaml << EOF
+apiVersion: machineconfiguration.openshift.io/v1
+kind: MachineConfigPool
+metadata:
+  name: ocsworker
+spec:
+  machineConfigSelector:
+    matchExpressions:
+      - {key: machineconfiguration.openshift.io/role, operator: In, values: [worker,ocsworker]}
+  maxUnavailable: "null"
+  nodeSelector:
+    matchLabels:
+      node-role.kubernetes.io/ocsworker: ""
+  paused: false
+EOF
+oc apply -f ./mcp-ocsworker.yaml
+
+# 为 ocs 节点打上标签 ocsworker 
+# 经验证这个步骤不用做
+for i in $(seq 0 2)
+do
+  oc label node worker${i}.cluster-0001.rhsacn.org node-role.kubernetes.io/ocsworker-
+done
+
+
+cat > sys_block_sdb_queue_rotational << EOF
+0
+EOF
+
+config_source=$(cat ./sys_block_sdb_queue_rotational | base64 -w 0 )
+
+cat << EOF > ./99-ocs-zzz-sys-block-sdb-queue-rotational.yaml
+apiVersion: machineconfiguration.openshift.io/v1
+kind: MachineConfig
+metadata:
+  labels:
+    machineconfiguration.openshift.io/role: worker
+  name: ocsworker-sys-block-sdb-queue-rotational
+spec:
+  config:
+    ignition:
+      config: {}
+      security:
+        tls: {}
+      timeouts: {}
+      version: 2.2.0
+    networkd: {}
+    passwd: {}
+    storage:
+      files:
+      - contents:
+          source: data:text/plain;charset=utf-8;base64,${config_source}
+          verification: {}
+        filesystem: root
+        mode: 0644
+        path: /etc/systemd/system.conf.d/
+  osImageURL: ""
+EOF
+
+# 将这个 machineconfig 部署到 worker 上
+# 照理说，应该把这个 machineconfig 部署到部分节点上
+# 而不是部署到所有节点上
+oc apply -f ./99-ocs-zzz-sys-block-sdb-queue-rotational.yaml -n openshift-config
+
+
 ```

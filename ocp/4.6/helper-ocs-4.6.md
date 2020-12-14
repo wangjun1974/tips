@@ -1790,3 +1790,9 @@ oc -n openshift-local-storage get installplan -o jsonpath='{ range .items[0]}{.s
 
 oc -n openshift-storage get installplan -o jsonpath='{ range .items[0]}{.status.bundleLookups[0].path }{"\n"}{end}' >> ./tmp/registry-images.lst
 ```
+
+### 检查磁盘究竟是 HDD 还是 SSD
+检查节点 worker0 的磁盘 /sys/block/<device>/queue/rotational，如果返回为 1 为说明磁盘为 HDD，如果返回为 0 说明是磁盘是 SSD
+```
+oc debug node/worker0.cluster-0001.rhsacn.org -- chroot /host cat /sys/block/sdb/queue/rotational
+```

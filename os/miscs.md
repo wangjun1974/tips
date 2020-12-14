@@ -7182,5 +7182,9 @@ Grafana.com: Dashboards: 315
 
 ### OpenShift 从 Thanos 里查询信息
 ```
+# 查询 storage class 
 curl -k -H "Authorization: Bearer $(oc whoami -t)" "https://$(oc get routes -n openshift-monitoring thanos-querier -o jsonpath='{ .spec.host'})/api/v1/query?query=kube_storageclass_info&dedup=true"
+
+# 查询 console 的 url
+curl -k -H "Authorization: Bearer $(oc whoami -t)" "https://$(oc get routes -n openshift-monitoring thanos-querier -o jsonpath='{ .spec.host'})/api/v1/query?query=console_url&dedup=true" | jq -r '.data.result[0].metric.url'
 ```

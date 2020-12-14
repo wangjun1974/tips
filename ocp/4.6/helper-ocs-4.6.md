@@ -1800,7 +1800,7 @@ oc debug node/worker0.cluster-0001.rhsacn.org -- chroot /host cat /sys/block/sdb
 # 设置 machine config 改变 device rotational 设置
 # 参见：https://www.redhat.com/en/blog/openshift-container-platform-4-how-does-machine-config-pool-work
 # 创建 machineconfigpool ocsworker
-# 经验证这个步骤不要添加
+# 注意：经验证这个步骤不要添加
 cat > mcp-ocsworker.yaml << EOF
 apiVersion: machineconfiguration.openshift.io/v1
 kind: MachineConfigPool
@@ -1819,18 +1819,19 @@ EOF
 oc apply -f ./mcp-ocsworker.yaml
 
 # 为 ocs 节点打上标签 ocsworker 
-# 经验证这个步骤不用做
+# 注意：经验证这个步骤不用做
 for i in $(seq 0 2)
 do
   oc label node worker${i}.cluster-0001.rhsacn.org node-role.kubernetes.io/ocsworker-
 done
 
-
-cat > sys_block_sdb_queue_rotational << EOF
-0
+# 生成 udev rules，设置块设备的 queue/rotational 属性为 0
+cat > udev_rules_rotational << EOF
+ACTION=="add|change", SUBSYSTEM=="block", KERNEL=="sd[a-z]",  ATTR{queue/rotational}="0"
+ACTION=="add|change", SUBSYSTEM=="block", KERNEL=="dm-[0-9]", ATTR{queue/rotational}="0"
 EOF
 
-config_source=$(cat ./sys_block_sdb_queue_rotational | base64 -w 0 )
+config_source=$(cat ./udev_rules_rotational | base64 -w 0 )
 
 cat << EOF > ./99-ocs-zzz-sys-block-sdb-queue-rotational.yaml
 apiVersion: machineconfiguration.openshift.io/v1
@@ -1856,7 +1857,7 @@ spec:
           verification: {}
         filesystem: root
         mode: 0644
-        path: /etc/systemd/system.conf.d/
+        path: /etc/udev/rules.d/99-udev-rules-rotational.rules
   osImageURL: ""
 EOF
 

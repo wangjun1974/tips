@@ -7193,3 +7193,14 @@ curl -k -H "Authorization: Bearer $(oc whoami -t)" "https://$(oc get routes -n o
 ```
 cat worker.ign | jq -r '.ignition.security.tls.certificateAuthorities[0].source' | sed -e 's|^.*base64,||'  | base64 -d | openssl x509 -text -noout -in /dev/stdin | grep -E "Not Before|Not After" 
 ``` 
+
+### 检查 machine config daemon 日志
+```
+oc -n openshift-machine-config-operator logs $(oc get pods -n openshift-machine-config-operator -o jsonpath='{ range .items[*]}{.metadata.name}{"\n"}{end}' | grep daemon-5c) -c machine-config-daemon 
+...
+E1214 08:49:32.450838    2595 writer.go:135] Marking Degraded due to: open /sys/block/sdb/queue/.rotational138096396: permission denied
+
+oc -n openshift-machine-config-operator delete pod $(oc get pods -n openshift-machine-config-operator -o jsonpath='{ range .items[*]}{.metadata.name}{"\n"}{end}' | grep daemon-5c)
+
+
+```

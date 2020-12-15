@@ -7230,9 +7230,162 @@ oc get OperatorHub cluster -o json | jq .
 
 ### 4 个方法在 OpenShift 下构建应用程序
 https://dzone.com/articles/4-ways-to-build-applications-in-openshift-1 
+```
+oc new namespace test1
+oc project test1
+oc new-build nodejs~https://github.com/cesarvr/hello-world-nodejs --name=nodejs-build
+
+# 查看对象
+oc -n test1 get all
+NAME                       READY   STATUS      RESTARTS   AGE
+pod/nodejs-build-1-build   0/1     Completed   0          2m50s
+
+NAME                                          TYPE     FROM   LATEST
+buildconfig.build.openshift.io/nodejs-build   Source   Git    1
+
+NAME                                      TYPE     FROM          STATUS     STARTED         DURATION
+build.build.openshift.io/nodejs-build-1   Source   Git@5623514   Complete   2 minutes ago   1m33s
+
+NAME                                          IMAGE REPOSITORY                                                      TAGS     UPDATED
+imagestream.image.openshift.io/nodejs-build   image-registry.openshift-image-registry.svc:5000/test1/nodejs-build   latest   About a minute ago
+
+# 查看日志
+oc -n test1 logs $(oc -n test1 get pod -o jsonpath='{.items[0].metadata.name}')
+Adding cluster TLS certificate authority to trust store
+Caching blobs under "/var/cache/blobs".
+Getting image source signatures
+Copying blob sha256:6500ac87b29ffd00c8655be65a6824dfcf9fc0accc625158ef1060bcedc84ca8
+Copying blob sha256:0c7bc3c1e1a396e2e329b971eeab99d8c2dcc8ce18964770bff841eedfff3397
+Copying blob sha256:1b8dabac56ed728c17a670d327474ab87dc392dc17721854ea599a7753326579
+Copying blob sha256:2603ccf3ba62ab3cdf4fbe4ae582ed4c9e7191d16efaf5c0bdedafe2cbdf5553
+Copying blob sha256:3c6f298d7f4fcdea4dbdc5d5ac81a13a9201efcea7cfd7d4478cba6f1f08fd7e
+Copying config sha256:db4e490a45d85c077a42b3ef3cc0625b63ce7d3960ee81894e9b725271fbc6b9
+Writing manifest to image destination
+Storing signatures
+Generating dockerfile with builder image image-registry.openshift-image-registry.svc:5000/openshift/nodejs@sha256:4c2a9a7cb573190fcf8772b054f090daabc8b957cad0ba2373899ed6a70c25dd
+...
+STEP 1: FROM image-registry.openshift-image-registry.svc:5000/openshift/nodejs@sha256:4c2a9a7cb573190fcf8772b054f090daabc8b957cad0ba2373899ed6a70c25dd
+STEP 2: LABEL "io.openshift.build.commit.date"="Sun Mar 22 11:56:47 2020 +0000"       "io.openshift.build.commit.id"="562351422e8b6b63168184a7aecaec14686e6a46"       "io.openshift.build.commit.ref"="master"       "io.openshift.build.commit.message"="Create README.md"       "io.openshift.build.source-location"="https://github.com/cesarvr/hello-world-nodejs"       "io.openshift.build.image"="image-registry.openshift-image-registry.svc:5000/openshift/nodejs@sha256:4c2a9a7cb573190fcf8772b054f090daabc8b957cad0ba2373899ed6a70c25dd"       "io.openshift.build.commit.author"="Cesar Valdez <cesarv01@yahoo.com>"
+STEP 3: ENV OPENSHIFT_BUILD_NAME="nodejs-build-1"     OPENSHIFT_BUILD_NAMESPACE="test1"     OPENSHIFT_BUILD_SOURCE="https://github.com/cesarvr/hello-world-nodejs"     OPENSHIFT_BUILD_COMMIT="562351422e8b6b63168184a7aecaec14686e6a46"
+STEP 4: USER root
+STEP 5: COPY upload/src /tmp/src
+STEP 6: RUN chown -R 1001:0 /tmp/src
+STEP 7: USER 1001
+STEP 8: RUN /usr/libexec/s2i/assemble
+STEP 9: CMD /usr/libexec/s2i/run
+STEP 10: COMMIT temp.builder.openshift.io/test1/nodejs-build-1:c8027934
+Getting image source signatures
+Copying blob sha256:0b5feeefca258787c519a497e76fd0537a4635b327afc7c44f578f190e0be37f
+Copying blob sha256:37ab7f712dcb91a697a5bf63475f5b1723a55b3fb5af11f0c1fa42e6ec163868
+Copying blob sha256:af7dc60e1bfb32557c735ee52ca2e95885bb134d84393bf2ae0169304425ffec
+Copying blob sha256:7a9f4af0a3a5ba525906dea3505b4c693a9137c00823110bc7993661b13a1fb9
+Copying blob sha256:e5702422d6b2e52de769904448d1e1a1bbaf521bcbcea7b07dbeb80d7e9b8c3d
+Copying blob sha256:5f1a86bd6165767a26519fa41a4d6de774d494b4871326210c1e9215e746bf22
+Copying config sha256:18d9c593c9878745270ff898d754ab4cc3d915115c02f653a08d964db95aee51
+Writing manifest to image destination
+Storing signatures
+--> 18d9c593c98
+18d9c593c9878745270ff898d754ab4cc3d915115c02f653a08d964db95aee51
+
+Pushing image image-registry.openshift-image-registry.svc:5000/test1/nodejs-build:latest ...
+Getting image source signatures
+Copying blob sha256:5f1a86bd6165767a26519fa41a4d6de774d494b4871326210c1e9215e746bf22
+Copying blob sha256:1b8dabac56ed728c17a670d327474ab87dc392dc17721854ea599a7753326579
+Copying blob sha256:2603ccf3ba62ab3cdf4fbe4ae582ed4c9e7191d16efaf5c0bdedafe2cbdf5553
+Copying blob sha256:0c7bc3c1e1a396e2e329b971eeab99d8c2dcc8ce18964770bff841eedfff3397
+Copying blob sha256:6500ac87b29ffd00c8655be65a6824dfcf9fc0accc625158ef1060bcedc84ca8
+Copying blob sha256:3c6f298d7f4fcdea4dbdc5d5ac81a13a9201efcea7cfd7d4478cba6f1f08fd7e
+Copying config sha256:18d9c593c9878745270ff898d754ab4cc3d915115c02f653a08d964db95aee51
+Writing manifest to image destination
+Storing signatures
+Successfully pushed image-registry.openshift-image-registry.svc:5000/test1/nodejs-build@sha256:a7b8e9fdcc40ca75f872d1846639e7010f4495166e228cf0b4b1e3f96
+228d263
+Push successful
+
+
+```
 
 
 ### 查看有哪些 imagestream
 ```
 oc get is -n openshift -o jsonpath='{range .items[*]}{.metadata.name}{"\n"}'
+```
+
+### Red Hat Security API Data Examples
+```
+cat > get_rhsa_2016_1847.py << 'EOF'
+#!/usr/bin/env python
+from __future__ import print_function
+import sys
+import requests
+from datetime import datetime, timedelta
+
+API_HOST = 'https://access.redhat.com/hydra/rest/securitydata'
+
+
+def get_data(query):
+
+    full_query = API_HOST + query
+    r = requests.get(full_query)
+
+    if r.status_code != 200:
+        print('ERROR: Invalid request; returned {} for the following '
+              'query:\n{}'.format(r.status_code, full_query))
+        sys.exit(1)
+
+    if not r.json():
+        print('No data returned with the following query:')
+        print(full_query)
+        sys.exit(0)
+
+    return r.json()
+
+
+# Get a list of issues and their impacts for RHSA-2016:1847
+endpoint = '/cve.json'
+params = 'advisory=RHSA-2016:1847'
+
+data = get_data(endpoint + '?' + params)
+
+for cve in data:
+    print(cve['CVE'], cve['severity'])
+
+
+print('-----')
+# Get a list of kernel advisories for the last 30 days and display the
+# packages that they provided.
+endpoint = '/cvrf.json'
+date = datetime.now() - timedelta(days=30)
+params = 'package=kernel&after=' + str(date.date())
+
+data = get_data(endpoint + '?' + params)
+
+kernel_advisories = []
+for advisory in data:
+    print(advisory['RHSA'], advisory['severity'], advisory['released_on'])
+    print('-', '\n- '.join(advisory['released_packages']))
+    kernel_advisories.append(advisory['RHSA'])
+
+
+print('-----')
+# From the list of advisories saved in the previous example (as
+# `kernel_advisories`), get a list of affected products for each advisory.
+endpoint = '/cvrf/'
+
+for advisory in kernel_advisories:
+    data = get_data(endpoint + advisory + '.json')
+    print(advisory)
+
+    product_branch = data['cvrfdoc']['product_tree']['branch']
+    for product_branch in data['cvrfdoc']['product_tree']['branch']:
+
+        if product_branch['type'] == 'Product Family':
+
+            if type(product_branch['branch']) is dict:
+                print('-', product_branch['branch']['full_product_name'])
+
+            else:
+                print('-', '\n- '.join(pr['full_product_name'] for
+                                       pr in product_branch['branch']))
+EOF
 ```

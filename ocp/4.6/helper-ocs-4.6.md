@@ -1868,3 +1868,19 @@ oc apply -f ./99-ocs-zzz-sys-block-sdb-queue-rotational.yaml -n openshift-config
 
 
 ```
+
+### 检查节点是否有所需的 labels
+这篇文档不管阅读几遍都不为过
+https://kubernetes.io/docs/reference/kubectl/cheatsheet/
+```
+# 为节点添加 labels
+oc label nodes worker0.cluster-0001.rhsacn.org cluster.ocs.openshift.io/openshift-storage=''
+oc label nodes worker1.cluster-0001.rhsacn.org cluster.ocs.openshift.io/openshift-storage=''
+oc label nodes worker2.cluster-0001.rhsacn.org cluster.ocs.openshift.io/openshift-storage=''
+
+# 查询节点是否有所需的 labels
+oc get nodes -o jsonpath='{range .items[*]}{.metadata.labels}{"\n"}'
+
+# 检查 worker 节点的 labels 
+oc get nodes --selector='!node-role.kubernetes.io/master' -o jsonpath='{range .items[*]}{.metadata.labels}{"\n"}'
+```

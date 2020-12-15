@@ -7230,3 +7230,9 @@ oc get OperatorHub cluster -o json | jq .
 
 ### 4 个方法在 OpenShift 下构建应用程序
 https://dzone.com/articles/4-ways-to-build-applications-in-openshift-1 
+
+
+### 查看有哪些 imagestream
+```
+oc get is -n openshift -o jsonpath='{range .items[*]}{.metadata.name}{"\n"}'
+```

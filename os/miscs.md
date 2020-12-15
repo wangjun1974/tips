@@ -7388,4 +7388,12 @@ for advisory in kernel_advisories:
                 print('-', '\n- '.join(pr['full_product_name'] for
                                        pr in product_branch['branch']))
 EOF
+
+# 查询某个 CVE，例如: CVE-2020-10771
+curl https://access.redhat.com/hydra/rest/securitydata/cve.json | jq -r '.[] | select( .CVE == "CVE-2020-10771" )'
+
+# 根据变量查询 Red Hat Security Data API
+CVE_IN_QUESTION="CVE-2020-10771"
+
+curl https://access.redhat.com/hydra/rest/securitydata/cve.json | jq -r ".[] | select( .CVE == \"${CVE_IN_QUESTION}\" )"
 ```

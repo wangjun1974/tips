@@ -7204,3 +7204,26 @@ oc -n openshift-machine-config-operator delete pod $(oc get pods -n openshift-ma
 
 
 ```
+
+### 测试 nexus3
+```
+mkdir -p /var/nexus3/nexus3_test
+
+podman run -d --name nexus3 -v /var/nexus3/nexus3_test:/nexus-data sonatype/nexus3
+podman run -d --name nexus3_1 -v /var/nexus3/nexus3_test:/nexus-data sonatype/nexus3
+
+```
+
+### install docker-ce on RHEL8
+https://help.hcltechsw.com/bigfix/10.0/mcm/MCM/Config/install_docker_ce_docker_compose_on_rhel_8.html
+```
+sudo dnf config-manager --add-repo=https://download.docker.com/linux/centos/docker-ce.repo
+sudo dnf repolist -v
+sudo dnf install --nobest docker-ce
+
+```
+
+### 查看 OperatorHub cluster
+```
+oc get OperatorHub cluster -o json | jq . 
+```

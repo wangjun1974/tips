@@ -7227,3 +7227,6 @@ sudo dnf install --nobest docker-ce
 ```
 oc get OperatorHub cluster -o json | jq . 
 ```
+
+### 4 个方法在 OpenShift 下构建应用程序
+https://dzone.com/articles/4-ways-to-build-applications-in-openshift-1 

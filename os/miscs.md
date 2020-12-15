@@ -7396,4 +7396,7 @@ curl https://access.redhat.com/hydra/rest/securitydata/cve.json | jq -r '.[] | s
 CVE_IN_QUESTION="CVE-2020-10771"
 
 curl https://access.redhat.com/hydra/rest/securitydata/cve.json | jq -r ".[] | select( .CVE == \"${CVE_IN_QUESTION}\" )"
+
+# 根据变量查询 Red Hat Security Data API 并输出选择的字段
+ curl https://access.redhat.com/hydra/rest/securitydata/cve.json | jq -r ".[] | select( .CVE == \"${CVE_IN_QUESTION}\" ) | .CVE, .bugzilla, .advisories"
 ```

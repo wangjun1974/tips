@@ -7398,5 +7398,16 @@ CVE_IN_QUESTION="CVE-2020-10771"
 curl https://access.redhat.com/hydra/rest/securitydata/cve.json | jq -r ".[] | select( .CVE == \"${CVE_IN_QUESTION}\" )"
 
 # 根据变量查询 Red Hat Security Data API 并输出选择的字段
- curl https://access.redhat.com/hydra/rest/securitydata/cve.json | jq -r ".[] | select( .CVE == \"${CVE_IN_QUESTION}\" ) | .CVE, .bugzilla, .advisories"
+curl https://access.redhat.com/hydra/rest/securitydata/cve.json | jq -r ".[] | select( .CVE == \"${CVE_IN_QUESTION}\" ) | .CVE, .bugzilla, .advisories"
+
+```
+
+### OpenShift 4 上调试 etcd 的命令
+```
+ssh -i <cert> core@<master> (or oc debug node/<node>)
+crictl exec -it <etcd-member pod id> /bin/bash
+export ETCDCTL_API=3 ETCDCTL_CACERT=/etc/ssl/etcd/ca.crt 
+export ETCDCTL_CERT=$(find /etc/ssl/ -name *peer*crt) 
+export ETCDCTL_KEY=$(find /etc/ssl/ -name *peer*key)
+etcdctl get --prefix / --keys-only
 ```

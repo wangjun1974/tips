@@ -7302,13 +7302,18 @@ Successfully pushed image-registry.openshift-image-registry.svc:5000/test1/nodej
 228d263
 Push successful
 
+# 部署应用
+oc new-app nodejs-build --name nodejs-demo
+oc expose service/nodejs-demo
 
+# 获取路由
+oc get route -o=jsonpath='{range .items[?(@.metadata.name=="nodejs-demo")]}{@.spec.host}{"\n"}{end}'
 ```
 
 
 ### 查看有哪些 imagestream
 ```
-oc get is -n openshift -o jsonpath='{range .items[*]}{.metadata.name}{"\n"}'
+oc get is -n openshift -o jsonpath='{range .items[*]}{.metadata.name}{"\n"}{end}'
 ```
 
 ### Red Hat Security API Data Examples

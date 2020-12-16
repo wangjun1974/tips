@@ -7231,6 +7231,7 @@ oc get OperatorHub cluster -o json | jq .
 ### 4 个方法在 OpenShift 下构建应用程序
 https://dzone.com/articles/4-ways-to-build-applications-in-openshift-1 
 ```
+# 方式1
 oc new namespace test1
 oc project test1
 oc new-build nodejs~https://github.com/cesarvr/hello-world-nodejs --name=nodejs-build
@@ -7308,6 +7309,18 @@ oc expose service/nodejs-demo
 
 # 获取路由
 oc get route -o=jsonpath='{range .items[?(@.metadata.name=="nodejs-demo")]}{@.spec.host}{"\n"}{end}'
+
+# 方式2
+git clone https://github.com/cesarvr/Spring-Boot spring_boot
+cd spring_boot
+# generate the binary executable file in ./build/libs/
+gradle bootJar
+
+# we got a file named: hello-boot-0.1.0.jar
+
+# 参考：https://developers.redhat.com/blog/2018/12/18/openshift-java-s2i-builder-java-11-grade/
+
+
 ```
 
 
@@ -7420,4 +7433,23 @@ etcdctl get --prefix / --keys-only
 # 一条命令的版本
 ssh -i <cert> core@<master> (or oc debug node/<node>)
 crictl exec -it $( crictl ps --name etcdctl -o json | jq -r '.containers[0].id' ) etcdctl get --prefix / --keys-only
+```
+
+### 在 RHEL7 上安装 gradle 
+https://yallalabs.com/devops/how-to-install-gradle-centos-7-rhel-7/
+```
+wget https://services.gradle.org/distributions/gradle-6.4.1-bin.zip -P /tmp
+
+sudo unzip -d /opt/gradle /tmp/gradle-*.zip
+
+cat > /etc/profile.d/gradle.sh << 'EOF'
+export GRADLE_HOME=/opt/gradle/gradle-6.4.1
+export PATH=${GRADLE_HOME}/bin:${PATH}
+EOF
+
+source /etc/profile.d/gradle.sh
+
+gradle -v
+
+
 ```

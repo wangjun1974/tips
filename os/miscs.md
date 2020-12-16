@@ -7320,6 +7320,10 @@ gradle bootJar
 
 # 参考：https://developers.redhat.com/blog/2018/12/18/openshift-java-s2i-builder-java-11-grade/
 
+# generate the build configuration
+oc new-build java --name=java-binary-build --binary=true
+
+oc start-build bc/java-binary-build --from-file=./build/libs/hello-boot-0.1.0.jar --follow
 
 ```
 

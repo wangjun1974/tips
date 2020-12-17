@@ -7512,4 +7512,6 @@ source:
     uri: ssh://git@github.com/UKCloud/my-private-repo-name.git
   sourceSecret:
     name: myGitHubsecret
+
+# 注意 uri 是以 ssh:// 开始的
 ```

@@ -7489,3 +7489,27 @@ https://blogs.vmware.com/virtualblocks/2019/08/14/introducing-cloud-native-stora
       logs: /elasticsearch/persistent/${CLUSTER_NAME}/logs
       repo: /elasticsearch/persistent/backup ## LINE TO ADD
 ```
+
+### 在 OpenShift Build Config 里配置 sshkey git 认证
+https://docs.ukcloud.com/articles/openshift/oshift-how-build-app-private-repo.html
+
+```
+# 生成用来做 git 认证的 sshkey
+ssh-keygen -t rsa -b 4096 -c "jbloggs@example.com" -f my_GitHub_deploy_key
+
+# 把 public key 添加给 git repo 
+# 步骤参见：https://developer.github.com/v3/guides/managing-deploy-keys/#deploy-keys
+
+# 把 private key 做成 openshift secret
+oc secrets new-sshauth myGitHubsecret --ssh-privatekey=./my_GitHub_deploy_key
+
+# 把 secret 添加到 builder service account 上
+oc secrets link builder myGitHubsecret
+
+# 编辑 secret 到 buildconfig 
+source:
+  git:
+    uri: ssh://git@github.com/UKCloud/my-private-repo-name.git
+  sourceSecret:
+    name: myGitHubsecret
+```

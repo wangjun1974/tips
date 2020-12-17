@@ -7477,4 +7477,5 @@ https://docs.openshift.com/container-platform/4.6/installing/installing_bare_met
 ### Layered Approach to Container and Kubernetes Security
 https://www.redhat.com/en/resources/layered-approach-security-detail<br>
 
-
+### Introducing Cloud Native Storage for vSphere
+https://blogs.vmware.com/virtualblocks/2019/08/14/introducing-cloud-native-storage-for-vsphere/

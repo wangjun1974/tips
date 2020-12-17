@@ -7543,7 +7543,18 @@ oc patch pod $(oc get pods -o jsonpath='{range .items[?(@.metadata.name=="test")
 
 ### 为 github 帐户添加 sshkey
 ```
-ssh-agent bash -c 'ssh-add ~/.ssh/wjqhd_github_sshkey; git clone git@github.com:wangjun1974/hello-world-nodejs.git'
+# 根据 github 的手册添加 sshkey
 
+# 在本地添加 private key， 克隆仓库，验证 sshkey 认证可正常工作
+ssh-agent bash -c 'ssh-add ~/.ssh/wjqhd_github_sshkey; git clone git@github.com:wangjun1974/hello-world-nodejs.git'
 ssh-add ~/.ssh/wjqhd_github_sshkey
+git clone
+git status
+git push
+
+# 创建 secret 
+oc create secret generic git-auth-1 --from-file=ssh-privatekey=/Users/junwang/.ssh/wjqhd_github_sshkey --type=kubernetes.io/ssh-auth
+
+# 用 secret 作为 source-secret 建立新的 build 
+oc new-build nodejs~ssh://git@github.com/wangjun1974/hello-world-nodejs.git --name=ssh-4-nodejs-build --source-secret='git-auth-1'
 ```

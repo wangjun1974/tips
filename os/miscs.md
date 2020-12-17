@@ -2143,6 +2143,13 @@ for f in $(pgrep 'Chrome'); do renice +20 -p $f; done
 # make chrome normal
 for f in $(pgrep 'Chrome'); do renice 0 -p $f; done
 
+# make mdworker be nice to other process
+sudo -i
+for f in $(pgrep 'mdworker'); do renice +20 -p $f; done
+
+# make mdworker normal
+sudo -i
+for f in $(pgrep 'mdworker'); do renice 0 -p $f; done
 ```
  
 ### 如何在 url 里将特殊字符进行编码

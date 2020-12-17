@@ -7479,3 +7479,13 @@ https://www.redhat.com/en/resources/layered-approach-security-detail<br>
 
 ### Introducing Cloud Native Storage for vSphere
 https://blogs.vmware.com/virtualblocks/2019/08/14/introducing-cloud-native-storage-for-vsphere/
+
+### OpenShift 4.6 ElasticSearch Backup 相关内容
+```
+# 目前需要将 elasticsearch CR 设置为 unmanaged mode
+# 然后修改 elasticsearch.yml，修改内容如下：
+    path:
+      data: /elasticsearch/persistent/${CLUSTER_NAME}/data
+      logs: /elasticsearch/persistent/${CLUSTER_NAME}/logs
+      repo: /elasticsearch/persistent/backup ## LINE TO ADD
+```

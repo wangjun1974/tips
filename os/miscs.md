@@ -7501,8 +7501,7 @@ ssh-keygen -t rsa -b 4096 -c "jbloggs@example.com" -f my_GitHub_deploy_key
 # 步骤参见：https://developer.github.com/v3/guides/managing-deploy-keys/#deploy-keys
 
 # 把 private key 做成 openshift secret
-oc secrets new-sshauth myGitHubsecret --ssh-privatekey=./my_GitHub_deploy_key
-
+oc create secret generic myGitHubsecret --from-file=ssh-privatekey=./my_GitHub_deploy_key --type=kubernetes.io/ssh-auth
 # 把 secret 添加到 builder service account 上
 oc secrets link builder myGitHubsecret
 
@@ -7514,4 +7513,37 @@ source:
     name: myGitHubsecret
 
 # 注意 uri 是以 ssh:// 开始的
+# 另外需要注意 uri 的写法需要符合
+# 参见：https://docs.openshift.com/container-platform/3.5/dev_guide/builds/build_inputs.html
+# URI patterns only match Git source URIs which are conformant to RFC3986. For example, https://github.com/openshift/origin.git. They do not match the alternate SSH style that Git also uses. For example, git@github.com:openshift/origin.git.
+# It is not valid to attempt to express a URI pattern in the alternate style, or to include a username/password component in a URI pattern.
+```
+
+
+### 创建 builder pod 
+```
+# 创建 secret 
+oc create secret generic git-auth --from-file=ssh-privatekey=./my_GitHub_deploy_key --type=kubernetes.io/ssh-auth
+
+# 为 service account 添加 secret
+oc secret link default git-auth
+
+# 获取所需的 image uri
+oc get is nodejs-build -o jsonpath='{range .items[?(@.metadata.name=="nodejs-build")]}{@.status.dockerImageRepository}'
+
+# 用这个 image uri 启动 pod
+oc run --image="$(oc get is nodejs-build -o jsonpath='{range .items[?(@.metadata.name=="nodejs-build")]}{@.status.dockerImageRepository}')" test
+
+# 登录 builder pod
+oc rsh $(oc get pods -o jsonpath='{range .items[?(@.metadata.name=="test")]}{@.metadata.name}')
+
+# patch pod
+oc patch pod $(oc get pods -o jsonpath='{range .items[?(@.metadata.name=="test")]}{@.metadata.name}') 
+```
+
+### 为 github 帐户添加 sshkey
+```
+ssh-agent bash -c 'ssh-add ~/.ssh/wjqhd_github_sshkey; git clone git@github.com:wangjun1974/hello-world-nodejs.git'
+
+ssh-add ~/.ssh/wjqhd_github_sshkey
 ```

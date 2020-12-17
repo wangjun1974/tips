@@ -7558,3 +7558,65 @@ oc create secret generic git-auth-1 --from-file=ssh-privatekey=/Users/junwang/.s
 # 用 secret 作为 source-secret 建立新的 build 
 oc new-build nodejs~ssh://git@github.com/wangjun1974/hello-world-nodejs.git --name=ssh-4-nodejs-build --source-secret='git-auth-1'
 ```
+
+### 测试 jenkins nodejs pipeline
+```
+oc project default
+oc create namespace test1
+oc project test1 
+
+oc new-app jenkins-ephemeral
+
+oc create -f https://raw.githubusercontent.com/openshift/origin/master/examples/jenkins/pipeline/samplepipeline.yaml
+template.template.openshift.io/jenkins-pipeline-example created
+
+oc new-app --template=jenkins-pipeline-example
+
+oc get is jenkins-agent-nodejs -n openshift -o jsonpath='{.status.tags[0].items[0].dockerImageReference}{"\n"}'
+
+skopeo copy --format v2s2 --authfile /root/pull-secret-2.json --all docker://quay.io/openshift-release-dev/ocp-v4.0-art-dev@sha256:89b4cc10e4fdd03494e9153685808d9ad4c7a11862e8104ebe32a0d6ba62b05d docker://helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4
+
+oc -n openshift patch is jenkins-agent-nodejs --type json -p='[{"op": "replace", "path": "/spec/tags/1/from/name", "value":"helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4@sha256:89b4cc10e4fdd03494e9153685808d9ad4c7a11862e8104ebe32a0d6ba62b05d"}]'
+
+oc -n test1 logs $(oc get pods -n test1 -o jsonpath='{ range .items[*]}{.metadata.name}{"\n"}{end}' | grep build)
+
+oc get dc/mongodb -o jsonpath='{ .spec.triggers[0].imageChangeParams.from.name}{"\n"}'
+
+oc patch dc/mongodb --type json -p='[{"op": "replace", "path": "/spec/triggers/0/imageChangeParams/from/name", "value":"mongodb:3.6"}]'
+
+oc get dc/mongodb -o jsonpath='{ .spec.triggers[0].imageChangeParams.from.name}{"\n"}'
+
+oc -n test1 describe pod $(oc get pods -n test1 -o jsonpath='{ range .items[*]}{.metadata.name}{"\n"}{end}' | grep build)
+
+oc -n test1 logs $(oc get pods -n test1 -o jsonpath='{ range .items[*]}{.metadata.name}{"\n"}{end}' | grep build)
+
+oc -n test1 rsh $(oc get pods -n test1 -o jsonpath='{ range .items[*]}{.metadata.name}{"\n"}{end}' | grep build)
+
+oc adm policy add-scc-to-user anyuid -z default -n test1
+oc adm policy add-scc-to-user anyuid -z builder -n test1
+
+oc get build -o jsonpath='{range .items[?(@.metadata.name contains "sample-pipeline" && @.status.conditions[0].type=="Running")]}{@.metadata.name}{"\n"}'
+
+oc get build -o jsonpath='{range .items[?(@.metadata.name=="sample-pipeline-5")]}{@.metadata.name}{"\n"}'
+
+oc get build -o jsonpath='{range .items[?(@.metadata.name=="sample-pipeline-6")]}{@.metadata.name}{"\n"}'
+oc cancel-build $(oc get build -o jsonpath='{range .items[?(@.metadata.name=="sample-pipeline-6")]}{@.metadata.name}{"\n"}')
+
+oc get build -o jsonpath='{range .items[?(@.metadata.name=="nodejs-mongodb-example-8")]}{@.metadata.name}{"\n"}'
+oc cancel-build $(oc get build -o jsonpath='{range .items[?(@.metadata.name=="nodejs-mongodb-example-8")]}{@.metadata.name}{"\n"}')
+
+oc start-build --build-loglevel 5 sample-pipeline
+
+# 参考：https://github.com/xiaoping378/blog/blob/master/posts/openshift%E5%AE%9E%E8%B7%B5-DevOps%E5%AE%9E%E6%88%98-1.md
+# 设置 NPM_MIRROR 环境变量
+oc start-build --build-loglevel 5 nodejs-mongodb-example --env="NPM_MIRROR=https://registry.npm.taobao.org"
+
+# patch buildconfig nodejs-mongodb-example，设置环境变量 NPM_MIRROR 的值
+oc -n test1 patch bc/nodejs-mongodb-example --type json -p='[{"op": "add", "path": "/spec/strategy/sourceStrategy/env/0/value", "value":"https://registry.npm.taobao.org"}]'
+
+oc -n test1 get bc/nodejs-mongodb-example -o jsonpath='{.spec.strategy.sourceStrategy.env[0].value}{"\n"}'
+
+oc start-build --build-loglevel 5 sample-pipeline
+
+oc -n test1 logs $(oc get pods -n test1 -o jsonpath='{ range .items[?(@.metadata.name=="nodejs-mongodb-example-10-build")]}{@.metadata.name}{"\n"}{end}')
+```

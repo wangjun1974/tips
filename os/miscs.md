@@ -7464,3 +7464,17 @@ gradle -v
 
 
 ```
+
+### 制作并修改 coreos iso 的工具
+https://github.com/chuckersjp/coreos-iso-maker<br>
+
+jinja template 内核参数的例子<br>
+https://github.com/RedHatOfficial/ocp4-helpernode/blob/master/templates/pxe-master.j2
+
+coreos-installer options for ISO install<br>
+https://docs.openshift.com/container-platform/4.6/installing/installing_bare_metal/installing-bare-metal.html#installation-user-infra-machines-static-network_installing-bare-metal
+
+### Layered Approach to Container and Kubernetes Security
+https://www.redhat.com/en/resources/layered-approach-security-detail<br>
+
+

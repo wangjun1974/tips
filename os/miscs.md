@@ -7622,8 +7622,9 @@ oc -n test1 logs $(oc get pods -n test1 -o jsonpath='{ range .items[?(@.metadata
 ```
 
 ### 介绍 jsonpath 的网址
-https://support.smartbear.com/alertsite/docs/monitors/api/endpoint/jsonpath.html#filters
-https://unofficial-kubernetes.readthedocs.io/en/latest/user-guide/jsonpath/
+https://support.smartbear.com/alertsite/docs/monitors/api/endpoint/jsonpath.html#filters<br>
+https://unofficial-kubernetes.readthedocs.io/en/latest/user-guide/jsonpath/<br>
+https://medium.com/@imarunrk/certified-kubernetes-administrator-cka-tips-and-tricks-part-4-17407899ef1a
 
 
 ### 介绍 buildah 的网址
@@ -7685,3 +7686,21 @@ https://docs.openshift.com/container-platform/3.6/dev_guide/service_accounts.htm
 | deployer | Used by deployment pods and is given the system:deployer role, which allows viewing and modifying replication controllers and pods in the project. |
 | default | Used to run all other pods unless they specify a different service account. |
 
+### kubectl cheat sheet
+https://kapeli.com/cheat_sheets/Kubernetes.docset/Contents/Resources/Documents/index
+```
+# 查看节点的 status
+kubectl get nodes -o jsonpath='{range .items[*]}{@.metadata.name}:{"\n"}{range @.status.conditions[*]}{"\t"}{@.type}={@.status}{"\n"}{end}{end}'
+master0.cluster-0001.rhsacn.org:
+        MemoryPressure=False
+        DiskPressure=False
+        PIDPressure=False
+        Ready=True
+...
+
+# 查看节点的 ExternalIP
+kubectl get nodes -o jsonpath='{range .items[*]}{@.metadata.name}: {@.status.addresses[?(@.type=="ExternalIP")].address}{"\n"}{end}'
+
+# 查看节点的 InternalIP
+kubectl get nodes -o jsonpath='{range .items[*]}{@.metadata.name}: {@.status.addresses[?(@.type=="InternalIP")].address}{"\n"}{end}'
+```

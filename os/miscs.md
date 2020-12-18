@@ -7709,6 +7709,7 @@ kubectl get nodes -o jsonpath='{range .items[*]}{@.metadata.name}: {@.status.add
 rc_name="nodejs-mongodb-example-1"
 sel=$(kubectl get rc ${rc_name} --output=json | jq -j '.spec.selector | to_entries | .[] | "\(.key)=\(.value),"')
 sel=${sel%?} # Remove trailing comma
+# 参见：https://bytefreaks.net/gnulinux/bash/how-to-remove-prefix-and-suffix-from-a-variable-in-bash
 pods=$(kubectl get pods --selector=$sel --output=jsonpath={.items..metadata.name})`
 ```
 
@@ -7756,3 +7757,6 @@ v12.18.4
 sh-4.4$ /opt/app-root/src/.npm-global/bin/node --version 
 v15.4.0
 ```
+
+### 使用 nodeshift 部署 nodejs 应用到 OpenShift
+https://developers.redhat.com/blog/2019/08/30/easily-deploy-node-js-applications-to-red-hat-openshift-using-nodeshift/

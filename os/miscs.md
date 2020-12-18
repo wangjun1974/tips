@@ -7672,3 +7672,16 @@ https://www.openshift.com/blog/deploy-vuejs-applications-on-openshift
 ### Writing Jenkins Pipeline For OpenShift Deployment
 https://ruddra.com/openshift-python-jenkins-pipeline-one/<br>
 https://ruddra.com/openshift-python-jenkins-pipeline-two/
+
+
+### OpenShift 的 Service Account
+https://docs.openshift.com/container-platform/3.6/dev_guide/service_accounts.html
+
+每个 namespace/project 下都有 3 个默认的 service account
+
+| Servicde Account | Usage |
+|---|---|
+| builder | Used by build pods. It is given the system:image-builder role, which allows pushing images to any image stream in the project using the internal Docker registry. |
+| deployer | Used by deployment pods and is given the system:deployer role, which allows viewing and modifying replication controllers and pods in the project. |
+| default | Used to run all other pods unless they specify a different service account. |
+

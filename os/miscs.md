@@ -7620,3 +7620,7 @@ oc start-build --build-loglevel 5 sample-pipeline
 
 oc -n test1 logs $(oc get pods -n test1 -o jsonpath='{ range .items[?(@.metadata.name=="nodejs-mongodb-example-10-build")]}{@.metadata.name}{"\n"}{end}')
 ```
+
+### 介绍 jsonpath 的网址
+https://support.smartbear.com/alertsite/docs/monitors/api/endpoint/jsonpath.html#filters
+

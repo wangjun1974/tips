@@ -7623,4 +7623,48 @@ oc -n test1 logs $(oc get pods -n test1 -o jsonpath='{ range .items[?(@.metadata
 
 ### 介绍 jsonpath 的网址
 https://support.smartbear.com/alertsite/docs/monitors/api/endpoint/jsonpath.html#filters
+https://unofficial-kubernetes.readthedocs.io/en/latest/user-guide/jsonpath/
+
+
+### 介绍 buildah 的网址
+https://www.redhat.com/sysadmin/building-buildah
+
+### 登录 nodejs 应用
+```
+# https://cli.vuejs.org/guide/installation.html
+# 想实现安装 vue-cli-service
+oc -n test1 rsh $(oc get pods -n test1 -o jsonpath='{ range .items[?(@.metadata.name=="nodejs-mongodb-example-1-z85qm")]}{@.metadata.name}{"\n"}{end}')
+sh-4.2$ env | grep NPM
+NPM_CONFIG_PREFIX=/opt/app-root/src/.npm-global
+NPM_RUN=start
+NPM_MIRROR=https://registry.npm.taobao.org
+
+# 安装特定版本
+# 参见：https://stackabuse.com/npm-install-specific-version-of-a-package/
+
+sh-4.2$ npm install -g @vue/cli-service
+
+# 安装完后，可执行程序在 .npm_global 下
+sh-4.2$ ls -l ./.npm-global/bin/vue-cli-service
+lrwxrwxrwx. 1 default root 59 Dec 18 01:48 ./.npm-global/bin/vue-cli-service -> ../lib/node_modules/@vue/cli-service/bin/vue-cli-service.js
+
+# 查看 vue-cli-service 帮助
+sh-4.2$ vue-cli-service --help
+
+  Usage: vue-cli-service <command> [options]
+
+  Commands:
+
+    serve     start development server
+    build     build for production
+    inspect   inspect internal webpack config
+
+  run vue-cli-service help [command] for usage of a specific command.
+
+
+```
+
+
+### 如何部署 VueJS 到 OpenShift 上
+https://www.openshift.com/blog/deploy-vuejs-applications-on-openshift
 

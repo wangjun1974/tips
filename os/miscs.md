@@ -7703,4 +7703,55 @@ kubectl get nodes -o jsonpath='{range .items[*]}{@.metadata.name}: {@.status.add
 
 # 查看节点的 InternalIP
 kubectl get nodes -o jsonpath='{range .items[*]}{@.metadata.name}: {@.status.addresses[?(@.type=="InternalIP")].address}{"\n"}{end}'
+
+
+# "jq" command useful for transformations that are too complex for jsonpath
+rc_name="nodejs-mongodb-example-1"
+sel=$(kubectl get rc ${rc_name} --output=json | jq -j '.spec.selector | to_entries | .[] | "\(.key)=\(.value),"')
+sel=${sel%?} # Remove trailing comma
+pods=$(kubectl get pods --selector=$sel --output=jsonpath={.items..metadata.name})`
+```
+
+### 设置 npm registry ; 安装 npm 软件包
+```
+oc project default
+oc delete project test-nodejs --wait=true --timeout=5m
+oc create namespace test-nodejs
+
+oc project test-nodejs
+
+# 创建 build secret 和 build
+oc create secret generic git-auth-1 --from-file=ssh-privatekey=/Users/junwang/.ssh/wjqhd_github_sshkey --type=kubernetes.io/ssh-auth
+oc new-build nodejs~ssh://git@github.com/wangjun1974/hello-world-nodejs.git --name=ssh-4-nodejs-build --source-secret='git-auth-1'
+
+# 基于 build image 运行容器
+oc run --image="$(oc get is ssh-4-nodejs-build -o jsonpath='{.status.tags[0].items[0].dockerImageReference}')" test
+
+# rsh pod test
+oc rsh $(oc get pods -o jsonpath='{ range .items[*]}{.metadata.name}{"\n"}{end}' | grep test)
+
+# 设置 registry，安装 npm
+npm set registry https://registry.npm.taobao.org
+
+# 检查 nodejs 版本
+node --version
+
+# 安装高版本 node
+npm install -g npm stable
+npm install -g node
+> node@15.4.0 preinstall /opt/app-root/src/.npm-global/lib/node_modules/node
+> node installArchSpecificPackage
++ node-linux-x64@15.4.0
+added 1 package in 15.913s
+
+/opt/app-root/src/.npm-global/bin/node -> /opt/app-root/src/.npm-global/lib/node_modules/node/bin/node
++ node@15.4.0
+added 2 packages from 1 contributor in 18.948s
+
+# 检查 nodejs 版本
+sh-4.4$ node --version 
+v12.18.4
+
+sh-4.4$ /opt/app-root/src/.npm-global/bin/node --version 
+v15.4.0
 ```

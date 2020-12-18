@@ -7668,3 +7668,7 @@ sh-4.2$ vue-cli-service --help
 ### 如何部署 VueJS 到 OpenShift 上
 https://www.openshift.com/blog/deploy-vuejs-applications-on-openshift
 
+
+### Writing Jenkins Pipeline For OpenShift Deployment
+https://ruddra.com/openshift-python-jenkins-pipeline-one/<br>
+https://ruddra.com/openshift-python-jenkins-pipeline-two/

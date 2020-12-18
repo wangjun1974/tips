@@ -7712,7 +7712,8 @@ sel=${sel%?} # Remove trailing comma
 pods=$(kubectl get pods --selector=$sel --output=jsonpath={.items..metadata.name})`
 ```
 
-### 设置 npm registry ; 安装 npm 软件包
+### 设置 npm registry ; 安装 npm 软件包 ； 升级 node
+https://stackoverflow.com/questions/8191459/how-do-i-update-node-js
 ```
 oc project default
 oc delete project test-nodejs --wait=true --timeout=5m

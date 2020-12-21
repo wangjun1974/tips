@@ -7905,8 +7905,10 @@ oc get templates nodejs-mongodb-example -n openshift -o jsonpath={.parameters[17
 oc start-build --build-loglevel 5  nodejs-sample-pipeline 
 oc get builds
 
+# 查看 nodejs agent 容器日志
 oc -n test1 logs $(oc get pods -n test1 -o jsonpath='{ range .items[*]}{@.metadata.name}{"\n"}{end}'| grep nodejs | grep -v build | tail -1)
 
+# 查看 nodejs builder 容器日志
 oc -n test1 logs $(oc get pods -n test1 -o jsonpath='{ range .items[*]}{@.metadata.name}{"\n"}{end}'| grep -E nodejs | grep -E build | tail -1)
 
 ```

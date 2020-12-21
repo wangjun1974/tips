@@ -7835,6 +7835,8 @@ oc project test1
 
 oc new-app jenkins-ephemeral
 
+oc -n test1 logs $(oc get pods -n test1 -o jsonpath='{ range .items[*]}{@.metadata.name}{"\n"}{end}'| grep -v deploy)
+
 oc create -f https://raw.githubusercontent.com/openshift/origin/master/examples/jenkins/pipeline/samplepipeline.yaml
 
 oc new-app --template=jenkins-pipeline-example

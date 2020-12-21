@@ -7769,3 +7769,30 @@ https://managedkube.com/kubernetes/pod/failure/crashloopbackoff/k8sbot/troublesh
 ```
 oc get ImageContentSourcePolicy -o jsonpath='{range .items[*]}{.metadata.name}{"\n"}{range @.spec.repositoryDigestMirrors[*]}{"\t"}Source: {@.source}{"\n"}{"\t"}Mirror: {@.mirrors}{"\n"}{end}{end}'
 ```
+
+### 检查是否能获取 jenkins 相关 imagestream 的镜像
+```
+# imagestream jenkins 的镜像 
+oc -n openshift get is jenkins -o jsonpath='{.spec.tags[0].from.name}{"\n"}'
+
+# 检查是否能获 jenkins 镜像
+podman pull --authfile=/root/pull-secret-2.json $(oc -n openshift get is jenkins -o jsonpath='{.spec.tags[0].from.name}{"\n"}')
+
+# imagestream jenkins-agent-base 的镜像
+oc -n openshift get is jenkins-agent-base -o jsonpath='{.spec.tags[0].from.name}{"\n"}'
+
+# 检查是否能获 jenkins-agent-base 镜像
+podman pull --authfile=/root/pull-secret-2.json $(oc -n openshift get is jenkins-agent-base -o jsonpath='{.spec.tags[0].from.name}{"\n"}')
+
+# imagestream jenkins-agent-maven 的镜像
+oc -n openshift get is jenkins-agent-maven -o jsonpath='{.spec.tags[1].from.name}{"\n"}'
+
+# 检查是否能获 jenkins-agent-maven 镜像
+podman pull --authfile=/root/pull-secret-2.json $(oc -n openshift get is jenkins-agent-maven -o jsonpath='{.spec.tags[1].from.name}{"\n"}')
+
+# imagestream jenkins-agent-nodejs 的镜像
+oc -n openshift get is jenkins-agent-nodejs -o jsonpath='{.spec.tags[1].from.name}{"\n"}'
+
+# 检查是否能获 jenkins-agent-nodejs 镜像
+podman pull --authfile=/root/pull-secret-2.json $(oc -n openshift get is jenkins-agent-nodejs -o jsonpath='{.spec.tags[1].from.name}{"\n"}')
+```

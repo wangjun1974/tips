@@ -7763,3 +7763,9 @@ https://developers.redhat.com/blog/2019/08/30/easily-deploy-node-js-applications
 
 ### troubleshooting pod Back-off restarting failed container
 https://managedkube.com/kubernetes/pod/failure/crashloopbackoff/k8sbot/troubleshooting/2019/02/12/pod-failure-crashloopbackoff.html
+
+
+### 查询 ImageContentSourcePolicy 以及 source 和 mirrors 的关系
+```
+oc get ImageContentSourcePolicy -o jsonpath='{range .items[*]}{.metadata.name}{"\n"}{range @.spec.repositoryDigestMirrors[*]}{"\t"}Source: {@.source}{"\n"}{"\t"}Mirror: {@.mirrors}{"\n"}{end}{end}'
+```

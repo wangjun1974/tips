@@ -7796,3 +7796,30 @@ oc -n openshift get is jenkins-agent-nodejs -o jsonpath='{.spec.tags[1].from.nam
 # 检查是否能获 jenkins-agent-nodejs 镜像
 podman pull --authfile=/root/pull-secret-2.json $(oc -n openshift get is jenkins-agent-nodejs -o jsonpath='{.spec.tags[1].from.name}{"\n"}')
 ```
+
+### 设置 Jenkins agent pod retention
+https://docs.okd.io/latest/openshift_images/using_images/images-other-jenkins-agent.html 
+
+Jenkins agent pods (slave pod) 在构建完成或停止后默认情况下会被删除。 可以通过 Kubernetes 插件 Pod Retention 设置更改此行为。 可以为所有Jenkins版本设置 Pod 保留，并为每个 Pod 模板覆盖。 
+
+支持以下行为：
+* **always** keeps the build pod regardless of build result.
+* **default** uses the plug-in value (pod template only).
+* **never** always deletes the pod.
+* **onFailure** keeps the pod if it fails during the build.
+
+```
+podTemplate(label: "mypod",
+  cloud: "openshift",
+  inheritFrom: "maven",
+  podRetention: onFailure(), 
+  containers: [
+    ...
+  ]) {
+  node("mypod") {
+    ...
+  }
+}
+```
+
+Allowed values for podRetention are never(), onFailure(), always(), and default().

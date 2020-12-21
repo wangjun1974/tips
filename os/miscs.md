@@ -7710,7 +7710,7 @@ rc_name="nodejs-mongodb-example-1"
 sel=$(kubectl get rc ${rc_name} --output=json | jq -j '.spec.selector | to_entries | .[] | "\(.key)=\(.value),"')
 sel=${sel%?} # Remove trailing comma
 # 参见：https://bytefreaks.net/gnulinux/bash/how-to-remove-prefix-and-suffix-from-a-variable-in-bash
-pods=$(kubectl get pods --selector=$sel --output=jsonpath={.items..metadata.name})`
+pods=$(kubectl get pods --selector=$sel --output=jsonpath={.items..metadata.name})
 ```
 
 ### 设置 npm registry ; 安装 npm 软件包 ； 升级 node
@@ -7760,3 +7760,6 @@ v15.4.0
 
 ### 使用 nodeshift 部署 nodejs 应用到 OpenShift
 https://developers.redhat.com/blog/2019/08/30/easily-deploy-node-js-applications-to-red-hat-openshift-using-nodeshift/
+
+### troubleshooting pod Back-off restarting failed container
+https://managedkube.com/kubernetes/pod/failure/crashloopbackoff/k8sbot/troubleshooting/2019/02/12/pod-failure-crashloopbackoff.html

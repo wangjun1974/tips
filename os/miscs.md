@@ -7865,3 +7865,54 @@ oc -n test1 logs $(oc get pods -n test1 -o jsonpath='{ range .items[?(@.metadata
 
 ```
 
+https://github.com/openshift/origin/blob/master/examples/jenkins/pipeline/nodejs-sample-pipeline.yaml
+```
+oc project default
+oc delete namespace test1 --wait=true --timeout=5m 
+oc get project test1 
+
+oc create namespace test1 
+oc project test1
+
+oc new-app jenkins-ephemeral
+
+# 查看 jenkins 容器日志
+oc -n test1 logs $(oc get pods -n test1 -o jsonpath='{ range .items[*]}{@.metadata.name}{"\n"}{end}'| grep -v deploy)
+# 等待日志里出现类似如下的日志内容
+# 2020-12-21 06:34:03 INFO    io.fabric8.jenkins.openshiftsync.BuildWatcher reconcileRunsAndBuilds Reconciling job runs and builds
+
+# 访问网址
+oc get route jenkins -o jsonpath='{.spec.host}{"\n"}' 
+jenkins-test1.apps.cluster-0001.rhsacn.org
+
+oc create -f https://raw.githubusercontent.com/openshift/origin/master/examples/jenkins/pipeline/nodejs-sample-pipeline.yaml
+
+oc -n test1 patch bc/nodejs-mongodb-example --type json -p='[{"op": "add", "path": "/spec/strategy/sourceStrategy/env/0/value", "value":"https://registry.npm.taobao.org"}]'
+
+oc -n test1 get bc/nodejs-mongodb-example -o jsonpath='{.spec.strategy.sourceStrategy.env[0]}{"\n"}'
+
+# 每次 buildconfig 都会重新生成
+# 每次 buildconfig 都会把 NPM_MIRROR 环境变量清除掉
+oc start-build --build-loglevel 5  nodejs-sample-pipeline 
+oc get builds
+
+oc -n test1 logs $(oc get pods -n test1 -o jsonpath='{ range .items[*]}{@.metadata.name}{"\n"}{end}'| grep nodejs | grep -v build | tail -1)
+
+oc -n test1 logs $(oc get pods -n test1 -o jsonpath='{ range .items[*]}{@.metadata.name}{"\n"}{end}'| grep -E nodejs | grep -E build | tail -1)
+```
+
+
+### 报错 "StaticPodsDegraded: pod/openshift-kube-scheduler-master1.cluster-0001.rhsacn.org container \"kube-scheduler\" is not ready" 的处理 
+```
+Status for clusteroperator/kube-scheduler changed: Degraded message changed from "NodeControllerDegraded: All master nodes are ready" to "StaticPodsDegraded: pod/openshift-kube-scheduler-master1.cluster-0001.rhsacn.org container \"kube-scheduler\" is not ready: unknown reason\nStaticPodsDegraded: pod/openshift-kube-scheduler-master1.cluster-0001.rhsacn.org container \"kube-scheduler\" is terminated: Error: n.org:6443/api/v1/namespaces/openshift-kube-scheduler/configmaps/kube-scheduler?timeout=10s\": context deadline exceeded (Client.Timeout exceeded while awaiting headers)\nStaticPodsDegraded: I1221 06:29:25.035214 1 leaderelection.go:253] successfully acquired lease openshift-kube-scheduler/kube-scheduler\nStaticPodsDegraded: I1221 06:33:25.004866 1 scheduler.go:597] \"Successfully bound pod to node\" pod=\"test1/jenkins-1-deploy\" node=\"worker0.cluster-0001.rhsacn.org\" evaluatedNodes=6 feasibleNodes=3\nStaticPodsDegraded: I1221 06:33:27.860340 1 scheduler.go:597] \"Successfully bound pod to node\" pod=\"test1/jenkins-1-r9jc4\" node=\"worker2.cluster-0001.rhsacn.org\" evaluatedNodes=6 feasibleNodes=3\nStaticPodsDegraded: I1221 06:39:11.192808 1 scheduler.go:597] \"Successfully bound pod to node\" pod=\"test1/nodejs-gwsfz\" node=\"worker0.cluster-0001.rhsacn.org\" evaluatedNodes=6 feasibleNodes=3\nStaticPodsDegraded: I1221 06:39:30.311049 1 scheduler.go:597] \"Successfully bound pod to node\" pod=\"test1/nodejs-mongodb-example-1-build\" node=\"worker0.cluster-0001.rhsacn.org\" evaluatedNodes=6 feasibleNodes=3\nStaticPodsDegraded: I1221 06:39:31.105030 1 scheduler.go:597] \"Successfully bound pod to node\" pod=\"test1/mongodb-1-deploy\" node=\"worker0.cluster-0001.rhsacn.org\" evaluatedNodes=6 feasibleNodes=3\nStaticPodsDegraded: I1221 06:39:33.986806 1 scheduler.go:597] \"Successfully bound pod to node\" pod=\"test1/mongodb-1-jdvzp\" node=\"worker0.cluster-0001.rhsacn.org\" evaluatedNodes=6 feasibleNodes=3\nStaticPodsDegraded: E1221 06:42:35.322288 1 leaderelection.go:321] error retrieving resource lock openshift-kube-scheduler/kube-scheduler: Get \"https://api-int.cluster-0001.rhsacn.org:6443/api/v1/namespaces/openshift-kube-scheduler/configmaps/kube-scheduler?timeout=10s\": context deadline exceeded (Client.Timeout exceeded while awaiting headers)\nStaticPodsDegraded: I1221 06:42:35.322346 1 leaderelection.go:278] failed to renew lease openshift-kube-scheduler/kube-scheduler: timed out waiting for the condition\nStaticPodsDegraded: E1221 06:42:35.322404 1 leaderelection.go:297] Failed to release lock: resource name may not be empty\nStaticPodsDegraded: F1221 06:42:35.322412 1 server.go:211] leaderelection lost\nStaticPodsDegraded: \nNodeControllerDegraded: All master nodes are ready"
+
+
+oc -n openshift-kube-scheduler-operator get pods
+NAME                                                 READY   STATUS    RESTARTS   AGE
+openshift-kube-scheduler-operator-77796f7649-g7n5x   1/1     Running   68         18d
+
+# 从 operator 的日志可以看到相关报错
+oc -n openshift-kube-scheduler-operator logs $( oc -n openshift-kube-scheduler-operator get pods -o jsonpath='{range .items[*]}{@.metadata.name}{"\n"}{end}' | grep operator )
+
+
+```

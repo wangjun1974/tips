@@ -7887,18 +7887,28 @@ jenkins-test1.apps.cluster-0001.rhsacn.org
 
 oc create -f https://raw.githubusercontent.com/openshift/origin/master/examples/jenkins/pipeline/nodejs-sample-pipeline.yaml
 
-oc -n test1 patch bc/nodejs-mongodb-example --type json -p='[{"op": "add", "path": "/spec/strategy/sourceStrategy/env/0/value", "value":"https://registry.npm.taobao.org"}]'
-
-oc -n test1 get bc/nodejs-mongodb-example -o jsonpath='{.spec.strategy.sourceStrategy.env[0]}{"\n"}'
-
 # 每次 buildconfig 都会重新生成
 # 每次 buildconfig 都会把 NPM_MIRROR 环境变量清除掉
+
+# 我想到的办法是给 template 提供默认参数
+oc get templates nodejs-mongodb-example -n openshift -o jsonpath={.parameters[17].name}
+NPM_MIRROR
+# 默认没有 NPM_MIRROR 参数的默认值
+oc get templates nodejs-mongodb-example -n openshift -o jsonpath={.parameters[17].value}
+
+# 设置 NPM_MIRROR 参数的默认值
+oc -n openshift patch templates nodejs-mongodb-example -n openshift --type json -p '[{"op": "add", "path": "/parameters/17/value", "value": "https://registry.npm.taobao.org"}]'
+
+# 检查设置结果
+oc get templates nodejs-mongodb-example -n openshift -o jsonpath={.parameters[17].value}
+
 oc start-build --build-loglevel 5  nodejs-sample-pipeline 
 oc get builds
 
 oc -n test1 logs $(oc get pods -n test1 -o jsonpath='{ range .items[*]}{@.metadata.name}{"\n"}{end}'| grep nodejs | grep -v build | tail -1)
 
 oc -n test1 logs $(oc get pods -n test1 -o jsonpath='{ range .items[*]}{@.metadata.name}{"\n"}{end}'| grep -E nodejs | grep -E build | tail -1)
+
 ```
 
 
@@ -7913,6 +7923,8 @@ openshift-kube-scheduler-operator-77796f7649-g7n5x   1/1     Running   68       
 
 # 从 operator 的日志可以看到相关报错
 oc -n openshift-kube-scheduler-operator logs $( oc -n openshift-kube-scheduler-operator get pods -o jsonpath='{range .items[*]}{@.metadata.name}{"\n"}{end}' | grep operator )
+
+oc get templates nodejs-mongodb-example -n openshift -o jsonpath={.parameters[17].name}
 
 
 ```

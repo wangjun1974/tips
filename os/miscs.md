@@ -7931,3 +7931,23 @@ oc get templates nodejs-mongodb-example -n openshift -o jsonpath={.parameters[17
 
 
 ```
+
+
+### jenkins openshift.newApp 传递参数的例子
+https://github.com/openshift/jenkins-client-plugin/issues/342
+```
+# 以下的例子说明了如何在 jenkins pipeline 里执行 newApp 并且传递参数
+echo "No proevious BuildConfig. Creating new BuildConfig."
+def myNewApp = openshift.newApp(
+        "${GIT_REPO}#${BRANCH}",
+        "--name=${IMAGE}",
+        "--context-dir=.",
+        "--source-secret=gitlab",
+        "-e BUILD_NUMBER=${BUILD_NUMBER}",
+        "-e BUILD_ENV=${openshift.project()}",
+        "-e PROFILE=stage",
+        "-e SPRING_PROFILES_ACTIVE=stage",
+        "-e BUILD_ENV=${openshift.project()}"
+)
+echo "new-app myNewApp ${myNewApp.count()} objects named: ${myNewApp.names()}"
+```

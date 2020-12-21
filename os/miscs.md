@@ -7825,7 +7825,7 @@ podTemplate(label: "mypod",
 Allowed values for podRetention are never(), onFailure(), always(), and default().
 
 
-### OKD Jenkins example pipeline
+### OKD Jenkins example pipeline - pipeline/samplepipeline
 https://github.com/openshift/origin/tree/master/examples/jenkins/pipeline
 
 ```
@@ -7865,6 +7865,7 @@ oc -n test1 logs $(oc get pods -n test1 -o jsonpath='{ range .items[?(@.metadata
 
 ```
 
+### OKD Jenkins example pipeline - pipeline/nodejs-sample-pipeline
 https://github.com/openshift/origin/blob/master/examples/jenkins/pipeline/nodejs-sample-pipeline.yaml
 ```
 oc project default

@@ -7823,3 +7823,8 @@ podTemplate(label: "mypod",
 ```
 
 Allowed values for podRetention are never(), onFailure(), always(), and default().
+
+
+### OKD Jenkins example pipeline
+https://github.com/openshift/origin/tree/master/examples/jenkins/pipeline
+

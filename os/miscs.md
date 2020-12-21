@@ -7828,3 +7828,38 @@ Allowed values for podRetention are never(), onFailure(), always(), and default(
 ### OKD Jenkins example pipeline
 https://github.com/openshift/origin/tree/master/examples/jenkins/pipeline
 
+```
+oc project default
+oc create namespace test1
+oc project test1 
+
+oc new-app jenkins-ephemeral
+
+oc create -f https://raw.githubusercontent.com/openshift/origin/master/examples/jenkins/pipeline/samplepipeline.yaml
+
+oc new-app --template=jenkins-pipeline-example
+
+oc get dc/mongodb -o jsonpath='{ .spec.triggers[0].imageChangeParams.from.name}{"\n"}'
+oc patch dc/mongodb --type json -p='[{"op": "replace", "path": "/spec/triggers/0/imageChangeParams/from/name", "value":"mongodb:3.6"}]'
+oc get dc/mongodb -o jsonpath='{ .spec.triggers[0].imageChangeParams.from.name}{"\n"}'
+
+# 测试使用环境变量 NPM_MIRROR 可顺利完成 build nodejs-mongodb-example
+oc start-build --build-loglevel 5 nodejs-mongodb-example --env="NPM_MIRROR=https://registry.npm.taobao.org"
+
+# patch bc/nodejs-mongodb-example
+oc -n test1 patch bc/nodejs-mongodb-example --type json -p='[{"op": "add", "path": "/spec/strategy/sourceStrategy/env/0/value", "value":"https://registry.npm.taobao.org"}]'
+
+# 检查 patch 结果
+oc -n test1 get bc/nodejs-mongodb-example -o jsonpath='{.spec.strategy.sourceStrategy.env[0]}{"\n"}'
+
+# 执行 pipeline
+oc start-build --build-loglevel 5 sample-pipeline
+
+# 查看日志
+oc -n test1 logs $(oc get pods -n test1 -o jsonpath='{ range .items[?(@.metadata.name == "nodejs-mongodb-example-3-build")]}{@.metadata.name}{"\n"}{end}')
+
+# 查看日志
+oc -n test1 logs $(oc get pods -n test1 -o jsonpath='{ range .items[?(@.metadata.name == "nodejs-mongodb-example-1-cwzt4")]}{@.metadata.name}{"\n"}{end}')
+
+```
+

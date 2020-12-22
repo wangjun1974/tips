@@ -6964,7 +6964,7 @@ https://www.openshift.com/blog/chaining-builds
 
 ### 检查集群健康状态
 ```
-echo
+echo “check pods health on masters ...”
 for i in $(seq 0 2)
 do
   echo master${i} 
@@ -6972,11 +6972,34 @@ do
   echo
 done
 
+echo “check pods health on workers ...”
 for i in $(seq 0 2)
 do
   echo worker${i} 
   oc get pods --all-namespaces -o wide | grep worker${i} | grep -Ev "Running|Complete"
   echo
+done
+
+echo “check reachable on masters ...”
+DOMAIN="cluster-0001.rhsacn.org"
+for i in $(seq 0 2)
+do
+  echo master${i} 
+  IP=$( oc get nodes master${i}.${DOMAIN} -o jsonpath='{@.status.addresses[?(@.type=="InternalIP")].address}' )
+  ping -c1 ${IP} >/dev/null 2>/dev/null
+  if [ $? -eq 0 ]; then echo "master${i} is reachable..."; else echo "master${i} is not reachable..."; fi
+  # oc debug node/master${i}.${DOMAIN} -- chroot /host crictl ps --name openvswitch -o json
+done
+
+echo “check reachable on workers ...”
+DOMAIN="cluster-0001.rhsacn.org"
+for i in $(seq 0 2)
+do
+  echo worker${i} 
+  IP=$( oc get nodes worker${i}.${DOMAIN} -o jsonpath='{@.status.addresses[?(@.type=="InternalIP")].address}' )
+  ping -c1 ${IP} >/dev/null 2>/dev/null
+  if [ $? -eq 0 ]; then echo "worker${i} is reachable..."; else echo "worker${i} is not reachable..."; fi
+  # oc debug node/worker${i}.${DOMAIN} -- chroot /host crictl ps --name openvswitch -o json
 done
 ```
 

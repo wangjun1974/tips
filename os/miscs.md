@@ -7911,8 +7911,51 @@ oc -n test1 logs $(oc get pods -n test1 -o jsonpath='{ range .items[*]}{@.metada
 
 # 查看 nodejs builder 容器日志
 oc -n test1 logs $(oc get pods -n test1 -o jsonpath='{ range .items[*]}{@.metadata.name}{"\n"}{end}'| grep -E nodejs | grep -E build | tail -1)
+```
+
+### OKD Jenkins example pipeline - pipeline/openshift-client-plugin-pipeline
+https://github.com/openshift/origin/blob/master/examples/jenkins/pipeline/openshift-client-plugin-pipeline.yaml
 
 ```
+oc project default
+oc delete project test1 --wait=true --timeout=5m
+oc get project test1 
+
+oc create namespace test1
+oc project test1
+
+oc new-app jenkins-ephemeral
+
+# 查看 jenkins 容器日志
+oc -n test1 logs $(oc get pods -n test1 -o jsonpath='{ range .items[*]}{@.metadata.name}{"\n"}{end}'| grep -v deploy)
+# 等待日志里出现类似如下的日志内容
+# 2020-12-21 06:34:03 INFO    io.fabric8.jenkins.openshiftsync.BuildWatcher reconcileRunsAndBuilds Reconciling job runs and builds
+
+# 访问网址
+oc get route jenkins -o jsonpath='{.spec.host}{"\n"}' 
+jenkins-test1.apps.cluster-0001.rhsacn.org
+
+oc create -f https://raw.githubusercontent.com/openshift/origin/master/examples/jenkins/pipeline/openshift-client-plugin-pipeline.yaml
+buildconfig.build.openshift.io/sample-pipeline-openshift-client-plugin created
+
+# start build 
+oc start-build sample-pipeline-openshift-client-plugin 
+
+# 过了一段时间，在 jenkins 上可以看到如下报错
+# [Pipeline] End of Pipeline
+# ERROR: new-build returned an error;
+# {err=error: can't lookup images: Timeout: request did not complete within requested timeout 34s
+# error: unable to locate any images in image streams, local docker images with name "centos/ ruby-25-centos7"
+
+# 首先拷贝缺少的 image stream 所需要的镜像到本地 registry
+...
+
+# 创建 image-stream
+# 参考: https://dzone.com/articles/pulling-images-from-external-container-registry-to
+oc -n openshift import-image centos/ruby-25-centos7:latest --from=helper.cluster-0001.rhsacn.org:5000/centos/ruby-25-centos7:latest --confirm --scheduled=true
+
+```
+
 
 
 ### 报错 "StaticPodsDegraded: pod/openshift-kube-scheduler-master1.cluster-0001.rhsacn.org container \"kube-scheduler\" is not ready" 的处理 

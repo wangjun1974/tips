@@ -7977,6 +7977,12 @@ oc start-build sample-pipeline-openshift-client-plugin
 # 参考: https://dzone.com/articles/pulling-images-from-external-container-registry-to
 oc -n openshift import-image centos/ruby-25-centos7:latest --from=helper.cluster-0001.rhsacn.org:5000/centos/ruby-25-centos7:latest --confirm --scheduled=true
 
+# 出错的 pipeline 步骤是
+# catch (Throwable t) {
+#                        // The selector returned from newBuild will select all objects created by the operation
+#                        nb = openshift.newBuild( "https://github.com/openshift/ruby-hello-world", "--name=ruby" )
+# 内网把 docker.io 给屏蔽了
+
 ```
 
 

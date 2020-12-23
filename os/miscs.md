@@ -8202,3 +8202,12 @@ oc get nodes -o jsonpath='{range .items[*]}{@.metadata.name}{"\n\t"}{@.metadata.
 # 一些 pod 有反复重启的记录
 oc get pods -A |awk  '$5 != "0" {print $0}' 
 ```
+
+
+### 为用户添加 cluster-admin 权限
+https://infohub.delltechnologies.com/l/deployment-guide-red-hat-openshift-container-platform-4-2/assigning-a-cluster-admin-role-to-the-ad-user-5
+```
+oc adm policy add-cluster-role-to-user cluster-admin admin
+
+oc get clusterrolebindings -o json | jq '.items[] | select(.subjects[0].name=="admin")' | jq '.roleRef.name'
+```

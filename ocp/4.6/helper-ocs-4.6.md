@@ -1991,4 +1991,66 @@ oc -n openshift-storage get pods -o jsonpath='{range .items[?(.spec.containers[0
 
 # 查看 ocs operator pod 的日志
 oc -n openshift-storage logs $(oc -n openshift-storage get pods -o jsonpath='{range .items[?(.spec.containers[0].name=="ocs-operator")]}{@.metadata.name}{"\n"}{end}')
+
+# 获取 rook-ceph operator pod 的名字
+oc -n openshift-storage get pods -o jsonpath='{range .items[?(.spec.containers[0].name=="rook-ceph-operator")]}{@.metadata.name}{"\n"}{end}'
+
+# 查看 rook-ceph operator pod 的日志
+oc -n openshift-storage logs $(oc -n openshift-storage get pods -o jsonpath='{range .items[?(.spec.containers[0].name=="rook-ceph-operator")]}{@.metadata.name}{"\n"}{end}')
+
+# 获取 noobaa operator pod 的名字
+oc -n openshift-storage get pods -o jsonpath='{range .items[?(.spec.containers[0].name=="noobaa-operator")]}{@.metadata.name}{"\n"}{end}'
+
+# 查看 noobaa operator pod 的日志
+oc -n openshift-storage logs $(oc -n openshift-storage get pods -o jsonpath='{range .items[?(.spec.containers[0].name=="noobaa-operator")]}{@.metadata.name}{"\n"}{end}')
+
+```
+
+
+### 报错处理
+```
+
+列出 Restart 次数不为 0 的 Pod
+kubectl get pods -n openshift-storage |awk  '$4 != "0" {print $0}' 
+NAME                                                              READY   STATUS      RESTARTS   AGE
+csi-cephfsplugin-provisioner-7b89766c86-26kpv                     5/5     Running     11         5h10m
+csi-cephfsplugin-provisioner-7b89766c86-47k5r                     5/5     Running     20         5h10m
+csi-rbdplugin-provisioner-75596f49bd-bvnkz                        5/5     Running     11         5h10m
+csi-rbdplugin-provisioner-75596f49bd-hdwd9                        5/5     Running     25         5h10m
+rook-ceph-operator-7478d76b-9b6z4                                 1/1     Running     407        7d22h
+
+# describe pods 显示 Events 里有 BackOff 
+#   Warning  BackOff         4h59m                kubelet            Back-off restarting failed container
+# 究竟是什么原因造成的呢
+oc -n openshift-storage describe pod csi-cephfsplugin-provisioner-7b89766c86-26kpv 
+...
+Events:
+  Type     Reason          Age                    From               Message
+  ----     ------          ----                   ----               -------
+  Normal   Scheduled       3h22m                  default-scheduler  Successfully assigned openshift-storage/csi-cephfsplugin-provisioner-7b89766c86-47k5r to worker1.cluster-0001.rhsacn.org
+  Normal   AddedInterface  3h22m                  multus             Add eth0 [10.254.5.25/24]
+  Normal   Pulled          3h22m                  kubelet            Container image "registry.redhat.io/ocs4/cephcsi-rhel8@sha256:09ca8922c6e741aeebb8ecbb6260987b751634ee1ac8846ce67207b64dd11d41" already present on machine
+  Normal   Started         3h22m                  kubelet            Started container liveness-prometheus
+  Normal   Pulled          3h22m                  kubelet            Container image "registry.redhat.io/ocs4/cephcsi-rhel8@sha256:09ca8922c6e741aeebb8ecbb6260987b751634ee1ac8846ce67207b64dd11d41" already present on machine
+  Normal   Started         3h22m                  kubelet            Started container csi-cephfsplugin
+  Normal   Created         3h22m                  kubelet            Created container csi-cephfsplugin
+  Normal   Created         3h22m                  kubelet            Created container liveness-prometheus
+  Warning  BackOff         3h9m                   kubelet            Back-off restarting failed container
+  Normal   Pulled          139m (x5 over 3h22m)   kubelet            Container image "registry.redhat.io/openshift4/ose-csi-external-provisioner-rhel7@sha256:656c3c04e122129d15fb63b3cb66e959daa3b224efcdebbd9cb5fde511798bea" already present on machine
+  Normal   Created         139m (x5 over 3h22m)   kubelet            Created container csi-provisioner
+  Normal   Started         139m (x5 over 3h22m)   kubelet            Started container csi-provisioner
+  Warning  BackOff         139m (x3 over 3h8m)    kubelet            Back-off restarting failed container
+  Normal   Pulled          3m43s (x8 over 3h22m)  kubelet            Container image "registry.redhat.io/openshift4/ose-csi-external-attacher@sha256:583d4964b7c5aca68e7723b2f2272d8e023626203564148dd109699a2a6da158" already present on machine
+  Normal   Started         3m42s (x8 over 3h22m)  kubelet            Started container csi-attacher
+  Normal   Created         3m42s (x8 over 3h22m)  kubelet            Created container csi-attacher
+  Warning  BackOff         3m24s (x2 over 3h8m)   kubelet            Back-off restarting failed container
+  Normal   Pulled          3m13s (x8 over 3h22m)  kubelet            Container image "registry.redhat.io/openshift4/ose-csi-external-resizer-rhel7@sha256:753ba494bb3021e5d4e4d0b6f4b86435257bbc2ebb581052311a3e68f7ecf881" already present on machine
+  Normal   Created         3m13s (x8 over 3h22m)  kubelet            Created container csi-resizer
+  Normal   Started         3m12s (x8 over 3h22m)  kubelet            Started container csi-resizer
+
+
+oc -n openshift-storage get pods csi-cephfsplugin-provisioner-7b89766c86-26kpv -o json > ~/tmp/err
+
+# 一些 pod 有反复重启的记录
+oc -n openshift-storage get pods |awk  '$4 != "0" {print $0}' 
 ```

@@ -8195,3 +8195,10 @@ print("Pod Created. Name: {0}. Number of Volumes: {1}".format(
 ```
 oc get nodes -o jsonpath='{range .items[*]}{@.metadata.name}{"\n\t"}{@.metadata.labels}{"\n"}{end}'
 ```
+
+
+### 查询反复重启的 Pods
+```
+# 一些 pod 有反复重启的记录
+oc get pods -A |awk  '$5 != "0" {print $0}' 
+```

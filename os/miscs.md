@@ -6972,6 +6972,7 @@ do
   echo
 done
 
+echo
 echo “check pods health on workers ...”
 for i in $(seq 0 2)
 do

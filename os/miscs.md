@@ -8210,4 +8210,16 @@ https://infohub.delltechnologies.com/l/deployment-guide-red-hat-openshift-contai
 oc adm policy add-cluster-role-to-user cluster-admin admin
 
 oc get clusterrolebindings -o json | jq '.items[] | select(.subjects[0].name=="admin")' | jq '.roleRef.name'
+"admin"
+"cluster-admin"
+"cluster-admins"
+"system:cluster-admin"
+"system:cluster-admins"
+
+oc adm policy remove-cluster-role-from-user admin admin
+oc adm policy remove-cluster-role-from-user cluster-admins admin
+oc adm policy remove-cluster-role-from-user system:cluster-admin admin
+oc adm policy remove-cluster-role-from-user system:cluster-admins admin
+
+
 ```

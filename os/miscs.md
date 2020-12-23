@@ -8036,9 +8036,10 @@ https://support.google.com/docs/answer/179738?co=GENIE.Platform%3DDesktop&hl=en
 
 
 ### OpenShift drain 或者 evacuate 节点进行后续维护
-https://medium.com/techbeatly/openshift-cluster-how-to-drain-or-evacuate-a-node-for-maintenance-e9bf051e4a4e 
+https://medium.com/techbeatly/openshift-cluster-how-to-drain-or-evacuate-a-node-for-maintenance-e9bf051e4a4e<br>
+https://docs.openshift.com/container-platform/4.1/nodes/nodes/nodes-nodes-working.html<br>
 ```
-# 在 OCP 4.x 上没有测试过
+# 在 OCP 4.x 上的步骤
 # 1. 设置节点不再接受新的调度
 oc adm cordon worker2.cluster-0001.rhsacn.org
 

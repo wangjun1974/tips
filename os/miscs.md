@@ -6989,7 +6989,6 @@ do
   ping -c1 ${IP} >/dev/null 2>/dev/null
   if [ $? -eq 0 ]; then echo "master${i} is reachable..."; else echo "master${i} is not reachable..."; fi
   echo
-  # oc debug node/master${i}.${DOMAIN} -- chroot /host crictl ps --name openvswitch -o json
 done
 
 echo “check reachable on workers ...”
@@ -7001,7 +7000,6 @@ do
   ping -c1 ${IP} >/dev/null 2>/dev/null
   if [ $? -eq 0 ]; then echo "worker${i} is reachable..."; else echo "worker${i} is not reachable..."; fi
   echo
-  # oc debug node/worker${i}.${DOMAIN} -- chroot /host crictl ps --name openvswitch -o json
 done
 
 echo “check oc debug on masters ...”

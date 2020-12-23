@@ -1884,3 +1884,81 @@ oc get nodes -o jsonpath='{range .items[*]}{.metadata.labels}{"\n"}'
 # 检查 worker 节点的 labels 
 oc get nodes --selector='!node-role.kubernetes.io/master' -o jsonpath='{range .items[*]}{.metadata.labels}{"\n"}'
 ```
+
+
+### 创建集群
+```
+# create local-storage-block.yaml and change dev/by-id
+cat > local-storage-block.yaml << EOF
+apiVersion: local.storage.openshift.io/v1
+kind: LocalVolume
+metadata:
+  name: local-block
+  namespace: openshift-local-storage
+  labels:
+    app: ocs-storagecluster
+spec:
+  nodeSelector:
+    nodeSelectorTerms:
+    - matchExpressions:
+        - key: cluster.ocs.openshift.io/openshift-storage
+          operator: In
+          values:
+          - ""
+  storageClassDevices:
+    - storageClassName: localblock
+      volumeMode: Block
+      devicePaths:
+        - /dev/disk/by-id/$(ssh core@10.66.208.143 'ls -l /dev/disk/by-id ' 2>&1 | grep sdb | tail -1 | awk '{print $9}')
+        - /dev/disk/by-id/$(ssh core@10.66.208.144 'ls -l /dev/disk/by-id ' 2>&1 | grep sdb | tail -1 | awk '{print $9}')
+        - /dev/disk/by-id/$(ssh core@10.66.208.145 'ls -l /dev/disk/by-id ' 2>&1 | grep sdb | tail -1 | awk '{print $9}')
+EOF
+
+oc apply -f local-storage-block.yaml
+
+# 没有资源限制时创建集群的方式
+cat > storagecluster-simple.yaml << 'EOF'
+apiVersion: ocs.openshift.io/v1
+kind: StorageCluster
+metadata:
+  name: ocs-storagecluster
+  namespace: openshift-storage
+spec:
+  externalStorage: {}
+  monDataDirHostPath: /var/lib/rook
+  storageDeviceSets:
+  - config: {}
+    count: 1   
+    dataPVCTemplate:
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: "1"
+        storageClassName: localblock
+        volumeMode: Block
+    name: ocs-deviceset
+    placement: {}
+    replica: 3
+EOF
+
+oc apply -f ./storagecluster-simple.yaml
+
+# 设置资源限制
+cpu_limit="500m"
+cpu_request="500m"
+memory_limit="512Mi"
+memory_request="512Mi"
+
+for service in mds mgr mon osd noobaa-core noobaa-db rgw prepareosd crashcollector cleanup
+do
+  oc patch StorageCluster ocs-storagecluster -n openshift-storage --type=merge --patch='{"spec":{"resources":{"'${service}'": {"Limit": {"cpu": "'${cpu_limit}'"}}}}}'
+  oc patch StorageCluster ocs-storagecluster -n openshift-storage --type=merge --patch='{"spec":{"resources":{"'${service}'": {"Request": {"cpu": "'${cpu_request}'"}}}}}'
+
+  oc patch StorageCluster ocs-storagecluster -n openshift-storage --type=merge --patch='{"spec":{"resources":{"'${service}'": {"Limit": {"memory": "'${memory_limit}'"}}}}}'
+  oc patch StorageCluster ocs-storagecluster -n openshift-storage --type=merge --patch='{"spec":{"resources":{"'${service}'": {"Request": {"memory": "'${memory_request}'"}}}}}'  
+done
+
+
+```

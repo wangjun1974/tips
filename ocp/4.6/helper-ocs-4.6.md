@@ -1982,3 +1982,13 @@ do
 done
 
 ```
+
+
+### 查看安装后集群的相关情况
+```
+# 获取 ocs operator pod 的名字
+oc -n openshift-storage get pods -o jsonpath='{range .items[?(.spec.containers[0].name=="ocs-operator")]}{@.metadata.name}{"\n"}{end}'
+
+# 查看 ocs operator pod 的日志
+oc -n openshift-storage logs $(oc -n openshift-storage get pods -o jsonpath='{range .items[?(.spec.containers[0].name=="ocs-operator")]}{@.metadata.name}{"\n"}{end}')
+```

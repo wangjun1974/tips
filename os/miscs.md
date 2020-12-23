@@ -8189,3 +8189,9 @@ if pod_create.status_code != 201:
 print("Pod Created. Name: {0}. Number of Volumes: {1}".format(
     pod_name, len(pvc_names)))
 ```
+
+
+### 查询节点的 labels
+```
+oc get nodes -o jsonpath='{range .items[*]}{@.metadata.name}{"\n\t"}{@.metadata.labels}{"\n"}{end}'
+```

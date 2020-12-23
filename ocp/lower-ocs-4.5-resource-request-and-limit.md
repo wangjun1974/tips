@@ -19,9 +19,9 @@ do
 done
 
 
-# rgw pod has limits/requests but i don't find method to correct it
+# rgw pod has limits/requests that could set by patch deployment object
 # bellow commands works 
-# deployment rgw resources requests and limits
+# patch rgw deployment resources requests and limits
 for i in rook-ceph-rgw-ocs-storagecluster-cephobjectstore-a rook-ceph-rgw-ocs-storagecluster-cephobjectstore-b 
 do 
   oc -n openshift-storage patch deployment ${i} --type json -p '[{"op": "replace", "path": "/spec/template/spec/containers/0/resources/requests/cpu", "value": "500m"}]'

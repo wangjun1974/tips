@@ -20,17 +20,17 @@ done
 
 
 # rgw pod has limits/requests but i don't find method to correct it
-# bellow commands not works 
-cpu_limit="500m"
-cpu_request="500m"
-memory_limit="512Mi"
-memory_request="512Mi"
+# bellow commands works 
+# deployment rgw resources requests and limits
+for i in rook-ceph-rgw-ocs-storagecluster-cephobjectstore-a rook-ceph-rgw-ocs-storagecluster-cephobjectstore-b 
+do 
+  oc -n openshift-storage patch deployment ${i} --type json -p '[{"op": "replace", "path": "/spec/template/spec/containers/0/resources/requests/cpu", "value": "500m"}]'
+  oc -n openshift-storage patch deployment ${i} --type json -p '[{"op": "replace", "path": "/spec/template/spec/containers/0/resources/requests/memory", "value": "512Mi"}]'
 
-oc patch pod rook-ceph-rgw-ocs-storagecluster-cephobjectstore-b-6886cc8dhnlp -n openshift-storage --type=merge --patch='{"spec": {"containers": {"resources": {"limits": {"cpu": "'${cpu_limit}'"}}}}}'
-oc patch pod rook-ceph-rgw-ocs-storagecluster-cephobjectstore-b-6886cc8dhnlp -n openshift-storage --type=merge --patch='{"spec": {"containers": {"resources": {"requests": {"cpu": "'${cpu_request}'"}}}}}'
+  oc -n openshift-storage patch deployment ${i} --type json -p '[{"op": "replace", "path": "/spec/template/spec/containers/0/resources/limits/cpu", "value": "500m"}]'
+  oc -n openshift-storage patch deployment ${i} --type json -p '[{"op": "replace", "path": "/spec/template/spec/containers/0/resources/limits/memory", "value": "512Mi"}]'
+done
 
-oc patch pod rook-ceph-rgw-ocs-storagecluster-cephobjectstore-b-6886cc8dhnlp -n openshift-storage --type=merge --patch='{"spec": {"containers": {"resources": {"limits": {"memory": "'${memory_limit}'"}}}}}'
-oc patch pod rook-ceph-rgw-ocs-storagecluster-cephobjectstore-b-6886cc8dhnlp -n openshift-storage --type=merge --patch='{"spec": {"containers": {"resources": {"requests": {"memory": "'${memory_request}'"}}}}}'
 
 # following command could remove requests/limits from pod and deployment but rgw still in pending status
 oc patch deployment rook-ceph-rgw-ocs-storagecluster-cephobjectstore-b -n openshift-storage --type json -p '[{ "op": "remove", "path": "/spec/template/spec/containers/0/resources/limits" }]'

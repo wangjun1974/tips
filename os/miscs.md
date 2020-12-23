@@ -8026,3 +8026,10 @@ def myNewApp = openshift.newApp(
 )
 echo "new-app myNewApp ${myNewApp.count()} objects named: ${myNewApp.names()}"
 ```
+
+
+### Google Doc 快捷键查询
+https://support.google.com/docs/answer/179738?co=GENIE.Platform%3DDesktop&hl=en
+```
+# Page Up on Mac is Fn + Up Arrow 
+```

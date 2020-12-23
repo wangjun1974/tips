@@ -6981,6 +6981,7 @@ do
   echo
 done
 
+echo
 echo “check reachable on masters ...”
 DOMAIN="cluster-0001.rhsacn.org"
 for i in $(seq 0 2)
@@ -6992,6 +6993,7 @@ do
   # oc debug node/master${i}.${DOMAIN} -- chroot /host crictl ps --name openvswitch -o json
 done
 
+echo
 echo “check reachable on workers ...”
 DOMAIN="cluster-0001.rhsacn.org"
 for i in $(seq 0 2)

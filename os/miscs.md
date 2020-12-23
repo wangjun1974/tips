@@ -8033,3 +8033,47 @@ https://support.google.com/docs/answer/179738?co=GENIE.Platform%3DDesktop&hl=en
 ```
 # Page Up on Mac is Fn + Up Arrow 
 ```
+
+
+### OpenShift drain 或者 evacuate 节点进行后续维护
+https://medium.com/techbeatly/openshift-cluster-how-to-drain-or-evacuate-a-node-for-maintenance-e9bf051e4a4e 
+```
+# 在 OCP 4.x 上没有测试过
+# 1. 设置节点不再接受新的调度
+oc adm cordon worker2.cluster-0001.rhsacn.org
+
+# 2. 排空节点
+# 直接执行以下命令会报错
+oc adm drain worker2.cluster-0001.rhsacn.org 
+node/worker2.cluster-0001.rhsacn.org already cordoned
+error: unable to drain node "worker2.cluster-0001.rhsacn.org", aborting command...
+
+There are pending nodes to be drained:
+ worker2.cluster-0001.rhsacn.org
+cannot delete Pods with local storage (use --delete-local-data to override): openshift-marketplace/5fdfbb80a6f6d1ea7892828aae864e347bb026b3f943b1ad6e40dbf278dwqbd, openshift-monitoring/alertmanager-main-2, openshift-monitoring/grafana-6c6696ff85-xpf6r, openshift-monitoring/kube-state-metrics-6ccbdf475f-mqzhd, openshift-monitoring/prometheus-adapter-9bbb4ff66-485cm, test1/jenkins-1-2j2mt
+cannot delete DaemonSet-managed Pods (use --ignore-daemonsets to ignore): openshift-cluster-node-tuning-operator/tuned-4s8vg, openshift-dns/dns-default-vwh78, openshift-image-registry/node-ca-jql55, openshift-local-storage/diskmaker-discovery-2h7fc, openshift-machine-config-operator/machine-config-daemon-2rvd8, openshift-monitoring/node-exporter-ld2gp, openshift-multus/multus-sj949, openshift-multus/network-metrics-daemon-hzxjk, openshift-sdn/ovs-ct7g7, openshift-sdn/sdn-sjssn
+
+# 这时根据提示执行
+oc adm drain worker2.cluster-0001.rhsacn.org --delete-local-data --ignore-daemonsets
+# 或者
+oc adm drain worker2.cluster-0001.rhsacn.org --delete-local-data --ignore-daemonsets --force
+
+# 执行完之后，节点上还有少量 daemonset pod 在运行
+oc get pods --all-namespaces -o wide | grep worker2 
+openshift-cluster-node-tuning-operator             tuned-4s8vg                                                       1/1     Running             0          8d      10.66.208.145   worker2.cluster-0001.rhsacn.org   <none>           <none>
+openshift-dns                                      dns-default-vwh78                                                 3/3     Running             0          8d      10.254.3.4      worker2.cluster-0001.rhsacn.org   <none>           <none>
+openshift-image-registry                           node-ca-jql55                                                     1/1     Running             0          8d      10.66.208.145   worker2.cluster-0001.rhsacn.org   <none>           <none>
+openshift-local-storage                            diskmaker-discovery-2h7fc                                         1/1     Running             0          8d      10.254.3.2      worker2.cluster-0001.rhsacn.org   <none>           <none>
+openshift-machine-config-operator                  machine-config-daemon-2rvd8                                       2/2     Running             0          8d      10.66.208.145   worker2.cluster-0001.rhsacn.org   <none>           <none>
+openshift-monitoring                               node-exporter-ld2gp                                               2/2     Running             0          8d      10.66.208.145   worker2.cluster-0001.rhsacn.org   <none>           <none>
+openshift-multus                                   multus-sj949                                                      1/1     Running             0          8d      10.66.208.145   worker2.cluster-0001.rhsacn.org   <none>           <none>
+openshift-multus                                   network-metrics-daemon-hzxjk                                      2/2     Running             0          8d      10.254.3.3      worker2.cluster-0001.rhsacn.org   <none>           <none>
+openshift-sdn                                      ovs-ct7g7                                                         1/1     Running             0          8d      10.66.208.145   worker2.cluster-0001.rhsacn.org   <none>           <none>
+openshift-sdn                                      sdn-sjssn                                                         2/2     Running             1          8d      10.66.208.145   worker2.cluster-0001.rhsacn.org   <none>           <none>
+
+# 3. 此时执行相关维护工作
+
+# 4. 重启节点或者维护工作结束后
+# 重新设置节点可被调度
+oc adm uncordon worker2.cluster-0001.rhsacn.org
+```

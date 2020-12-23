@@ -1960,5 +1960,15 @@ do
   oc patch StorageCluster ocs-storagecluster -n openshift-storage --type=merge --patch='{"spec":{"resources":{"'${service}'": {"Request": {"memory": "'${memory_request}'"}}}}}'  
 done
 
+# deployment rgw resources requests and limits
+for i in rook-ceph-rgw-ocs-storagecluster-cephobjectstore-a rook-ceph-rgw-ocs-storagecluster-cephobjectstore-b 
+do 
+  oc -n openshift-storage patch deployment ${i} --type json -p '[{"op": "replace", "path": "/spec/template/spec/containers/0/resources/requests/cpu", "value": "500m"}]'
+  oc -n openshift-storage patch deployment ${i} --type json -p '[{"op": "replace", "path": "/spec/template/spec/containers/0/resources/requests/memory", "value": "512Mi"}]'
+
+  oc -n openshift-storage patch deployment ${i} --type json -p '[{"op": "replace", "path": "/spec/template/spec/containers/0/resources/limits/cpu", "value": "500m"}]'
+  oc -n openshift-storage patch deployment ${i} --type json -p '[{"op": "replace", "path": "/spec/template/spec/containers/0/resources/limits/memory", "value": "512Mi"}]'
+done
+
 
 ```

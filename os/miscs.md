@@ -7019,6 +7019,24 @@ do
   IP=$( oc get nodes worker${i}.${DOMAIN} -o jsonpath='{@.status.addresses[?(@.type=="InternalIP")].address}' )
   oc debug node/worker${i}.${DOMAIN} -- chroot /host crictl ps --name openvswitch -o json
 done
+
+echo “check openvswitch pod on masters ...”
+DOMAIN="cluster-0001.rhsacn.org"
+for i in $(seq 0 2)
+do
+  echo master${i} 
+  IP=$( oc get nodes master${i}.${DOMAIN} -o jsonpath='{@.status.addresses[?(@.type=="InternalIP")].address}' )
+  oc debug node/master${i}.${DOMAIN} -- chroot /host crictl ps --name openvswitch -o json | jq '{name: .containers[0].metadata.name, state: .containers[0].state}'
+done
+
+echo “check openvswitch pod on workers ...”
+DOMAIN="cluster-0001.rhsacn.org"
+for i in $(seq 0 2)
+do
+  echo worker${i} 
+  IP=$( oc get nodes worker${i}.${DOMAIN} -o jsonpath='{@.status.addresses[?(@.type=="InternalIP")].address}' )
+  oc debug node/worker${i}.${DOMAIN} -- chroot /host crictl ps --name openvswitch -o json | jq '{name: .containers[0].metadata.name, state: .containers[0].state}'
+done
 ```
 
 ### 设置 jenkins 使用 jdk 版本的方法
@@ -8259,3 +8277,7 @@ Step 8: Map Your IT Organization and Roles to Your Satellite 6 Setup
 Step 9: Manage the Content Lifecycle Continuously
 Step 10: Automate and Extend Your Setup
 ```
+
+
+### jq 的 Tutorial
+https://stedolan.github.io/jq/tutorial/

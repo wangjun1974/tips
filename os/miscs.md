@@ -8280,4 +8280,22 @@ Step 10: Automate and Extend Your Setup
 
 
 ### jq 的 Tutorial
-https://stedolan.github.io/jq/tutorial/
+https://stedolan.github.io/jq/tutorial/<br>
+https://www.softwaretestinghelp.com/github-rest-api-tutorial/<br>
+```
+# 利用这篇文章介绍的技巧查询 openshift origin 仓库
+
+# commit 信息
+curl 'https://api.github.com/repos/openshift/origin/commits?per_page=5' | jq '[.[] | {message: .commit.message, name: .commit.committer.name, parents: [.parents[].html_url]}]'
+
+# 获取 branches 信息
+curl 'https://api.github.com/repos/openshift/origin/branches'  | jq '.[]'
+
+# 利用 branches 信息里的 sha 来过滤跟 branches 相关的 commits
+curl 'https://api.github.com/repos/openshift/origin/commits?sha=d7fdd4e373acc04d60de65c4705ea6d69face59c&per_page=100' | jq '[.[] | {message: .commit.message, name: .commit.committer.name}]'
+
+curl https://access.redhat.com/sites/default/files/cdn_redhat_com_cac.json | jq '.[]'
+
+# 利用 jq 查询 red hat cdn 地址
+curl https://access.redhat.com/sites/default/files/cdn_redhat_com_cac.json | jq '{ip_prefix: .cidr_list[].ip_prefix, service: .cidr_list[].service}'
+```

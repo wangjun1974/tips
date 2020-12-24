@@ -8295,6 +8295,7 @@ Step 10: Automate and Extend Your Setup
 ### jq 的 Tutorial
 https://stedolan.github.io/jq/tutorial/<br>
 https://www.softwaretestinghelp.com/github-rest-api-tutorial/<br>
+https://stedolan.github.io/jq/manual/<br>
 ```
 # 利用这篇文章介绍的技巧查询 openshift origin 仓库
 
@@ -8311,6 +8312,9 @@ curl https://access.redhat.com/sites/default/files/cdn_redhat_com_cac.json | jq 
 
 # 利用 jq 查询 red hat cdn 地址
 curl https://access.redhat.com/sites/default/files/cdn_redhat_com_cac.json | jq '{ip_prefix: .cidr_list[].ip_prefix, service: .cidr_list[].service}'
+
+# 利用 jq 查询 red hat cdn 地址，过滤条件为 service=="RH CDN"
+curl https://access.redhat.com/sites/default/files/cdn_redhat_com_cac.json | jq '.cidr_list[] | select(.service=="RH CDN")|.ip_prefix'
 
 # 获取 redhat cdn 的 python script 
 cat > get_redhat_cd_ip.py << 'EOF'

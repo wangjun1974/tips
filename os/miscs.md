@@ -8235,6 +8235,27 @@ oc adm policy remove-cluster-role-from-user admin admin
 oc adm policy remove-cluster-role-from-user cluster-admins admin
 oc adm policy remove-cluster-role-from-user system:cluster-admin admin
 oc adm policy remove-cluster-role-from-user system:cluster-admins admin
+```
 
 
+### 关于 imagestream 和 deployment 的博客文章
+https://developers.redhat.com/blog/2019/09/20/using-red-hat-openshift-image-streams-with-kubernetes-deployments/
+
+
+
+### 10 步构建标准运维环境
+10 Steps to Build an SOE: How Red Hat Satellite 6 Supports Setting up a Standard Operating Environment<br>
+https://access.redhat.com/articles/1585273<br>
+
+```
+Step 1: Set Up Your System Management Infrastructure
+Step 2: Map Your Location and Datacenter Topology
+Step 3: Define your Definitive Media Library Content
+Step 4: Define Your Content Lifecycle
+Step 5: Define Your Core Build. Define your OS-deployment (core build) configuration and its corresponding content items
+Step 6: Define Your Application Content
+Step 7: Automate Your Provisioning
+Step 8: Map Your IT Organization and Roles to Your Satellite 6 Setup
+Step 9: Manage the Content Lifecycle Continuously
+Step 10: Automate and Extend Your Setup
 ```

@@ -8298,4 +8298,20 @@ curl https://access.redhat.com/sites/default/files/cdn_redhat_com_cac.json | jq 
 
 # 利用 jq 查询 red hat cdn 地址
 curl https://access.redhat.com/sites/default/files/cdn_redhat_com_cac.json | jq '{ip_prefix: .cidr_list[].ip_prefix, service: .cidr_list[].service}'
+
+# 获取 redhat cdn 的 python script 
+cat > get_redhat_cd_ip.py << 'EOF'
+#!/usr/bin/python
+
+import urllib2
+import json
+
+hdr = {'User-Agent':'Mozilla/5.0'}
+url = "https://access.redhat.com/sites/default/files/cdn_redhat_com_cac.json"
+request = urllib2.Request(url,headers=hdr)
+result = urllib2.urlopen(request)
+ip_list = json.load(result)
+for ip in ip_list['cidr_list']:
+  print ip['ip_prefix']
+EOF
 ```

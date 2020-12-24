@@ -8255,6 +8255,19 @@ oc adm policy remove-cluster-role-from-user system:cluster-admin admin
 oc adm policy remove-cluster-role-from-user system:cluster-admins admin
 ```
 
+正确的步骤可以参考以下链接
+https://access.redhat.com/documentation/en-us/red_hat_openshift_container_storage/4.5/html-single/managing_openshift_container_storage/index#allowing-user-access-to-the-multicloud-object-gateway-console_rhocs
+```
+# 创建 cluster-admins 组
+oc adm groups new cluster-admins
+
+# 将组 cluster-admins 与角色 cluster-admin 绑定
+oc adm policy add-cluster-role-to-group cluster-admin cluster-admins
+
+# 添加用户到组 cluster-admins
+oc adm groups add-users cluster-admins <user-name> <user-name> <user-name>...
+```
+
 
 ### 关于 imagestream 和 deployment 的博客文章
 https://developers.redhat.com/blog/2019/09/20/using-red-hat-openshift-image-streams-with-kubernetes-deployments/

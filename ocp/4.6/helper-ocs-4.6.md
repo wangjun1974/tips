@@ -2054,3 +2054,18 @@ oc -n openshift-storage get pods csi-cephfsplugin-provisioner-7b89766c86-26kpv -
 # 一些 pod 有反复重启的记录
 oc -n openshift-storage get pods |awk  '$4 != "0" {print $0}' 
 ```
+
+
+### 用户如何访问 noobaa dashboard
+正确的步骤可以参考以下链接
+https://access.redhat.com/documentation/en-us/red_hat_openshift_container_storage/4.5/html-single/managing_openshift_container_storage/index#allowing-user-access-to-the-multicloud-object-gateway-console_rhocs 
+```
+# 创建 cluster-admins 组
+oc adm groups new cluster-admins
+
+# 将组 cluster-admins 与角色 cluster-admin 绑定
+oc adm policy add-cluster-role-to-group cluster-admin cluster-admins
+
+# 添加用户到组 cluster-admins
+oc adm groups add-users cluster-admins <user-name> <user-name> <user-name>...
+```

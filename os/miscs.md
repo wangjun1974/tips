@@ -8428,7 +8428,7 @@ EOF
 ### 如何通过 cloudinit 添加静态路由
 https://cloudinit.readthedocs.io/en/latest/topics/network-config-format-v2.html#common-properties-for-all-device-types 
 ```
-# cloudinit add route
+# cloudinit add static route
 routes:
  - to: 0.0.0.0/0
    via: 10.23.2.1

@@ -8434,3 +8434,51 @@ routes:
    via: 10.23.2.1
    metric: 3
 ```
+
+
+### 通过 configmaps 为 kubevirt 虚拟机提供 sysprep 配置文件
+https://github.com/kubevirt/kubevirt/issues/2902#issuecomment-564623562
+```
+# 创建 configmap sysprep-config
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: sysprep-config
+data:
+  Unattended.xml: |
+    <?xml version="1.0" encoding="utf-8"?>
+    <unattend xmlns="urn:schemas-microsoft-com:unattend"
+    [...]
+    </unattend>
+  Autounattended.xml: |
+    <?xml version="1.0" encoding="utf-8"?>
+    <unattend xmlns="urn:schemas-microsoft-com:unattend"
+    [...]
+    </unattend>
+
+# 将 configmap sysprep-config 作为 cdrom 添加给 virtualmachineinstance
+metadata:
+  name: testvmi-sysprep
+apiVersion: kubevirt.io/v1alpha3
+kind: VirtualMachineInstance
+spec:
+  domain:
+    resources:
+      requests:
+        memory: 10G
+    devices:
+      disks:
+      - name: sysprep
+        cdrom:
+          bus: sata
+      - name: mypvcdisk
+        disk:
+          bus: sata
+  volumes:
+    - name: mypvcdisk
+      persistentVolumeClaim:
+        claimName: windows-image
+    - name: sysprep
+      configmap:
+        name: sysprep-config 
+```

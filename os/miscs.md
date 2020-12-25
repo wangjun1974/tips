@@ -8482,3 +8482,18 @@ spec:
       configmap:
         name: sysprep-config 
 ```
+
+
+### OpenShift Virtualization 检查 virtualmachine.kubevirt.io 的信息
+```
+oc get customresourcedefinitions virtualmachines.kubevirt.io -o yaml
+```
+
+### 看看 openshift 集群最近有哪些 events 
+```
+# 查询 event message
+oc get events -A -o jsonpath='{range .items[*]}{@.message}{"\n"}{end}'
+
+# 查询 event creationTimestamp, lastTimestamp 和 message
+oc get events -A -o jsonpath='{range .items[*]}message: {@.message}{"\n"}createTimestamp: {@.metadata.creationTimestamp}{"\n"}lastTimestamp: {@.lastTimestamp}{"\n"}{"\n"}{end}'
+```

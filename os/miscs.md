@@ -8534,3 +8534,30 @@ $ curl -s -k https://api-int.ocp.luji.io:22623/config/worker -H 'Accept: applica
 # Scott: The OS pivots directly to the cluster version, so if you use 4.1 boot media on a 4.6.9 cluster it will go directly to 4.6.9.
 
 ```
+
+
+### ceph 查看 pool 里的 rados objects
+```
+# 查看 pool 里的 rados objects 
+rados -p <pool name> ls - 
+
+# ocs add rook toolbox
+oc patch OCSInitialization ocsinit -n openshift-storage --type json --patch  '[{ "op": "replace", "path": "/spec/enableCephTools", "value": true }]'
+
+TOOLS_POD=$(oc get pods -n openshift-storage -l app=rook-ceph-tools -o name)
+# 通过 rook toolbox 列出 pools
+oc rsh -n openshift-storage $TOOLS_POD ceph osd lspools
+1 ocs-storagecluster-cephblockpool
+2 ocs-storagecluster-cephobjectstore.rgw.control
+3 ocs-storagecluster-cephfilesystem-metadata
+4 ocs-storagecluster-cephfilesystem-data0
+5 ocs-storagecluster-cephobjectstore.rgw.meta
+6 ocs-storagecluster-cephobjectstore.rgw.log
+7 ocs-storagecluster-cephobjectstore.rgw.buckets.index
+8 ocs-storagecluster-cephobjectstore.rgw.buckets.non-ec
+9 .rgw.root
+10 ocs-storagecluster-cephobjectstore.rgw.buckets.data
+
+# 通过 rook toolbox 查看 pool 里的 rados objects
+oc rsh -n openshift-storage $TOOLS_POD rados -p ocs-storagecluster-cephblockpool ls -
+```

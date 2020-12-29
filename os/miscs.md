@@ -8538,6 +8538,7 @@ $ curl -s -k https://api-int.ocp.luji.io:22623/config/worker -H 'Accept: applica
 
 ### ceph 查看 pool 里的 rados objects
 ```
+# https://docs.ceph.com/en/latest/man/8/rados/#examples
 # 查看 pool 里的 rados objects 
 rados -p <pool name> ls - 
 
@@ -8560,4 +8561,24 @@ oc rsh -n openshift-storage $TOOLS_POD ceph osd lspools
 
 # 通过 rook toolbox 查看 pool 里的 rados objects
 oc rsh -n openshift-storage $TOOLS_POD rados -p ocs-storagecluster-cephblockpool ls -
+
+# 查看 
+oc rsh -n openshift-storage $TOOLS_POD ceph df 
+RAW STORAGE:
+    CLASS     SIZE        AVAIL       USED        RAW USED     %RAW USED 
+    ssd       240 GiB     236 GiB     1.4 GiB      4.4 GiB          1.83 
+    TOTAL     240 GiB     236 GiB     1.4 GiB      4.4 GiB          1.83 
+ 
+POOLS:
+    POOL                                                      ID     STORED      OBJECTS     USED        %USED     MAX AVAIL 
+    ocs-storagecluster-cephblockpool                           1     467 MiB         165     1.4 GiB      0.68        67 GiB 
+    ocs-storagecluster-cephobjectstore.rgw.control             2         0 B           8         0 B         0        67 GiB 
+    ocs-storagecluster-cephfilesystem-metadata                 3     3.8 KiB          22      96 KiB         0        67 GiB 
+    ocs-storagecluster-cephfilesystem-data0                    4         0 B           0         0 B         0        67 GiB 
+    ocs-storagecluster-cephobjectstore.rgw.meta                5     1.7 KiB           7      72 KiB         0        67 GiB 
+    ocs-storagecluster-cephobjectstore.rgw.log                 6      23 KiB         210     427 KiB         0        67 GiB 
+    ocs-storagecluster-cephobjectstore.rgw.buckets.index       7         0 B          11         0 B         0        67 GiB 
+    ocs-storagecluster-cephobjectstore.rgw.buckets.non-ec      8         0 B           0         0 B         0        67 GiB 
+    .rgw.root                                                  9     4.7 KiB          16     180 KiB         0        67 GiB 
+    ocs-storagecluster-cephobjectstore.rgw.buckets.data       10       1 KiB           1      12 KiB         0        67 GiB 
 ```

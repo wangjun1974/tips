@@ -8497,3 +8497,40 @@ oc get events -A -o jsonpath='{range .items[*]}{@.message}{"\n"}{end}'
 # 查询 event creationTimestamp, lastTimestamp 和 message
 oc get events -A -o jsonpath='{range .items[*]}message: {@.message}{"\n"}createTimestamp: {@.metadata.creationTimestamp}{"\n"}lastTimestamp: {@.lastTimestamp}{"\n"}{"\n"}{end}'
 ```
+
+
+### OpenShift 4.6.x 与 ignition version 3.1.0
+```
+# 获取 openshift-machine-api secret worker-user-data
+oc extract -n openshift-machine-api secret/worker-user-data --keys=userData --to=-
+
+# 对于我的测试环境来说应该执行以下命令
+# 获得 ignition version 2.2.0 版本的配置 
+# curl -s -k https://api-int.cluster-0001.rhcnsa.org:22623/config/worker -H 'Accept: application/vnd.coreos.ignition+json;version=2.2.0, */*;q=0.1' | jq  | head -20
+
+# 获得 ignition version 3.1.0 版本的配置 
+# curl -s -k https://api-int.cluster-0001.rhcnsa.org:22623/config/worker -H 'Accept: application/vnd.coreos.ignition+json;version=3.1.0, */*;q=0.1' | jq  | head -20
+
+
+$ curl -s -k https://api-int.ocp.luji.io:22623/config/worker -H 'Accept: application/vnd.coreos.ignition+json;version=3.1.0, */*;q=0.1' | jq | head -20
+{
+  "ignition": {
+    "config": {
+      "replace": {
+        "verification": {}
+      }
+    },
+    "proxy": {},
+    "security": {
+      "tls": {}
+    },
+    "timeouts": {},
+    "version": "3.1.0"
+  },
+  "passwd": {
+
+# So extract ignition data, encode it to base64, and use it in the vapp properties. Instead of using the original generated worker.ign
+
+# Scott: The OS pivots directly to the cluster version, so if you use 4.1 boot media on a 4.6.9 cluster it will go directly to 4.6.9.
+
+```

@@ -8582,3 +8582,64 @@ POOLS:
     .rgw.root                                                  9     4.7 KiB          16     180 KiB         0        67 GiB 
     ocs-storagecluster-cephobjectstore.rgw.buckets.data       10       1 KiB           1      12 KiB         0        67 GiB 
 ```
+
+
+### 
+```
+oc describe pod 5fdfbb80a6f6d1ea7892828aae864e347bb026b3f943b1ad6e40dbf278dqm8s -n openshift-marketplace
+
+...
+Events:
+  Type     Reason          Age                      From                                      Message
+  ----     ------          ----                     ----                                      -------
+  Normal   Scheduled       <unknown>                                                          Successfully assigned openshift-marketplace/5fdfbb80a6f6d1ea7892828aae864e347bb026b3f943b1ad6e40dbf278dqm8s to worker1.cluster-0001.rhsacn.org
+  Normal   AddedInterface  7d1h                     multus                                    Add eth0 [10.254.5.19/24]
+  Normal   Pulled          7d1h                     kubelet, worker1.cluster-0001.rhsacn.org  Container image "quay.io/openshift-release-dev/ocp-v4.0-art-dev@sha256:3bd85be1e98b6f2a4854471c3dcaefbfa594753380f6db2617c37f7da7e26ec2" already present on machine
+  Normal   Created         7d1h                     kubelet, worker1.cluster-0001.rhsacn.org  Created container util
+  Normal   Started         7d1h                     kubelet, worker1.cluster-0001.rhsacn.org  Started container util
+  Warning  Failed          43h (x1474 over 7d1h)    kubelet, worker1.cluster-0001.rhsacn.org  Error: ErrImagePull
+  Warning  Failed          11h (x1842 over 7d1h)    kubelet, worker1.cluster-0001.rhsacn.org  Failed to pull image "registry.redhat.io/rhpam-7/rhpam-operator-bundle@sha256:af5a192a66fd81506cc5361103d7e3d510992f207343f6580a91022dc1bce745": rpc error: code = Unknown desc = unable to retrieve auth token: invalid username/password: unauthorized: Please login to the Red Hat Registry using your Customer Portal credentials. Further instructions can be found here: https://access.redhat.com/RegistryAuthentication
+  Normal   Pulling         3h6m (x1943 over 7d1h)   kubelet, worker1.cluster-0001.rhsacn.org  Pulling image "registry.redhat.io/rhpam-7/rhpam-operator-bundle@sha256:af5a192a66fd81506cc5361103d7e3d510992f207343f6580a91022dc1bce745"
+  Warning  Failed          111m (x44071 over 7d1h)  kubelet, worker1.cluster-0001.rhsacn.org  Error: ImagePullBackOff
+  Normal   BackOff         96m (x44137 over 7d1h)   kubelet, worker1.cluster-0001.rhsacn.org  Back-off pulling image "registry.redhat.io/rhpam-7/rhpam-operator-bundle@sha256:af5a192a66fd81506cc5361103d7e3d510992f207343f6580a91022dc1bce745"
+  Normal   AddedInterface  91m                      multus                                    Add eth0 [10.254.5.18/24]
+  Normal   Pulled          91m                      kubelet, worker1.cluster-0001.rhsacn.org  Container image "quay.io/openshift-release-dev/ocp-v4.0-art-dev@sha256:3bd85be1e98b6f2a4854471c3dcaefbfa594753380f6db2617c37f7da7e26ec2" already present on machine
+  Normal   Created         90m                      kubelet, worker1.cluster-0001.rhsacn.org  Created container util
+  Normal   Started         90m                      kubelet, worker1.cluster-0001.rhsacn.org  Started container util
+  Normal   Pulling         89m (x4 over 90m)        kubelet, worker1.cluster-0001.rhsacn.org  Pulling image "registry.redhat.io/rhpam-7/rhpam-operator-bundle@sha256:af5a192a66fd81506cc5361103d7e3d510992f207343f6580a91022dc1bce745"
+  Warning  Failed          89m (x4 over 90m)        kubelet, worker1.cluster-0001.rhsacn.org  Failed to pull image "registry.redhat.io/rhpam-7/rhpam-operator-bundle@sha256:af5a192a66fd81506cc5361103d7e3d510992f207343f6580a91022dc1bce745": rpc error: code = Unknown desc = unable to retrieve auth token: invalid username/password: unauthorized: Please login to the Red Hat Registry using your Customer Portal credentials. Further instructions can be found here: https://access.redhat.com/RegistryAuthentication
+  Warning  Failed          89m (x4 over 90m)        kubelet, worker1.cluster-0001.rhsacn.org  Error: ErrImagePull
+  Normal   BackOff         16m (x327 over 90m)      kubelet, worker1.cluster-0001.rhsacn.org  Back-off pulling image "registry.redhat.io/rhpam-7/rhpam-operator-bundle@sha256:af5a192a66fd81506cc5361103d7e3d510992f207343f6580a91022dc1bce745"
+  Warning  Failed          53s (x393 over 90m)      kubelet, worker1.cluster-0001.rhsacn.org  Error: ImagePullBackOff
+
+
+# 拷贝镜像到本地目录并且打包
+rm -rf /root/tmp/mirror/rhpam-7
+mkdir -p /root/tmp/mirror/rhpam-7
+skopeo copy --authfile /home/ec2-user/pull-secret.json --format v2s2 docker://registry.redhat.io/rhpam-7/rhpam-operator-bundle@sha256:af5a192a66fd81506cc5361103d7e3d510992f207343f6580a91022dc1bce745 dir:///root/tmp/mirror/rhpam-7
+tar zcvf /tmp/mirror-rhpam-7.tar.gz /root/tmp/mirror/rhpam-7
+chmod a+r /tmp/mirror-rhpam-7.tar.gz
+
+# 拷贝镜像打包并且上传到 OpenShift 对应的本地 registry
+skopeo copy --authfile /root/pull-secret-2.json --format v2s2 dir:///root/tmp/mirror/rhpam-7 docker://helper.cluster-0001.rhsacn.org:5000/rhpam-7/rhpam-operator-bundle
+
+# 生成 rhpam7 的 imagecontentsourcepolicy
+cat <<EOF > /root/tmp/rhpam-imagecontentsourcepolicy.yaml
+apiVersion: operator.openshift.io/v1alpha1
+kind: ImageContentSourcePolicy
+metadata:
+  name: icsp-rhpam-operator-bundle
+spec:
+  repositoryDigestMirrors:
+  - mirrors:
+    - helper.cluster-0001.rhsacn.org:5000/rhpam-7/rhpam-operator-bundle
+    source: registry.redhat.io/rhpam-7/rhpam-operator-bundle
+EOF
+
+# 应用 rhpam7 的 imagecontentsourcepolicy
+oc apply -f /root/tmp/rhpam-imagecontentsourcepolicy.yaml
+
+# 确认 rhpam7 的 imagecontentsourcepolicy 已生效
+oc get ImageContentSourcePolicy -o jsonpath='{range .items[*]}{.metadata.name}{"\n"}{range @.spec.repositoryDigestMirrors[*]}{"\t"}Source: {@.source}{"\n"}{"\t"}Mirror: {@.mirrors}{"\n"}{end}{end}' | grep rhpam
+
+```

@@ -8768,3 +8768,66 @@ https://access.redhat.com/solutions/2137701
 ```
 oc logs <pod> -p
 ```
+
+
+### 消除 ceph HEALTH_WARN - daemons have recently crashed 告警
+```
+# ceph status 命令显示曾经发生过 daemons crashed
+TOOLS_POD=$(oc get pods -n openshift-storage -l app=rook-ceph-tools -o name)
+oc rsh -n openshift-storage $TOOLS_POD ceph status
+  cluster:
+    id:     9d685302-c2e5-40a6-88c8-b2db1389a5f0
+    health: HEALTH_WARN
+            1 daemons have recently crashed
+ 
+  services:
+    mon: 3 daemons, quorum a,b,c (age 3m)
+    mgr: a(active, since 59m)
+    mds: ocs-storagecluster-cephfilesystem:1 {0=ocs-storagecluster-cephfilesystem-a=up:active} 1 up:standby-replay
+    osd: 3 osds: 3 up (since 3m), 3 in (since 7d)
+    rgw: 2 daemons active (ocs.storagecluster.cephobjectstore.a, ocs.storagecluster.cephobjectstore.b)
+ 
+  task status:
+    scrub status:
+        mds.ocs-storagecluster-cephfilesystem-a: idle
+        mds.ocs-storagecluster-cephfilesystem-b: idle
+ 
+  data:
+    pools:   10 pools, 176 pgs
+    objects: 456 objects, 570 MiB
+    usage:   4.5 GiB used, 236 GiB / 240 GiB avail
+    pgs:     176 active+clean
+ 
+  io:
+    client:   853 B/s rd, 15 KiB/s wr, 1 op/s rd, 1 op/s wr
+
+# 执行 ceph crash archive-all 消除告警信息
+oc rsh -n openshift-storage $TOOLS_POD ceph crash archive-all
+
+# ceph status 这时将显示状态 HEALTH_OK
+oc rsh -n openshift-storage $TOOLS_POD ceph status 
+  cluster:
+    id:     9d685302-c2e5-40a6-88c8-b2db1389a5f0
+    health: HEALTH_OK
+ 
+  services:
+    mon: 3 daemons, quorum a,b,c (age 7m)
+    mgr: a(active, since 63m)
+    mds: ocs-storagecluster-cephfilesystem:1 {0=ocs-storagecluster-cephfilesystem-a=up:active} 1 up:standby-replay
+    osd: 3 osds: 3 up (since 8m), 3 in (since 7d)
+    rgw: 2 daemons active (ocs.storagecluster.cephobjectstore.a, ocs.storagecluster.cephobjectstore.b)
+ 
+  task status:
+    scrub status:
+        mds.ocs-storagecluster-cephfilesystem-a: idle
+        mds.ocs-storagecluster-cephfilesystem-b: idle
+ 
+  data:
+    pools:   10 pools, 176 pgs
+    objects: 456 objects, 570 MiB
+    usage:   4.5 GiB used, 236 GiB / 240 GiB avail
+    pgs:     176 active+clean
+ 
+  io:
+    client:   970 B/s rd, 44 KiB/s wr, 1 op/s rd, 3 op/s wr
+```

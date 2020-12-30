@@ -7050,6 +7050,15 @@ do
   done 
   echo
 done
+
+echo “check free by oc debug on masters ...”
+DOMAIN="cluster-0001.rhsacn.org"
+for i in $(seq 0 2)
+do
+  echo master${i} 
+  IP=$( oc get nodes master${i}.${DOMAIN} -o jsonpath='{@.status.addresses[?(@.type=="InternalIP")].address}' )
+  oc debug node/master${i}.${DOMAIN} -- chroot /host free
+done
 ```
 
 ### 设置 jenkins 使用 jdk 版本的方法

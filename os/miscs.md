@@ -7037,6 +7037,19 @@ do
   IP=$( oc get nodes worker${i}.${DOMAIN} -o jsonpath='{@.status.addresses[?(@.type=="InternalIP")].address}' )
   oc debug node/worker${i}.${DOMAIN} -- chroot /host crictl ps --name openvswitch -o json | jq '{name: .containers[0].metadata.name, state: .containers[0].state}'
 done
+
+echo “check pods logs CrashLoopBackOff on masters ...”
+for i in $(seq 0 2)
+do
+  echo master${i} 
+  oc get pods --all-namespaces -o wide | grep master${i} | grep -Ev "Running|Complete" | grep -E "CrashLoopBackOff" | awk '{print $1" "$2}' | while read namespace podname
+  do 
+    echo "logs of $podname in namespace $namespace"
+    oc -n $namespace logs $podname -p
+    echo
+  done 
+  echo
+done
 ```
 
 ### 设置 jenkins 使用 jdk 版本的方法
@@ -8642,4 +8655,107 @@ oc apply -f /root/tmp/rhpam-imagecontentsourcepolicy.yaml
 # 确认 rhpam7 的 imagecontentsourcepolicy 已生效
 oc get ImageContentSourcePolicy -o jsonpath='{range .items[*]}{.metadata.name}{"\n"}{range @.spec.repositoryDigestMirrors[*]}{"\t"}Source: {@.source}{"\n"}{"\t"}Mirror: {@.mirrors}{"\n"}{end}{end}' | grep rhpam
 
+oc describe pod business-automation-operator-86c5954d74-bcgk7 -n rhdm-pc-dm-demo
+...
+Events:
+  Type     Reason          Age                    From               Message
+  ----     ------          ----                   ----               -------
+  Normal   Scheduled       50m                    default-scheduler  Successfully assigned rhdm-pc-dm-demo/business-automation-operator-86c5954d74-bcgk7 to worker0.cluster-0001.rhsacn.org
+  Normal   AddedInterface  50m                    multus             Add eth0 [10.254.4.34/24]
+  Normal   Pulling         48m (x4 over 50m)      kubelet            Pulling image "registry.redhat.io/rhpam-7/rhpam-rhel8-operator@sha256:c71a818cc9e6a45b6bb59413e2b282c3c30f2415eb506bfed34a8ebba5010288"
+  Warning  Failed          48m (x4 over 49m)      kubelet            Failed to pull image "registry.redhat.io/rhpam-7/rhpam-rhel8-operator@sha256:c71a818cc9e6a45b6bb59413e2b282c3c30f2415eb506bfed34a8ebba5010288": rpc error: code = Unknown desc = unable to retrieve auth token: invalid username/password: unauthorized: Please login to the Red Hat Registry using your Customer Portal credentials. Further instructions can be found here: https://access.redhat.com/RegistryAuthentication
+  Warning  Failed          48m (x4 over 49m)      kubelet            Error: ErrImagePull
+  Warning  Failed          47m (x7 over 49m)      kubelet            Error: ImagePullBackOff
+  Normal   BackOff         4m57s (x193 over 49m)  kubelet            Back-off pulling image "registry.redhat.io/rhpam-7/rhpam-rhel8-operator@sha256:c71a818cc9e6a45b6bb59413e2b282c3c30f2415eb506bfed34a8ebba5010288"
+
+
+# 拷贝镜像到本地目录并且打包 
+skopeo copy --authfile /home/ec2-user/pull-secret.json --format v2s2 docker://registry.redhat.io/rhpam-7/rhpam-rhel8-operator@sha256:c71a818cc9e6a45b6bb59413e2b282c3c30f2415eb506bfed34a8ebba5010288 dir:///root/tmp/mirror/rhpam-7
+tar zcvf /tmp/mirror-rhpam-7.tar.gz /root/tmp/mirror/rhpam-7
+chmod a+r /tmp/mirror-rhpam-7.tar.gz
+
+# 拷贝镜像打包并且上传到 OpenShift 对应的本地 registry
+skopeo copy --authfile /root/pull-secret-2.json --format v2s2 dir:///root/tmp/mirror/rhpam-7 docker://helper.cluster-0001.rhsacn.org:5000/rhpam-7/rhpam-rhel8-operator
+
+# 生成 rhpam-rhel8-operator 的 imagecontentsourcepolicy
+cat <<EOF > /root/tmp/rhpam-imagecontentsourcepolicy.yaml
+apiVersion: operator.openshift.io/v1alpha1
+kind: ImageContentSourcePolicy
+metadata:
+  name: icsp-rhpam-operator-bundle
+spec:
+  repositoryDigestMirrors:
+  - mirrors:
+    - helper.cluster-0001.rhsacn.org:5000/rhpam-7/rhpam-operator-bundle
+    source: registry.redhat.io/rhpam-7/rhpam-operator-bundle
+  - mirrors:
+    - helper.cluster-0001.rhsacn.org:5000/rhpam-7/rhpam-rhel8-operator
+    source: registry.redhat.io/rhpam-7/rhpam-rhel8-operator
+EOF
+
+# 应用 rhpam-rhel8-operator 的 imagecontentsourcepolicy
+oc apply -f /root/tmp/rhpam-imagecontentsourcepolicy.yaml
+
+# 确认 rhpam-rhel8-operator 的 imagecontentsourcepolicy 已生效
+oc get ImageContentSourcePolicy -o jsonpath='{range .items[*]}{.metadata.name}{"\n"}{range @.spec.repositoryDigestMirrors[*]}{"\t"}Source: {@.source}{"\n"}{"\t"}Mirror: {@.mirrors}{"\n"}{end}{end}' | grep rhpam-rhel8-operator
+
+# pod console-cr-form 处于 ImagePullBackOff 状态
+oc describe pod console-cr-form -n rhdm-pc-dm-demo 
+Events:
+  Type     Reason                  Age   From               Message
+  ----     ------                  ----  ----               -------
+  Normal   Scheduled               23m   default-scheduler  Successfully assigned rhdm-pc-dm-demo/console-cr-form to worker1.cluster-0001.rhsacn.org
+  Warning  FailedCreatePodSandBox  22m   kubelet            Failed to create pod sandbox: rpc error: code = Unknown desc = failed to create pod network sandbox k8s_console-cr-form_rhdm-pc-dm-demo_cc18869a-e93b-4532-ad1b-ade3837dba09_0(3fa971f64813b5c90c71a66c69b79bf3556a6741ca9ed732fee969b1ae4e920a): [rhdm-pc-dm-demo/console-cr-form:openshift-sdn]: error adding container to network "openshift-sdn": CNI request failed with status 400: 'Get "https://api-int.cluster-0001.rhsacn.org:6443/api/v1/namespaces/rhdm-pc-dm-demo/pods/console-cr-form": unexpected EOF
+'
+  Normal   AddedInterface  22m                  multus   Add eth0 [10.254.5.35/24]
+  Normal   Pulling         22m                  kubelet  Pulling image "registry.redhat.io/rhpam-7/rhpam-rhel8-operator@sha256:c71a818cc9e6a45b6bb59413e2b282c3c30f2415eb506bfed34a8ebba5010288"
+  Normal   Pulled          22m                  kubelet  Successfully pulled image "registry.redhat.io/rhpam-7/rhpam-rhel8-operator@sha256:c71a818cc9e6a45b6bb59413e2b282c3c30f2415eb506bfed34a8ebba5010288" in 47.829602ms
+  Normal   Started         22m                  kubelet  Started container console-cr-form
+  Normal   Created         22m                  kubelet  Created container console-cr-form
+  Normal   Pulling         21m (x3 over 22m)    kubelet  Pulling image "registry.redhat.io/openshift4/ose-oauth-proxy@sha256:e83d591b61b3de88586822b3b85c3158607d19141e054dc43907ba75e9a5cfbc"
+  Warning  Failed          21m (x3 over 22m)    kubelet  Failed to pull image "registry.redhat.io/openshift4/ose-oauth-proxy@sha256:e83d591b61b3de88586822b3b85c3158607d19141e054dc43907ba75e9a5cfbc": rpc error: code = Unknown desc = unable to retrieve auth token: invalid username/password: unauthorized: Please login to the Red Hat Registry using your Customer Portal credentials. Further instructions can be found here: https://access.redhat.com/RegistryAuthentication
+  Warning  Failed          21m (x3 over 22m)    kubelet  Error: ErrImagePull
+  Warning  Failed          13m (x37 over 22m)   kubelet  Error: ImagePullBackOff
+  Normal   BackOff         3m5s (x82 over 22m)  kubelet  Back-off pulling image "registry.redhat.io/openshift4/ose-oauth-proxy@sha256:e83d591b61b3de88586822b3b85c3158607d19141e054dc43907ba75e9a5cfbc"
+
+# 拷贝镜像到本地目录并且打包 
+skopeo copy --authfile /home/ec2-user/pull-secret.json --format v2s2 docker://registry.redhat.io/openshift4/ose-oauth-proxy@sha256:e83d591b61b3de88586822b3b85c3158607d19141e054dc43907ba75e9a5cfbc dir:///root/tmp/mirror/rhpam-7
+tar zcvf /tmp/mirror-rhpam-7.tar.gz /root/tmp/mirror/rhpam-7
+chmod a+r /tmp/mirror-rhpam-7.tar.gz
+
+# 拷贝镜像打包并且上传到 OpenShift 对应的本地 registry
+skopeo copy --authfile /root/pull-secret-2.json --format v2s2 dir:///root/tmp/mirror/rhpam-7 docker://helper.cluster-0001.rhsacn.org:5000/openshift4/ose-oauth-proxy
+
+# 生成 ose-oauth-proxy 的 imagecontentsourcepolicy
+cat <<EOF > /root/tmp/rhpam-imagecontentsourcepolicy.yaml
+apiVersion: operator.openshift.io/v1alpha1
+kind: ImageContentSourcePolicy
+metadata:
+  name: icsp-rhpam-operator-bundle
+spec:
+  repositoryDigestMirrors:
+  - mirrors:
+    - helper.cluster-0001.rhsacn.org:5000/rhpam-7/rhpam-operator-bundle
+    source: registry.redhat.io/rhpam-7/rhpam-operator-bundle
+  - mirrors:
+    - helper.cluster-0001.rhsacn.org:5000/rhpam-7/rhpam-rhel8-operator
+    source: registry.redhat.io/rhpam-7/rhpam-rhel8-operator
+  - mirrors:
+    - helper.cluster-0001.rhsacn.org:5000/openshift4/ose-oauth-proxy
+    source: registry.redhat.io/openshift4/ose-oauth-proxy    
+EOF
+
+# 应用 rhpam-rhel8-operator 的 imagecontentsourcepolicy
+oc apply -f /root/tmp/rhpam-imagecontentsourcepolicy.yaml
+
+# 确认 ose-oauth-proxy 的 imagecontentsourcepolicy 已生效
+oc get ImageContentSourcePolicy -o jsonpath='{range .items[*]}{.metadata.name}{"\n"}{range @.spec.repositoryDigestMirrors[*]}{"\t"}Source: {@.source}{"\n"}{"\t"}Mirror: {@.mirrors}{"\n"}{end}{end}' | grep ose-oauth-proxy
+```
+
+
+
+### OpenShift 下 Pod 处于 CrashLoopBackOff 的原因
+https://access.redhat.com/solutions/2137701
+```
+oc logs <pod> -p
 ```

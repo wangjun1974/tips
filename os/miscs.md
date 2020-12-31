@@ -8844,3 +8844,33 @@ oc rsh -n openshift-storage $TOOLS_POD ceph status
   io:
     client:   970 B/s rd, 44 KiB/s wr, 1 op/s rd, 3 op/s wr
 ```
+
+
+
+### OCS pods in CrashLoopBackOff 的 日志
+```
+# pod csi-rbdplugin-privisioner 由容器 csi-provisioner csi-resizer csi-attacher csi-rbdplugin liveness-prometheus 组成
+oc -n openshift-storage logs csi-rbdplugin-provisioner-75596f49bd-58q6v -p 
+error: a container name must be specified for pod csi-rbdplugin-provisioner-75596f49bd-58q6v, choose one of: [csi-provisioner csi-resizer csi-attacher csi-rbdplugin liveness-prometheus]
+
+oc -n openshift-storage logs csi-cephfsplugin-provisioner-7b89766c86-wzk2l  -p 
+
+error: a container name must be specified for pod csi-cephfsplugin-provisioner-7b89766c86-wzk2l, choose one of: [csi-attacher csi-resizer csi-provisioner csi-cephfsplugin liveness-prometheus]
+[junwang@JundeMacBook-Pro ~]$ oc -n openshift-storage logs csi-cephfsplugin-provisioner-7b89766c86-wzk2l -c csi-resizer -p 
+I1231 01:03:57.937452       1 main.go:68] Version : v4.3.40-202010141211.p0-0-gdfa08ed-dirty
+I1231 01:03:57.939621       1 connection.go:153] Connecting to unix:///csi/csi-provisioner.sock
+I1231 01:03:57.940738       1 common.go:111] Probing CSI driver for readiness
+W1231 01:03:57.947444       1 metrics.go:142] metrics endpoint will not be started because `metrics-address` was not specified.
+I1231 01:03:57.951559       1 leaderelection.go:242] attempting to acquire leader lease  openshift-storage/external-resizer-openshift-storage-cephfs-csi-ceph-com...
+I1231 01:04:17.408926       1 leaderelection.go:252] successfully acquired lease openshift-storage/external-resizer-openshift-storage-cephfs-csi-ceph-com
+I1231 01:04:17.409212       1 controller.go:190] Starting external resizer openshift-storage.cephfs.csi.ceph.com
+E1231 01:05:13.981290       1 leaderelection.go:367] Failed to update lock: Operation cannot be fulfilled on leases.coordination.k8s.io "external-resizer-openshift-storage-cephfs-csi-ceph-com": the object has been modified; please apply your changes to the latest version and try again
+I1231 01:05:16.524768       1 leaderelection.go:288] failed to renew lease openshift-storage/external-resizer-openshift-storage-cephfs-csi-ceph-com: timed out waiting for the condition
+F1231 01:05:16.524803       1 leader_election.go:169] stopped leading
+```
+
+
+
+### Tmux Cheat Sheet
+https://tmuxcheatsheet.com/
+

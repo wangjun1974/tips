@@ -7051,6 +7051,19 @@ do
   echo
 done
 
+echo “check pods logs CrashLoopBackOff on workers ...”
+for i in $(seq 0 2)
+do
+  echo worker${i} 
+  oc get pods --all-namespaces -o wide | grep worker${i} | grep -Ev "Running|Complete" | grep -E "CrashLoopBackOff" | awk '{print $1" "$2}' | while read namespace podname
+  do 
+    echo "logs of $podname in namespace $namespace"
+    oc -n $namespace logs $podname -p
+    echo
+  done 
+  echo
+done
+
 echo “check free by oc debug on masters ...”
 DOMAIN="cluster-0001.rhsacn.org"
 for i in $(seq 0 2)

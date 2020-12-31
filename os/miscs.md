@@ -8853,10 +8853,13 @@ oc rsh -n openshift-storage $TOOLS_POD ceph status
 oc -n openshift-storage logs csi-rbdplugin-provisioner-75596f49bd-58q6v -p 
 error: a container name must be specified for pod csi-rbdplugin-provisioner-75596f49bd-58q6v, choose one of: [csi-provisioner csi-resizer csi-attacher csi-rbdplugin liveness-prometheus]
 
+# pod csi-cephfsplugin-provisioner 由容器 csi-attacher csi-resizer csi-provisioner csi-cephfsplugin liveness-prometheus 组成
 oc -n openshift-storage logs csi-cephfsplugin-provisioner-7b89766c86-wzk2l  -p 
-
 error: a container name must be specified for pod csi-cephfsplugin-provisioner-7b89766c86-wzk2l, choose one of: [csi-attacher csi-resizer csi-provisioner csi-cephfsplugin liveness-prometheus]
-[junwang@JundeMacBook-Pro ~]$ oc -n openshift-storage logs csi-cephfsplugin-provisioner-7b89766c86-wzk2l -c csi-resizer -p 
+
+# 查看容器 csi-resizer 的日志
+# 报错为： Failed to update lock: Operation cannot be fulfilled on leases.coordination.k8s.io
+oc -n openshift-storage logs csi-cephfsplugin-provisioner-7b89766c86-wzk2l -c csi-resizer -p 
 I1231 01:03:57.937452       1 main.go:68] Version : v4.3.40-202010141211.p0-0-gdfa08ed-dirty
 I1231 01:03:57.939621       1 connection.go:153] Connecting to unix:///csi/csi-provisioner.sock
 I1231 01:03:57.940738       1 common.go:111] Probing CSI driver for readiness

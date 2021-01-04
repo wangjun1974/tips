@@ -8877,3 +8877,86 @@ F1231 01:05:16.524803       1 leader_election.go:169] stopped leading
 ### Tmux Cheat Sheet
 https://tmuxcheatsheet.com/
 
+
+
+### 问题追踪
+```
+# 检查 etcd 的健康状况
+oc get etcd -o=jsonpath='{range .items[0].status.conditions[?(@.type=="EtcdMembersAvailable")]}{.message}{"\n"}'
+3 members are available
+
+# etcd-master2.cluster-0001.rhsacn.org 容器有重启的现象
+oc get pods -n openshift-etcd | grep etcd
+etcd-master0.cluster-0001.rhsacn.org                3/3     Running     0          39d
+etcd-master1.cluster-0001.rhsacn.org                3/3     Running     0          39d
+etcd-master2.cluster-0001.rhsacn.org                3/3     Running     12         39d
+etcd-quorum-guard-6446859dbb-98q4s                  1/1     Running     0          4d20h
+etcd-quorum-guard-6446859dbb-kv69v                  1/1     Running     0          4d21h
+etcd-quorum-guard-6446859dbb-xktkh                  1/1     Running     0          4d20h
+
+
+646a1e76b9516       203086c2d8868ba6b079af6f4953844254f105f78dead408b1ffd441480d4300   About a minute ago   Exited              kube-apiserver  
+
+# kube-apiserver 容器报错
+sudo crictl logs 646a1e76b9516
+...
+W0104 07:19:30.723990      19 clientconn.go:1223] grpc: addrConn.createTransport failed to connect to {https://10.66.208.140:2379  <nil> 0 <nil>}. Err :connection error: desc = "transport: Error while dialing dial tcp 10.66.208.140:2379: connect: no route to host". Reconnecting...
+W0104 07:19:31.171907      19 clientconn.go:1223] grpc: addrConn.createTransport failed to connect to {https://10.66.208.141:2379  <nil> 0 <nil>}. Err :connection error: desc = "transport: Error while dialing dial tcp 10.66.208.141:2379: connect: no route to host". Reconnecting...
+W0104 07:19:31.171907      19 clientconn.go:1223] grpc: addrConn.createTransport failed to connect to {https://10.66.208.141:2379  <nil> 0 <nil>}. Err :connection error: desc = "transport: Error while dialing dial tcp 10.66.208.141:2379: connect: no route to host". Reconnecting...
+Error: context deadline exceeded
+I0104 07:19:33.873454       1 main.go:198] Termination finished with exit code 1
+I0104 07:19:33.873527       1 main.go:151] Deleting termination lock file "/var/log/kube-apiserver/.terminating"
+
+# 查看 etcd 容器
+sudo crictl ps -a | grep etcd
+5cc186030c9ef       257e20937605406e2cf28da0e6c68aa85a8487a2aca0310c089891fe97b22464   8 minutes ago        Running             etcd-metrics                                  0                   3dde48e37798c
+854a1e8729cfa       257e20937605406e2cf28da0e6c68aa85a8487a2aca0310c089891fe97b22464   8 minutes ago        Running             etcd                                          0                   3dde48e37798c
+8e86ea9db41e0       257e20937605406e2cf28da0e6c68aa85a8487a2aca0310c089891fe97b22464   8 minutes ago        Running             etcdctl                                       0                   3dde48e37798c
+13a368506d502       257e20937605406e2cf28da0e6c68aa85a8487a2aca0310c089891fe97b22464   8 minutes ago        Exited              etcd-resources-copy                           0                   3dde48e37798c
+f0294ca3a88e1       257e20937605406e2cf28da0e6c68aa85a8487a2aca0310c089891fe97b22464   8 minutes ago        Exited              etcd-ensure-env-vars  
+
+sudo crictl logs 854a1e8729cfa 2>&1 | more
+
+sudo crictl logs 5cc186030c9ef
+sudo crictl logs 8e86ea9db41e0
+
+# 检查 kube-apiserver 是否正常运行
+sudo crictl ps -a | grep kube-apiserver 
+54261045c43f6       59c8ec9cf04d0b89d3295b108606e88aeeabb02b7c4f4e5f4351623ece2a9790   42 seconds ago       Running             kube-apiserver-check-endpoints                1                   0232867cc8bac
+57a06e48da93a       59c8ec9cf04d0b89d3295b108606e88aeeabb02b7c4f4e5f4351623ece2a9790   42 seconds ago       Running             kube-apiserver-cert-regeneration-controller   1                   0232867cc8bac
+1cdc10270edbe       203086c2d8868ba6b079af6f4953844254f105f78dead408b1ffd441480d4300   43 seconds ago       Running             kube-apiserver                                2                   0232867cc8bac
+0511b36e852a6       203086c2d8868ba6b079af6f4953844254f105f78dead408b1ffd441480d4300   3 minutes ago        Exited              kube-apiserver                                1                   0232867cc8bac
+ede04ea30eff4       59c8ec9cf04d0b89d3295b108606e88aeeabb02b7c4f4e5f4351623ece2a9790   4 minutes ago        Exited              kube-apiserver-check-endpoints                0                   0232867cc8bac
+b5f73b5a898b3       59c8ec9cf04d0b89d3295b108606e88aeeabb02b7c4f4e5f4351623ece2a9790   4 minutes ago        Running             kube-apiserver-insecure-readyz                0                   0232867cc8bac
+fac71cd3a5449       59c8ec9cf04d0b89d3295b108606e88aeeabb02b7c4f4e5f4351623ece2a9790   4 minutes ago        Exited              kube-apiserver-cert-regeneration-controller   0                   0232867cc8bac
+b7f80f39965cf       59c8ec9cf04d0b89d3295b108606e88aeeabb02b7c4f4e5f4351623ece2a9790   4 minutes ago        Running             kube-apiserver-cert-syncer                    0                   0232867cc8bac
+
+# 检查 kube-apiserver 的日志
+sudo crictl logs $( sudo crictl ps --name kube-apiserver -o json  | jq '.containers[0].id' | sed -e 's|"||g' )
+
+# 最近退出的 pods 包括
+sudo crictl ps -a | grep Exited  | more
+9f6fd0fefda4c       b69fa64626c9c494d05cfd7cc160629538e84f813546f73c718a048cf255fa9d   4 minutes ago       Exited              openshift-apiserver-operat
+or                  5                   8d33ad66e41a6
+5765142166a4b       a2f06168344d6450be4ea6764b4072309c325c6aaec4353e92831b85fab7f8a9   4 minutes ago       Exited              packageserver             
+                    7                   9bc61f77a3276
+5d522fdf3b6c9       203086c2d8868ba6b079af6f4953844254f105f78dead408b1ffd441480d4300   4 minutes ago       Exited              kube-controller-manager   
+                    2                   827f1f13fd39e
+9fc2c390c7e8e       a21d90ad5637d38872fc9ee7cde0cf67e8a96149461f6544d45b3948e635518f   5 minutes ago       Exited              oauth-apiserver           
+                    6                   9a0c507c4717f
+7f845e1cc7192       59c8ec9cf04d0b89d3295b108606e88aeeabb02b7c4f4e5f4351623ece2a9790   6 minutes ago       Exited              kube-apiserver-check-endpo
+ints                4                   92659af53aece
+c23545dcfcf71       203086c2d8868ba6b079af6f4953844254f105f78dead408b1ffd441480d4300   6 minutes ago       Exited              kube-apiserver            
+                    3                   92659af53aece
+9e25c8018dc8a       e573390c6291486c9fc0796df010c5428b35b950b9246f643e3c82cb90386421   6 minutes ago       Exited              console-operator       
+
+# 看看 console-operator 为什么退出了
+sudo crictl logs 9e25c8018dc8a
+
+# 看看 packageserver 为什么退出了
+sudo crictl logs 5765142166a4b
+
+# 最后问题通过增大 master 内存解决了，感觉也没能完全处理好
+
+
+```

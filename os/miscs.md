@@ -8983,3 +8983,11 @@ $ oc delete deployment/marketplace-operator
 # 删除拥有 marketplace-operator 标签的 replicaset 
 $ oc delete rs -l name=marketplace-operator
 ```
+
+
+
+### 添加 Add configmap for service CA bundle
+https://github.com/openshift/cluster-ingress-operator/commit/fa2873f252311dd43a2433944b1d88622c1eb8ba
+```
+oc extract -n openshift-kube-apiserver-operator cm/service-network-serving-ca --to=-
+```

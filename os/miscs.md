@@ -9165,3 +9165,47 @@ oc patch deployment/my-release-wordpress --patch \
    "{\"spec\":{\"template\":{\"metadata\":{\"annotations\":{\"last-restart\":\"`date +'%s'`\"}}}}}"
   
 ```
+
+
+
+### OCS 下通过 rook toolbox 创建 pool 和删除 pool
+```
+# 启用 rook toolbox
+oc patch OCSInitialization ocsinit -n openshift-storage --type json --patch  '[{ "op": "replace", "path": "/spec/enableCephTools", "value": true }]'
+
+TOOLS_POD=$(oc get pods -n openshift-storage -l app=rook-ceph-tools -o name)
+
+# 创建 pool ocs-storagecluster-test
+oc rsh -n openshift-storage $TOOLS_POD ceph osd pool create ocs-storagecluster-test 64 64
+
+# 查看 pool 的情况
+oc rsh -n openshift-storage $TOOLS_POD ceph osd lspools
+1 ocs-storagecluster-cephblockpool
+2 ocs-storagecluster-cephobjectstore.rgw.control
+3 ocs-storagecluster-cephfilesystem-metadata
+4 ocs-storagecluster-cephfilesystem-data0
+5 ocs-storagecluster-cephobjectstore.rgw.meta
+6 ocs-storagecluster-cephobjectstore.rgw.log
+7 ocs-storagecluster-cephobjectstore.rgw.buckets.index
+8 ocs-storagecluster-cephobjectstore.rgw.buckets.non-ec
+9 .rgw.root
+10 ocs-storagecluster-cephobjectstore.rgw.buckets.data
+11 ocs-storagecluster-test
+
+# 删除 pool
+oc rsh -n openshift-storage $TOOLS_POD ceph osd pool delete ocs-storagecluster-test ocs-storagecluster-test --yes-i-really-really-mean-it
+
+# 查看 pool 的情况
+oc rsh -n openshift-storage $TOOLS_POD ceph osd lspools
+1 ocs-storagecluster-cephblockpool
+2 ocs-storagecluster-cephobjectstore.rgw.control
+3 ocs-storagecluster-cephfilesystem-metadata
+4 ocs-storagecluster-cephfilesystem-data0
+5 ocs-storagecluster-cephobjectstore.rgw.meta
+6 ocs-storagecluster-cephobjectstore.rgw.log
+7 ocs-storagecluster-cephobjectstore.rgw.buckets.index
+8 ocs-storagecluster-cephobjectstore.rgw.buckets.non-ec
+9 .rgw.root
+10 ocs-storagecluster-cephobjectstore.rgw.buckets.data
+
+```

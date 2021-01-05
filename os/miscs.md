@@ -8972,3 +8972,14 @@ https://docs.openshift.com/container-platform/4.6/installing/installing_bare_met
 |Control plane|RHCOS|4|16GB|120GB|
 |Compute|RHCOS or RHEL 7.6|2|8GB|120GB|
 
+
+
+### 删除 marketplace operator 相关资源，CVO重建相关资源
+修复 marketplace-operator 相关错误
+```
+# 删除 deployment marketplace-operator
+$ oc delete deployment/marketplace-operator
+
+# 删除拥有 marketplace-operator 标签的 replicaset 
+$ oc delete rs -l name=marketplace-operator
+```

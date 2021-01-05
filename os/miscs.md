@@ -9085,6 +9085,7 @@ helm repo list
 helm search repo
 helm search hub
 
+# https://artifacthub.io/packages/helm/bitnami/wordpress
 # 添加 bitnami repo
 helm repo add bitnami https://charts.bitnami.com/bitnami
 
@@ -9124,4 +9125,43 @@ To access your WordPress site from outside the cluster follow the steps below:
 # 生成 route
 oc expose svc/my-release-wordpress
 
+# 拷贝缺失镜像
+oc get statefulset.apps/my-release-mariadb -o jsonpath='{.spec.template.spec.containers[0].image}'
+docker.io/bitnami/mariadb:10.5.8-debian-10-r21 
+
+oc get deployment.apps/my-release-wordpress -o jsonpath='{.spec.template.spec.containers[0].image}'
+docker.io/bitnami/wordpress:5.6.0-debian-10-r9
+
+mkdir -p /root/tmp/mirror/bitnami/mariadb
+skopeo copy --format v2s2 docker://docker.io/bitnami/mariadb:10.5.8-debian-10-r21 dir:///root/tmp/mirror/bitnami/mariadb
+
+mkdir -p /root/tmp/mirror/bitnami/wordpress
+skopeo copy --format v2s2 docker://docker.io/bitnami/wordpress:5.6.0-debian-10-r9 dir:///root/tmp/mirror/bitnami/wordpress
+
+# 上传镜像
+skopeo copy --format v2s2 dir:///root/tmp/mirror/bitnami/mariadb docker://helper.cluster-0001.rhsacn.org:5000/bitnami/mariadb:10.5.8-debian-10-r21
+
+skopeo copy --format v2s2 dir:///root/tmp/mirror/bitnami/wordpress docker://helper.cluster-0001.rhsacn.org:5000/bitnami/wordpress:5.6.0-debian-10-r9
+
+
+# patch statefulset my-release-mariadb 和 deployment my-release-wordpress
+oc patch statefulset my-release-mariadb -n test2 --type json \
+    -p '[{"op": "replace", "path": "/spec/template/spec/containers/0/image", "value": "helper.cluster-0001.rhsacn.org:5000/bitnami/mariadb:10.5.8-debian-10-r21"}]'
+
+oc patch deployment my-release-wordpress -n test2 --type json \
+    -p '[{"op": "replace", "path": "/spec/template/spec/containers/0/image", "value": "helper.cluster-0001.rhsacn.org:5000/bitnami/wordpress:5.6.0-debian-10-r9"}]'
+
+# 为 my-release-mariadb 用户添加 anyuid scc
+oc adm policy add-scc-to-user anyuid -z my-release-mariadb -n test2
+# 我认为这个可以不用执行
+oc adm policy add-scc-to-user anyuid -z default -n test2 
+
+# 触发重新部署
+# 我认为这个可以不用执行
+oc patch statefulset/my-release-mariadb --patch \
+   "{\"spec\":{\"template\":{\"metadata\":{\"annotations\":{\"last-restart\":\"`date +'%s'`\"}}}}}"
+
+oc patch deployment/my-release-wordpress --patch \
+   "{\"spec\":{\"template\":{\"metadata\":{\"annotations\":{\"last-restart\":\"`date +'%s'`\"}}}}}"
+  
 ```

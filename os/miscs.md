@@ -9163,7 +9163,11 @@ oc patch statefulset/my-release-mariadb --patch \
 
 oc patch deployment/my-release-wordpress --patch \
    "{\"spec\":{\"template\":{\"metadata\":{\"annotations\":{\"last-restart\":\"`date +'%s'`\"}}}}}"
-  
+
+# 列出已安装的 chart
+helm list
+NAME            NAMESPACE       REVISION        UPDATED                                 STATUS          CHART                   APP VERSION
+my-release      test2           1               2021-01-05 13:04:14.919487446 +0800 CST deployed        wordpress-10.2.1        5.6.0    
 ```
 
 

@@ -9067,7 +9067,7 @@ curl -L https://mirror.openshift.com/pub/openshift-v4/clients/helm/latest/helm-l
 
 chmod +x /usr/local/bin/helm
 
-oc new-project mysql
+oc new-project test2
 
 # 添加 helm 的 stable repo 和 incubator repo
 helm repo add stable https://aliacs-app-catalog.oss-cn-hangzhou.aliyuncs.com/charts/
@@ -9122,6 +9122,9 @@ To access your WordPress site from outside the cluster follow the steps below:
   echo Username: user
   echo Password: $(kubectl get secret --namespace test2 my-release-wordpress -o jsonpath="{.data.wordpress-password}" | base64 --decode)
 
+  # 口令获取
+  oc get secret my-release-wordpress -o jsonpath='{.data.wordpress-password}' | base64 -d 
+
 # 生成 route
 oc expose svc/my-release-wordpress
 
@@ -9153,11 +9156,11 @@ oc patch deployment my-release-wordpress -n test2 --type json \
 
 # 为 my-release-mariadb 用户添加 anyuid scc
 oc adm policy add-scc-to-user anyuid -z my-release-mariadb -n test2
-# 我认为这个可以不用执行
+# 为 default 用户添加 anyuid scc
 oc adm policy add-scc-to-user anyuid -z default -n test2 
 
 # 触发重新部署
-# 我认为这个可以不用执行
+# 根据需要执行
 oc patch statefulset/my-release-mariadb --patch \
    "{\"spec\":{\"template\":{\"metadata\":{\"annotations\":{\"last-restart\":\"`date +'%s'`\"}}}}}"
 
@@ -9216,3 +9219,8 @@ oc rsh -n openshift-storage $TOOLS_POD ceph osd lspools
 oc patch OCSInitialization ocsinit -n openshift-storage --type json --patch  '[{ "op": "replace", "path": "/spec/enableCephTools", "value": false }]'
 
 ```
+
+
+
+### OpenShift cookbook
+https://cookbook.openshift.org/users-and-role-based-access-control/how-can-i-enable-an-image-to-run-as-a-set-user-id.html

@@ -8960,3 +8960,15 @@ sudo crictl logs 5765142166a4b
 
 
 ```
+
+
+
+### OpenShift 4.6 最小资源需求
+https://docs.openshift.com/container-platform/4.6/installing/installing_bare_metal/installing-restricted-networks-bare-metal.html#minimum-resource-requirements_installing-restricted-networks-bare-metal
+
+|Machine|Operating System|vCPU|Virtual RAM|Storage|
+|---|---|---|---|---|
+|Bootstrap|RHCOS|4|16GB|120GB|
+|Control plane|RHCOS|4|16GB|120GB|
+|Compute|RHCOS or RHEL 7.6|2|8GB|120GB|
+

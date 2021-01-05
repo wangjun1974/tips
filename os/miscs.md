@@ -9208,4 +9208,7 @@ oc rsh -n openshift-storage $TOOLS_POD ceph osd lspools
 9 .rgw.root
 10 ocs-storagecluster-cephobjectstore.rgw.buckets.data
 
+# 禁用 rook toolbox
+oc patch OCSInitialization ocsinit -n openshift-storage --type json --patch  '[{ "op": "replace", "path": "/spec/enableCephTools", "value": false }]'
+
 ```

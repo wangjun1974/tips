@@ -9017,6 +9017,9 @@ ca-bundle.crt
 
 $ oc create route reencrypt apiserver --service kubernetes --port https -n default --dest-ca-cert=ca-bundle.crt
 
+openssl s_client -showcerts -connect apiserver-default.apps.cluster-0001.rhsacn.org:443
+
+
 # 通过 Resourcre Locker Operator 达到类似目的
 # https://github.com/redhat-cop/resource-locker-operator
 # 设置目标对象 targetObjectRef
@@ -9049,4 +9052,76 @@ spec:
         namespace: default
   serviceAccountRef:
     name: default
+```
+
+
+
+### OpenShift 4 与 Helm 3
+https://www.openshift.com/blog/openshift-4-3-deploy-applications-with-helm-3<br>
+https://docs.openshift.com/container-platform/4.4/cli_reference/helm_cli/getting-started-with-helm-on-openshift-container-platform.html<br>
+https://help.aliyun.com/document_detail/58587.html<br>
+
+```
+# 下载 helm client
+curl -L https://mirror.openshift.com/pub/openshift-v4/clients/helm/latest/helm-linux-amd64 -o /usr/local/bin/helm
+
+chmod +x /usr/local/bin/helm
+
+oc new-project mysql
+
+# 添加 helm 的 stable repo 和 incubator repo
+helm repo add stable https://aliacs-app-catalog.oss-cn-hangzhou.aliyuncs.com/charts/
+helm repo add incubator https://aliacs-app-catalog.oss-cn-hangzhou.aliyuncs.com/charts-incubator/
+helm repo update
+
+# 查看已安装 charts
+helm list
+heml ls
+
+# 查看 repo
+helm repo list 
+
+# 搜索 repo 和 hub
+helm search repo
+helm search hub
+
+# 添加 bitnami repo
+helm repo add bitnami https://charts.bitnami.com/bitnami
+
+# 安装 bitnami wordpress
+helm install my-release bitnami/wordpress
+WARNING: Kubernetes configuration file is group-readable. This is insecure. Location: /root/ocp4/auth/kubeconfig
+NAME: my-release
+LAST DEPLOYED: Tue Jan  5 10:47:02 2021
+NAMESPACE: test2
+STATUS: deployed
+REVISION: 1
+NOTES:
+** Please be patient while the chart is being deployed **
+
+Your WordPress site can be accessed through the following DNS name from within your cluster:
+
+    my-release-wordpress.test2.svc.cluster.local (port 80)
+
+To access your WordPress site from outside the cluster follow the steps below:
+
+1. Get the WordPress URL by running these commands:
+
+  NOTE: It may take a few minutes for the LoadBalancer IP to be available.
+        Watch the status with: 'kubectl get svc --namespace test2 -w my-release-wordpress'
+
+   export SERVICE_IP=$(kubectl get svc --namespace test2 my-release-wordpress --template "{{ range (index .status.loadBalancer.ingress 0) }}{{.}}{{ end }}")
+   echo "WordPress URL: http://$SERVICE_IP/"
+   echo "WordPress Admin URL: http://$SERVICE_IP/admin"
+
+2. Open a browser and access WordPress using the obtained URL.
+
+3. Login with the following credentials below to see your blog:
+
+  echo Username: user
+  echo Password: $(kubectl get secret --namespace test2 my-release-wordpress -o jsonpath="{.data.wordpress-password}" | base64 --decode)
+
+# 生成 route
+oc expose svc/my-release-wordpress
+
 ```

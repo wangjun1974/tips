@@ -8990,4 +8990,63 @@ $ oc delete rs -l name=marketplace-operator
 https://github.com/openshift/cluster-ingress-operator/commit/fa2873f252311dd43a2433944b1d88622c1eb8ba
 ```
 oc extract -n openshift-kube-apiserver-operator cm/service-network-serving-ca --to=-
+# ca-bundle.crt
+-----BEGIN CERTIFICATE-----
+MIIDTDCCAjSgAwIBAgIIAJB/+/C6NGQwDQYJKoZIhvcNAQELBQAwRDESMBAGA1UE
+CxMJb3BlbnNoaWZ0MS4wLAYDVQQDEyVrdWJlLWFwaXNlcnZlci1zZXJ2aWNlLW5l
+dHdvcmstc2lnbmVyMB4XDTIwMTEyNTA2MjEwOVoXDTMwMTEyMzA2MjEwOVowRDES
+MBAGA1UECxMJb3BlbnNoaWZ0MS4wLAYDVQQDEyVrdWJlLWFwaXNlcnZlci1zZXJ2
+aWNlLW5ldHdvcmstc2lnbmVyMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKC
+AQEAyb5I+VIdARlznTg1SNzUi5WYRn+0V4iQAM1jYOhpnEUffhfawfCmhD+1kG6I
+XeKej28BC6tnoNhWlLt6IG010z7yH/lGq6zh/G1CsAK3JxaIgU7E92KfSToPpVz6
+pxYWruv+8qx3g7urOyacL60+Z+T9byyW0QSE6nl9rCKaQybPYxQdBxooQuf3tZFE
+e49oO2yDMJ9pm0QfgDTEKGE9OITYdXWBlAKoKEiIzsIEMQN9tmO/+j3Tclbxr6br
+rbTPMgithz5QnRbZsKjbzmRhuqNZ0RCvvOoPuLe2RhTk+KT/7qrlKoMmxL/5HhRf
+6Ds9xYe8ntgSfOqT95AA1ZedOwIDAQABo0IwQDAOBgNVHQ8BAf8EBAMCAqQwDwYD
+VR0TAQH/BAUwAwEB/zAdBgNVHQ4EFgQURcP7OgUdK4cgB46FZOTD8L7CMeowDQYJ
+KoZIhvcNAQELBQADggEBAEVAK0uHOhd+yUD9OY9QnAu/qyL6eSVWkWQfrmSoIECG
+xfJSSQWDCG91/DNQ1fwqrm0iHJqbUa6lTajJPhAmy9h+h3vrqKs9YdqLeoSlGN7W
+9Y5QxFOa+xBKswKYCh5sIIWotOx6bJ9fWnPGXUbxz5PWBTJAuhAl8MghZTL6aZWK
+dIJur/tJs9kuGzidE7/cs4Lgp5cwGv9rHwInUxjUGFKxN+/byHUTHggzWdzsQ8qh
+oz4QdzNeR2x5oSIxyEN0SVyzhs7M6L8ZIOwpTy+PlI5jeI/WUGFl3y4mmHwlb7zy
+aD8InvUVyxYMYCbqU6iZPGZw01PKBCBz1yLTyU5SY/E=
+-----END CERTIFICATE-----
+
+$ oc extract -n openshift-kube-apiserver-operator cm/service-network-serving-ca --to=.
+ca-bundle.crt
+
+$ oc create route reencrypt apiserver --service kubernetes --port https -n default --dest-ca-cert=ca-bundle.crt
+
+# 通过 Resourcre Locker Operator 达到类似目的
+# https://github.com/redhat-cop/resource-locker-operator
+# 设置目标对象 targetObjectRef
+# 设置源对象和源字段 SourceObjectRefs
+# 设置 Patch 模版 PatchTemplate
+# 设置 Patch 类型 PatchType 
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: ResourceLocker
+metadata:
+  name: apiserver-route
+spec:
+  patches:
+    - id: patch1
+      patchTemplate: |
+        spec:
+          tls:
+            destinationCACertificate: |
+              "{{ (index . 0) }}"
+      patchType: application/strategic-merge-patch+json
+      sourceObjectRefs:
+        - apiVersion: v1
+          fieldPath: $.data.ca-bundle\.crt
+          kind: ConfigMap
+          name: service-network-serving-ca
+          namespace: openshift-kube-apiserver-operator
+      targetObjectRef:
+        apiVersion: route.openshift.io/v1
+        kind: Route
+        name: apiserver
+        namespace: default
+  serviceAccountRef:
+    name: default
 ```

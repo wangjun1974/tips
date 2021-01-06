@@ -9224,3 +9224,46 @@ oc patch OCSInitialization ocsinit -n openshift-storage --type json --patch  '[{
 
 ### OpenShift cookbook
 https://cookbook.openshift.org/users-and-role-based-access-control/how-can-i-enable-an-image-to-run-as-a-set-user-id.html
+
+
+### 获取 scc 的 priority
+```
+oc get scc -o jsonpath='Name{"\t\t\t"}Priority{"\n"}{range .items[*]}{@.metadata.name}{"\t\t\t"}{@.priority}{"\n"}{end}' 
+
+Name              Priority
+anyuid            10
+hostaccess              <nil>
+hostmount-anyuid                <nil>
+hostnetwork             <nil>
+node-exporter           <nil>
+nonroot           <nil>
+noobaa            <nil>
+privileged              <nil>
+restricted              <nil>
+rook-ceph               <nil>
+rook-ceph-csi           <nil>
+```
+
+
+
+#### 删除 OCS 的 ceph pool
+删除 OCS 下的 ceph pool 需要删除 k8s 下对应的 CRD 资源 CephBlockPool
+
+删除 k8s 下对应的 CRD 资源 CephBlockPool的方法：
+```
+1. oc delete CephBlockPool sc-pool-2way -n openshift-storage
+2. From OCP UI -> In left Nav -> Administration -> Custom Resource Definanions -> search CephBlockPool -> click on CephBlockPool -> Go to instance tab -> delete resource from right menu.
+```
+
+另外直接直接操作 ceph pool 的方法为：
+```
+oc patch OCSInitialization ocsinit -n openshift-storage --type json --patch  '[{ "op": "replace", "path": "/spec/enableCephTools", "value": true }]'
+
+TOOLS_POD=$(oc get pods -n openshift-storage -l app=rook-ceph-tools -o name)
+
+# list pools
+oc rsh -n openshift-storage $TOOLS_POD ceph osd lspools
+
+# delete pool -- carefully
+oc rsh -n openshift-storage $TOOLS_POD ceph osd pool delete <pool_name> <pool_name> --yes-i-really-really-mean-it
+```

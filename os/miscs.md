@@ -9267,3 +9267,8 @@ oc rsh -n openshift-storage $TOOLS_POD ceph osd lspools
 # delete pool -- carefully
 oc rsh -n openshift-storage $TOOLS_POD ceph osd pool delete <pool_name> <pool_name> --yes-i-really-really-mean-it
 ```
+
+
+
+### How to create a MachineSet for VMware in OpenShift 4.5 and Higher
+https://access.redhat.com/solutions/5307621

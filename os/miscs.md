@@ -9278,3 +9278,53 @@ https://access.redhat.com/solutions/5307621
 ### machine config template keepalived 
 [0] https://github.com/openshift/machine-config-operator/blob/master/templates/master/00-master/on-prem/files/keepalived-keepalived.yaml<br>
 [1] https://github.com/openshift/machine-config-operator/blob/master/templates/worker/00-worker/on-prem/files/keepalived-keepalived.yaml<br>
+
+
+
+### 查询 pipeline operators 
+```
+# 查询 pipeline operator 需要的镜像
+echo "select * from related_image \
+    where operatorbundle_name like 'openshift-pipelines-operator%';" \
+    | sqlite3 -line ./bundles.db 
+
+
+# 下载 pipeline operator 需要的镜像
+mkdir -p /root/jwang/mirror/openshift-pipelines-tech-preview
+skopeo copy --format v2s2 docker://registry.redhat.io/openshift-pipelines-tech-preview/pipelines-rhel8-operator@sha256:78260d7b70e43ec4782176fe892fae2998e5885943f673914f5b5ff1add7b267 dir:///root/jwang/mirror/openshift-pipelines-tech-preview
+
+# 将下载镜像拷贝到本地 registry
+skopeo copy --authfile /root/ocp4/ins452/postinstall/pull-secret-2.json --format v2s2 dir:///tmp/openshift-pipelines-tech-preview docker://registry.ocp4.example.com:5443/openshift-pipelines-tech-preview/pipelines-rhel8-operator
+
+cat <<EOF > /root/tmp/pipeline-imagecontentsourcepolicy.yaml
+apiVersion: operator.openshift.io/v1alpha1
+kind: ImageContentSourcePolicy
+metadata:
+  name: icsp-pipelines-operator
+spec:
+  repositoryDigestMirrors:
+  - mirrors:
+    - registry.ocp4.example.com:5443/openshift-pipelines-tech-preview/pipelines-rhel8-operator
+    source: registry.redhat.io/openshift-pipelines-tech-preview/pipelines-rhel8-operator
+EOF
+
+
+```
+
+
+
+### 检查 cluster operator 
+```
+# 获取 cluster operator 的名字
+oc get co -o jsonpath='{range .items[*]}{@.metadata.name}{"\n"}{end}'
+
+# 获取 kube-apiserver 的 id
+sudo crictl ps -a | grep Running | grep "kube-apiserver " | awk '{print $1}' 
+
+# 获取 kube-apiserver 的 日志
+sudo crictl logs $(sudo crictl ps -a | grep Running | grep "kube-apiserver " | awk '{print $1}')
+
+http://pastebin.test.redhat.com/929194
+
+
+```

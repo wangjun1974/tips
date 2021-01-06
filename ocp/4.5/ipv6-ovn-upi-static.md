@@ -621,4 +621,9 @@ Password:
 Error: error authenticating creds for "registry.ocp4.example.com:5443": error pinging docker registry registry.ocp4.example.com:5443: Get https://registry.ocp4.example.com:5443/v2/: dial tcp 192.168.7.11:5443: connect: network is unreachable
 
 
+# 不清楚为什么需要在所有 master 和 worker 节点上手工登录虚拟机执行以下命令
+sudo nmcli c s ens3 | grep dns
+sudo nmcli c mod ens3 ipv6.ignore-auto-dns 'yes'
+sudo nmcli c down ens3 && sudo nmcli c up ens3
+
 ```

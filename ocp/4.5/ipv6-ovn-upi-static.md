@@ -626,4 +626,33 @@ sudo nmcli c s ens3 | grep dns
 sudo nmcli c mod ens3 ipv6.ignore-auto-dns 'yes'
 sudo nmcli c down ens3 && sudo nmcli c up ens3
 
+# clusteroperator kube-apiserver 和 openshift-apiserver 处于降级状态
+kube-apiserver                             4.5.2     True        False         True       24m
+openshift-apiserver                        4.5.2     True        False         True       18m
+
+# kube-apiserver 有如下报错
+oc -n openshift-kube-apiserver-operator logs $(oc get pods -n openshift-kube-apiserver-operator -o jsonpath='{ .items[*].metadata.name }')
+...
+E0106 14:40:24.087292       1 base_controller.go:180] "ConfigObserver" controller failed to sync "key", err: configmaps openshift-etcd/etcd-endpoints: no etcd endpoint addresses found
+
+# configmaps openshift-etcd/etcd-endpoints 的内容为
+oc -n openshift-etcd get configmaps etcd-endpoints -o json 
+
+{
+    "apiVersion": "v1",
+    "data": {
+        "MjAwMTpkYjg6OjE0": "2001:db8::14",
+        "MjAwMTpkYjg6OjE1": "2001:db8::15",
+        "MjAwMTpkYjg6OjEz": "2001:db8::13"
+    },
+...
+
+# Endpoint 的 data 是 ipv6 地址
+
+# Patch configmaps etcd-endpoints, patch 之后并未生效，应该有 controller 控制这个 configmaps
+oc -n openshift-etcd patch configmaps etcd-endpoints --type json -p '[{"op": "replace", "path": "/data/MjAwMTpkYjg6OjE0", "value": "2001:0DB8:0000:0000:0000:0000:0000:0014"}]'
+oc -n openshift-etcd patch configmaps etcd-endpoints --type json -p '[{"op": "replace", "path": "/data/MjAwMTpkYjg6OjE1", "value": "2001:0DB8:0000:0000:0000:0000:0000:0015"}]'
+oc -n openshift-etcd patch configmaps etcd-endpoints --type json -p '[{"op": "replace", "path": "/data/MjAwMTpkYjg6OjEz", "value": "2001:0DB8:0000:0000:0000:0000:0000:0013"}]'
+
+
 ```

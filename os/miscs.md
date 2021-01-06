@@ -9272,3 +9272,9 @@ oc rsh -n openshift-storage $TOOLS_POD ceph osd pool delete <pool_name> <pool_na
 
 ### How to create a MachineSet for VMware in OpenShift 4.5 and Higher
 https://access.redhat.com/solutions/5307621
+
+
+
+### machine config template keepalived 
+[0] https://github.com/openshift/machine-config-operator/blob/master/templates/master/00-master/on-prem/files/keepalived-keepalived.yaml<br>
+[1] https://github.com/openshift/machine-config-operator/blob/master/templates/worker/00-worker/on-prem/files/keepalived-keepalived.yaml<br>

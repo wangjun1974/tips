@@ -301,6 +301,10 @@ cd ${TEMPDIR}
 guestfish -a ${NGINX_DIRECTORY}/rhcos-${RHCOSVERSION}-x86_64-installer.x86_64.iso \
   -m /dev/sda tar-out / - | tar xvf -
 
+# 4.5 以上版本需要执行
+guestfish -a ${NGINX_DIRECTORY}/rhcos-${RHCOSVERSION}-x86_64-live.x86_64.iso \
+  -m /dev/sda tar-out / - | tar xvf -
+
 # Helper function to modify the config files
 modify_cfg(){
   for file in "EFI/redhat/grub.cfg" "isolinux/isolinux.cfg"; do

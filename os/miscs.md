@@ -9527,3 +9527,14 @@ oc get pods -l olm.catalogSource=community-operators -n openshift-marketplace
 
 ### OpenShift 4.3: Alertmanager Configuration
 https://www.openshift.com/blog/openshift-4-3-alertmanager-configuration
+
+
+
+### install helm chart by dry-run and oc apply
+```
+helm template ./tooling/charts/operators/ --dry-run | oc apply -f-
+namespace/do500-workspaces created
+namespace/do500-gitlab created
+operatorgroup.operators.coreos.com/codeready-workspaces created
+subscription.operators.coreos.com/codeready-workspaces created
+```

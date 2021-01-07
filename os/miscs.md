@@ -9445,3 +9445,23 @@ EOF
 
 ### 配置 ip 参数的内核参数
 https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/7/html/networking_guide/sec-configuring_ip_networking_from_the_kernel_command_line
+
+
+
+### stop masters and workers
+```
+for vm in master0 master1 master2 worker0 worker1 worker2 
+do
+  virsh destroy jwang-ocp452-${vm}
+done
+
+for vm in master0 master1 master2 worker0 worker1 worker2 
+do
+  qemu-img create -f qcow2 /data/kvm/jwang-ocp452-${vm}.qcow2 120G
+done
+
+for vm in master0 master1 master2 worker0 worker1 worker2 
+do
+  virsh start jwang-ocp452-${vm}
+done
+```

@@ -387,6 +387,69 @@ BIOSMODE="bios"
 NET_INTERFACE="ens3"
 modify_cfg
 
+# ipv4 configure
+URL="http://192.168.8.11:8080/"
+GATEWAY="192.168.8.1"
+NETMASK="64"
+DNS="192.168.8.11"
+
+# BOOTSTRAP
+# TYPE="bootstrap"
+NODE="bootstrap-static"
+IP="192.168.8.12"
+FQDN="bootstrap.ocp4.example.com"
+BIOSMODE="bios"
+NET_INTERFACE="ens3"
+modify_cfg
+
+# MASTERS
+# TYPE="master"
+# MASTER-0
+NODE="master-0"
+IP="192.168.8.13"
+FQDN="master1.ocp4.example.com"
+BIOSMODE="bios"
+NET_INTERFACE="ens3"
+modify_cfg
+
+# MASTER-1
+NODE="master-1"
+IP="192.168.8.14"
+FQDN="master2.ocp4.example.com"
+BIOSMODE="bios"
+NET_INTERFACE="ens3"
+modify_cfg
+
+# MASTER-2
+NODE="master-2"
+IP="192.168.8.15"
+FQDN="master3.ocp4.example.com"
+BIOSMODE="bios"
+NET_INTERFACE="ens3"
+modify_cfg
+
+# WORKERS
+NODE="worker-0"
+IP="192.168.8.16"
+FQDN="worker1.ocp4.example.com"
+BIOSMODE="bios"
+NET_INTERFACE="ens3"
+modify_cfg
+
+NODE="worker-1"
+IP="192.168.8.17"
+FQDN="worker2.ocp4.example.com"
+BIOSMODE="bios"
+NET_INTERFACE="ens3"
+modify_cfg
+
+NODE="worker-2"
+IP="192.168.8.18"
+FQDN="worker3.ocp4.example.com"
+BIOSMODE="bios"
+NET_INTERFACE="ens3"
+modify_cfg
+
 # Generate the images, one per node as the IP configuration is different...
 # https://github.com/coreos/coreos-assembler/blob/master/src/cmd-buildextend-installer#L97-L103
 for node in master-0 master-1 master-2 worker-0 worker-1 worker-2 bootstrap-static; do

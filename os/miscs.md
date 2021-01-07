@@ -9440,6 +9440,44 @@ imageContentSources:
   - registry.ocp4.example.com:5443/ocp4/openshift4
   source: quay.io/openshift-release-dev/ocp-v4.0-art-dev
 EOF
+
+
+cat > install-config.yaml.GOOD.4_6 << EOF
+apiVersion: v1
+baseDomain: example.com
+compute:
+- hyperthreading: Enabled
+  name: worker
+  replicas: 0
+controlPlane:
+  hyperthreading: Enabled
+  name: master
+  replicas: 3
+metadata:
+  name: ocp4
+networking:
+  clusterNetworks:
+  - cidr: 10.254.0.0/16
+    hostPrefix: 24
+  networkType: OpenShiftSDN
+  serviceNetwork:
+  - 172.30.0.0/16
+platform:
+  none: {}
+pullSecret: '{"auths":{"registry.ocp4.example.com:5443":{"auth":"YTph"}}}'
+sshKey: |
+$( cat /root/.ssh/id_rsa.pub | sed 's/^/  /g' )
+additionalTrustBundle: |
+$( cat /etc/pki/ca-trust/source/anchors/ocp4.example.com.crt | sed 's/^/  /g' )
+imageContentSources:
+- mirrors:
+  - registry.ocp4.example.com:5443/ocp4/openshift4
+  source: quay.io/openshift-release-dev/ocp-release
+- mirrors:
+  - registry.ocp4.example.com:5443/ocp4/openshift4
+  source: quay.io/openshift-release-dev/ocp-v4.0-art-dev
+EOF
+
 ```
 
 

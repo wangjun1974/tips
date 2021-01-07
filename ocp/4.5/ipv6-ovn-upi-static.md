@@ -315,6 +315,16 @@ modify_cfg(){
   done
 }
 
+# 4.5 以上版本
+modify_cfg(){
+  for file in "EFI/redhat/grub.cfg" "isolinux/isolinux.cfg"; do
+    # Append the proper image and ignition urls
+    sed -e '/ignition.platform.id=metal/s|$| coreos.inst.install_dev=vda coreos.inst.ignition_url='"${URL}"'\/ignition\/'"${NODE}"'.ign ip='"${IP}"'::'"${GATEWAY}"':'"${NETMASK}"':'"${FQDN}"':'"${NET_INTERFACE}"':none:'"${DNS}"' nameserver='"${DNS}"'|' ${file} > $(pwd)/${NODE}_${file##*/}
+    # Boot directly in the installation
+    sed -i -e 's/default vesamenu.c32/default linux/g' -e 's/timeout 600/timeout 10/g' $(pwd)/${NODE}_${file##*/}
+  done
+}
+
 URL="http://[2001:db8::11]:8080/"
 GATEWAY="[2001:db8::11]"
 NETMASK="64"
@@ -707,4 +717,11 @@ for node in master-0 master-1 master-2 worker-0 worker-1 worker-2 bootstrap-stat
     -o ${NGINX_DIRECTORY}/${node}.iso .
 done
 
+
+# 4.6.8 live iso 的 启动参数
+### BEGIN /etc/grub.d/10_linux ###
+menuentry 'RHEL CoreOS (Live)' --class fedora --class gnu-linux --class gnu --class os {
+        linux /images/pxeboot/vmlinuz random.trust_cpu=on rd.luks.options=discard coreos.liveiso=rhcos-46.82.202012051820-0 ignition.firstboot ignition.platform.id=metal
+        initrd /images/pxeboot/initrd.img /images/ignition.img
+}
 ```

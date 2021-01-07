@@ -9508,4 +9508,22 @@ done
 
 ### OpenShift 4 下如何替换全局 pull secret
 https://access.redhat.com/solutions/4902871
+```
+# 如果在 openshift-config 下存在这个 secret/pull-secret
+oc set data secret/pull-secret -n openshift-config --from-file=.dockerconfigjson=pull-secret.txt
 
+# 如果在 openshift-config 下不存在这个 secret/pull-secret，则创建这个 pull secret
+oc create secret generic pull-secret -n openshift-config --type=kubernetes.io/dockerconfigjson --from-file=.dockerconfigjson=/path/to/downloaded/pull-secret 
+
+# 检查 pods 
+oc get pods -l olm.catalogSource=certified-operators -n openshift-marketplace
+oc get pods -l olm.catalogSource=redhat-operators -n openshift-marketplace
+oc get pods -l olm.catalogSource=community-operators -n openshift-marketplace
+
+
+```
+
+
+
+### OpenShift 4.3: Alertmanager Configuration
+https://www.openshift.com/blog/openshift-4-3-alertmanager-configuration

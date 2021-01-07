@@ -9398,5 +9398,50 @@ update-ca-trust extract
 
 # 重启 registry 服务
 systemctl restart docker-distribution
-
 ```
+
+
+
+### 生成 ocp 4.6 ipv6 install-config.yaml 文件
+```
+cat > install-config.yaml.GOOD.ipv6.4_6 << EOF
+apiVersion: v1
+baseDomain: example.com
+compute:
+- hyperthreading: Enabled
+  name: worker
+  replicas: 0
+controlPlane:
+  hyperthreading: Enabled
+  name: master
+  replicas: 3
+metadata:
+  name: ocp4
+networking:
+  machineCIDR: 2001:0DB8::/64
+  networkType: OVNKubernetes
+  clusterNetwork:
+  - cidr: fd01::/48
+    hostPrefix: 64
+  serviceNetwork:
+  - fd02::/112
+platform:
+  none: {}
+pullSecret: '{"auths":{"registry.ocp4.example.com:5443":{"auth":"YTph"}}}'
+sshKey: |
+$( cat /root/.ssh/id_rsa.pub | sed 's/^/  /g' )
+additionalTrustBundle: |
+$( cat /etc/pki/ca-trust/source/anchors/ocp4.example.com.crt | sed 's/^/  /g' )
+imageContentSources:
+- mirrors:
+  - registry.ocp4.example.com:5443/ocp4/openshift4
+  source: quay.io/openshift-release-dev/ocp-release
+- mirrors:
+  - registry.ocp4.example.com:5443/ocp4/openshift4
+  source: quay.io/openshift-release-dev/ocp-v4.0-art-dev
+EOF
+```
+
+
+### 配置 ip 参数的内核参数
+https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/7/html/networking_guide/sec-configuring_ip_networking_from_the_kernel_command_line

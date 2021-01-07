@@ -388,6 +388,20 @@ for node in master-0 master-1 master-2 worker-0 worker-1 worker-2 bootstrap-stat
     -o ${NGINX_DIRECTORY}/${node}.iso .
 done
 
+# 4.5 以上版本需要用添加 genisoimage 参数 -V ${VOLID}
+for node in master-0 master-1 master-2 worker-0 worker-1 worker-2 bootstrap-static; do
+  # Overwrite the grub.cfg and isolinux.cfg files for each node type
+  for file in "EFI/redhat/grub.cfg" "isolinux/isolinux.cfg"; do
+    /bin/cp -f $(pwd)/${node}_${file##*/} ${file}
+  done
+  # As regular user!
+  genisoimage -verbose -rock -J -joliet-long -V ${VOLID} -volset ${VOLID} \
+    -eltorito-boot isolinux/isolinux.bin -eltorito-catalog isolinux/boot.cat \
+    -no-emul-boot -boot-load-size 4 -boot-info-table \
+    -eltorito-alt-boot -efi-boot images/efiboot.img -no-emul-boot \
+    -o ${NGINX_DIRECTORY}/${node}.iso .
+done
+
 # Optionally, clean up
 cd
 rm -Rf ${TEMPDIR}
@@ -654,5 +668,39 @@ oc -n openshift-etcd patch configmaps etcd-endpoints --type json -p '[{"op": "re
 oc -n openshift-etcd patch configmaps etcd-endpoints --type json -p '[{"op": "replace", "path": "/data/MjAwMTpkYjg6OjE1", "value": "2001:0DB8:0000:0000:0000:0000:0000:0015"}]'
 oc -n openshift-etcd patch configmaps etcd-endpoints --type json -p '[{"op": "replace", "path": "/data/MjAwMTpkYjg6OjEz", "value": "2001:0DB8:0000:0000:0000:0000:0000:0013"}]'
 
+# 生成 ISO
+export MAJORBUILDNUMBER=4.6
+export EXTRABUILDNUMBER=4.6.8
+mkdir -p /data/ocp4/${EXTRABUILDNUMBER}
+
+wget https://mirror.openshift.com/pub/openshift-v4/dependencies/rhcos/${MAJORBUILDNUMBER}/${EXTRABUILDNUMBER}/rhcos-${EXTRABUILDNUMBER}-x86_64-live.x86_64.iso -P /data/ocp4/${EXTRABUILDNUMBER}
+
+
+export NGINX_DIRECTORY=/data/ocp4/${EXTRABUILDNUMBER}
+export RHCOSVERSION=4.6.8
+export VOLID=$(isoinfo -d -i ${NGINX_DIRECTORY}/rhcos-${RHCOSVERSION}-x86_64-live.x86_64.iso | awk '/Volume id/ { print $3 }')
+
+TEMPDIR=$(mktemp -d)
+echo $VOLID
+echo $TEMPDIR
+
+cd ${TEMPDIR}
+guestfish -a ${NGINX_DIRECTORY}/rhcos-${RHCOSVERSION}-x86_64-live.x86_64.iso \
+  -m /dev/sda tar-out / - | tar xvf -
+
+
+# 4.5 以上版本需要用添加 genisoimage 参数 -V ${VOLID}
+for node in master-0 master-1 master-2 worker-0 worker-1 worker-2 bootstrap-static; do
+  # Overwrite the grub.cfg and isolinux.cfg files for each node type
+  for file in "EFI/redhat/grub.cfg" "isolinux/isolinux.cfg"; do
+    /bin/cp -f $(pwd)/${node}_${file##*/} ${file}
+  done
+  # As regular user!
+  genisoimage -verbose -rock -J -joliet-long -V ${VOLID} -volset ${VOLID} \
+    -eltorito-boot isolinux/isolinux.bin -eltorito-catalog isolinux/boot.cat \
+    -no-emul-boot -boot-load-size 4 -boot-info-table \
+    -eltorito-alt-boot -efi-boot images/efiboot.img -no-emul-boot \
+    -o ${NGINX_DIRECTORY}/${node}.iso .
+done
 
 ```

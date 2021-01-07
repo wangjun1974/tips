@@ -9503,3 +9503,9 @@ do
   virsh start jwang-ocp452-${vm}
 done
 ```
+
+
+
+### OpenShift 4 下如何替换全局 pull secret
+https://access.redhat.com/solutions/4902871
+

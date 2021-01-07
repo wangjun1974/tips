@@ -9328,3 +9328,75 @@ http://pastebin.test.redhat.com/929194
 
 
 ```
+
+
+### 生成证书符合 OCP 4.6 要求的自签名证书
+```
+# 需要重新生成的证书原来保存的位置
+cat /etc/docker-distribution/registry/config.yml
+version: 0.1
+log:
+  fields:
+    service: registry
+storage:
+    cache:
+        layerinfo: inmemory
+    filesystem:
+        rootdirectory: /var/lib/registry
+    delete:
+        enabled: true
+http:
+    addr: :5443
+    tls:
+       certificate: /etc/crts/ocp4.example.com.crt
+       key: /etc/crts/ocp4.example.com.key
+
+cd /etc/crts
+
+# 生成配置文件
+cat > ssl.conf << EOF
+[req]
+default_bits  = 4096
+distinguished_name = req_distinguished_name
+req_extensions = req_ext
+x509_extensions = v3_req
+prompt = no
+
+[req_distinguished_name]
+countryName = CN
+stateOrProvinceName = BJ
+localityName = BJ
+organizationName = Global Security
+organizationalUnitName = IT Department
+commonName = *.ocp4.example.com
+
+[req_ext]
+subjectAltName = @alt_names
+
+[v3_req]
+subjectAltName = @alt_names
+
+# Key usage: this is typical for a CA certificate. However since it will
+# prevent it being used as an test self-signed certificate it is best
+# left out by default.
+# keyUsage                = critical,keyCertSign,cRLSign
+
+basicConstraints        = critical,CA:true
+subjectKeyIdentifier    = hash
+
+[alt_names]
+DNS.1 = *.ocp4.example.com
+DNS.2 = registry.ocp4.example.com
+EOF
+
+# 生成证书
+openssl req -x509 -nodes -days 3650 -newkey rsa:4096 -keyout ocp4.example.com.key -out ocp4.example.com.crt -config ./ssl.conf
+
+# 拷贝证书且更新证书信任关系
+cp /etc/crts/ocp4.example.com.crt /etc/pki/ca-trust/source/anchors
+update-ca-trust extract
+
+# 重启 registry 服务
+systemctl restart docker-distribution
+
+```

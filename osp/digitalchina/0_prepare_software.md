@@ -59,5 +59,17 @@ EOF
 
 ```
 
+### 镜像仓库准备
 
+OSP 在部署时需要访问镜像仓库，在一般的部署下，这个镜像仓库会部署在 undercloud 上
 
+```
+# 安装时需使用 rhel-8.2-x86_64-dvd.iso
+# 这个 ISO 可在红帽官网下载
+# https://access.redhat.com/downloads/content/479/ver=/rhel---8/8.2/x86_64/product-software
+
+virt-install --name=jwang-rhel82-undercloud --vcpus=4 --ram=32768 \
+--disk path=/data/kvm/jwang-rhel82-undercloud.qcow2,bus=virtio,size=120 \
+--os-variant rhel8.0 --network network=openshift4v6,model=virtio \
+--boot menu=on --cdrom /root/jwang/isos/rhel-8.2-x86_64-dvd.iso 
+```

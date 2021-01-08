@@ -1,0 +1,52 @@
+### 软件准备
+
+需要准备的操作系统镜像
+RHEL-8.2
+
+需要准备的软件频道参见：
+https://access.redhat.com/documentation/zh-cn/red_hat_openstack_platform/16.1/html/director_installation_and_usage/undercloud-repositories
+
+
+
+在下载服务器上执行，订阅所需软件频道
+```
+subscription-manager repos --disable=*
+subscription-manager repos --enable=rhel-8-for-x86_64-baseos-eus-rpms --enable=rhel-8-for-x86_64-appstream-eus-rpms --enable=rhel-8-for-x86_64-highavailability-eus-rpms --enable=ansible-2.9-for-rhel-8-x86_64-rpms --enable=openstack-16.1-for-rhel-8-x86_64-rpms --enable=fast-datapath-for-rhel-8-x86_64-rpms --enable=rhceph-4-tools-for-rhel-8-x86_64-rpms
+```
+
+在下载服务器上，生成同步软件频道的脚本
+```
+cat > OSP16_1_repo_sync_up.sh <<'EOF'
+#!/bin/bash
+
+localPath="/repos/rhel8osp/"
+fileConn="/getPackage/"
+
+## sync following yum repos 
+# rhel-8-for-x86_64-baseos-eus-rpms
+# rhel-8-for-x86_64-appstream-eus-rpms
+# rhel-8-for-x86_64-highavailability-eus-rpms
+# ansible-2.9-for-rhel-8-x86_64-rpms
+# openstack-16.1-for-rhel-8-x86_64-rpms
+# fast-datapath-for-rhel-8-x86_64-rpms
+# rhceph-4-tools-for-rhel-8-x86_64-rpms
+
+for i in rhel-8-for-x86_64-baseos-eus-rpms rhel-8-for-x86_64-appstream-eus-rpms rhel-8-for-x86_64-highavailability-eus-rpms ansible-2.9-for-rhel-8-x86_64-rpms openstack-16.1-for-rhel-8-x86_64-rpms fast-datapath-for-rhel-8-x86_64-rpms rhceph-4-tools-for-rhel-8-x86_64-rpms
+do
+
+  rm -rf "$localPath"$i/repodata
+  echo "sync channel $i..."
+  reposync -n --delete --download-path="$localPath" --repoid $i --downloadcomps --download-metadata
+
+  echo "create repo $i..."
+  time createrepo -g $(ls "$localPath"$i/repodata/*comps.xml) --update --skip-stat --cachedir /tmp/empty-cache-dir "$localPath"$i
+
+done
+
+exit 0
+EOF
+
+```
+
+
+

@@ -2069,3 +2069,16 @@ oc adm policy add-cluster-role-to-group cluster-admin cluster-admins
 # 添加用户到组 cluster-admins
 oc adm groups add-users cluster-admins <user-name> <user-name> <user-name>...
 ```
+
+
+
+### 在 ocs 下如何实现 bucket notification
+```
+# ocs 下的 route
+oc get route -n openshift-storage
+NAME          HOST/PORT                                                    PATH   SERVICES      PORT         TERMINATION   WILDCARD
+noobaa-mgmt   noobaa-mgmt-openshift-storage.apps.cluster-0001.rhsacn.org          noobaa-mgmt   mgmt-https   reencrypt     None
+s3            s3-openshift-storage.apps.cluster-0001.rhsacn.org                   s3            s3-https     reencrypt     None
+
+
+```

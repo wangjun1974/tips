@@ -9538,3 +9538,6 @@ namespace/do500-gitlab created
 operatorgroup.operators.coreos.com/codeready-workspaces created
 subscription.operators.coreos.com/codeready-workspaces created
 ```
+
+
+

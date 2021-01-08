@@ -137,11 +137,11 @@ EOF
 # 5.4 创建本地 repos 目录
 [stack@undercloud ~]$ sudo mkdir -p /var/www/html/repos
 [stack@undercloud ~]$ sudo -i
-[stack@undercloud ~]# pushd /var/www/html/repos
+[root@undercloud ~]# pushd /var/www/html/repos
 
 # 5.5 安装 createrepo，生成 repos 同步脚本
-[stack@undercloud ~]# yum install -y createrepo
-[stack@undercloud ~]# cat > ./OSP16_1_repo_sync_up.sh <<'EOF'
+[root@undercloud ~]# yum install -y createrepo
+[root@undercloud ~]# cat > ./OSP16_1_repo_sync_up.sh <<'EOF'
 #!/bin/bash
 
 localPath="/repos/rhel8osp/"

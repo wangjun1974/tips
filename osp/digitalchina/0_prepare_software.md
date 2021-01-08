@@ -11,12 +11,18 @@ https://access.redhat.com/documentation/zh-cn/red_hat_openstack_platform/16.1/ht
 在下载服务器上执行，订阅所需软件频道
 ```
 subscription-manager repos --disable=*
-subscription-manager repos --enable=rhel-8-for-x86_64-baseos-eus-rpms --enable=rhel-8-for-x86_64-appstream-eus-rpms --enable=rhel-8-for-x86_64-highavailability-eus-rpms --enable=ansible-2.9-for-rhel-8-x86_64-rpms --enable=openstack-16.1-for-rhel-8-x86_64-rpms --enable=fast-datapath-for-rhel-8-x86_64-rpms --enable=rhceph-4-tools-for-rhel-8-x86_64-rpms
+subscription-manager repos --enable=rhel-8-for-x86_64-baseos-rpms --enable=rhel-8-for-x86_64-appstream-rpms --enable=rhel-8-for-x86_64-highavailability-rpms --enable=ansible-2.9-for-rhel-8-x86_64-rpms --enable=openstack-16.1-for-rhel-8-x86_64-rpms --enable=fast-datapath-for-rhel-8-x86_64-rpms --enable=rhceph-4-tools-for-rhel-8-x86_64-rpms
 ```
 
 在下载服务器上，生成同步软件频道的脚本
 ```
-cat > OSP16_1_repo_sync_up.sh <<'EOF'
+mkdir -p /repos/rhel8osp
+pushd /repos/rhel8osp
+
+# 安装 createrepo
+yum install -y createrepo
+
+cat > /root/OSP16_1_repo_sync_up.sh <<'EOF'
 #!/bin/bash
 
 localPath="/repos/rhel8osp/"
@@ -46,6 +52,8 @@ done
 exit 0
 EOF
 
+# 同步软件仓库
+/usr/bin/nohup /bin/bash OSP16_1_repo_sync_up.sh &
 ```
 
 

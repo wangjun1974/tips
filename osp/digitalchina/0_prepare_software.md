@@ -54,6 +54,9 @@ EOF
 
 # 同步软件仓库
 /usr/bin/nohup /bin/bash OSP16_1_repo_sync_up.sh &
+
+# 同步完之后把 /repos/rhel8osp 目录打包，下载作为离线时使用的软件仓库
+
 ```
 
 

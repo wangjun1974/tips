@@ -140,11 +140,11 @@ EOF
 [root@undercloud ~]# pushd /var/www/html/repos
 
 # 5.5 安装 createrepo，生成 repos 同步脚本
-[root@undercloud ~]# yum install -y createrepo
-[root@undercloud ~]# cat > ./OSP16_1_repo_sync_up.sh <<'EOF'
+[root@undercloud repos]# yum install -y createrepo
+[root@undercloud repos]# cat > ./OSP16_1_repo_sync_up.sh <<'EOF'
 #!/bin/bash
 
-localPath="/repos/rhel8osp/"
+localPath="/var/www/html/repos/rhel8osp/"
 fileConn="/getPackage/"
 
 ## sync following yum repos 

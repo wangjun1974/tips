@@ -70,7 +70,7 @@ EOF
 
 ```
 
-### 镜像仓库准备
+### Yum 仓库和镜像仓库准备
 
 OSP 在部署时需要访问镜像仓库，在一般的部署下，这个镜像仓库会部署在 undercloud 上
 
@@ -126,10 +126,51 @@ EOF
 [stack@undercloud ~]$ sudo subscription-manager release --set=8.2
 
 # 5.1 禁用所有软件频道
-[stack@director ~]$ sudo subscription-manager repos --disable=*
+[stack@undercloud ~]$ sudo subscription-manager repos --disable=*
 
 # 5.2 启用对应软件频道
-[stack@director ~]$ sudo subscription-manager repos --enable=rhel-8-for-x86_64-baseos-eus-rpms --enable=rhel-8-for-x86_64-appstream-eus-rpms --enable=rhel-8-for-x86_64-highavailability-eus-rpms --enable=ansible-2.9-for-rhel-8-x86_64-rpms --enable=openstack-16.1-for-rhel-8-x86_64-rpms --enable=fast-datapath-for-rhel-8-x86_64-rpms --enable=advanced-virt-for-rhel-8-x86_64-rpms --enable=rhceph-4-tools-for-rhel-8-x86_64-rpms
+[stack@undercloud ~]$ sudo subscription-manager repos --enable=rhel-8-for-x86_64-baseos-eus-rpms --enable=rhel-8-for-x86_64-appstream-eus-rpms --enable=rhel-8-for-x86_64-highavailability-eus-rpms --enable=ansible-2.9-for-rhel-8-x86_64-rpms --enable=openstack-16.1-for-rhel-8-x86_64-rpms --enable=fast-datapath-for-rhel-8-x86_64-rpms --enable=advanced-virt-for-rhel-8-x86_64-rpms --enable=rhceph-4-tools-for-rhel-8-x86_64-rpms
+
+# 5.3 安装 httpd
+[stack@undercloud ~]$ sudo yum install -y httpd
+
+# 5.4 创建本地 repos 目录
+[stack@undercloud ~]$ sudo mkdir -p /var/www/html/repos
+[stack@undercloud ~]$ sudo -i
+[stack@undercloud ~]# pushd /var/www/html/repos
+
+# 5.5 安装 createrepo，生成 repos 同步脚本
+[stack@undercloud ~]# yum install -y createrepo
+[stack@undercloud ~]# cat > ./OSP16_1_repo_sync_up.sh <<'EOF'
+#!/bin/bash
+
+localPath="/repos/rhel8osp/"
+fileConn="/getPackage/"
+
+## sync following yum repos 
+# rhel-8-for-x86_64-baseos-eus-rpms
+# rhel-8-for-x86_64-appstream-eus-rpms
+# rhel-8-for-x86_64-highavailability-eus-rpms
+# ansible-2.9-for-rhel-8-x86_64-rpms
+# openstack-16.1-for-rhel-8-x86_64-rpms
+# fast-datapath-for-rhel-8-x86_64-rpms
+# rhceph-4-tools-for-rhel-8-x86_64-rpms
+# advanced-virt-for-rhel-8-x86_64-rpms
+
+for i in rhel-8-for-x86_64-baseos-eus-rpms rhel-8-for-x86_64-appstream-eus-rpms rhel-8-for-x86_64-highavailability-eus-rpms ansible-2.9-for-rhel-8-x86_64-rpms openstack-16.1-for-rhel-8-x86_64-rpms fast-datapath-for-rhel-8-x86_64-rpms rhceph-4-tools-for-rhel-8-x86_64-rpms advanced-virt-for-rhel-8-x86_64-rpms
+do
+
+  rm -rf "$localPath"$i/repodata
+  echo "sync channel $i..."
+  reposync -n --delete --download-path="$localPath" --repoid $i --downloadcomps --download-metadata
+
+  echo "create repo $i..."
+  time createrepo -g $(ls "$localPath"$i/repodata/*comps.xml) --update --skip-stat --cachedir /tmp/empty-cache-dir "$localPath"$i
+
+done
+
+exit 0
+EOF
 
 # 5.3 设置 container-tools 模块为版本 2.0
 [stack@director ~]$ sudo dnf module disable -y container-tools:rhel8

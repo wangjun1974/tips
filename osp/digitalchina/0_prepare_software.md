@@ -135,7 +135,7 @@ EOF
 [stack@undercloud ~]$ sudo yum install -y httpd
 
 # 5.4 创建本地 repos 目录
-[stack@undercloud ~]$ sudo mkdir -p /var/www/html/repos
+[stack@undercloud ~]$ sudo mkdir -p /var/www/html/repos/osp16.1
 [stack@undercloud ~]$ sudo -i
 [root@undercloud ~]# pushd /var/www/html/repos
 
@@ -144,7 +144,7 @@ EOF
 [root@undercloud repos]# cat > ./OSP16_1_repo_sync_up.sh <<'EOF'
 #!/bin/bash
 
-localPath="/var/www/html/repos/rhel8osp/"
+localPath="/var/www/html/repos/osp16.1/"
 fileConn="/getPackage/"
 
 ## sync following yum repos 

@@ -175,19 +175,86 @@ EOF
 # 5.6 同步 repos
 [root@undercloud repos]# /usr/bin/nohup /bin/bash ./OSP16_1_repo_sync_up.sh &
 
-# 5.3 设置 container-tools 模块为版本 2.0
-[stack@director ~]$ sudo dnf module disable -y container-tools:rhel8
-[stack@director ~]$ sudo dnf module enable -y container-tools:2.0
+# 5.7 重设 selinux context
+[root@undercloud repos]# chcon --recursive --reference=/var/www/html /var/www/html/repos
 
-# 5.4 设置 virt 模块版本为 8.2
-[stack@director ~]$ sudo dnf module disable -y virt:rhel
-[stack@director ~]$ sudo dnf module enable -y virt:8.2
+# 5.8 开启防火墙 http 端口，启动 httpd 服务器
+[root@undercloud repos]# firewall-cmd --add-service=http
+[root@undercloud repos]# firewall-cmd --add-service=http --permanent
+[root@undercloud repos]# firewall-cmd --reload
 
-# 5.5 更新并且重启
-[stack@director ~]$ sudo dnf update -y
-[stack@director ~]$ sudo reboot
+# 5.9 启动 httpd 服务
+[root@undercloud repos]# systemctl enable httpd && systemctl start httpd
 
+# 5.10 禁用远程 yum 源，设置本地 http yum 源
+# baseurl 的 UNDERCLOUD_IP 地址
+# 用本地接口名称替换 ens3
+[root@undercloud repos]# subscription-manager repos --disable=*
+[root@undercloud repos]# echo y | mv /etc/yum.repos.d/redhat.repo /etc/yum.repos.d/backup
+[root@undercloud repos]# sed -ie 's|enabled=1|enabled=0|' /etc/yum/pluginconf.d/subscription-manager.conf
 
+[root@undercloud repos]# UNDERCLOUD_IP=$( ip a s dev ens3 | grep -E "inet " | awk '{print $2}' | awk -F'/' '{print $1}' )
+[root@undercloud repos]# > /etc/yum.repos.d/osp.repo 
+[root@undercloud repos]# for i in rhel-8-for-x86_64-baseos-eus-rpms rhel-8-for-x86_64-appstream-eus-rpms rhel-8-for-x86_64-highavailability-eus-rpms ansible-2.9-for-rhel-8-x86_64-rpms openstack-16.1-for-rhel-8-x86_64-rpms fast-datapath-for-rhel-8-x86_64-rpms rhceph-4-tools-for-rhel-8-x86_64-rpms advanced-virt-for-rhel-8-x86_64-rpms
+do
+cat >> /etc/yum.repos.d/osp.repo << EOF
+[$i]
+name=$i
+baseurl=http://${UNDERCLOUD_IP}/repos/osp16.1/$i/
+enabled=1
+gpgcheck=0
+
+EOF
+done
+
+[root@undercloud repos]# exit
+
+# 5.11 设置 container-tools 模块为版本 2.0
+[stack@undercloud ~]$ sudo dnf module disable -y container-tools:rhel8
+[stack@undercloud ~]$ sudo dnf module enable -y container-tools:2.0
+
+# 5.12 设置 virt 模块版本为 8.2
+[stack@undercloud ~]$ sudo dnf module disable -y virt:rhel
+[stack@undercloud ~]$ sudo dnf module enable -y virt:8.2
+
+# 5.13 更新并且重启
+[stack@undercloud ~]$ sudo dnf update -y
+[stack@undercloud ~]$ sudo reboot
+
+# 6 安装 director
+[stack@undercloud ~]$ sudo dnf install -y python3-tripleoclient
+
+# 7 安装 ceph-ansible
+
+# 8 创建 undercloud.conf 文件
+cat > undercloud.conf << EOF
+[DEFAULT]
+undercloud_hostname = undercloud.example.com
+container_images_file = containers-prepare-parameter.yaml
+local_ip = 192.0.2.1/24
+undercloud_public_host = 192.0.2.2
+undercloud_admin_host = 192.0.2.3
+undercloud_nameservers = 192.0.2.254
+subnets = ctlplane-subnet
+local_subnet = ctlplane-subnet
+#undercloud_service_certificate =
+generate_service_certificate = true
+certificate_generation_ca = local
+local_interface = eth0
+inspection_extras = false
+undercloud_debug = false
+enable_tempest = false
+enable_ui = false
+
+[auth]
+
+[ctlplane-subnet]
+cidr = 192.0.2.0/24
+dhcp_start = 192.0.2.5
+dhcp_end = 192.0.2.24
+inspection_iprange = 192.0.2.100,192.0.2.120
+gateway = 192.0.2.254
+EOF
 
 
 ```

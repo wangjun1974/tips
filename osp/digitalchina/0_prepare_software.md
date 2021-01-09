@@ -225,8 +225,10 @@ done
 [stack@undercloud ~]$ sudo dnf install -y python3-tripleoclient
 
 # 7 安装 ceph-ansible
+[stack@undercloud ~]$ sudo dnf install -y ceph-ansible
 
 # 8 创建 undercloud.conf 文件
+# 参数详情参见：https://github.com/wangjun1974/tips/blob/master/osp/digitalchina/1_undercloud_conf.md
 cat > undercloud.conf << EOF
 [DEFAULT]
 undercloud_hostname = undercloud.example.com
@@ -234,19 +236,20 @@ container_images_file = containers-prepare-parameter.yaml
 local_ip = 192.0.2.1/24
 undercloud_public_host = 192.0.2.2
 undercloud_admin_host = 192.0.2.3
-undercloud_nameservers = 192.0.2.254
+#undercloud_nameservers = 192.0.2.254
 subnets = ctlplane-subnet
 local_subnet = ctlplane-subnet
 #undercloud_service_certificate =
-generate_service_certificate = true
-certificate_generation_ca = local
-local_interface = eth0
+#generate_service_certificate = true
+#certificate_generation_ca = local
+local_interface = ens10
 inspection_extras = false
 undercloud_debug = false
 enable_tempest = false
 enable_ui = false
 
 [auth]
+undercloud_admin_password = redhat
 
 [ctlplane-subnet]
 cidr = 192.0.2.0/24
@@ -256,5 +259,18 @@ inspection_iprange = 192.0.2.100,192.0.2.120
 gateway = 192.0.2.254
 EOF
 
+# 9.1 生成容器参数文件 containers-prepare-parameter.yaml
+[stack@undercloud ~]$ openstack tripleo container image prepare default   --local-push-destination   --output-env-file containers-prepare-parameter.yaml
 
+# 9.2 为 containers-prepare-parameter.yaml 添加 ContainerImageRegistryCredentials 参数
+# 参见：https://access.redhat.com/documentation/en-us/red_hat_openstack_platform/16.1/html/advanced_overcloud_customization/sect-containerized_services#container-image-preparation-parameters
+# 参见：https://access.redhat.com/RegistryAuthentication
+cat >> containers-prepare-parameter.yaml <<'EOF'
+  ContainerImageRegistryCredentials:
+    registry.redhat.io:
+      6747835|jwang: eyJhbGciOiJSUzUxMiJ9.eyJzdWIiOiJmNGY4YzM4NzExODg0YTBhYjlhYzRkMmY3ZDMxM2FjYSJ9.Bzifgqjx-GShNkRk5Ju75GpJXqnNp9FL83SabzVhAVq1v6NTxlQLbD7FGmfQi9o2oX4n9s1bZzgZgaSfjeNUesw4VX7qH2MFgb3pJbS9CmjBWYRQ4xIPlOei8FVmR9chzZlBAueeh5wwZUN57PN5kvuMLeD-TjhJRVP7zZQcgeq0XB-dPFWkbBwYaA45kPYMXTEpJZlFcQZ12u_MNHSTR8sR_COt1VbjYpLYw7uvKFPgaLdkfD1Guy9ELkYWm324NdKAFBpUwC_6ySXcac920H0EGiB1bCrH-pX8ROIbfR7tMG2XygEKpt97j_Rbin-JKDsYThT9G4WaLiS0x-RJP7AAtntvxuntHXuYzkosCNJUtnfLM_L4n0z2AFfL0UHgu9D-sXeOo2xbfmaiEM5YUHGMIj5QnFE923xvoQkT54OQ8DVimdTXLDM_D2rQuFsf1zZKBqh8vRgcmyXNqnr0_1D8lpAyZdxH7YtXYy0Hhal_Lf5aEFoOUsOCj1tbAVwNtYBP5uxdLpzVgfW3A4aTF71CO6AI5y3ObboAIhrYGVscv4yUs-P87tOylm3iAY6wnvtGREb82OxubRJelGoQIvfPie4iO7qg9tRxzHODCqgDsdbG9WiDhUV86d81ZmLi3w99aJtVb_XTxAewt7k19IhsgKP-7WnGIG3efTxHDsY'
+EOF
+
+# 10. 安装 undercloud
+[stack@undercloud ~]$ time openstack undercloud install
 ```

@@ -140,7 +140,7 @@ EOF
 [root@undercloud ~]# pushd /var/www/html/repos
 
 # 5.5 安装 createrepo，生成 repos 同步脚本
-[root@undercloud repos]# yum install -y createrepo
+[root@undercloud repos]# yum install -y createrepo yum-utils
 [root@undercloud repos]# cat > ./OSP16_1_repo_sync_up.sh <<'EOF'
 #!/bin/bash
 
@@ -171,6 +171,9 @@ done
 
 exit 0
 EOF
+
+# 5.6 同步 repos
+[root@undercloud repos]# /usr/bin/nohup /bin/bash ./OSP16_1_repo_sync_up.sh &
 
 # 5.3 设置 container-tools 模块为版本 2.0
 [stack@director ~]$ sudo dnf module disable -y container-tools:rhel8

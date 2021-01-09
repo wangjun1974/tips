@@ -273,4 +273,12 @@ EOF
 
 # 10. 安装 undercloud
 [stack@undercloud ~]$ time openstack undercloud install
+
+# 11. 修改 yum repo 
+# 安装 undercloud 时把 http 服务从端口 80 改为了 8787
+[stack@undercloud ~]$ sudo sed -ie 's|192.168.8.21|192.168.8.21:8787|g' /etc/yum.repos.d/osp.repo
+[stack@undercloud ~]$ echo y | sudo mv /etc/yum.repos.d/osp.repoe /etc/yum.repos.d/backup
+
+# 12. 安装 undercloud
+[stack@undercloud ~]$ time openstack undercloud install
 ```

@@ -265,10 +265,12 @@ EOF
 # 9.2 为 containers-prepare-parameter.yaml 添加 ContainerImageRegistryCredentials 参数
 # 参见：https://access.redhat.com/documentation/en-us/red_hat_openstack_platform/16.1/html/advanced_overcloud_customization/sect-containerized_services#container-image-preparation-parameters
 # 参见：https://access.redhat.com/RegistryAuthentication
+# 在以下网址创建所需的 registry service accounts
+# https://access.redhat.com/terms-based-registry/#/accounts
 cat >> containers-prepare-parameter.yaml <<'EOF'
   ContainerImageRegistryCredentials:
     registry.redhat.io:
-      6747835|jwang: eyJhbGciOiJSUzUxMiJ9.eyJzdWIiOiJmNGY4YzM4NzExODg0YTBhYjlhYzRkMmY3ZDMxM2FjYSJ9.Bzifgqjx-GShNkRk5Ju75GpJXqnNp9FL83SabzVhAVq1v6NTxlQLbD7FGmfQi9o2oX4n9s1bZzgZgaSfjeNUesw4VX7qH2MFgb3pJbS9CmjBWYRQ4xIPlOei8FVmR9chzZlBAueeh5wwZUN57PN5kvuMLeD-TjhJRVP7zZQcgeq0XB-dPFWkbBwYaA45kPYMXTEpJZlFcQZ12u_MNHSTR8sR_COt1VbjYpLYw7uvKFPgaLdkfD1Guy9ELkYWm324NdKAFBpUwC_6ySXcac920H0EGiB1bCrH-pX8ROIbfR7tMG2XygEKpt97j_Rbin-JKDsYThT9G4WaLiS0x-RJP7AAtntvxuntHXuYzkosCNJUtnfLM_L4n0z2AFfL0UHgu9D-sXeOo2xbfmaiEM5YUHGMIj5QnFE923xvoQkT54OQ8DVimdTXLDM_D2rQuFsf1zZKBqh8vRgcmyXNqnr0_1D8lpAyZdxH7YtXYy0Hhal_Lf5aEFoOUsOCj1tbAVwNtYBP5uxdLpzVgfW3A4aTF71CO6AI5y3ObboAIhrYGVscv4yUs-P87tOylm3iAY6wnvtGREb82OxubRJelGoQIvfPie4iO7qg9tRxzHODCqgDsdbG9WiDhUV86d81ZmLi3w99aJtVb_XTxAewt7k19IhsgKP-7WnGIG3efTxHDsY'
+      6747835|jwang: eyJhbGciOiJSUzUxMi...
 EOF
 
 # 10. 安装 undercloud

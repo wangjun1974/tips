@@ -374,5 +374,5 @@ Waiting for messages on queue 'tripleo' with no timeout.
 +--------------------------------------+---------------------+---------------+-------------+--------------------+-------------+
 
 # 显示 baremetal node 详情
-(undercloud) [stack@undercloud ~]$ openstack baremetal node show 
+(undercloud) [stack@undercloud ~]$ openstack baremetal node show overcloud-ctrl01
 ```

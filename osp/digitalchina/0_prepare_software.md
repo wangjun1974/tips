@@ -283,4 +283,24 @@ EOF
 
 # 12. 安装 undercloud
 [stack@undercloud ~]$ time openstack undercloud install
+
+# 13. 检查 undercloud 状态
+[stack@undercloud ~]$ source ~/stackrc
+# 13.1 查看 undercloud catalog
+(undercloud) [stack@undercloud ~]$ openstack catalog list
+# 13.2 查看 ip 地址
+(undercloud) [stack@undercloud ~]$ ip a 
+# 13.3 查看 ip 路由
+(undercloud) [stack@undercloud ~]$ ip r
+# 13.4 检查 ovs database
+(undercloud) [stack@undercloud ~]$ sudo ovs-vsctl show
+# 13.5 检查 undercloud openstack 网络配置
+(undercloud) [stack@undercloud ~]$ cat /etc/os-net-config/config.json | jq .
+# 13.6 检查 ovs switch 基本情况
+(undercloud) [stack@undercloud ~]$ sudo ovs-vsctl show
+# 13.7 查看 undercloud openstack 网络情况
+(undercloud) [stack@undercloud ~]$ openstack network list
+(undercloud) [stack@undercloud ~]$ openstack subnet list
+(undercloud) [stack@undercloud ~]$ openstack subnet show ctlplane-subnet -f json
+(undercloud) [stack@undercloud ~]$ sudo podman ps
 ```

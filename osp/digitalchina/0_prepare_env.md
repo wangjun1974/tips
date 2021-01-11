@@ -222,6 +222,22 @@ for i in $(virsh list --all | awk ' /overcloud/ {print $2}'); do
     count=$((count+1))
 done
 
+# 配置 Hypervisor 启用 nested virtualization
+echo "Configuring /etc/modprobe.d/kvm_intel.conf"
+cat << EOF > /etc/modprobe.d/kvm_intel.conf
+options kvm-intel nested=1
+options kvm-intel enable_shadow_vmcs=1
+options kvm-intel enable_apicv=1
+options kvm-intel ept=1
+EOF
+
+modprobe -r kvm_intel
+modprobe kvm_intel
+
+cat /sys/module/kvm_intel/parameters/nested
+Y
+
+
 
 
 

@@ -9576,3 +9576,48 @@ EOF
 
 ### 介绍 lokkit 的链接
 https://www.lifewire.com/what-is-lokkit-2192255
+
+
+
+### Nested virtualization in KVM
+https://stafwag.github.io/blog/blog/2018/06/04/nested-virtualization-in-kvm/<br>
+https://raw.githubusercontent.com/kashyapc/nvmx-haswell/master/SETUP-nVMX.rst
+
+```
+[root@base-pvg ~]# virsh  capabilities | virsh cpu-baseline /dev/stdin 
+<cpu mode='custom' match='exact'>
+  <model fallback='allow'>Westmere-IBRS</model>
+  <feature policy='require' name='vmx'/>
+</cpu>
+
+编辑虚拟机，将 cpu 设置为
+  <cpu mode='custom' match='exact'>
+    <model fallback='allow'>Westmere-IBRS</model>
+    <feature policy='require' name='vmx'/>
+  </cpu>
+
+[root@base-pvg ~]# virsh list --all | grep jwang-overcloud
+ -     jwang-overcloud-ceph01         shut off
+ -     jwang-overcloud-ceph02         shut off
+ -     jwang-overcloud-ceph03         shut off
+ -     jwang-overcloud-compute01      shut off
+ -     jwang-overcloud-compute02      shut off
+ -     jwang-overcloud-ctrl01         shut off
+ -     jwang-overcloud-ctrl02         shut off
+ -     jwang-overcloud-ctrl03         shut off
+
+
+
+ALL_N="ctrl01 ctrl02 ctrl03 compute01 compute02 ceph01 ceph02 ceph03"
+
+for node in $ALL_N
+do
+  openstack baremetal node manage overcloud-${node}
+done  
+
+openstack baremetal node list
+
+openstack overcloud node introspect --all-manageable --provide
+
+openstack baremetal node show overcloud-compute01 -f json
+```

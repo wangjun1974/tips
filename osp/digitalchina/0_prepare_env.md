@@ -179,8 +179,45 @@ firewall-cmd --permanent --add-port=623/tcp
 iptables -I INPUT 1 -m tcp -p tcp --dport 3128 -j ACCEPT
 iptables -I INPUT 1 -m tcp -p tcp --dport 623 -j ACCEPT
 
-# RHEL7 Hypervisor 安装 vbmc 软件包
-yum install -y python2-virtualbmc
+# RHEL7 Hypervisor 安装 vbmc 和 ipmitool 软件包
+yum install -y python2-virtualbmc ipmitool
+
+# 配置 vbmc 
+echo "Creating VirtualBMC systemd unit file"
+cat << EOF > /usr/lib/systemd/system/virtualbmc@.service
+[Unit]
+Description=VirtualBMC %i service
+After=network.target libvirtd.service
+
+[Service]
+Type=forking
+PIDFile=/root/.vbmc/%i/pid
+ExecStart=/bin/vbmc start %i
+ExecStop=/bin/vbmc stop %i
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+echo "Adding nodes to Virtual BMC..."
+count=1
+for i in $(virsh list --all | awk ' /overcloud/ {print $2}'); do
+    echo "Adding node $i to Virtual BMC"
+    vbmc add $i --address 192.168.1.${count} --username admin --password redhat || { echo "Unable to add $i to Virtual BMC..."; return 1; }
+
+    echo "Starting Virtual BMC service for node $i"
+    systemctl enable --now virtualbmc@${i} || { echo "Unable to start Virtual BMC service for $i..."; return 1; }
+
+    # Dammit!!!
+    sleep 1
+
+    echo "Testing IPMI connection on node $i"
+    ipmitool -I lanplus -U admin -P redhat  -H 192.168.1.${count}  power status || { echo "IPMI test on node $i failed..."; return 1; }
+
+    count=$((count+1))
+done
+
 
 
 

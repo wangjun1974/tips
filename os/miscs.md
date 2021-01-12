@@ -9644,6 +9644,11 @@ https://gitlab.cee.redhat.com/mzheng/meiyan-rhos-templates/-/tree/master/rhosp16
 
 
 
+### osp16 部署模版
+https://gitlab.cee.redhat.com/mzheng/meiyan-rhos-templates/-/blob/master/rhosp16-with-ceph/deploy.sh
+
+
+
 ### undercloud.conf 说明
 ```
 #

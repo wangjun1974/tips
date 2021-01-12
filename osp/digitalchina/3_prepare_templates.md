@@ -10,6 +10,9 @@
 # 为每种类型填上对应的节点数量
 cat > /home/stack/templates/node-info.yaml << 'EOF'
 parameter_defaults:
+  OvercloudControllerFlavor: baremetal
+  OvercloudComputeFlavor: baremetal
+  OvercloudCephStorageFlavor: baremetal
   ControllerCount: 3
   ComputeCount: 2
   CephStorageCount: 3

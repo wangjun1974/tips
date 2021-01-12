@@ -16,11 +16,10 @@ openstack overcloud deploy --templates $THT \
 -e $THT/environments/ceph-ansible/ceph-rgw.yaml \
 -e $CNF/cephstorage.yaml \
 -e $THT/environments/network-isolation.yaml \
--e $CNF/environments/net-bond-with-vlans.yaml \
 -e $CNF/environments/network-environment.yaml \
+-e $CNF/environments/net-bond-with-vlans.yaml \
 -e ~/containers-prepare-parameter.yaml \
--e $CNF/fix-nova-reserved-host-memory.yaml \
---control-flavor baremetal --compute-flavor baremetal --ceph-storage-flavor baremetal
+-e $CNF/fix-nova-reserved-host-memory.yaml 
 EOF
 
 # 设置脚本可执行

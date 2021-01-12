@@ -355,6 +355,12 @@ Successfully introspected 3 node(s).
 Waiting for messages on queue 'tripleo' with no timeout.
 3 node(s) successfully moved to the "available" state.
 
+# 确认所有节点已成功完成 introspection
+# 字段 Started at 非空
+# 字段 Finished at 非空
+# 字段 Error 为 None 
+(undercloud) [stack@undercloud ~]$ openstack baremetal introspection list
+
 # 列出 baremetal node 列表
 # 节点 Power State 应为 power off
 # 节点 Provisioning State 应为 available
@@ -375,4 +381,11 @@ Waiting for messages on queue 'tripleo' with no timeout.
 
 # 显示 baremetal node 详情
 (undercloud) [stack@undercloud ~]$ openstack baremetal node show overcloud-ctrl01
+
+# 保存 introspection 信息
+# 从 introspection 信息可查询到网卡和磁盘相关信息
+(undercloud) [stack@undercloud ~]$ mkdir -p introspection
+(undercloud) [stack@undercloud ~]$ pushd introspection
+(undercloud) [stack@undercloud ~]$ for i in $(openstack baremetal node list -f value -c Name); do openstack baremetal introspection data save $i > $i.json ; done
+(undercloud) [stack@undercloud ~]$ pushd
 ```

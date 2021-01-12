@@ -21,4 +21,10 @@ openstack overcloud deploy --templates $THT \
 -e ~/containers-prepare-parameter.yaml \
 -e $CNF/fix-nova-reserved-host-memory.yaml
 EOF
+
+# 设置脚本可执行
+(undercloud) [stack@undercloud ~]$ chmod 755 ~/deploy.sh
+
+# 开始部署
+(undercloud) [stack@undercloud ~]$ time ./deploy.sh
 ```

@@ -24,16 +24,16 @@
 * 每个网络所在的交换机是什么，是否共用交换机
 * 每个网络在服务器这边对应哪个或哪几个网口
 
-以下是
+以下是一个例子
 
 |名字|vlan|网段|备注说明|对应服务器网口|
 |---|---|---|---|---|
 |ControlPlane|无|192.0.2.0/24|部署网络|网口1|
 |External|10|10.0.0.0/24|overcloud 的 External API 和 floating ip 所在的网络|网口2和网口3|
-|InternalAPI|20|172.16.2.0/24||overcloud 的 Internal API 所在的网络|网口2和网口3|
+|InternalAPI|20|172.16.2.0/24|overcloud 的 Internal API 所在的网络|网口2和网口3|
 |Tenant|50|172.16.0.0/24|overcloud 租户 overlay 隧道所在的网络|网口2和网口3|
-|Storage|30|172.16.1.0/24|172.16.1.1|overcloud 存储网络，内部客户端通过此网络访问存储|网口2和网口3|
-|StorageMgmt|40|172.16.3.0/24|172.16.3.1|overcloud 内部存储管理网络|网口2和网口3|
+|Storage|30|172.16.1.0/24|overcloud 存储网络，内部客户端通过此网络访问存储|网口2和网口3|
+|StorageMgmt|40|172.16.3.0/24|overcloud 内部存储管理网络|网口2和网口3|
 
 ### 在虚拟机里安装 osp 时做的准备工作
 

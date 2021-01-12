@@ -131,33 +131,57 @@ overcloud 网络<br>
 网卡2和网卡3 绑定在一起跑所有其他内部网络，希望用 linux bond 将两块网卡绑定起来，bond 模式为 active-backup
 
 (undercloud) [stack@undercloud bond-with-vlans]$ cp controller.yaml controller.yaml.sav 
-(undercloud) [stack@undercloud bond-with-vlans]$ diff -urN controller.yaml controller.yaml.sav 
---- controller.yaml     2021-01-12 12:36:53.160270678 +0800
+(undercloud) [stack@undercloud bond-with-vlans]$ diff -urN controller.yaml controller.yaml.sav
+--- controller.yaml     2021-01-12 18:41:47.718270678 +0800
 +++ controller.yaml.sav 2021-01-12 12:32:11.795270678 +0800
-@@ -197,7 +197,7 @@
-             $network_config:
-               network_config:
-               - type: interface
--                name: ens3
-+                name: nic1
-                 mtu:
-                   get_param: ControlPlaneMtu
-                 use_dhcp: false
-@@ -225,12 +225,12 @@
-                     get_param: BondInterfaceOvsOptions
-                   members:
-                   - type: interface
--                    name: ens4
-+                    name: nic2
-                     mtu:
-                       get_attr: [MinViableMtu, value]
-                     primary: true
-                   - type: interface
--                    name: ens5
-+                    name: nic3
-                     mtu:
-                       get_attr: [MinViableMtu, value]
-                 - type: vlan
+@@ -126,7 +126,7 @@
+     description: IP address/subnet on the external network
+     type: string
+   ExternalNetworkVlanID:
+-    default: 1
++    default: 10
+     description: Vlan ID for the external network traffic.
+     type: number
+   ExternalMtu:
+@@ -216,17 +216,6 @@
+                   get_param: DnsServers
+                 domain:
+                   get_param: DnsSearchDomains
+-                mtu:
+-                  get_param: ExternalMtu
+-                addresses:
+-                - ip_netmask:
+-                    get_param: ExternalIpSubnet
+-                routes:
+-                  list_concat_unique:
+-                    - get_param: ExternalInterfaceRoutes
+-                    - - default: true
+-                        next_hop:
+-                          get_param: ExternalInterfaceDefaultRoute
+                 members:
+                 - type: ovs_bond
+                   name: bond1
+@@ -288,6 +277,20 @@
+                   routes:
+                     list_concat_unique:
+                       - get_param: TenantInterfaceRoutes
++                - type: vlan
++                  mtu:
++                    get_param: ExternalMtu
++                  vlan_id:
++                    get_param: ExternalNetworkVlanID
++                  addresses:
++                  - ip_netmask:
++                      get_param: ExternalIpSubnet
++                  routes:
++                    list_concat_unique:
++                      - get_param: ExternalInterfaceRoutes
++                      - - default: true
++                          next_hop:
++                            get_param: ExternalInterfaceDefaultRoute
+ outputs:
+   OS::stack_id:
+     description: The OsNetConfigImpl resource.  
 
 
 (undercloud) [stack@undercloud bond-with-vlans]$ cp compute.yaml compute.yaml.sav 

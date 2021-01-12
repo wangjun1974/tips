@@ -9685,3 +9685,90 @@ https://gitlab.cee.redhat.com/mzheng/meiyan-rhos-templates/-/blob/master/rhosp16
 # The network will be masqueraded for external access. (boolean value)
 #masquerade = false
 ```
+
+
+
+### 通过 jq 查看 introspection 结果
+```
+
+查看 disks 信息
+(undercloud) [stack@undercloud ~]$ cat ~/introspection/overcloud-ceph01.json | jq .inventory.disks
+
+查看第一块 disk 信息
+(undercloud) [stack@undercloud ~]$ cat ~/introspection/overcloud-ceph01.json | jq .inventory.disks | jq '.[0]'
+{
+  "name": "/dev/vda",
+  "model": "",
+  "size": 107374182400,
+  "rotational": true,
+  "wwn": null,
+  "serial": null,
+  "vendor": "0x1af4",
+  "wwn_with_extension": null,
+  "wwn_vendor_extension": null,
+  "hctl": null,
+  "by_path": "/dev/disk/by-path/pci-0000:00:08.0"
+}
+
+查看所有磁盘的名字
+(undercloud) [stack@undercloud ~]$ cat ~/introspection/overcloud-ceph01.json | jq .inventory.disks | jq '.[].name'
+"/dev/vda"
+"/dev/vdb"
+"/dev/vdc"
+"/dev/vdd"
+
+查看所有 interface
+(undercloud) [stack@undercloud ~]$ cat ~/introspection/overcloud-ceph01.json | jq .inventory.interfaces
+[
+  {
+    "name": "ens4",
+    "mac_address": "52:54:00:89:21:a5",
+    "ipv4_address": null,
+    "ipv6_address": "fe80::5054:ff:fe89:21a5%ens4",
+    "has_carrier": true,
+    "lldp": null,
+    "vendor": "0x1af4",
+    "product": "0x0001",
+    "client_id": null,
+    "biosdevname": null
+  },
+  {
+    "name": "ens5",
+    "mac_address": "52:54:00:16:28:d1",
+    "ipv4_address": null,
+    "ipv6_address": "fe80::5054:ff:fe16:28d1%ens5",
+    "has_carrier": true,
+    "lldp": null,
+    "vendor": "0x1af4",
+    "product": "0x0001",
+    "client_id": null,
+    "biosdevname": null
+  },
+  {
+    "name": "ens3",
+    "mac_address": "52:54:00:78:2f:e3",
+    "ipv4_address": "192.0.2.102",
+    "ipv6_address": "fe80::cc7:4ef4:62b0:19a7%ens3",
+    "has_carrier": true,
+    "lldp": null,
+    "vendor": "0x1af4",
+    "product": "0x0001",
+    "client_id": null,
+    "biosdevname": null
+  }
+]
+
+# 查看启动接口
+(undercloud) [stack@undercloud ~]$ cat ~/introspection/overcloud-ceph01.json | jq .interfaces
+{
+  "ens3": {
+    "ip": "192.0.2.102",
+    "mac": "52:54:00:78:2f:e3",
+    "client_id": null,
+    "pxe": true
+  }
+}
+
+# 查看全部接口
+(undercloud) [stack@undercloud ~]$ cat ~/introspection/overcloud-ceph01.json | jq .all_interfaces
+```

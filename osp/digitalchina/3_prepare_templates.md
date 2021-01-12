@@ -222,3 +222,20 @@ overcloud 网络<br>
 
 ```
 
+
+生成 ~/templates/cephstorage.yaml 
+```
+# 注意这个文件的内容需根据 ceph 节点的磁盘实际情况修改 devices 部分
+(undercloud) [stack@undercloud ~]$ cat > ~/templates/cephstorage.yaml << EOF
+parameter_defaults:
+  CephConfigOverrides:
+    mon_max_pg_per_osd: 300
+  CephAnsibleDisksConfig:
+    devices:
+      - /dev/vdb
+      - /dev/vdc
+      - /dev/vdd
+    osd_scenario: lvm
+    osd_objectstore: bluestore
+EOF
+```

@@ -9771,4 +9771,24 @@ https://gitlab.cee.redhat.com/mzheng/meiyan-rhos-templates/-/blob/master/rhosp16
 
 # 查看全部接口
 (undercloud) [stack@undercloud ~]$ cat ~/introspection/overcloud-ceph01.json | jq .all_interfaces
+
+# 查看启动接口
+(undercloud) [stack@undercloud ~]$ cat ~/introspection/overcloud-ceph01.json | jq .boot_interface
+"52:54:00:78:2f:e3"
+
+# 查看 root_disk
+(undercloud) [stack@undercloud ~]$ cat ~/introspection/overcloud-ceph01.json | jq .root_disk
+{
+  "name": "/dev/vda",
+  "model": "",
+  "size": 107374182400,
+  "rotational": true,
+  "wwn": null,
+  "serial": null,
+  "vendor": "0x1af4",
+  "wwn_with_extension": null,
+  "wwn_vendor_extension": null,
+  "hctl": null,
+  "by_path": "/dev/disk/by-path/pci-0000:00:08.0"
+}
 ```

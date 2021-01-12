@@ -9636,3 +9636,8 @@ openstack baremetal node unset <UUID> --property root_device
 openstack baremetal node set --property capabilities='node:compute-5,cpu_hugepages:true,cpu_txt:true,boot_option:local,cpu_aes:true,cpu_vt:true,cpu_hugepages_1g:true' compute3
 
 ```
+
+
+
+### osp16 templates with ceph 
+https://gitlab.cee.redhat.com/mzheng/meiyan-rhos-templates/-/tree/master/rhosp16-with-ceph<br>

@@ -19,7 +19,8 @@ openstack overcloud deploy --templates $THT \
 -e $CNF/environments/net-bond-with-vlans.yaml \
 -e $CNF/environments/network-environment.yaml \
 -e ~/containers-prepare-parameter.yaml \
--e $CNF/fix-nova-reserved-host-memory.yaml
+-e $CNF/fix-nova-reserved-host-memory.yaml \
+--control-flavor baremetal --compute-flavor baremetal --ceph-storage-flavor baremetal
 EOF
 
 # 设置脚本可执行

@@ -9621,3 +9621,18 @@ openstack overcloud node introspect --all-manageable --provide
 
 openstack baremetal node show overcloud-compute01 -f json
 ```
+
+
+### 设定/取消设定 baremetal node 的 root_device 的方法，以及为节点capabilities 里添加 node:role-index 
+https://docs.openstack.org/tripleo-docs/latest/install/advanced_deployment/root_device.html
+```
+设置root_device
+openstack baremetal node set <UUID> --property root_device='{"wwn": "0x4000cca77fc4dba1"}'
+
+取消root_device设置
+openstack baremetal node unset <UUID> --property root_device
+
+设置节点属性
+openstack baremetal node set --property capabilities='node:compute-5,cpu_hugepages:true,cpu_txt:true,boot_option:local,cpu_aes:true,cpu_vt:true,cpu_hugepages_1g:true' compute3
+
+```

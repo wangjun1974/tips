@@ -10,9 +10,6 @@
 # 为每种类型填上对应的节点数量
 cat > /home/stack/templates/node-info.yaml << 'EOF'
 parameter_defaults:
-  OvercloudControllerFlavor: control
-  OvercloudComputeFlavor: compute
-  OvercloudCephStorageFlavor: ceph-storage
   ControllerCount: 3
   ComputeCount: 2
   CephStorageCount: 3
@@ -20,7 +17,7 @@ parameter_defaults:
   # SchedulerHints
   ControllerSchedulerHints:
     'capabilities:node': 'controller-%index%'
-  NovaComputeSchedulerHints:
+  ComputeSchedulerHints:
     'capabilities:node': 'compute-%index%'
   CephStorageSchedulerHints:
     'capabilities:node': 'cephstorage-%index%'

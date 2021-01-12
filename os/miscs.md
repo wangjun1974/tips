@@ -9641,3 +9641,42 @@ openstack baremetal node set --property capabilities='node:compute-5,cpu_hugepag
 
 ### osp16 templates with ceph 
 https://gitlab.cee.redhat.com/mzheng/meiyan-rhos-templates/-/tree/master/rhosp16-with-ceph<br>
+
+
+
+### undercloud.conf 说明
+```
+#
+# From instack-undercloud
+#
+
+# Network CIDR for the Neutron-managed subnet for Overcloud instances.
+# (string value)
+# Deprecated group/name - [DEFAULT]/network_cidr
+#cidr = 192.168.24.0/24
+
+# Start of DHCP allocation range for PXE and DHCP of Overcloud
+# instances on this network. (string value)
+# Deprecated group/name - [DEFAULT]/dhcp_start
+#dhcp_start = 192.168.24.5
+
+# End of DHCP allocation range for PXE and DHCP of Overcloud instances
+# on this network. (string value)
+# Deprecated group/name - [DEFAULT]/dhcp_end
+#dhcp_end = 192.168.24.24
+
+# Temporary IP range that will be given to nodes on this network
+# during the inspection process. Should not overlap with the range
+# defined by dhcp_start and dhcp_end, but should be in the same ip
+# subnet. (string value)
+# Deprecated group/name - [DEFAULT]/inspection_iprange
+#inspection_iprange = 192.168.24.100,192.168.24.120
+
+# Network gateway for the Neutron-managed network for Overcloud
+# instances on this network. (string value)
+# Deprecated group/name - [DEFAULT]/network_gateway
+#gateway = 192.168.24.1
+
+# The network will be masqueraded for external access. (boolean value)
+#masquerade = false
+```

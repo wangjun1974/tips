@@ -37,4 +37,10 @@ EOF
 
 # 开始部署
 (undercloud) [stack@undercloud ~]$ time ./deploy.sh
+
+# 部署成功后，执行 
+(undercloud) [stack@undercloud ~]$ source ~/overcloudrc
+
+# 查看 overcloud compute 服务
+(overcloud) [stack@undercloud ~]$ openstack compute service list
 ```

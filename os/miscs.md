@@ -9861,3 +9861,26 @@ parameter_defaults:
     registry.redhat.io:
       6747835|jwang: eyJhb...
 ```
+
+```
+(undercloud) [stack@undercloud ~]$ openstack server list
++--------------------------------------+-------------------------+--------+---------------------+----------------+-----------+
+| ID                                   | Name                    | Status | Networks            | Image          | Flavor    |
++--------------------------------------+-------------------------+--------+---------------------+----------------+-----------+
+| e214670c-eb85-48a7-a9d9-c94b115049a1 | overcloud-controller-1  | ACTIVE | ctlplane=192.0.2.9  | overcloud-full | baremetal |
+| aa9d1823-7077-4bdc-ba95-425a74ac2837 | overcloud-controller-0  | ACTIVE | ctlplane=192.0.2.23 | overcloud-full | baremetal |
+| ee13c670-79dc-4ca8-9a54-13b4ededd159 | overcloud-controller-2  | ACTIVE | ctlplane=192.0.2.19 | overcloud-full | baremetal |
+| 9ebe0e0f-4ffb-4679-853f-01cdae4f9722 | overcloud-novacompute-0 | ACTIVE | ctlplane=192.0.2.17 | overcloud-full | baremetal |
+| de0605e9-ae98-44a3-96b0-1eeccba89b16 | overcloud-novacompute-1 | ACTIVE | ctlplane=192.0.2.24 | overcloud-full | baremetal |
+| 8a75e2c0-894e-4758-a1a2-8b413b82ecfb | overcloud-cephstorage-1 | ACTIVE | ctlplane=192.0.2.21 | overcloud-full | baremetal |
+| 13a207ff-6d73-41f6-8660-12cb361152ab | overcloud-cephstorage-2 | ACTIVE | ctlplane=192.0.2.8  | overcloud-full | baremetal |
+| 028df777-bdb9-4b6f-9cc7-183bcad049cc | overcloud-cephstorage-0 | ACTIVE | ctlplane=192.0.2.16 | overcloud-full | baremetal |
++--------------------------------------+-------------------------+--------+---------------------+----------------+-----------+
+
+(undercloud) [stack@undercloud ~]$ sudo cat /var/lib/mistral/overcloud/ansible.log | grep overcloud-cephstorage-0 | grep -E "fatal: " 
+        "fatal: [overcloud-cephstorage-0]: FAILED! => {\"changed\": false, \"cmd\": [\"podman\", \"inspect\", \"608a40b63096\", \"2a177bdbcf58\", \"ce8e3e1a2bbd\"], \"delta\": \"0:00:00.207533\", \"end\": \"2021-01-13 10:33:25.511713\", \"msg\": \"non-zero return code\", \"rc\": 125, \"start\": \"2021-01-13 10:33:25.304180\", \"stderr\": \"Error: error getting image \\\"ce8e3e1a2bbd\\\": unable to find a name and tag match for ce8e3e1a2bbd in repotags: no such image\", \"stderr_lines\": [\"Error: error getting image \\\"ce8e3e1a2bbd\\\": unable to find a name and tag match for ce8e3e1a2bbd in repotags: no such image\"], \"stdout\": \"\", \"stdout_lines\": []}",
+(undercloud) [stack@undercloud ~]$ sudo cat /var/lib/mistral/overcloud/ansible.log | grep overcloud-cephstorage-1 | grep -E "fatal: " 
+        "fatal: [overcloud-cephstorage-1]: FAILED! => {\"changed\": false, \"cmd\": [\"podman\", \"inspect\", \"3106a47130b9\", \"94c20d553a8d\", \"f747960e7fcf\"], \"delta\": \"0:00:00.337421\", \"end\": \"2021-01-13 10:33:25.743865\", \"msg\": \"non-zero return code\", \"rc\": 125, \"start\": \"2021-01-13 10:33:25.406444\", \"stderr\": \"Error: error getting image \\\"f747960e7fcf\\\": unable to find a name and tag match for f747960e7fcf in repotags: no such image\", \"stderr_lines\": [\"Error: error getting image \\\"f747960e7fcf\\\": unable to find a name and tag match for f747960e7fcf in repotags: no such image\"], \"stdout\": \"\", \"stdout_lines\": []}",
+(undercloud) [stack@undercloud ~]$ sudo cat /var/lib/mistral/overcloud/ansible.log | grep overcloud-cephstorage-2 | grep -E "fatal: " 
+        "fatal: [overcloud-cephstorage-2]: FAILED! => {\"changed\": false, \"cmd\": [\"podman\", \"inspect\", \"51b2504f520a\", \"08817d83161a\", \"c9c197e953be\"], \"delta\": \"0:00:00.305030\", \"end\": \"2021-01-13 10:33:25.872782\", \"msg\": \"non-zero return code\", \"rc\": 125, \"start\": \"2021-01-13 10:33:25.567752\", \"stderr\": \"Error: error getting image \\\"c9c197e953be\\\": unable to find a name and tag match for c9c197e953be in repotags: no such image\", \"stderr_lines\": [\"Error: error getting image \\\"c9c197e953be\\\": unable to find a name and tag match for c9c197e953be in repotags: no such image\"], \"stdout\": \"\", \"stdout_lines\": []}",
+```

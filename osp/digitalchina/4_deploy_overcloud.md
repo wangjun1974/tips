@@ -26,6 +26,15 @@ EOF
 # 设置脚本可执行
 (undercloud) [stack@undercloud ~]$ chmod 755 ~/deploy.sh
 
+# 部署前确认 undercloud 防火墙允许 overcloud 访问 time service
+# 编辑 /etc/sysconfig/iptables 文件
+# 在行
+-A INPUT -p udp -m multiport --dports 123 -m state --state NEW -m comment --comment "105 ntp ipv4" -j ACCEPT
+# 之后添加行
+-A INPUT -s 192.0.2.0/24 -p udp -m multiport --dports 123 -m state --state NEW -m comment --comment "105 ntp ipv4" -j ACCEPT
+# 然后重启 iptables 服务
+(undercloud) [stack@undercloud ~]$ sudo systemctl restart iptables
+
 # 开始部署
 (undercloud) [stack@undercloud ~]$ time ./deploy.sh
 ```

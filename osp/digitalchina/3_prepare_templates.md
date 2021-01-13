@@ -46,8 +46,9 @@ overcloud 网络<br>
 |External|10|10.0.0.0/24|overcloud 的 External API 和 floating ip 所在的网络|
 |InternalAPI|20|172.16.2.0/24||overcloud 的 Internal API 所在的网络|
 |Tenant|50|172.16.0.0/24|overcloud 租户 overlay 隧道所在的网络|
-|Storage|30|172.16.1.0/24|172.16.1.1|overcloud 存储网络，内部客户端通过此网络访问存储|
-|StorageMgmt|40|172.16.3.0/24|172.16.3.1|overcloud 内部存储管理网络|
+|Storage|30|172.16.1.0/24|overcloud 存储网络，内部客户端通过此网络访问存储|
+|StorageMgmt|40|172.16.3.0/24|overcloud 内部存储管理网络|
+|Management|60|10.0.1.0/24|内部管理网络 - 默认未使用|
 
 ```
 # 设置环境变量 THT

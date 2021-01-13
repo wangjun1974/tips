@@ -20,7 +20,7 @@ openstack overcloud deploy --templates $THT \
 -e $CNF/environments/net-bond-with-vlans.yaml \
 -e ~/containers-prepare-parameter.yaml \
 -e $CNF/fix-nova-reserved-host-memory.yaml \
---ntp-server 192.168.8.21
+--ntp-server 192.0.2.1
 EOF
 
 # 设置脚本可执行

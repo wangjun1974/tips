@@ -209,15 +209,38 @@ done
 
 [root@undercloud repos]# exit
 
-# 5.11 设置 container-tools 模块为版本 2.0
+
+# 5.11 安装并设置 chrony 服务
+[stack@undercloud ~]$ sudo dnf install -y chrony
+
+# 生成以 undercloud 本地时间为时间源的时间服务器配置
+[stack@undercloud ~]$ sudo -i 
+[stack@undercloud ~]# cat > /etc/chrony.conf << EOF
+server 127.127.1.0 iburst
+allow all
+local stratum 4
+EOF
+[stack@undercloud ~]# exit
+
+# 在 firewallD 规则里开放 ntp 服务
+[stack@undercloud ~]$ sudo firewall-cmd --add-service=ntp
+[stack@undercloud ~]$ sudo firewall-cmd --add-service=ntp --permanent
+[stack@undercloud ~]$ sudo firewall-cmd --reload
+[stack@undercloud ~]$ sudo systemctl enable chronyd && sudo systemctl start chronyd
+
+# 查看时间源
+[stack@undercloud ~]$ chronyc -n sources
+[stack@undercloud ~]$ chronyc -n tracking
+
+# 5.12 设置 container-tools 模块为版本 2.0
 [stack@undercloud ~]$ sudo dnf module disable -y container-tools:rhel8
 [stack@undercloud ~]$ sudo dnf module enable -y container-tools:2.0
 
-# 5.12 设置 virt 模块版本为 8.2
+# 5.13 设置 virt 模块版本为 8.2
 [stack@undercloud ~]$ sudo dnf module disable -y virt:rhel
 [stack@undercloud ~]$ sudo dnf module enable -y virt:8.2
 
-# 5.13 更新并且重启
+# 5.14 更新并且重启
 [stack@undercloud ~]$ sudo dnf update -y
 [stack@undercloud ~]$ sudo reboot
 

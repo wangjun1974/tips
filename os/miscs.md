@@ -9883,4 +9883,143 @@ parameter_defaults:
         "fatal: [overcloud-cephstorage-1]: FAILED! => {\"changed\": false, \"cmd\": [\"podman\", \"inspect\", \"3106a47130b9\", \"94c20d553a8d\", \"f747960e7fcf\"], \"delta\": \"0:00:00.337421\", \"end\": \"2021-01-13 10:33:25.743865\", \"msg\": \"non-zero return code\", \"rc\": 125, \"start\": \"2021-01-13 10:33:25.406444\", \"stderr\": \"Error: error getting image \\\"f747960e7fcf\\\": unable to find a name and tag match for f747960e7fcf in repotags: no such image\", \"stderr_lines\": [\"Error: error getting image \\\"f747960e7fcf\\\": unable to find a name and tag match for f747960e7fcf in repotags: no such image\"], \"stdout\": \"\", \"stdout_lines\": []}",
 (undercloud) [stack@undercloud ~]$ sudo cat /var/lib/mistral/overcloud/ansible.log | grep overcloud-cephstorage-2 | grep -E "fatal: " 
         "fatal: [overcloud-cephstorage-2]: FAILED! => {\"changed\": false, \"cmd\": [\"podman\", \"inspect\", \"51b2504f520a\", \"08817d83161a\", \"c9c197e953be\"], \"delta\": \"0:00:00.305030\", \"end\": \"2021-01-13 10:33:25.872782\", \"msg\": \"non-zero return code\", \"rc\": 125, \"start\": \"2021-01-13 10:33:25.567752\", \"stderr\": \"Error: error getting image \\\"c9c197e953be\\\": unable to find a name and tag match for c9c197e953be in repotags: no such image\", \"stderr_lines\": [\"Error: error getting image \\\"c9c197e953be\\\": unable to find a name and tag match for c9c197e953be in repotags: no such image\"], \"stdout\": \"\", \"stdout_lines\": []}",
+
+
+(undercloud) [stack@undercloud ~]$ podman login registry.redhat.io
+Username: 6747835|jwang
+Password: 
+Login Succeeded!
+
+(undercloud) [stack@undercloud ~]$ podman pull registry.redhat.io/openshift4/ose-prometheus-alertmanager:4.1
+Trying to pull registry.redhat.io/openshift4/ose-prometheus-alertmanager:4.1...
+Getting image source signatures
+Copying blob c1427d8de594 done
+Copying blob 455ea8ab0621 done
+Copying blob 935ce2f796a9 done
+Copying blob bb13d92caffa done
+Copying config b00b1d49b1 done
+Writing manifest to image destination
+Storing signatures
+b00b1d49b1ebe84ed1154da252b093bcf59e4a31e8b98e4f657ec50867c4cfdd
+
+(undercloud) [stack@undercloud ~]$ podman pull registry.redhat.io/rhceph/rhceph-4-dashboard-rhel8:4
+Trying to pull registry.redhat.io/rhceph/rhceph-4-dashboard-rhel8:4...
+Getting image source signatures
+Copying blob cca21acb641a done
+Copying blob d9e72d058dc5 done
+Copying blob c921400c62b4 done
+Copying config e317acb665 done
+Writing manifest to image destination
+Storing signatures
+e317acb66510ad968a12875b6766b971aea943b536b856bc578d66877e958f43
+
+(undercloud) [stack@undercloud ~]$ podman pull registry.redhat.io/openshift4/ose-prometheus-node-exporter:v4.1
+Trying to pull registry.redhat.io/openshift4/ose-prometheus-node-exporter:v4.1...
+Getting image source signatures
+Copying blob 3d85e2d43a91 done
+Copying blob 23302e52b49d done
+Copying blob cf5693de4d3c done
+Copying blob 9dcb201bed02 done
+Copying config 69b00cdbb1 done
+Writing manifest to image destination
+Storing signatures
+69b00cdbb1da73bbc3333d209f83c9a68b001c16f98d998fc54348e80f66e8e3
+
+(undercloud) [stack@undercloud ~]$ podman pull registry.redhat.io/openshift4/ose-prometheus:4.1
+Trying to pull registry.redhat.io/openshift4/ose-prometheus:4.1...
+Getting image source signatures
+Copying blob 455ea8ab0621 skipped: already exists
+Copying blob 935ce2f796a9 skipped: already exists
+Copying blob bb13d92caffa skipped: already exists
+Copying blob 6785f5392033 done
+Copying config 6b5d26d612 done
+Writing manifest to image destination
+Storing signatures
+6b5d26d6121c9877b7502a1f1dc433cc5f4d5ffc762dcc8c3da525c5d3bf893a
+
+(undercloud) [stack@undercloud ~]$ sudo cat /var/lib/mistral/overcloud/ansible.log | grep failed 
+...
+        "overcloud-cephstorage-0    : ok=129  changed=6    unreachable=0    failed=0    skipped=215  rescued=0    ignored=0   ",
+        "overcloud-cephstorage-1    : ok=119  changed=4    unreachable=0    failed=0    skipped=207  rescued=0    ignored=0   ",
+        "overcloud-cephstorage-2    : ok=120  changed=4    unreachable=0    failed=1    skipped=205  rescued=0    ignored=0   ",
+        "overcloud-controller-0     : ok=199  changed=10   unreachable=0    failed=0    skipped=269  rescued=0    ignored=0   ",
+        "overcloud-controller-1     : ok=170  changed=6    unreachable=0    failed=0    skipped=247  rescued=0    ignored=0   ",
+        "overcloud-controller-2     : ok=170  changed=6    unreachable=0    failed=0    skipped=247  rescued=0    ignored=0   ",
+        "overcloud-novacompute-0    : ok=48   changed=2    unreachable=0    failed=0    skipped=142  rescued=0    ignored=0   ",
+        "overcloud-novacompute-1    : ok=48   changed=2    unreachable=0    failed=0    skipped=142  rescued=0    ignored=0   ",
+    "failed_when_result": true
+2021-01-13 20:18:37,803 p=120160 u=mistral n=ansible | overcloud-cephstorage-0    : ok=144  changed=42   unreachable=0    failed=0    skipped=263  rescued=0    ignored=0   
+2021-01-13 20:18:37,803 p=120160 u=mistral n=ansible | overcloud-cephstorage-1    : ok=141  changed=42   unreachable=0    failed=0    skipped=263  rescued=0    ignored=0   
+2021-01-13 20:18:37,803 p=120160 u=mistral n=ansible | overcloud-cephstorage-2    : ok=141  changed=42   unreachable=0    failed=0    skipped=263  rescued=0    ignored=0   
+2021-01-13 20:18:37,803 p=120160 u=mistral n=ansible | overcloud-controller-0     : ok=199  changed=82   unreachable=0    failed=0    skipped=244  rescued=0    ignored=0   
+2021-01-13 20:18:37,804 p=120160 u=mistral n=ansible | overcloud-controller-1     : ok=193  changed=82   unreachable=0    failed=0    skipped=240  rescued=0    ignored=0   
+2021-01-13 20:18:37,804 p=120160 u=mistral n=ansible | overcloud-controller-2     : ok=193  changed=82   unreachable=0    failed=0    skipped=240  rescued=0    ignored=0   
+2021-01-13 20:18:37,804 p=120160 u=mistral n=ansible | overcloud-novacompute-0    : ok=173  changed=58   unreachable=0    failed=0    skipped=240  rescued=0    ignored=0   
+2021-01-13 20:18:37,804 p=120160 u=mistral n=ansible | overcloud-novacompute-1    : ok=173  changed=58   unreachable=0    failed=0    skipped=240  rescued=0    ignored=0   
+2021-01-13 20:18:37,805 p=120160 u=mistral n=ansible | undercloud                 : ok=92   changed=15   unreachable=0    failed=1    skipped=39   rescued=0    ignored=0   
+
+(undercloud) [stack@undercloud ~]$ sudo cat /var/lib/mistral/overcloud/ansible.log | grep overcloud-cephstorage-2 | grep "fatal: "  | more
+        "fatal: [overcloud-cephstorage-2 -> 192.0.2.23]: FAILED! => {\"attempts\": 60, \"changed\": false, \"cmd\": [\"podman\", \"exec\", \"ceph-mon-overcloud-contro
+ller-0\", \"ceph\", \"--cluster\", \"ceph\", \"-s\", \"-f\", \"json\"], \"delta\": \"0:00:01.723454\", \"end\": \"2021-01-13 12:18:31.911859\", \"rc\": 0, \"start\": 
+\"2021-01-13 12:18:30.188405\", \"stderr\": \"\", \"stderr_lines\": [], \"stdout\": \"\\n{\\\"fsid\\\":\\\"a20d5cc1-4aca-4ebb-8d50-4dc85d463817\\\",\\\"health\\\":{\\
+\"checks\\\":{\\\"TOO_FEW_OSDS\\\":{\\\"severity\\\":\\\"HEALTH_WARN\\\",\\\"summary\\\":{\\\"message\\\":\\\"OSD count 0 < osd_pool_default_size 3\\\"}}},\\\"status\
+\\":\\\"HEALTH_WARN\\\"},\\\"election_epoch\\\":8,\\\"quorum\\\":[0,1,2],\\\"quorum_names\\\":[\\\"overcloud-controller-2\\\",\\\"overcloud-controller-0\\\",\\\"overc
+loud-controller-1\\\"],\\\"quorum_age\\\":18375,\\\"monmap\\\":{\\\"epoch\\\":1,\\\"fsid\\\":\\\"a20d5cc1-4aca-4ebb-8d50-4dc85d463817\\\",\\\"modified\\\":\\\"2021-01
+-13 07:11:54.980500\\\",\\\"created\\\":\\\"2021-01-13 07:11:54.980500\\\",\\\"min_mon_release\\\":14,\\\"min_mon_release_name\\\":\\\"nautilus\\\",\\\"election_strat
+egy\\\":1,\\\"disallowed_leaders: \\\":\\\"\\\",\\\"stretch_mode\\\":false,\\\"features\\\":{\\\"persistent\\\":[\\\"kraken\\\",\\\"luminous\\\",\\\"mimic\\\",\\\"osd
+map-prune\\\",\\\"nautilus\\\",\\\"elector-pinging\\\"],\\\"optional\\\":[]},\\\"mons\\\":[{\\\"rank\\\":0,\\\"name\\\":\\\"overcloud-controller-2\\\",\\\"public_addr
+s\\\":{\\\"addrvec\\\":[{\\\"type\\\":\\\"v2\\\",\\\"addr\\\":\\\"172.16.1.58:3300\\\",\\\"nonce\\\":0},{\\\"type\\\":\\\"v1\\\",\\\"addr\\\":\\\"172.16.1.58:6789\\\"
+,\\\"nonce\\\":0}]},\\\"addr\\\":\\\"172.16.1.58:6789/0\\\",\\\"public_addr\\\":\\\"172.16.1.58:6789/0\\\",\\\"crush_location\\\":\\\"{}\\\"},{\\\"rank\\\":1,\\\"name
+\\\":\\\"overcloud-controller-0\\\",\\\"public_addrs\\\":{\\\"addrvec\\\":[{\\\"type\\\":\\\"v2\\\",\\\"addr\\\":\\\"172.16.1.185:3300\\\",\\\"nonce\\\":0},{\\\"type\
+\\":\\\"v1\\\",\\\"addr\\\":\\\"172.16.1.185:6789\\\",\\\"nonce\\\":0}]},\\\"addr\\\":\\\"172.16.1.185:6789/0\\\",\\\"public_addr\\\":\\\"172.16.1.185:6789/0\\\",\\\"
+crush_location\\\":\\\"{}\\\"},{\\\"rank\\\":2,\\\"name\\\":\\\"overcloud-controller-1\\\",\\\"public_addrs\\\":{\\\"addrvec\\\":[{\\\"type\\\":\\\"v2\\\",\\\"addr\\\
+":\\\"172.16.1.223:3300\\\",\\\"nonce\\\":0},{\\\"type\\\":\\\"v1\\\",\\\"addr\\\":\\\"172.16.1.223:6789\\\",\\\"nonce\\\":0}]},\\\"addr\\\":\\\"172.16.1.223:6789/0\\
+\",\\\"public_addr\\\":\\\"172.16.1.223:6789/0\\\",\\\"crush_location\\\":\\\"{}\\\"}]},\\\"osdmap\\\":{\\\"osdmap\\\":{\\\"epoch\\\":5,\\\"num_osds\\\":0,\\\"num_up_
+osds\\\":0,\\\"num_in_osds\\\":0,\\\"num_remapped_pgs\\\":0}},\\\"pgmap\\\":{\\\"pgs_by_state\\\":[],\\\"num_pgs\\\":0,\\\"num_pools\\\":0,\\\"num_objects\\\":0,\\\"d
+ata_bytes\\\":0,\\\"bytes_used\\\":0,\\\"bytes_avail\\\":0,\\\"bytes_total\\\":0},\\\"fsmap\\\":{\\\"epoch\\\":1,\\\"by_rank\\\":[],\\\"up:standby\\\":0},\\\"mgrmap\\
+\":{\\\"epoch\\\":3,\\\"active_gid\\\":4270,\\\"active_name\\\":\\\"overcloud-controller-0\\\",\\\"active_addrs\\\":{\\\"addrvec\\\":[{\\\"type\\\":\\\"v2\\\",\\\"add
+r\\\":\\\"172.16.1.185:6800\\\",\\\"nonce\\\":57},{\\\"type\\\":\\\"v1\\\",\\\"addr\\\":\\\"172.16.1.185:6801\\\",\\\"nonce\\\":57}]},\\\"active_addr\\\":\\\"172.16.1
+.185:6801/57\\\",\\\"active_change\\\":\\\"2021-01-13 07:14:36.479167\\\",\\\"available\\\":true,\\\"standbys\\\":[{\\\"gid\\\":4284,\\\"name\\\":\\\"overcloud-contro
+ller-2\\\",\\\"available_modules\\\":[{\\\"name\\\":\\\"alerts\\\",\\\"can_run\\\":true,\\\"error_string\\\":\\\"\\\",\\\"module_options\\\":{\\\"interval\\\":{\\\"na
+me\\\":\\\"interval\\\",\\\"type\\\":\\\"secs\\\",\\\"level\\\":\\\"advanced\\\",\\\"flags\\\":1,\\\"default_value\\\":\\\"60\\\",\\\"min\\\":\\\"\\\",\\\"max\\\":\\\
+"\\\",\\\"enum_allowed\\\":[],\\\"desc\\\":\\\"How frequently to reexamine health status\\\",\\\"long_desc\\\":\\\"\\\",\\\"tags\\\":[],\\\"see_also\\\":[]},\\\"smtp_
+destination\\\":{\\\"name\\\":\\\"smtp_destination\\\",\\\"type\\\":\\\"str\\\",\\\"level\\\":\\\"advanced\\\",\\\"flags\\\":1,\\\"default_value\\\":\\\"\\\",\\\"min\
+\\":\\\"\\\",\\\"max\\\":\\\"\\\",\\\"enum_allowed\\\":[],\\\"desc\\\":\\\"Email address to send alerts to\\\",\\\"long_desc\\\":\\\"\\\",\\\"tags\\\":[],\\\"see_also
+\\\":[]},\\\"smtp_from_name\\\":{\\\"name\\\":\\\"smtp_from_name\\\",\\\"type\\\":\\\"str\\\",\\\"level\\\":\\\"advanced\\\",\\\"flags\\\":1,\\\"default_value\\\":\\\
+"Ceph\\\",\\\"min\\\":\\\"\\\",\\\"max\\\":\\\"\\\",\\\"enum_allowed\\\":[],\\\"desc\\\":\\\"Email From: name\\\",\\\"long_desc\\\":\\\"\\\",\\\"tags\\\":[],\\\"see_a
+lso\\\":[]},\\\"smtp_host\\\":{\\\"name\\\":\\\"smtp_host\\\",\\\"type\\\":\\\"str\\\",\\\"level\\\":\\\"advanced\\\",\\\"flags\\\":1,\\\"default_value\\\":\\\"\\\",\
+\\"min\\\":\\\"\\\",\\\"max\\\":\\\"\\\",\\\"enum_allowed\\\":[],\\\"desc\\\":\\\"SMTP server\\\",\\\"long_desc\\\":\\\"\\\",\\\"tags\\\":[],\\\"see_also\\\":[]},\\\"
+smtp_password\\\":{\\\"name\\\":\\\"smtp_password\\\",\\\"type\\\":\\\"str\\\",\\\"level\\\":\\\"advanced\\\",\\\"flags\\\":1,\\\"default_value\\\":\\\"\\\",\\\"min\\
+\":\\\"\\\",\\\"max\\\":\\\"\\\",\\\"enum_allowed\\\":[],\\\"desc\\\":\\\"Password to authenticate with\\\",\\\"long_desc\\\":\\\"\\\",\\\"tags\\\":[],\\\"see_also\\\
+":[]},\\\"smtp_port\\\":{\\\"name\\\":\\\"smtp_port\\\",\\\"type\\\":\\\"int\\\",\\\"level\\\":\\\"advanced\\\",\\\"flags\\\":1,\\\"default_value\\\":\\\"465\\\",\\\"
+min\\\":\\\"\\\",\\\"max\\\":\\\"\\\",\\\"enum_allowed\\\":[],\\\"desc\\\":\\\"SMTP port\\\",\\\"long_desc\\\":\\\"\\\",\\\"tags\\\":[],\\\"see_also\\\":[]},\\\"smtp_
+sender\\\":{\\\"name\\\":\\\"smtp_sender\\\",\\\"type\\\":\\\"str\\\",\\\"level\\\":\\\"advanced\\\",\\\"flags\\\":1,\\\"default_value\\\":\\\"\\\",\\\"min\\\":\\\"\\
+\",\\\"max\\\":\\\"\\\",\\\"enum_allowed\\\":[],\\\"desc\\\":\\\"SMTP envelope sender\\\",\\\"long_desc\\\":\\\"\\\",\\\"tags\\\":[],\\\"see_also\\\":[]},\\\"smtp_ssl
+\\\":{\\\"name\\\":\\\"smtp_ssl\\\",\\\"type\\\":\\\"bool\\\",\\\"level\\\":\\\"advanced\\\",\\\"flags\\\":1,\\\"default_value\\\":\\\"True\\\",\\\"min\\\":\\\"\\\",\
+\\"max\\\":\\\"\\\",\\\"enum_allowed\\\":[],\\\"desc\\\":\\\"Use SSL to connect to SMTP server\\\",\\\"long_desc\\\":\\\"\\\",\\\"tags\\\":[],\\\"see_also\\\":[]},\\\
+"smtp_user\\\":{\\\"name\\\":\\\"smtp_user\\\",\\\"type\\\":\\\"str\\\",\\\"level\\\":\\\"advanced\\\",\\\"flags\\\":1,\\\"default_value\\\":\\\"\\\",\\\"min\\\":\\\"
+\\\",\\\"max\\\":\\\"\\\",\\\"enum_allowed\\\":[],\\\"desc\\\":\\\"User to authenticate as\\\",\\\"long_desc\\\":\\\"\\\",\\\"tags\\\":[],\\\"see_also\\\":[]}}},{\\\"
+name\\\":\\\"ansible\\\",\\\"can_run\\\":true,\\\"error_string\\\":\\\"\\\",\\\"module_options\\\":{\\\"password\\\":{\\\"name\\\":\\\"password\\\",\\\"type\\\":\\\"s
+tr\\\",\\\"level\\\":\\\"advanced\\\",\\\"flags\\\":0,\\\"default_value\\\":\\\"\\\",\\\"min\\\":\\\"\\\",\\\"max\\\":\\\"\\\",\\\"enum_allowed\\\":[],\\\"desc\\\":\\
+
+
+(undercloud) [stack@undercloud ~]$ ssh heat-admin@192.0.2.9 sudo podman exec -it ceph-mon-overcloud-controller-1 ceph status
+Warning: Permanently added '192.0.2.9' (ECDSA) to the list of known hosts.
+  cluster:
+    id:     a20d5cc1-4aca-4ebb-8d50-4dc85d463817
+    health: HEALTH_WARN
+            OSD count 0 < osd_pool_default_size 3
+
+  services:
+    mon: 3 daemons, quorum overcloud-controller-2,overcloud-controller-0,overcloud-controller-1 (age 6h)
+    mgr: overcloud-controller-0(active, since 6h), standbys: overcloud-controller-2, overcloud-controller-1
+    osd: 0 osds: 0 up, 0 in
+
+  data:
+    pools:   0 pools, 0 pgs
+    objects: 0 objects, 0 B
+    usage:   0 B used, 0 B / 0 B avail
+    pgs:
+
+
 ```

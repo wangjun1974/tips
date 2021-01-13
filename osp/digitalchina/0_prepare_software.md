@@ -216,7 +216,8 @@ done
 # 生成以 undercloud 本地时间为时间源的时间服务器配置
 [stack@undercloud ~]$ sudo -i 
 [stack@undercloud ~]# cat > /etc/chrony.conf << EOF
-server 127.127.1.0 iburst
+server 192.0.2.1 iburst
+bindaddress 192.0.2.1
 allow all
 local stratum 4
 EOF

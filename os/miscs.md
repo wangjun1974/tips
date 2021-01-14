@@ -10045,7 +10045,7 @@ localhost/docker-registry                                    latest   678dfa38fc
 
 
 
-### 建立 undercloud 本地 docker registry
+### 在 helper 上建立本地 docker registry
 ```
 yum -y install podman httpd httpd-tools wget jq
 
@@ -10060,17 +10060,16 @@ update-ca-trust extract
 
 htpasswd -bBc /opt/registry/auth/htpasswd dummy dummy
 
-# 编辑 /etc/sysconfig/iptables 文件，在行 "998 log all ipv4" 和行 "999 drop all ipv4" 之间添加行 "added: accept 5001 from all ipv4"
--A INPUT -m state --state NEW -m limit --limit 20/min --limit-burst 15 -m comment --comment "998 log all ipv4" -j LOG
--A INPUT -p tcp -m multiport --dports 5001 -m state --state NEW -m comment --comment "added: accept 5001 from all ipv4" -j ACCEPT
--A INPUT -m state --state NEW -m comment --comment "999 drop all ipv4" -j DROP
+firewall-cmd --add-port=5000/tcp --zone=internal --permanent
+firewall-cmd --add-port=5000/tcp --zone=public   --permanent
+firewall-cmd --add-service=http  --permanent
+firewall-cmd --reload
 
-# 重启 iptables 服务
-systemctl restart iptables
+# 在 helper 上导入 docker-registry 镜像
 
 cat > /usr/local/bin/localregistry.sh << 'EOF'
 #!/bin/bash
-podman run --name poc-registry -d -p 5001:5001 \
+podman run --name poc-registry -d -p 5000:5000 \
 -v /opt/registry/data:/var/lib/registry:z \
 -v /opt/registry/auth:/auth:z \
 -e "REGISTRY_AUTH=htpasswd" \
@@ -10087,11 +10086,84 @@ chmod +x /usr/local/bin/localregistry.sh
 
 /usr/local/bin/localregistry.sh
 
-curl -u dummy:dummy -k https://undercloud.example.com:5000/v2/_catalog
+curl -u dummy:dummy https://helper.example.com:5000/v2/_catalog
 
-REPO_URL=helper.cluster-0001.rhsacn.org:5000
-curl -u dummy:dummy -s -X GET https://$REPO_URL/v2/_catalog \
- | jq '.repositories[]' \
- | sort \
- | xargs -I _ curl -u dummy:dummy -s -X GET https://$REPO_URL/v2/_/tags/list
+# 添加 undercloud.example.com 到 /etc/hosts
+cat >> /etc/hosts << EOF
+192.168.8.21 undercloud.example.com
+EOF
+
+scp /opt/registry/certs/domain.crt stack@undercloud.example.com:~
+ssh stack@undercloud.example.com sudo cp /home/stack/domain.crt /etc/pki/ca-trust/source/anchors/
+ssh stack@undercloud.example.com sudo update-ca-trust extract
+
+# 在 undercloud 上添加 helper 的 hosts 记录
+ssh stack@undercloud.example.com 
+sudo -i
+cat >> /etc/hosts << EOF
+
+192.168.8.20 helper.example.com
+EOF
+
+curl -u dummy:dummy https://helper.example.com:5000/v2/_catalog
+exit
+
+# 在 helper 上安装 skopeo 
+yum install -y skopeo
+
+# 在 helper 上 login 到 registry.redhat.io 和 helper.example.com:5000
+podman login registry.redhat.io
+
+podman login helper.example.com:5000
+
+
+cat > /usr/local/bin/syncimgs << 'EOF'
+#!/bin/env bash
+
+PUSHREGISTRY=helper.example.com:5000
+FORK=4
+
+rhosp_namespace=registry.redhat.io/rhosp-rhel8
+rhosp_tag=16.1
+ceph_namespace=registry.redhat.io/rhceph
+ceph_image=rhceph-4-rhel8
+ceph_tag=latest
+ceph_alertmanager_namespace=registry.redhat.io/openshift4
+ceph_alertmanager_image=ose-prometheus-alertmanager
+ceph_alertmanager_tag=4.1
+ceph_grafana_namespace=registry.redhat.io/rhceph
+ceph_grafana_image=rhceph-4-dashboard-rhel8
+ceph_grafana_tag=4
+ceph_node_exporter_namespace=registry.redhat.io/openshift4
+ceph_node_exporter_image=ose-prometheus-node-exporter
+ceph_node_exporter_tag=v4.1
+ceph_prometheus_namespace=registry.redhat.io/openshift4
+ceph_prometheus_image=ose-prometheus
+ceph_prometheus_tag=4.1
+
+function copyimg() {
+  image=${1}
+  version=${2}
+
+  release=$(skopeo inspect docker://${image}:${version} | jq -r '.Labels | (.version + "-" + .release)')
+  dest="${PUSHREGISTRY}/${image#*\/}"
+  echo Copying ${image} to ${dest}
+  skopeo copy --format v2s2 docker://${image}:${release} docker://${dest}:${release}
+  skopeo copy --format v2s2 docker://${image}:${version} docker://${dest}:${version}
+}
+
+copyimg "${ceph_namespace}/${ceph_image}" ${ceph_tag} &
+copyimg "${ceph_alertmanager_namespace}/${ceph_alertmanager_image}" ${ceph_alertmanager_tag} &
+copyimg "${ceph_grafana_namespace}/${ceph_grafana_image}" ${ceph_grafana_tag} &
+copyimg "${ceph_node_exporter_namespace}/${ceph_node_exporter_image}" ${ceph_node_exporter_tag} &
+copyimg "${ceph_prometheus_namespace}/${ceph_prometheus_image}" ${ceph_prometheus_tag} &
+wait
+
+for rhosp_image in $(podman search ${rhosp_namespace} --limit 1000 --format "{{ .Name }}"); do
+  ((i=i%FORK)); ((i++==0)) && wait
+  copyimg ${rhosp_image} ${rhosp_tag} &
+done
+EOF
+
+
 ```

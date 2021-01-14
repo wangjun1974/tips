@@ -263,10 +263,7 @@ Y
 
 ### 安装 Helper
 ```
-virt-install --name demo-guest4 --memory 2048 --vcpus 2 --disk size=160 --os-variant rhel8.0 --location http://example.com/OS-install --initrd-inject /home/username/ks.cfg --extra-args="ks=file:/ks.cfg console=tty0 console=ttyS0,115200n8"
-
-virt-install --name demo-guest5 --memory 16384 --vcpus 16 --disk size=280 --os-variant rhel8.0 --location RHEL8.iso --graphics none --extra-args='console=ttyS0'
-
+# 安装 helper 服务器
 virt-install --name=jwang-helper-undercloud --vcpus=4 --ram=32768 \
 --disk path=/data/kvm/jwang-helper-undercloud.qcow2,bus=virtio,size=100 \
 --os-variant rhel8.0 --network network=openshift4v6,model=virtio \
@@ -274,5 +271,23 @@ virt-install --name=jwang-helper-undercloud --vcpus=4 --ram=32768 \
 --graphics none \
 --initrd-inject /tmp/ks-helper.cfg \
 --extra-args='ks=file:/ks-helper.cfg console=ttyS0'
+
+# 配置 yum 源
+# 根据现场实际情况配置
+# 这里用 undercloud 提供的 yum 源
+
+cat > /etc/yum.repos.d/w.repo << EOF
+[rhel-8-for-x86_64-baseos-eus-rpms]
+name=rhel-8-for-x86_64-baseos-eus-rpms
+baseurl=http://192.168.8.21:8787/repos/osp16.1/rhel-8-for-x86_64-baseos-eus-rpms/
+enabled=1
+gpgcheck=0
+
+[rhel-8-for-x86_64-appstream-eus-rpms]
+name=rhel-8-for-x86_64-appstream-eus-rpms
+baseurl=http://192.168.8.21:8787/repos/osp16.1/rhel-8-for-x86_64-appstream-eus-rpms/
+enabled=1
+gpgcheck=0
+EOF
 
 ```

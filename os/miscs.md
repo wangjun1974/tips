@@ -10023,3 +10023,22 @@ Warning: Permanently added '192.0.2.9' (ECDSA) to the list of known hosts.
 
 
 ```
+
+
+
+### 导入 docker registry 镜像
+https://www.mankier.com/1/podman-save
+```
+# 保存 docker-registry 镜像到 tar 文件
+podman save --format docker-dir -o docker-registry docker.io/library/registry:2
+tar cvf podman-docker-registry-v2.tar docker-registry/
+
+# 在无法访问 docker.io 的环境里上传并且解压缩这个 tar 文件
+tar xvf podman-docker-registry-v2.tar
+podman load -i docker-registry
+
+# 查看目标环境里的本地 images 
+podman images
+REPOSITORY                                                   TAG      IMAGE ID       CREATED         SIZE
+localhost/docker-registry                                    latest   678dfa38fcfa   3 weeks ago     26.8 MB
+```

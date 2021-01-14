@@ -260,3 +260,19 @@ Y
 ```
 
 
+
+### 安装 Helper
+```
+virt-install --name demo-guest4 --memory 2048 --vcpus 2 --disk size=160 --os-variant rhel8.0 --location http://example.com/OS-install --initrd-inject /home/username/ks.cfg --extra-args="ks=file:/ks.cfg console=tty0 console=ttyS0,115200n8"
+
+virt-install --name demo-guest5 --memory 16384 --vcpus 16 --disk size=280 --os-variant rhel8.0 --location RHEL8.iso --graphics none --extra-args='console=ttyS0'
+
+virt-install --name=jwang-helper-undercloud --vcpus=4 --ram=32768 \
+--disk path=/data/kvm/jwang-helper-undercloud.qcow2,bus=virtio,size=100 \
+--os-variant rhel8.0 --network network=openshift4v6,model=virtio \
+--boot menu=on --location /root/jwang/isos/rhel-8.2-x86_64-dvd.iso \
+--graphics none \
+--initrd-inject /tmp/ks-helper.cfg \
+--extra-args='ks=file:/ks-helper.cfg console=ttyS0'
+
+```

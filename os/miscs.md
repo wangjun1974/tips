@@ -10042,3 +10042,56 @@ podman images
 REPOSITORY                                                   TAG      IMAGE ID       CREATED         SIZE
 localhost/docker-registry                                    latest   678dfa38fcfa   3 weeks ago     26.8 MB
 ```
+
+
+
+### 建立 undercloud 本地 docker registry
+```
+yum -y install podman httpd httpd-tools wget jq
+
+mkdir -p /opt/registry/{auth,certs,data}
+
+cd /opt/registry/certs
+
+openssl req -newkey rsa:4096 -nodes -sha256 -keyout domain.key -x509 -days 3650 -out domain.crt  -subj "/C=CN/ST=GD/L=SZ/O=Global Security/OU=IT Department/CN=*.example.com"
+
+cp /opt/registry/certs/domain.crt /etc/pki/ca-trust/source/anchors/
+update-ca-trust extract
+
+htpasswd -bBc /opt/registry/auth/htpasswd dummy dummy
+
+# 编辑 /etc/sysconfig/iptables 文件，在行 "998 log all ipv4" 和行 "999 drop all ipv4" 之间添加行 "added: accept 5001 from all ipv4"
+-A INPUT -m state --state NEW -m limit --limit 20/min --limit-burst 15 -m comment --comment "998 log all ipv4" -j LOG
+-A INPUT -p tcp -m multiport --dports 5001 -m state --state NEW -m comment --comment "added: accept 5001 from all ipv4" -j ACCEPT
+-A INPUT -m state --state NEW -m comment --comment "999 drop all ipv4" -j DROP
+
+# 重启 iptables 服务
+systemctl restart iptables
+
+cat > /usr/local/bin/localregistry.sh << 'EOF'
+#!/bin/bash
+podman run --name poc-registry -d -p 5001:5001 \
+-v /opt/registry/data:/var/lib/registry:z \
+-v /opt/registry/auth:/auth:z \
+-e "REGISTRY_AUTH=htpasswd" \
+-e "REGISTRY_AUTH_HTPASSWD_REALM=Registry" \
+-e "REGISTRY_HTTP_SECRET=ALongRandomSecretForRegistry" \
+-e REGISTRY_AUTH_HTPASSWD_PATH=/auth/htpasswd \
+-v /opt/registry/certs:/certs:z \
+-e REGISTRY_HTTP_TLS_CERTIFICATE=/certs/domain.crt \
+-e REGISTRY_HTTP_TLS_KEY=/certs/domain.key \
+localhost/docker-registry:latest 
+EOF
+
+chmod +x /usr/local/bin/localregistry.sh
+
+/usr/local/bin/localregistry.sh
+
+curl -u dummy:dummy -k https://undercloud.example.com:5000/v2/_catalog
+
+REPO_URL=helper.cluster-0001.rhsacn.org:5000
+curl -u dummy:dummy -s -X GET https://$REPO_URL/v2/_catalog \
+ | jq '.repositories[]' \
+ | sort \
+ | xargs -I _ curl -u dummy:dummy -s -X GET https://$REPO_URL/v2/_/tags/list
+```

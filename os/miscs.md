@@ -10022,6 +10022,56 @@ Warning: Permanently added '192.0.2.9' (ECDSA) to the list of known hosts.
     pgs:
 
 
+(undercloud) [stack@undercloud ~]$ openstack server list
++--------------------------------------+-------------------------+--------+---------------------+----------------+-----------+
+| ID                                   | Name                    | Status | Networks            | Image          | Flavor    |
++--------------------------------------+-------------------------+--------+---------------------+----------------+-----------+
+| 5f13d981-5dc7-4445-90c8-59d27cfc3f11 | overcloud-controller-0  | ACTIVE | ctlplane=192.0.2.22 | overcloud-full | baremetal |
+| 45e16cb0-2c85-4500-b6eb-cd5e86897184 | overcloud-controller-2  | ACTIVE | ctlplane=192.0.2.14 | overcloud-full | baremetal |
+| 522f2254-bd11-468d-9df3-e6602ad19d3c | overcloud-controller-1  | ACTIVE | ctlplane=192.0.2.10 | overcloud-full | baremetal |
+| 55a8d5d1-d2f5-420a-9ed0-15ce47fc5947 | overcloud-novacompute-0 | ACTIVE | ctlplane=192.0.2.11 | overcloud-full | baremetal |
+| 9bfa235b-cd5c-4929-a5c9-5a32c1ff3071 | overcloud-novacompute-1 | ACTIVE | ctlplane=192.0.2.12 | overcloud-full | baremetal |
+| 415435a7-2988-411b-85cd-4cb165f3e57c | overcloud-cephstorage-1 | ACTIVE | ctlplane=192.0.2.18 | overcloud-full | baremetal |
+| 715d5e7a-14e1-4a91-af02-37f31b488381 | overcloud-cephstorage-2 | ACTIVE | ctlplane=192.0.2.8  | overcloud-full | baremetal |
+| 36b768b9-8ee8-4b03-8858-951f38957db8 | overcloud-cephstorage-0 | ACTIVE | ctlplane=192.0.2.15 | overcloud-full | baremetal |
++--------------------------------------+-------------------------+--------+---------------------+----------------+-----------+
+
+Jan 14 16:58:46 overcloud-cephstorage-2 systemd[1]: ceph-osd@2.service: Main process exited, code=exited, status=1/FAILURE
+Jan 14 16:58:46 overcloud-cephstorage-2 systemd[1]: ceph-osd@2.service: Failed with result 'exit-code'.
+Jan 14 16:58:47 overcloud-cephstorage-2 systemd[1]: ceph-osd@8.service: Service RestartSec=10s expired, scheduling restart.
+Jan 14 16:58:47 overcloud-cephstorage-2 systemd[1]: ceph-osd@8.service: Scheduled restart job, restart counter is at 1.
+Jan 14 16:58:47 overcloud-cephstorage-2 podman[19320]: Error: Failed to evict container: "": Failed to find container "ceph-osd-8" in st
+ate: no container with name or ID ceph-osd-8 found: no such container
+
+Jan 14 16:58:57 overcloud-cephstorage-2 podman[19550]: 2021-01-14 16:58:57.202005292 +0000 UTC m=+0.191512529 container create 3323392dc
+2ba53c7f5dddd15648b21556d930b2239e757c3ddac3e2cefe80d10 (image=undercloud.ctlplane.localdomain:8787/rhceph/rhceph-4-rhel8:latest, name=ceph-osd-2)
+Jan 14 16:58:57 overcloud-cephstorage-2 podman[19550]: 2021-01-14 16:58:57.382088661 +0000 UTC m=+0.371595880 container init 3323392dc2b
+a53c7f5dddd15648b21556d930b2239e757c3ddac3e2cefe80d10 (image=undercloud.ctlplane.localdomain:8787/rhceph/rhceph-4-rhel8:latest, name=ceph-osd-2)
+Jan 14 16:58:57 overcloud-cephstorage-2 podman[19550]: 2021-01-14 16:58:57.408954708 +0000 UTC m=+0.398461937 container start 3323392dc2
+ba53c7f5dddd15648b21556d930b2239e757c3ddac3e2cefe80d10 (image=undercloud.ctlplane.localdomain:8787/rhceph/rhceph-4-rhel8:latest, name=ceph-osd-2)
+Jan 14 16:58:58 overcloud-cephstorage-2 systemd[1]: ceph-osd@5.service: Service RestartSec=10s expired, scheduling restart.
+Jan 14 16:58:58 overcloud-cephstorage-2 systemd[1]: ceph-osd@5.service: Scheduled restart job, restart counter is at 2.
+Jan 14 16:58:58 overcloud-cephstorage-2 podman[19657]: Error: Failed to evict container: "": Failed to find container "ceph-osd-5" in state: no container with name or ID ceph-osd-5 found: no such container
+Jan 14 16:58:59 overcloud-cephstorage-2 podman[19667]: 2021-01-14 16:58:59.162784085 +0000 UTC m=+0.181366620 container create 2c1dc27c12687000b186a71c870d0613c032965b42eae03f7b50ea3fceccde92 (image=undercloud.ctlplane.localdomain:8787/rhceph/rhceph-4-rhel8:latest, name=ceph-osd-5)
+Jan 14 16:58:59 overcloud-cephstorage-2 podman[19667]: 2021-01-14 16:58:59.393928331 +0000 UTC m=+0.412510872 container init 2c1dc27c126
+87000b186a71c870d0613c032965b42eae03f7b50ea3fceccde92 (image=undercloud.ctlplane.localdomain:8787/rhceph/rhceph-4-rhel8:latest, name=ceph-osd-5)
+Jan 14 16:58:59 overcloud-cephstorage-2 podman[19667]: 2021-01-14 16:58:59.424525557 +0000 UTC m=+0.443108087 container start 2c1dc27c12687000b186a71c870d0613c032965b42eae03f7b50ea3fceccde92 (image=undercloud.ctlplane.localdomain:8787/rhceph/rhceph-4-rhel8:latest, name=ceph-osd-5)
+Jan 14 16:59:00 overcloud-cephstorage-2 podman[19781]: 2021-01-14 16:59:00.050705915 +0000 UTC m=+0.154419571 container died 3323392dc2ba53c7f5dddd15648b21556d930b2239e757c3ddac3e2cefe80d10 (image=undercloud.ctlplane.localdomain:8787/rhceph/rhceph-4-rhel8:latest, name=ceph-osd-2)
+Jan 14 16:59:00 overcloud-cephstorage-2 systemd[1]: ceph-osd@8.service: Service RestartSec=10s expired, scheduling restart.
+Jan 14 16:59:00 overcloud-cephstorage-2 systemd[1]: ceph-osd@8.service: Scheduled restart job, restart counter is at 2.
+Jan 14 16:59:00 overcloud-cephstorage-2 podman[19781]: 2021-01-14 16:59:00.125046404 +0000 UTC m=+0.228760028 container remove 3323392dc2ba53c7f5dddd15648b21556d930b2239e757c3ddac3e2cefe80d10 (image=undercloud.ctlplane.localdomain:8787/rhceph/rhceph-4-rhel8:latest, name=ceph-osd-2)
+Jan 14 16:59:00 overcloud-cephstorage-2 systemd[1]: ceph-osd@2.service: Main process exited, code=exited, status=1/FAILURE
+Jan 14 16:59:00 overcloud-cephstorage-2 systemd[1]: ceph-osd@2.service: Failed with result 'exit-code'.
+Jan 14 16:59:00 overcloud-cephstorage-2 podman[19793]: Error: Failed to evict container: "": Failed to find container "ceph-osd-8" in st
+ate: no container with name or ID ceph-osd-8 found: no such container
+Jan 14 16:59:00 overcloud-cephstorage-2 podman[19819]: 2021-01-14 16:59:00.488409559 +0000 UTC m=+0.191534068 container create 3c7cd4832
+30e37951cb0bfbef43134242fa4c289371f8fd0b77caec79fd4d36f (image=undercloud.ctlplane.localdomain:8787/rhceph/rhceph-4-rhel8:latest, name=c
+eph-osd-8)
+Jan 14 16:59:00 overcloud-cephstorage-2 podman[19819]: 2021-01-14 16:59:00.720478003 +0000 UTC m=+0.423602485 container init 3c7cd483230
+e37951cb0bfbef43134242fa4c289371f8fd0b77caec79fd4d36f (image=undercloud.ctlplane.localdomain:8787/rhceph/rhceph-4-rhel8:latest, name=ceph-osd-8)
+
+http://pastebin.test.redhat.com/931605
+
 ```
 
 

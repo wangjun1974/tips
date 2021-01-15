@@ -271,6 +271,8 @@ inspection_extras = false
 undercloud_debug = false
 enable_tempest = false
 enable_ui = false
+clean_nodes=true
+
 
 [auth]
 undercloud_admin_password = redhat

@@ -10132,6 +10132,18 @@ podman run --name poc-registry -d -p 5000:5000 \
 localhost/docker-registry:latest 
 EOF
 
+# 经实际验证 tripleo 与这种认证方式不兼容
+# 因此在创建为 tripleo 工作的 registry 时，可取消认证部分
+cat > /usr/local/bin/localregistry.sh << 'EOF'
+#!/bin/bash
+podman run --name poc-registry -d -p 5000:5000 \
+-v /opt/registry/data:/var/lib/registry:z \
+-v /opt/registry/certs:/certs:z \
+-e REGISTRY_HTTP_TLS_CERTIFICATE=/certs/domain.crt \
+-e REGISTRY_HTTP_TLS_KEY=/certs/domain.key \
+localhost/docker-registry:latest 
+EOF
+
 chmod +x /usr/local/bin/localregistry.sh
 
 /usr/local/bin/localregistry.sh

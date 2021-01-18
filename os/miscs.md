@@ -10283,3 +10283,15 @@ EOF
 yum install -y tar
 
 ```
+
+
+### network manager 设置 vlan 类型连接，将 ip 地址设置在此连接上
+```
+nmcli con add type vlan con-name ens3-vlan-12 dev ens3 id 12
+nmcli con mod ens3-vlan-12 \
+    connection.autoconnect 'yes'
+    ipv4.method 'manual' \
+    ipv4.address '10.66.208.237/24' \
+    ipv4.gateway '10.66.208.254' \
+    ipv4.dns '10.64.63.6'
+```

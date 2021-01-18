@@ -10295,3 +10295,23 @@ nmcli con mod ens3-vlan-12 \
     ipv4.gateway '10.66.208.254' \
     ipv4.dns '10.64.63.6'
 ```
+
+
+
+### osp16.1 生成本地 yum repo 文件
+```
+ 
+> /etc/yum.repos.d/osp.repo 
+
+for i in rhel-8-for-x86_64-baseos-eus-rpms rhel-8-for-x86_64-appstream-eus-rpms rhel-8-for-x86_64-highavailability-eus-rpms ansible-2.9-for-rhel-8-x86_64-rpms openstack-16.1-for-rhel-8-x86_64-rpms fast-datapath-for-rhel-8-x86_64-rpms rhceph-4-tools-for-rhel-8-x86_64-rpms advanced-virt-for-rhel-8-x86_64-rpms
+do
+cat >> /etc/yum.repos.d/osp.repo << EOF
+[$i]
+name=$i
+baseurl=file:///var/www/html/repos/osp16.1/$i/
+enabled=1
+gpgcheck=0
+
+EOF
+done
+```

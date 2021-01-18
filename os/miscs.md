@@ -10260,3 +10260,26 @@ parameter_defaults:
   DockerInsecureRegistryAddress:
     - helper.example.com:5000
 ```
+
+
+
+### install tar on rhel8.2 with rhel 8.2 iso
+```
+mount -o loop /dev/sr0 /mnt
+cat > /etc/yum.repos.d/local.repo << EOF
+[baseos]
+name=baseos
+baseurl=file:///mnt/BaseOS
+enabled=1
+gpgcheck=0
+
+[appstream]
+name=appstream
+baseurl=file:///mnt/AppStream
+enabled=1
+gpgcheck=0
+EOF
+
+yum install -y tar
+
+```

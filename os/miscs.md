@@ -10372,3 +10372,16 @@ virsh net-autostart --network br0
 
 virt-install --name=jwang-helper-undercloud --vcpus=4 --ram=32768 --disk path=/data/kvm/jwang-helper-undercloud.qcow2,bus=virtio,size=100 --os-variant rhel8.0 --network network=openshift4v6,model=virtio --boot menu=on --location /root/jwang/isos/rhel-8.2-x86_64-dvd.iso --graphics none --initrd-inject /tmp/ks-helper.cfg --extra-args='ks=file:/ks-helper.cfg console=ttyS0'
 ```
+
+
+### 使用 ipmitool 控制节点电源状态
+```
+# 检查节点的电源状态 
+time ipmitool -I lanplus -H 172.16.0.95 -L ADMINISTRATOR -p 6232 -U admin power status
+
+# 打开节点电源
+time ipmitool -I lanplus -H 172.16.0.95 -L ADMINISTRATOR -p 6232 -U admin power on
+
+# 关闭节点电源
+time ipmitool -I lanplus -H 172.16.0.95 -L ADMINISTRATOR -p 6232 -U admin power off
+```

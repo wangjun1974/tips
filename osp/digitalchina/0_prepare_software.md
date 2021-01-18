@@ -271,7 +271,7 @@ inspection_extras = true
 undercloud_debug = false
 enable_tempest = false
 enable_ui = false
-clean_nodes=true
+clean_nodes = true
 
 
 [auth]

@@ -10401,3 +10401,13 @@ openstack baremetal node set --property capabilities='node:cephstorage-0,boot_op
 openstack baremetal node set --property capabilities='node:cephstorage-1,boot_option:local' overcloud-ceph02
 openstack baremetal node set --property capabilities='node:cephstorage-2,boot_option:local' overcloud-ceph03
 ```
+
+
+
+### overcloud deploy 报错信息
+```
+UnicodeEncodeError: 'ascii' codec can't encode character '\u2192' in position 1171: ordinal not in range(128)
+
+# 目前怀疑需要在 undercloud 的 bash 里设置 LC_ALL=en_US.UTF-8
+export LC_ALL=en_US.UTF-8
+```

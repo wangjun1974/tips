@@ -10375,6 +10375,7 @@ virt-install --name=jwang-helper-undercloud --vcpus=4 --ram=32768 --disk path=/d
 
 
 ### 使用 ipmitool 控制节点电源状态
+https://linux.die.net/man/1/ipmitool
 ```
 # 检查节点的电源状态 
 time ipmitool -I lanplus -H 172.16.0.95 -L ADMINISTRATOR -p 6232 -U admin power status
@@ -10384,4 +10385,19 @@ time ipmitool -I lanplus -H 172.16.0.95 -L ADMINISTRATOR -p 6232 -U admin power 
 
 # 关闭节点电源
 time ipmitool -I lanplus -H 172.16.0.95 -L ADMINISTRATOR -p 6232 -U admin power off
+```
+
+
+### 为节点设置 Tag 
+```
+openstack baremetal node set --property capabilities='node:controller-0,boot_option:local' overcloud-ctrl01
+openstack baremetal node set --property capabilities='node:controller-1,boot_option:local' overcloud-ctrl02
+openstack baremetal node set --property capabilities='node:controller-2,boot_option:local' overcloud-ctrl03
+
+openstack baremetal node set --property capabilities='node:compute-0,boot_option:local' overcloud-compute01
+openstack baremetal node set --property capabilities='node:compute-1,boot_option:local' overcloud-compute02
+
+openstack baremetal node set --property capabilities='node:cephstorage-0,boot_option:local' overcloud-ceph01
+openstack baremetal node set --property capabilities='node:cephstorage-1,boot_option:local' overcloud-ceph02
+openstack baremetal node set --property capabilities='node:cephstorage-2,boot_option:local' overcloud-ceph03
 ```

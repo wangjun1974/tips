@@ -10319,6 +10319,9 @@ done
 
 ### 安装 helper 虚拟机
 参考以下链接
+https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/7/html/networking_guide/sec-network_bridging_using_the_networkmanager_command_line_tool_nmcli
+
+参考以下链接
 https://medium.com/@kbidarkar/configuring-bridges-and-vlans-using-nmcli-8cb79f45d3a6
 
 创建网桥并且附加 vlan interface 
@@ -10326,6 +10329,7 @@ https://medium.com/@kbidarkar/configuring-bridges-and-vlans-using-nmcli-8cb79f45
 ```
 # 创建 bridge 类型的 conn br0
 nmcli con add type bridge con-name br0 ifname br0
+# (可选) 根据实际情况设置 bridge.stp，有时可能因为 bridge.stp 设置导致网络通信不正常
 nmcli con mod br0 bridge.stp no
 
 # 创建 vlan 类型的 conn ens3.12 设置 master 为 br0 

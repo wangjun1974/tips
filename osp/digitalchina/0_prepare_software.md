@@ -267,7 +267,7 @@ local_subnet = ctlplane-subnet
 #generate_service_certificate = true
 #certificate_generation_ca = local
 local_interface = ens10
-inspection_extras = false
+inspection_extras = true
 undercloud_debug = false
 enable_tempest = false
 enable_ui = false
@@ -282,7 +282,8 @@ cidr = 192.0.2.0/24
 dhcp_start = 192.0.2.5
 dhcp_end = 192.0.2.24
 inspection_iprange = 192.0.2.100,192.0.2.120
-gateway = 192.0.2.254
+gateway = 192.0.2.1
+masquerade = true
 EOF
 
 # 9.1 生成容器参数文件 containers-prepare-parameter.yaml

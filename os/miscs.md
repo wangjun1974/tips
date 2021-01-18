@@ -10315,3 +10315,44 @@ gpgcheck=0
 EOF
 done
 ```
+
+
+### 安装 helper 虚拟机
+参考以下链接
+https://medium.com/@kbidarkar/configuring-bridges-and-vlans-using-nmcli-8cb79f45d3a6
+
+创建网桥并且附加 vlan interface 
+
+```
+# 创建 bridge 类型的 conn br0
+nmcli con add type bridge con-name br0 ifname br0
+nmcli con mod br0 bridge.stp no
+
+# 创建 vlan 类型的 conn ens3.12 设置 master 为 br0 
+nmcli con add type vlan con-name ens3.12 dev ens3 id 12 master br0 connection.autoconnect 'yes'
+
+# 为 br0 设置 ip 地址
+nmcli con mod br0 \
+    connection.autoconnect 'yes'
+    ipv4.method 'manual' \
+    ipv4.address '10.66.208.237/24' \
+    ipv4.gateway '10.66.208.254' \
+    ipv4.dns '10.64.63.6'
+
+定义 libvirt network ，使用 host birdge
+
+# 创建新的 libvirt network br0
+cat << EOF > /root/host-bridge.xml
+<network>
+  <name>br0</name>
+  <forward mode="bridge"/>
+  <bridge name="br0"/>
+</network>
+EOF
+
+virsh net-define /root/host-bridge.xml
+virsh net-start br0
+virsh net-autostart --network br0
+
+virt-install --name=jwang-helper-undercloud --vcpus=4 --ram=32768 --disk path=/data/kvm/jwang-helper-undercloud.qcow2,bus=virtio,size=100 --os-variant rhel8.0 --network network=openshift4v6,model=virtio --boot menu=on --location /root/jwang/isos/rhel-8.2-x86_64-dvd.iso --graphics none --initrd-inject /tmp/ks-helper.cfg --extra-args='ks=file:/ks-helper.cfg console=ttyS0'
+```

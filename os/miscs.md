@@ -10439,6 +10439,20 @@ rendered/container_config_scripts/pacemaker_wait_bundle.sh
 undercloud-install-20210118071347.tar.bzip2
 undercloud-install-20210118080102.tar.bzip2
 
+# 检查当前目录下有哪些文件包含非 ASCII 字符
+LC_ALL=C find . -type f -exec  grep -l '[^[:print:]]' {} \;
+
+# 检查文件里具体哪行包含非 ASCII 字符
+LC_ALL=C grep -Hn '[^[:print:]]' ~/.bash_profile
+
+# 打印文件第 5 行
+sed -n 5p .bash_profile 
+
+# 找到文件里是否包含特殊字符
+grep "$(printf %b '\u2192')" filename
+
+# 查看哪个文件包含字符 \u2192 
+grep -r  $'\u2192' * 
 ```
 
 

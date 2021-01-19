@@ -10481,3 +10481,8 @@ ssh heat-admin@192.0.2.24 date -u
 ```
 
 
+### YAML 的语法
+https://docs.ansible.com/ansible/latest/reference_appendices/YAMLSyntax.html
+
+
+

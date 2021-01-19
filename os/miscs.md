@@ -10421,6 +10421,24 @@ Error ERANGE:  pg_num 128 size 3 would mean 1152 total pgs, which exceeds max 90
 
 解决方法为调大：
 mon_max_pg_per_osd
+
+
+grep $(python3 -c 'print(u"\u2192")') ~/templates/network_data.yaml
+
+# 检查当前目录下有哪些文件包含非 ASCII 字符
+LC_ALL=C grep -l '[^[:print:]]' * -r 
+images/overcloud-full.qcow2
+images/overcloud-full.initrd
+images/overcloud-full.vmlinuz
+images/ironic-python-agent.initramfs
+images/ironic-python-agent.kernel
+nohup.out
+osp16.1-yum-repos-2021-01-15.tar.gz
+rendered/container_config_scripts/pacemaker_restart_bundle.sh
+rendered/container_config_scripts/pacemaker_wait_bundle.sh
+undercloud-install-20210118071347.tar.bzip2
+undercloud-install-20210118080102.tar.bzip2
+
 ```
 
 

@@ -251,12 +251,12 @@ overcloud 网络<br>
 (undercloud) [stack@undercloud ~]$ cat > ~/templates/cephstorage.yaml << EOF
 parameter_defaults:
   CephConfigOverrides:
-    mon_max_pg_per_osd: 300
+    mon_max_pg_per_osd: 500
   CephAnsibleDisksConfig:
     devices:
-      - /dev/vdb
-      - /dev/vdc
-      - /dev/vdd
+      - /dev/disk/by-path/pci-0000:00:09.0
+      - /dev/disk/by-path/pci-0000:00:0a.0
+      - /dev/disk/by-path/pci-0000:00:0b.0
     osd_scenario: lvm
     osd_objectstore: bluestore
 EOF

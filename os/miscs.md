@@ -10426,3 +10426,11 @@ mon_max_pg_per_osd
 
 ### TripleO service deployment steps
 https://jaosorior.dev/2018/tripleo-service-deployment-steps/
+
+
+
+### 获取 introspection 信息里的磁盘
+```
+# 根据 introspection 信息查看磁盘
+cat overcloud-ceph03.json | jq ".inventory.disks[].by_path" 
+```

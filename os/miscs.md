@@ -10434,3 +10434,50 @@ https://jaosorior.dev/2018/tripleo-service-deployment-steps/
 # 根据 introspection 信息查看磁盘
 cat overcloud-ceph03.json | jq ".inventory.disks[].by_path" 
 ```
+
+
+### 使用 by-path 的 disk 来描述 ceph osd disk
+```
+cat > ~/templates/cephstorage.yaml
+parameter_defaults:
+  CephConfigOverrides:
+    mon_max_pg_per_osd: 500
+  CephAnsibleDiskConfig:
+    devices:
+      - /dev/disk/by-path/pci-0000:00:09.0
+      - /dev/disk/by-path/pci-0000:00:0a.0
+      - /dev/disk/by-path/pci-0000:00:0b.0
+    osd_scenario: lvm
+    osd_objectstore: bluestore
+```
+
+
+
+### 检查 overcloud 节点时间是否同步
+参考: 
+https://stackoverflow.com/questions/9393038/ssh-breaks-out-of-while-loop-in-bash
+
+```
+# ssh 会把其他内容从标准输入里吃掉
+# 可以在 ssh 命令里添加 < /dev/null
+(undercloud) [stack@undercloud ~]$ openstack server list -f value -c Networks | awk -F'=' '{print $2}' | while read i ; do echo ssh heat-admin@$i date -u "< /dev/null"  ; echo echo ; done 
+
+#!/bin/bash
+ssh heat-admin@192.0.2.8 date -u < /dev/null 
+echo
+ssh heat-admin@192.0.2.14 date -u 
+echo
+ssh heat-admin@192.0.2.12 date -u
+echo
+ssh heat-admin@192.0.2.22 date -u
+echo
+ssh heat-admin@192.0.2.11 date -u
+echo
+ssh heat-admin@192.0.2.17 date -u
+echo
+ssh heat-admin@192.0.2.18 date -u
+echo
+ssh heat-admin@192.0.2.24 date -u
+```
+
+

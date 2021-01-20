@@ -10547,3 +10547,11 @@ https://docs.ansible.com/ansible/latest/reference_appendices/YAMLSyntax.html
 
 
 
+### install undercloud helper 
+```
+# 清理磁盘
+qemu-img create -f qcow2 /data/kvm/jwang-helper-undercloud.qcow2 120G
+
+# 安装
+virt-install --name=jwang-helper-undercloud --vcpus=2 --ram=4096 --disk path=/data/kvm/jwang-helper-undercloud.qcow2,bus=virtio,size=100 --os-variant rhel8.0 --network network=openshift4v6,model=virtio --boot menu=on --location /root/jwang/isos/rhel-8.2-x86_64-dvd.iso --initrd-inject /tmp/ks-helper.cfg --extra-args='ks=file:/ks-helper.cfg console=ttyS0'
+```

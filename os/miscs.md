@@ -9601,6 +9601,11 @@ firefox
 EOF
 ```
 
+在 kickstart 里添加 kernel params 的例子<br>
+https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/7/html/networking_guide/sec-disabling_consistent_network_device_naming
+```
+   bootloader --append="crashkernel=auto net.ifnames=0 biosdevname=0"
+```
 
 
 ### 介绍 lokkit 的链接

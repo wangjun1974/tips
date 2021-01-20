@@ -115,4 +115,54 @@ EOF
 
 # 检查 undercloud ctlplane-subnet 的 dns_nameservers
 (undercloud) [stack@undercloud ~]$ openstack subnet show ctlplane-subnet -c dns_nameservers -f value
+
+# 更新 ~/templates/environments/network-environment.yaml 的 dns 配置
+(undercloud) [stack@undercloud ~]$ sed -i 's/  DnsServers: \[\]/  DnsServers: ["192.168.122.3"]/' ~/templates/environments/network-environment.yaml
+(undercloud) [stack@undercloud ~]$ grep DnsServers ~/templates/environments/network-environment.yaml
+
+# 生成 ~/templates/custom-domain.yaml 文件
+(undercloud) [stack@undercloud ~]$ THT=/usr/share/openstack-tripleo-heat-templates/
+(undercloud) [stack@undercloud ~]$ sed 's/localdomain/example.com/' $THT/environments/predictable-placement/custom-domain.yaml | tee ~/templates/custom-domain.yaml
+
+# 拷贝 enable-tls.yaml, inject-trust-anchor.yaml 
+[stack@undercloud ~]$ cp ~/rendered/environments/ssl/enable-tls.yaml ~/templates
+[stack@undercloud ~]$ cp ~/rendered/environments/ssl/inject-trust-anchor.yaml ~/templates/inject-trust-anchor.yaml
+
+# 替换 inject-trust-anchor.yaml 里的相对路径到绝对路径
+[stack@undercloud ~]$ sed -i 's#\.\./\.\.#/usr/share/openstack-tripleo-heat-templates#' ~/templates/inject-trust-anchor.yaml
+[stack@undercloud ~]$ grep NodeTLSCAData ~/templates/inject-trust-anchor.yaml
+
+# 生成 private ssl key
+[stack@undercloud ~]$ openssl genrsa -out ~/templates/overcloud-privkey.pem 2048
+
+# 生成自签名证书
+[stack@undercloud ~]$ openssl req -new -x509 -key ~/templates/overcloud-privkey.pem -out ~/templates/overcloud-cacert.pem -days 365 -subj '/C=US/ST=NC/L=Raleigh/O=Red Hat/OU=QE/CN=overcloud.example.com'
+
+# 查看生成的自签名证书
+[stack@undercloud ~]$ openssl x509 -in ~/templates/overcloud-cacert.pem -text -noout
+
+# 拷贝自签名证书和 IPA CA 证书到 undercloud 的 trusted store
+[stack@undercloud ~]$ cat ~/templates/overcloud-cacert.pem /etc/ipa/ca.crt  > ~/cacert.pem
+[stack@undercloud ~]$ sudo cp ~/cacert.pem /etc/pki/ca-trust/source/anchors/ca.crt.pem
+[stack@undercloud ~]$ sudo update-ca-trust extract
+
+# 在 enable-tls.yaml 中添加 ca cert
+[stack@undercloud ~]$ cd ~/templates
+[stack@undercloud templates]$ sed -i -e '/The contents of your certificate go here/r overcloud-cacert.pem' -e '/The contents of your certificate go here/ d' enable-tls.yaml
+[stack@undercloud templates]$ sed -i  -e '/-----BEGIN CERT/,/-----END CERT/{s/^/    /g}' enable-tls.yaml
+
+# 在 enable-tls.yaml 中添加 ssl private key
+[stack@undercloud templates]$ sed -i -e '/The contents of the private key go here/r overcloud-privkey.pem' -e '/The contents of the private key go here/ d' enable-tls.yaml
+[stack@undercloud templates]$ sed -i -e '/-----BEGIN RSA/,/-----END RSA/{s/^/    /g}' enable-tls.yaml
+
+# 在 enable-tls.yaml 中设置 PublicTLSCAFile 指向 /etc/pki/ca-trust/source/anchors/ca.crt.pem
+(undercloud) [stack@undercloud templates]$ sed -i "s#PublicTLSCAFile: ''#PublicTLSCAFile: '/etc/pki/ca-trust/source/anchors/ca.crt.pem'#" enable-tls.yaml
+
+# 在 inject-trust-anchor.yaml 中添加 cacert.pem
+[stack@undercloud templates]$ sed -i -e '/The contents of your certificate go here/r /home/stack/cacert.pem' -e '/The contents of your certificate go here/ d' inject-trust-anchor.yaml
+[stack@undercloud templates]$ sed -i  -e '/-----BEGIN CERT/,/-----END CERT/{s/^/    /g}' inject-trust-anchor.yaml
+
+# 检查 enable-tls.yaml 和 inject-trust-anchor.yaml
+[stack@undercloud templates]$ cat enable-tls.yaml
+[stack@undercloud templates]$ cat inject-trust-anchor.yaml
 ```

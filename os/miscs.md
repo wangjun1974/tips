@@ -10569,3 +10569,10 @@ virt-install --name=jwang-helper-undercloud --vcpus=2 --ram=4096 --disk path=/da
 # 不配置图形环境
 virt-install --name=jwang-helper-undercloud --vcpus=2 --ram=4096 --disk path=/data/kvm/jwang-helper-undercloud.qcow2,bus=virtio,size=100 --os-variant rhel8.0 --network network=openshift4v6,model=virtio --boot menu=on --graphics none --location /root/jwang/isos/rhel-8.2-x86_64-dvd.iso --initrd-inject /tmp/ks-helper.cfg --extra-args='ks=file:/ks-helper.cfg console=ttyS0 nameserver=192.168.8.1 ip=192.168.8.20::192.168.8.1:255.255.255.0:helper.example.com:ens2:none'
 ```
+
+
+### ipa server 相关内容
+```
+卸载 ipa server 
+ipa-server-install --uninstall
+```

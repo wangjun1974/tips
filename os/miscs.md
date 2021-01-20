@@ -9541,10 +9541,11 @@ subscription.operators.coreos.com/codeready-workspaces created
 
 
 
-### RHEL8 minimal kickstart file
+### RHEL8 kickstart file
 可以从网址生成
 https://access.redhat.com/labsinfo/kickstartconfig
 
+RHEL8 minimal kickstart file
 ```
 cat > /tmp/ks.cfg <<'EOF'
 lang en_US
@@ -9568,6 +9569,34 @@ firstboot --disable
 %packages
 @^minimal-environment
 kexec-tools
+%end
+EOF
+```
+
+RHEL8 server with gui kickstart file
+```
+cat > /tmp/ks-helper.cfg <<'EOF'
+lang en_US
+keyboard us
+ignoredisk --only-use=vda
+timezone Asia/Shanghai --isUtc
+rootpw $1$/5O3zdx8$/h6dTG0k/W9Pso5SXHSOc/ --iscrypted
+#platform x86, AMD64, or Intel EM64T
+reboot
+text
+cdrom
+bootloader --location=mbr --append="rhgb quiet crashkernel=auto"
+zerombr
+clearpart --all --initlabel
+autopart
+network --device=ens3 --hostname=helper.example.com --bootproto=static --ip=192.168.8.20 --netmask=255.255.255.0 --gateway=192.168.8.1 --nameserver=192.168.8.1
+auth --passalgo=sha512 --useshadow
+selinux --enforcing
+firewall --enabled --ssh
+firstboot --disable
+%packages
+@^graphical-server-environment
+firefox
 %end
 EOF
 ```

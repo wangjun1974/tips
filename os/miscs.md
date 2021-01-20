@@ -10569,8 +10569,17 @@ virt-install --name=jwang-helper-undercloud --vcpus=2 --ram=4096 --disk path=/da
 # 不配置图形环境
 virt-install --name=jwang-helper-undercloud --vcpus=2 --ram=4096 --disk path=/data/kvm/jwang-helper-undercloud.qcow2,bus=virtio,size=100 --os-variant rhel8.0 --network network=openshift4v6,model=virtio --boot menu=on --graphics none --location /root/jwang/isos/rhel-8.2-x86_64-dvd.iso --initrd-inject /tmp/ks-helper.cfg --extra-args='ks=file:/ks-helper.cfg console=ttyS0 nameserver=192.168.8.1 ip=192.168.8.20::192.168.8.1:255.255.255.0:helper.example.com:ens3:none'
 
-# 删除 undercloud 的 ipv4.dns 和设置 ipv6.ignore-auto-dns 为 yes
+# 删除 undercloud 的 connection ens3 的 ipv4.dns 和设置 ipv6.ignore-auto-dns 为 yes
 (undercloud) [stack@undercloud ~]$ sudo nmcli con mod ens3 ipv4.dns '' ipv6.ignore-auto-dns 'yes'
+
+# 查看 arp
+(undercloud) [stack@undercloud ~]$ ip neigh | grep 192.168.122.3
+192.168.122.3 dev ens12 lladdr 52:54:00:d7:3f:90 STALE
+
+# 安装完 ipa 之后，开放防火墙
+https://computingforgeeks.com/how-to-install-and-configure-freeipa-server-on-rhel-centos-8/
+firewall-cmd --add-service={http,https,dns,ntp,freeipa-ldap,freeipa-ldaps} --permanent
+firewall-cmd --reload
 ```
 
 

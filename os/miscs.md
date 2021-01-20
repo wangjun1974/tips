@@ -10564,10 +10564,13 @@ qemu-img create -f qcow2 /data/kvm/jwang-helper-undercloud.qcow2 100G
 # https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/8/html/system_design_guide/installer-troubleshooting_system-design-guide#ip-boot-option-format-error_troubleshooting-after-installation
 
 # 配置图形环境
-virt-install --name=jwang-helper-undercloud --vcpus=2 --ram=4096 --disk path=/data/kvm/jwang-helper-undercloud.qcow2,bus=virtio,size=100 --os-variant rhel8.0 --network network=openshift4v6,model=virtio --boot menu=on --location /root/jwang/isos/rhel-8.2-x86_64-dvd.iso --initrd-inject /tmp/ks-helper.cfg --extra-args='ks=file:/ks-helper.cfg nameserver=192.168.8.1 ip=192.168.8.20::192.168.8.1:255.255.255.0:helper.example.com:ens2:none'
+virt-install --name=jwang-helper-undercloud --vcpus=2 --ram=4096 --disk path=/data/kvm/jwang-helper-undercloud.qcow2,bus=virtio,size=100 --os-variant rhel8.0 --network network=openshift4v6,model=virtio --boot menu=on --location /root/jwang/isos/rhel-8.2-x86_64-dvd.iso --initrd-inject /tmp/ks-helper.cfg --extra-args='ks=file:/ks-helper.cfg nameserver=192.168.8.1 ip=192.168.8.20::192.168.8.1:255.255.255.0:helper.example.com:ens3:none'
 
 # 不配置图形环境
-virt-install --name=jwang-helper-undercloud --vcpus=2 --ram=4096 --disk path=/data/kvm/jwang-helper-undercloud.qcow2,bus=virtio,size=100 --os-variant rhel8.0 --network network=openshift4v6,model=virtio --boot menu=on --graphics none --location /root/jwang/isos/rhel-8.2-x86_64-dvd.iso --initrd-inject /tmp/ks-helper.cfg --extra-args='ks=file:/ks-helper.cfg console=ttyS0 nameserver=192.168.8.1 ip=192.168.8.20::192.168.8.1:255.255.255.0:helper.example.com:ens2:none'
+virt-install --name=jwang-helper-undercloud --vcpus=2 --ram=4096 --disk path=/data/kvm/jwang-helper-undercloud.qcow2,bus=virtio,size=100 --os-variant rhel8.0 --network network=openshift4v6,model=virtio --boot menu=on --graphics none --location /root/jwang/isos/rhel-8.2-x86_64-dvd.iso --initrd-inject /tmp/ks-helper.cfg --extra-args='ks=file:/ks-helper.cfg console=ttyS0 nameserver=192.168.8.1 ip=192.168.8.20::192.168.8.1:255.255.255.0:helper.example.com:ens3:none'
+
+# 删除 undercloud 的 ipv4.dns 和设置 ipv6.ignore-auto-dns 为 yes
+(undercloud) [stack@undercloud ~]$ sudo nmcli con mod ens3 ipv4.dns '' ipv6.ignore-auto-dns 'yes'
 ```
 
 
@@ -10576,3 +10579,5 @@ virt-install --name=jwang-helper-undercloud --vcpus=2 --ram=4096 --disk path=/da
 卸载 ipa server 
 ipa-server-install --uninstall
 ```
+
+

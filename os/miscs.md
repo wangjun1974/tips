@@ -10580,6 +10580,10 @@ virt-install --name=jwang-helper-undercloud --vcpus=2 --ram=4096 --disk path=/da
 https://computingforgeeks.com/how-to-install-and-configure-freeipa-server-on-rhel-centos-8/
 firewall-cmd --add-service={http,https,dns,ntp,freeipa-ldap,freeipa-ldaps} --permanent
 firewall-cmd --reload
+
+# 部署报错
+# tripleoclient.exceptions.ConfigDownloadInProgress: Config download already in progress with execution id 5881cbf1-1058-4833-94a2-2c8bc595adea for stack overcloud
+# Bug 1892679 - 'Overcloud Deployed with error' but 'openstack overcloud failures' shows no ansible error log.
 ```
 
 
@@ -10588,5 +10592,39 @@ firewall-cmd --reload
 卸载 ipa server 
 ipa-server-install --uninstall
 ```
+
+
+### linux 配置 pptp 客户端
+https://linuxconfig.org/how-to-establish-pptp-vpn-client-connection-on-centos-rhel-7-linux
+```
+# 安装 pptp 客户端
+yum install pptp
+
+# 加载内核模块
+modprobe nf_conntrack_pptp
+
+# 添加认证信息到 /etc/ppp/chap-secrets 文件
+# 其中用户名是 admin 口令是 00000000
+echo 'admin PPTP 00000000 *' >> /etc/ppp/chap-secrets
+
+# 生成配置文件
+# 服务器地址是 36.110.27.220
+mkdir -p /etc/ppp/peers
+cat > /etc/ppp/peers/linuxconfig << EOF
+pty "pptp 36.110.27.220 --nolaunchpppd"
+name wangjun
+remotename PPTP
+require-mppe-128
+file /etc/ppp/options.pptp
+ipparam linuxconfig
+EOF
+
+# 建立 pptp 连接
+pppd call linuxconfig
+
+# 添加到 192.168.10.0/24 的路由
+ip route add 192.168.10.0/24 via 36.110.27.220 dev ppp0
+```
+
 
 

@@ -10650,4 +10650,29 @@ bridge link show
 6: virbr0-nic: <BROADCAST,MULTICAST> mtu 1500 master virbr0 state disabled priority 32 cost 100
 15: ens35f1.10@ens35f1: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 master br0 state forwarding priority 32 cost 100
 16: vnet0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 master br0 state forwarding priority 32 cost 100
+
+
+ sudo podman logs  ironic_inspector_dnsmasq
+...
+
++ echo 'Running command: '\''/sbin/dnsmasq --conf-file=/etc/ironic-inspector/dnsmasq.conf -k --log-facility=/var/log/ironic-inspector/dnsmasq.log'\'''
+Running command: '/sbin/dnsmasq --conf-file=/etc/ironic-inspector/dnsmasq.conf -k --log-facility=/var/log/ironic-inspector/dnsmasq.log'
++ exec /sbin/dnsmasq --conf-file=/etc/ironic-inspector/dnsmasq.conf -k --log-facility=/var/log/ironic-inspector/dnsmasq.log
+
+dnsmasq: failed to bind DHCP server socket: Address already in use
+
+# 禁用 default 网络 autostart
+sudo virsh net-autostart --network default --disable
+
+(undercloud) [stack@undercloud ~]$ sudo systemctl -l | grep ironic | grep dns
+● tripleo_ironic_inspector_dnsmasq.service                                                                                             loaded failed     failed          ironic_inspector_dnsmasq container                                     
+● tripleo_ironic_inspector_dnsmasq_healthcheck.timer                                                                                   loaded failed     failed          ironic_inspector_dnsmasq container healthcheck  
+
+# 重启  tripleo_ironic_inspector_dnsmasq.service 服务
+(undercloud) [stack@undercloud ~]$ sudo systemctl restart  tripleo_ironic_inspector_dnsmasq.service
+
+
+(undercloud) [stack@undercloud ~]$ sudo systemctl -l | grep ironic | grep dns   tripleo_ironic_inspector_dnsmasq.service                                                                                             loaded active     running         ironic_inspector_dnsmasq container                                       
+tripleo_ironic_inspector_dnsmasq_healthcheck.timer                                                                                   loaded active     waiting         ironic_inspector_dnsmasq container healthcheck 
+
 ```

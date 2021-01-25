@@ -10623,8 +10623,31 @@ EOF
 pppd call linuxconfig
 
 # 添加到 192.168.10.0/24 的路由
-ip route add 192.168.10.0/24 via 36.110.27.220 dev ppp0
+ip route add 192.168.10.0/24 via 36.110.27.220 dev ppp0 proto static metric 21
+
+
+vncserver :1
+firewall-cmd --permanent --add-port=5901/tcp
+
+https://access.redhat.com/solutions/5566011
+
+nf_conntrack: default automatic helper assignment has been turned off for security reasons and CT-based  firewall rule not found. Use the iptables CT target to attach helpers instead.
+
+echo "net.netfilter.nf_conntrack_helper = 1" >> /etc/sysctl.conf
+sysctl -p
+
+# 在 Mac 上启动 ftp server
+sudo -s launchctl load -w /System/Library/LaunchDaemons/ftp.plist
 ```
 
 
 
+### rhel 8 列出 bridge 信息
+```
+# 在 rhel 8 上可以用以下命令查看 bridge 的 端口
+bridge link show
+
+6: virbr0-nic: <BROADCAST,MULTICAST> mtu 1500 master virbr0 state disabled priority 32 cost 100
+15: ens35f1.10@ens35f1: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 master br0 state forwarding priority 32 cost 100
+16: vnet0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 master br0 state forwarding priority 32 cost 100
+```

@@ -10650,7 +10650,11 @@ bridge link show
 6: virbr0-nic: <BROADCAST,MULTICAST> mtu 1500 master virbr0 state disabled priority 32 cost 100
 15: ens35f1.10@ens35f1: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 master br0 state forwarding priority 32 cost 100
 16: vnet0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 master br0 state forwarding priority 32 cost 100
+```
 
+
+### 问题定位：introspection 失败 
+```
 
  sudo podman logs  ironic_inspector_dnsmasq
 ...

@@ -10680,4 +10680,9 @@ sudo virsh net-destroy default
 (undercloud) [stack@undercloud ~]$ sudo systemctl -l | grep ironic | grep dns   tripleo_ironic_inspector_dnsmasq.service                                                                                             loaded active     running         ironic_inspector_dnsmasq container                                       
 tripleo_ironic_inspector_dnsmasq_healthcheck.timer                                                                                   loaded active     waiting         ironic_inspector_dnsmasq container healthcheck 
 
+
+# 处于 clean wait 状态的节点如何重新 introspect
+openstack baremetal node abort overcloud-ceph02
+openstack baremetal node manage overcloud-ceph02
+openstack overcloud node introspect overcloud-ceph02 --provide
 ```

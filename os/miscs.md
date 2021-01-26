@@ -10667,6 +10667,7 @@ dnsmasq: failed to bind DHCP server socket: Address already in use
 
 # 禁用 default 网络 autostart
 sudo virsh net-autostart --network default --disable
+sudo virsh net-destroy default
 
 (undercloud) [stack@undercloud ~]$ sudo systemctl -l | grep ironic | grep dns
 ● tripleo_ironic_inspector_dnsmasq.service                                                                                             loaded failed     failed          ironic_inspector_dnsmasq container                                     

@@ -10685,4 +10685,28 @@ tripleo_ironic_inspector_dnsmasq_healthcheck.timer                              
 openstack baremetal node abort overcloud-ceph02
 openstack baremetal node manage overcloud-ceph02
 openstack overcloud node introspect overcloud-ceph02 --provide
+
+for i in $(seq 1 3)
+do
+   echo overcloud-ctrl0$i properties capabilities
+   openstack baremetal node show overcloud-ctrl0$i -f json | jq '.properties.capabilities'
+   echo
+done
+
+for i in $(seq 1 2)
+do
+   echo overcloud-compute0$i properties capabilities
+   openstack baremetal node show overcloud-compute0$i -f json | jq '.properties.capabilities'
+   echo
+done
+
+for i in $(seq 1 3)
+do
+   echo overcloud-ceph0$i properties capabilities
+   openstack baremetal node show overcloud-ceph0$i -f json | jq '.properties.capabilities'
+   echo
+done
+
+
+openstack tripleo container image list | grep docker | tee /tmp/image-list
 ```

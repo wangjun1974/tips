@@ -10709,4 +10709,20 @@ done
 
 
 openstack tripleo container image list | grep docker | tee /tmp/image-list
+
+# https://bugzilla.redhat.com/show_bug.cgi?id=1804045
+sudo openstack tripleo container image push  helper.example.com:5000/rhceph/rhceph-4-rhel8:latest --debug
+
+sudo openstack tripleo container image push  helper.example.com:5000/rhosp-rhel8/openstack-novajoin-notifier:16.1 --debug
+sudo openstack tripleo container image push  helper.example.com:5000/rhosp-rhel8/openstack-novajoin-server:16.1 --debug
+
+
+# 获得用户 client.rgw.overcloud-controller-0.rgw0 的信息
+(undercloud) [stack@undercloud ~]$ ssh heat-admin@overcloud-controller-0.ctlplane.example.com sudo podman exec -it ceph-rgw-overcloud-controller-0-rgw0 ceph auth get client.rgw.overcloud-controller-0.rgw0
+Warning: Permanently added 'overcloud-controller-0.ctlplane.example.com' (ECDSA) to the list of known hosts.
+exported keyring for client.rgw.overcloud-controller-0.rgw0
+[client.rgw.overcloud-controller-0.rgw0]
+        key = AQAxQAhg14TWMBAAqe1E59uXimnMQMOpsEOQog==
+        caps mon = "allow rw"
+        caps osd = "allow rwx"
 ```

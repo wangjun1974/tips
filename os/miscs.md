@@ -10726,3 +10726,23 @@ exported keyring for client.rgw.overcloud-controller-0.rgw0
         caps mon = "allow rw"
         caps osd = "allow rwx"
 ```
+
+
+
+### RHEL6/7/8 性能调优参数
+```
+
+sysctl (RHEL7/8)
+net.core.busy_read=50
+net.core.busy_poll=50
+net.ipv4.tcp_fastopen=3
+net.ipv4.tcp_early_retrans=1
+kernel.numa_balancing=0
+
+sysctl -a | grep net.ipv4.tcp_fastopen
+sysctl -a | grep net.ipv4.tcp_early_retrans
+sysctl -a | grep kernel.numa_balancing
+
+modinfo ixgbe | grep -E "^parm" 
+
+```

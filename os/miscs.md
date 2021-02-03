@@ -10849,3 +10849,19 @@ service_plugins=qos,ovn-router,trunk,segments
 
 
 ```
+
+
+
+### osp16.1 默认安装 overclod ceph pool 详情
+```
+(undercloud) [stack@undercloud ~]$ ssh heat-admin@overcloud-controller-0.ctlplane sudo podman exec -it ceph-mon-overcloud-controller-0 ceph osd pool ls detail 
+Warning: Permanently added 'overcloud-controller-0.ctlplane' (ECDSA) to the list of known hosts.
+pool 1 'vms' replicated size 3 min_size 2 crush_rule 0 object_hash rjenkins pg_num 128 pgp_num 128 autoscale_mode warn last_change 75 flags hashpspool stripe_width 0 application rbd
+pool 2 'volumes' replicated size 3 min_size 2 crush_rule 0 object_hash rjenkins pg_num 128 pgp_num 128 autoscale_mode warn last_change 76 flags hashpspool stripe_width 0 application rbd
+pool 3 'images' replicated size 3 min_size 2 crush_rule 0 object_hash rjenkins pg_num 128 pgp_num 128 autoscale_mode warn last_change 81 flags hashpspool,selfmanaged_snaps stripe_width 0 application rbd
+        removed_snaps [1~3]
+pool 4 '.rgw.root' replicated size 3 min_size 2 crush_rule 0 object_hash rjenkins pg_num 128 pgp_num 128 autoscale_mode warn last_change 43 flags hashpspool stripe_width 0 application rgw
+pool 5 'default.rgw.control' replicated size 3 min_size 2 crush_rule 0 object_hash rjenkins pg_num 128 pgp_num 128 autoscale_mode warn last_change 45 flags hashpspool stripe_width 0 application rgw
+pool 6 'default.rgw.meta' replicated size 3 min_size 2 crush_rule 0 object_hash rjenkins pg_num 128 pgp_num 128 autoscale_mode warn last_change 48 flags hashpspool stripe_width 0 application rgw
+pool 7 'default.rgw.log' replicated size 3 min_size 2 crush_rule 0 object_hash rjenkins pg_num 128 pgp_num 128 autoscale_mode warn last_change 49 flags hashpspool stripe_width 0 application rgw
+```

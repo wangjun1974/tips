@@ -10746,3 +10746,106 @@ sysctl -a | grep kernel.numa_balancing
 modinfo ixgbe | grep -E "^parm" 
 
 ```
+
+
+
+### Connecting OpenStack to Service Telemetry Framework
+https://infrawatch.github.io/documentation/#deploying-to-non-standard-network-topologies_completing-the-stf-configuration
+
+
+
+### osp 16.1 undercloud rabbitmq 服务无法启动问题的分析
+https://bugzilla.redhat.com/show_bug.cgi?id=1847859
+```
+
+# 文件 /var/lib/config-data/puppet-generated/rabbitmq/etc/rabbitmq/rabbitmq-env.conf
+内容如下
+LANG=en_US.UTF-8
+LC_ALL=en_US.UTF-8
+NODE_IP_ADDRESS=
+NODE_PORT=
+RABBITMQ_CTL_DIST_PORT_MAX=25683
+RABBITMQ_CTL_DIST_PORT_MIN=25673
+RABBITMQ_NODENAME=rabbit@undercloud
+export ERL_EPMD_ADDRESS=192.0.2.1
+export ERL_INETRC=/etc/rabbitmq/inetrc
+
+# 因此需要修改 /etc/hosts 文件
+# 让 undercloud 解析到 192.0.2.1 
+(undercloud) [stack@undercloud ~]$ cat /etc/hosts | grep undercloud 
+192.0.2.1 undercloud.ctlplane.example.com undercloud.ctlplane undercloud
+#192.168.122.2 undercloud.example.com undercloud
+
+# 修改完后 rabbitmq 将能启动起来
+(undercloud) [stack@undercloud ~]$ sudo podman ps | grep rabbitmq
+(undercloud) [stack@undercloud ~]$ sudo podman exec -it rabbitmq rabbitmqctl cluster_status
+```
+
+
+
+### 确认 overcloud 满足 openshift 需要
+https://docs.openshift.com/container-platform/4.6/installing/installing_openstack/installing-openstack-installer-kuryr.html#prerequisites
+```
+
+# https://docs.openshift.com/container-platform/4.6/installing/installing_openstack/installing-openstack-installer-kuryr.html#prerequisites
+(undercloud) [stack@undercloud ~]$ ssh heat-admin@overcloud-controller-0.ctlplane sudo grep service_plugin /var/lib/config-data/puppet-generated/neutron/etc/neutron/neutron.conf
+Warning: Permanently added 'overcloud-controller-0.ctlplane' (ECDSA) to the list of known hosts.
+service_plugins=qos,ovn-router,trunk,segments
+
+# 检查本地上游镜像仓库里有 octavia 镜像
+[root@helper ~]# curl https://helper.example.com:5000/v2/_catalog  | jq . | grep octavia
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100  3830  100  3830    0     0  31916      0 --:--:-- --:--:-- --:--:-- 32184
+    "rhosp-rhel8/openstack-octavia-api",
+    "rhosp-rhel8/openstack-octavia-base",
+    "rhosp-rhel8/openstack-octavia-health-manager",
+    "rhosp-rhel8/openstack-octavia-housekeeping",
+    "rhosp-rhel8/openstack-octavia-worker",
+
+# 确认部署完的环境包含 octavia 服务
+(overcloud) [stack@undercloud ~]$ openstack catalog show octavia -f json 
+{
+  "endpoints": [
+    {
+      "id": "6c4deabbdffe458d8169c8b09721a7a3",
+      "interface": "internal",
+      "region_id": "regionOne",
+      "url": "https://overcloud.internalapi.example.com:9876",
+      "region": "regionOne"
+    },
+    {
+      "id": "9497b5e9e052470d9457f445672a6f8e",
+      "interface": "public",
+      "region_id": "regionOne",
+      "url": "https://overcloud.example.com:13876",
+      "region": "regionOne"
+    },
+    {
+      "id": "fe52fa7a79cf41ec93c4917a3fc1e4f2",
+      "interface": "admin",
+      "region_id": "regionOne",
+      "url": "https://overcloud.internalapi.example.com:9876",
+      "region": "regionOne"
+    }
+  ],
+  "id": "5ac2e927cb7748cc8fdbaaf8d3cbe154",
+  "name": "octavia",
+  "type": "load-balancer"
+}
+
+# 列出 octavia provider
+(overcloud) [stack@undercloud ~]$ openstack loadbalancer provider list
++---------+-------------------------------------------------+
+| name    | description                                     |
++---------+-------------------------------------------------+
+| amphora | The Octavia Amphora driver.                     |
+| octavia | Deprecated alias of the Octavia Amphora driver. |
+| ovn     | Octavia OVN driver.                             |
++---------+-------------------------------------------------+
+
+# https://docs.openshift.com/container-platform/4.6/networking/load-balancing-openstack.html#installation-osp-kuryr-octavia-configure
+# kuryr 与 octavia ovn 的集成
+
+
+```

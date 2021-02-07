@@ -10865,3 +10865,384 @@ pool 5 'default.rgw.control' replicated size 3 min_size 2 crush_rule 0 object_ha
 pool 6 'default.rgw.meta' replicated size 3 min_size 2 crush_rule 0 object_hash rjenkins pg_num 128 pgp_num 128 autoscale_mode warn last_change 48 flags hashpspool stripe_width 0 application rgw
 pool 7 'default.rgw.log' replicated size 3 min_size 2 crush_rule 0 object_hash rjenkins pg_num 128 pgp_num 128 autoscale_mode warn last_change 49 flags hashpspool stripe_width 0 application rgw
 ```
+
+
+
+### RGW/S3 Archive Zone goes upstream in Ceph
+https://ceph.io/planet/rgw-s3-archive-zone-goes-upstream-in-ceph/
+
+
+
+### 配置 active-active multi site rgw
+```
+# keepalived.conf
+# 在 haproxy 上优先级最高，是 102
+# 在 haproxy2 上优先级为 101
+# 在 haproxy3 上优先级为 100
+cat /etc/keepalived/keepalived.conf
+vrrp_script chk_haproxy {
+ script "killall -0 haproxy" # check the haproxy process
+ interval 2 # every 2 seconds
+ weight 2 # add 2 points if OK
+}
+vrrp_instance VI_1 {
+ interface eth1 # interface to monitor
+ state MASTER # MASTER on haproxy, BACKUP on haproxy2 and haproxy 3
+ virtual_router_id 51
+ priority 102 # 102 on haproxy, 101 and 100 on haproxy2 and haproxy3
+ virtual_ipaddress {
+  x.x.254.17 # virtual ip address
+ }
+ track_script {
+  chk_haproxy
+ }
+}
+
+# rgw 的 haproxy 配置
+cat /etc/haproxy/haproxy.cfg
+#---------------------------------------------------------------------
+# Example configuration for a possible web application. See the
+# full configuration options online.
+#
+# http://haproxy.1wt.eu/download/1.4/doc/configuration.txt
+#
+#---------------------------------------------------------------------
+#---------------------------------------------------------------------
+# Global settings
+#---------------------------------------------------------------------
+global
+  # to have these messages end up in /var/log/haproxy.log you will
+  # need to:
+  #
+  # 1) configure syslog to accept network log events. This is done
+  # by adding the '-r' option to the SYSLOGD_OPTIONS in
+  # /etc/sysconfig/syslog
+  #
+  # 2) configure local2 events to go to the /var/log/haproxy.log
+  # file. A line like the following can be added to
+  # /etc/sysconfig/syslog
+  #
+  # local2.* /var/log/haproxy.log
+  #
+  log 127.0.0.1 local2
+
+  chroot /var/lib/haproxy
+  pidfile /var/run/haproxy.pid
+  maxconn 4000
+  user haproxy
+  group haproxy
+  daemon
+
+  # turn on stats unix socket
+  stats socket /var/lib/haproxy/stats
+
+#---------------------------------------------------------------------
+# common defaults that all the 'listen' and 'backend' sections will
+# use if not designated in their block
+#---------------------------------------------------------------------
+defaults
+  mode http
+  log global
+  option httplog
+  option dontlognull
+  option http-server-close
+  option forwardfor except 127.0.0.0/8
+  option redispatch
+  retries 3
+  timeout http-request 10s
+  timeout queue 1m
+  timeout connect 10s
+  timeout client 1m
+  timeout server 1m
+  timeout http-keep-alive 10s
+  timeout check 10s
+  maxconn 3000
+
+frontend http_web *:80
+  mode http
+  default_backend rgw
+
+#frontend rgw-https
+#  bind *:443 ssl crt /etc/ssl/private/example.com.pem
+#  default_backend rgw
+
+backend rgw
+  balance roundrobin
+  mode http
+  server rgw1 10.67.128.13:8080 check
+  server rgw2 10.67.128.14:8080 check
+  server rgw3 10.67.128.15:8080 check
+
+# 列出 realm
+radosgw-admin realm list
+{
+  "default_info": "",
+  "realms": []
+}
+
+# 创建 realm，然后列出 realm
+radosgw-admin realm create --rgw-realm=aaa-cloud --default
+radosgw-admin realm list
+{
+  "default_info": "cc03cc5e-a070-4147-b7fb-00f5ae490fa6",
+  "realms": [
+    "aaa-cloud"
+  ]
+}
+
+# 创建 master zonegroup
+radosgw-admin zonegroup create --rgw-zonegroup=sg --rgw-realm=aaa-cloud --master --default
+
+# 查询 zonegroup sg 信息
+radosgw-admin zonegroup get --rgw-zonegroup=sg
+{
+  "id": "008e8788-9efc-4e7e-9e04-719ff8da72ba",
+  "name": "sg",
+  "api_name": "sg",
+  "is_master": "true",
+  "endpoints": [],
+  "hostnames": [],
+  "hostnames_s3website": [],
+  "master_zone": "e544879e-cd5a-424d-96dd-ccf1504429c6",
+  "zones": [
+    {
+      "id": "bb3467a7-9d3d-4a5e-8424-ea0c4ba573f4",
+      "name": "sg-az2",
+      "endpoints": [
+        "http:\/\/x.x.254.17"
+      ],
+      "log_meta": "false",
+      "log_data": "true",
+      "bucket_index_max_shards": 0,
+      "read_only": "false"
+    },
+    {
+      "id": "e544879e-cd5a-424d-96dd-ccf1504429c6",
+      "name": "sg-az1",
+      "endpoints": [
+        "http:\/\/x.x.254.17"
+      ],
+      "log_meta": "true",
+      "log_data": "true",
+      "bucket_index_max_shards": 0,
+      "read_only": "false"
+    }
+  ],
+  "placement_targets": [
+    {
+      "name": "default-placement",
+      "tags": []
+    }
+  ],
+  "default_placement": "default-placement",
+  "realm_id": "b9e54eb7-bd92-4f47-ba87-0991a8b20e5d"
+}
+
+# 创建 master zone sg-az1 
+radosgw-admin zone create --rgw-zonegroup=sg --rgw-zone=sg-az1 --master --default --endpoints=http://x.x.254.17:80
+
+# 列出 master zone sg-az1 信息
+radosgw-admin zone get --rgw-zone=sg-az1
+{
+  "id": "e544879e-cd5a-424d-96dd-ccf1504429c6",
+  "name": "sg-az1",
+  "domain_root": "sg-az1.rgw.data.root",
+  "control_pool": "sg-az1.rgw.control",
+  "gc_pool": "sg-az1.rgw.gc",
+  "log_pool": "sg-az1.rgw.log",
+  "intent_log_pool": "sg-az1.rgw.intent-log",
+  "usage_log_pool": "sg-az1.rgw.usage",
+  "user_keys_pool": "sg-az1.rgw.users.keys",
+  "user_email_pool": "sg-az1.rgw.users.email",
+  "user_swift_pool": "sg-az1.rgw.users.swift",
+  "user_uid_pool": "sg-az1.rgw.users.uid",
+  "system_key": {
+    "access_key": "DFT7FB1DMHLFLY4AYJ2S",
+    "secret_key": "A0orc3jJJIZGYu0sSwouVH1eiLPe6taNKtCqDM3n"
+  },
+  "placement_pools": [
+    {
+      "key": "default-placement",
+      "val": {
+        "index_pool": "sg-az1.rgw.buckets.index",
+        "data_pool": "sg-az1.rgw.buckets.data",
+        "data_extra_pool": "sg-az1.rgw.buckets.extra",
+        "index_type": 0
+      }
+    }
+  ],
+  "metadata_heap": "",
+  "realm_id": "b9e54eb7-bd92-4f47-ba87-0991a8b20e5d"
+}
+
+# 删除 default Zone Group
+radosgw-admin zonegroup remove --rgw-zonegroup=default --rgw-zone=default
+
+radosgw-admin period update --commit
+
+radosgw-admin zone delete --rgw-zone=default
+
+radosgw-admin period update --commit
+
+radosgw-admin zonegroup delete --rgw-zonegroup=default
+
+radosgw-admin period update --commit
+
+radosgw-admin zonegroup list
+read_default_id : 0
+{
+  "default_info": "008e8788-9efc-4e7e-9e04-719ff8da72ba",
+  "zonegroups": [
+    "sg"
+  ]
+}
+
+# 创建 sync user
+radosgw-admin user create --uid="sync-user" --display-name="Synchronization User" --system
+
+radosgw-admin zone modify --rgw-zone=sg-az1 \
+  --access-key=DFT7FB1DMHLFLY4AYJ2S \
+  --secret=A0orc3jJJIZGYu0sSwouVH1eiLPe6taNKtCqDM3n
+
+radosgw-admin period update --commit
+
+# 编辑 /usr/share/ceph-ansible/groups_var/all.yml 
+ceph_conf_overrides:
+  global:
+    osd_pool_default_size: 3
+    osd_pool_default_min_size: 2
+    osd_crush_update_on_start: false
+    mon_osd_full_ratio: .80
+    mon_osd_nearfull_ratio: .70
+  client.rgw.df-rgw-01:
+    rgw_zone: "sg-az1"
+    rgw_zonegroup: "sg"
+  client.rgw.df-rgw-02:
+    rgw_zone: "sg-az1"
+    rgw_zonegroup: "sg"
+  client.rgw.df-rgw-03:
+    rgw_zone: "sg-az1"
+    rgw_zonegroup: "sg"
+
+cd /usr/share/ceph-ansible/
+ansible-playbook rgw-standalone.yml
+
+[root@df-rgw-01 ~]# systemctl restart ceph-radosgw.target
+[root@df-rgw-02 ~]# systemctl restart ceph-radosgw.target
+[root@df-rgw-03 ~]# systemctl restart ceph-radosgw.target
+
+# 在站点 2 配置 
+# 获取 realm
+[root@mh-rgw-01 ~]# radosgw-admin realm pull --url=http://x.x.254.17 \
+  --access-key=DFT7FB1DMHLFLY4AYJ2S \
+  --secret=A0orc3jJJIZGYu0sSwouVH1eiLPe6taNKtCqDM3n
+
+[root@mh-rgw-01 ~]# radosgw-admin realm default --rgw-realm=aaa-cloud
+
+[root@mh-rgw-01 ~]# radosgw-admin realm list
+{
+  "default_info": "b9e54eb7-bd92-4f47-ba87-0991a8b20e5d",
+  "realms": [
+    "aaa-cloud"
+  ]
+}
+
+# pull the period
+[root@mh-rgw-01 ~]# radosgw-admin period pull --url=http://x.x.254.17 \
+  --access-key=DFT7FB1DMHLFLY4AYJ2S \
+  --secret=A0orc3jJJIZGYu0sSwouVH1eiLPe6taNKtCqDM3n
+
+# 创建 secondary zone
+[root@mh-rgw-01 ~]# radosgw-admin zone create --rgw-zonegroup=sg \
+  --rgw-zone=sg-az2 --access-key=DFT7FB1DMHLFLY4AYJ2S \
+  --secret=A0orc3jJJIZGYu0sSwouVH1eiLPe6taNKtCqDM3n \
+  --endpoints=http://x.x.254.17
+
+[root@mh-rgw-01 ~]# radosgw-admin zone list
+{
+  "default_info": "bb3467a7-9d3d-4a5e-8424-ea0c4ba573f4",
+  "zones": [
+    "sg-az2"
+  ]
+}
+
+# update period
+[root@mh-rgw-01 ~]# radosgw-admin period update --commit
+
+# 检查同步状态
+[root@mh-rgw-01 ~]# radosgw-admin sync status
+2017-06-07 06:03:34.094028 7fe206f559c0 0 error in read_id for id : (2) No such file or directory
+2017-06-07 06:03:34.095161 7fe206f559c0 0 error in read_id for id : (2) No such file or directory
+    realm b9e54eb7-bd92-4f47-ba87-0991a8b20e5d (aaa-cloud)
+  zonegroup 008e8788-9efc-4e7e-9e04-719ff8da72ba (sg)
+    zone bb3467a7-9d3d-4a5e-8424-ea0c4ba573f4 (sg-az2)
+metadata sync syncing
+      full sync: 0/64 shards
+      metadata is caught up with master
+      incremental sync: 64/64 shards
+data sync source: e544879e-cd5a-424d-96dd-ccf1504429c6 (sg-az1)
+      syncing
+      full sync: 0/128 shards
+      incremental sync: 128/128 shards
+      data is caught up with source
+
+# 编辑 /usr/share/ceph-ansible/groups_var/all.yml
+[root@mh-rgw-01 ~]# cat /usr/share/ceph-ansible/groups_var/all.yml
+ceph_conf_overrides:
+  global:
+    osd_pool_default_size: 3
+    osd_pool_default_min_size: 2
+    osd_crush_update_on_start: false
+    mon_osd_full_ratio: .80
+    mon_osd_nearfull_ratio: .70
+  client.rgw.mh-rgw-01:
+    rgw_zone: "sg-az2"
+    rgw_zonegroup: "sg"
+  client.rgw.mh-rgw-02:
+    rgw_zone: "sg-az2"
+    rgw_zonegroup: "sg"
+  client.rgw.mh-rgw-03:
+    rgw_zone: "sg-az2"
+    rgw_zonegroup: "sg"
+
+[root@mh-ceph-admin ~]# cd /usr/share/ceph-ansible/
+[root@mh-ceph-admin ceph-ansible]# ansible-playbook rgw-standalone.yml
+
+[root@mh-rgw-01 ~]# systemctl restart ceph-radosgw.target
+[root@mh-rgw-02 ~]# systemctl restart ceph-radosgw.target
+[root@mh-rgw-03 ~]# systemctl restart ceph-radosgw.target
+
+# 设置 s3 格式的 subdomain
+# objstore.aaaconnect.cloud domain will be used for S3 object storage service.
+# 每个用户有自己的 url {bucket-name}.objstore.aaaconnect.cloud
+# 两个站点都需要执行
+
+# 编辑 /usr/share/ceph-ansible/groups_var/all.yml
+[root@mh-ceph-admin ~]# cd /usr/share/ceph-ansible/
+[root@mh-ceph-admin ceph-ansible]# cat groups_var/all.yml
+ceph_conf_overrides:
+  global:
+    osd_pool_default_size: 3
+    osd_pool_default_min_size: 2
+    osd_crush_update_on_start: false
+    mon_osd_full_ratio: .80
+    mon_osd_nearfull_ratio: .70
+  client.rgw.mh-rgw-01:
+    rgw_zone: "sg-az2"
+    rgw_zonegroup: "sg"
+    rgw_dns_name: "objstore.aaaconnect.cloud"
+  client.rgw.mh-rgw-02:
+    rgw_zone: "sg-az2"
+    rgw_zonegroup: "sg"
+    rgw_dns_name: "objstore.aaaconnect.cloud"
+  client.rgw.mh-rgw-03:
+    rgw_zone: "sg-az2"
+    rgw_zonegroup: "sg"
+    rgw_dns_name: "objstore.aaaconnect.cloud"
+
+[root@mh-ceph-admin ~]# cd /usr/share/ceph-ansible/
+[root@mh-ceph-admin ceph-ansible]# ansible-playbook rgw-standalone.yml
+[root@mh-rgw-01 ~]# systemctl restart ceph-radosgw.target
+[root@mh-rgw-02 ~]# systemctl restart ceph-radosgw.target
+[root@mh-rgw-03 ~]# systemctl restart ceph-radosgw.target
+```

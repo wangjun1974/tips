@@ -41,35 +41,17 @@
 # ctrol01 是第一个 controller 
 # 添加 node:controller-0
 # 同时添加 boot_option:local
-(undercloud) [stack@undercloud ~]$ openstack baremetal node set --property capabilities='node:controller-0,boot_option:local,cpu_aes:true,cpu_hugepages:true,cpu_hugepages_1g:true,cpu_vt:true' overcloud-ctrl01
+(undercloud) [stack@undercloud ~]$ openstack baremetal node set --property capabilities='node:controller-0,boot_option:local' overcloud-ctrl01
 
 # 用同样的方法为其他 baremetal node 设置 properties capabilities
 # 注意调整 role 和 index
-(undercloud) [stack@undercloud ~]$ openstack baremetal node show overcloud-ctrl02 -f json | jq '.properties.capabilities'
-"cpu_aes:true,cpu_hugepages:true,cpu_hugepages_1g:true,cpu_vt:true"
-(undercloud) [stack@undercloud ~]$ openstack baremetal node set --property capabilities='node:controller-1,boot_option:local,cpu_aes:true,cpu_hugepages:true,cpu_hugepages_1g:true,cpu_vt:true' overcloud-ctrl02
+(undercloud) [stack@undercloud ~]$ openstack baremetal node set --property capabilities='node:controller-1,boot_option:local' overcloud-ctrl02
+(undercloud) [stack@undercloud ~]$ openstack baremetal node set --property capabilities='node:controller-2,boot_option:local' overcloud-ctrl03
 
-(undercloud) [stack@undercloud ~]$ openstack baremetal node show overcloud-ctrl03 -f json | jq '.properties.capabilities'
-"cpu_aes:true,cpu_hugepages:true,cpu_hugepages_1g:true,cpu_vt:true"
-(undercloud) [stack@undercloud ~]$ openstack baremetal node set --property capabilities='node:controller-2,boot_option:local,cpu_aes:true,cpu_hugepages:true,cpu_hugepages_1g:true,cpu_vt:true' overcloud-ctrl03
+(undercloud) [stack@undercloud ~]$ openstack baremetal node set --property capabilities='node:compute-0,boot_option:local' overcloud-compute01
+(undercloud) [stack@undercloud ~]$ openstack baremetal node set --property capabilities='node:compute-1,boot_option:local' overcloud-compute02
 
-(undercloud) [stack@undercloud ~]$ openstack baremetal node show overcloud-compute01 -f json | jq '.properties.capabilities'
-"cpu_aes:true,cpu_hugepages:true,cpu_hugepages_1g:true,cpu_vt:true"
-(undercloud) [stack@undercloud ~]$ openstack baremetal node set --property capabilities='node:compute-0,boot_option:local,cpu_aes:true,cpu_hugepages:true,cpu_hugepages_1g:true,cpu_vt:true' overcloud-compute01
-
-(undercloud) [stack@undercloud ~]$ openstack baremetal node show overcloud-compute02 -f json | jq '.properties.capabilities'
-"cpu_aes:true,cpu_hugepages:true,cpu_hugepages_1g:true,cpu_vt:true"
-(undercloud) [stack@undercloud ~]$ openstack baremetal node set --property capabilities='node:compute-1,boot_option:local,cpu_aes:true,cpu_hugepages:true,cpu_hugepages_1g:true,cpu_vt:true' overcloud-compute02
-
-(undercloud) [stack@undercloud ~]$ openstack baremetal node show overcloud-ceph01 -f json | jq '.properties.capabilities'
-"cpu_aes:true,cpu_hugepages:true,cpu_hugepages_1g:true,cpu_vt:true"
-(undercloud) [stack@undercloud ~]$ openstack baremetal node set --property capabilities='node:cephstorage-0,boot_option:local,cpu_aes:true,cpu_hugepages:true,cpu_hugepages_1g:true,cpu_vt:true' overcloud-ceph01
-
-(undercloud) [stack@undercloud ~]$ openstack baremetal node show overcloud-ceph02 -f json | jq '.properties.capabilities'
-"cpu_aes:true,cpu_hugepages:true,cpu_hugepages_1g:true,cpu_vt:true"
-(undercloud) [stack@undercloud ~]$ openstack baremetal node set --property capabilities='node:cephstorage-1,boot_option:local,cpu_aes:true,cpu_hugepages:true,cpu_hugepages_1g:true,cpu_vt:true' overcloud-ceph02
-
-(undercloud) [stack@undercloud ~]$ openstack baremetal node show overcloud-ceph03 -f json | jq '.properties.capabilities'
-"cpu_aes:true,cpu_hugepages:true,cpu_hugepages_1g:true,cpu_vt:true"
-(undercloud) [stack@undercloud ~]$ openstack baremetal node set --property capabilities='node:cephstorage-2,boot_option:local,cpu_aes:true,cpu_hugepages:true,cpu_hugepages_1g:true,cpu_vt:true' overcloud-ceph03
+(undercloud) [stack@undercloud ~]$ openstack baremetal node set --property capabilities='node:cephstorage-0,boot_option:local' overcloud-ceph01
+(undercloud) [stack@undercloud ~]$ openstack baremetal node set --property capabilities='node:cephstorage-1,boot_option:local' overcloud-ceph02
+(undercloud) [stack@undercloud ~]$ openstack baremetal node set --property capabilities='node:cephstorage-2,boot_option:local' overcloud-ceph03
 ```

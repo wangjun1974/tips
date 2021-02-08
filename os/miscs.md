@@ -11246,3 +11246,15 @@ ceph_conf_overrides:
 [root@mh-rgw-02 ~]# systemctl restart ceph-radosgw.target
 [root@mh-rgw-03 ~]# systemctl restart ceph-radosgw.target
 ```
+
+
+
+### OpenShift Tips Cluster Version
+https://openshift.tips/clusterversion/
+
+包含以下内容
+* 切换 clusterversion channel
+* unmanage operators
+* 生成 patch yaml 文件
+* patch clusterversion 对象
+* 禁用 clusterversion operator

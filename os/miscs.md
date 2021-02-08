@@ -11258,3 +11258,8 @@ https://openshift.tips/clusterversion/
 * 生成 patch yaml 文件
 * patch clusterversion 对象
 * 禁用 clusterversion operator
+
+
+
+### Red Hat Ceph Storage for Data Lake
+https://gist.github.com/mmgaggle/5297770b2a38963c75f689a53990c1f6#red-hat-ceph-storage-for-data-lake

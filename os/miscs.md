@@ -11263,3 +11263,18 @@ https://openshift.tips/clusterversion/
 
 ### Red Hat Ceph Storage for Data Lake
 https://gist.github.com/mmgaggle/5297770b2a38963c75f689a53990c1f6#red-hat-ceph-storage-for-data-lake
+
+
+
+### 创建 ocs 演示应用
+```
+# 创建 project my-database-app
+oc new-project my-database-app
+
+# 创建演示应用 
+# 设置参数
+# STORAGE_CLASS=ocs-storagecluster-ceph-rbd
+# VOLUME_CAPACITY=5Gi
+curl -s https://raw.githubusercontent.com/red-hat-storage/ocs-training/master/training/modules/ocs4/attachments/configurable-rails-app.yaml | oc new-app -p STORAGE_CLASS=ocs-storagecluster-ceph-rbd -p VOLUME_CAPACITY=5Gi -f -
+
+```

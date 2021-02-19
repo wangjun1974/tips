@@ -11278,3 +11278,9 @@ oc new-project my-database-app
 curl -s https://raw.githubusercontent.com/red-hat-storage/ocs-training/master/training/modules/ocs4/attachments/configurable-rails-app.yaml | oc new-app -p STORAGE_CLASS=ocs-storagecluster-ceph-rbd -p VOLUME_CAPACITY=5Gi -f -
 
 ```
+
+
+
+### Linux on Z and LinuxONE Tuning hints and tips
+https://www.ibm.com/developerworks/linux/linux390/perf/index.html<br>
+https://www.ibm.com/developerworks/linux/linux390/perf/tuning_database.html

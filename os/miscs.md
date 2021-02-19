@@ -11287,3 +11287,8 @@ https://www.ibm.com/developerworks/linux/linux390/perf/tuning_database.html
 
 Migrating from OProfile to perf, and beyond<br>
 https://developer.ibm.com/technologies/linux/tutorials/migrate-from-oprofile-to-perf/
+
+
+
+### Are there any benchmarking and performance testing tools available in Red Hat Enterprise Linux
+https://access.redhat.com/solutions/173863

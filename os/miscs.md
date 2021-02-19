@@ -11284,3 +11284,6 @@ curl -s https://raw.githubusercontent.com/red-hat-storage/ocs-training/master/tr
 ### Linux on Z and LinuxONE Tuning hints and tips
 https://www.ibm.com/developerworks/linux/linux390/perf/index.html<br>
 https://www.ibm.com/developerworks/linux/linux390/perf/tuning_database.html
+
+Migrating from OProfile to perf, and beyond<br>
+https://developer.ibm.com/technologies/linux/tutorials/migrate-from-oprofile-to-perf/

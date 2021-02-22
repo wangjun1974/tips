@@ -10729,6 +10729,20 @@ exported keyring for client.rgw.overcloud-controller-0.rgw0
 
 
 
+### 问题定位: Feb 21 23:52:30 overcloud-controller-0 podman(haproxy-bundle-podman-0)[548533]: ERROR: Error: error creating container storage: the container name "haproxy-bundle-podman-0" is already in use by "6f4126f77e6ebde7326ffe1b963b31e9dad5590cacbd7ab1d0123b307229dbad". You have to remove that container to be able to reuse that name.: that name is already in use
+参考类似问题：<br>
+https://github.com/containers/podman/issues/2240
+```
+[heat-admin@overcloud-controller-0 ~]$ sudo podman ps | grep haproxy
+[heat-admin@overcloud-controller-0 ~]$ sudo podman ps -a | grep haproxy
+9e419db69633  undercloud.ctlplane.example.com:8787/rhosp-rhel8/openstack-haproxy:16.1                 /pacemaker_restar...  2 weeks ago  Exited (0) 2 weeks ago         haproxy_restart_bundle
+a719de11b7e4  undercloud.ctlplane.example.com:8787/rhosp-rhel8/openstack-haproxy:16.1                 /container_puppet...  2 weeks ago  Exited (0) 2 weeks ago         haproxy_init_bundle
+
+# 解决方法是执行命令 podman rm --force --storage <container_id>
+sudo podman rm --force --storage 6f4126f77e6ebde7326ffe1b963b31e9dad5590cacbd7ab1d0123b307229dbad 
+```
+
+
 ### RHEL6/7/8 性能调优参数
 ```
 

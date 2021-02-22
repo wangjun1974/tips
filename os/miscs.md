@@ -11349,6 +11349,11 @@ https://access.redhat.com/solutions/5061861
 
 
 
+### How to Build an ACM Demo Environment
+https://github.com/open-cluster-management/labs
+
+
+
 ### 使用 serviceaccount token 登录 openshift (cli)
 参考 Bug 1827374 - CLI login not working when Openshift idp is configured using SSO
 ```

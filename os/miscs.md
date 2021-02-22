@@ -11343,6 +11343,12 @@ https://developers.redhat.com/articles/2020/12/09/get-started-your-developer-san
 
 
 
+
+### Critical DaemonSets Missing Universal Toleration
+关键的 DeamonSet 如何设置 Universal Toleration<br>
+https://access.redhat.com/solutions/5061861
+
+
 ### 使用 serviceaccount token 登录 openshift (cli)
 参考 Bug 1827374 - CLI login not working when Openshift idp is configured using SSO
 ```

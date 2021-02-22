@@ -11335,3 +11335,11 @@ https://access.redhat.com/solutions/173863<br>
 RHEL7 Performance Tuning Guide<br>
 https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/7/html/performance_tuning_guide/index<br>
 
+
+
+### 使用 serviceaccount token 登录 openshift (cli)
+参考 Bug 1827374 - CLI login not working when Openshift idp is configured using SSO
+```
+# https://oauth-openshift.apps.sandbox.x8i5.p1.openshiftapps.com/oauth/token/display
+oc login --token=sha256~2bSKgMogSXC0EjzTlDWeh24aiDEUUt5WPmQuPMCLusw --server=https://api.sandbox.x8i5.p1.openshiftapps.com:6443
+```

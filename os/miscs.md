@@ -11342,4 +11342,31 @@ https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/7/html/pe
 ```
 # https://oauth-openshift.apps.sandbox.x8i5.p1.openshiftapps.com/oauth/token/display
 oc login --token=sha256~2bSKgMogSXC0EjzTlDWeh24aiDEUUt5WPmQuPMCLusw --server=https://api.sandbox.x8i5.p1.openshiftapps.com:6443
+
+# 拿 jenkins 来测试应用
+oc -n wang-jun-1974-dev new-app jenkins-ephemeral
+
+# 生成 template
+oc -n wang-jun-1974-dev create -f https://raw.githubusercontent.com/openshift/origin/master/examples/jenkins/pipeline/maven-pipeline.yaml
+
+# 创建 app
+oc -n wang-jun-1974-dev new-app --template=maven-pipeline
+
+# 列出 pods
+oc -n wang-jun-1974-dev get pods
+
+# patch wildfly imagestream
+# https://www.wildfly.org/news/2019/10/07/WildFly-s2i-18-released/
+# https://raw.githubusercontent.com/wildfly/wildfly-s2i/wf-18.0/imagestreams/wildfly-centos7.json
+oc -n wang-jun-1974-dev patch is wildfly --type json -p='[{"op": "replace", "path": "/spec/tags/0/from/name", "value":"quay.io/wildfly/wildfly-centos7:17.0"}]'
+
+# 触发 build
+oc start-build openshift-jee-sample -n wang-jun-1974-dev
+
+# 查看 logs
+oc -n wang-jun-1974-dev logs openshift-jee-sample-docker-1-build
+
+# 访问 route
+curl $(oc -n wang-jun-1974-dev get routes openshift-jee-sample -o jsonpath='{ .spec.host }')
+
 ```

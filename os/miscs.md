@@ -11337,9 +11337,16 @@ https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/7/html/pe
 
 
 
+### OpenShift Developer Sandbox
+https://developers.redhat.com/developer-sandbox<br>
+https://developers.redhat.com/articles/2020/12/09/get-started-your-developer-sandbox-red-hat-openshift<br>
+
+
+
 ### 使用 serviceaccount token 登录 openshift (cli)
 参考 Bug 1827374 - CLI login not working when Openshift idp is configured using SSO
 ```
+# https://developers.redhat.com/articles/2020/12/09/get-started-your-developer-sandbox-red-hat-openshift#
 # https://oauth-openshift.apps.sandbox.x8i5.p1.openshiftapps.com/oauth/token/display
 oc login --token=sha256~2bSKgMogSXC0EjzTlDWeh24aiDEUUt5WPmQuPMCLusw --server=https://api.sandbox.x8i5.p1.openshiftapps.com:6443
 

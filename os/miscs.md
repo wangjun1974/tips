@@ -11388,3 +11388,15 @@ oc -n wang-jun-1974-dev logs openshift-jee-sample-docker-1-build
 curl $(oc -n wang-jun-1974-dev get routes openshift-jee-sample -o jsonpath='{ .spec.host }')
 
 ```
+
+
+
+### 什么是 skupper
+https://skupper.io/
+
+
+Skupper<br>
+Multicloud communication for Kubernetes<br>
+Skupper is a layer 7 service interconnect. It enables secure communication across Kubernetes clusters with no VPNs or special firewall rules.<br>
+
+With Skupper, your application can span multiple cloud providers, data centers, and regions.<br>

@@ -11391,7 +11391,8 @@ curl $(oc -n wang-jun-1974-dev get routes openshift-jee-sample -o jsonpath='{ .s
 
 
 
-### 什么是 skupper
+### 学习内容
+什么是 skupper<br>
 https://skupper.io/
 
 
@@ -11400,3 +11401,6 @@ Multicloud communication for Kubernetes<br>
 Skupper is a layer 7 service interconnect. It enables secure communication across Kubernetes clusters with no VPNs or special firewall rules.<br>
 
 With Skupper, your application can span multiple cloud providers, data centers, and regions.<br>
+
+什么是 Submariner<br>
+https://submariner.io/getting-started/architecture/globalnet/

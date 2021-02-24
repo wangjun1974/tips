@@ -200,6 +200,7 @@ EOF
 (undercloud) [stack@undercloud ~]$ time /bin/bash ~/deploy-enable-tls-octavia.sh
 
 # 完成部署
+(undercloud) [stack@undercloud ~]$ source overcloudrc
 (overcloud) [stack@undercloud ~]$ openstack hypervisor list
 +--------------------------------------+-------------------------------------+-----------------+-------------+-------+
 | ID                                   | Hypervisor Hostname                 | Hypervisor Type | Host IP     | State |

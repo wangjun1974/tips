@@ -11425,7 +11425,6 @@ cat /var/log/glusterfs/glusterd.log | grep " E "
 [2021-02-24 07:51:45.325221] E [MSGID: 101176] [graph.c:680:glusterfs_graph_activate] 0-graph: init failed
 
 cat /etc/glusterfs/glusterd.vol 
-
 volume management
     type mgmt/glusterd
     option working-directory /var/lib/glusterd
@@ -11442,9 +11441,8 @@ end-volume
 
 cat /var/log/glusterfs/glusterd.log | more
 
-[2021-02-24 08:03:36.005376] E [run.c:190:runner_log] (-->/lib64/libglusterfs.so.0(xlator_init+0x4b) [0x7f91be9f9d1b] -->/usr/lib64/glusterfs/3.8.4/xla
-tor/mgmt/glusterd.so(init+0x29e4) [0x7f91b99b99d4] -->/lib64/libglusterfs.so.0(runner_log+0x115) [0x7f91bea49175] ) 0-glusterd: command failed: /usr/libexec/glusterfs/gsyncd -c /var/lib/glusterd/geo-replication/gsyncd_template.conf --config-set-rx remote-gsyncd /usr/libexec/glusterfs/gsyncd . .
+# 最后发现是由于 /var 文件系统满了
 
-0-management: Initialization of volume 'management' failed, review your volfi
-le again
+systemctl -l | grep -Ev "loaded active" 
+
 ```

@@ -9830,6 +9830,9 @@ https://gitlab.cee.redhat.com/mzheng/meiyan-rhos-templates/-/blob/master/rhosp16
 
 ### osp16.1 部署失败错误信息
 ```
+# 问题：在部署阶段，ceph-ansible 执行时，在哪里可以了解 ceph ansible 执行的情况
+# 等待答案...
+
 # 首先查看哪个节点 failed 不为 0
 sudo cat /var/lib/mistral/overcloud/ansible.log | grep -E "failed"
 
@@ -11404,3 +11407,6 @@ With Skupper, your application can span multiple cloud providers, data centers, 
 
 什么是 Submariner<br>
 https://submariner.io/getting-started/architecture/globalnet/
+
+
+

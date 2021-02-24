@@ -11410,3 +11410,41 @@ https://submariner.io/getting-started/architecture/globalnet/
 
 
 
+### troubleshooting 
+```
+cat /tmp/err | grep -Ev 'ptp4l'
+systemctl -l | grep -Ev "loaded active" 
+systemctl restart glusterd
+
+cat /var/log/glusterfs/glusterd.log | grep " E "
+
+[2021-02-24 07:51:45.097202] E [MSGID: 106243] [glusterd.c:1797:init] 0-management: creation of 1 listeners failed, continuing with succeeded transport
+[2021-02-24 07:51:45.325128] E [run.c:190:runner_log] (-->/lib64/libglusterfs.so.0(xlator_init+0x4b) [0x7fd126abbd1b] -->/usr/lib64/glusterfs/3.8.4/xlator/mgmt/glusterd.so(init+0x29e4) [0x7fd11b5529d4] -->/lib64/libglusterfs.so.0(runner_log+0x115) [0x7fd126b0b175] ) 0-glusterd: command failed: /usr/libexec/glusterfs/gsyncd -c /var/lib/glusterd/geo-replication/gsyncd_template.conf --config-set-rx remote-gsyncd /usr/libexec/glusterfs/gsyncd . .
+[2021-02-24 07:51:45.325179] E [MSGID: 101019] [xlator.c:486:xlator_init] 0-management: Initialization of volume 'management' failed, review your volfile again
+[2021-02-24 07:51:45.325214] E [MSGID: 101066] [graph.c:324:glusterfs_graph_init] 0-management: initializing translator failed
+[2021-02-24 07:51:45.325221] E [MSGID: 101176] [graph.c:680:glusterfs_graph_activate] 0-graph: init failed
+
+cat /etc/glusterfs/glusterd.vol 
+
+volume management
+    type mgmt/glusterd
+    option working-directory /var/lib/glusterd
+    option transport-type socket,rdma
+    option transport.socket.keepalive-time 10
+    option transport.socket.keepalive-interval 2
+    option transport.socket.read-fail-log off
+    option ping-timeout 0
+    option event-threads 1
+#   option lock-timer 180
+#   option transport.address-family inet6
+#   option base-port 49152
+end-volume
+
+cat /var/log/glusterfs/glusterd.log | more
+
+[2021-02-24 08:03:36.005376] E [run.c:190:runner_log] (-->/lib64/libglusterfs.so.0(xlator_init+0x4b) [0x7f91be9f9d1b] -->/usr/lib64/glusterfs/3.8.4/xla
+tor/mgmt/glusterd.so(init+0x29e4) [0x7f91b99b99d4] -->/lib64/libglusterfs.so.0(runner_log+0x115) [0x7f91bea49175] ) 0-glusterd: command failed: /usr/libexec/glusterfs/gsyncd -c /var/lib/glusterd/geo-replication/gsyncd_template.conf --config-set-rx remote-gsyncd /usr/libexec/glusterfs/gsyncd . .
+
+0-management: Initialization of volume 'management' failed, review your volfi
+le again
+```

@@ -198,4 +198,16 @@ EOF
 
 # 部署 overcloud
 (undercloud) [stack@undercloud ~]$ time /bin/bash ~/deploy-enable-tls-octavia.sh
+
+# 完成部署
+(overcloud) [stack@undercloud ~]$ openstack hypervisor list
++--------------------------------------+-------------------------------------+-----------------+-------------+-------+
+| ID                                   | Hypervisor Hostname                 | Hypervisor Type | Host IP     | State |
++--------------------------------------+-------------------------------------+-----------------+-------------+-------+
+| 8adbe348-3bae-496e-b356-7bc107e5068f | overcloud-novacompute-1.example.com | QEMU            | 172.16.2.62 | up    |
+| 0332f73d-fb3b-4fd1-bd9c-37f4ec579696 | overcloud-computehci-1.example.com  | QEMU            | 172.16.2.72 | up    |
+| 0cf22dcd-d3eb-4d6d-be66-664721bd317d | overcloud-novacompute-0.example.com | QEMU            | 172.16.2.61 | up    |
+| d405a32b-e856-47c8-85c0-aa0b3adad152 | overcloud-computehci-2.example.com  | QEMU            | 172.16.2.73 | up    |
+| f8317e9c-1298-4322-a17f-99294881ca30 | overcloud-computehci-0.example.com  | QEMU            | 172.16.2.71 | up    |
++--------------------------------------+-------------------------------------+-----------------+-------------+-------+
 ```

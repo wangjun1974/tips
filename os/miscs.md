@@ -11503,3 +11503,17 @@ systemctl -l | grep -Ev "loaded active"
 ### ceph placement group 问题定位
 https://docs.ceph.com/en/latest/rados/troubleshooting/troubleshooting-pg/
 
+
+
+### 部署 compat mode 3 节点 osp 16.1 时遇到报错
+```
+(undercloud) [stack@undercloud ~]$ cat /var/lib/mistral/overcloud/ansible.log | grep "fatal:" -A28
+...
+    "stderr": "<13>Feb 25 06:11:51 puppet-user: Warning: The function 'hiera' is deprecated in favor of using 'lookup'. See https://puppet.com/docs/puppet/5.5/deprecated_language.html\\n   (file & line not available)\n<13>Feb 25 06:12:05 puppet-user: Warning: /etc/puppet/hiera.yaml: Use of 'hiera.yaml' version 3 is deprecated. It should be converted to version 5\n<13>Feb 25 06:12:05 puppet-user:    (file: /etc/puppet/hiera.yaml)\n<13>Feb 25 06:12:05 puppet-user: Warning: Undefined variable '::deploy_config_name'; \\n   (file & line not available)\n<13>Feb 25 06:12:05 puppet-user: Warning: ModuleLoader: module 'tripleo' has unresolved dependencies - it will only see those that are resolved. Use 'puppet module list --tree' to see information about modules\\n   (file & line not available)\n<13>Feb 25 06:12:05 puppet-user: Warning: Undefined variable '::nova::params::vncproxy_service_name'; class nova::params has not been evaluated\\n   (file & line not available)\n<13>Feb 25 06:12:05 puppet-user: Warning: ModuleLoader: module 'nova' has unresolved dependencies - it will only see those that are resolved. Use 'puppet module list --tree' to see information about modules\\n   (file & line not available)\n<13>Feb 25 06:12:05 puppet-user: Warning: ModuleLoader: module 'openstacklib' has unresolved dependencies - it will only see those that are resolved. Use 'puppet module list --tree' to see information about modules\\n   (file & line not available)\n<13>Feb 25 06:12:05 puppet-user: Warning: ModuleLoader: module 'concat' has unresolved dependencies - it will only see those that are resolved. Use 'puppet module list --tree' to see information about modules\\n   (file & line not available)\n<13>Feb 25 06:12:05 puppet-user: Warning: Unknown variable: '::deployment_type'. (file: /etc/puppet/modules/tripleo/manifests/profile/base/database/mysql/client.pp, line: 89, column: 8)\n<13>Feb 25 06:12:06 puppet-user: Warning: ModuleLoader: module 'pacemaker' has unresolved dependencies - it will only see those that are resolved. Use 'puppet module list --tree' to see information about modules\\n   (file & line not available)\n<13>Feb 25 06:12:07 puppet-user: Warning: tag is a metaparam; this value will inherit to all contained resources in the tripleo::firewall::rule definition\n<13>Feb 25 06:12:07 puppet-user: Notice: Scope(Class[Tripleo::Firewall::Post]): At this stage, all network traffic is blocked.\n<13>Feb 25 06:12:07 puppet-user: Error: Evaluation Error: Error while evaluating a Resource Statement, Evaluation Error: Error while evaluating a Resource Statement, Duplicate declaration: Exec[/etc/pki/CA/certs/vnc.crt] is already declared at (file: /etc/puppet/modules/tripleo/manifests/certmonger/libvirt_vnc.pp, line: 87); cannot redeclare (file: /etc/puppet/modules/tripleo/manifests/certmonger/libvirt_vnc.pp, line: 87) (file: /etc/puppet/modules/tripleo/manifests/certmonger/libvirt_vnc.pp, line: 87, column: 5) (file: /etc/puppet/modules/tripleo/manifests/profile/base/certmonger_user.pp, line: 258) on node overcloud-controller-1.example.com",
+
+# 参考 https://bugs.launchpad.net/tripleo/+bug/1887376
+# https://git.openstack.org/cgit/openstack/tripleo-heat-templates/commit/?id=5087bc9c12fb2eda23db6c06cec82bbc7fb997a1
+
+
+
+```

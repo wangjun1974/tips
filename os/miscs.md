@@ -11513,7 +11513,9 @@ https://docs.ceph.com/en/latest/rados/troubleshooting/troubleshooting-pg/
 
 # 参考 https://bugs.launchpad.net/tripleo/+bug/1887376
 # https://git.openstack.org/cgit/openstack/tripleo-heat-templates/commit/?id=5087bc9c12fb2eda23db6c06cec82bbc7fb997a1
-
-
-
 ```
+
+
+
+### Custom RHEL 7 Installation ISO/DVD fails with "Warning: dracut-initqueue timeout - starting timeout scripts"
+https://access.redhat.com/solutions/3438961 

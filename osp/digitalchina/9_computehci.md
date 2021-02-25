@@ -30,6 +30,8 @@ export THT=/usr/share/openstack-tripleo-heat-templates/
 (undercloud) [stack@undercloud openstack-tripleo-heat-templates]$ cd ~/rendered
 
 # 拷贝 rendered/environments/network-environment.yaml 到 ~/templates/environments
+(undercloud) [stack@undercloud rendered]$ rm -rf ~/templates/environments
+(undercloud) [stack@undercloud rendered]$ mkdir -p ~/templates/environments
 (undercloud) [stack@undercloud rendered]$ cp environments/network-environment.yaml ~/templates/environments
 
 # 重新拷贝 rendered/network 到 ~/templates
@@ -42,6 +44,7 @@ export THT=/usr/share/openstack-tripleo-heat-templates/
 # 根据需要修改 ~/templates/network/config//bond-with-vlans/controller.yaml 
 # 根据需要修改 ~/templates/network/config//bond-with-vlans/compute.yaml
 # 根据需要修改 ~/templates/network/config//bond-with-vlans/computehci.yaml
+# 参考 https://github.com/wangjun1974/tips/blob/master/osp/digitalchina/3_prepare_templates.md
 
 # 为 baremetal node 设置 properties capabilities
 # 注意调整 role 和 index

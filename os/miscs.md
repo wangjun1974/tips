@@ -11446,3 +11446,55 @@ cat /var/log/glusterfs/glusterd.log | more
 systemctl -l | grep -Ev "loaded active" 
 
 ```
+
+
+### Controller Role 和 Compute Role 有哪些服务上的差别
+
+```
+# 以下内容适用于 OSP 16.1 
+# 保存 Controller Role 的 ServiceDefault 到文件
+(overcloud) [stack@undercloud templates]$ cat roles_data.yaml | grep -E "\- name: Controller" -A186 | tail -156 | tee /tmp/controllerservice 
+
+# 保存 Compute Role 的 ServiceDefault 到文件
+(overcloud) [stack@undercloud templates]$ cat roles_data.yaml | grep -E "\- name: Compute$" -A77 | tail -48 | tee /tmp/computeservice 
+
+# 保存 ComputeHCI Role 的 ServiceDefault 到文件
+(overcloud) [stack@undercloud templates]$ cat roles_data.yaml | grep -E "\- name: ComputeHCI$" -A64 | tail -49 | tee /tmp/computehciservice 
+
+# 哪些服务包含在 Compute Role，但是不包含在 ControllerRole 里
+(overcloud) [stack@undercloud templates]$ diff -urN /tmp/controllerservice /tmp/computeservice | grep -E "^\+" 
++++ /tmp/computeservice 2021-02-25 09:43:09.310273266 +0800
++    - OS::TripleO::Services::CephClient
++    - OS::TripleO::Services::ComputeCeilometerAgent
++    - OS::TripleO::Services::ComputeNeutronCorePlugin
++    - OS::TripleO::Services::ComputeNeutronL3Agent
++    - OS::TripleO::Services::ComputeNeutronMetadataAgent
++    - OS::TripleO::Services::ComputeNeutronOvsAgent
++    - OS::TripleO::Services::NeutronBgpVpnBagpipe
++    - OS::TripleO::Services::NovaAZConfig
++    - OS::TripleO::Services::NovaCompute
++    - OS::TripleO::Services::NovaLibvirt
++    - OS::TripleO::Services::NovaLibvirtGuests
++    - OS::TripleO::Services::NovaMigrationTarget
++    - OS::TripleO::Services::OVNController
++    - OS::TripleO::Services::OVNMetadataAgent
+
+# 哪些服务包含在 ComputeHCI Role，但是不包含在 ControllerRole 里
+(overcloud) [stack@undercloud templates]$ diff -urN /tmp/controllerservice /tmp/computehciservice | grep -E "^\+" 
++++ /tmp/computehciservice      2021-02-25 10:01:03.053474381 +0800
++    - OS::TripleO::Services::CephClient
++    - OS::TripleO::Services::CephOSD
++    - OS::TripleO::Services::ComputeCeilometerAgent
++    - OS::TripleO::Services::ComputeNeutronCorePlugin
++    - OS::TripleO::Services::ComputeNeutronL3Agent
++    - OS::TripleO::Services::ComputeNeutronMetadataAgent
++    - OS::TripleO::Services::ComputeNeutronOvsAgent
++    - OS::TripleO::Services::NeutronBgpVpnBagpipe
++    - OS::TripleO::Services::NovaAZConfig
++    - OS::TripleO::Services::NovaCompute
++    - OS::TripleO::Services::NovaLibvirt
++    - OS::TripleO::Services::NovaLibvirtGuests
++    - OS::TripleO::Services::NovaMigrationTarget
++    - OS::TripleO::Services::OVNController
++    - OS::TripleO::Services::OVNMetadataAgent
+```

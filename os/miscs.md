@@ -11498,3 +11498,8 @@ systemctl -l | grep -Ev "loaded active"
 +    - OS::TripleO::Services::OVNController
 +    - OS::TripleO::Services::OVNMetadataAgent
 ```
+
+
+### ceph placement group 问题定位
+https://docs.ceph.com/en/latest/rados/troubleshooting/troubleshooting-pg/
+

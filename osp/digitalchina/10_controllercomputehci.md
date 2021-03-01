@@ -246,8 +246,51 @@ EOF
 (undercloud) [stack@undercloud ~]$ time /bin/bash ~/deploy-enable-tls-octavia.sh
 
 # 目前尚不工作
-undercloud) [stack@undercloud ~]$ cat /var/lib/mistral/overcloud/ansible.log | grep "fatal:" -A28
+(undercloud) [stack@undercloud ~]$ cat /var/lib/mistral/overcloud/ansible.log | grep "fatal:" -A28
 ...
     "stderr": "<13>Feb 25 06:11:51 puppet-user: Warning: The function 'hiera' is deprecated in favor of using 'lookup'. See https://puppet.com/docs/puppet/5.5/deprecated_language.html\\n   (file & line not available)\n<13>Feb 25 06:12:05 puppet-user: Warning: /etc/puppet/hiera.yaml: Use of 'hiera.yaml' version 3 is deprecated. It should be converted to version 5\n<13>Feb 25 06:12:05 puppet-user:    (file: /etc/puppet/hiera.yaml)\n<13>Feb 25 06:12:05 puppet-user: Warning: Undefined variable '::deploy_config_name'; \\n   (file & line not available)\n<13>Feb 25 06:12:05 puppet-user: Warning: ModuleLoader: module 'tripleo' has unresolved dependencies - it will only see those that are resolved. Use 'puppet module list --tree' to see information about modules\\n   (file & line not available)\n<13>Feb 25 06:12:05 puppet-user: Warning: Undefined variable '::nova::params::vncproxy_service_name'; class nova::params has not been evaluated\\n   (file & line not available)\n<13>Feb 25 06:12:05 puppet-user: Warning: ModuleLoader: module 'nova' has unresolved dependencies - it will only see those that are resolved. Use 'puppet module list --tree' to see information about modules\\n   (file & line not available)\n<13>Feb 25 06:12:05 puppet-user: Warning: ModuleLoader: module 'openstacklib' has unresolved dependencies - it will only see those that are resolved. Use 'puppet module list --tree' to see information about modules\\n   (file & line not available)\n<13>Feb 25 06:12:05 puppet-user: Warning: ModuleLoader: module 'concat' has unresolved dependencies - it will only see those that are resolved. Use 'puppet module list --tree' to see information about modules\\n   (file & line not available)\n<13>Feb 25 06:12:05 puppet-user: Warning: Unknown variable: '::deployment_type'. (file: /etc/puppet/modules/tripleo/manifests/profile/base/database/mysql/client.pp, line: 89, column: 8)\n<13>Feb 25 06:12:06 puppet-user: Warning: ModuleLoader: module 'pacemaker' has unresolved dependencies - it will only see those that are resolved. Use 'puppet module list --tree' to see information about modules\\n   (file & line not available)\n<13>Feb 25 06:12:07 puppet-user: Warning: tag is a metaparam; this value will inherit to all contained resources in the tripleo::firewall::rule definition\n<13>Feb 25 06:12:07 puppet-user: Notice: Scope(Class[Tripleo::Firewall::Post]): At this stage, all network traffic is blocked.\n<13>Feb 25 06:12:07 puppet-user: Error: Evaluation Error: Error while evaluating a Resource Statement, Evaluation Error: Error while evaluating a Resource Statement, Duplicate declaration: Exec[/etc/pki/CA/certs/vnc.crt] is already declared at (file: /etc/puppet/modules/tripleo/manifests/certmonger/libvirt_vnc.pp, line: 87); cannot redeclare (file: /etc/puppet/modules/tripleo/manifests/certmonger/libvirt_vnc.pp, line: 87) (file: /etc/puppet/modules/tripleo/manifests/certmonger/libvirt_vnc.pp, line: 87, column: 5) (file: /etc/puppet/modules/tripleo/manifests/profile/base/certmonger_user.pp, line: 258) on node overcloud-controller-1.example.com",
 
+# 备份 undercloud 上的 /etc/puppet/modules/tripleo/manifests/certmonger/libvirt_vnc.pp 文件
+(undercloud) [stack@undercloud ~]$ cp /etc/puppet/modules/tripleo/manifests/certmonger/libvirt_vnc.pp /etc/puppet/modules/tripleo/manifests/certmonger/libvirt_vnc.pp.orig
+
+# 修改 undercloud 上的 /etc/puppet/modules/tripleo/manifests/certmonger/libvirt_vnc.pp 文件
+# 注释 exec { $cacertfile ... }
+(undercloud) [stack@undercloud ~]$ diff -urN /etc/puppet/modules/tripleo/manifests/certmonger/libvirt_vnc.pp.orig /etc/puppet/modules/tripleo/manifests/certmonger/libvirt_vnc.pp
+--- /etc/puppet/modules/tripleo/manifests/certmonger/libvirt_vnc.pp.orig        2021-03-01 11:16:30.482048411 +0800
++++ /etc/puppet/modules/tripleo/manifests/certmonger/libvirt_vnc.pp     2021-03-01 11:40:55.003322669 +0800
+@@ -84,15 +84,15 @@
+     # Sometimes certmonger returns before creating the cacert file. This has
+     # been reported in: https://bugzilla.redhat.com/show_bug.cgi?id=1759281
+     # Until this is fixed, add this workaround.
+-    exec { $cacertfile :
+-      require   => Certmonger_certificate[$name],
+-      command   => "test -f ${cacertfile}",
+-      unless    => "test -f ${cacertfile}",
+-      tries     => 60,
+-      try_sleep => 1,
+-      timeout   => 60,
+-      path      => '/usr/bin:/bin',
+-    }
++    #exec { $cacertfile :
++    #  require   => Certmonger_certificate[$name],
++    #  command   => "test -f ${cacertfile}",
++    #  unless    => "test -f ${cacertfile}",
++    #  tries     => 60,
++    #  try_sleep => 1,
++    #  timeout   => 60,
++    #  path      => '/usr/bin:/bin',
++    #}
+ 
+     file { $cacertfile :
+       require => Exec[$cacertfile],
+
+# 拷贝修改过的 /etc/puppet/modules/tripleo/manifests/certmonger/libvirt_vnc.pp 到 overcloud 节点
+(undercloud) [stack@undercloud ~]$ scp /etc/puppet/modules/tripleo/manifests/certmonger/libvirt_vnc.pp heat-admin@overcloud-controller-0.ctlplane:/tmp
+(undercloud) [stack@undercloud ~]$ ssh heat-admin@overcloud-controller-0.ctlplane 'sudo cp /tmp/libvirt_vnc.pp /etc/puppet/modules/tripleo/manifests/certmonger/libvirt_vnc.pp'
+
+(undercloud) [stack@undercloud ~]$ scp /etc/puppet/modules/tripleo/manifests/certmonger/libvirt_vnc.pp heat-admin@overcloud-controller-1.ctlplane:/tmp
+(undercloud) [stack@undercloud ~]$ ssh heat-admin@overcloud-controller-1.ctlplane 'sudo cp /tmp/libvirt_vnc.pp /etc/puppet/modules/tripleo/manifests/certmonger/libvirt_vnc.pp'
+
+(undercloud) [stack@undercloud ~]$ scp /etc/puppet/modules/tripleo/manifests/certmonger/libvirt_vnc.pp heat-admin@overcloud-controller-2.ctlplane:/tmp
+(undercloud) [stack@undercloud ~]$ ssh heat-admin@overcloud-controller-2.ctlplane 'sudo cp /tmp/libvirt_vnc.pp /etc/puppet/modules/tripleo/manifests/certmonger/libvirt_vnc.pp'
 ```

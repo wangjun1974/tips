@@ -11518,4 +11518,9 @@ https://docs.ceph.com/en/latest/rados/troubleshooting/troubleshooting-pg/
 
 
 ### Custom RHEL 7 Installation ISO/DVD fails with "Warning: dracut-initqueue timeout - starting timeout scripts"
-https://access.redhat.com/solutions/3438961 
+https://access.redhat.com/solutions/3438961
+
+
+
+### Add required overcloud image in the install doc for RHOSP16 stf
+https://bugzilla.redhat.com/show_bug.cgi?id=1866816

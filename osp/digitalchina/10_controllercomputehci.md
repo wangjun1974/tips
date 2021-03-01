@@ -280,9 +280,18 @@ EOF
 +    #  timeout   => 60,
 +    #  path      => '/usr/bin:/bin',
 +    #}
- 
-     file { $cacertfile :
-       require => Exec[$cacertfile],
+  
+-    file { $cacertfile :
+-      require => Exec[$cacertfile],
+-      mode    => '0644'
+-    }
++    #file { $cacertfile :
++    #  require => Exec[$cacertfile],
++    #  mode    => '0644'
++    #}
+     ~> Service<| title == $notify_service_real |>
+   }
+
 
 # 拷贝修改过的 /etc/puppet/modules/tripleo/manifests/certmonger/libvirt_vnc.pp 到 overcloud 节点
 (undercloud) [stack@undercloud ~]$ scp /etc/puppet/modules/tripleo/manifests/certmonger/libvirt_vnc.pp heat-admin@overcloud-controller-0.ctlplane:/tmp

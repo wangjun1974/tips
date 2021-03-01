@@ -289,8 +289,33 @@ EOF
 +    #  require => Exec[$cacertfile],
 +    #  mode    => '0644'
 +    #}
-     ~> Service<| title == $notify_service_real |>
-   }
++    #~> Service<| title == $notify_service_real |>
++  #}
+ 
+-  file { $service_certificate :
+-    require => Certmonger_certificate[$name],
+-    mode    => '0644'
+-  }
+-  file { $service_key :
+-    require => Certmonger_certificate[$name],
+-    group   => 'qemu',
+-    mode    => '0640'
+-  }
++  #file { $service_certificate :
++  #  require => Certmonger_certificate[$name],
++  #  mode    => '0644'
++  #}
++  #file { $service_key :
++  #  require => Certmonger_certificate[$name],
++  #  group   => 'qemu',
++  #  mode    => '0640'
++  #}
+ 
+-  File[$service_certificate] ~> Service<| title == $notify_service_real |>
+-  File[$service_key] ~> Service<| title == $notify_service_real |>
++  #File[$service_certificate] ~> Service<| title == $notify_service_real |>
++  #File[$service_key] ~> Service<| title == $notify_service_real |>
+ }
 
 
 # 拷贝修改过的 /etc/puppet/modules/tripleo/manifests/certmonger/libvirt_vnc.pp 到 overcloud 节点

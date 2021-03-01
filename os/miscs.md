@@ -11524,3 +11524,14 @@ https://access.redhat.com/solutions/3438961
 
 ### Add required overcloud image in the install doc for RHOSP16 stf
 https://bugzilla.redhat.com/show_bug.cgi?id=1866816
+
+
+
+### 如何设置 subscription-manager 使用国内的 CDN
+https://access.redhat.com/solutions/5090421
+```
+# subscription-manager config --rhsm.baseurl=https://china.cdn.redhat.com
+# subscription-manager refresh
+# yum clean all
+# yum makecache
+```

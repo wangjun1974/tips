@@ -122,7 +122,6 @@ export THT=/usr/share/openstack-tripleo-heat-templates/
 (undercloud) [stack@undercloud rendered]$ cp environments/network-environment.yaml ~/templates/environments
 
 # 重新拷贝 rendered/network 到 ~/templates
-(undercloud) [stack@undercloud rendered]$ rm -rf ~/templates/network
 (undercloud) [stack@undercloud rendered]$ cp -rp network ~/templates
 
 # 拷贝 rendered/environments/net-bond-with-vlans.yaml 到 ~/templates/environments/

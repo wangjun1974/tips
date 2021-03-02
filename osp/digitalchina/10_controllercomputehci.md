@@ -254,7 +254,7 @@ EOF
 (undercloud) [stack@undercloud ~]$ cp /etc/puppet/modules/tripleo/manifests/certmonger/libvirt_vnc.pp /etc/puppet/modules/tripleo/manifests/certmonger/libvirt_vnc.pp.orig
 
 # 修改 undercloud 上的 /etc/puppet/modules/tripleo/manifests/certmonger/libvirt_vnc.pp 文件
-# 注释 exec { $cacertfile ... }
+# 注释 exec { $cacertfile ... } 及之后的内容
 (undercloud) [stack@undercloud ~]$ diff -urN /etc/puppet/modules/tripleo/manifests/certmonger/libvirt_vnc.pp.orig /etc/puppet/modules/tripleo/manifests/certmonger/libvirt_vnc.pp
 --- /etc/puppet/modules/tripleo/manifests/certmonger/libvirt_vnc.pp.orig        2021-03-01 11:16:30.482048411 +0800
 +++ /etc/puppet/modules/tripleo/manifests/certmonger/libvirt_vnc.pp     2021-03-01 11:40:55.003322669 +0800

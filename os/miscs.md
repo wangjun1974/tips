@@ -11540,3 +11540,13 @@ https://access.redhat.com/solutions/5090421
 
 ### 裸金属服务器业务（BMS）的现状调研4：Huawei Bare Metal Server
 http://www.brofive.org/?p=4512
+
+
+
+### How do I re-run only ceph-ansible when using tripleo config-download?
+关于如何重新执行 ceph-ansible 部分<br>
+http://blog.johnlikesopenstack.com/2019/01/how-do-i-re-run-only-ceph-ansible-when.html
+```
+sudo cd /var/lib/mistral/config-download-latest/
+sudo bash ansible-playbook-command.sh --tags external_deploy_steps
+```

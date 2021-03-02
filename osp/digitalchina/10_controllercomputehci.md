@@ -245,7 +245,7 @@ EOF
 # 部署 overcloud
 (undercloud) [stack@undercloud ~]$ time /bin/bash ~/deploy-enable-tls-octavia.sh
 
-# 目前尚不工作
+# 经过调整，把 controller，compute 和 cephstorage 成功部署在 3 个节点上
 (undercloud) [stack@undercloud ~]$ cat /var/lib/mistral/overcloud/ansible.log | grep "fatal:" -A28
 ...
     "stderr": "<13>Feb 25 06:11:51 puppet-user: Warning: The function 'hiera' is deprecated in favor of using 'lookup'. See https://puppet.com/docs/puppet/5.5/deprecated_language.html\\n   (file & line not available)\n<13>Feb 25 06:12:05 puppet-user: Warning: /etc/puppet/hiera.yaml: Use of 'hiera.yaml' version 3 is deprecated. It should be converted to version 5\n<13>Feb 25 06:12:05 puppet-user:    (file: /etc/puppet/hiera.yaml)\n<13>Feb 25 06:12:05 puppet-user: Warning: Undefined variable '::deploy_config_name'; \\n   (file & line not available)\n<13>Feb 25 06:12:05 puppet-user: Warning: ModuleLoader: module 'tripleo' has unresolved dependencies - it will only see those that are resolved. Use 'puppet module list --tree' to see information about modules\\n   (file & line not available)\n<13>Feb 25 06:12:05 puppet-user: Warning: Undefined variable '::nova::params::vncproxy_service_name'; class nova::params has not been evaluated\\n   (file & line not available)\n<13>Feb 25 06:12:05 puppet-user: Warning: ModuleLoader: module 'nova' has unresolved dependencies - it will only see those that are resolved. Use 'puppet module list --tree' to see information about modules\\n   (file & line not available)\n<13>Feb 25 06:12:05 puppet-user: Warning: ModuleLoader: module 'openstacklib' has unresolved dependencies - it will only see those that are resolved. Use 'puppet module list --tree' to see information about modules\\n   (file & line not available)\n<13>Feb 25 06:12:05 puppet-user: Warning: ModuleLoader: module 'concat' has unresolved dependencies - it will only see those that are resolved. Use 'puppet module list --tree' to see information about modules\\n   (file & line not available)\n<13>Feb 25 06:12:05 puppet-user: Warning: Unknown variable: '::deployment_type'. (file: /etc/puppet/modules/tripleo/manifests/profile/base/database/mysql/client.pp, line: 89, column: 8)\n<13>Feb 25 06:12:06 puppet-user: Warning: ModuleLoader: module 'pacemaker' has unresolved dependencies - it will only see those that are resolved. Use 'puppet module list --tree' to see information about modules\\n   (file & line not available)\n<13>Feb 25 06:12:07 puppet-user: Warning: tag is a metaparam; this value will inherit to all contained resources in the tripleo::firewall::rule definition\n<13>Feb 25 06:12:07 puppet-user: Notice: Scope(Class[Tripleo::Firewall::Post]): At this stage, all network traffic is blocked.\n<13>Feb 25 06:12:07 puppet-user: Error: Evaluation Error: Error while evaluating a Resource Statement, Evaluation Error: Error while evaluating a Resource Statement, Duplicate declaration: Exec[/etc/pki/CA/certs/vnc.crt] is already declared at (file: /etc/puppet/modules/tripleo/manifests/certmonger/libvirt_vnc.pp, line: 87); cannot redeclare (file: /etc/puppet/modules/tripleo/manifests/certmonger/libvirt_vnc.pp, line: 87) (file: /etc/puppet/modules/tripleo/manifests/certmonger/libvirt_vnc.pp, line: 87, column: 5) (file: /etc/puppet/modules/tripleo/manifests/profile/base/certmonger_user.pp, line: 258) on node overcloud-controller-1.example.com",
@@ -327,4 +327,78 @@ EOF
 
 (undercloud) [stack@undercloud ~]$ scp /etc/puppet/modules/tripleo/manifests/certmonger/libvirt_vnc.pp heat-admin@overcloud-controller-2.ctlplane:/tmp
 (undercloud) [stack@undercloud ~]$ ssh heat-admin@overcloud-controller-2.ctlplane 'sudo cp /tmp/libvirt_vnc.pp /etc/puppet/modules/tripleo/manifests/certmonger/libvirt_vnc.pp'
+
+
+# 需要调高 3 个节点的 cpu 和内存，调整 cpu 到 8 cpu，内存到 16384 MB 
+
+# 查看 ceph 状态
+(undercloud) [stack@undercloud ~]$ ssh heat-admin@overcloud-controller-0.ctlplane sudo podman exec -it ceph-mon-overcloud-controller-0 ceph -s 
+Warning: Permanently added 'overcloud-controller-0.ctlplane' (ECDSA) to the list of known hosts.
+  cluster:
+    id:     765cff5c-012e-4871-9d19-cf75eaf27769
+    health: HEALTH_OK
+ 
+  services:
+    mon: 3 daemons, quorum overcloud-controller-0,overcloud-controller-1,overcloud-controller-2 (age 78m)
+    mgr: overcloud-controller-2(active, since 75m), standbys: overcloud-controller-1, overcloud-controller-0
+    osd: 9 osds: 9 up (since 73m), 9 in (since 73m)
+    rgw: 3 daemons active (overcloud-controller-0.rgw0, overcloud-controller-1.rgw0, overcloud-controller-2.rgw0)
+ 
+  task status:
+ 
+  data:
+    pools:   7 pools, 896 pgs
+    objects: 612 objects, 3.0 GiB
+    usage:   18 GiB used, 882 GiB / 900 GiB avail
+    pgs:     896 active+clean
+ 
+  io:
+    client:   12 KiB/s rd, 0 B/s wr, 11 op/s rd, 7 op/s wr
+
+# 查看 overcloud 服务状态
+(overcloud) [stack@undercloud ~]$ openstack network agent list
++--------------------------------------+----------------------+------------------------------------+-------------------+-------+-------+-------------------------------+
+| ID                                   | Agent Type           | Host                               | Availability Zone | Alive | State | Binary                        |
++--------------------------------------+----------------------+------------------------------------+-------------------+-------+-------+-------------------------------+
+| 80a23d63-434b-412c-9c1b-d6500df7297f | OVN Controller agent | overcloud-controller-0.example.com |                   | :-)   | UP    | ovn-controller                |
+| b8e6650b-e801-455b-a6d6-697f188b9621 | OVN Metadata agent   | overcloud-controller-0.example.com |                   | :-)   | UP    | networking-ovn-metadata-agent |
+| de392c00-6600-4101-b006-8d576098005f | OVN Controller agent | overcloud-controller-1.example.com |                   | :-)   | UP    | ovn-controller                |
+| 7071b6b8-cc8d-414f-ba47-f136db697502 | OVN Metadata agent   | overcloud-controller-1.example.com |                   | :-)   | UP    | networking-ovn-metadata-agent |
+| 33697076-ef8f-478f-8071-e76ee9fffdcc | OVN Controller agent | overcloud-controller-2.example.com |                   | :-)   | UP    | ovn-controller                |
+| 3e6e800a-5dbf-4f69-8e11-dcb87d9c979b | OVN Metadata agent   | overcloud-controller-2.example.com |                   | :-)   | UP    | networking-ovn-metadata-agent |
++--------------------------------------+----------------------+------------------------------------+-------------------+-------+-------+-------------------------------+
+
+(overcloud) [stack@undercloud ~]$ openstack compute service list
++--------------------------------------+----------------+------------------------------------+----------+---------+-------+----------------------------+
+| ID                                   | Binary         | Host                               | Zone     | Status  | State | Updated At                 |
++--------------------------------------+----------------+------------------------------------+----------+---------+-------+----------------------------+
+| 9ac6bbff-a3f3-4baf-9fb3-459e2a072c60 | nova-conductor | overcloud-controller-0.example.com | internal | enabled | up    | 2021-03-02T02:46:47.000000 |
+| 250043cd-d86b-460d-a80f-7904bb0578e1 | nova-conductor | overcloud-controller-2.example.com | internal | enabled | up    | 2021-03-02T02:46:44.000000 |
+| ec46d429-899d-483a-922f-8b895c8c630a | nova-scheduler | overcloud-controller-0.example.com | internal | enabled | up    | 2021-03-02T02:46:46.000000 |
+| 74cfcaa5-39e6-4e67-b923-58cf5961ac7e | nova-conductor | overcloud-controller-1.example.com | internal | enabled | up    | 2021-03-02T02:46:46.000000 |
+| 81dd8cec-1e77-493b-9772-9ff28b3ec63a | nova-scheduler | overcloud-controller-2.example.com | internal | enabled | up    | 2021-03-02T02:46:50.000000 |
+| ebe60286-8241-44f1-8657-58c27ea36722 | nova-scheduler | overcloud-controller-1.example.com | internal | enabled | up    | 2021-03-02T02:46:50.000000 |
+| cd2349fd-3855-4c06-9721-6a74497e544d | nova-compute   | overcloud-controller-2.example.com | nova     | enabled | up    | 2021-03-02T02:46:51.000000 |
+| b1ea8c2f-5d87-4c35-9060-2a1082443b99 | nova-compute   | overcloud-controller-1.example.com | nova     | enabled | up    | 2021-03-02T02:46:41.000000 |
+| 10381a85-0067-451e-8e76-d94dbbb96751 | nova-compute   | overcloud-controller-0.example.com | nova     | enabled | up    | 2021-03-02T02:46:47.000000 |
++--------------------------------------+----------------+------------------------------------+----------+---------+-------+----------------------------+
+
+(overcloud) [stack@undercloud ~]$ openstack volume service list
++------------------+------------------------------------+------+---------+-------+----------------------------+
+| Binary           | Host                               | Zone | Status  | State | Updated At                 |
++------------------+------------------------------------+------+---------+-------+----------------------------+
+| cinder-scheduler | overcloud-controller-0.example.com | nova | enabled | up    | 2021-03-02T02:47:20.000000 |
+| cinder-scheduler | overcloud-controller-2.example.com | nova | enabled | up    | 2021-03-02T02:47:15.000000 |
+| cinder-scheduler | overcloud-controller-1.example.com | nova | enabled | up    | 2021-03-02T02:47:17.000000 |
+| cinder-volume    | hostgroup@tripleo_ceph             | nova | enabled | up    | 2021-03-02T02:47:13.000000 |
++------------------+------------------------------------+------+---------+-------+----------------------------+
+
+(overcloud) [stack@undercloud ~]$ openstack hypervisor list
++--------------------------------------+------------------------------------+-----------------+-------------+-------+
+| ID                                   | Hypervisor Hostname                | Hypervisor Type | Host IP     | State |
++--------------------------------------+------------------------------------+-----------------+-------------+-------+
+| bd631c1a-a9f7-4365-8fd9-22ddd56a5a7b | overcloud-controller-2.example.com | QEMU            | 172.16.2.53 | up    |
+| 8cc5ddec-6585-4d03-a42f-91993a1adb3d | overcloud-controller-1.example.com | QEMU            | 172.16.2.52 | up    |
+| 10f5fc09-3e76-4541-b627-5dc52ddbffcd | overcloud-controller-0.example.com | QEMU            | 172.16.2.51 | up    |
++--------------------------------------+------------------------------------+-----------------+-------------+-------+
 ```

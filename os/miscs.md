@@ -11535,3 +11535,8 @@ https://access.redhat.com/solutions/5090421
 # yum clean all
 # yum makecache
 ```
+
+
+
+### 裸金属服务器业务（BMS）的现状调研4：Huawei Bare Metal Server
+http://www.brofive.org/?p=4512

@@ -11550,3 +11550,8 @@ http://blog.johnlikesopenstack.com/2019/01/how-do-i-re-run-only-ceph-ansible-whe
 sudo cd /var/lib/mistral/config-download-latest/
 sudo bash ansible-playbook-command.sh --tags external_deploy_steps
 ```
+
+
+
+### RHV 4.4 RHVM Standalone LocalDB deploy
+https://access.redhat.com/documentation/en-us/red_hat_virtualization/4.4/html-single/installing_red_hat_virtualization_as_a_standalone_manager_with_local_databases/index#Installing_RHEL_for_RHVM_SM_localDB_deploy

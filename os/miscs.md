@@ -11558,5 +11558,15 @@ sudo bash ansible-playbook-command.sh --tags external_deploy_steps
 ### RHV 4.4 RHVM Standalone LocalDB deploy
 https://access.redhat.com/documentation/en-us/red_hat_virtualization/4.4/html-single/installing_red_hat_virtualization_as_a_standalone_manager_with_local_databases/index#Installing_RHEL_for_RHVM_SM_localDB_deploy
 ```
+
+# 在 kvm 环境下使用 kickstart 安装虚拟机 
 virt-install --name=jwang-rhel83-rhvm --vcpus=2 --ram=4096 --disk path=/data/kvm/jwang-rhel83-rhvm.qcow2,bus=virtio,size=120 --os-variant rhel8.0 --network network=default,model=virtio --boot menu=on --graphics none --location  /root/jwang/isos/rhel-8.3-x86_64-dvd.iso --initrd-inject /tmp/ks.cfg --extra-args='ks=file:/ks.cfg console=ttyS0 ip=192.168.122.152::192.168.122.1:255.255.255.0:rhvm.rhcnsa.org:ens3:none'
+
+# 在 RHV 环境下使用 kickstart 安装虚拟机
+# https://access.redhat.com/solutions/300713
+
+kernel path ISO11://vmlinuz-rhel-8.3
+initrd path ISO11://initrd.img-rhel-8.3
+kernel parameters  ks=http://10.66.208.115/ks-rhvm.cfg ksdevice=ens3 ip=10.66.208.152 netmask=255.255.255.0 dns 10.64.63.6 gateway=10.66.208.254
+
 ```

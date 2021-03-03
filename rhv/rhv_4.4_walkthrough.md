@@ -4,13 +4,13 @@
 
 |hostname|ip|role|
 |---|---|---|
-|rhvm1.rhcnsa.org|10.66.208.152/24|rhv manager|
-|node1.rhcnsa.org|10.66.208.153/24|rhv hypervisor|
+|rhvm1.rhcnsa.org|192.168.122.152/24|rhv manager|
+|node1.rhcnsa.org|192.168.122.153/24|rhv hypervisor|
 
 根据最佳实践，环境中建议提供dns和time server
 |dns|gateway|ntp timeserver|
 |---|---|---|
-|10.64.63.6|10.66.208.254|clock.corp.redhat.com|
+|10.64.63.6|192.168.122.1|clock.corp.redhat.com|
 
 ## 安装
 ### 0. 安装前准备好DNS服务器和NTP时间同步服务器（可选）
@@ -158,10 +158,13 @@ engine-setup
 
 请使用RHVH-4.3-20190806.1-RHVH-x86_64-dvd1.iso安装RHV Hypervisor
 
+下载地址：
+https://access.redhat.com/downloads/content/415/ver=4.4/rhel---8/4.4/x86_64/product-software
+
 ```
 rhv4.3/
 |-- isos
-|   |-- RHVH-4.3-20190806.1-RHVH-x86_64-dvd1.iso
+|   |-- RHVH-4.4-20210202.0-RHVH-x86_64-dvd1.iso
 ```
 
 安装步骤参考《INSTALLING RED HAT VIRTUALIZATION AS A STANDALONE MANAGER WITH LOCAL DATABASES》4.1.1 Installing Red Hat Virtualization Hosts

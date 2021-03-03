@@ -10408,6 +10408,8 @@ virsh net-start br0
 virsh net-autostart --network br0
 
 virt-install --name=jwang-helper-undercloud --vcpus=4 --ram=32768 --disk path=/data/kvm/jwang-helper-undercloud.qcow2,bus=virtio,size=100 --os-variant rhel8.0 --network network=openshift4v6,model=virtio --boot menu=on --location /root/jwang/isos/rhel-8.2-x86_64-dvd.iso --graphics none --initrd-inject /tmp/ks-helper.cfg --extra-args='ks=file:/ks-helper.cfg console=ttyS0'
+
+virt-install --name=jwang-rhel83-rhvm --vcpus=2 --ram=4096 --disk path=/data/kvm/jwang-rhel83-rhvm.qcow2,bus=virtio,size=120 --os-variant rhel8.0 --network network=default,model=virtio --boot menu=on --graphics none --location  /root/jwang/isos/rhel-8.3-x86_64-dvd.iso --initrd-inject /tmp/ks-helper.cfg --extra-args='ks=file:/ks-helper.cfg console=ttyS0 ip=192.168.122.152::192.168.122.1:255.255.255.0:rhvm.rhcnsa.org:ens3:none'
 ```
 
 
@@ -11555,3 +11557,6 @@ sudo bash ansible-playbook-command.sh --tags external_deploy_steps
 
 ### RHV 4.4 RHVM Standalone LocalDB deploy
 https://access.redhat.com/documentation/en-us/red_hat_virtualization/4.4/html-single/installing_red_hat_virtualization_as_a_standalone_manager_with_local_databases/index#Installing_RHEL_for_RHVM_SM_localDB_deploy
+```
+virt-install --name=jwang-rhel83-rhvm --vcpus=2 --ram=4096 --disk path=/data/kvm/jwang-rhel83-rhvm.qcow2,bus=virtio,size=120 --os-variant rhel8.0 --network network=default,model=virtio --boot menu=on --graphics none --location  /root/jwang/isos/rhel-8.3-x86_64-dvd.iso --initrd-inject /tmp/ks-helper.cfg --extra-args='ks=file:/ks-helper.cfg console=ttyS0 ip=192.168.122.152::192.168.122.1:255.255.255.0:rhvm.rhcnsa.org:ens3:none'
+```

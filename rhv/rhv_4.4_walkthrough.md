@@ -202,6 +202,23 @@ dnf clean all
 dnf install rhvm -y
 ```
 
+```
+安装过程中的报错信息
+(Fri Mar  5 13:23:50:205404 2021) [sss_cache] [sysdb_domain_cache_connect] (0x0010): DB version too new [0.22], expected [0.21] for domain implicit_files!
+Lower version of database is expected!
+Removing cache files in /var/lib/sss/db should fix the issue, but note that removing cache files will also remove all of your cached credentials.
+Could not open available domains
+useradd: sss_cache exited with status 71
+useradd: Failed to flush the sssd cache.
+
+# 解决方案
+systemctl stop sssd
+rm -rf /var/lib/sss/db/*
+systemctl start sssd
+
+
+```
+
 #### 1.4 执行rhv manager配置
 ```
 engine-setup
@@ -211,12 +228,12 @@ engine-setup
 
 |Question|Default|Answer|
 |---|---|---|
-|Set up Cinderlib integration|No|No|
+|Configure Cinderlib integration|No|No|
 |Configure Engine on this host|Yes|Yes|
-|Configure ovirt-provider-ovn|Yes|Yes|
-|Configure Image I/O Proxy on this host|Yes|Yes|
+|Configure ovirt-provider-ovn|Yes|No|
 |Configure WebSocket Proxy on this host|Yes|Yes|
 |Configure Data Warehouse on this host|Yes|Yes|
+|Configure Grafana on this host|Yes|Yes|
 |Configure VM Console Proxy on this host|Yes|Yes|
 |Host fully qualified DNS name of this server [rhvm1.rhcnsa.org]|rhvm1.rhcnsa.org|rhvm1.rhcnsa.org|
 |Do you want Setup to configure the firewall|Yes|Yes|
@@ -225,17 +242,18 @@ engine-setup
 |Where is the Engine database located? (Local, Remote) [Local]|Local|Local|
 |Would you like Setup to automatically configure postgresql and create Engine database, or prefer to perform that manually? (Automatic, Manual) [Automatic]|Automatic|Automatic|
 |Application mode (Virt, Gluster, Both)|Both|**Virt**|
-|Use default credentials (admin@internal) for ovirt-provider-ovn|Yes|Yes|
 |Default SAN wipe after delete|No|No|
 |Organization name for certificate [rhcnsa.org]|rhcnsa.org|rhcnsa.org|
 |Do you wish to set the application as the default page of the web server|Yes|Yes|
 |Do you wish Setup to configure that, or prefer to perform that manually? (Automatic, Manual)|Automatic|Automatic|
 |Please choose Data Warehouse sampling scale:(1) Basic (2) Full (1, 2)[1]:|1|1|
+|Use Engine admin password as initial Grafana admin password|Yes|Yes|
+|Do you want Setup to continue, with amount of memory less than recommended?|No|Yes|
 
 ### 2. 安装RHV Hypervisor
 #### 2.1 安装RHV Hypervisor
 
-请使用RHVH-4.3-20190806.1-RHVH-x86_64-dvd1.iso安装RHV Hypervisor
+请使用RHVH-4.4-20210202.0-RHVH-x86_64-dvd1.iso安装RHV Hypervisor
 
 下载地址：
 https://access.redhat.com/downloads/content/415/ver=4.4/rhel---8/4.4/x86_64/product-software

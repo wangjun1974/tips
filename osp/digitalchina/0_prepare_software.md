@@ -164,8 +164,9 @@ do
   echo "sync channel $i..."
   reposync -n --delete --download-path="$localPath" --repoid $i --downloadcomps --download-metadata
 
-  echo "create repo $i..."
-  time createrepo -g $(ls "$localPath"$i/repodata/*comps.xml) --update --skip-stat --cachedir /tmp/empty-cache-dir "$localPath"$i
+  # rhel8 no need to run createrepo
+  #echo "create repo $i..."
+  #time createrepo -g $(ls "$localPath"$i/repodata/*comps.xml) --update --skip-stat --cachedir /tmp/#empty-cache-dir "$localPath"$i
 
 done
 

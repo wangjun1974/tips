@@ -11618,3 +11618,32 @@ nodectl
 
 ### 包含很多 Red Hat 培训课程内容的网址
 https://poppywan.readthedocs.io/en/latest/022-rhca/002-RH318/readme/
+
+
+
+
+### Nested KVM in rhv 相关设置
+参考: https://access.redhat.com/solutions/3543721<br>
+参考：https://lists.ovirt.org/pipermail/users/2017-March/080219.html<br>
+```
+# 安装 vdsm-hook-nestedvt 和 vdsm-hook-macspoof
+# https://lists.ovirt.org/pipermail/users/2017-March/080219.html
+# https://www.redhat.com/en/blog/testing-ovirt-33-nested-kvm
+
+# engine-config --get KEY_NAME
+engine-config --get UserDefinedVMProperties=macspoof
+```
+
+
+
+### oVirt SPICE console from a Mac
+https://rizvir.com/articles/ovirt-mac-console/
+```
+# 这个链接里的步骤仍然工作
+```
+
+
+
+### puppylinux
+目前的想法是在虚拟机里运行 puppylinux，然后通过 remote-viewer 访问 puppylinux 的桌面<br>
+http://puppylinux.com/index.html

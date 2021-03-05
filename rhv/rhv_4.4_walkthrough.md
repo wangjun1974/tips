@@ -259,9 +259,8 @@ engine-setup
 https://access.redhat.com/downloads/content/415/ver=4.4/rhel---8/4.4/x86_64/product-software
 
 ```
-rhv4.3/
-|-- isos
-|   |-- RHVH-4.4-20210202.0-RHVH-x86_64-dvd1.iso
+rhv44/
+|-- RHVH-4.4-20210202.0-RHVH-x86_64-dvd1.iso
 ```
 
 安装步骤参考《INSTALLING RED HAT VIRTUALIZATION AS A STANDALONE MANAGER WITH LOCAL DATABASES》4.1.1 Installing Red Hat Virtualization Hosts
@@ -282,10 +281,10 @@ yum install -y nfs-utils
 
 ##### 3.1.2 创建输出的目录
 ```
-mkdir -p /data
+mkdir -p /ds11
 
 cat > /etc/exports << EOF
-/data    *(rw)
+/ds11    *(rw)
 EOF
 ```
 
@@ -293,8 +292,8 @@ EOF
 ```
 groupadd kvm -g 36
 useradd vdsm -u 36 -g 36
-chown -R vdsm:kvm /data
-chmod -R 0755 /data
+chown -R vdsm:kvm /ds11
+chmod -R 0755 /ds11
 ```
 
 ##### 3.1.4 启动服务

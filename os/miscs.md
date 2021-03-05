@@ -11569,4 +11569,26 @@ kernel path ISO11://vmlinuz-rhel-8.3
 initrd path ISO11://initrd.img-rhel-8.3
 kernel parameters  ks=http://10.66.208.115/ks-rhvm.cfg ksdevice=ens3 ip=10.66.208.152 netmask=255.255.255.0 dns 10.64.63.6 gateway=10.66.208.254
 
+# RHVH 的 ks.cfg 例子
+liveimg --url=http://192.168.127.252/xx/squashfs.img
+clearpart --all
+autopart --type=thinp
+rootpw --plaintext redhat
+timezone --utc Asia/Shanghai
+zerombr
+text
+reboot
+%post --erroronfail
+nodectl
+%end
+
+
+# 参考这个链接里的内容
+# https://poppywan.readthedocs.io/en/latest/022-rhca/002-RH318/readme/
+
 ```
+
+
+
+### 包含很多 Red Hat 培训课程内容的网址
+https://poppywan.readthedocs.io/en/latest/022-rhca/002-RH318/readme/

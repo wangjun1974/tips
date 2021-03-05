@@ -29,20 +29,59 @@ rhv4.4
 
 #### 1.2 配置yum软件仓库
 
-备注：假设rhv repos内容已拷贝到/repo下，/repo下包含以下repo
+备注：假设rhv repos内容已拷贝到/repos/rhv44下，/repos/rhv44下包含以下repo
 
 ```
-cd /repo
+cd /repos/rhv44
 tree -L 1 
 .
-|-- jb-eap-7.3-for-rhel-8-x86_64-rpms
+/repos/rhv44/
 |-- ansible-2.9-for-rhel-8-x86_64-rpms
-|-- rhv-4.4-manager-for-rhel-8-x86_64-rpms
-|-- rhel-8-for-x86_64-baseos-rpms
+|-- fast-datapath-for-rhel-8-x86_64-rpms
+|-- jb-eap-7.3-for-rhel-8-x86_64-rpms
 |-- rhel-8-for-x86_64-appstream-rpms
-`-- fast-datapath-for-rhel-8-x86_64-rpms
+|-- rhel-8-for-x86_64-baseos-rpms
+`-- rhv-4.4-manager-for-rhel-8-x86_64-rpms
 
 6 directories, 0 files
+```
+
+# 备注
+# 同步脚本内容
+```
+# 订阅软件仓库
+subscription-manager repos --disable=*
+subscription-manager repos --enable=rhel-8-for-x86_64-baseos-rpms --enable=rhel-8-for-x86_64-appstream-rpms --enable=rhv-4.4-manager-for-rhel-8-x86_64-rpms --enable=fast-datapath-for-rhel-8-x86_64-rpms --enable=jb-eap-7.3-for-rhel-8-x86_64-rpms --enable=ansible-2.9-for-rhel-8-x86_64-rpms
+
+# 同步软件仓库
+mkdir -p /repos/rhv44
+cd /repos/rhv44
+cat > RHV4_4_repo_sync_up.sh << 'EOF'
+#!/bin/bash
+
+localPath="/repos/rhv44/"
+fileConn="/getPackage/"
+
+## sync following yum repos 
+# rhel-8-for-x86_64-baseos-rpms
+# rhel-8-for-x86_64-appstream-rpms
+# rhv-4.4-manager-for-rhel-8-x86_64-rpms
+# ansible-2.9-for-rhel-8-x86_64-rpms
+# fast-datapath-for-rhel-8-x86_64-rpms
+# jb-eap-7.3-for-rhel-8-x86_64-rpms
+
+for i in rhel-8-for-x86_64-baseos-rpms rhel-8-for-x86_64-appstream-rpms rhv-4.4-manager-for-rhel-8-x86_64-rpms ansible-2.9-for-rhel-8-x86_64-rpms fast-datapath-for-rhel-8-x86_64-rpms jb-eap-7.3-for-rhel-8-x86_64-rpms
+do
+
+  rm -rf "$localPath"$i/repodata
+  echo "sync channel $i..."
+  reposync -n --delete --download-path="$localPath" --repoid $i --download-metadata
+
+done
+
+exit 0 
+EOF
+
 ```
 
 配置yum本地源
@@ -50,37 +89,37 @@ tree -L 1
 cat > /etc/yum.repos.d/w.repo << 'EOF'
 [rhel-8-for-x86_64-baseos-rpms]
 name=rhel-8-for-x86_64-baseos-rpms
-baseurl=file:///repo/rhel-8-for-x86_64-baseos-rpms/
+baseurl=file:///repos/rhv44/rhel-8-for-x86_64-baseos-rpms/
 enabled=1
 gpgcheck=0
 
 [rhel-8-for-x86_64-appstream-rpms]
 name=rhel-8-for-x86_64-appstream-rpms
-baseurl=file:///repo/rhel-8-for-x86_64-appstream-rpms/
+baseurl=file:///repos/rhv44/rhel-8-for-x86_64-appstream-rpms/
 enabled=1
 gpgcheck=0
 
 [fast-datapath-for-rhel-8-x86_64-rpms]
 name=fast-datapath-for-rhel-8-x86_64-rpms
-baseurl=file:///repo/fast-datapath-for-rhel-8-x86_64-rpms/
+baseurl=file:///repos/rhv44/fast-datapath-for-rhel-8-x86_64-rpms/
 enabled=1
 gpgcheck=0
 
 [rhv-4.4-manager-for-rhel-8-x86_64-rpms]
 name=rhv-4.4-manager-for-rhel-8-x86_64-rpms
-baseurl=file:///repo/rhv-4.4-manager-for-rhel-8-x86_64-rpms/
+baseurl=file:///repos/rhv44/rhv-4.4-manager-for-rhel-8-x86_64-rpms/
 enabled=1
 gpgcheck=0
 
 [ansible-2.9-for-rhel-8-x86_64-rpms]
 name=ansible-2.9-for-rhel-8-x86_64-rpms
-baseurl=file:///repo/ansible-2.9-for-rhel-8-x86_64-rpms/
+baseurl=file:///repos/rhv44/ansible-2.9-for-rhel-8-x86_64-rpms/
 enabled=1
 gpgcheck=0
 
 [jb-eap-7.3-for-rhel-8-x86_64-rpms]
 name=jb-eap-7.3-for-rhel-8-x86_64-rpms
-baseurl=file:///repo/jb-eap-7.3-for-rhel-8-x86_64-rpms/
+baseurl=file:///repos/rhv44/jb-eap-7.3-for-rhel-8-x86_64-rpms/
 enabled=1
 gpgcheck=0
 EOF
@@ -99,26 +138,34 @@ EOF
 
 注意：
 1. 如果安装操作系统时已设置时间服务器，此步骤可以忽略
-2. 请根据实际情况将clock.corp.redhat.com替换成环境里可用的ntp时间服务器
+2. 将本机设置为时间服务器
 ```
-yum install -y ntp
+yum install -y chrony
 
-cat > /etc/ntp.conf << 'EOF'
-driftfile /var/lib/ntp/drift
-restrict default nomodify notrap nopeer noquery
-restrict 127.0.0.1 
-restrict ::1
-server clock.corp.redhat.com iburst
-includefile /etc/ntp/crypto/pw
-keys /etc/ntp/keys
-disable monitor
+# 生成以本地时间为时间源的时间服务器配置
+cat > /etc/chrony.conf << EOF
+server 10.66.208.152 iburst
+bindaddress 10.66.208.152
+allow all
+local stratum 4
 EOF
 
-systemctl enable ntpd && systemctl start ntpd
+# 在 firewallD 规则里开放 ntp 服务
+sudo firewall-cmd --add-service=ntp
+sudo firewall-cmd --add-service=ntp --permanent
+sudo firewall-cmd --reload
+sudo systemctl enable chronyd && sudo systemctl restart chronyd
+
+# 查看时间源
+chronyc -n sources
+chronyc -n tracking
 ```
 
 #### 1.3 更新系统并安装RHV软件
 ```
+# 启用 pki-deps 模块
+dnf module -y enable pki-deps
+
 yum update -y
 yum install rhvm
 ```

@@ -1957,7 +1957,8 @@ reposync --download-path="$localPath" --download-metadata --repoid=$i  --setopt=
 ```
 
 ### RHEL8 上同步离线仓库的方法
-https://redhatnordicssa.github.io/rhel8-really-fast
+https://redhatnordicssa.github.io/rhel8-really-fast<br>
+https://access.redhat.com/solutions/23016<br>
 ```
 #!/bin/bash
 
@@ -1975,9 +1976,34 @@ do
   echo "sync channel $i..."
   reposync -n --delete --download-path="$localPath" --repoid $i --downloadcomps --download-metadata
 
-  echo "create repo $i..."
+  #echo "create repo $i..."
   #createrepo "$localPath"$i
-  time createrepo -g $(ls "$localPath"$i/repodata/*comps.xml) --update --skip-stat --cachedir /tmp/empty-cache-dir "$localPath"$i
+  #time createrepo -g $(ls "$localPath"$i/repodata/*comps.xml) --update --skip-stat --cachedir /tmp/empty-cache-dir "$localPath"$i
+
+done
+
+exit 0
+
+cat RHV4_4_repo_sync_up.sh 
+#!/bin/bash
+
+localPath="/repos/rhv44/"
+fileConn="/getPackage/"
+
+## sync following yum repos 
+# rhel-8-for-x86_64-baseos-rpms
+# rhel-8-for-x86_64-appstream-rpms
+# rhv-4.4-manager-for-rhel-8-x86_64-rpms
+# ansible-2.9-for-rhel-8-x86_64-rpms
+# fast-datapath-for-rhel-8-x86_64-rpms
+# jb-eap-7.3-for-rhel-8-x86_64-rpms
+
+for i in rhel-8-for-x86_64-baseos-rpms rhel-8-for-x86_64-appstream-rpms rhv-4.4-manager-for-rhel-8-x86_64-rpms ansible-2.9-for-rhel-8-x86_64-rpms fast-datapath-for-rhel-8-x86_64-rpms jb-eap-7.3-for-rhel-8-x86_64-rpms
+do
+
+  rm -rf "$localPath"$i/repodata
+  echo "sync channel $i..."
+  reposync -n --delete --download-path="$localPath" --repoid $i --download-metadata
 
 done
 

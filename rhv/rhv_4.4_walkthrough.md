@@ -70,12 +70,22 @@ fileConn="/getPackage/"
 # fast-datapath-for-rhel-8-x86_64-rpms
 # jb-eap-7.3-for-rhel-8-x86_64-rpms
 
-for i in rhel-8-for-x86_64-baseos-rpms rhel-8-for-x86_64-appstream-rpms rhv-4.4-manager-for-rhel-8-x86_64-rpms ansible-2.9-for-rhel-8-x86_64-rpms fast-datapath-for-rhel-8-x86_64-rpms jb-eap-7.3-for-rhel-8-x86_64-rpms
+for i in rhel-8-for-x86_64-baseos-rpms rhel-8-for-x86_64-appstream-rpms
 do
 
   rm -rf "$localPath"$i/repodata
   echo "sync channel $i..."
   reposync -n --delete --download-path="$localPath" --repoid $i --download-metadata
+
+done
+
+# theses repos download old and new contents to fulfill requires
+for i in rhv-4.4-manager-for-rhel-8-x86_64-rpms ansible-2.9-for-rhel-8-x86_64-rpms fast-datapath-for-rhel-8-x86_64-rpms jb-eap-7.3-for-rhel-8-x86_64-rpms
+do
+
+  rm -rf "$localPath"$i/repodata
+  echo "sync channel $i..."
+  reposync --download-path="$localPath" --repoid $i --download-metadata
 
 done
 
@@ -173,6 +183,17 @@ yum remove crypto-policies-scripts
 # 更新已安装软件到最新
 dnf distro-sync --nobest -y
 dnf upgrade --nobest
+
+cd /repos/rhv44
+dnf install -y createrepo
+
+pushd ansible-2.9-for-rhel-8-x86_64-rpms
+createrepo .
+popd
+pushd rhv-4.4-manager-for-rhel-8-x86_64-rpms
+createrepo .
+popd
+
 dnf install rhvm -y
 ```
 

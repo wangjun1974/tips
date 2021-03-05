@@ -163,11 +163,17 @@ chronyc -n tracking
 
 #### 1.3 更新系统并安装RHV软件
 ```
-# 启用 pki-deps 模块
+# 启用 pki-deps 模块 和 postgresql:12 
 dnf module -y enable pki-deps
+dnf module -y enable postgresql:12
 
-yum update -y
-yum install rhvm
+# 删除产生冲突的软件包
+yum remove crypto-policies-scripts
+
+# 更新已安装软件到最新
+dnf distro-sync --nobest -y
+dnf upgrade --nobest
+dnf install rhvm -y
 ```
 
 #### 1.4 执行rhv manager配置

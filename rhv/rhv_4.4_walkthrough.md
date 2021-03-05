@@ -184,6 +184,7 @@ yum remove crypto-policies-scripts
 dnf distro-sync --nobest -y
 dnf upgrade --nobest
 
+# 以下步骤应该不用执行，依赖关系解决通过压缩包 rhv-4.4-repos-addons-2021-03-05.tar.gz 解决
 cd /repos/rhv44
 dnf install -y createrepo
 
@@ -194,6 +195,10 @@ pushd rhv-4.4-manager-for-rhel-8-x86_64-rpms
 createrepo .
 popd
 
+# ovirt-engine 软件包在 requires 里描述了具体的 ansible 版本，因此不能只下载最新的版本
+tar zxvf rhv-4.4-repos-addons-2021-03-05.tar.gz -C /
+
+dnf clean all
 dnf install rhvm -y
 ```
 

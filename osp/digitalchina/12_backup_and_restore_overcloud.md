@@ -1,5 +1,7 @@
 ```
 # 备份及恢复控制节点
+# OSP 16.1 文档参见
+# https://access.redhat.com/documentation/en-us/red_hat_openstack_platform/16.1/html/undercloud_and_control_plane_back_up_and_restore/creating-a-backup-of-the-undercloud-and-control-plane-nodes_osp-ctlplane-br
 
 # 生成 playbook, playbook 可在 overcloud controller 节点上安装 ReaR
 (undercloud) [stack@undercloud ~]$ cat <<'EOF' > ~/overcloud_bar_rear_setup.yaml
@@ -7,8 +9,18 @@
 # We install and configure ReaR in the control plane nodes
 # As they are the only nodes we will like to backup now.
 - become: true
+  hosts: ceph_mon
+  name: Backup ceph authentication
+  tasks:
+    - name: Backup ceph authentication role
+      include_role:
+        name: backup-and-restore
+        tasks_from: ceph_authentication
+      tags:
+      -  bar_create_recover_image
+- become: true
   hosts: Controller
-  name: Install ReaR
+  name: Create the recovery images for the control plane
   roles:
   - role: backup-and-restore
 EOF
@@ -30,8 +42,8 @@ PLAY RECAP *********************************************************************
 overcloud-controller-0     : ok=12   changed=6    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
 overcloud-controller-1     : ok=12   changed=6    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
 overcloud-controller-2     : ok=12   changed=6    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
-
-# 创建 overcloud controller 备份
+ 
+# 创建 overcloud controller 备份，如果可能的话建议采用另外一种方法创建备份
 # 这种方法会先停止所有服务，执行备份，然后再恢复服务
 (undercloud) [stack@undercloud ~]$ ansible-playbook \
 	-v -i ~/tripleo-inventory.yaml \
@@ -102,5 +114,65 @@ e709be998990  undercloud.ctlplane.example.com:8787/rhosp-rhel8/openstack-mariadb
 Warning: Permanently added 'overcloud-controller-0.ctlplane' (ECDSA) to the list of known hosts.
 0ab97a9a531e47cb5ca528ad7480f8770c82a248b497a9fedc4f29493e648182
 
+# 查看备份进度
+watch -n5 "ssh -t heat-admin@overcloud-controller-0.ctlplane 'sudo dmesg|tail -5 '"
+...
+[278157.683638] SELinux: mount invalid.  Same superblock, different security settings for (dev mqueue, type mqueue)
+[278164.449129] SELinux: mount invalid.  Same superblock, different security settings for (dev mqueue, type mqueue)
+[278171.627351] SELinux: mount invalid.  Same superblock, different security settings for (dev mqueue, type mqueue)
+[278179.729586] SELinux: mount invalid.  Same superblock, different security settings for (dev mqueue, type mqueue)
+[278187.613258] SELinux: mount invalid.  Same superblock, different security settings for (dev mqueue, type mqueue)
+...
+# 等待消息 SELinux: mount invalid.  Same superblock, different security settings for (dev mqueue, type mqueue) 不再出现
+# 这个消息属于无害消息，参见https://access.redhat.com/solutions/3348951
+# SELinux is attempting to mount the mqueue device inside of the container with a different label then the host, but /dev/mqueue is shared on the host. Since there is an existing label the kernel logs this warning.
+# Bug 1425278 - "SELinux: mount invalid. Same superblock, different security settings for (dev mqueue, type mqueue)" error message in logs https://bugzilla.redhat.com/show_bug.cgi?id=1425278
 
+
+ssh heat-admin@overcloud-controller-0.ctlplane "sudo podman ps -a | grep Paused "  | awk '{print $1}' | while read i ; do ssh heat-admin@overcloud-controller-0.ctlplane echo "sudo podman resume $i" </dev/null ; done
+
+ssh heat-admin@overcloud-controller-1.ctlplane "sudo podman ps -a | grep Paused "  | awk '{print $1}' | while read i ; do ssh heat-admin@overcloud-controller-1.ctlplane echo "sudo podman resume $i" </dev/null ; done
+
+ssh heat-admin@overcloud-controller-2.ctlplane "sudo podman ps -a | grep Paused "  | awk '{print $1}' | while read i ; do ssh heat-admin@overcloud-controller-2.ctlplane echo "sudo podman resume $i" </dev/null ; done
+
+ssh heat-admin@overcloud-controller-1.ctlplane "sudo podman ps -a | grep Paused "
+
+# 记录时间
+Mar  8 09:23:04
+
+# 执行命令
+sudo pcs resource cleanup haproxy-bundle
+
+# 查看日志
+sudo cat /var/log/messages | grep -i haproxy -A5 | grep "Mar  8 09:23" | more
+...
+Mar  8 09:23:47 overcloud-controller-2 pacemaker-attrd[3524]: notice: Setting fail-count-haproxy-bundle-podman-2#start_0[overcloud-controller-2]: INFINITY 
+-> (unset)
+Mar  8 09:23:47 overcloud-controller-2 pacemaker-attrd[3524]: notice: Setting last-failure-haproxy-bundle-podman-2#start_0[overcloud-controller-2]: 1615193
+583 -> (unset)
+Mar  8 09:23:47 overcloud-controller-2 pacemaker-controld[3527]: notice: State transition S_IDLE -> S_POLICY_ENGINE
+Mar  8 09:23:48 overcloud-controller-2 pacemaker-schedulerd[3525]: warning: Forcing haproxy-bundle-podman-2 away from overcloud-controller-2 after 1000000 
+failures (max=1000000)
+Mar  8 09:23:48 overcloud-controller-2 pacemaker-schedulerd[3525]: notice: Calculated transition 39, saving inputs in /var/lib/pacemaker/pengine/pe-input-1
+29.bz2
+Mar  8 09:23:49 overcloud-controller-2 pacemaker-schedulerd[3525]: notice:  * Start      haproxy-bundle-podman-2              (                           o
+vercloud-controller-2 )
+Mar  8 09:23:49 overcloud-controller-2 pacemaker-controld[3527]: notice: Initiating monitor operation haproxy-bundle-podman-2_monitor_0 locally on overclou
+d-controller-2
+Mar  8 09:23:49 overcloud-controller-2 pacemaker-schedulerd[3525]: notice: Calculated transition 40, saving inputs in /var/lib/pacemaker/pengine/pe-input-1
+30.bz2
+Mar  8 09:23:49 overcloud-controller-2 pacemaker-controld[3527]: notice: Result of probe operation for haproxy-bundle-podman-2 on overcloud-controller-2: 7
+ (not running)
+Mar  8 09:23:49 overcloud-controller-2 pacemaker-controld[3527]: notice: Initiating start operation haproxy-bundle-podman-2_start_0 locally on overcloud-co
+ntroller-2
+Mar  8 09:23:50 overcloud-controller-2 podman(haproxy-bundle-podman-2)[209240]: INFO: running container haproxy-bundle-podman-2 for the first time
+Mar  8 09:23:50 overcloud-controller-2 podman(haproxy-bundle-podman-2)[209240]: ERROR: Error: error creating container storage: the container name "haproxy
+-bundle-podman-2" is already in use by "8138ca222c93069a907e7d246cde1c9fe9d6fe7d3e8222639cc499515cb78323". You have to remove that container to be able to reuse that name.: that name is already in use
+...
+
+# 尝试强制删除 orphan 容器存储 
+sudo podman rm --force --storage 8138ca222c93069a907e7d246cde1c9fe9d6fe7d3e8222639cc499515cb78323
+
+# 清理资源
+sudo pcs resource cleanup haproxy-bundle
 ```

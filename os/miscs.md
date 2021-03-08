@@ -11647,3 +11647,52 @@ https://rizvir.com/articles/ovirt-mac-console/
 ### puppylinux
 目前的想法是在虚拟机里运行 puppylinux，然后通过 remote-viewer 访问 puppylinux 的桌面<br>
 http://puppylinux.com/index.html
+
+
+
+### RHV 如何设置让 Host 不去 activate Guest 的 LV
+https://access.redhat.com/solutions/2662261<br>
+https://access.redhat.com/solutions/3450192<br>
+
+```
+# In RHEL 7, systemd and lvm are eager to scan and activate anything on a system. This leads to activation of Guest internal LVs.
+
+# 配置步骤
+# 执行对象：数据中心里的每个 Host:
+1. Switch host to Maintenance Mode
+2. SSH to host
+3. If the boot device is a local disk, blacklist it in multipath [*]
+4. Run the vdsm-tool config-lvm-filter tool
+5. Reboot host
+6. Activate host
+
+# /usr/bin/vdsm-tool config-lvm-filter
+...
+This is the recommended LVM filter for this host:
+
+  filter = [ "a|^/dev/vda2$|", "r|.*|" ]
+...
+# mkdir /etc/multipath/conf.d
+# vi /etc/multipath/conf.d/blacklist.conf
+
+blacklist {
+      wwid SIBM-ESXSST336732LC____F3ET0EP0Q000072428BX1
+}
+
+
+[*] Why it is important to blacklist the local device in mutlipath?
+If not configured, in the next boot/upgrade, multipath will take over the device before lvm, lvm would not find it and the machine would fail to boot. For details, see RHV host boot into emergency mode after upgrade .
+https://access.redhat.com/solutions/4000961
+
+```
+
+
+### split example
+```
+split -b 3900M -d rhv-4.4-repos-2021-03-03.tar.gz rhv-4.4-repos-2021-03-03.tar.gz.
+
+ls -lh rhv-4.4-repos-2021-03-03.tar.gz.0*
+-rw-r--r--. 1 root root 3.9G Mar  8 11:36 rhv-4.4-repos-2021-03-03.tar.gz.00
+-rw-r--r--. 1 root root 3.9G Mar  8 11:36 rhv-4.4-repos-2021-03-03.tar.gz.01
+-rw-r--r--. 1 root root 1.2G Mar  8 11:36 rhv-4.4-repos-2021-03-03.tar.gz.02
+```

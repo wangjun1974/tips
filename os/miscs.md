@@ -11679,6 +11679,13 @@ blacklist {
       wwid SIBM-ESXSST336732LC____F3ET0EP0Q000072428BX1
 }
 
+To find the wwid you can run:
+
+    # udevadm info /dev/sda | grep ID_SERIAL=     E: ID_SERIAL=0QEMU_QEMU_HARDDISK_host4-data
+
+This is explained in the linked documentation:
+
+    https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/7/html/dm_multipath/ignore_localdisk_procedure
 
 [*] Why it is important to blacklist the local device in mutlipath?
 If not configured, in the next boot/upgrade, multipath will take over the device before lvm, lvm would not find it and the machine would fail to boot. For details, see RHV host boot into emergency mode after upgrade .
@@ -11696,3 +11703,7 @@ ls -lh rhv-4.4-repos-2021-03-03.tar.gz.0*
 -rw-r--r--. 1 root root 3.9G Mar  8 11:36 rhv-4.4-repos-2021-03-03.tar.gz.01
 -rw-r--r--. 1 root root 1.2G Mar  8 11:36 rhv-4.4-repos-2021-03-03.tar.gz.02
 ```
+
+
+### 如何添加 storage domain
+https://www.youtube.com/watch?v=0fRnpmav-Pw

@@ -12,7 +12,7 @@ https://access.redhat.com/documentation/en-us/red_hat_virtualization/4.4/html-si
 virt-install --name=jwang-rhel83-rhvm --vcpus=4 --ram=32768 \
 --disk path=/data/kvm/jwang-rhel83-rhvm.qcow2,bus=virtio,size=120 \
 --os-variant rhel8.0 --network network=openshift4v6,model=virtio \
---boot menu=on --location /root/jwang/isos/rhel-8.3-x86_64-dvd.iso \
+--boot menu=on --graphics none --location /root/jwang/isos/rhel-8.3-x86_64-dvd.iso \
 --console pty,target_type=serial \
 --initrd-inject /tmp/ks.cfg \
 --extra-args='ks=file:/ks.cfg console=ttyS0'

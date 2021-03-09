@@ -141,6 +141,11 @@ total 5450000
 
 ```
 
+根据链接里的步骤替换 osd<br>
+https://access.redhat.com/documentation/en-us/red_hat_openstack_platform/16.0/html/deploying_an_overcloud_with_containerized_red_hat_ceph/replacing_a_failed_disk
+```
+
+```
 
 
 ```

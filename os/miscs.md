@@ -11707,3 +11707,8 @@ ls -lh rhv-4.4-repos-2021-03-03.tar.gz.0*
 
 ### 如何添加 storage domain
 https://www.youtube.com/watch?v=0fRnpmav-Pw
+
+
+### Build kernel module for Mellanox CX5 on RHEL 8.3
+参见王征写的文档：https://github.com/wangzheng422/docker_env/blob/master/redhat/rhel/rhel8.build.kernel.repo.cache.md
+

@@ -75,13 +75,62 @@ overcloud-controller-2     : ok=12   changed=6    unreachable=0    failed=0    s
 	--extra="tripleo_backup_and_restore_service_manager=false" \
 	~/overcloud_bar_rear_setup.yaml --limit=overcloud-controller-0 2>&1 | tee /tmp/err1 
 
-backup-and-restore : MySQL Grants backup
+# 备份的内容
+[root@base-pvg rhv44]# ls -ltr /ctl_plane_backups/overcloud-controller-0/ /ctl_plane_backups/overcloud-controller-1/ /ctl_plane_backups/overcloud-controller-2/
+total 5423664
+-rw-------. 1 root root  269152256 Mar  8 17:49 overcloud-controller-2.example.com.iso
+-rw-------. 1 root root        291 Mar  8 17:49 VERSION
+-rw-------. 1 root root        202 Mar  8 17:49 README
+-rw-------. 1 root root     744289 Mar  8 17:49 rear-overcloud-controller-2.log
+-rw-------. 1 root root 5199606206 Mar  8 18:26 backup.tar.gz
+-rw-------. 1 root root   84299568 Mar  8 18:26 backup.log
+-rw-------. 1 root root          0 Mar  8 18:26 selinux.autorelabel
+
+/ctl_plane_backups/overcloud-controller-1/:
+total 5484856
+-rw-------. 1 root root  269154304 Mar  8 17:49 overcloud-controller-1.example.com.iso
+-rw-------. 1 root root        291 Mar  8 17:49 VERSION
+-rw-------. 1 root root        202 Mar  8 17:49 README
+-rw-------. 1 root root     743969 Mar  8 17:49 rear-overcloud-controller-1.log
+-rw-------. 1 root root 5262282067 Mar  8 18:26 backup.tar.gz
+-rw-------. 1 root root   84294078 Mar  8 18:26 backup.log
+-rw-------. 1 root root          0 Mar  8 18:27 selinux.autorelabel
+
+/ctl_plane_backups/overcloud-controller-0/:
+total 5450000
+-rw-------. 1 root root  269148160 Mar  8 17:49 overcloud-controller-0.example.com.iso
+-rw-------. 1 root root        291 Mar  8 17:49 VERSION
+-rw-------. 1 root root        202 Mar  8 17:49 README
+-rw-------. 1 root root     744042 Mar  8 17:49 rear-overcloud-controller-0.log
+-rw-------. 1 root root 5226558396 Mar  8 18:27 backup.tar.gz
+-rw-------. 1 root root   84320078 Mar  8 18:27 backup.log
+-rw-------. 1 root root          0 Mar  8 18:27 selinux.autorelabel
+
+# 模拟 overcloud-controller-0 出现故障，尝试恢复 overcloud-controller-0 
+[root@base-pvg rhv44]# virsh list
+ Id    Name                           State
+----------------------------------------------------
+ 132   jwang-helper-undercloud        running
+ 133   jwang-rhel82-undercloud        running
+ 137   jwang-overcloud-ceph01         running
+ 138   jwang-overcloud-ceph02         running
+ 139   jwang-overcloud-ceph03         running
+
+[root@base-pvg rhv44]# virsh destroy jwang-overcloud-ceph01 
+
+[root@base-pvg rhv44]# mv /data/kvm/jwang-overcloud-ceph01.qcow2 /data/kvm/jwang-overcloud-ceph01.qcow2.orignal
+[root@base-pvg rhv44]# mv /data/kvm/jwang-overcloud-ceph01-storage-1.qcow2 /data/kvm/jwang-overcloud-ceph01-storage-1.qcow2.orignal
+[root@base-pvg rhv44]# mv /data/kvm/jwang-overcloud-ceph01-storage-2.qcow2 /data/kvm/jwang-overcloud-ceph01-storage-2.qcow2.original
+[root@base-pvg rhv44]# mv /data/kvm/jwang-overcloud-ceph01-storage-3.qcow2 /data/kvm/jwang-overcloud-ceph01-storage-3.qcow2.original
+
+
 
 ```
 
 
 
 ```
+# 问题定位及解决
 # 执行备份时，任务 TASK backup-and-restore : MySQL Grants backup 在 overcloud-controller-0 上报错
 # 调整 /usr/share/ansible/roles/backup-and-restore/backup/tasks/db_backup.yml 里的 TASK 
 # 注释掉 no_log，可以获得详细的报错信息

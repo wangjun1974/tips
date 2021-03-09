@@ -144,7 +144,100 @@ total 5450000
 根据链接里的步骤替换 osd<br>
 https://access.redhat.com/documentation/en-us/red_hat_openstack_platform/16.0/html/deploying_an_overcloud_with_containerized_red_hat_ceph/replacing_a_failed_disk
 ```
+(undercloud) [stack@undercloud ~]$ ssh heat-admin@overcloud-controller-0.ctlplane sudo podman exec -it ceph-mon-overcloud-controller-0 ceph osd tree 
+Warning: Permanently added 'overcloud-controller-0.ctlplane' (ECDSA) to the list of known hosts.
+ID CLASS WEIGHT  TYPE NAME                       STATUS REWEIGHT PRI-AFF 
+-1       0.87918 root default                                            
+-5       0.29306     host overcloud-controller-0                         
+ 0   hdd 0.09769         osd.0                     down        0 1.00000 
+ 3   hdd 0.09769         osd.3                     down        0 1.00000 
+ 6   hdd 0.09769         osd.6                     down        0 1.00000 
+-3       0.29306     host overcloud-controller-1                         
+ 1   hdd 0.09769         osd.1                       up  1.00000 1.00000 
+ 4   hdd 0.09769         osd.4                       up  1.00000 1.00000 
+ 7   hdd 0.09769         osd.7                       up  1.00000 1.00000 
+-7       0.29306     host overcloud-controller-2                         
+ 2   hdd 0.09769         osd.2                       up  1.00000 1.00000 
+ 5   hdd 0.09769         osd.5                       up  1.00000 1.00000 
+ 8   hdd 0.09769         osd.8                       up  1.00000 1.00000 
 
+# 模版里采用的是 by-path 的方式，因此新替换的磁盘的路径并没有改变
+[heat-admin@overcloud-controller-0 ~]$ sudo ls /dev/disk/by-path/ -l 
+...
+lrwxrwxrwx. 1 root root  9 Mar  9 07:50 virtio-pci-0000:00:09.0 -> ../../vdb
+lrwxrwxrwx. 1 root root  9 Mar  9 07:50 virtio-pci-0000:00:0a.0 -> ../../vdc
+lrwxrwxrwx. 1 root root  9 Mar  9 07:50 virtio-pci-0000:00:0b.0 -> ../../vdd
+
+[heat-admin@overcloud-controller-0 ~]$ sudo lsblk
+NAME   MAJ:MIN RM  SIZE RO TYPE MOUNTPOINT
+vda    253:0    0  100G  0 disk 
+vda1 253:1    0    1M  0 part 
+vda2 253:2    0  100G  0 part /
+vdb    253:16   0  100G  0 disk 
+vdc    253:32   0  100G  0 disk 
+vdd    253:48   0  100G  0 disk 
+
+# 设置环境变量 MON
+[heat-admin@overcloud-controller-0 ~]$ MON=$(sudo podman ps | grep ceph-mon | awk {'print $1'})
+
+# 设置 alias ceph
+alias ceph="sudo podman exec $MON ceph"
+
+# 确认想替换的 osd 状态为 down
+[heat-admin@overcloud-controller-0 ~]$ ceph osd tree | grep osd.0
+ 0   hdd 0.09769         osd.0                     down        0 1.00000 
+[heat-admin@overcloud-controller-0 ~]$ ceph osd tree | grep osd.3
+ 3   hdd 0.09769         osd.3                     down        0 1.00000 
+[heat-admin@overcloud-controller-0 ~]$ ceph osd tree | grep osd.6
+ 6   hdd 0.09769         osd.6                     down        0 1.00000 
+
+# destroy osd
+[heat-admin@overcloud-controller-0 ~]$ ceph osd destroy 0 --yes-i-really-mean-it 
+destroyed osd.0
+[heat-admin@overcloud-controller-0 ~]$ ceph osd destroy 3 --yes-i-really-mean-it 
+destroyed osd.3
+[heat-admin@overcloud-controller-0 ~]$ ceph osd destroy 6 --yes-i-really-mean-it 
+destroyed osd.6
+
+# 停止服务
+[heat-admin@overcloud-controller-0 ~]$ sudo systemctl stop ceph-osd@0
+[heat-admin@overcloud-controller-0 ~]$ sudo systemctl stop ceph-osd@3
+[heat-admin@overcloud-controller-0 ~]$ sudo systemctl stop ceph-osd@6
+
+# 设置环境变量 IMG，指向 ceph 镜像 id
+IMG=$(sudo podman images | grep ceph | awk {'print $3'})
+
+# 设置 alias ceph-volume 
+alias ceph-volume="sudo podman run --rm --privileged --net=host --ipc=host -v /run/lock/lvm:/run/lock/lvm:z -v /var/run/udev/:/var/run/udev/:z -v /dev:/dev -v /etc/ceph:/etc/ceph:z -v /var/lib/ceph/:/var/lib/ceph/:z -v /var/log/ceph/:/var/log/ceph/:z --entrypoint=ceph-volume $IMG --cluster ceph"
+
+# 确认 alias ceph-volume 可正常执行
+[heat-admin@overcloud-controller-0 ~]$ ceph-volume lvm list
+No valid Ceph lvm devices found
+
+# 检查新磁盘，确认新磁盘设备不属于 vg 和 lvm
+[heat-admin@overcloud-controller-0 ~]$ sudo pvdisplay /dev/disk/by-path/virtio-pci-0000:00:09.0
+  Failed to find physical volume "/dev/vdb".
+[heat-admin@overcloud-controller-0 ~]$ sudo pvdisplay /dev/disk/by-path/virtio-pci-0000:00:0a.0
+  Failed to find physical volume "/dev/vdc".
+[heat-admin@overcloud-controller-0 ~]$ sudo pvdisplay /dev/disk/by-path/virtio-pci-0000:00:0b.0
+  Failed to find physical volume "/dev/vdd".
+
+# 确认新的 osd 设备被清理
+[heat-admin@overcloud-controller-0 ~]$ ceph-volume lvm zap /dev/disk/by-path/virtio-pci-0000:00:09.0
+[heat-admin@overcloud-controller-0 ~]$ ceph-volume lvm zap /dev/disk/by-path/virtio-pci-0000:00:0a.0
+[heat-admin@overcloud-controller-0 ~]$ ceph-volume lvm zap /dev/disk/by-path/virtio-pci-0000:00:0b.0
+
+# 创建新 osd 仍使用旧的 id，传递参数 --no-systemd，在容器内需要这个参数
+[heat-admin@overcloud-controller-0 ~]$ ceph-volume lvm create --osd-id 0 --data /dev/disk/by-path/virtio-pci-0000:00:09.0 --no-systemd
+[heat-admin@overcloud-controller-0 ~]$ ceph-volume lvm create --osd-id 3 --data /dev/disk/by-path/virtio-pci-0000:00:0a.0 --no-systemd
+[heat-admin@overcloud-controller-0 ~]$ ceph-volume lvm create --osd-id 6 --data /dev/disk/by-path/virtio-pci-0000:00:0b.0 --no-systemd
+
+# 启动 osd systemd 服务
+[heat-admin@overcloud-controller-0 ~]$ sudo systemctl start ceph-osd@0
+[heat-admin@overcloud-controller-0 ~]$ sudo systemctl start ceph-osd@3
+[heat-admin@overcloud-controller-0 ~]$ sudo systemctl start ceph-osd@6
+
+# 等待一段时间，数据将同步到新恢复的 osd 上
 ```
 
 

@@ -35,7 +35,7 @@ EOF
 	--become \
 	--become-user root \
 	--tags bar_setup_rear \
-	--extra="tripleo_backup_and_restore_nfs_server=192.168.122.1" \
+	--extra="tripleo_backup_and_restore_nfs_server=192.0.2.254" \
 	~/overcloud_bar_rear_setup.yaml
 ...
 PLAY RECAP ************************************************************************************************************************************************
@@ -116,13 +116,27 @@ total 5450000
  138   jwang-overcloud-ceph02         running
  139   jwang-overcloud-ceph03         running
 
+# 关闭虚拟机 jwang-overcloud-ceph01
 [root@base-pvg rhv44]# virsh destroy jwang-overcloud-ceph01 
 
+# 备份虚拟机磁盘
 [root@base-pvg rhv44]# mv /data/kvm/jwang-overcloud-ceph01.qcow2 /data/kvm/jwang-overcloud-ceph01.qcow2.orignal
 [root@base-pvg rhv44]# mv /data/kvm/jwang-overcloud-ceph01-storage-1.qcow2 /data/kvm/jwang-overcloud-ceph01-storage-1.qcow2.orignal
 [root@base-pvg rhv44]# mv /data/kvm/jwang-overcloud-ceph01-storage-2.qcow2 /data/kvm/jwang-overcloud-ceph01-storage-2.qcow2.original
 [root@base-pvg rhv44]# mv /data/kvm/jwang-overcloud-ceph01-storage-3.qcow2 /data/kvm/jwang-overcloud-ceph01-storage-3.qcow2.original
 
+# 新建虚拟机磁盘
+[root@base-pvg ~]# qemu-img create -f qcow2 /data/kvm/jwang-overcloud-ceph01.qcow2 100G
+[root@base-pvg ~]# qemu-img create -f qcow2 /data/kvm/jwang-overcloud-ceph01-storage-1.qcow2 100G
+[root@base-pvg ~]# qemu-img create -f qcow2 /data/kvm/jwang-overcloud-ceph01-storage-2.qcow2 100G
+[root@base-pvg ~]# qemu-img create -f qcow2 /data/kvm/jwang-overcloud-ceph01-storage-3.qcow2 100G
+
+# 设置权限，为虚拟机添加 cdrom，使用 overcloud-controller-0.example.com.iso 作为 cdrom 的镜像
+[root@base-pvg ~]# chmod 775 /ctl_plane_backups/overcloud-controller-0/
+[root@base-pvg ~]# chmod 664 /ctl_plane_backups/overcloud-controller-0/overcloud-controller-0.example.com.iso
+[root@base-pvg ~]# virsh attach-disk jwang-overcloud-ceph01 /ctl_plane_backups/overcloud-controller-0/overcloud-controller-0.example.com.iso hda --type cdrom --mode readonly --config
+
+# 启动虚拟机，选择通过 DVD 启动，使用 ReaR 恢复虚拟机
 
 
 ```

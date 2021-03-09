@@ -142,7 +142,8 @@ total 5450000
 ```
 
 根据链接里的步骤替换 osd<br>
-https://access.redhat.com/documentation/en-us/red_hat_openstack_platform/16.0/html/deploying_an_overcloud_with_containerized_red_hat_ceph/replacing_a_failed_disk
+https://access.redhat.com/documentation/en-us/red_hat_openstack_platform/16.0/html/deploying_an_overcloud_with_containerized_red_hat_ceph/replacing_a_failed_disk<br>
+https://access.redhat.com/documentation/en-us/red_hat_openstack_platform/16.1/html-single/deploying_an_overcloud_with_containerized_red_hat_ceph/index#ensuring-osd-down-and-destroyed<br>
 ```
 (undercloud) [stack@undercloud ~]$ ssh heat-admin@overcloud-controller-0.ctlplane sudo podman exec -it ceph-mon-overcloud-controller-0 ceph osd tree 
 Warning: Permanently added 'overcloud-controller-0.ctlplane' (ECDSA) to the list of known hosts.

@@ -378,6 +378,9 @@ cp kernel.spec kernel.spec.orig
 # 自定义内核名称
 sed -i "s/# define buildid \\.local/%define buildid \\.cuc/" kernel.spec
 
+# 编译内核 rpm 
 rpmbuild -bb --target=$(uname -m) --with baseonly --without debug --without debuginfo --without kabichk kernel.spec 2> build-err.log | tee build-out.log
+
+# 安装内核 rpm
 
 ```

@@ -45,9 +45,30 @@ acpi  dmi  efi  memmap  qemu_fw_cfg
 ## rhel-8-for-x86_64-appstream-rpms
 ## rhel-8-for-x86_64-supplementary-rpms
 ## codeready-builder-for-rhel-8-x86_64-rpms
+## 下载后的文件为 rhel8.dnf.tgz.aa - rhel8.dnf.tgz.ae
 ## 需要安装的软件包括 dpdk 和 openvswitch
 
+# mkdir -p /data
+# cat rhel8.dnf.tgz.a* > rhel8.dnf.tgz
+# tar zxf rhel8.dnf.tgz -C /data
+
+# cat << EOF > /etc/yum.repos.d/remote.repo
+[appstream]
+name=appstream
+baseurl=file:///data/dnf/rhel-8-for-x86_64-appstream-rpms
+enabled=1
+gpgcheck=0
+
+[baseos]
+name=baseos
+baseurl=file:///data/dnf/rhel-8-for-x86_64-baseos-rpms
+enabled=1
+gpgcheck=0
+EOF
+
+
 ### 安装依赖包
+## 以下步骤可以不用在 rhel 8.3 上执行
 ## 安装依赖包时没有安装 epel-release
 # yum groupinstall -y 'Development Tools' 'System Tools'
 # yum install -y policycoreutils-python-utils
@@ -55,10 +76,14 @@ acpi  dmi  efi  memmap  qemu_fw_cfg
 # yum install -y cmake elfutils-devel zlib-devel
 # yum install -y perl pciutils gcc-gfortran tcsh expat glib2 tcl libstdc++ bc tk gtk2 atk cairo numactl pkgconfig ethtool lsof python36 gcc-gfortran tcsh pciutils tk tcl unbound
 
+
+# yum groupinstall -y 'Development Tools'
+# yum install python36 tcl tk tcsh gcc-gfortran lsof pciutils
+
 ### 安装OFED驱动
-## 挂载OFED-5.2-2.0.7介质
+## 挂载 MLNX_OFED_LINUX-5.2-2.2.0.0 介质
 # mkdir /mnt/ofed
-# mount -o loop /path_to/MLNX_OFED_LINUX-5.2-2.0.7.0-rhel8.3-x86_64.iso /mnt/ofed
+# mount -o loop /path_to/MLNX_OFED_LINUX-5.2-2.2.0.0-rhel8.3-x86_64 /mnt/ofed
 
 ## 执行安装命令
 # cd /mnt/ofed
@@ -75,8 +100,9 @@ acpi  dmi  efi  memmap  qemu_fw_cfg
 # modinfo mlx5_core
 # ibdev2netdev -v
 
-## 安装openvswitch
-#  yum install -y mlnx-dpdk-xxxx.x86_64.rpm mlnx-dpdk-devel-xxxx.x86_64.rpm openvswitch-xxxx.x86_64.rpm
+## 安装openvswitch 
+## 安装的软件来自 MLNX_OFED_LINUX-5.2-2.2.0.0 介质
+# yum install -y RPMS/mlnx-dpdk-20.11.0-1.52220.x86_64.rpm RPMS/mlnx-dpdk-devel-20.11.0-1.52220.x86_64.rpm RPMS/openvswitch-2.14.1-1.52220.x86_64.rpm
 
 ### 配置SR-IOV
 ## 参考文档: https://docs.mellanox.com/pages/viewpage.action?pageId=39285091

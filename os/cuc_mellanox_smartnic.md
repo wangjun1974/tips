@@ -94,6 +94,9 @@ enabled=1
 gpgcheck=0
 EOF
 
+## 更新系统并重启
+# yum update -y
+# reboot 
 
 ### 安装依赖包
 ## 注意：以下步骤可以不用在 rhel 8.3 上执行
@@ -105,6 +108,10 @@ EOF
 # yum install -y perl pciutils gcc-gfortran tcsh expat glib2 tcl libstdc++ bc tk gtk2 atk cairo numactl pkgconfig ethtool lsof python36 gcc-gfortran tcsh pciutils tk tcl unbound
 
 ## 在 rhel 8.3 上执行
+# yum update -y
+# reboot 
+
+## 安装编译环境
 # yum groupinstall -y 'Development Tools'
 # yum install python36 tcl tk tcsh gcc-gfortran lsof pciutils
 
@@ -304,6 +311,7 @@ recirc_id(0),in_port(6),eth(src=4a:9a:3a:69:36:5c,dst=0e:4e:1c:6c:cc:ab),eth_typ
 
 ```
 ### rhel 8.3 上编译内核的步骤
+## 步骤参考王征写的文档里的步骤：https://github.com/wangzheng422/docker_env/blob/master/redhat/rhel/rhel8.build.kernel.repo.cache.md
 ## 安装 yum-utils 和 rpm-build
 # yum -y install yum-utils rpm-build 
 

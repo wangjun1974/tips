@@ -11712,3 +11712,19 @@ https://www.youtube.com/watch?v=0fRnpmav-Pw
 ### Build kernel module for Mellanox CX5 on RHEL 8.3
 参见王征写的文档：https://github.com/wangzheng422/docker_env/blob/master/redhat/rhel/rhel8.build.kernel.repo.cache.md
 
+
+### build kernel
+```
+yum -y install yum-utils rpm-build 
+
+cd /root
+yumdownloader --source kernel.x86_64
+rpm -ivh /root/kernel-4.18.0-240.1.1.el8_3.src.rpm
+
+cd /root/rpmbuild/SPECS
+
+yum-builddep kernel.spec
+
+
+
+```

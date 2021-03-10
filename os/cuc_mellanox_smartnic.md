@@ -39,13 +39,17 @@ acpi  dmi  efi  memmap  qemu_fw_cfg
 
 ### 下载驱动和dpdk+openvswitch介质
 ## 链接: https://pan.baidu.com/s/1B4bRcnpyAv8L-GzPB32Orw 密码: r9ck
-## 这个目录包含 rhel 8.3 的软件仓库
+## 这个目录包含软件仓库
 ## rhel-8-for-x86_64-baseos-rpms
 ## rhel-8-for-x86_64-baseos-source-rpms
 ## rhel-8-for-x86_64-appstream-rpms
 ## rhel-8-for-x86_64-supplementary-rpms
 ## codeready-builder-for-rhel-8-x86_64-rpms
 ## 下载后的文件为 rhel8.dnf.tgz.aa - rhel8.dnf.tgz.ae
+## 链接: https://pan.baidu.com/s/1A9ADVV_XymTatrL20A-SrQ 提取码: qis9
+## 这个目录包含软件仓库
+## fast-datapath-for-rhel-8-x86_64-rpms
+## openstack-16.1-for-rhel-8-x86_64-rpms 
 ## 需要安装的软件包括 dpdk 和 openvswitch
 
 # mkdir -p /data
@@ -64,11 +68,35 @@ name=baseos
 baseurl=file:///data/dnf/rhel-8-for-x86_64-baseos-rpms
 enabled=1
 gpgcheck=0
+
+[remote-baseos-source]
+name=baseos-source
+baseurl=file:///data/dnf/rhel-8-for-x86_64-baseos-source-rpms
+enabled=1
+gpgcheck=0
+
+[fast-datapath]
+name=fast-datapath
+baseurl=file:///data/dnf/fast-datapath-for-rhel-8-x86_64-rpms
+enabled=1
+gpgcheck=0
+
+[openstack-16.1]
+name=openstack-16.1
+baseurl=file:///data/dnf/openstack-16.1-for-rhel-8-x86_64-rpms
+enabled=1
+gpgcheck=0
+
+[remote-codeready-builder]
+name=supplementary
+baseurl=file:///data/dnf/codeready-builder-for-rhel-8-x86_64-rpms
+enabled=1
+gpgcheck=0
 EOF
 
 
 ### 安装依赖包
-## 以下步骤可以不用在 rhel 8.3 上执行
+## 注意：以下步骤可以不用在 rhel 8.3 上执行
 ## 安装依赖包时没有安装 epel-release
 # yum groupinstall -y 'Development Tools' 'System Tools'
 # yum install -y policycoreutils-python-utils
@@ -76,11 +104,11 @@ EOF
 # yum install -y cmake elfutils-devel zlib-devel
 # yum install -y perl pciutils gcc-gfortran tcsh expat glib2 tcl libstdc++ bc tk gtk2 atk cairo numactl pkgconfig ethtool lsof python36 gcc-gfortran tcsh pciutils tk tcl unbound
 
-
+## 在 rhel 8.3 上执行
 # yum groupinstall -y 'Development Tools'
 # yum install python36 tcl tk tcsh gcc-gfortran lsof pciutils
 
-### 安装OFED驱动
+### 安装 OFED 驱动
 ## 挂载 MLNX_OFED_LINUX-5.2-2.2.0.0 介质
 # mkdir /mnt/ofed
 # mount -o loop /path_to/MLNX_OFED_LINUX-5.2-2.2.0.0-rhel8.3-x86_64 /mnt/ofed
@@ -102,7 +130,7 @@ EOF
 
 ## 安装 openvswitch 
 ## 安装的软件来自 MLNX_OFED_LINUX-5.2-2.2.0.0 介质
-# yum install -y RPMS/mlnx-dpdk-20.11.0-1.52220.x86_64.rpm RPMS/mlnx-dpdk-devel-20.11.0-1.52220.x86_64.rpm RPMS/openvswitch-2.14.1-1.52220.x86_64.rpm
+# yum install -y RPMS/mlnx-dpdk-20.11.0-1.52220.x86_64.rpm RPMS/mlnx-dpdk-devel-20.11.0-1.52220.x86_64.rpm RPMS/
 
 ### 配置SR-IOV
 ## 参考文档: https://docs.mellanox.com/pages/viewpage.action?pageId=39285091
@@ -269,5 +297,79 @@ ufid:9b0596d9-d3c6-4c88-aadb-087a81690c22, skb_priority(0/0),skb_mark(0/0),ct_st
 # ovs-appctl dpctl/dump-flows type=offloaded
 recirc_id(0),in_port(6),eth(src=4a:9a:3a:69:36:5c,dst=0e:4e:1c:6c:cc:ab),eth_type(0x0800),ipv4(frag=no), packets:136600676, bytes:206813409172, used:0.170s, actions:4
 
+
+```
+
+
+
+```
+### rhel 8.3 上编译内核的步骤
+## 安装 yum-utils 和 rpm-build
+# yum -y install yum-utils rpm-build 
+
+## 下载并安装 kernel src rpm
+# cd /root
+# yumdownloader --source kernel.x86_64
+# rpm -ivh /root/kernel-4.18.0-240.1.1.el8_3.src.rpm
+
+## 安装编译依赖
+# cd /root/rpmbuild/SPECS
+# yum install libselinux-devel
+# yum-builddep kernel.spec
+
+## 建立编译环境
+# rpm-build -bp kernel.spec
+
+# https://www.cnblogs.com/luohaixian/p/9313863.html
+KERNELVERION=$(uname -r | sed "s/.$(uname -m)//")
+KERNELRV=$(uname -r)
+KERNELSV=$(echo $KERNELRV | sed 's/_.//')
+# /bin/cp -f /root/rpmbuild/BUILD/kernel-${KERNELVERION}/linux-${KERNELSV}/configs/* /root/rpmbuild/SOURCES/
+
+cd /root/rpmbuild/BUILD/kernel-${KERNELVERION}/linux-${KERNELSV}/
+
+/bin/cp -f configs/kernel-4.18.0-$(uname -m).config .config
+
+make oldconfig
+
+cp .config .config.orig
+
+make menuconfig
+
+## 根据需要调整以下配置项目
+## 执行 make menuconfig
+## 按 '/' 搜索
+## 以 CONFIG_NF_FLOW_TABLE_IPV4 为例
+## 按 '/' 搜索，输入 CONFIG_NF_FLOW_TABLE_IPV4，然后按 1, 按 M
+## 其他项目与上述过程相同，最后选择 ‘Save' 并退出 
+# CONFIG_MLX5_TC_CT=y
+# CONFIG_NET_ACT_CT=m
+# CONFIG_SKB_EXTENSIONS=y
+# CONFIG_NET_TC_SKB_EXT=y
+# CONFIG_NF_FLOW_TABLE=m
+# CONFIG_NF_FLOW_TABLE_IPV4=m  x
+# CONFIG_NF_FLOW_TABLE_IPV6=m  x
+# CONFIG_NF_FLOW_TABLE_INET=m
+# CONFIG_NET_ACT_CONNMARK=m x
+# CONFIG_NET_ACT_IPT=m  x
+# CONFIG_NET_EMATCH_IPT=m   x
+# CONFIG_NET_ACT_IFE=m  x
+
+## 在 .config 文件开始位置插入 # x86_64
+sed -i '1s/^/# x86_64\n/' .config
+
+## 将作出的修改拷贝到 /root/rpmbuild/SOURCESf
+/bin/cp -f .config configs/kernel-4.18.0-$(uname -m).config
+/bin/cp -f .config configs/kernel-x86_64.config
+/bin/cp -f configs/* /root/rpmbuild/SOURCES/
+
+cd /root/rpmbuild/SPECS
+cp kernel.spec kernel.spec.orig
+# https://fedoraproject.org/wiki/Building_a_custom_kernel
+
+# 自定义内核名称
+sed -i "s/# define buildid \\.local/%define buildid \\.cuc/" kernel.spec
+
+rpmbuild -bb --target=$(uname -m) --with baseonly --without debug --without debuginfo --without kabichk kernel.spec 2> build-err.log | tee build-out.log
 
 ```

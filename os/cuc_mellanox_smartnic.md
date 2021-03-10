@@ -100,7 +100,7 @@ EOF
 # modinfo mlx5_core
 # ibdev2netdev -v
 
-## 安装openvswitch 
+## 安装 openvswitch 
 ## 安装的软件来自 MLNX_OFED_LINUX-5.2-2.2.0.0 介质
 # yum install -y RPMS/mlnx-dpdk-20.11.0-1.52220.x86_64.rpm RPMS/mlnx-dpdk-devel-20.11.0-1.52220.x86_64.rpm RPMS/openvswitch-2.14.1-1.52220.x86_64.rpm
 

@@ -11728,3 +11728,29 @@ yum-builddep kernel.spec
 
 
 ```
+
+### CentOS/RHEL 8: how to build the kernel RPM with native CPU optimizations
+https://www.getpagespeed.com/server-setup/centos-rhel-8-how-to-build-the-kernel-rpm-with-native-optimizations
+
+```
+cat > build-install-native-kernel.sh << 'EOF'
+#!/bin/bash
+sudo dnf -y install https://extras.getpagespeed.com/release-latest.rpm
+sudo dnf install mock replace
+sudo usermod -a -G mock $USER
+mkdir -p ~/kernel-native
+cd ~/kernel-native
+dnf download --source kernel
+rpm2cpio kernel-*.src.rpm | cpio -idmv
+
+RPM_OPT_FLAGS=`echo $(rpm -E %optflags) | sed 's@-O2@-O3@' | sed  's@-m64@-march=native@' | sed 's@-mtune=generic@-mtune=native@'`
+replace '${RPM_OPT_FLAGS}' "${RPM_OPT_FLAGS}" -- kernel.spec
+replace '# define buildid .local' '%define buildid .native' -- kernel.spec
+mock -r epel-8-x86_64 --no-clean --no-cleanup-after --spec=$spec --sources=. --resultdir=. --buildsrpm
+mock -r epel-8-x86_64 --no-clean --no-cleanup-after --rebuild --resultdir=. *.src.rpm
+# sudo dnf install kernel-4*.native.*x86_64.rpm kernel-core-4*.native.*x86_64.rpm kernel-modules-4*.native.*x86_64.rpm
+EOF
+```
+
+使用 mock 编译 rpm 包<br>
+https://blog.packagecloud.io/eng/2015/05/11/building-rpm-packages-with-mock/

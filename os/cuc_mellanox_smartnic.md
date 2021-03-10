@@ -1,8 +1,8 @@
 
 相关步骤参考谭春阳所写的《在BCLinux8.1上安装配置OFED+OVS-kernel硬件offload》
 
-配置 iommu 和 HugePage
 ```
+### 配置 iommu 和 HugePage
 ## 在 GRUB_CMDLINE_LINUX 结尾处添加 intel_iommu=on iommu=pt default_hugepagesz=1G hugepagesz=1G hugepages=8
 # cat /etc/default/grub
 GRUB_TIMEOUT=5
@@ -18,7 +18,7 @@ GRUB_ENABLE_BLSCFG=true
 # ls /sys/firmware/
 acpi  dmi  efi  memmap  qemu_fw_cfg
 
-## 如果存在efi目录说明，使用的是UEFI，启动配置文件为
+## 如果存在 efi 目录说明，使用的是 UEFI，启动配置文件为
 # find /boot/efi/EFI -name "grub.cfg"
 /boot/efi/EFI/redhat/grub.cfg
 
@@ -33,11 +33,11 @@ acpi  dmi  efi  memmap  qemu_fw_cfg
 ## 重启系统
 # reboot
 
-## 确认iommu和HugePage设置生效
+### 确认iommu和HugePage设置生效
 ## 输出里应包含 intel_iommu=on iommu=pt default_hugepagesz=1G hugepagesz=1G hugepages=8
 # cat /proc/cmdline
 
-## 下载驱动和dpdk+openvswitch介质
+### 下载驱动和dpdk+openvswitch介质
 ## 链接: https://pan.baidu.com/s/1B4bRcnpyAv8L-GzPB32Orw 密码: r9ck
 ## 这个目录包含 rhel 8.3 的软件仓库
 ## rhel-8-for-x86_64-baseos-rpms
@@ -47,7 +47,7 @@ acpi  dmi  efi  memmap  qemu_fw_cfg
 ## codeready-builder-for-rhel-8-x86_64-rpms
 ## 需要安装的软件包括 dpdk 和 openvswitch
 
-## 安装依赖包
+### 安装依赖包
 ## 安装依赖包时没有安装 epel-release
 # yum groupinstall -y 'Development Tools' 'System Tools'
 # yum install -y policycoreutils-python-utils
@@ -55,7 +55,7 @@ acpi  dmi  efi  memmap  qemu_fw_cfg
 # yum install -y cmake elfutils-devel zlib-devel
 # yum install -y perl pciutils gcc-gfortran tcsh expat glib2 tcl libstdc++ bc tk gtk2 atk cairo numactl pkgconfig ethtool lsof python36 gcc-gfortran tcsh pciutils tk tcl unbound
 
-## 安装OFED驱动
+### 安装OFED驱动
 ## 挂载OFED-5.2-2.0.7介质
 # mkdir /mnt/ofed
 # mount -o loop /path_to/MLNX_OFED_LINUX-5.2-2.0.7.0-rhel8.3-x86_64.iso /mnt/ofed
@@ -78,7 +78,7 @@ acpi  dmi  efi  memmap  qemu_fw_cfg
 ## 安装openvswitch
 #  yum install -y mlnx-dpdk-xxxx.x86_64.rpm mlnx-dpdk-devel-xxxx.x86_64.rpm openvswitch-xxxx.x86_64.rpm
 
-## 配置SR-IOV
+### 配置SR-IOV
 ## 参考文档: https://docs.mellanox.com/pages/viewpage.action?pageId=39285091
 ## 本文以物理网口enp216s0f0为例
 ## 在固件层面打开SR-IOV选项
@@ -94,14 +94,14 @@ supports-eeprom-access: no
 supports-register-dump: no
 supports-priv-flags: yes
 
-## 根据上述命令得到PCI id，然后执行：
+## 根据上述命令得到 PCI id，然后执行：
 # mlxconfig -y -d 0000:d8:00.0 set SRIOV_EN=1 UCTX_EN=1 NUM_OF_VFS=8
-## 备注：NUM_OF_VFS最大值127
+## 备注：NUM_OF_VFS 最大值 127
 
 ## 重启系统
 # reboot
 
-## 从系统层面生成SR-IOV VF设备
+## 从系统层面生成 SR-IOV VF 设备
 # echo 4 > /sys/class/net/enp216s0f0/device/sriov_numvfs
 # ip -d link show
 ...
@@ -115,7 +115,7 @@ supports-priv-flags: yes
     link/ether b8:59:9f:ce:2c:eb brd ff:ff:ff:ff:ff:ff promiscuity 0 addrgenmode none numtxqueues 1016 numrxqueues 126 gso_max_size 65536 gso_max_segs 65535 portname p1 
 ...
 
-## 给representor设备配置MAC地址
+## 给 representor 设备配置MAC地址
 # for id in {0..3};do \
     od -An -N6 -tx1 /dev/urandom | sed -e 's/^  *//' -e 's/  */:/g'; \
 done
@@ -137,8 +137,8 @@ e0:18:f7:1b:8f:d9
     vf 2 MAC 00:48:9d:d1:c9:00, spoof checking off, link-state auto, trust off, query_rss off
     vf 3 MAC 60:03:82:7e:1a:d1, spoof checking off, link-state auto, trust off, query_rss off
 
-### 配置SwitchDev
-## 解绑所有VF
+### 配置 switchdev
+## 解绑所有 VF
 # readlink /sys/class/net/enp216s0f0/device/virtfn* | cut -d '/' -f 2
 0000:d8:00.2
 0000:d8:00.3
@@ -150,10 +150,10 @@ e0:18:f7:1b:8f:d9
 # echo 0000:d8:00.4 > /sys/bus/pci/drivers/mlx5_core/unbind
 # echo 0000:d8:00.5 > /sys/bus/pci/drivers/mlx5_core/unbind
 
-## 设置PF设备工作模式为switchdev
+## 设置 PF 设备工作模式为 switchdev
 # devlink dev eswitch set pci/0000:d8:00.0 mode switchdev
 
-## 如果遇到失败的错误提示，那么可以先停止所有VF设备再尝试
+## 如果遇到失败的错误提示，那么可以先停止所有 VF 设备再尝试
 # echo 0 > /sys/class/net/enp216s0f0/device/sriov_numvfs
 # ip -d link show enp216s0f0
 2: enp216s0f0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc mq state UP mode DEFAULT group default qlen 1000
@@ -162,32 +162,32 @@ e0:18:f7:1b:8f:d9
 ## 退回普通工作模式的命令是:
 # devlink dev eswitch set pci/0000:d8:00.0 mode legacy
 
-## 重新绑定VF
+## 重新绑定 VF
 # echo 0000:d8:00.2 > /sys/bus/pci/drivers/mlx5_core/bind
 # echo 0000:d8:00.3 > /sys/bus/pci/drivers/mlx5_core/bind
 # echo 0000:d8:00.4 > /sys/bus/pci/drivers/mlx5_core/bind
 # echo 0000:d8:00.5 > /sys/bus/pci/drivers/mlx5_core/bind
 
 ### 配置Open vSwitch
-## 启动ovs
+## 启动 ovs 服务
 # systemctl start openvswitch
 
-## 添加桥设备
+## 添加 ovs bridge 'ovs-sriov'
 # ovs-vsctl add-br ovs-sriov
 
-## 启用硬件offload
+## 启用硬件 offload
 # ovs-vsctl set Open_vSwitch . other_config:hw-offload=true
 
-## 重启ovs
+## 重启 ovs 服务
 # systemctl restart openvswitch
 
-## 查看ovs-vsctl list open配置信息
+## 查看 ovs-vsctl list open 配置信息
 # ovs-vsctl list open
 ...
 other_config        : {hw-offload="true"}
 ...
 
-## 添加representor设备到桥
+## 添加 representor 设备到桥
 # ovs-vsctl add-port ovs-sriov enp216s0f0
 # ovs-vsctl add-port ovs-sriov enp216s0f0_0
 # ovs-vsctl add-port ovs-sriov enp216s0f0_1
@@ -211,32 +211,32 @@ c71ab696-566b-4e3a-bc73-5e2ffc7a8cf8
                 type: internal
     ovs_version: "2.14.1"
 
-## 启动SR-IOV VF和representor设备
+## 启动SR-IOV VF 和 representor 设备
 # for id in {0..3};do \
     ip link set enp216s0f0v$id up; \
     ip link set enp216s0f0_$id up; \
 done
 
-### 测试和验证硬件offload生效
+### 测试和验证硬件 offload 生效
 ## 搭建同样配置的另一台测试机
-## 这台机器作为iperf3的客户端。
-## 安装iperf3
+## 这台机器作为 iperf3 的客户端。
+## 安装 iperf3
 ## 在两台机器上都执行
 # yum install -y iperf3
 
-## 给SR-IOV VF设备配置IP地址
-## 注意：必须在SR-IOV VF设备，而不是representor设备上配置IP地址才能使硬件offload生效。
-## 分别在两台机器上配置IP地址，选择第一个VF口
+## 给 SR-IOV VF 设备配置 IP 地址
+## 注意：必须在 SR-IOV VF 设备，而不是 representor 设备上配置IP地址才能使硬件 offload 生效。
+## 分别在两台机器上配置 IP 地址，选择第一个 VF 口
 ## 客户端：
 # ip addr add dev enp3s0f0v0 192.168.5.21/24
 ## 服务器端
 # ip addr add dev enp216s0f0v0 192.168.5.22/24
-## 启动iperf3服务器端
+## 启动 iperf3 服务器端
 # iperf3 -s -i 1
-## 使用iperf3客户端打流
+## 使用 iperf3 客户端打流
 # iperf3 -c 192.168.5.22 -i 1 -t 1800
 
-## 从iperf3服务器端查看流状态
+## 从 iperf3 服务器端查看流状态
 # ovs-appctl dpctl/dump-flows -m | egrep offload
 ufid:9b0596d9-d3c6-4c88-aadb-087a81690c22, skb_priority(0/0),skb_mark(0/0),ct_state(0/0),ct_zone(0/0),ct_mark(0/0),ct_label(0/0),recirc_id(0),dp_hash(0/0),in_port(enp216s0f0),packet_type(ns=0/0,id=0/0),eth(src=4a:9a:3a:69:36:5c,dst=0e:4e:1c:6c:cc:ab),eth_type(0x0800),ipv4(src=0.0.0.0/0.0.0.0,dst=0.0.0.0/0.0.0.0,proto=0/0,tos=0/0,ttl=0/0,frag=no), packets:54114480, bytes:81929308428, used:0.520s, offloaded:yes, dp:tc, actions:enp216s0f0_0
 

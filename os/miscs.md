@@ -11754,3 +11754,6 @@ EOF
 
 使用 mock 编译 rpm 包<br>
 https://blog.packagecloud.io/eng/2015/05/11/building-rpm-packages-with-mock/
+
+Building a custom kernel/Source RPM<br>
+https://fedoraproject.org/wiki/Building_a_custom_kernel/Source_RPM

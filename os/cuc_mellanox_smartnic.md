@@ -1,5 +1,8 @@
 
 相关步骤参考谭春阳所写的《在BCLinux8.1上安装配置OFED+OVS-kernel硬件offload》
+参考：OVS Offload Using ASAP2 Direct<br>
+https://docs.mellanox.com/display/MLNXOFEDv471001/OVS+Offload+Using+ASAP2+Direct
+
 
 ```
 ### 配置 iommu 和 HugePage
@@ -326,13 +329,12 @@ recirc_id(0),in_port(6),eth(src=4a:9a:3a:69:36:5c,dst=0e:4e:1c:6c:cc:ab),eth_typ
 # yum-builddep kernel.spec
 
 ## 建立编译环境
-# rpm-build -bp kernel.spec
+# rpmbuild -bp kernel.spec
 
 # https://www.cnblogs.com/luohaixian/p/9313863.html
 KERNELVERION=$(uname -r | sed "s/.$(uname -m)//")
 KERNELRV=$(uname -r)
 KERNELSV=$(echo $KERNELRV | sed 's/_.//')
-# /bin/cp -f /root/rpmbuild/BUILD/kernel-${KERNELVERION}/linux-${KERNELSV}/configs/* /root/rpmbuild/SOURCES/
 
 cd /root/rpmbuild/BUILD/kernel-${KERNELVERION}/linux-${KERNELSV}/
 
@@ -340,12 +342,10 @@ cd /root/rpmbuild/BUILD/kernel-${KERNELVERION}/linux-${KERNELSV}/
 
 make oldconfig
 
-cp .config .config.orig
-
 make menuconfig
 
-## 根据需要调整以下配置项目
 ## 执行 make menuconfig
+## 根据需要调整以下配置项目
 ## 按 '/' 搜索
 ## 以 CONFIG_NF_FLOW_TABLE_IPV4 为例
 ## 按 '/' 搜索，输入 CONFIG_NF_FLOW_TABLE_IPV4，然后按 1, 按 M
@@ -363,10 +363,13 @@ make menuconfig
 # CONFIG_NET_EMATCH_IPT=m   x
 # CONFIG_NET_ACT_IFE=m  x
 
+## 检查更改情况
+cat .config | grep -E "CONFIG_NF_FLOW_TABLE_IPV4|CONFIG_NF_FLOW_TABLE_IPV6|CONFIG_NET_ACT_CONNMARK|CONFIG_NET_ACT_IPT|CONFIG_NET_EMATCH_IPT|CONFIG_NET_ACT_IFE" 
+
 ## 在 .config 文件开始位置插入 # x86_64
 sed -i '1s/^/# x86_64\n/' .config
 
-## 将作出的修改拷贝到 /root/rpmbuild/SOURCESf
+## 将作出的修改拷贝到 /root/rpmbuild/SOURCES
 /bin/cp -f .config configs/kernel-4.18.0-$(uname -m).config
 /bin/cp -f .config configs/kernel-x86_64.config
 /bin/cp -f configs/* /root/rpmbuild/SOURCES/
@@ -374,12 +377,11 @@ sed -i '1s/^/# x86_64\n/' .config
 cd /root/rpmbuild/SPECS
 cp kernel.spec kernel.spec.orig
 # https://fedoraproject.org/wiki/Building_a_custom_kernel
-
 # 自定义内核名称
 sed -i "s/# define buildid \\.local/%define buildid \\.cuc/" kernel.spec
 
 # 编译内核 rpm 
-rpmbuild -bb --target=$(uname -m) --with baseonly --without debug --without debuginfo --without kabichk kernel.spec 2> build-err.log | tee build-out.log
+/usr/bin/nohup rpmbuild -bb --target=$(uname -m) --with baseonly --without debug --without debuginfo --without kabichk kernel.spec &
 
 # 安装内核 rpm
 

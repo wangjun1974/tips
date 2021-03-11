@@ -11757,3 +11757,6 @@ https://blog.packagecloud.io/eng/2015/05/11/building-rpm-packages-with-mock/
 
 Building a custom kernel/Source RPM<br>
 https://fedoraproject.org/wiki/Building_a_custom_kernel/Source_RPM
+
+CentOS Build Kernel
+https://wiki.centos.org/zh/HowTos/Custom_Kernel

@@ -364,7 +364,7 @@ make menuconfig
 # CONFIG_NET_ACT_IFE=m  x
 
 ## 检查更改情况
-cat .config | grep -E "CONFIG_NF_FLOW_TABLE_IPV4|CONFIG_NF_FLOW_TABLE_IPV6|CONFIG_NET_ACT_CONNMARK|CONFIG_NET_ACT_IPT|CONFIG_NET_EMATCH_IPT|CONFIG_NET_ACT_IFE" 
+cat .config | grep -E "CONFIG_MLX5_TC_CT|CONFIG_NET_ACT_CT|CONFIG_SKB_EXTENSIONS|CONFIG_NET_TC_SKB_EXT|CONFIG_NF_FLOW_TABLE|CONFIG_NF_FLOW_TABLE_IPV4|CONFIG_NF_FLOW_TABLE_IPV6|CONFIG_NF_FLOW_TABLE_INET|CONFIG_NET_ACT_CONNMARK|CONFIG_NET_ACT_IPT|CONFIG_NET_EMATCH_IPT|CONFIG_NET_ACT_IFE" 
 
 ## 在 .config 文件开始位置插入 # x86_64
 sed -i '1s/^/# x86_64\n/' .config
@@ -372,16 +372,16 @@ sed -i '1s/^/# x86_64\n/' .config
 ## 将作出的修改拷贝到 /root/rpmbuild/SOURCES
 /bin/cp -f .config configs/kernel-4.18.0-$(uname -m).config
 /bin/cp -f .config configs/kernel-x86_64.config
-/bin/cp -f configs/* /root/rpmbuild/SOURCES/
+/bin/cp -f configs/* ~/rpmbuild/SOURCES/
 
-cd /root/rpmbuild/SPECS
+cd ~/rpmbuild/SPECS
 cp kernel.spec kernel.spec.orig
 # https://fedoraproject.org/wiki/Building_a_custom_kernel
 # 自定义内核名称
 sed -i "s/# define buildid \\.local/%define buildid \\.cuc/" kernel.spec
 
 # 编译内核 rpm 
-/usr/bin/nohup rpmbuild -bb --target=$(uname -m) --with baseonly --without debug --without debuginfo --without kabichk kernel.spec &
+/usr/bin/nohup rpmbuild -bb --target=$(uname -m) --with baseonly --without debug --without debuginfo --without kabichk kernel.spec 2> build-err.log &
 
 # 安装内核 rpm
 

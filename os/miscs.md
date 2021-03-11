@@ -11759,4 +11759,24 @@ Building a custom kernel/Source RPM<br>
 https://fedoraproject.org/wiki/Building_a_custom_kernel/Source_RPM
 
 CentOS Build Kernel
-https://wiki.centos.org/zh/HowTos/Custom_Kernel
+https://wiki.centos.org/zh/HowTos/Custom_Kernel<br>
+https://computingforgeeks.com/enable-powertools-repository-on-centos-rhel-linux/<br>
+```
+sudo yum groupinstall "Development Tools"
+sudo yum install ncurses-devel
+sudo yum install hmaccalc zlib-devel binutils-devel elfutils-libelf-devel wget
+
+mkdir -p ~/rpmbuild/{BUILD,BUILDROOT,RPMS,SOURCES,SPECS,SRPMS}
+echo '%_topdir %(echo $HOME)/rpmbuild' > ~/.rpmmacros
+
+sudo wget https://vault.centos.org/8.3.2011/BaseOS/Source/SPackages/kernel-4.18.0-240.10.1.el8_3.src.rpm
+
+rpm -ivh kernel-4.18.0-240.10.1.el8_3.src.rpm
+sudo yum -y install yum-utils rpm-build 
+sudo yum install libselinux-devel
+sudo yum install epel-release 
+sudo dnf config-manager --set-enabled powertools
+
+cd ~/rpmbuild/SPECS
+sudo yum-builddep kernel.spec
+```

@@ -381,8 +381,15 @@ cp kernel.spec kernel.spec.orig
 sed -i "s/# define buildid \\.local/%define buildid \\.cuc/" kernel.spec
 
 # 编译内核 rpm 
-/usr/bin/nohup rpmbuild -bb --target=$(uname -m) --with baseonly --without debug --without debuginfo --without kabichk kernel.spec 2> build-err.log &
+/usr/bin/nohup rpmbuild -bb --target=$(uname -m) --with baseonly --without debug --without debuginfo --without kabichk kernel.spec &
 
 # 安装内核 rpm
+sudo yum localinstall ~/rpmbuild/RPMS/x86_64/kernel-4.18.0-240.1.1.el8.cuc.x86_64.rpm ~/rpmbuild/RPMS/x86_64/kernel-core-4.18.0-240.1.1.el8.cuc.x86_64.rpm ~/rpmbuild/RPMS/x86_64/kernel-modules-4.18.0-240.1.1.el8.cuc.x86_64.rpm ~/rpmbuild/RPMS/x86_64/kernel-devel-4.18.0-240.1.1.el8.cuc.x86_64.rpm ~/rpmbuild/RPMS/x86_64/kernel-headers-4.18.0-240.1.1.el8.cuc.x86_64.rpm
 
+# 重启系统
+reboot
+
+# 检查内核版本及内核配置
+uname -r 
+sudo cat /boot/config-$(uname -r) | grep -E "CONFIG_MLX5_TC_CT|CONFIG_NET_ACT_CT|CONFIG_SKB_EXTENSIONS|CONFIG_NET_TC_SKB_EXT|CONFIG_NF_FLOW_TABLE|CONFIG_NF_FLOW_TABLE_IPV4|CONFIG_NF_FLOW_TABLE_IPV6|CONFIG_NF_FLOW_TABLE_INET|CONFIG_NET_ACT_CONNMARK|CONFIG_NET_ACT_IPT|CONFIG_NET_EMATCH_IPT|CONFIG_NET_ACT_IFE"
 ```

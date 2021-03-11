@@ -11762,6 +11762,7 @@ CentOS Build Kernel
 https://wiki.centos.org/zh/HowTos/Custom_Kernel<br>
 https://computingforgeeks.com/enable-powertools-repository-on-centos-rhel-linux/<br>
 https://wiki.centos.org/HowTos/I_need_the_Kernel_Source<br>
+https://vault.centos.org/8.3.2011/BaseOS/Source/SPackages/<br>
 ```
 sudo yum groupinstall "Development Tools"
 sudo yum install ncurses-devel

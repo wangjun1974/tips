@@ -11825,3 +11825,6 @@ sed -i "s/# define buildid \\.local/%define buildid \\.cuc/" kernel.spec
 # 编译内核 rpm 
 /usr/bin/nohup rpmbuild -bb --target=$(uname -m) --with baseonly --without debug --without debuginfo --without kabichk kernel.spec &
 ```
+
+RDG: Accelerating ML and DL Workloads over Red Hat OpenShift Container Platform v4.1 with InfiniBand.<br>
+https://docs.mellanox.com/pages/releaseview.action?pageId=19804150

@@ -11761,6 +11761,7 @@ https://fedoraproject.org/wiki/Building_a_custom_kernel/Source_RPM
 CentOS Build Kernel
 https://wiki.centos.org/zh/HowTos/Custom_Kernel<br>
 https://computingforgeeks.com/enable-powertools-repository-on-centos-rhel-linux/<br>
+https://wiki.centos.org/HowTos/I_need_the_Kernel_Source<br>
 ```
 sudo yum groupinstall "Development Tools"
 sudo yum install ncurses-devel
@@ -11828,3 +11829,7 @@ sed -i "s/# define buildid \\.local/%define buildid \\.cuc/" kernel.spec
 
 RDG: Accelerating ML and DL Workloads over Red Hat OpenShift Container Platform v4.1 with InfiniBand.<br>
 https://docs.mellanox.com/pages/releaseview.action?pageId=19804150
+
+```
+cat ~/rpmbuild/BUILD/kernel-4.18.0-240.10.1.el8_3/linux-4.18.0-240.10.1.el8.cuc.x86_64/.config | grep -E "CONFIG_MLX5_TC_CT|CONFIG_NET_ACT_CT|CONFIG_SKB_EXTENSIONS|CONFIG_NET_TC_SKB_EXT|CONFIG_NF_FLOW_TABLE|CONFIG_NF_FLOW_TABLE_IPV4|CONFIG_NF_FLOW_TABLE_IPV6|CONFIG_NF_FLOW_TABLE_INET|CONFIG_NET_ACT_CONNMARK|CONFIG_NET_ACT_IPT|CONFIG_NET_EMATCH_IPT|CONFIG_NET_ACT_IFE"
+```

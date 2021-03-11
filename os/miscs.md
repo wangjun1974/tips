@@ -11833,3 +11833,6 @@ https://docs.mellanox.com/pages/releaseview.action?pageId=19804150
 ```
 cat ~/rpmbuild/BUILD/kernel-4.18.0-240.10.1.el8_3/linux-4.18.0-240.10.1.el8.cuc.x86_64/.config | grep -E "CONFIG_MLX5_TC_CT|CONFIG_NET_ACT_CT|CONFIG_SKB_EXTENSIONS|CONFIG_NET_TC_SKB_EXT|CONFIG_NF_FLOW_TABLE|CONFIG_NF_FLOW_TABLE_IPV4|CONFIG_NF_FLOW_TABLE_IPV6|CONFIG_NF_FLOW_TABLE_INET|CONFIG_NET_ACT_CONNMARK|CONFIG_NET_ACT_IPT|CONFIG_NET_EMATCH_IPT|CONFIG_NET_ACT_IFE"
 ```
+
+Mellanox ASAP² Basic Debug
+https://community.mellanox.com/s/article/ASAP-Basic-Debug

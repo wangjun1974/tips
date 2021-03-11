@@ -11775,8 +11775,30 @@ rpm -ivh kernel-4.18.0-240.10.1.el8_3.src.rpm
 sudo yum -y install yum-utils rpm-build 
 sudo yum install libselinux-devel
 sudo yum install epel-release 
+sudo dnf install dnf-plugins-core
 sudo dnf config-manager --set-enabled powertools
 
 cd ~/rpmbuild/SPECS
 sudo yum-builddep kernel.spec
+
+rpmbuild -bp kernel.spec
+cd ~/rpmbuild/BUILD/kernel-4.18.0-240.10.1.el8_3/linux-4.18.0-240.10.1.el8.x86_64
+
+/bin/cp -f configs/kernel-4.18.0-$(uname -m).config .config
+
+sed -i '1s/^/# x86_64\n/' .config
+
+## 将作出的修改拷贝到 /root/rpmbuild/SOURCES
+/bin/cp -f .config configs/kernel-4.18.0-$(uname -m).config
+/bin/cp -f .config configs/kernel-x86_64.config
+/bin/cp -f configs/* ~/rpmbuild/SOURCES/
+
+cd ~/rpmbuild/SPECS
+cp kernel.spec kernel.spec.orig
+# https://fedoraproject.org/wiki/Building_a_custom_kernel
+# 自定义内核名称
+sed -i "s/# define buildid \\.local/%define buildid \\.cuc/" kernel.spec
+
+# 编译内核 rpm 
+/usr/bin/nohup rpmbuild -bb --target=$(uname -m) --with baseonly --without debug --without debuginfo --without kabichk kernel.spec &
 ```

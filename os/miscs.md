@@ -11786,6 +11786,29 @@ cd ~/rpmbuild/BUILD/kernel-4.18.0-240.10.1.el8_3/linux-4.18.0-240.10.1.el8.x86_6
 
 /bin/cp -f configs/kernel-4.18.0-$(uname -m).config .config
 
+## 执行 make menuconfig
+## 根据需要调整以下配置项目
+## 按 '/' 搜索
+## 以 CONFIG_NF_FLOW_TABLE_IPV4 为例
+## 按 '/' 搜索，输入 CONFIG_NF_FLOW_TABLE_IPV4，然后按 1, 按 M
+## 其他项目与上述过程相同，最后选择 ‘Save' 并退出 
+# CONFIG_MLX5_TC_CT=y
+# CONFIG_NET_ACT_CT=m
+# CONFIG_SKB_EXTENSIONS=y
+# CONFIG_NET_TC_SKB_EXT=y
+# CONFIG_NF_FLOW_TABLE=m
+# CONFIG_NF_FLOW_TABLE_IPV4=m  x
+# CONFIG_NF_FLOW_TABLE_IPV6=m  x
+# CONFIG_NF_FLOW_TABLE_INET=m
+# CONFIG_NET_ACT_CONNMARK=m x
+# CONFIG_NET_ACT_IPT=m  x
+# CONFIG_NET_EMATCH_IPT=m   x
+# CONFIG_NET_ACT_IFE=m  x
+
+## 检查更改情况
+cat .config | grep -E "CONFIG_MLX5_TC_CT|CONFIG_NET_ACT_CT|CONFIG_SKB_EXTENSIONS|CONFIG_NET_TC_SKB_EXT|CONFIG_NF_FLOW_TABLE|CONFIG_NF_FLOW_TABLE_IPV4|CONFIG_NF_FLOW_TABLE_IPV6|CONFIG_NF_FLOW_TABLE_INET|CONFIG_NET_ACT_CONNMARK|CONFIG_NET_ACT_IPT|CONFIG_NET_EMATCH_IPT|CONFIG_NET_ACT_IFE" 
+
+## 在 .config 文件开始位置插入 # x86_64
 sed -i '1s/^/# x86_64\n/' .config
 
 ## 将作出的修改拷贝到 /root/rpmbuild/SOURCES

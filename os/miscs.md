@@ -11892,8 +11892,6 @@ sudo dnf install -y centos-release-openstack-ussuri
 # sudo dnf install -y centos-release-nfv-openvswitch
 sudo dnf install openvswitch libibverbs 
 
-sudo 
-
 # 获取 rpm 编译选项 
 # $ rpm -q --queryformat="%{NAME}: %{OPTFLAGS}\n" <package>
 

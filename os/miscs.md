@@ -11884,5 +11884,27 @@ CONFIG_NF_FLOW_TABLE_INET=m
 CONFIG_SKB_EXTENSIONS=y
 ```
 
-在CentOS 8 / RHEL 8上安装Open vSwitch
+在CentOS 8 / RHEL 8上安装Open vSwitch<br>
 https://zh.codepre.com/how-to-10451.html
+```
+sudo dnf install -y epel-release
+sudo dnf install -y centos-release-openstack-ussuri
+# sudo dnf install -y centos-release-nfv-openvswitch
+sudo dnf install openvswitch libibverbs 
+
+sudo 
+
+# 获取 rpm 编译选项 
+# $ rpm -q --queryformat="%{NAME}: %{OPTFLAGS}\n" <package>
+
+# DPDK 19.11 is out! Why you should update and how to do so
+https://medium.com/@lhamthomas45/dpdk-19-11-is-out-why-you-should-update-and-how-to-do-so-7395810f71e
+
+# 
+sudo yumdownloader --source openvswitch2.13
+sudo yum-builddep openvswitch2.13
+rpm -ivh openvswitch2.13-2.13.0-79.5.1.el8.src.rpm
+
+cd ~/rpmbuild/SPECS
+rpmbuild -bb --target=`uname -m` --without check --without check_datapath_kernel openvswitch2.13.spec 2>build-err.log | tee build-info.log
+```

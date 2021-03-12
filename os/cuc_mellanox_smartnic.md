@@ -4,6 +4,47 @@
 https://docs.mellanox.com/display/MLNXOFEDv471001/OVS+Offload+Using+ASAP2+Direct
 
 
+创建虚拟机
+```
+#!/bin/bash
+virt-install --name=jwang-rhel83-cuc --vcpus=4 --ram=16384 \
+--disk path=/data/kvm/jwang-rhel83-cuc.qcow2,bus=virtio,size=100 \
+--os-variant rhel8.0 --network network=default,model=virtio \
+--boot menu=on --graphics none --location /root/jwang/isos/rhel-8.3-x86_64-dvd.iso \
+--console pty,target_type=serial \
+--initrd-inject /tmp/ks.cfg \
+--extra-args='ks=file:/ks.cfg console=ttyS0'
+```
+
+/tmp/ks.cfg 文件内容
+```
+cat > /tmp/ks.cfg << 'EOF'
+lang en_US
+keyboard us
+timezone Asia/Shanghai --isUtc
+rootpw $1$PTAR1+6M$DIYrE6zTEo5dWWzAp9as61 --iscrypted
+#platform x86, AMD64, or Intel EM64T
+reboot
+text
+cdrom
+bootloader --location=mbr --append="rhgb quiet crashkernel=auto"
+zerombr
+clearpart --all --initlabel
+autopart
+network --device=ens2 --hostname=cuc.example.com --bootproto=static --ip=192.168.122.100 --netmask=255.255.255.0 --gateway=192.168.122.1 --nameserver=192.168.122.1
+auth --passalgo=sha512 --useshadow
+selinux --enforcing
+firewall --enabled --ssh
+skipx
+firstboot --disable
+%packages
+@^minimal-environment
+kexec-tools
+tar
+%end
+EOF
+```
+
 ```
 ### 配置 iommu 和 HugePage
 ## 在 GRUB_CMDLINE_LINUX 结尾处添加 intel_iommu=on iommu=pt default_hugepagesz=1G hugepagesz=1G hugepages=8

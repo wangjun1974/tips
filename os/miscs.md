@@ -11837,3 +11837,26 @@ cat ~/rpmbuild/BUILD/kernel-4.18.0-240.10.1.el8_3/linux-4.18.0-240.10.1.el8.cuc.
 
 Mellanox ASAP² Basic Debug
 https://community.mellanox.com/s/article/ASAP-Basic-Debug
+
+```
+CONFIG_NET_ACT_CSUM – needed for action csum
+CONFIG_NET_ACT_PEDIT – needed for header rewrite
+CONFIG_NET_ACT_MIRRED – needed for basic forward
+CONFIG_NET_ACT_CT – needed for connection tracking (supported from kernel 5.6)
+CONFIG_NET_ACT_VLAN - needed for action vlan push/pop
+CONFIG_NET_ACT_GACT
+CONFIG_NET_CLS_FLOWER
+CONFIG_NET_CLS_ACT
+CONFIG_NET_SWITCHDEV
+CONFIG_NET_TC_SKB_EXT - needed for connection tracking (supported from kernel 5.6)
+CONFIG_NET_ACT_CT - needed for connection tracking (supported from kernel 5.6)
+CONFIG_NFT_FLOW_OFFLOAD
+CONFIG_NET_ACT_TUNNEL_KEY
+CONFIG_NF_FLOW_TABLE - needed for connection tracking (supported from kernel 5.6)
+CONFIG_SKB_EXTENSIONS - needed for connection tracking (supported from kernel 5.6)
+CONFIG_NET_CLS_MATCHALL
+CONFIG_NET_ACT_POLICE
+CONFIG_MLX5_ESWITCH
+
+cat /boot/config-4.18.0-193.28.1.el8.cuc.x86_64 | grep -E "CONFIG_NET_ACT_CSUM|CONFIG_NET_ACT_PEDIT|CONFIG_NET_ACT_MIRRED|CONFIG_NET_ACT_CT|CONFIG_NET_ACT_VLAN|CONFIG_NET_ACT_GACT|CONFIG_NET_CLS_FLOWER|CONFIG_NET_CLS_ACT|CONFIG_NET_SWITCHDEV|CONFIG_NET_TC_SKB_EXT|CONFIG_NET_ACT_CT|CONFIG_NFT_FLOW_OFFLOAD|CONFIG_NET_ACT_TUNNEL_KEY|CONFIG_NF_FLOW_TABLE|CONFIG_SKB_EXTENSIONS|CONFIG_NET_CLS_MATCHALL|CONFIG_NET_ACT_POLICE|CONFIG_MLX5_ESWITCH"
+```

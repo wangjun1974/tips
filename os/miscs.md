@@ -11883,3 +11883,6 @@ CONFIG_NF_FLOW_TABLE=m
 CONFIG_NF_FLOW_TABLE_INET=m
 CONFIG_SKB_EXTENSIONS=y
 ```
+
+在CentOS 8 / RHEL 8上安装Open vSwitch
+https://zh.codepre.com/how-to-10451.html

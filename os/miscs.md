@@ -12076,6 +12076,16 @@ B_STAMP
 pg_num: 128
 (undercloud) [stack@undercloud ~]$ ssh heat-admin@overcloud-controller-0.ctlplane sudo podman exec -it ceph-mon-overcloud-controller-0 ceph osd pool get vms pgp_num 
 pgp_num: 128
+
+# 检查 pool vms 的副本数量
+(undercloud) [stack@undercloud ~]$ ssh heat-admin@overcloud-controller-0.ctlplane sudo podman exec -it ceph-mon-overcloud-controller-0 ceph osd dump | grep size | grep vms
+pool 1 'vms' replicated size 3 min_size 2 crush_rule 0 object_hash rjenkins pg_num 128 pgp_num 128 autoscale_mode warn last_change 38 flags hashpspool stripe_width 0 application rbd
+
+# 设置 pool vms 的 pg_num 和 pgp_num 
+(undercloud) [stack@undercloud ~]$ ssh heat-admin@overcloud-controller-0.ctlplane sudo podman exec -it ceph-mon-overcloud-controller-0 ceph osd pool set vms pg_num 256
+(undercloud) [stack@undercloud ~]$ ssh heat-admin@overcloud-controller-0.ctlplane sudo podman exec -it ceph-mon-overcloud-controller-0 ceph osd pool set vms pgp_num 256
+
+# 如果有其他pool，同步调整它们的pg_num和pgp_num，以使负载更加均衡
 ```
 
 

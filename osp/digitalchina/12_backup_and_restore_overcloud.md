@@ -338,3 +338,63 @@ sudo podman rm --force --storage 8138ca222c93069a907e7d246cde1c9fe9d6fe7d3e82226
 # 清理资源
 sudo pcs resource cleanup haproxy-bundle
 ```
+
+
+```
+# 问题定位
+# 报错信息：Error: Failed to evict container: "": Failed to find container "ceph-osd->
+[heat-admin@overcloud-controller-2 ~]$ sudo systemctl status ceph-osd@2 
+ ceph-osd@2.service - Ceph OSD
+   Loaded: loaded (/etc/systemd/system/ceph-osd@.service; enabled; vendor preset: disabled)
+   Active: active (running) since Mon 2021-03-15 06:06:09 UTC; 6s ago
+  Process: 138889 ExecStop=/usr/bin/sh -c /usr/bin/podman rm -f `cat //run/ceph-osd@2.service-cid` (code=exited, status=0/SUCCESS)
+  Process: 140487 ExecStart=/usr/bin/podman run -d --conmon-pidfile //run/ceph-osd@2.service-pid --cidfile //run/ceph-osd@2.service-cid --rm>
+  Process: 140448 ExecStartPre=/usr/bin/podman rm -f ceph-osd-2 (code=exited, status=1/FAILURE)
+  Process: 140446 ExecStartPre=/usr/bin/rm -f //run/ceph-osd@2.service-pid //run/ceph-osd@2.service-cid (code=exited, status=0/SUCCESS)
+ Main PID: 140554 (conmon)
+    Tasks: 0 (limit: 101097)
+   Memory: 2.6M
+   CGroup: /system.slice/system-ceph\x2dosd.slice/ceph-osd@2.service
+            140554 /usr/bin/conmon --api-version 1 -s -c 1e414cfae0f2beb8cd26739ed5810d61a12e9708cbd44d01eca304696934caf0 -u 1e414cfae0f2be>
+
+                                                                                                                                           Mar 15 06:06:07 overcloud-controller-2.example.com systemd[1]: Starting Ceph OSD...
+Mar 15 06:06:08 overcloud-controller-2.example.com podman[140448]: "ceph-osd-2" in state: no container with name or ID ceph-osd-2 found: no such container
+Mar 15 06:06:08 overcloud-controller-2.example.com podman[140487]: 2021-03-15 06:06:08.712547413 +0000 UTC m=+0.487205666 container create 1>
+Mar 15 06:06:09 overcloud-controller-2.example.com podman[140487]: 2021-03-15 06:06:09.075508809 +0000 UTC m=+0.850167731 container init 1e4>
+Mar 15 06:06:09 overcloud-controller-2.example.com podman[140487]: 2021-03-15 06:06:09.129490349 +0000 UTC m=+0.904148712 container start 1e>
+Mar 15 06:06:09 overcloud-controller-2.example.com podman[140487]: 1e414cfae0f2beb8cd26739ed5810d61a12e9708cbd44d01eca304696934caf0
+Mar 15 06:06:09 overcloud-controller-2.example.com systemd[1]: Started Ceph OSD.
+
+# https://bugzilla.redhat.com/show_bug.cgi?id=1834179&GoAheadAndLogIn=1
+# Bug 1834179 - Error: cluster is not available on this node, overcloud reboot failed
+2021-03-15 06:21:39.040 7f8362bb5dc0  0 osd.5 265 using weightedpriority op queue with priority op cut off at 64.
+2021-03-15 06:21:39.042 7f8362bb5dc0 -1 osd.5 265 log_to_monitors {default=true}
+2021-03-15 06:21:39.053 7f834c0f9700 -1 monclient: _check_auth_rotating possible clock skew, rotating keys expired way too early (before 2021-03-15 05:21:39.054640)
+2021-03-15 06:21:49.042 7f8349724700 -1 monclient: _check_auth_rotating possible clock skew, rotating keys expired way too early (before 2021-03-15 05:21:49.043414)
+
+# 可能类似的问题，但是并不确定 https://tracker.ceph.com/issues/23460
+# 最终的解决方法是重新将 3 个节点重新启动，最终恢复
+
+# 
+(undercloud) [stack@undercloud ~]$ ssh heat-admin@overcloud-controller-0.ctlplane sudo podman exec -it ceph-mon-overcloud-controller-0 ceph status 
+Warning: Permanently added 'overcloud-controller-0.ctlplane' (ECDSA) to the list of known hosts.
+  cluster:
+    id:     765cff5c-012e-4871-9d19-cf75eaf27769
+    health: HEALTH_WARN
+            178 pgs not deep-scrubbed in time
+ 
+  services:
+    mon: 3 daemons, quorum overcloud-controller-0,overcloud-controller-1,overcloud-controller-2 (age 101s)
+    mgr: overcloud-controller-0(active, since 67s), standbys: overcloud-controller-2, overcloud-controller-1
+    osd: 9 osds: 9 up (since 48s), 9 in (since 59s)
+    rgw: 3 daemons active (overcloud-controller-0.rgw0, overcloud-controller-1.rgw0, overcloud-controller-2.rgw0)
+ 
+  task status:
+ 
+  data:
+    pools:   7 pools, 896 pgs
+    objects: 612 objects, 3.0 GiB
+    usage:   18 GiB used, 881 GiB / 900 GiB avail
+    pgs:     896 active+clean
+
+```

@@ -11960,3 +11960,29 @@ EOF
 在ceph中：pool、PG、OSD的关系<br>
 https://www.cnblogs.com/wangmo/p/10826337.html<br>
 
+调整ceph的pg数（pg_num， pgp_num）<br>
+https://www.jianshu.com/p/ae96ee24ef6c
+
+ceph pg, osd, pool 之间的一些查找方法<br>
+https://blog.csdn.net/hello_nb1/article/details/76528243<br>
+```
+# pg, osd, pool 之间的一些查找方法
+# 1. pg --> osd: 通过 pg 查找 osd
+ceph pg map {pgid}
+
+# 2. osd --> pg: 通过 osd 查找 pg
+ceph pg ls-by-osd osd.{osdid}
+
+# 3. pg --> pool: 通过 pg 查找 pool
+ceph pg dump | grep "^{poolid}\."
+
+# 4. pool --> pg: 通过 pool 查找 pg
+# poolid 通过 ceph osd pool ls detail 可查看到
+ceph pg ls-by-pool {poolname}
+ceph pg ls {poolid}
+
+# 5. object --> osd: 通过 object 查找 osd
+ceph osd map {poolname} {objectname}
+```
+
+

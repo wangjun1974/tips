@@ -12110,7 +12110,23 @@ pool 'default.rgw.log' replicated size:3 pg_num:128
 (undercloud) [stack@undercloud ~]$ ssh heat-admin@overcloud-controller-0.ctlplane sudo podman exec -it ceph-mon-overcloud-controller-0 ceph osd dump | grep pool | awk '{a+=$6 * $14} END{print a}'
 2688
 
-
+# 用 ceph osd df tree 的输出里的第 19 个字段求和也可以获得总的 osd 层面看到的 pg 的总数
+# ID CLASS WEIGHT  REWEIGHT SIZE    RAW USE DATA     OMAP    META     AVAIL   %USE VAR  PGS STATUS TYPE NAME                       
+# -1       0.87918        - 900 GiB  18 GiB  9.5 GiB 144 KiB  9.0 GiB 881 GiB 2.05 1.00   -        root default                    
+# -5       0.29306        - 300 GiB 6.2 GiB  3.2 GiB  60 KiB  3.0 GiB 294 GiB 2.05 1.00   -            host overcloud-controller-0 
+#  0   hdd 0.09769  1.00000 100 GiB 2.1 GiB  1.1 GiB  20 KiB 1024 MiB  98 GiB 2.07 1.01 300     up         osd.0                   
+#  3   hdd 0.09769  1.00000 100 GiB 2.0 GiB 1022 MiB  20 KiB 1024 MiB  98 GiB 2.00 0.97 302     up         osd.3                   
+#  6   hdd 0.09769  1.00000 100 GiB 2.1 GiB  1.1 GiB  20 KiB 1024 MiB  98 GiB 2.09 1.02 294     up         osd.6                   
+# -3       0.29306        - 300 GiB 6.2 GiB  3.2 GiB  24 KiB  3.0 GiB 294 GiB 2.05 1.00   -            host overcloud-controller-1 
+#  1   hdd 0.09769  1.00000 100 GiB 1.8 GiB  869 MiB     0 B    1 GiB  98 GiB 1.85 0.90 275     up         osd.1                   
+#  4   hdd 0.09769  1.00000 100 GiB 2.4 GiB  1.4 GiB     0 B    1 GiB  98 GiB 2.40 1.17 343     up         osd.4                   
+#  7   hdd 0.09769  1.00000 100 GiB 1.9 GiB  934 MiB  24 KiB 1024 MiB  98 GiB 1.91 0.93 278     up         osd.7                   
+# -7       0.29306        - 300 GiB 6.2 GiB  3.2 GiB  60 KiB  3.0 GiB 294 GiB 2.05 1.00   -            host overcloud-controller-2 
+#  2   hdd 0.09769  1.00000 100 GiB 2.1 GiB  1.1 GiB     0 B    1 GiB  98 GiB 2.12 1.03 298     up         osd.2                   
+#  5   hdd 0.09769  1.00000 100 GiB 2.2 GiB  1.2 GiB     0 B    1 GiB  98 GiB 2.17 1.06 321     up         osd.5                   
+#  8   hdd 0.09769  1.00000 100 GiB 1.9 GiB  885 MiB  60 KiB 1024 MiB  98 GiB 1.86 0.91 277     up         osd.8                        
+(undercloud) [stack@undercloud ~]$ ssh heat-admin@overcloud-controller-0.ctlplane sudo podman exec -it ceph-mon-overcloud-controller-0 ceph osd df tree  | grep "osd\." | awk '{a+=$19} END{print a}'
+2688
 ```
 
 

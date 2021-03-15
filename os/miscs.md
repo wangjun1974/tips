@@ -11918,7 +11918,7 @@ rpmbuild -bb --target=`uname -m` --without check --without check_datapath_kernel
 
 
 ```
-sudo subscription-manager repos --disable=* --enable=rhel-8-for-x86_64-baseos-rpms --enable=rhel-8-for-x86_64-baseos-source-rpms --enable=rhel-8-for-x86_64-appstream-rpms --enable=fast-datapath-for-rhel-8-x86_64-rpms --enable=fast-datapath-for-rhel-8-x86_64-source-rpms --enable=openstack-16.1-for-rhel-8-x86_64-rpms --enable=codeready-builder-for-rhel-8-x86_64-rpms 
+sudo subscription-manager repos --disable=* --enable=rhel-8-for-x86_64-baseos-rpms --enable=rhel-8-for-x86_64-baseos-source-rpms --enable=rhel-8-for-x86_64-appstream-rpms --enable=rhel-8-for-x86_64-appstream-source-rpms --enable=fast-datapath-for-rhel-8-x86_64-rpms --enable=fast-datapath-for-rhel-8-x86_64-source-rpms --enable=openstack-16.1-for-rhel-8-x86_64-rpms --enable=codeready-builder-for-rhel-8-x86_64-rpms 
 sudo yum clean all
 sudo yum makecache
 
@@ -11935,12 +11935,13 @@ fileConn="/getPackage/"
 # rhel-8-for-x86_64-baseos-rpms
 # rhel-8-for-x86_64-baseos-source-rpms
 # rhel-8-for-x86_64-appstream-rpms
+# rhel-8-for-x86_64-appstream-source-rpms
 # fast-datapath-for-rhel-8-x86_64-rpms
 # fast-datapath-for-rhel-8-x86_64-source-rpms
 # openstack-16.1-for-rhel-8-x86_64-rpms
 # codeready-builder-for-rhel-8-x86_64-rpms
 
-for i in rhel-8-for-x86_64-baseos-rpms rhel-8-for-x86_64-baseos-source-rpms rhel-8-for-x86_64-appstream-rpms fast-datapath-for-rhel-8-x86_64-rpms fast-datapath-for-rhel-8-x86_64-source-rpms openstack-16.1-for-rhel-8-x86_64-rpms codeready-builder-for-rhel-8-x86_64-rpms
+for i in rhel-8-for-x86_64-baseos-rpms rhel-8-for-x86_64-baseos-source-rpms rhel-8-for-x86_64-appstream-rpms rhel-8-for-x86_64-appstream-source-rpms fast-datapath-for-rhel-8-x86_64-rpms fast-datapath-for-rhel-8-x86_64-source-rpms openstack-16.1-for-rhel-8-x86_64-rpms codeready-builder-for-rhel-8-x86_64-rpms
 do
 
   rm -rf "$localPath"$i/repodata

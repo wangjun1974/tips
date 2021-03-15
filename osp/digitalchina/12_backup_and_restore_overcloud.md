@@ -397,4 +397,29 @@ Warning: Permanently added 'overcloud-controller-0.ctlplane' (ECDSA) to the list
     usage:   18 GiB used, 881 GiB / 900 GiB avail
     pgs:     896 active+clean
 
+# 过一段时间之后，ceph 恢复为 HEALTH_OK 状态
+(undercloud) [stack@undercloud ~]$ ssh heat-admin@overcloud-controller-0.ctlplane sudo podman exec -it ceph-mon-overcloud-controller-0 ceph status 
+Warning: Permanently added 'overcloud-controller-0.ctlplane' (ECDSA) to the list of known hosts.
+  cluster:
+    id:     765cff5c-012e-4871-9d19-cf75eaf27769
+    health: HEALTH_OK
+ 
+  services:
+    mon: 3 daemons, quorum overcloud-controller-0,overcloud-controller-1,overcloud-controller-2 (age 11m)
+    mgr: overcloud-controller-0(active, since 10m), standbys: overcloud-controller-2, overcloud-controller-1
+    osd: 9 osds: 9 up (since 10m), 9 in (since 10m)
+    rgw: 3 daemons active (overcloud-controller-0.rgw0, overcloud-controller-1.rgw0, overcloud-controller-2.rgw0)
+ 
+  task status:
+ 
+  data:
+    pools:   7 pools, 896 pgs
+    objects: 612 objects, 3.0 GiB
+    usage:   18 GiB used, 881 GiB / 900 GiB avail
+    pgs:     896 active+clean
+ 
+  io:
+    client:   13 KiB/s rd, 0 B/s wr, 13 op/s rd, 8 op/s wr
+
+
 ```

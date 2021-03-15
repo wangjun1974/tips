@@ -11983,6 +11983,72 @@ ceph pg ls {poolid}
 
 # 5. object --> osd: 通过 object 查找 osd
 ceph osd map {poolname} {objectname}
+
+
+
+# 查看 pool 的详情
+(undercloud) [stack@undercloud ~]$ ssh heat-admin@overcloud-controller-0.ctlplane sudo podman exec -it ceph-mon-overcloud-controller-0 ceph osd pool ls detail 
+Warning: Permanently added 'overcloud-controller-0.ctlplane' (ECDSA) to the list of known hosts.
+pool 1 'vms' replicated size 3 min_size 2 crush_rule 0 object_hash rjenkins pg_num 128 pgp_num 128 autoscale_mode warn last_change 38 flags hashpspool stripe_width 0 application rbd
+pool 2 'volumes' replicated size 3 min_size 2 crush_rule 0 object_hash rjenkins pg_num 128 pgp_num 128 autoscale_mode warn last_change 39 flags hashpspool stripe_width 0 application rbd
+pool 3 'images' replicated size 3 min_size 2 crush_rule 0 object_hash rjenkins pg_num 128 pgp_num 128 autoscale_mode warn last_change 54 flags hashpspool,selfmanaged_snaps stripe_width 0 application rbd
+        removed_snaps [1~3]
+pool 4 '.rgw.root' replicated size 3 min_size 2 crush_rule 0 object_hash rjenkins pg_num 128 pgp_num 128 autoscale_mode warn last_change 44 flags hashpspool stripe_width 0 application rgw
+pool 5 'default.rgw.control' replicated size 3 min_size 2 crush_rule 0 object_hash rjenkins pg_num 128 pgp_num 128 autoscale_mode warn last_change 46 flags hashpspool stripe_width 0 application rgw
+pool 6 'default.rgw.meta' replicated size 3 min_size 2 crush_rule 0 object_hash rjenkins pg_num 128 pgp_num 128 autoscale_mode warn last_change 49 flags hashpspool stripe_width 0 application rgw
+pool 7 'default.rgw.log' replicated size 3 min_size 2 crush_rule 0 object_hash rjenkins pg_num 128 pgp_num 128 autoscale_mode warn last_change 50 flags hashpspool stripe_width 0 application rgw
+
+# 看看 OSD 的使用情况
+(undercloud) [stack@undercloud ~]$ ssh heat-admin@overcloud-controller-0.ctlplane sudo podman exec -it ceph-mon-overcloud-controller-0 ceph osd df 
+Warning: Permanently added 'overcloud-controller-0.ctlplane' (ECDSA) to the list of known hosts.
+ID CLASS WEIGHT  REWEIGHT SIZE    RAW USE DATA     OMAP    META     AVAIL   %USE VAR  PGS STATUS 
+ 0   hdd 0.09769  1.00000 100 GiB 2.1 GiB  1.1 GiB  20 KiB 1024 MiB  98 GiB 2.07 1.01 300     up 
+ 3   hdd 0.09769  1.00000 100 GiB 2.0 GiB 1022 MiB  20 KiB 1024 MiB  98 GiB 2.00 0.97 302     up 
+ 6   hdd 0.09769  1.00000 100 GiB 2.1 GiB  1.1 GiB  20 KiB 1024 MiB  98 GiB 2.09 1.02 294     up 
+ 1   hdd 0.09769  1.00000 100 GiB 1.8 GiB  869 MiB     0 B    1 GiB  98 GiB 1.85 0.90 275     up 
+ 4   hdd 0.09769  1.00000 100 GiB 2.4 GiB  1.4 GiB     0 B    1 GiB  98 GiB 2.40 1.17 343     up 
+ 7   hdd 0.09769  1.00000 100 GiB 1.9 GiB  934 MiB  24 KiB 1024 MiB  98 GiB 1.91 0.93 278     up 
+ 2   hdd 0.09769  1.00000 100 GiB 2.1 GiB  1.1 GiB     0 B    1 GiB  98 GiB 2.12 1.03 298     up 
+ 5   hdd 0.09769  1.00000 100 GiB 2.2 GiB  1.2 GiB     0 B    1 GiB  98 GiB 2.17 1.06 321     up 
+ 8   hdd 0.09769  1.00000 100 GiB 1.9 GiB  885 MiB  60 KiB 1024 MiB  98 GiB 1.86 0.91 277     up 
+                    TOTAL 900 GiB  18 GiB  9.5 GiB 145 KiB  9.0 GiB 881 GiB 2.05                 
+MIN/MAX VAR: 0.90/1.17  STDDEV: 0.16
+
+PG   OBJECTS DEGRADED MISPLACED UNFOUND BYTES OMAP_BYTES* OMAP_KEYS* LOG STATE        SINCE VERSION REPORTED UP        ACTING    SCRUB_STAMP                DEEP_SCRUB_STAMP
+
+
+# 查看 pool '.rgw.root' 的 pg 信息
+# ceph pg ls-by-pool {poolname}
+(undercloud) [stack@undercloud ~]$ ssh heat-admin@overcloud-controller-0.ctlplane sudo podman exec -it ceph-mon-overcloud-controller-0 ceph pg ls-by-pool .rgw.root
+PG   OBJECTS DEGRADED MISPLACED UNFOUND BYTES OMAP_BYTES* OMAP_KEYS* LOG STATE        SINCE VERSION REPORTED UP        ACTING    SCRUB_STAMP                DEEP_SCRUB_STAMP
+4.0        0        0         0       0     0           0          0   0 active+clean   19m     0'0  418:281 [4,0,8]p4 [4,0,8]p4 2021-03-15 06:28:22.456470 2021-03-08 15:19
+:59.862615 
+4.1        0        0         0       0     0           0          0   0 active+clean   19m     0'0  418:303 [2,6,1]p2 [2,6,1]p2 2021-03-15 06:25:57.798662 2021-03-15 06:25
+:57.798662 
+...
+4.70       1        0         0       0   348           0          0   2 active+clean   16m    67'2  419:361 [2,4,3]p2 [2,4,3]p2 2021-03-15 06:47:02.089029 2021-03-15 06:47:02.089029 
+...
+4.77       1        0         0       0   348           0          0   2 active+clean   14m   419'2  419:312 [5,0,7]p5 [5,0,7]p5 2021-03-15 06:48:35.847218 2021-03-15 06:48:35.847218
+... 
+
+
+# 根据 poolid 查看与之关联的 pg
+# ceph pg dump | grep "^{poolid}\." 
+(undercloud) [stack@undercloud ~]$ ssh heat-admin@overcloud-controller-0.ctlplane sudo podman exec -it ceph-mon-overcloud-controller-0 ceph pg dump | grep "^4\." 
+4.48          0                  0        0         0       0        0           0          0    0        0 active+clean 2021-03-15 06:47:25.267969       0'0    419:310 [2,1,6]          2 [2,1,6]              2        0'0 2021-03-15 06:47:25.267895             0'0 2021-03-15 06:47:25.267895             0 
+4.49          0                  0        0         0       0        0           0          0    0        0 active+clean 2021-03-15 06:42:16.420103       0'0    418:291 [6,8,7]          6 [6,8,7]              6        0'0 2021-03-15 06:28:40.499086             0'0 2021-03-15 06:28:40.499086             0
+...
+4.7e          0                  0        0         0       0        0           0          0    0        0 active+clean 2021-03-15 06:49:28.776771       0'0    419:255 [0,4,5]          0 [0,4,5]              0        0'0 2021-03-15 06:49:28.776720             0'0 2021-03-09 06:58:46.981165             0 
+4.79          0                  0        0         0       0        0           0          0    0        0 active+clean 2021-03-15 06:49:40.258519       0'0    419:304 [5,4,6]          5 [5,4,6]              5        0'0 2021-03-15 06:49:40.258460             0'0 2021-03-15 06:49:40.258460             0 
+4.78          0                  0        0         0       0        0           0          0    0        0 active+clean 2021-03-15 06:42:16.434859       0'0    418:292 [0,8,7]          0 [0,8,7]              0        0'0 2021-03-15 06:25:59.023398             0'0 2021-03-15 06:25:59.023398             0 
+4.7b          0                  0        0         0       0        0           0          0    0        0 active+clean 2021-03-15 06:50:05.392248       0'0    419:299 [5,3,1]          5 [5,3,1]              5        0'0 2021-03-15 06:50:05.392156             0'0 2021-03-15 06:50:05.392156             0 
+4.7a          0                  0        0         0       0        0           0          0    0        0 active+clean 2021-03-15 06:42:07.069141       0'0    418:323 [2,3,1]          2 [2,3,1]              2        0'0 2021-03-15 06:30:39.129062             0'0 2021-03-15 06:30:39.129062             0
+
+
+# 根据 pgid 查看与之关联的 osd
+# ceph pg map {pgid}
+(undercloud) [stack@undercloud ~]$ ssh heat-admin@overcloud-controller-0.ctlplane sudo podman exec -it ceph-mon-overcloud-controller-0 ceph pg map 4.48
+osdmap e419 pg 4.48 (4.48) -> up [2,1,6] acting [2,1,6]
 ```
 
 

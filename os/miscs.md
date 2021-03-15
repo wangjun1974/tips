@@ -11905,4 +11905,13 @@ rpm -ivh openvswitch2.13-2.13.0-79.5.1.el8.src.rpm
 
 cd ~/rpmbuild/SPECS
 rpmbuild -bb --target=`uname -m` --without check --without check_datapath_kernel openvswitch2.13.spec 2>build-err.log | tee build-info.log
+
+# 编译 dpdk on rhel8 需卸载 mellanox ofed 5.2
+# /usr/sbin/ofed_uninstall.sh
+
+# 然后执行
+# cd ~/rpmbuild/SPECS
+# yum-builddep dpdk.spec
+
+
 ```

@@ -11988,7 +11988,6 @@ ceph osd map {poolname} {objectname}
 
 # 查看 pool 的详情
 (undercloud) [stack@undercloud ~]$ ssh heat-admin@overcloud-controller-0.ctlplane sudo podman exec -it ceph-mon-overcloud-controller-0 ceph osd pool ls detail 
-Warning: Permanently added 'overcloud-controller-0.ctlplane' (ECDSA) to the list of known hosts.
 pool 1 'vms' replicated size 3 min_size 2 crush_rule 0 object_hash rjenkins pg_num 128 pgp_num 128 autoscale_mode warn last_change 38 flags hashpspool stripe_width 0 application rbd
 pool 2 'volumes' replicated size 3 min_size 2 crush_rule 0 object_hash rjenkins pg_num 128 pgp_num 128 autoscale_mode warn last_change 39 flags hashpspool stripe_width 0 application rbd
 pool 3 'images' replicated size 3 min_size 2 crush_rule 0 object_hash rjenkins pg_num 128 pgp_num 128 autoscale_mode warn last_change 54 flags hashpspool,selfmanaged_snaps stripe_width 0 application rbd
@@ -12049,6 +12048,34 @@ PG   OBJECTS DEGRADED MISPLACED UNFOUND BYTES OMAP_BYTES* OMAP_KEYS* LOG STATE  
 # ceph pg map {pgid}
 (undercloud) [stack@undercloud ~]$ ssh heat-admin@overcloud-controller-0.ctlplane sudo podman exec -it ceph-mon-overcloud-controller-0 ceph pg map 4.48
 osdmap e419 pg 4.48 (4.48) -> up [2,1,6] acting [2,1,6]
+
+# 通过 osd 查找 pg
+# ceph pg ls-by-osd osd.{osdid}
+(undercloud) [stack@undercloud ~]$ ssh heat-admin@overcloud-controller-0.ctlplane sudo podman exec -it ceph-mon-overcloud-controller-0 ceph pg ls-by-osd osd.2
+PG   OBJECTS DEGRADED MISPLACED UNFOUND BYTES    OMAP_BYTES* OMAP_KEYS* LOG  STATE        SINCE VERSION   REPORTED  UP        ACTING    SCRUB_STAMP                DEEP_SCRU
+B_STAMP           
+1.7        0        0         0       0        0           0          0    0 active+clean   36m       0'0   418:291 [6,2,7]p6 [6,2,7]p6 2021-03-15 06:30:18.656514 2021-03-0
+8 21:58:13.664190 
+1.b        0        0         0       0        0           0          0    0 active+clean   36m       0'0   418:333 [2,1,3]p2 [2,1,3]p2 2021-03-15 06:33:56.501144 2021-03-0
+9 06:13:55.557107 
+...
+4.48       0        0         0       0        0           0          0    0 active+clean   32m       0'0   419:310 [2,1,6]p2 [2,1,6]p2 2021-03-15 06:47:25.267895 2021-03-1
+5 06:47:25.267895 
+...
+
+# PG 的计算公式
+# Total PGs = ((Total_number_of_OSD * 100) / max_replication_count) / pool_count
+# 默认 openstack pool 数量是 7，max_replication_count 是 3，在实验环境下 Total_number_of_OSD 为 9
+# 按照这个公式 Total PGs = ((9 *100) / 3 ) / 7 = 42，在默认部署的测试环境下这个值为 128 
+
+# 调整ceph的pg数（pg_num， pgp_num）
+# https://www.jianshu.com/p/ae96ee24ef6c
+
+# 获取 pool vms 的 pg_num 和 pgp_num
+(undercloud) [stack@undercloud ~]$ ssh heat-admin@overcloud-controller-0.ctlplane sudo podman exec -it ceph-mon-overcloud-controller-0 ceph osd pool get vms pg_num 
+pg_num: 128
+(undercloud) [stack@undercloud ~]$ ssh heat-admin@overcloud-controller-0.ctlplane sudo podman exec -it ceph-mon-overcloud-controller-0 ceph osd pool get vms pgp_num 
+pgp_num: 128
 ```
 
 

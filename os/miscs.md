@@ -12128,6 +12128,71 @@ pool 'default.rgw.log' replicated size:3 pg_num:128
 #  8   hdd 0.09769  1.00000 100 GiB 1.9 GiB  885 MiB  60 KiB 1024 MiB  98 GiB 1.86 0.91 277     up         osd.8                        
 (undercloud) [stack@undercloud ~]$ ssh heat-admin@overcloud-controller-0.ctlplane sudo podman exec -it ceph-mon-overcloud-controller-0 ceph osd df tree  | grep "osd\." | awk '{a+=$19} END{print a}'
 2688
+
+# 查看 ceph pool .rgw.root 下的对象
+(undercloud) [stack@undercloud ~]$ ssh heat-admin@overcloud-controller-0.ctlplane sudo podman exec -it ceph-mon-overcloud-controller-0 rados -p .rgw.root ls
+zonegroup_info.ef2d8ef7-c984-493f-b7ca-1115634d1cad
+zonegroup_info.1ac8f5ad-54cf-4711-acf0-12209b12baa7
+zone_info.e89400ff-e6f5-4499-9af1-05214e6b7a5c
+zone_info.7c79b120-7619-412d-98c3-3e9a07adc91d
+zonegroup_info.980e9bde-e852-4a36-9a21-db90bc7e80ff
+zone_names.default
+zonegroups_names.default
+
+# 查看 ceph pool images 下的对象
+# 其中 rbd_data.12992731673d 是 pool images 下对象的指纹
+(undercloud) [stack@undercloud ~]$ ssh heat-admin@overcloud-controller-0.ctlplane sudo podman exec -it ceph-mon-overcloud-controller-0 rados -p images ls
+rbd_data.12992731673d.000000000000016f
+rbd_data.12992731673d.000000000000007e
+rbd_data.12992731673d.000000000000003d
+rbd_data.12992731673d.00000000000000da
+rbd_data.12992731673d.00000000000000b5
+rbd_data.12992731673d.0000000000000115
+rbd_data.12992731673d.0000000000000098
+rbd_data.12992731673d.000000000000013d
+rbd_data.12992731673d.0000000000000179
+rbd_data.12992731673d.000000000000000f
+rbd_data.12992731673d.000000000000015b
+...
+
+# 在 overcloud 环境下有 2 个 image
+(overcloud) [stack@undercloud ~]$ openstack image list
++--------------------------------------+----------------------------------------+--------+
+| ID                                   | Name                                   | Status |
++--------------------------------------+----------------------------------------+--------+
+| 0ff57ef9-3b25-45fd-b2b3-a8fb08ac1a98 | cirros                                 | active |
+| 969681be-3b1b-4929-bf42-a314845aacb2 | octavia-amphora-16.1-20201202.1.x86_64 | active |
++--------------------------------------+----------------------------------------+--------+
+
+# 这两个 image 保存在 ceph pool images 里，可以用命令 rbd ls <poolname> 查看
+(undercloud) [stack@undercloud ~]$ ssh heat-admin@overcloud-controller-0.ctlplane sudo podman exec -it ceph-mon-overcloud-controller-0 rbd ls images
+0ff57ef9-3b25-45fd-b2b3-a8fb08ac1a98
+969681be-3b1b-4929-bf42-a314845aacb2
+
+# openstack 下的 glance image cirros 的 uuid 是 0ff57ef9-3b25-45fd-b2b3-a8fb08ac1a98
+# 对应的 ceph rbd 为 images/0ff57ef9-3b25-45fd-b2b3-a8fb08ac1a98
+# 通过如下命令可以获得 rbd image 详情
+(undercloud) [stack@undercloud ~]$ ssh heat-admin@overcloud-controller-0.ctlplane sudo podman exec -it ceph-mon-overcloud-controller-0 rbd info images/0ff57ef9-3b25-45fd-b2b3-a8fb08ac1a98
+rbd image '0ff57ef9-3b25-45fd-b2b3-a8fb08ac1a98':
+        size 12 MiB in 2 objects
+        order 23 (8 MiB objects)
+        snapshot_count: 1
+        id: 2b91e55369472
+        block_name_prefix: rbd_data.2b91e55369472
+        format: 2
+        features: layering, exclusive-lock, object-map, fast-diff, deep-flatten
+        op_features: 
+        flags: 
+        create_timestamp: Mon Mar 15 09:03:27 2021
+        access_timestamp: Mon Mar 15 09:03:27 2021
+        modify_timestamp: Mon Mar 15 09:03:27 2021
+
+# 看看 cirros 对应的 ceph object
+(undercloud) [stack@undercloud ~]$ ssh heat-admin@overcloud-controller-0.ctlplane sudo podman exec -it ceph-mon-overcloud-controller-0 rados -p images ls | grep rbd_data.2b91e55369472 
+rbd_data.2b91e55369472.0000000000000000
+rbd_data.2b91e55369472.0000000000000001 
+
+
 ```
 
 

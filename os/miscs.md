@@ -12086,6 +12086,31 @@ pool 1 'vms' replicated size 3 min_size 2 crush_rule 0 object_hash rjenkins pg_n
 (undercloud) [stack@undercloud ~]$ ssh heat-admin@overcloud-controller-0.ctlplane sudo podman exec -it ceph-mon-overcloud-controller-0 ceph osd pool set vms pgp_num 256
 
 # 如果有其他pool，同步调整它们的pg_num和pgp_num，以使负载更加均衡
+
+# 查看集群的 pg 数量
+(undercloud) [stack@undercloud ~]$ ssh heat-admin@overcloud-controller-0.ctlplane sudo podman exec -it ceph-mon-overcloud-controller-0 ceph status | grep pgs
+    pools:   7 pools, 896 pgs
+    pgs:     896 active+clean
+(undercloud) [stack@undercloud ~]$ ssh heat-admin@overcloud-controller-0.ctlplane sudo podman exec -it ceph-mon-overcloud-controller-0 ceph pg dump 2>/dev/null | egrep '^[0-9]+\.[0-9a-f]+\s' | wc -l
+896
+(undercloud) [stack@undercloud ~]$ ssh heat-admin@overcloud-controller-0.ctlplane sudo podman exec -it ceph-mon-overcloud-controller-0 ceph pg ls | egrep '^[0-9]+\.[0-9a-f]+\s' | wc -l
+
+# 查看集群 pool 的类型，副本数量，以及 pg_num
+(undercloud) [stack@undercloud ~]$ ssh heat-admin@overcloud-controller-0.ctlplane sudo podman exec -it ceph-mon-overcloud-controller-0 ceph osd dump | grep pool | awk '{print $1,$3,$4,$5":"$6,$13":"$14}'
+pool 'vms' replicated size:3 pg_num:128
+pool 'volumes' replicated size:3 pg_num:128
+pool 'images' replicated size:3 pg_num:128
+pool '.rgw.root' replicated size:3 pg_num:128
+pool 'default.rgw.control' replicated size:3 pg_num:128
+pool 'default.rgw.meta' replicated size:3 pg_num:128
+pool 'default.rgw.log' replicated size:3 pg_num:128
+
+# 从 osd 的角度来看，osd 所保存的 pg 的数量是 pool_pgnum 乘以 pool_replicated_size 之和
+# 在这个例子里应该为 (3*128)*7 = 2688
+(undercloud) [stack@undercloud ~]$ ssh heat-admin@overcloud-controller-0.ctlplane sudo podman exec -it ceph-mon-overcloud-controller-0 ceph osd dump |grep pool | awk '{a+=$6 * $14} END{print a}'
+2688
+
+
 ```
 
 

@@ -11953,3 +11953,10 @@ done
 exit 0
 EOF
 ```
+
+
+
+### ceph 相关的内容
+在ceph中：pool、PG、OSD的关系<br>
+https://www.cnblogs.com/wangmo/p/10826337.html<br>
+

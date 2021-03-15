@@ -12107,7 +12107,7 @@ pool 'default.rgw.log' replicated size:3 pg_num:128
 
 # 从 osd 的角度来看，osd 所保存的 pg 的数量是 pool_pgnum 乘以 pool_replicated_size 之和
 # 在这个例子里应该为 (3*128)*7 = 2688
-(undercloud) [stack@undercloud ~]$ ssh heat-admin@overcloud-controller-0.ctlplane sudo podman exec -it ceph-mon-overcloud-controller-0 ceph osd dump |grep pool | awk '{a+=$6 * $14} END{print a}'
+(undercloud) [stack@undercloud ~]$ ssh heat-admin@overcloud-controller-0.ctlplane sudo podman exec -it ceph-mon-overcloud-controller-0 ceph osd dump | grep pool | awk '{a+=$6 * $14} END{print a}'
 2688
 
 

@@ -80,4 +80,18 @@ gpgcheck=0
 
 EOF
 done
+
+# 添加 local registry helper.example.com 到 /etc/hosts
+cat >> /etc/hosts << EOF
+192.168.122.3 helper.example.com
+EOF
+
+# 拷贝 registry 的证书，更新证书信任关系
+scp helper.example.com:/opt/registry/certs/domain.crt /etc/pki/ca-trust/source/anchors/
+update-ca-trust extract
+
+# 访问 registry 的 catalog
+curl https://helper.example.com:5000/v2/_catalog
+
+
 ```

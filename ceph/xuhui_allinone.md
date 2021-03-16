@@ -142,6 +142,7 @@ ceph_conf_overrides:
     osd_pool_default_min_size: 1
 EOF
 
+# 生成 group_vars/osds.yml 文件
 cat > group_vars/osds.yml <<'EOF'
 osd_scenario: lvm
 osd_objectstore: bluestore
@@ -149,6 +150,12 @@ devices:
   - /dev/disk/by-path/pci-0000:00:06.0
   - /dev/disk/by-path/pci-0000:00:07.0
   - /dev/disk/by-path/pci-0000:00:08.0
+EOF
+
+# 生成 group_vars/mons.yml 文件
+cat > group_vars/mons.yml <<'EOF'
+ceph_mon_docker_memory_limit: 3072m
+ceph_mon_docker_cpu_limit: 1
 EOF
 
 cat > /etc/ansible/hosts << 'EOF'

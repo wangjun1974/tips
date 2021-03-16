@@ -219,10 +219,15 @@ ansible-playbook site-container.yml
 # https://www.sebastien-han.fr/blog/2015/12/11/ceph-properly-remove-an-osd/
 
 # 尝试另外的 osds.yml 配置
+# 参见邮件 Latest RHCS z-stream
 cat > group_vars/osds.yml <<'EOF'
+osd_auto_discovery: false
+osd_scenario: non-collocated
 devices:
   - /dev/disk/by-path/pci-0000:00:06.0
   - /dev/disk/by-path/pci-0000:00:07.0
+dedicated_devices:
+  - /dev/disk/by-path/pci-0000:00:08.0
   - /dev/disk/by-path/pci-0000:00:08.0
 EOF
 

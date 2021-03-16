@@ -230,6 +230,9 @@ devices:
 dedicated_devices:
   - /dev/vdd
   - /dev/vdd
+bluestore_wal_devices:
+  - /dev/vdd
+  - /dev/vdd
 EOF
 
 # lsblk 的输出
@@ -240,6 +243,42 @@ vdc                                                                             
 vdd                                                                                                                   252:48   0  100G  0 disk 
 |-ceph--block--dbs--d91b8955--79cf--4d51--b05f--1a58daf51bfb-osd--block--db--ab488420--69ff--4e96--a1ad--43c17ea00218 253:4    0   50G  0 lvm  
 `-ceph--block--dbs--d91b8955--79cf--4d51--b05f--1a58daf51bfb-osd--block--db--7a02ea9d--a7b1--4349--b695--3364fa79d771 253:6    0   50G  0 lvm  
+
+
+# 查看 perf counters
+podman exec -it ceph-mon-xuhui ceph daemon osd.0 perf schema
+podman exec -it ceph-mon-xuhui ceph daemon osd.0 perf dump 
+
+# 关于 Bluestore 的说明
+# https://xcodest.me/ceph-bluestore-and-ceph-volume.html
+
+podman exec -it ceph-osd-0 ceph-bluestore-tool  show-label --path /var/lib/ceph/osd/ceph-0
+inferring bluefs devices from bluestore path
+{
+    "/var/lib/ceph/osd/ceph-0/block": {
+        "osd_uuid": "c8707324-d0be-4c70-a451-2a7322fa0812",
+        "size": 107369988096,
+        "btime": "2021-03-16 21:09:19.788363",
+        "description": "main",
+        "bluefs": "1",
+        "ceph_fsid": "8b71d5de-4c9e-4ff5-afa8-ee00ce81843f",
+        "kv_backend": "rocksdb",
+        "magic": "ceph osd volume v026",
+        "mkfs_done": "yes",
+        "osd_key": "AQD8rVBgxehVOxAAYp0wu0CY4ZJ9QtzyB3u8ew==",
+        "ready": "ready",
+        "require_osd_release": "14",
+        "whoami": "0"
+    },
+    "/var/lib/ceph/osd/ceph-0/block.db": {
+        "osd_uuid": "c8707324-d0be-4c70-a451-2a7322fa0812",
+        "size": 53682896896,
+        "btime": "2021-03-16 21:09:19.791001",
+        "description": "bluefs db"
+    }
+}
+
+
 ```
 
 

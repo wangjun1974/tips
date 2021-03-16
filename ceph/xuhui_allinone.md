@@ -119,18 +119,26 @@ cd /usr/share/ceph-ansible
 
 # 生成测试的 group_vars/all.yml
 cat > group_vars/all.yml << EOF
+---
+dummy:
 fetch_directory: ~/ceph-ansible-keys
+cluster: ceph
+configure_firewall: True
+ceph_origin: distro
+#ceph_repository: rhcs
+#ceph_repository_type: cdn
+ceph_rhcs_version: 4
+ceph_iscsi_config_dev: false
+cephx: true
 monitor_interface: ens2 
+ip_version: ipv4
+mon_use_fqdn: false # if set to true, the MON name used will be the fqdn in the ceph.conf
 public_network: 192.168.122.0/24
 ceph_docker_image: rhceph/rhceph-4-rhel8
 ceph_docker_image_tag: "latest"
 containerized_deployment: true
 ceph_docker_registry: helper.example.com:5000
 ceph_docker_registry_auth: false
-ceph_origin: distro
-#ceph_repository: rhcs
-#ceph_repository_type: cdn
-ceph_rhcs_version: 4
 dashboard_admin_user: admin
 dashboard_admin_password: redhat
 node_exporter_container_image: helper.example.com:5000/openshift4/ose-prometheus-node-exporter:v4.1
@@ -139,6 +147,8 @@ grafana_admin_password: redhat
 grafana_container_image: helper.example.com:5000/rhceph/rhceph-4-dashboard-rhel8
 prometheus_container_image: helper.example.com:5000/openshift4/ose-prometheus:4.1
 alertmanager_container_image: helper.example.com:5000/openshift4/ose-prometheus-alertmanager:4.1
+block_db_size: -1
+osd_objectstore: bluestore
 
 ceph_conf_overrides:
   global:
@@ -210,14 +220,217 @@ ansible-playbook site-container.yml
 
 # 尝试另外的 osds.yml 配置
 cat > group_vars/osds.yml <<'EOF'
-osd_scenario: lvm
-osd_objectstore: bluestore
 devices:
   - /dev/disk/by-path/pci-0000:00:06.0
   - /dev/disk/by-path/pci-0000:00:07.0
-dedicated_devices:  
   - /dev/disk/by-path/pci-0000:00:08.0
-  - /dev/disk/by-path/pci-0000:00:08.0  
 EOF
 
+```
+
+
+
+```
+# example of group_vars/all.yml
+---
+dummy:
+fetch_directory: ~/ceph-ansible-keys
+cluster: ceph
+configure_firewall: False
+ceph_origin: repository
+ceph_repository: rhcs
+ceph_rhcs_version: 4
+ceph_iscsi_config_dev: false
+cephx: true
+monitor_interface: "bond0.2670"
+ip_version: ipv4
+mon_use_fqdn: false # if set to true, the MON name used will be the fqdn in the ceph.conf
+cephfs: cephfs # name of the ceph filesystem
+cephfs_data_pool:
+  name: "{{ cephfs_data if cephfs_data is defined else 'cephfs_data' }}"
+  pg_num: "512"
+  pgp_num: "512"
+  rule_name: "replicated_rule"
+  type: 1
+  erasure_profile: ""
+  expected_num_objects: ""
+  size: "{{ osd_pool_default_size }}"
+  min_size: "{{ osd_pool_default_min_size }}"
+  pg_autoscale_mode: off
+cephfs_metadata_pool:
+  name: "{{ cephfs_metadata if cephfs_metadata is defined else 'cephfs_metadata' }}"
+  pg_num: "128"
+  pgp_num: "128"
+  rule_name: "replicated_rule"
+  type: 1
+  erasure_profile: ""
+  expected_num_objects: ""
+  size: "{{ osd_pool_default_size }}"
+  min_size: "{{ osd_pool_default_min_size }}"
+  pg_autoscale_mode: off
+cephfs_pools:
+  - "{{ cephfs_data_pool }}"
+  - "{{ cephfs_metadata_pool }}"
+is_hci: false
+hci_safety_factor: 0.2
+non_hci_safety_factor: 0.7
+block_db_size: -1 # block db size in bytes for the ceph-volume lvm batch. -1 means use the default of 'as big as possible'.
+public_network: 10.89.223.128/27
+cluster_network: 10.89.223.160/27
+osd_objectstore: bluestore
+ceph_conf_overrides:
+  global:
+    mon_clock_drift_warn_backoff: "30"
+    mon_clock_drift_allowed: ".15"
+    osd_pool_default_size: "3"
+    osd_pool_default_min_size: "2"
+    mon_osd_full_ratio: "0.95"
+    mon_osd_nearfull_ratio: "0.7"
+    mon_compact_on_start: true
+    mon_allow_pool_delete: true
+    mon_max_pg_per_osd: "300"
+    osd_pool_default_pg_autoscale_mode: "off"
+  osd:
+    osd_client_op_priority: "63"
+    osd_recovery_op_priority: "1"
+    osd_backfill_scan_max: "16"
+    osd_backfill_scan_min: "4"
+    osd_scrub_begin_hour: "21"
+    osd_scrub_end_hour: "5"
+    osd_scrub_during_recovery: "false"
+    osd_deep_scrub_stride: "1048576"
+    osd_scrub_chunk_min: "1"
+    osd_scrub_chunk_max: "5"
+    osd_scrub_sleep: ".1"
+    osd_recovery_max_active: "1"
+    bluestore_cache_autotune: false
+    bluestore_cache_size_hdd: "8589934592"
+    bluestore_cache_kv_ratio: "0.2"
+    bluestore_cache_meta_ratio: "0.8"
+    bluestore_rocksdb_options: "compression=kNoCompression,max_write_buffer_number=32,min_write_buffer_number_to_merge=2,recycle_log_file_num=32,compaction_style=kCompactionStyleLevel,write_buffer_size=67108864,target_file_size_base=67108864,max_background_compactions=31,level0_file_num_compaction_trigger=8,level0_slowdown_writes_trigger=32,level0_stop_writes_trigger=64,max_bytes_for_level_base=536870912,compaction_threads=32,max_bytes_for_level_multiplier=8,flusher_threads=8,compaction_readahead_size=2MB"
+    osd_min_log_entries: "10"
+    osd_max_pg_log_entries: "10"
+    osd_pg_log_dups_tracked: "10"
+    osd_pg_log_trim_min: "10"
+os_tuning_params:
+   - { name: kernel.pid_max, value: 4194303 }
+   - { name: fs.file-max, value: 26234859 }
+   - { name: vm.zone_reclaim_mode , value: 0 }
+   - { name: vm.vfs_cache_pressure , value: 50 }
+   - { name: vm.swappiness, value: 10 }
+   - { name: vm.dirty_ratio, value: 15 }
+   - { name: vm.dirty_background_ratio, value: 3 }
+   - { name: vm.min_free_kbytes, value: "{{ vm_min_free_kbytes }}" }
+   - { name: net.core.rmem_max, value: 56623104 }
+   - { name: net.core.wmem_max, value: 56623104 }
+   - { name: net.core.rmem_default, value: 56623104 }
+   - { name: net.core.wmem_default, value: 56623104 }
+   - { name: net.core.optmem_max, value: 40960 }
+   - { name: net.ipv4.tcp_rmem, value: 4096 87380 56623104   }
+   - { name: net.ipv4.tcp_wmem, value: 4096 87380 56623104   }
+   - { name: net.core.somaxconn, value: 1024 }
+   - { name: net.core.netdev_max_backlog, value: 50000 }
+   - { name: net.ipv4.tcp_max_syn_backlog, value: 30000 }
+   - { name: net.ipv4.tcp_max_tw_backlog, value: 2000000 }
+   - { name: net.ipv4.tcp_tw_reuse, value: 1 }
+   - { name: net.ipv4.tcp_fin_timeout, value: 10 }
+   - { name: net.ipv4.tcp_slow_start_after_idle, value: 0 }
+   - { name: net.ipv4.conf.all.send_redirects, value: 0 }
+   - { name: net.ipv4.conf.all.accept_redirects, value: 0 }
+   - { name: net.ipv4.conf.all.accept_source_route, value: 0 }
+   - { name: net.ipv4.tcp_mtu_probing, value: 1 }
+   - { name: net.ipv4.tcp_timestamps, value: 0 }
+   - { name: net.ipv4.tcp_moderate_rcvbuf, value: 0 }
+ceph_docker_image: "rhceph/rhceph-4-rhel8"
+ceph_docker_image_tag: "latest"
+ceph_docker_registry: "rs-ops-casb-201:5000"
+ceph_docker_registry_auth: false
+containerized_deployment: True
+openstack_config: true
+openstack_glance_pool:
+  name: "images"
+  pg_num: "128"
+  pgp_num: "128"
+  rule_name: "replicated_rule"
+  type: 1
+  erasure_profile: ""
+  expected_num_objects: ""
+  application: "rbd"
+  size: "{{ osd_pool_default_size }}"
+  min_size: "{{ osd_pool_default_min_size }}"
+  pg_autoscale_mode: off
+openstack_cinder_pool:
+  name: "volumes"
+  pg_num: "1024"
+  pgp_num: "1024"
+  rule_name: "replicated_rule"
+  type: 1
+  erasure_profile: ""
+  expected_num_objects: ""
+  application: "rbd"
+  size: "{{ osd_pool_default_size }}"
+  min_size: "{{ osd_pool_default_min_size }}"
+  pg_autoscale_mode: off
+openstack_nova_pool:
+  name: "vms"
+  pg_num: "512"
+  pgp_num: "512"
+  rule_name: "replicated_rule"
+  type: 1
+  erasure_profile: ""
+  expected_num_objects: ""
+  application: "rbd"
+  size: "{{ osd_pool_default_size }}"
+  min_size: "{{ osd_pool_default_min_size }}"
+  pg_autoscale_mode: off
+openstack_pools:
+  - "{{ openstack_glance_pool }}"
+  - "{{ openstack_cinder_pool }}"
+  - "{{ openstack_nova_pool }}"
+dashboard_enabled: True
+dashboard_protocol: https
+dashboard_port: 8443
+dashboard_admin_user: admin
+dashboard_admin_password: dtn@2020
+dashboard_crt: ''
+dashboard_key: ''
+dashboard_tls_external: false
+dashboard_grafana_api_no_ssl_verify: "{{ true if dashboard_protocol == 'https' and not grafana_crt and not grafana_key else false }}"
+node_exporter_container_image: rs-ops-casb-201:5000/openshift4/ose-prometheus-node-exporter:v4.1
+grafana_admin_user: admin
+grafana_admin_password: dtn@2020
+grafana_crt: ''
+grafana_key: ''
+grafana_container_image: rs-ops-casb-201:5000/rhceph/rhceph-4-dashboard-rhel8:latest
+prometheus_container_image: rs-ops-casb-201:5000/openshift4/ose-prometheus:4.1
+alertmanager_container_image: rs-ops-casb-201:5000/openshift4/ose-prometheus-alertmanager:4.1
+
+# example of group_vars/osds.yml
+---
+dummy:
+devices:
+  - /dev/sdc
+  - /dev/sdd
+  - /dev/sde
+  - /dev/sdf
+  - /dev/sdg
+  - /dev/sdh
+  - /dev/sdi
+  - /dev/sdj
+  - /dev/sdk
+  - /dev/sdl
+  - /dev/sdm
+  - /dev/sdn
+  - /dev/sdo
+  - /dev/sdp
+  - /dev/sdq
+  - /dev/sdr
+  - /dev/sds
+  - /dev/sdt
+  - /dev/sdu
+  - /dev/sdv
+  - /dev/sdw
+  - /dev/sdx
+  - /dev/sdy
+  - /dev/sdz
 ```

@@ -219,6 +219,7 @@ ansible-playbook site-container.yml
 # https://www.sebastien-han.fr/blog/2015/12/11/ceph-properly-remove-an-osd/
 
 # 尝试另外的 osds.yml 配置
+# 用这个配置能完成部署
 # 参见邮件 Latest RHCS z-stream
 cat > group_vars/osds.yml <<'EOF'
 osd_auto_discovery: false
@@ -227,10 +228,18 @@ devices:
   - /dev/disk/by-path/pci-0000:00:06.0
   - /dev/disk/by-path/pci-0000:00:07.0
 dedicated_devices:
-  - /dev/disk/by-path/pci-0000:00:08.0
-  - /dev/disk/by-path/pci-0000:00:08.0
+  - /dev/vdd
+  - /dev/vdd
 EOF
 
+# lsblk 的输出
+vdb                                                                                                                   252:16   0  100G  0 disk 
+`-ceph--block--8117b254--56c8--4282--8803--a3935a19ee2c-osd--block--07bcdfcc--8226--4f31--9ea2--be3f9d48187a          253:3    0  100G  0 lvm  
+vdc                                                                                                                   252:32   0  100G  0 disk 
+`-ceph--block--3f722a0b--2476--4e1c--8cf5--ce7bcee30704-osd--block--0a8b63f9--9e28--4a1b--9c69--bcf964e2405a          253:5    0  100G  0 lvm  
+vdd                                                                                                                   252:48   0  100G  0 disk 
+|-ceph--block--dbs--d91b8955--79cf--4d51--b05f--1a58daf51bfb-osd--block--db--ab488420--69ff--4e96--a1ad--43c17ea00218 253:4    0   50G  0 lvm  
+`-ceph--block--dbs--d91b8955--79cf--4d51--b05f--1a58daf51bfb-osd--block--db--7a02ea9d--a7b1--4349--b695--3364fa79d771 253:6    0   50G  0 lvm  
 ```
 
 

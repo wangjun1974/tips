@@ -12191,8 +12191,8 @@ rbd image '0ff57ef9-3b25-45fd-b2b3-a8fb08ac1a98':
 (undercloud) [stack@undercloud ~]$ ssh heat-admin@overcloud-controller-0.ctlplane sudo podman exec -it ceph-mon-overcloud-controller-0 rados -p images ls | grep rbd_data.2b91e55369472 
 rbd_data.2b91e55369472.0000000000000000
 rbd_data.2b91e55369472.0000000000000001 
-
-
 ```
+
+
 
 

@@ -67,6 +67,11 @@ virt-install --debug --ram 16384 --vcpus 4 --os-variant rhel7 \
 # 参考链接设置离线 registry
 # https://github.com/wangjun1974/ospinstall/blob/main/helper_registry.example.md
 
+# 拷贝软件仓库
+scp osp16.1-yum-repos-2021-01-15.tar.gz root@192.168.122.101:/home
+ssh root@192.168.122.101 mkdir -p /var/www/html
+ssh root@192.168.122.101 tar zxvf /home/osp16.1-yum-repos-2021-01-15.tar.gz -C /
+
 # 设置软件仓库
 > /etc/yum.repos.d/w.repo 
 for i in rhel-8-for-x86_64-baseos-eus-rpms rhel-8-for-x86_64-appstream-eus-rpms  ansible-2.9-for-rhel-8-x86_64-rpms rhceph-4-tools-for-rhel-8-x86_64-rpms 
@@ -84,6 +89,7 @@ done
 # 添加 local registry helper.example.com 到 /etc/hosts
 cat >> /etc/hosts << EOF
 192.168.122.3 helper.example.com
+192.168.122.101 xuhui.example.com
 EOF
 
 # 拷贝 registry 的证书，更新证书信任关系
@@ -190,6 +196,7 @@ mkdir -p /var/log/ansible/
 chmod 755 /var/log/ansible
 
 # 准备 dashboard 镜像
+# 针对 registry 执行一遍
 podman pull helper.example.com:5000/rhceph/rhceph-4-dashboard-rhel8:4
 podman tag helper.example.com:5000/rhceph/rhceph-4-dashboard-rhel8:4 helper.example.com:5000/rhceph/rhceph-4-dashboard-rhel8:latest
 podman push helper.example.com:5000/rhceph/rhceph-4-dashboard-rhel8:latest

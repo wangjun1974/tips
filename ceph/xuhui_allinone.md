@@ -23,6 +23,7 @@ do
 done
 
 # 安装一个 allinone 的 节点
+# 生成 ks.cfg 文件
 cat > /tmp/ks.cfg << 'EOF'
 lang en_US
 keyboard us
@@ -50,6 +51,7 @@ tar
 %end
 EOF
 
+# 安装虚拟机
 echo "Defining node jwang-xuhui-ceph01..."
 virt-install --debug --ram 16384 --vcpus 4 --os-variant rhel7 \
     --disk path=/data/kvm/jwang-xuhui-ceph01.qcow2,bus=virtio,size=100 \
@@ -61,6 +63,9 @@ virt-install --debug --ram 16384 --vcpus 4 --os-variant rhel7 \
     --initrd-inject /tmp/ks.cfg \
     --extra-args='ks=file:/ks.cfg console=ttyS0' \
     --name jwang-xuhui-ceph01
+
+# 参考链接设置离线 registry
+# https://github.com/wangjun1974/ospinstall/blob/main/helper_registry.example.md
 
 # 设置软件仓库
 > /etc/yum.repos.d/w.repo 

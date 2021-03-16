@@ -117,6 +117,7 @@ fetch_directory: ~/ceph-ansible-keys
 monitor_interface: ens2 
 public_network: 192.168.122.0/24
 ceph_docker_image: rhceph/rhceph-4-rhel8
+ceph_docker_image_tag: "latest"
 containerized_deployment: true
 ceph_docker_registry: helper.example.com:5000
 ceph_docker_registry_auth: false
@@ -180,6 +181,11 @@ sed -ie 's|^#retry_files_save_path.*|retry_files_save_path = ~/|' /etc/ansible/a
 # 生成目录
 mkdir -p /var/log/ansible/
 chmod 755 /var/log/ansible
+
+# 准备 dashboard 镜像
+podman pull helper.example.com:5000/rhceph/rhceph-4-dashboard-rhel8:4
+podman tag helper.example.com:5000/rhceph/rhceph-4-dashboard-rhel8:4 helper.example.com:5000/rhceph/rhceph-4-dashboard-rhel8:latest
+podman push helper.example.com:5000/rhceph/rhceph-4-dashboard-rhel8:latest
 
 # 执行安装
 echo y | cp site-container.yml.sample site-container.yml

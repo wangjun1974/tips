@@ -161,7 +161,7 @@ EOF
 # 生成 group_vars/mons.yml 文件
 cat > group_vars/mons.yml <<'EOF'
 ceph_mon_docker_memory_limit: 3072m
-ceph_mon_docker_cpu_limit: 1
+ceph_mon_docker_cpu_limit: 2
 EOF
 
 cat > /etc/ansible/hosts << 'EOF'
@@ -191,8 +191,8 @@ ansible all -m authorized_key -a 'user=root state=present key="{{ lookup(\"file\
 # 修改/etc/ansible/ansible.cfg
 sed -ie 's|^#retry_files_save_path.*|retry_files_save_path = ~/|' /etc/ansible/ansible.cfg
 
-# 生成目录
-mkdir -p /var/log/ansible/
+# 生成 /var/log/ansible 目录
+mkdir -p /var/log/ansible
 chmod 755 /var/log/ansible
 
 # 准备 dashboard 镜像

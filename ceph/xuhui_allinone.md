@@ -198,4 +198,19 @@ podman push helper.example.com:5000/rhceph/rhceph-4-dashboard-rhel8:latest
 echo y | cp site-container.yml.sample site-container.yml
 ansible-playbook site-container.yml
 
+# 根据以下步骤移除 osd 
+# https://www.sebastien-han.fr/blog/2015/12/11/ceph-properly-remove-an-osd/
+
+# 尝试另外的 osds.yml 配置
+cat > group_vars/osds.yml <<'EOF'
+osd_scenario: lvm
+osd_objectstore: bluestore
+devices:
+  - /dev/disk/by-path/pci-0000:00:06.0
+  - /dev/disk/by-path/pci-0000:00:07.0
+dedicated_devices:  
+  - /dev/disk/by-path/pci-0000:00:08.0
+  - /dev/disk/by-path/pci-0000:00:08.0  
+EOF
+
 ```

@@ -399,7 +399,8 @@ MDS version: ceph version 14.2.11-95.el8cp (1d6087ae858e7c8e72fe7390c3522c7e0d95
 pool 1 'cephfs_data' replicated size 1 min_size 1 crush_rule 0 object_hash rjenkins pg_num 128 pgp_num 128 autoscale_mode warn last_change 22 flags hashpspool stripe_width 0 application cephfs
 pool 2 'cephfs_metadata' replicated size 1 min_size 1 crush_rule 0 object_hash rjenkins pg_num 128 pgp_num 128 autoscale_mode warn last_change 22 flags hashpspool stripe_width 0 pg_autoscale_bias 4 pg_num_min 16 recovery_priority 5 application cephfs
 
-
+# ocs test bucket policy and bucket acl
+https://github.com/larsks/ocs-object-test
 ```
 
 

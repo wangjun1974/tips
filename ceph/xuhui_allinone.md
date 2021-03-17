@@ -528,3 +528,23 @@ devices:
   - /dev/sdy
   - /dev/sdz
 ```
+
+
+```
+# 设置环境变量 IMG，指向 ceph 镜像 id
+IMG=$(sudo podman images | grep ceph | awk {'print $3'})
+
+# 设置 alias ceph-volume 
+alias ceph-volume="sudo podman run --rm --privileged --net=host --ipc=host -v /run/lock/lvm:/run/lock/lvm:z -v /var/run/udev/:/var/run/udev/:z -v /dev:/dev -v /etc/ceph:/etc/ceph:z -v /var/lib/ceph/:/var/lib/ceph/:z -v /var/log/ceph/:/var/log/ceph/:z --entrypoint=ceph-volume $IMG --cluster ceph"
+
+# 确认 alias ceph-volume 可正常执行
+[heat-admin@overcloud-controller-0 ~]$ ceph-volume lvm list
+
+ceph-volume lvm batch --bluestore --prepare /dev/vdb /dev/vdc --db-devices /dev/vdd --wal-devices /dev/vdd --report --format=json
+
+# 知识库文档
+https://access.redhat.com/solutions/3871211
+https://access.redhat.com/solutions/4241061
+
+ceph daemon osd.<id> perf dump
+```

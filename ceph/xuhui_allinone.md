@@ -407,6 +407,36 @@ https://access.redhat.com/solutions/2045583
 
 # Ceph performance and Sizing
 https://gist.github.com/mmgaggle/5297770b2a38963c75f689a53990c1f6
+
+# Storage Blog
+https://www.redhat.com/en/blog/channel/red-hat-storage
+
+# COSBench 压测
+https://github.com/jharriga/RGWtest
+
+# 其他压测工具包括 
+# GOSbench，hsbench S3bench
+
+# Minio Wrap 也是对象存储的压测工具
+https://github.com/minio/warp
+
+# 测试工具 s3 performance
+https://github.com/IBM/og
+
+# 如何计算 4kB 随机写 IOPS
+# 如果只给定 CPU 信息如何估算 4k 随机读写 IOPS
+sockets * cores * ghz * 1500
+
+# 用内核驱动加载 cephfs
+http://docs.ceph.org.cn/cephfs/fstab/
+# {ipaddress}:{port}:/ {mount}/{mountpoint} {filesystem-name}     [name=username,secret=secretkey|secretfile=/path/to/secretfile],[{mount.options}]
+# 10.10.10.10:6789:/     /mnt/ceph    ceph    name=admin,secretfile=/etc/ceph/secret.key,noatime    0       2
+# 用 FUSE 驱动加载 cephfs
+# #DEVICE                                  PATH         TYPE      OPTIONS
+# id={user-ID}[,conf={path/to/conf.conf}] /mount/path  fuse.ceph defaults 0 0
+# id=admin  /mnt/ceph  fuse.ceph defaults 0 0
+# id=myuser,conf=/etc/ceph/cluster.conf  /mnt/ceph2  fuse.ceph defaults 0 0
+
 ```
 
 

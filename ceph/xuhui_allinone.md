@@ -401,6 +401,9 @@ pool 2 'cephfs_metadata' replicated size 1 min_size 1 crush_rule 0 object_hash r
 
 # ocs test bucket policy and bucket acl
 https://github.com/larsks/ocs-object-test
+
+# Red Hat Ceph 版本与社区版对照关系
+https://access.redhat.com/solutions/2045583
 ```
 
 

@@ -265,9 +265,22 @@ dedicated_devices:
 EOF
 
 # 接下来会看看这个配置是否能完成部署
+# 这个可以完成部署
 cat > group_vars/osds.yml <<'EOF'
 osd_auto_discovery: false
 osd_scenario: non-collocated
+devices:
+  - /dev/vdb
+dedicated_devices:
+  - /dev/vdc
+bluestore_wal_devices:
+  - /dev/vdd
+EOF
+
+# 试验一下 osd_scenario: lvm
+cat > group_vars/osds.yml <<'EOF'
+osd_auto_discovery: false
+osd_scenario: lvm
 devices:
   - /dev/vdb
 dedicated_devices:

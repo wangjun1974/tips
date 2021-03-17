@@ -332,6 +332,73 @@ inferring bluefs devices from bluestore path
     }
 }
 
+# 查看 lv 的 ceph 相关的 tags 
+lvs -o lv_tags osd-block-824f7862-88f6-4199-b361-efdcd9ff5f43
+lvs -o lv_tags /dev/ceph-block-f7598cfc-7c02-4698-9c9e-addc52d41cd1/osd-block-824f7862-88f6-4199-b361-efdcd9ff5f43 | sed -e 's|,|\n|g'
+LV Tags
+ceph.block_device=/dev/ceph-block-f7598cfc-7c02-4698-9c9e-addc52d41cd1/osd-block-824f7862-88f6-4199-b361-efdcd9ff5f43
+ceph.block_uuid=33hPZ8-DLJH-ta8P-gRY8-FRZk-30PY-7yppoY
+ceph.cephx_lockbox_secret=
+ceph.cluster_fsid=2105cea4-6c01-4e93-98c2-3eb9084594c3
+ceph.cluster_name=ceph
+ceph.crush_device_class=None
+ceph.db_device=/dev/ceph-block-dbs-9bc32c72-7cdb-4d51-9612-58af107326e1/osd-block-db-554e5403-b4ab-4c0f-8007-13ae760236c3
+ceph.db_uuid=1BzBF1-VSz3-LTf3-fRgU-UV3H-pELF-6BFmdX
+ceph.encrypted=0
+ceph.osd_fsid=3b5336fa-70f4-4a7c-903a-aac6f19de957
+ceph.osd_id=0
+ceph.osdspec_affinity=
+ceph.type=block
+ceph.vdo=0
+ceph.wal_device=/dev/ceph-block-wals-77ea20d0-7c95-4299-b135-ad111cf977df/osd-block-wal-a3ea15cd-b9a4-4c68-8485-ea5e9fb13c60
+ceph.wal_uuid=GUqUDU-cgyv-U70i-V8Vn-nu2s-NAeu-hRfrL3
+
+# Ceph - MDS high memory usage due to client having too many caps
+# https://access.redhat.com/solutions/5608691
+[mds]
+mds_cache_memory_limit = 8589934592
+mds_recall_max_caps = 20000
+mds_recall_max_decay_threshold = 32768
+mds_recall_max_decay_rate = 1.0
+mds_recall_global_max_decay_threshold = 262144
+
+# ceph config set mds mds_recall_max_caps 20000
+ - default value 5000
+# ceph config set mds mds_recall_max_decay_rate 1.0
+ - default value 2.5
+# ceph config set mds mds_recall_max_decay_threshold 32K
+ - default value 16384
+# ceph config set mds mds_recall_global_max_decay_threshold 256K
+ - default value 65536
+# ceph config set mds mds_cache_memory_limit 8G
+ - default value 1G
+
+podman exec -it ceph-mds-xuhui ceph fs status cephfs 
+[root@xuhui ceph-ansible]# podman exec -it ceph-mds-xuhui ceph fs status cephfs 
+
+cephfs - 0 clients
+======
++------+--------+-------+---------------+-------+-------+
+| Rank | State  |  MDS  |    Activity   |  dns  |  inos |
++------+--------+-------+---------------+-------+-------+
+|  0   | active | xuhui | Reqs:    0 /s |   10  |   13  |
++------+--------+-------+---------------+-------+-------+
++-----------------+----------+-------+-------+
+|       Pool      |   type   |  used | avail |
++-----------------+----------+-------+-------+
+| cephfs_metadata | metadata |  512k | 88.9G |
+|   cephfs_data   |   data   |    0  | 88.9G |
++-----------------+----------+-------+-------+
++-------------+
+| Standby MDS |
++-------------+
++-------------+
+MDS version: ceph version 14.2.11-95.el8cp (1d6087ae858e7c8e72fe7390c3522c7e0d951240) nautilus (stable)
+
+[root@xuhui ceph-ansible]# podman exec -it ceph-mds-xuhui ceph osd pool ls detail 
+pool 1 'cephfs_data' replicated size 1 min_size 1 crush_rule 0 object_hash rjenkins pg_num 128 pgp_num 128 autoscale_mode warn last_change 22 flags hashpspool stripe_width 0 application cephfs
+pool 2 'cephfs_metadata' replicated size 1 min_size 1 crush_rule 0 object_hash rjenkins pg_num 128 pgp_num 128 autoscale_mode warn last_change 22 flags hashpspool stripe_width 0 pg_autoscale_bias 4 pg_num_min 16 recovery_priority 5 application cephfs
+
 
 ```
 
@@ -561,7 +628,9 @@ https://access.redhat.com/solutions/4241061
 
 ceph daemon osd.<id> perf dump
 
-podman exec -it ceph-mon-xuhui ceph daemon osd.0 perf dump | grep blue
+# 检查 slow_used_bytes 是否为非 0，来判断 bluestore block.db 是否溢出
+podman exec -it ceph-mon-xuhui ceph daemon osd.0 perf dump | grep slow_used_bytes
+
 ```
 
 文档关于如何优化使用 NVMe SSD：Using NVMe with LVM Optimally<br>

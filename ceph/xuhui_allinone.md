@@ -404,6 +404,9 @@ https://github.com/larsks/ocs-object-test
 
 # Red Hat Ceph 版本与社区版对照关系
 https://access.redhat.com/solutions/2045583
+
+# Ceph performance and Sizing
+https://gist.github.com/mmgaggle/5297770b2a38963c75f689a53990c1f6
 ```
 
 

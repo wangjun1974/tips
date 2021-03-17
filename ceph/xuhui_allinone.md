@@ -547,4 +547,10 @@ https://access.redhat.com/solutions/3871211
 https://access.redhat.com/solutions/4241061
 
 ceph daemon osd.<id> perf dump
+
+podman exec -it ceph-mon-xuhui ceph daemon osd.0 perf dump | grep blue
 ```
+
+文档关于如何优化使用 NVMe SSD：Using NVMe with LVM Optimally<br>
+https://access.redhat.com/documentation/en-us/red_hat_ceph_storage/4/html-single/object_gateway_for_production_guide/index#using-nvme-with-lvm-optimally
+

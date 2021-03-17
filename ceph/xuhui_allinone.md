@@ -269,11 +269,11 @@ cat > group_vars/osds.yml <<'EOF'
 osd_auto_discovery: false
 osd_scenario: non-collocated
 devices:
-  - /dev/disk/by-path/pci-0000:00:06.0
+  - /dev/vdb
 dedicated_devices:
-  - /dev/disk/by-path/pci-0000:00:07.0
+  - /dev/vdc
 bluestore_wal_devices:
-  - /dev/disk/by-path/pci-0000:00:08.0
+  - /dev/vdd
 EOF
 
 # lsblk 的输出

@@ -12198,4 +12198,6 @@ rbd_data.2b91e55369472.0000000000000001
 # 关于 Erasure Code 的说明
 https://blog.csdn.net/sinat_27186785/article/details/52034588<br>
 
+Using Erasure Coding with RadosGW<br>
+https://ceph.io/planet/using-erasure-coding-with-radosgw/<br>
 

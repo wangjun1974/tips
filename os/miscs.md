@@ -4733,6 +4733,8 @@ echo ".tables" | sqlite3 -line ./bundles.db
 # 另外参考 https://www.openshift.com/blog/transferring-files-in-and-out-of-containers-in-openshift-part-1-manually-copying-files
 oc -n openshift-marketplace rsync $( oc -n openshift-marketplace get pods | grep my | awk '{print $1}'):/bundles.db .
 
+# 另外一个制作 OpenShift Offline Operator Catalog 的工具
+https://github.com/arvin-a/openshift-disconnected-operators
 
 ```
 

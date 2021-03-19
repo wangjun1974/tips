@@ -10799,6 +10799,9 @@ modinfo ixgbe | grep -E "^parm"
 ### Connecting OpenStack to Service Telemetry Framework
 https://infrawatch.github.io/documentation/#deploying-to-non-standard-network-topologies_completing-the-stf-configuration
 
+在使用 STF 的同时如何继续使用 Gnocchi<br>
+https://github.com/infrawatch/service-telemetry-operator/blob/master/tests/infrared/16/stf-gnocchi-connectors.yaml.template<br>
+
 
 
 ### osp 16.1 undercloud rabbitmq 服务无法启动问题的分析

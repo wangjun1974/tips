@@ -12204,3 +12204,5 @@ https://blog.csdn.net/sinat_27186785/article/details/52034588<br>
 Using Erasure Coding with RadosGW<br>
 https://ceph.io/planet/using-erasure-coding-with-radosgw/<br>
 
+# Red Hat Ceph Storage 4.1 新特性 
+https://www.redhat.com/en/blog/updating-nautilus-cornerstone-red-hats-ceph-storage-platform<br>

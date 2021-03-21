@@ -12213,3 +12213,7 @@ https://github.com/kairen/learning-ceph/blob/master/ceph-storage-cluster/erasure
 
 # Red Hat Ceph Storage 4.1 新特性 
 https://www.redhat.com/en/blog/updating-nautilus-cornerstone-red-hats-ceph-storage-platform<br>
+
+# RHV DR 
+Can RHV manage failover to a disaster recovery (DR) site?<br>
+https://access.redhat.com/solutions/2044903<br>

@@ -12211,6 +12211,31 @@ https://ceph.io/planet/using-erasure-coding-with-radosgw/<br>
 Erasure Code<br>
 https://github.com/kairen/learning-ceph/blob/master/ceph-storage-cluster/erasure-codes/README.md
 
+# Ceph Mirror
+https://source.redhat.com/communitiesatredhat/infrastructure/storage-cop/storage_community_of_practice_wiki/rhcs_4x_rbd_mirroring_steps<br>
+https://docs.ceph.com/en/latest/rbd/rbd-mirroring/<br>
+http://www.yangguanjun.com/2019/06/30/ceph-rbd-mirroring/<br>
+https://access.redhat.com/documentation/en-us/red_hat_ceph_storage/3/html/block_device_guide/block_device_mirroring<br>
+```
+rbd mirror pool enable {pool-name} {mode}
+
+$ rbd --cluster site-a mirror pool enable image-pool image
+$ rbd --cluster site-b mirror pool enable image-pool image
+
+# site-a: create mirror bootstrap token
+$ rbd --cluster site-a mirror pool peer bootstrap create --site-name site-a image-pool
+eyJmc2lkIjoiOWY1MjgyZGItYjg5OS00NTk2LTgwOTgtMzIwYzFmYzM5NmYzIiwiY2xpZW50X2lkIjoicmJkLW1pcnJvci1wZWVyIiwia2V5IjoiQVFBUnczOWQwdkhvQmhBQVlMM1I4RmR5dHNJQU50bkFTZ0lOTVE9PSIsIm1vbl9ob3N0IjoiW3YyOjE5Mi4xNjguMS4zOjY4MjAsdjE6MTkyLjE2OC4xLjM6NjgyMV0ifQ==
+
+# site-b: import site-a mirror bootstrap token
+$ cat <<EOF > token
+eyJmc2lkIjoiOWY1MjgyZGItYjg5OS00NTk2LTgwOTgtMzIwYzFmYzM5NmYzIiwiY2xpZW50X2lkIjoicmJkLW1pcnJvci1wZWVyIiwia2V5IjoiQVFBUnczOWQwdkhvQmhBQVlMM1I4RmR5dHNJQU50bkFTZ0lOTVE9PSIsIm1vbl9ob3N0IjoiW3YyOjE5Mi4xNjguMS4zOjY4MjAsdjE6MTkyLjE2OC4xLjM6NjgyMV0ifQ==
+EOF
+$ rbd --cluster site-b mirror pool peer bootstrap import --site-name site-b image-pool token
+
+$ rbd --cluster site-a mirror pool peer add image-pool client.rbd-mirror-peer@site-b
+$ rbd --cluster site-b mirror pool peer add image-pool client.rbd-mirror-peer@site-a
+```
+
 # Red Hat Ceph Storage 4.1 新特性 
 https://www.redhat.com/en/blog/updating-nautilus-cornerstone-red-hats-ceph-storage-platform<br>
 
@@ -12258,8 +12283,8 @@ logtick = 10
 ping = 10.66.208.254
 EOF
 
-systemctl enable watchdog
-systemctl start watchdog
+systemctl enable watchdog-ping
+systemctl start watchdog-ping
 
 grep . /sys/class/watchdog/watchdog1/*
 

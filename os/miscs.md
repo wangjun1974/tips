@@ -12258,5 +12258,35 @@ logtick = 10
 ping = 10.66.208.254
 EOF
 
+systemctl enable watchdog
 systemctl start watchdog
+
+grep . /sys/class/watchdog/watchdog1/*
+
+# 检查是否生效
+iptables -A OUTPUT -p icmp -j DROP
+
+
 ```
+
+
+# RHEL7 single user mode
+https://www.tecmint.com/boot-into-single-user-mode-in-centos-7/
+```
+# edit /boot/grub2/grub.conf
+linux16 ... rw init=/sysroot/bin/sh ...
+
+# press CTRL_x
+
+# chroot /sysroot
+
+# reboot -f
+```
+
+# RHEL7 安装 javaws 工具
+```
+# 这个软件在 rhel-7-server-rpms 软件仓库里
+yum install -y icedtea-web
+```
+
+

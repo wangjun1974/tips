@@ -12217,3 +12217,46 @@ https://www.redhat.com/en/blog/updating-nautilus-cornerstone-red-hats-ceph-stora
 # RHV DR 
 Can RHV manage failover to a disaster recovery (DR) site?<br>
 https://access.redhat.com/solutions/2044903<br>
+
+# 如何使用 softdog
+https://access.redhat.com/solutions/3892631<br>
+https://datahunter.org/watchdog<br>
+https://qkxu.github.io/2019/04/15/linux%E4%B8%8B%E7%9A%84watchdog.html<br>
+```
+yum install -y watchdog
+
+# 加载内核模块 softdog
+modprobe softdog
+
+# 配置重启加载 softdog
+echo softdog > /etc/modules-load.d/watchdog.conf
+systemctl restart systemd-modules-load
+
+# 在加载 softdog 模块后检查
+ls /dev/watchdog*
+wdctl /dev/watchdog1
+
+# 查看 watchdog 相关信息
+grep . /sys/class/watchdog/watchdog0/*
+grep . /sys/class/watchdog/watchdog1/*
+
+lsof | grep watchdog0
+wdmd       1258                  root    8w      CHR              251,0          0t0      14659 /dev/watchdog0
+
+ps awwx | grep 1258
+ 1258 ?        SLs    0:55 /usr/sbin/wdmd
+
+cat > /etc/watchdog.conf << EOF
+watchdog-device = /dev/watchdog1
+interval = 10
+max-load-1 = 0
+max-load-5 = 18
+max-load-15 = 12
+file = /var/log/messages    
+change = 600
+logtick = 10
+ping = 10.66.208.254
+EOF
+
+systemctl start watchdog
+```

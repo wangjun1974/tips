@@ -12293,6 +12293,57 @@ rbd image '0ff57ef9-3b25-45fd-b2b3-a8fb08ac1a98':
         create_timestamp: Mon Mar 15 09:03:27 2021
         access_timestamp: Mon Mar 15 09:03:27 2021
         modify_timestamp: Mon Mar 15 09:03:27 2021
+
+ssh heat-admin@overcloud-controller-2.ctlplane sudo podman exec -it ceph-mon-overcloud-controller-2 rbd create images/a -s 1G   
+ssh heat-admin@overcloud-controller-2.ctlplane sudo podman exec -it ceph-mon-overcloud-controller-2 rbd du images/a
+NAME PROVISIONED USED 
+a          1 GiB  0 B 
+
+(undercloud) [stack@undercloud ~]$ ssh heat-admin@overcloud-controller-2.ctlplane sudo podman exec -it ceph-mon-overcloud-controller-2 rbd info images/a 
+Warning: Permanently added 'overcloud-controller-2.ctlplane' (ECDSA) to the list of known hosts.
+rbd image 'a':
+        size 1 GiB in 256 objects
+        order 22 (4 MiB objects)
+        snapshot_count: 0
+        id: 374b4e4926d8f
+        block_name_prefix: rbd_data.374b4e4926d8f
+        format: 2
+        features: layering, exclusive-lock, object-map, fast-diff, deep-flatten
+        op_features: 
+        flags: 
+        create_timestamp: Mon Mar 22 08:31:37 2021
+        access_timestamp: Mon Mar 22 08:31:37 2021
+        modify_timestamp: Mon Mar 22 08:31:37 2021
+
+(undercloud) [stack@undercloud ~]$ ssh heat-admin@overcloud-controller-2.ctlplane sudo podman exec -it ceph-mon-overcloud-controller-2 rbd -p images bench --io-type write a --io-size 4096 --io-threads 1 --io-total 4096 --io-pattern rand
+bench  type write io_size 4096 io_threads 1 bytes 4096 pattern random
+  SEC       OPS   OPS/SEC   BYTES/SEC
+elapsed:     0  ops:        1  ops/sec:    22.73  bytes/sec: 93090.83
+
+(undercloud) [stack@undercloud ~]$ ssh heat-admin@overcloud-controller-2.ctlplane sudo podman exec -it ceph-mon-overcloud-controller-2 rbd du images/a
+NAME PROVISIONED USED  
+a          1 GiB 8 MiB
+
+(undercloud) [stack@undercloud ~]$ ssh heat-admin@overcloud-controller-2.ctlplane sudo podman exec -it ceph-mon-overcloud-controller-2 rbd -p images feature enable a journaling
+
+ssh heat-admin@overcloud-controller-2.ctlplane sudo podman exec -it ceph-mon-overcloud-controller-2 rbd -p images info a
+
+(undercloud) [stack@undercloud ~]$ ssh heat-admin@overcloud-controller-2.ctlplane sudo podman exec -it ceph-mon-overcloud-controller-2 rbd -p images info a
+rbd image 'a':
+        size 1 GiB in 256 objects
+        order 22 (4 MiB objects)
+        snapshot_count: 0
+        id: 374b4e4926d8f
+        block_name_prefix: rbd_data.374b4e4926d8f
+        format: 2
+        features: layering, exclusive-lock, object-map, fast-diff, deep-flatten, journaling
+        op_features: 
+        flags: 
+        create_timestamp: Mon Mar 22 08:31:37 2021
+        access_timestamp: Mon Mar 22 08:31:37 2021
+        modify_timestamp: Mon Mar 22 08:34:41 2021
+        journal: 374b4e4926d8f
+        mirroring state: disabled
 ```
 
 # Red Hat Ceph Storage 4.1 新特性 

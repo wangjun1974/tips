@@ -12289,4 +12289,7 @@ linux16 ... rw init=/sysroot/bin/sh ...
 yum install -y icedtea-web
 ```
 
+# OpenStack DR
+https://hystax.com/disaster-recovery-to-openstack/<br>
+https://www.trilio.io/openstack-backup/<br>
 

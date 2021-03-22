@@ -12253,6 +12253,8 @@ https://docs.ceph.com/en/latest/rbd/rbd-exclusive-locks/<br>
 https://docs.ceph.com/en/latest/man/8/rbd/<br>
 
 https://documentation.suse.com/ses/5.5/html/ses-all/ceph-rbd.html#ceph-rbd-mirror<br>
+
+https://access.redhat.com/documentation/en-us/red_hat_ceph_storage/4/html-single/block_device_guide/index#the-rbdmap-service_block<br>
 ```
 # --image-feature feature-name
 # 指定创建 format 2 格式的 RBD 映像时，要启用的特性。可以通过重复此选项来启用多个特性。当前支持下列特性：

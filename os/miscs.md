@@ -12217,6 +12217,7 @@ https://docs.ceph.com/en/latest/rbd/rbd-mirroring/<br>
 http://www.yangguanjun.com/2019/06/30/ceph-rbd-mirroring/<br>
 https://access.redhat.com/documentation/en-us/red_hat_ceph_storage/3/html/block_device_guide/block_device_mirroring<br>
 https://access.redhat.com/documentation/en-us/red_hat_ceph_storage/4/html/block_device_guide/mirroring-ceph-block-devices<br>
+https://www.infoq.cn/article/9rddkkpmu10*zs9ahrwh<br>
 ```
 rbd mirror pool enable {pool-name} {mode}
 
@@ -12235,6 +12236,61 @@ $ rbd --cluster site-b mirror pool peer bootstrap import --site-name site-b imag
 
 $ rbd --cluster site-a mirror pool peer add image-pool client.rbd-mirror-peer@site-b
 $ rbd --cluster site-b mirror pool peer add image-pool client.rbd-mirror-peer@site-a
+```
+
+# Ceph RBD features
+http://docs.ceph.org.cn/man/8/rbd/<br>
+
+feature object-map<br>
+https://www.sebastien-han.fr/blog/2015/07/06/ceph-enable-the-object-map-feature/<br>
+
+ceph internals<br>
+https://www.bookstack.cn/read/ceph-en/96ed51f9a1913a46.md<br>
+
+RBD EXCLUSIVE LOCKS<br>
+https://docs.ceph.com/en/latest/rbd/rbd-exclusive-locks/<br>
+
+https://docs.ceph.com/en/latest/man/8/rbd/<br>
+```
+# --image-feature feature-name
+# 指定创建 format 2 格式的 RBD 映像时，要启用的特性。可以通过重复此选项来启用多个特性。当前支持下列特性：
+# layering: 支持分层
+# striping: 支持条带化 v2
+# exclusive-lock: 支持独占锁
+# object-map: 支持对象映射（依赖 exclusive-lock ）
+# fast-diff: 快速计算差异（依赖 object-map ）
+# deep-flatten: 支持快照扁平化操作
+# journaling: 支持记录 IO 操作（依赖独占锁）
+# 
+# --image-feature feature-name
+# Specifies which RBD format 2 feature should be enabled when creating an image. Multiple features can be enabled by repeating this option multiple times. The following features are supported:
+# layering: layering support                                        id: 1
+# striping: striping v2 support                                     id: 2
+# exclusive-lock: exclusive locking support                         id: 4
+# object-map: object map support (requires exclusive-lock)          id: 8
+# fast-diff: fast diff calculations (requires object-map)           id: 16
+# deep-flatten: snapshot flatten support                            id: 32
+# journaling: journaled IO support (requires exclusive-lock)        id: 64
+# data-pool: erasure coded pool support                             id: 128
+# 
+# osp 16.1 glance image 启用了哪些 feature
+#         format: 2
+# 启用了：layering, exclusive-lock, object-map, fast-diff, deep-flatten
+ssh heat-admin@overcloud-controller-2.ctlplane sudo podman exec -it ceph-mon-overcloud-controller-2 rbd info images/0ff57ef9-3b25-45fd-b2b3-a8fb08ac1a98 
+Warning: Permanently added 'overcloud-controller-2.ctlplane' (ECDSA) to the list of known hosts.
+rbd image '0ff57ef9-3b25-45fd-b2b3-a8fb08ac1a98':
+        size 12 MiB in 2 objects
+        order 23 (8 MiB objects)
+        snapshot_count: 1
+        id: 2b91e55369472
+        block_name_prefix: rbd_data.2b91e55369472
+        format: 2
+        features: layering, exclusive-lock, object-map, fast-diff, deep-flatten
+        op_features: 
+        flags: 
+        create_timestamp: Mon Mar 15 09:03:27 2021
+        access_timestamp: Mon Mar 15 09:03:27 2021
+        modify_timestamp: Mon Mar 15 09:03:27 2021
 ```
 
 # Red Hat Ceph Storage 4.1 新特性 

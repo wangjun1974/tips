@@ -12216,6 +12216,7 @@ https://source.redhat.com/communitiesatredhat/infrastructure/storage-cop/storage
 https://docs.ceph.com/en/latest/rbd/rbd-mirroring/<br>
 http://www.yangguanjun.com/2019/06/30/ceph-rbd-mirroring/<br>
 https://access.redhat.com/documentation/en-us/red_hat_ceph_storage/3/html/block_device_guide/block_device_mirroring<br>
+https://access.redhat.com/documentation/en-us/red_hat_ceph_storage/4/html/block_device_guide/mirroring-ceph-block-devices<br>
 ```
 rbd mirror pool enable {pool-name} {mode}
 
@@ -12317,4 +12318,5 @@ yum install -y icedtea-web
 # OpenStack DR
 https://hystax.com/disaster-recovery-to-openstack/<br>
 https://www.trilio.io/openstack-backup/<br>
+
 

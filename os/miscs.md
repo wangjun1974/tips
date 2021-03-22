@@ -12273,7 +12273,7 @@ iptables -A OUTPUT -p icmp -j DROP
 # RHEL7 single user mode
 https://www.tecmint.com/boot-into-single-user-mode-in-centos-7/
 ```
-# edit /boot/grub2/grub.conf
+# edit grub boot param
 linux16 ... rw init=/sysroot/bin/sh ...
 
 # press CTRL_x

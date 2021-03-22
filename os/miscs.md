@@ -12346,6 +12346,12 @@ rbd image 'a':
         modify_timestamp: Mon Mar 22 08:34:41 2021
         journal: 374b4e4926d8f
         mirroring state: disabled
+
+(undercloud) [stack@undercloud ~]$ ssh heat-admin@overcloud-controller-2.ctlplane sudo podman exec -it ceph-mon-overcloud-controller-2 rbd -p images rm a 
+Removing image: 100% complete...done.
+
+# 删除大的 rbd image
+# 参考：https://ceph.io/geen-categorie/remove-big-rbd-image/
 ```
 
 # Red Hat Ceph Storage 4.1 新特性 

@@ -12437,3 +12437,51 @@ https://hystax.com/disaster-recovery-to-openstack/<br>
 https://www.trilio.io/openstack-backup/<br>
 
 
+# misc
+```
+# 检查系统日志
+cat messages | grep -Ev "node2 ptp4l|systemd: Started Session |systemd-logind: New session |systemd: Starting Session |systemd-logind: Removed session |systemd: Removed slice |systemd: Stopping User Slice|systemd: Created slice User Slice|systemd: Starting User Slice |systemd: Started Security Auditing Service|augenrules|auditd|audispd|systemd: Starting Security Auditing Service|audit|rhsmd|insights|Insights|random time|lldpad|NetworkManager|Virtual Machine|lvm2-lvmetad.socket|vdsmd_init_common.sh|ovirtmgmt|systemd|dracut|journal|kernel|goferd|watchdog|vdsm-tool|phc2sys|saslpasswd2|network|imgbase|chronyd|libvirtd|kdumpctl|rhnsd|dbus|sm-notify|rpc|multipathd|sshd|iscsid|sanlock" 
+```
+
+# osp16.1: overcloud 与外部 ceph 集群的集成
+https://access.redhat.com/documentation/en-us/red_hat_openstack_platform/16.1/html-single/integrating_an_overcloud_with_an_existing_red_hat_ceph_cluster/index
+```
+# 外部的 ceph cluster 需包含以下 pool 
+volumes: Storage for OpenStack Block Storage (cinder)
+images: Storage for OpenStack Image Storage (glance)
+vms: Storage for instances
+backups: Storage for OpenStack Block Storage Backup (cinder-backup) (实际实施时应该有 cinder-backup，因此应该有这个 pool )
+metrics: Storage for OpenStack Telemetry Metrics (gnocchi) （实际实施时，根据实际监控的配置情况，这个 pool 可能有，也可能没有 ）
+
+除此之外，还有 cephfs 的 data pool 和 metadata pool
+
+# 创建 client.openstack 用户，具备以下权限
+ceph auth add client.openstack mgr 'allow *' mon 'profile rbd' osd 'profile rbd pool=volumes, profile rbd pool=vms, profile rbd pool=images, profile rbd pool=backups, profile rbd pool=metrics'
+
+(undercloud) [stack@undercloud ~]$ ssh heat-admin@overcloud-controller-2.ctlplane sudo podman exec -it ceph-mon-overcloud-controller-2 ceph auth list
+client.openstack
+        key: AQAThD1gAAAAABAAFwnlKS3dVFb+BJuA3GRnYQ==
+        caps: [mgr] allow *
+        caps: [mon] profile rbd
+        caps: [osd] profile rbd pool=vms, profile rbd pool=volumes, profile rbd pool=images
+
+# 如果安装了 Manila + CephFS，还需要创建 client.manila 用户
+ceph auth add client.manila mon 'allow r, allow command "auth del", allow command "auth caps", allow command "auth get", allow command "auth get-or-create"' osd 'allow rw' mds 'allow *' mgr 'allow *'
+
+# 记录 client.manila 的 auth key 
+ceph auth get-key client.manila
+
+# 记录外部 ceph 集群的 cluster fsid
+(undercloud) [stack@undercloud ~]$ ssh heat-admin@overcloud-controller-2.ctlplane sudo podman exec -it ceph-mon-overcloud-controller-2 cat /etc/ceph/ceph.conf | grep fsid
+fsid = 765cff5c-012e-4871-9d19-cf75eaf27769
+
+
+# overcloud 与外部 ceph cluster 集成时用到的模版
+/usr/share/openstack-tripleo-heat-templates/environments/ceph-ansible/ceph-ansible-external.yaml
+
+# 如果配置 Manilia + native cephfs
+/usr/share/openstack-tripleo-heat-templates/environments/manila-cephfsnative-config.yaml
+
+# 如果配置 Manila + cephfs + nfs
+/usr/share/openstack-tripleo-heat-templates/environments/manila-cephfsganesha-config.yaml
+```

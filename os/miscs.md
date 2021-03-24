@@ -12594,6 +12594,7 @@ https://docs.openstack.org/cinder/latest/admin/blockstorage-volume-backups.html<
 https://wiki.openstack.org/wiki/Cinder/QuiescedSnapshotWithQemuGuestAgent<br>
 https://github.com/vagnerfarias/osp13-backup/tree/main<br>
 https://access.redhat.com/documentation/en-us/red_hat_openstack_platform/16.1/html/undercloud_and_control_plane_back_up_and_restore/index<br>
+https://raymii.org/s/tutorials/OpenStack_Quick_and_automatic_instance_snapshot_backups.html<br>
 
 # Intel N3000 Device driver on rhel7
 ```

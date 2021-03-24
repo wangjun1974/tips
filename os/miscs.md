@@ -12352,6 +12352,21 @@ Removing image: 100% complete...done.
 
 # 删除大的 rbd image
 # 参考：https://ceph.io/geen-categorie/remove-big-rbd-image/
+
+[root@rbd-client ~]# rbd --pool rbd snap create --snap snapname foo
+[root@rbd-client ~]# rbd snap create rbd/foo@snapname
+
+[root@rbd-client ~]# rbd --pool rbd snap ls foo
+[root@rbd-client ~]# rbd snap ls rbd/foo
+
+[root@rbd-client ~]# rbd --pool rbd snap rollback --snap snapname foo
+[root@rbd-client ~]# rbd snap rollback rbd/foo@snapname
+
+[root@rbd-client ~]# rbd --pool rbd snap rm --snap snapname foo
+[root@rbd-client ~]# rbd snap rm rbd/foo@snapname
+
+# Rook Ceph Backup 
+https://gitlab.com/jrevolt/rook-ceph-backup
 ```
 
 # Red Hat Ceph Storage 4.1 新特性 
@@ -12444,7 +12459,8 @@ cat messages | grep -Ev "node2 ptp4l|systemd: Started Session |systemd-logind: N
 ```
 
 # osp16.1: overcloud 与外部 ceph 集群的集成
-https://access.redhat.com/documentation/en-us/red_hat_openstack_platform/16.1/html-single/integrating_an_overcloud_with_an_existing_red_hat_ceph_cluster/index
+https://docs.openstack.org/project-deploy-guide/tripleo-docs/latest/features/ceph_external.html<br>
+https://access.redhat.com/documentation/en-us/red_hat_openstack_platform/16.1/html-single/integrating_an_overcloud_with_an_existing_red_hat_ceph_cluster/index<br>
 ```
 # 外部的 ceph cluster 需包含以下 pool 
 volumes: Storage for OpenStack Block Storage (cinder)
@@ -12484,4 +12500,91 @@ fsid = 765cff5c-012e-4871-9d19-cf75eaf27769
 
 # 如果配置 Manila + cephfs + nfs
 /usr/share/openstack-tripleo-heat-templates/environments/manila-cephfsganesha-config.yaml
+
+# 创建 /home/stack/templates/ceph-config.yaml 模版文件
+# 添加 CephClientKey，内容来自 ceph auth get-key client.openstack
+# 添加 CephClusterFSID，内容来自外部 ceph cluster 的 fsid
+# 添加 CephExternalMonHost，内容来自外部 ceph cluster 的 mon
+cat > /home/stack/templates/ceph-config.yaml << EOF
+parameter_defaults:
+  # Enable use of RBD backend in nova-compute
+  NovaEnableRbdBackend: true
+  # Enable use of RBD backend in cinder-volume
+  CinderEnableRbdBackend: true
+  # Backend to use for cinder-backup
+  CinderBackupBackend: ceph
+  # Backend to use for glance
+  GlanceBackend: rbd
+  # Backend to use for gnocchi-metricsd
+  GnocchiBackend: rbd
+  # Name of the Ceph pool hosting Nova ephemeral images
+  NovaRbdPoolName: vms
+  # Name of the Ceph pool hosting Cinder volumes
+  CinderRbdPoolName: volumes
+  # Name of the Ceph pool hosting Cinder backups
+  CinderBackupRbdPoolName: backups
+  # Name of the Ceph pool hosting Glance images
+  GlanceRbdPoolName: images
+  # Name of the Ceph pool hosting Gnocchi metrics
+  GnocchiRbdPoolName: metrics
+  # Name of the user to authenticate with the external Ceph cluster
+  CephClientUserName: openstack
+  CephClientKey: AQDLOh1VgEp6FRAAFzT7Zw+Y9V6JJExQAsRnRQ==
+  CephClusterFSID: 4b5c8c0a-ff60-454b-a1b4-9747aa737d19
+  CephExternalMonHost: 172.16.1.7, 172.16.1.8
+EOF
+
+# 连接多外部集群的例子
+CephExternalMultiConfig:
+  - cluster: 'ceph2'
+    fsid: 'af25554b-42f6-4d2b-9b9b-d08a1132d3e8'
+    external_cluster_mon_ips: '172.18.0.5,172.18.0.6,172.18.0.7'
+    keys:
+      - name: "client.openstack"
+        caps:
+          mgr: "allow *"
+          mon: "profile rbd"
+          osd: "profile rbd pool=volumes, profile rbd pool=backups, profile rbd pool=vms, profile rbd pool=images"
+        key: "AQCwmeRcAAAAABAA6SQU/bGqFjlfLro5KxrB1Q=="
+        mode: "0600"
+    dashboard_enabled: false
+  - cluster: 'ceph3'
+    fsid: 'e2cba068-5f14-4b0f-b047-acf375c0004a'
+    external_cluster_mon_ips: '172.18.0.8,172.18.0.9,172.18.0.10'
+    keys:
+      - name: "client.openstack"
+        caps:
+          mgr: "allow *"
+          mon: "profile rbd"
+          osd: "profile rbd pool=volumes, profile rbd pool=backups, profile rbd pool=vms, profile rbd pool=images"
+        key: "AQCwmeRcAAAAABAA6SQU/bGqFjlfLro5KxrB2Q=="
+        mode: "0600"
+    dashboard_enabled: false
+
+# The above, in addition to the parameters from the previous section, will result in an overcloud with the following files in /etc/ceph:
+ceph.client.openstack.keyring
+ceph.conf
+ceph2.client.openstack.keyring
+ceph2.conf
+ceph3.client.openstack.keyring
+ceph3.conf
+
+# 如果部署 Manila + external ceph cluster cephfs 的话
+parameter_defaults:
+  ManilaCephFSDataPoolName: manila_data
+  ManilaCephFSMetadataPoolName: manila_metadata
+  ManilaCephFSCephFSAuthId: 'manila'
+  CephManilaClientKey: 'AQDLOh1VgEp6FRAAFzT7Zw+Y9V6JJExQAsRnRQ=='
+
+# 添加 client.manila 用户并设置合适的权限
+ceph auth add client.manila mgr "allow *" mon "allow r, allow command 'auth del', allow command 'auth caps', allow command 'auth get', allow command 'auth get-or-create'" mds "allow *" osd "allow rw"
+
+# 与外部旧版本 ceph 集成需设置的参数 （Hammer）
+parameter_defaults:
+  ExtraConfig:
+    ceph::profile::params::rbd_default_features: '1'
+
+
 ```
+
+

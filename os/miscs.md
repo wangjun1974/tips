@@ -12590,6 +12590,9 @@ parameter_defaults:
 # OpenStack Backup 相关
 https://wiki.openstack.org/wiki/Raksha<br>
 https://access.redhat.com/documentation/en-us/red_hat_openstack_platform/10/html-single/instances_and_images_guide/index#section-create-consistent-snapshots<br>
+https://docs.openstack.org/cinder/latest/admin/blockstorage-volume-backups.html<br>
+https://wiki.openstack.org/wiki/Cinder/QuiescedSnapshotWithQemuGuestAgent<br>
+https://github.com/vagnerfarias/osp13-backup/tree/main<br>
 
 # Intel N3000 Device driver on rhel7
 ```

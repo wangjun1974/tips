@@ -12587,4 +12587,32 @@ parameter_defaults:
 
 ```
 
+# OpenStack Backup 相关
+https://wiki.openstack.org/wiki/Raksha<br>
+https://access.redhat.com/documentation/en-us/red_hat_openstack_platform/10/html-single/instances_and_images_guide/index#section-create-consistent-snapshots<br>
+
+# Intel N3000 Device driver on rhel7
+```
+# Install kernel header
+yum install kernel-devel gcc -y
+
+# Fetch i40e drivers from intel, on the RT compute node:
+curl -o i40e-2.10.19.30.tar.gz   https://downloadcenter.intel.com/downloads/eula/24411/Intel-Network-Adapter-Driver-for-PCIe-40-Gigabit-Ethernet-Network-Connections-Under-Linux-?httpDown=https%3A%2F%2Fdownloadmirror.intel.com%2F24411%2Feng%2Fi40e-2.10.19.30.tar.gz
+
+# Then build the RPM
+rpmbuild -tb i40e-2.10.19.30.tar.gz
+
+# Now this rpm can be installed on any compute node without the need for any repos, it doesn’t have any dependencies
+yum localinstall -y i40e*.rpm
+
+# Then reboot to allow the kernel to enumerate the interfaces:
+reboot
+
+sudo lshw -class network -businfo |grep FPGA
+pci@0000:88:00.0  p5p1        network        Ethernet Controller XXV710 Intel(R) FPGA Programmable Acceleration Card N30
+pci@0000:88:00.1  p5p2        network        Ethernet Controller XXV710 Intel(R) FPGA Programmable Acceleration Card N30
+pci@0000:8c:00.0  p5p3        network        Ethernet Controller XXV710 Intel(R) FPGA Programmable Acceleration Card N30
+pci@0000:8c:00.1  p5p4        network        Ethernet Controller XXV710 Intel(R) FPGA Programmable Acceleration Card N30
+```
+
 

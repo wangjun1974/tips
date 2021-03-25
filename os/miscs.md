@@ -12708,6 +12708,7 @@ Image copy: 100% complete...done.
 
 # 参见： https://ceph.io/planet/importing-an-existing-ceph-rbd-image-into-glance/
 # 参见： http://wordpress.hawkless.id.au/index.php/2018/04/26/openstack-queens-glance-create-an-image-from-an-existing-rbd-volume/
+# 参见： https://ceph.io/geen-categorie/remove-snapshot-before-rbd/
 
 (overcloud) [stack@undercloud ~]$ ssh heat-admin@overcloud-controller-2.ctlplane sudo podman exec -it openstack-cinder-volume-podman-0 rbd snap create images/${imageUuid}@snap
 (overcloud) [stack@undercloud ~]$ ssh heat-admin@overcloud-controller-2.ctlplane sudo podman exec -it openstack-cinder-volume-podman-0 rbd snap protect images/${imageUuid}@snap

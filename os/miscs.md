@@ -12601,6 +12601,9 @@ Site Recovery/DR solution with RedHat Openstack and HPE3PAR<br>
 https://www.youtube.com/watch?v=qNRR3onC9SA<br>
 没有实质性的内容，不推荐<br>
 
+Group demo: How to build reliable disaster recovery for OpenStack<br>
+https://www.youtube.com/watch?v=nVWnsKDh9tY<br>
+
 
 
 

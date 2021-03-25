@@ -12604,6 +12604,11 @@ https://www.youtube.com/watch?v=qNRR3onC9SA<br>
 Group demo: How to build reliable disaster recovery for OpenStack<br>
 https://www.youtube.com/watch?v=nVWnsKDh9tY<br>
 
+OpenStack高可用（HA）和灾备（DR）解决方案<br>
+https://blog.csdn.net/sj349781478/article/details/78522047<br>
+
+导入镜像到 Ceph <br>
+https://ceph.io/geen-categorie/openstack-import-existing-ceph-volumes-in-cinder/<br>
 
 
 

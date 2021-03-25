@@ -12596,6 +12596,8 @@ https://github.com/vagnerfarias/osp13-backup/tree/main<br>
 https://access.redhat.com/documentation/en-us/red_hat_openstack_platform/16.1/html/undercloud_and_control_plane_back_up_and_restore/index<br>
 https://raymii.org/s/tutorials/OpenStack_Quick_and_automatic_instance_snapshot_backups.html<br>
 
+这个工具能否支持向 OpenStack 迁移？<br>
+https://www.cloudendure.com/<br>
 
 Site Recovery/DR solution with RedHat Openstack and HPE3PAR<br>
 https://www.youtube.com/watch?v=qNRR3onC9SA<br>
@@ -12787,3 +12789,30 @@ https://tracker.ceph.com/projects/ceph/wiki/Code_Walkthroughs
 # Parallel OpenStack Migrate
 https://github.com/os-migrate/os-migrate<br>
 https://os-migrate.github.io/os-migrate/user/README.html<br>
+
+# 在融合的 ceph 集群里，如何调整参数让 ceph mon/osd 节点 down 造成的 I/O Paused 时间变短
+```
+# 以 Ceph 集群为例
+# 调整以下参数
+$ vim /usr/share/ceph-ansible/group_vars/all.yml
+...
+ceph_conf_overrides:
+  global:
+    osd_heartbeat_grace: 5
+    osd_heartbeat_interval: 1
+    mon_osd_adjust_heartbeat_grace: false
+    osd_mon_report_interval: 1
+    mon_client_ping_interval: 1
+    mon_client_ping_timeout: 3
+  mon:
+    mon_election_timeout: 1
+    mon_lease_ack_timeout_factor: 1.001
+    mon_accept_timeout_factor: 1.001
+  osd:
+    osd_client_watch_timeout: 10
+...
+$ cd /usr/share/ceph-ansible/
+$ ansible-playbook -i inventory site-container.yml
+
+
+```

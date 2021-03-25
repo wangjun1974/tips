@@ -12680,7 +12680,7 @@ volume-8106c740-5066-4b6c-a6e4-837afd23206a
 1. 记录服务器的信息：服务器实例名称，规格，IP地址，卷名称，卷uuid
 2. 虚拟机基于卷启动
 3. 环境的基础配置保持两端的一致性
-4. 配置租户，配额，网络，镜像
+4. 配置租户，配额，网络，镜像, keypair, security group
 5. 根据以上信息，在新环境中恢复实例
 
 (overcloud) [stack@undercloud ~]$ ssh heat-admin@overcloud-controller-2.ctlplane sudo podman exec -it openstack-cinder-volume-podman-0 rbd -p images ls

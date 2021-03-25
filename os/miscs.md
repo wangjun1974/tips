@@ -12683,6 +12683,49 @@ volume-8106c740-5066-4b6c-a6e4-837afd23206a
 4. 配置租户，配额，网络，镜像
 5. 根据以上信息，在新环境中恢复实例
 
+(overcloud) [stack@undercloud ~]$ ssh heat-admin@overcloud-controller-2.ctlplane sudo podman exec -it openstack-cinder-volume-podman-0 rbd -p images ls
+0ff57ef9-3b25-45fd-b2b3-a8fb08ac1a98
+969681be-3b1b-4929-bf42-a314845aacb2
+
+(overcloud) [stack@undercloud ~]$ openstack image list 
++--------------------------------------+----------------------------------------+--------+
+| ID                                   | Name                                   | Status |
++--------------------------------------+----------------------------------------+--------+
+| 0ff57ef9-3b25-45fd-b2b3-a8fb08ac1a98 | cirros                                 | active |
+| 969681be-3b1b-4929-bf42-a314845aacb2 | octavia-amphora-16.1-20201202.1.x86_64 | active |
++--------------------------------------+----------------------------------------+--------+
+
+(overcloud) [stack@undercloud ~]$ export imageUuid=$(uuidgen)
+(overcloud) [stack@undercloud ~]$ export imageNewName=cirros1
+
+(overcloud) [stack@undercloud ~]$ ssh heat-admin@overcloud-controller-2.ctlplane sudo podman exec -it openstack-cinder-volume-podman-0 rbd cp images/0ff57ef9-3b25-45fd-b2b3-a8fb08ac1a98 images/$imageUuid
+Image copy: 100% complete...done.
+
+(overcloud) [stack@undercloud ~]$ ssh heat-admin@overcloud-controller-2.ctlplane sudo podman exec -it openstack-cinder-volume-podman-0 rbd -p images ls
+0ff57ef9-3b25-45fd-b2b3-a8fb08ac1a98
+5a483e34-689b-4430-aa8f-fee8f0bdd500
+969681be-3b1b-4929-bf42-a314845aacb2
+
+# 参见： https://ceph.io/planet/importing-an-existing-ceph-rbd-image-into-glance/
+# 参见： http://wordpress.hawkless.id.au/index.php/2018/04/26/openstack-queens-glance-create-an-image-from-an-existing-rbd-volume/
+
+(overcloud) [stack@undercloud ~]$ ssh heat-admin@overcloud-controller-2.ctlplane sudo podman exec -it openstack-cinder-volume-podman-0 rbd snap create images/${imageUuid}@snap
+(overcloud) [stack@undercloud ~]$ ssh heat-admin@overcloud-controller-2.ctlplane sudo podman exec -it openstack-cinder-volume-podman-0 rbd snap protect images/${imageUuid}@snap
+
+# 删除时执行
+(overcloud) [stack@undercloud ~]$ ssh heat-admin@overcloud-controller-2.ctlplane sudo podman exec -it openstack-cinder-volume-podman-0 rbd snap unprotect images/${imageUuid}@snap
+(overcloud) [stack@undercloud ~]$ ssh heat-admin@overcloud-controller-2.ctlplane sudo podman exec -it openstack-cinder-volume-podman-0 rbd snap purge images/${imageUuid}
+(overcloud) [stack@undercloud ~]$ ssh heat-admin@overcloud-controller-2.ctlplane sudo podman exec -it openstack-cinder-volume-podman-0 rbd rm images/${imageUuid}
+
+# 用以下命令可以导入新生成的 image
+(overcloud) [stack@undercloud ~]$  export CLUSTER_ID='765cff5c-012e-4871-9d19-cf75eaf27769'
+(overcloud) [stack@undercloud ~]$  glance image-create \
+  --disk-format raw \
+  --container-format bare \
+  --id $imageUuid \
+  --name ${imageNewName}
+(overcloud) [stack@undercloud ~]$  glance location-add --url rbd://$CLUSTER_ID/images/${imageUuid}/snap $imageUuid
+
 
 ```
 

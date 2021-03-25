@@ -12610,7 +12610,81 @@ https://blog.csdn.net/sj349781478/article/details/78522047<br>
 导入镜像到 Ceph <br>
 https://ceph.io/geen-categorie/openstack-import-existing-ceph-volumes-in-cinder/<br>
 
+Volume migration between OpenStack clusters<br>
+https://cloud.garr.it/support/kb/general/cinderVolumeMigration/<br>
+```
+export volName=volume-<hexString>
+export volOSname=serverXdevVdB
 
+cinder manage --name=$volOSname cinder-pa1-cl1@cinder-ceph-pa1-cl1#cinder-ceph-pa1-cl1 $volName
+
+(overcloud) [stack@undercloud ~]$ ssh heat-admin@overcloud-controller-2.ctlplane sudo podman exec -it openstack-cinder-volume-podman-0 /bin/bash
+()[root@overcloud-controller-2 /]# cinder manage
+cinder manage
+usage: cinder manage [--cluster CLUSTER] [--id-type <id-type>] [--name <name>]
+                     [--description <description>]
+                     [--volume-type <volume-type>]
+                     [--availability-zone <availability-zone>]
+                     [--metadata [<key=value> [<key=value> ...]]] [--bootable]
+                     <host> <identifier>
+
+# 创建 volume 
+(overcloud) [stack@undercloud ~]$ openstack volume create --size 1 test
+
+(overcloud) [stack@undercloud ~]$ ssh heat-admin@overcloud-controller-2.ctlplane sudo podman exec -it openstack-cinder-volume-podman-0 rbd -p volumes ls 
+volume-8106c740-5066-4b6c-a6e4-837afd23206a
+
+(overcloud) [stack@undercloud ~]$ ssh heat-admin@overcloud-controller-2.ctlplane sudo podman exec -it openstack-cinder-volume-podman-0 rbd cp volumes/volume-8106c740-5066-4b6c-a6e4-837afd23206a volumes/volume-$(uuidgen)
+Image copy: 100% complete...done.
+
+(overcloud) [stack@undercloud ~]$ ssh heat-admin@overcloud-controller-2.ctlplane sudo podman exec -it openstack-cinder-volume-podman-0 rbd -p volumes ls 
+volume-8106c740-5066-4b6c-a6e4-837afd23206a
+volume-92b58cde-80f5-4ac4-8b61-12c100fdaa10
+
+(overcloud) [stack@undercloud ~]$ export volName=volume-92b58cde-80f5-4ac4-8b61-12c100fdaa10    
+(overcloud) [stack@undercloud ~]$ export volOSname=Server1Vda
+(overcloud) [stack@undercloud ~]$ cinder manage --name=$volOSname hostgroup@tripleo_ceph#tripleo_ceph $volName
++--------------------------------+--------------------------------------+
+| Property                       | Value                                |
++--------------------------------+--------------------------------------+
+| attachments                    | []                                   |
+| availability_zone              | nova                                 |
+| bootable                       | false                                |
+| consistencygroup_id            | None                                 |
+| created_at                     | 2021-03-25T02:54:31.000000           |
+| description                    | None                                 |
+| encrypted                      | False                                |
+| id                             | 181a75ec-172a-4066-b2a9-fb7b9c8a63eb |
+| metadata                       | {}                                   |
+| migration_status               | None                                 |
+| multiattach                    | False                                |
+| name                           | Server1Vda                           |
+| os-vol-host-attr:host          | hostgroup@tripleo_ceph#tripleo_ceph  |
+| os-vol-mig-status-attr:migstat | None                                 |
+| os-vol-mig-status-attr:name_id | None                                 |
+| os-vol-tenant-attr:tenant_id   | 1f76c7a530e34cf4a4958c86dc0946f8     |
+| replication_status             | None                                 |
+| size                           | 1                                    |
+| snapshot_id                    | None                                 |
+| source_volid                   | None                                 |
+| status                         | available                            |
+| updated_at                     | 2021-03-25T02:54:33.000000           |
+| user_id                        | d44acc8f58034bcda7eaedd59e1a9be9     |
+| volume_type                    | tripleo                              |
++--------------------------------+--------------------------------------+
+
+(overcloud) [stack@undercloud ~]$ ssh heat-admin@overcloud-controller-2.ctlplane sudo podman exec -it openstack-cinder-volume-podman-0 rbd -p volumes ls 
+volume-181a75ec-172a-4066-b2a9-fb7b9c8a63eb
+volume-8106c740-5066-4b6c-a6e4-837afd23206a
+
+1. 记录服务器的信息：服务器实例名称，规格，IP地址，卷名称，卷uuid
+2. 虚拟机基于卷启动
+3. 环境的基础配置保持两端的一致性
+4. 配置租户，配额，网络，镜像
+5. 根据以上信息，在新环境中恢复实例
+
+
+```
 
 # Intel N3000 Device driver on rhel7
 ```

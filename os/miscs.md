@@ -12781,5 +12781,9 @@ When the failed node restarts after the IPMI reset, the nova-compute process on 
 When Pacemaker detects that the Compute node is online, it starts the compute-unfence-trigger resource agent on the node, which releases the node and so that it can run instances again.
 Instance HA works with shared storage or local storage environments, which means that evacuated instances maintain the same network configuration, such as static IP and floating IP. The re-created instances also maintain the same characteristics inside the new Compue node.<br>
 
+# ceph code walkthrough
+https://tracker.ceph.com/projects/ceph/wiki/Code_Walkthroughs
 
-
+# Parallel OpenStack Migrate
+https://github.com/os-migrate/os-migrate<br>
+https://os-migrate.github.io/os-migrate/user/README.html<br>

@@ -12760,38 +12760,26 @@ https://access.redhat.com/documentation/en-us/red_hat_openstack_platform/16.1/ht
 When a Compute node fails, the Instance High Availability (HA) tool evacuates and re-creates the instances on a different Compute node.
 
 Instance HA uses the following resource agents:
-Agent name	Name inside cluster	Role
-fence_compute
-
-fence-nova
-
-Marks a Compute node for evacuation when the node becomes unavailable.
-
-NovaEvacuate
-
-nova-evacuate
-
-Evacuates instances from failed nodes. This agent runs on one of the Controller nodes.
-
-Dummy
-
-compute-unfence-trigger
-
-Releases a fenced node and enables the node to run instances again.
-
+|Agent name|Name inside cluster|Role|
+|---|---|---|
+|fence_compute|fence-nova|Marks a Compute node for evacuation when the node becomes unavailable.|
+|NovaEvacuate|nova-evacuate|Evacuates instances from failed nodes. This agent runs on one of the Controller nodes.|
+|Dummy|compute-unfence-trigger|Releases a fenced node and enables the node to run instances again.|
 
 The following events occur when a Compute node fails and triggers Instance HA:
 
-At the time of failure, the IPMI agent performs first-layer fencing, which includes physically resetting the node to ensure that it shuts down and preventing data corruption or multiple identical instances on the overcloud. When the node is offline, it is considered fenced.
+At the time of failure, the IPMI agent performs first-layer fencing, which includes physically resetting the node to ensure that it shuts down and preventing data corruption or multiple identical instances on the overcloud. When the node is offline, it is considered fenced.<br>
 After the physical IPMI fencing, the fence-nova agent automatically performs second-layer fencing and marks the fenced node with the “evacuate=yes” cluster per-node attribute by running the following command:
 
+```
 $ attrd_updater -n evacuate -A name="evacuate" host="FAILEDHOST" value="yes"
 FAILEDHOST is the name of the failed Compute node.
+```
 
-The nova-evacuate agent continually runs in the background and periodically checks the cluster for nodes with the “evacuate=yes” attribute. When nova-evacuate detects that the fenced node contains this attribute, the agent starts evacuating the node. The evacuation process is similar to the manual instance evacuation process that you can perform at any time. For more information about instance evacuation, see Evacuating an instance.
-When the failed node restarts after the IPMI reset, the nova-compute process on that node also starts automatically. Because the node was previously fenced, it does not run any new instances until Pacemaker un-fences the node.
+The nova-evacuate agent continually runs in the background and periodically checks the cluster for nodes with the “evacuate=yes” attribute. When nova-evacuate detects that the fenced node contains this attribute, the agent starts evacuating the node. The evacuation process is similar to the manual instance evacuation process that you can perform at any time. For more information about instance evacuation, see Evacuating an instance.<br>
+When the failed node restarts after the IPMI reset, the nova-compute process on that node also starts automatically. Because the node was previously fenced, it does not run any new instances until Pacemaker un-fences the node.<br>
 When Pacemaker detects that the Compute node is online, it starts the compute-unfence-trigger resource agent on the node, which releases the node and so that it can run instances again.
-Instance HA works with shared storage or local storage environments, which means that evacuated instances maintain the same network configuration, such as static IP and floating IP. The re-created instances also maintain the same characteristics inside the new Compue node.
+Instance HA works with shared storage or local storage environments, which means that evacuated instances maintain the same network configuration, such as static IP and floating IP. The re-created instances also maintain the same characteristics inside the new Compue node.<br>
 
 
 

@@ -12845,3 +12845,7 @@ watch hosted-engine --vm-status
 hosted-engine --set-maintenance --mode=none
 ```
 
+# KVM Forum Video
+[2020] vDPA Support in Linux Kernel by Jason Wang<br>
+https://www.youtube.com/watch?v=HarITOZ0hIw&list=PLW3ep1uCIRfxcUjrH2zcnTmav3mktDwe8&index=8
+

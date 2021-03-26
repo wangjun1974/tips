@@ -12826,12 +12826,19 @@ hosted-engine --vm-shutdown
 hosted-engine --vm-status
 virsh -r list
 reboot
+
 # 重启后，执行
 systemctl stop ovirt-ha-agent
 systemctl stop ovirt-ha-broker
 systemctl restart nfs-server
 systemctl start ovirt-ha-broker
 systemctl start ovirt-ha-agent
+
+# 检查服务状态
+systemctl status ovirt-ha-broker
+systemctl status ovirt-ha-agent
+
+# 检查 hosted-engine 状态
 hosted-engine --vm-status
 hosted-engine --vm-start
 watch hosted-engine --vm-status

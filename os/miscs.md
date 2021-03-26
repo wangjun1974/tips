@@ -12816,3 +12816,20 @@ $ ansible-playbook -i inventory site-container.yml
 
 
 ```
+
+# 重启运行self hosted engine的服务器
+```
+hosted-engine --set-maintenance --mode=global 
+hosted-engine --vm-shutdown 
+hosted-engine --vm-status
+virsh -r list
+reboot
+# 重启后，执行
+systemctl stop ovirt-ha-agent
+systemctl start ovirt-ha-agent
+hosted-engine --vm-status
+hosted-engine --vm-start
+watch hosted-engine --vm-status
+hosted-engine --set-maintenance --mode=none
+```
+

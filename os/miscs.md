@@ -12818,6 +12818,8 @@ $ ansible-playbook -i inventory site-container.yml
 ```
 
 # 重启运行self hosted engine的服务器
+参考： https://access.redhat.com/solutions/2486301<br>
+
 ```
 hosted-engine --set-maintenance --mode=global 
 hosted-engine --vm-shutdown 
@@ -12826,6 +12828,9 @@ virsh -r list
 reboot
 # 重启后，执行
 systemctl stop ovirt-ha-agent
+systemctl stop ovirt-ha-broker
+systemctl restart nfs-server
+systemctl start ovirt-ha-broker
 systemctl start ovirt-ha-agent
 hosted-engine --vm-status
 hosted-engine --vm-start

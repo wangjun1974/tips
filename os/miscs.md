@@ -12883,3 +12883,48 @@ https://ceph.io/planet/ceph-rados-gateway-and-nfs/<br>
 http://www.xuxiaopang.com/2017/03/27/ganesha-nfs-deploy/<br>
 https://zhoubofsy.github.io/2017/05/25/storage/ceph/ceph-nfs-service-by-rgw-with-nfs-ganesha/<br>
 https://stackoverflow.com/questions/64780853/ceph-object-gateway-what-is-the-best-backup-strategy<br>
+
+# How to assign existing replicated pools to a device class.
+https://www.suse.com/support/kb/doc/?id=000019699<br>
+```
+# The default rule provided with ceph is the replicated_rule:
+# rules
+rule replicated_rule {
+id 0
+type replicated
+min_size 1
+max_size 10
+step take default
+step chooseleaf firstn 0 type host
+step emit
+}
+
+# If the ceph cluster contains these types of storage devices, create the new crush rules with:
+# ceph osd crush rule create-replicated replicated_hdd default host hdd
+# ceph osd crush rule create-replicated replicated_ssd default host ssd
+# ceph osd crush rule create-replicated replicated_nvme default host nvme
+
+# The newly created rule will look nearly the same. This is the hdd rule:
+rule replicated_hdd {
+id 1
+type replicated
+min_size 1
+max_size 10
+step take default class hdd
+step chooseleaf firstn 0 type host
+step emit
+}
+
+After the rules are created, the existing pools can be assigned to the new rules:
+# ceph osd pool set $POOL_NAME crush_rule replicated_hdd
+or
+# ceph osd pool set $POOL_NAME crush_rule replicated_ssd
+or
+# ceph osd pool set $POOL_NAME crush_rule replicated_nvme
+
+Pools that may be considered for device class "ssd" or "nvme" are any pools that need reduced latency. However, it may only be practical to assign metadata pools to the faster device class devices, such as the following default pools:
+cephfs_metadata, .rgw.root, default.rgw.control, default.rgw.meta,default.rgw.log, default.rgw.buckets.index
+
+Pools that should be considered for device class hdd:
+iscsi-images, cephfs_data, default.rgw.buckets.data
+```

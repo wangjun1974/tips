@@ -12947,5 +12947,17 @@ kernel parameters  ks=http://10.66.208.115/ks-ceph05.cfg ksdevice=ens3 ip=10.66.
 ceph06
 kernel path ISO11://vmlinuz-rhel-8.3
 initrd path ISO11://initrd.img-rhel-8.3
-kernel parameters  ks=http://10.66.208.115/ks-ceph06.cfg ksdevice=ens3 ip=10.66.208.127 netmask=255.255.255.0 dns 10.64.63.6 gateway=10.66.208.254
+kernel parameters  ks=http://10.66.208.115/ks-ceph06.cfg ksdevice=ens6 ip=10.66.208.127 netmask=255.255.255.0 dns 10.64.63.6 gateway=10.66.208.254
+
+
+# deivce class 
+# https://access.redhat.com/solutions/3341491
 ```
+
+
+#  [RHEL8.4] system hung at Started cancel waiting for multipath siblings of x
+https://bugzilla.redhat.com/show_bug.cgi?id=1916168
+
+我在通过 kickstart 自动安装系统时遇到这个问题，这个问题产生的原因是在启动时网络遇到问题无法启动，在网络服务处陷入循环。因此需要调整网络启动参数，如网卡设备名，调整后系统可正常完成启动。
+
+

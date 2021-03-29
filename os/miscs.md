@@ -12849,3 +12849,36 @@ hosted-engine --set-maintenance --mode=none
 [2020] vDPA Support in Linux Kernel by Jason Wang<br>
 https://www.youtube.com/watch?v=HarITOZ0hIw&list=PLW3ep1uCIRfxcUjrH2zcnTmav3mktDwe8&index=8
 
+[2020] Keynote: KVM by Christian Bornträger<br>
+https://www.youtube.com/watch?v=MfLHmoEbZGE&list=PLW3ep1uCIRfxcUjrH2zcnTmav3mktDwe8&index=19
+
+
+# cephfs subvolume
+https://zhuanlan.zhihu.com/p/67977117<br>
+
+subvolume 可以看做是一个 cephfs volume 的子目录，可以设定配额限制、单独的 RADOS 名称空间(存储池内对象的逻辑分组，用户对存储池的读写可以仅在命名空间内进行)、唯一的 cephx 用户。
+
+```
+# 可以在创建 subvolume 时指定创建在一个 subvolume group 里 (subvolume 的父目录)
+ceph fs subvolume create <myvol> <mysubvol> <size> <group>
+ceph fs subvolume rm <myvol> <mysubvol> <group>
+
+ceph fs subvolumegroup create
+ceph fs subvolumegroup rm
+
+# 获得 subvolume 路径: {prefix}/{group_id}/{subvolume_id}
+ceph fs subvolume getpath
+
+# subvolume group snapshots 的创建和删除
+ceph fs subvolumegroup snapshot create
+ceph fs subvolumegroup snapshot rm 
+
+# subvolume snapshots 的创建和删除
+ceph fs subvolume snapshot create
+ceph fs subvolume snapshot rm
+```
+
+# ceph rgw and ganesha
+https://ceph.io/planet/ceph-rados-gateway-and-nfs/<br>
+http://www.xuxiaopang.com/2017/03/27/ganesha-nfs-deploy/<br>
+https://zhoubofsy.github.io/2017/05/25/storage/ceph/ceph-nfs-service-by-rgw-with-nfs-ganesha/<br>

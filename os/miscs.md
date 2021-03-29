@@ -12882,3 +12882,4 @@ ceph fs subvolume snapshot rm
 https://ceph.io/planet/ceph-rados-gateway-and-nfs/<br>
 http://www.xuxiaopang.com/2017/03/27/ganesha-nfs-deploy/<br>
 https://zhoubofsy.github.io/2017/05/25/storage/ceph/ceph-nfs-service-by-rgw-with-nfs-ganesha/<br>
+https://stackoverflow.com/questions/64780853/ceph-object-gateway-what-is-the-best-backup-strategy<br>

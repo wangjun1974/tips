@@ -12928,3 +12928,9 @@ cephfs_metadata, .rgw.root, default.rgw.control, default.rgw.meta,default.rgw.lo
 Pools that should be considered for device class hdd:
 iscsi-images, cephfs_data, default.rgw.buckets.data
 ```
+
+# 测试 rhceph 4.2
+```
+在 RHV 下通过 kickstart 安装 ceph 虚拟机
+# https://access.redhat.com/solutions/300713
+```

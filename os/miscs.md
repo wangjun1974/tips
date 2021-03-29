@@ -12933,4 +12933,19 @@ iscsi-images, cephfs_data, default.rgw.buckets.data
 ```
 在 RHV 下通过 kickstart 安装 ceph 虚拟机
 # https://access.redhat.com/solutions/300713
+
+ceph04.cfg
+kernel path ISO11://vmlinuz-rhel-8.3
+initrd path ISO11://initrd.img-rhel-8.3
+kernel parameters  ks=http://10.66.208.115/ks-ceph04.cfg ksdevice=ens3 ip=10.66.208.125 netmask=255.255.255.0 dns 10.64.63.6 gateway=10.66.208.254
+
+ceph05
+kernel path ISO11://vmlinuz-rhel-8.3
+initrd path ISO11://initrd.img-rhel-8.3
+kernel parameters  ks=http://10.66.208.115/ks-ceph05.cfg ksdevice=ens3 ip=10.66.208.126 netmask=255.255.255.0 dns 10.64.63.6 gateway=10.66.208.254
+
+ceph06
+kernel path ISO11://vmlinuz-rhel-8.3
+initrd path ISO11://initrd.img-rhel-8.3
+kernel parameters  ks=http://10.66.208.115/ks-ceph06.cfg ksdevice=ens3 ip=10.66.208.127 netmask=255.255.255.0 dns 10.64.63.6 gateway=10.66.208.254
 ```

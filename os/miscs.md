@@ -12987,3 +12987,192 @@ https://bugzilla.redhat.com/show_bug.cgi?id=1916168
 我在通过 kickstart 自动安装系统时遇到这个问题，这个问题产生的原因是在启动时网络遇到问题无法启动，在网络服务处陷入循环。因此需要调整网络启动参数，如网卡设备名，调整后系统可正常完成启动。
 
 
+# RGW index shard 有关的链接
+[Ceph] Large OMAP warning for RGW index shard with proper shard count<br>
+https://access.redhat.com/solutions/5703641<br>
+
+Ceph - Flapping OSD's when RGW buckets have millions of objects<br>
+https://access.redhat.com/solutions/2971581<br>
+
+# 设置 ssd osd 的 device class，创建 ssd replicate rule，设置 pool 使用 ssd replicate rule
+https://ceph.io/community/new-luminous-crush-device-classes/<br>
+```
+(undercloud) [stack@undercloud ~]$ ssh heat-admin@overcloud-controller-0.ctlplane sudo podman exec -it ceph-mon-overcloud-controller-0 ceph osd tree 
+ID CLASS WEIGHT  TYPE NAME                       STATUS REWEIGHT PRI-AFF 
+-1       0.87918 root default                                            
+-3       0.29306     host overcloud-controller-0                         
+ 0   hdd 0.09769         osd.0                       up  1.00000 1.00000 
+ 3   hdd 0.09769         osd.3                       up  1.00000 1.00000 
+ 6   hdd 0.09769         osd.6                       up  1.00000 1.00000 
+-5       0.29306     host overcloud-controller-1                         
+ 1   hdd 0.09769         osd.1                       up  1.00000 1.00000 
+ 4   hdd 0.09769         osd.4                       up  1.00000 1.00000 
+ 7   hdd 0.09769         osd.7                       up  1.00000 1.00000 
+-7       0.29306     host overcloud-controller-2                         
+ 2   hdd 0.09769         osd.2                       up  1.00000 1.00000 
+ 5   hdd 0.09769         osd.5                       up  1.00000 1.00000 
+ 8   hdd 0.09769         osd.8                       up  1.00000 1.00000 
+
+ # 手工把 osd.6, osd.7 和 osd.8 设置为 ssd device class
+(undercloud) [stack@undercloud ~]$ ssh heat-admin@overcloud-controller-0.ctlplane sudo podman exec -it ceph-mon-overcloud-controller-0 ceph osd crush rm-device-class osd.6
+done removing class of osd(s): 6
+
+(undercloud) [stack@undercloud ~]$ ssh heat-admin@overcloud-controller-0.ctlplane sudo podman exec -it ceph-mon-overcloud-controller-0 ceph osd crush set-device-class ssd osd.6
+set osd(s) 6 to class 'ssd'
+
+(undercloud) [stack@undercloud ~]$ ssh heat-admin@overcloud-controller-0.ctlplane sudo podman exec -it ceph-mon-overcloud-controller-0 ceph osd crush rm-device-class osd.7
+done removing class of osd(s): 7
+
+(undercloud) [stack@undercloud ~]$ ssh heat-admin@overcloud-controller-0.ctlplane sudo podman exec -it ceph-mon-overcloud-controller-0 ceph osd crush set-device-class ssd osd.7
+set osd(s) 7 to class 'ssd'
+
+(undercloud) [stack@undercloud ~]$ ssh heat-admin@overcloud-controller-0.ctlplane sudo podman exec -it ceph-mon-overcloud-controller-0 ceph osd crush rm-device-class osd.8
+done removing class of osd(s): 8
+
+(undercloud) [stack@undercloud ~]$ ssh heat-admin@overcloud-controller-0.ctlplane sudo podman exec -it ceph-mon-overcloud-controller-0 ceph osd crush set-device-class ssd osd.8
+set osd(s) 8 to class 'ssd'
+
+
+# 调整后 osd.6, osd.7 和 osd.8 的 device class 变成了 ssd
+(undercloud) [stack@undercloud ~]$ ssh heat-admin@overcloud-controller-0.ctlplane sudo podman exec -it ceph-mon-overcloud-controller-0 ceph osd tree
+ID CLASS WEIGHT  TYPE NAME                       STATUS REWEIGHT PRI-AFF 
+-1       0.87918 root default                                            
+-3       0.29306     host overcloud-controller-0                         
+ 0   hdd 0.09769         osd.0                       up  1.00000 1.00000 
+ 3   hdd 0.09769         osd.3                       up  1.00000 1.00000 
+ 6   ssd 0.09769         osd.6                       up  1.00000 1.00000 
+-5       0.29306     host overcloud-controller-1                         
+ 1   hdd 0.09769         osd.1                       up  1.00000 1.00000 
+ 4   hdd 0.09769         osd.4                       up  1.00000 1.00000 
+ 7   ssd 0.09769         osd.7                       up  1.00000 1.00000 
+-7       0.29306     host overcloud-controller-2                         
+ 2   hdd 0.09769         osd.2                       up  1.00000 1.00000 
+ 5   hdd 0.09769         osd.5                       up  1.00000 1.00000 
+ 8   ssd 0.09769         osd.8                       up  1.00000 1.00000 
+
+# 创建 replicated_hdd 和 replicated_ssd rule
+(undercloud) [stack@undercloud ~]$ ssh heat-admin@overcloud-controller-0.ctlplane sudo podman exec -it ceph-mon-overcloud-controller-0 ceph osd crush rule create-replicated replicated_hdd default host hdd
+(undercloud) [stack@undercloud ~]$ ssh heat-admin@overcloud-controller-0.ctlplane sudo podman exec -it ceph-mon-overcloud-controller-0 ceph osd crush rule create-replicated replicated_ssd default host ssd
+
+# 目前有 3 个 replicated rule 了
+(undercloud) [stack@undercloud ~]$ ssh heat-admin@overcloud-controller-0.ctlplane sudo podman exec -it ceph-mon-overcloud-controller-0 ceph osd crush rule ls
+replicated_rule
+replicated_hdd
+replicated_ssd
+
+# rule id 分别是 0, 1, 2
+(undercloud) [stack@undercloud ~]$ ssh heat-admin@overcloud-controller-0.ctlplane sudo podman exec -it ceph-mon-overcloud-controller-0 ceph osd crush rule dump
+[
+    {
+        "rule_id": 0,
+        "rule_name": "replicated_rule",
+        "ruleset": 0,
+        "type": 1,
+        "min_size": 1,
+        "max_size": 10,
+        "steps": [
+            {
+                "op": "take",
+                "item": -1,
+                "item_name": "default"
+            },
+            {
+                "op": "chooseleaf_firstn",
+                "num": 0,
+                "type": "host"
+            },
+            {
+                "op": "emit"
+            }
+        ]
+    },
+    {
+        "rule_id": 1,
+        "rule_name": "replicated_hdd",
+        "ruleset": 1,
+        "type": 1,
+        "min_size": 1,
+        "max_size": 10,
+        "steps": [
+            {
+                "op": "take",
+                "item": -2,
+                "item_name": "default~hdd"
+            },
+            {
+                "op": "chooseleaf_firstn",
+                "num": 0,
+                "type": "host"
+            },
+            {
+                "op": "emit"
+            }
+        ]
+    },
+    {
+        "rule_id": 2,
+        "rule_name": "replicated_ssd",
+        "ruleset": 2,
+        "type": 1,
+        "min_size": 1,
+        "max_size": 10,
+        "steps": [
+            {
+                "op": "take",
+                "item": -12,
+                "item_name": "default~ssd"
+            },
+            {
+                "op": "chooseleaf_firstn",
+                "num": 0,
+                "type": "host"
+            },
+            {
+                "op": "emit"
+            }
+        ]
+    }
+]
+
+
+
+# 接下来把 pool 调整到合适的 rule 上
+# pool vms, volumes, images 与 replicated_hdd 关联起来
+# pool .rgw.root, default.rgw.control, default.rgw.meta，default.rgw.log 与 replicated_ssd 关联起来
+(undercloud) [stack@undercloud ~]$ ssh heat-admin@overcloud-controller-0.ctlplane sudo podman exec -it ceph-mon-overcloud-controller-0 ceph osd pool ls detail 
+pool 1 'vms' replicated size 3 min_size 2 crush_rule 0 object_hash rjenkins pg_num 128 pgp_num 128 autoscale_mode warn last_change 62 flags hashpspool stripe_width 0 application rbd
+pool 2 'volumes' replicated size 3 min_size 2 crush_rule 0 object_hash rjenkins pg_num 128 pgp_num 128 autoscale_mode warn last_change 63 flags hashpspool stripe_width 0 application rbd
+pool 3 'images' replicated size 3 min_size 2 crush_rule 0 object_hash rjenkins pg_num 128 pgp_num 128 autoscale_mode warn last_change 65 flags hashpspool,selfmanaged_snaps stripe_width 0 application rbd
+        removed_snaps [1~3]
+pool 4 '.rgw.root' replicated size 3 min_size 2 crush_rule 0 object_hash rjenkins pg_num 128 pgp_num 128 autoscale_mode warn last_change 43 flags hashpspool stripe_width 0 application rgw
+pool 5 'default.rgw.control' replicated size 3 min_size 2 crush_rule 0 object_hash rjenkins pg_num 128 pgp_num 128 autoscale_mode warn last_change 45 flags hashpspool stripe_width 0 application rgw
+pool 6 'default.rgw.meta' replicated size 3 min_size 2 crush_rule 0 object_hash rjenkins pg_num 128 pgp_num 128 autoscale_mode warn last_change 48 flags hashpspool stripe_width 0 application rgw
+pool 7 'default.rgw.log' replicated size 3 min_size 2 crush_rule 0 object_hash rjenkins pg_num 128 pgp_num 128 autoscale_mode warn last_change 49 flags hashpspool stripe_width 0 application rgw
+
+# vms, volumes, images <=> replicated_hdd
+(undercloud) [stack@undercloud ~]$ ssh heat-admin@overcloud-controller-0.ctlplane sudo podman exec -it ceph-mon-overcloud-controller-0 ceph osd pool set vms crush_rule replicated_hdd 
+(undercloud) [stack@undercloud ~]$ ssh heat-admin@overcloud-controller-0.ctlplane sudo podman exec -it ceph-mon-overcloud-controller-0 ceph osd pool set volumes crush_rule replicated_hdd 
+(undercloud) [stack@undercloud ~]$ ssh heat-admin@overcloud-controller-0.ctlplane sudo podman exec -it ceph-mon-overcloud-controller-0 ceph osd pool set images crush_rule replicated_hdd 
+
+# .rgw.root, default.rgw.control, default.rgw.meta, default.rgw.log <=> replicated_ssd
+(undercloud) [stack@undercloud ~]$ ssh heat-admin@overcloud-controller-0.ctlplane sudo podman exec -it ceph-mon-overcloud-controller-0 ceph osd pool set .rgw.root crush_rule replicated_ssd
+(undercloud) [stack@undercloud ~]$ ssh heat-admin@overcloud-controller-0.ctlplane sudo podman exec -it ceph-mon-overcloud-controller-0 ceph osd pool set default.rgw.control crush_rule replicated_ssd
+(undercloud) [stack@undercloud ~]$ ssh heat-admin@overcloud-controller-0.ctlplane sudo podman exec -it ceph-mon-overcloud-controller-0 ceph osd pool set default.rgw.meta crush_rule replicated_ssd
+(undercloud) [stack@undercloud ~]$ ssh heat-admin@overcloud-controller-0.ctlplane sudo podman exec -it ceph-mon-overcloud-controller-0 ceph osd pool set default.rgw.log crush_rule replicated_ssd
+
+
+# vms, volumes, images 的 crush_rule 是 1
+# .rgw.root, default.rgw.control, default.rgw.meta, default.rgw.log 的 crush_rule 是 2
+(undercloud) [stack@undercloud ~]$ ssh heat-admin@overcloud-controller-0.ctlplane sudo podman exec -it ceph-mon-overcloud-controller-0 ceph osd pool ls detail
+Warning: Permanently added 'overcloud-controller-0.ctlplane' (ECDSA) to the list of known hosts.
+pool 1 'vms' replicated size 3 min_size 2 crush_rule 1 object_hash rjenkins pg_num 128 pgp_num 128 autoscale_mode warn last_change 74 flags hashpspool stripe_width 0 application rbd
+pool 2 'volumes' replicated size 3 min_size 2 crush_rule 1 object_hash rjenkins pg_num 128 pgp_num 128 autoscale_mode warn last_change 76 flags hashpspool stripe_width 0 application rbd
+pool 3 'images' replicated size 3 min_size 2 crush_rule 1 object_hash rjenkins pg_num 128 pgp_num 128 autoscale_mode warn last_change 78 flags hashpspool,selfmanaged_snaps stripe_width 0 application rbd
+        removed_snaps [1~3]
+pool 4 '.rgw.root' replicated size 3 min_size 2 crush_rule 2 object_hash rjenkins pg_num 128 pgp_num 128 autoscale_mode warn last_change 81 flags hashpspool stripe_width 0 application rgw
+pool 5 'default.rgw.control' replicated size 3 min_size 2 crush_rule 2 object_hash rjenkins pg_num 128 pgp_num 128 autoscale_mode warn last_change 85 flags hashpspool stripe_width 0 application rgw
+pool 6 'default.rgw.meta' replicated size 3 min_size 2 crush_rule 2 object_hash rjenkins pg_num 128 pgp_num 128 autoscale_mode warn last_change 87 flags hashpspool stripe_width 0 application rgw
+pool 7 'default.rgw.log' replicated size 3 min_size 2 crush_rule 2 object_hash rjenkins pg_num 128 pgp_num 128 autoscale_mode warn last_change 183 flags hashpspool stripe_width 0 application rgw
+
+
+```

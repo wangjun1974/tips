@@ -13188,4 +13188,12 @@ pool 7 'default.rgw.log' replicated size 3 min_size 2 crush_rule 2 object_hash r
 6
 7
 8
+
+# tripleo 的 ceph-ansible 日志在
+# /var/lib/mistral/overcloud/ceph-ansible/ceph_ansible_command.log 
+cat /var/lib/mistral/overcloud/ceph-ansible/ceph_ansible_command.log 
 ```
+
+# How Indexes Work In Ceph Rados Gateway
+介绍 Ceph Rados Gateway 的
+https://allthenodes.wordpress.com/2016/01/29/how-indexes-work-in-ceph-rados-gateway/

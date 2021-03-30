@@ -13174,5 +13174,18 @@ pool 5 'default.rgw.control' replicated size 3 min_size 2 crush_rule 2 object_ha
 pool 6 'default.rgw.meta' replicated size 3 min_size 2 crush_rule 2 object_hash rjenkins pg_num 128 pgp_num 128 autoscale_mode warn last_change 87 flags hashpspool stripe_width 0 application rgw
 pool 7 'default.rgw.log' replicated size 3 min_size 2 crush_rule 2 object_hash rjenkins pg_num 128 pgp_num 128 autoscale_mode warn last_change 183 flags hashpspool stripe_width 0 application rgw
 
+# 看看哪些 osd 与 crush class hdd 相关
+(undercloud) [stack@undercloud ~]$ ssh heat-admin@overcloud-controller-0.ctlplane sudo podman exec -it ceph-mon-overcloud-controller-0 ceph osd crush class ls-osd hdd
+0
+1
+2
+3
+4
+5
 
+# 看看哪些 osd 与 crush class ssd 相关
+(undercloud) [stack@undercloud ~]$ ssh heat-admin@overcloud-controller-0.ctlplane sudo podman exec -it ceph-mon-overcloud-controller-0 ceph osd crush class ls-osd ssd
+6
+7
+8
 ```

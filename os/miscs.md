@@ -13192,6 +13192,20 @@ pool 7 'default.rgw.log' replicated size 3 min_size 2 crush_rule 2 object_hash r
 # tripleo 的 ceph-ansible 日志在
 # /var/lib/mistral/overcloud/ceph-ansible/ceph_ansible_command.log 
 cat /var/lib/mistral/overcloud/ceph-ansible/ceph_ansible_command.log 
+
+# 手工创建 rgw.buckets.index 和 rgw.buckets.data pool
+(undercloud) [stack@undercloud ~]$ ssh heat-admin@overcloud-controller-0.ctlplane sudo podman exec -it ceph-mon-overcloud-controller-0 ceph osd pool create default.rgw.buckets.index 128 128
+(undercloud) [stack@undercloud ~]$ ssh heat-admin@overcloud-controller-0.ctlplane sudo podman exec -it ceph-mon-overcloud-controller-0 ceph osd pool create default.rgw.buckets.data 128 128
+
+# 设置 pool 的 application 为 rgw
+(undercloud) [stack@undercloud ~]$ ssh heat-admin@overcloud-controller-0.ctlplane sudo podman exec -it ceph-mon-overcloud-controller-0 ceph osd pool application enable default.rgw.buckets.index rgw
+(undercloud) [stack@undercloud ~]$ ssh heat-admin@overcloud-controller-0.ctlplane sudo podman exec -it ceph-mon-overcloud-controller-0 ceph osd pool application enable default.rgw.buckets.data rgw
+
+# 设置 rgw.buckets.data 的 crush rule 为 replicated_hdd 
+# 设置 rgw.buckets.index 的 crush rule 为 replicated_ssd 
+(undercloud) [stack@undercloud ~]$ ssh heat-admin@overcloud-controller-0.ctlplane sudo podman exec -it ceph-mon-overcloud-controller-0 ceph osd pool set default.rgw.buckets.data crush_rule replicated_hdd
+(undercloud) [stack@undercloud ~]$ ssh heat-admin@overcloud-controller-0.ctlplane sudo podman exec -it ceph-mon-overcloud-controller-0 ceph osd pool set default.rgw.buckets.index crush_rule replicated_ssd
+
 ```
 
 # How Indexes Work In Ceph Rados Gateway

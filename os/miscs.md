@@ -12949,6 +12949,32 @@ kernel path ISO11://vmlinuz-rhel-8.3
 initrd path ISO11://initrd.img-rhel-8.3
 kernel parameters  ks=http://10.66.208.115/ks-ceph06.cfg ksdevice=ens6 ip=10.66.208.127 netmask=255.255.255.0 dns 10.64.63.6 gateway=10.66.208.254
 
+# 在 rhv 上使用 kickstart 安装虚拟机时，注意调整 ks 文件，设置安装后用 poweroff 关闭机器
+# cat > ks-ceph06.cfg << 'EOF'
+ignoredisk --only-use=sda
+lang en_US
+keyboard us
+timezone Asia/Shanghai --isUtc
+rootpw $1$PTAR1+6M$DIYrE6zTEo5dWWzAp9as61 --iscrypted
+#platform x86, AMD64, or Intel EM64T
+poweroff
+text
+cdrom
+bootloader --location=mbr --append="rhgb quiet crashkernel=auto"
+zerombr
+clearpart --all --initlabel
+autopart
+network --device=ens6 --hostname=ceph06.rhcnsa.org --bootproto=static --ip=10.66.208.127 --netmask=255.255.255.0 --gateway=10.66.208.254 --nameserver=10.64.63.6
+auth --passalgo=sha512 --useshadow
+selinux --enforcing
+firewall --enabled --ssh
+skipx
+firstboot --disable
+%packages
+@^minimal-environment
+kexec-tools
+%end
+EOF
 
 # deivce class 
 # https://access.redhat.com/solutions/3341491

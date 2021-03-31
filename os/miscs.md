@@ -13237,8 +13237,137 @@ ssh heat-admin@overcloud-controller-0.ctlplane sudo radosgw-admin user list
 
 # 创建通过 s3 访问 rgw 的 rgw user - user1
 ssh heat-admin@overcloud-controller-0.ctlplane sudo radosgw-admin user create --uid='user1' --display-name='First User' --access-key='S3user1' --secret-key='S3user1key'
-# 创建通过 swift 访问 rgw 的 rgw sub user - user1
-radosgw-admin subuser create --uid='user1' --subuser='user1:swift' --secret-key='Swiftuser1key' --access=full
+# 创建通过 swift 访问 rgw 的 rgw subuser - user1:swift
+ssh heat-admin@overcloud-controller-0.ctlplane sudo radosgw-admin subuser create --uid='user1' --subuser='user1:swift' --secret-key='Swiftuser1key' --access=full
+
+# 查看一下 user 的信息
+ssh heat-admin@overcloud-controller-0.ctlplane sudo radosgw-admin user info --uid=user1
+{
+    "user_id": "user1",
+    "display_name": "First",
+    "email": "",
+    "suspended": 0,
+    "max_buckets": 1000,
+    "subusers": [
+        {
+            "id": "user1:swift",   
+            "permissions": "full-control"
+        }
+    ],
+    "keys": [
+        {
+            "user": "user1",
+            "access_key": "S3user1",
+            "secret_key": "S3user1key"
+        }
+    ],
+    "swift_keys": [
+        {
+            "user": "user1:swift",
+            "secret_key": "Swiftuser1key"
+        }
+    ],
+    "caps": [],
+    "op_mask": "read, write, delete",
+    "default_placement": "",
+    "default_storage_class": "",
+    "placement_tags": [],
+    "bucket_quota": {
+        "enabled": false,
+        "check_on_raw": false,
+        "max_size": -1,
+        "max_size_kb": 0,
+        "max_objects": -1          
+    },
+    "user_quota": {
+        "enabled": false,
+        "check_on_raw": false,
+        "max_size": -1,
+        "max_size_kb": 0,
+        "max_objects": -1
+    },
+    "temp_url_keys": [],
+    "type": "rgw",
+    "mfa_ids": []
+}
+
+
+# 安装一下 s3cmd
+ssh heat-admin@overcloud-controller-0.ctlplane sudo yum install -y s3cmd
+
+# 配置一下 s3cmd
+# Access Key: S3user1
+# Secret Key: S3user1key
+# S3 Endpoint: overcloud.storage.example.com:8080
+# DNS-style bucket+hostname:port template for accessing a bucket: %(bucket)s.overcloud.storage.example.com:8080
+ssh heat-admin@overcloud-controller-0.ctlplane sudo s3cmd --configure
+Enter new values or accept defaults in brackets with Enter.
+Refer to user manual for detailed description of all options.
+
+Access key and Secret key are your identifiers for Amazon S3. Leave them empty for using the env variables.
+Access Key: S3user1
+Secret Key: S3user1key
+Default Region [US]: # Just Hit Enter
+
+Use "s3.amazonaws.com" for S3 Endpoint and not modify it to the target Amazon S3.
+S3 Endpoint [s3.amazonaws.com]: overcloud.storage.example.com:8080
+
+Use "%(bucket)s.s3.amazonaws.com" to the target Amazon S3. "%(bucket)s" and "%(location)s" vars can be used
+if the target S3 system supports dns based buckets.
+DNS-style bucket+hostname:port template for accessing a bucket [%(bucket)s.s3.amazonaws.com]: %(bucket)s.overcloud.storage.example.com:8080
+
+Encryption password is used to protect your files from reading
+by unauthorized persons while in transfer to S3
+Encryption password: # Just Hit Enter
+Path to GPG program [/bin/gpg]: # Just Hit Enter
+
+When using secure HTTPS protocol all communication with Amazon S3
+servers is protected from 3rd party eavesdropping. This method is
+slower than plain HTTP, and can only be proxied with Python 2.7 or newer
+Use HTTPS protocol [Yes]: # Just Hit Enter
+
+On some networks all internet access must go through a HTTP proxy.
+Try setting it here if you can't connect to S3 directly
+HTTP Proxy server name: # Just Hit Enter
+
+New settings:
+  Access Key: S3user1
+  Secret Key: S3user1key
+  Default Region: US
+  S3 Endpoint: overcloud.storage.example.com:8080
+  DNS-style bucket+hostname:port template for accessing a bucket: %(bucket)s.overcloud.storage.example.com:8080
+  Encryption password:
+  Path to GPG program: /bin/gpg   
+  Use HTTPS protocol: True
+  HTTP Proxy server name:
+  HTTP Proxy server port: 0
+
+Test access with supplied credentials? [Y/n] Y
+Please wait, attempting to list all buckets...
+Success. Your access key and secret key worked fine :-)
+
+Now verifying that encryption works...
+Not configured. Never mind.
+
+Save settings? [y/N] y
+Configuration saved to '/root/.s3cfg'
+
+# 如果希望 DNS-style bucket+hostname:port for accessing a bucket 工作，需要设置 wildcard DNS
+# 参见：https://rhcs-test-drive.readthedocs.io/en/latest/Module-3/
+# 我的实验环境是用的 ipa 
+# 参考：https://access.redhat.com/solutions/971653
+# 在 IPA 上添加 wildcard DNS record
+# 参见：https://github.com/wangjun1974/tips/blob/master/osp/digitalchina/8_idm.md
+ipa dnsrecord-add example.com *.overcloud.storage --a-ip-address=172.16.1.240
+# 检查是否生效
+dig @localhost a.overcloud.storage.example.com
+
+# 列一下内容
+(overcloud) [stack@undercloud ~]$ ssh heat-admin@overcloud-controller-0.ctlplane sudo s3cmd ls
+
+# 创建一下 bucket
+(overcloud) [stack@undercloud ~]$ ssh heat-admin@overcloud-controller-0.ctlplane sudo s3cmd mb s3://mybucket
+
 
 ```
 

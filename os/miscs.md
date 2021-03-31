@@ -13405,6 +13405,7 @@ swift list
 sudo radosgw-admin key create --uid='013bd8d14e8a4b79a6f3b936778a5142$013bd8d14e8a4b79a6f3b936778a5142' --key-type=s3 --access-key fooAccessKey --secret-key fooSecretKey
 
 # 用以下测试脚本可以创建 bucket
+# https://github.com/sebgoa/pithos/blob/master/s3test.py
 cat > s3test.py << 'EOF'
 #!/usr/bin/env python
 

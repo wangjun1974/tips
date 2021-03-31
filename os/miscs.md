@@ -13428,6 +13428,40 @@ python s3test.py
 [heat-admin@overcloud-controller-0 ~]$ s3cmd ls
 2021-03-31 05:13  s3://container-1
 2021-03-31 06:39  s3://foobar
+
+# 在控制节点的 /etc/ceph/ceph.conf 文件里
+# client.rgw.overcloud-controller-*.rgw0 添加 rgw dns name = overcloud.storage.example.com
+[client.rgw.overcloud-controller-0.rgw0]
+host = overcloud-controller-0
+keyring = /var/lib/ceph/radosgw/ceph-rgw.overcloud-controller-0.rgw0/keyring
+log file = /var/log/ceph/ceph-rgw-overcloud-controller-0.rgw0.log
+rgw frontends = beast ssl_endpoint=172.16.1.51:8080 ssl_certificate=/etc/pki/tls/certs/ceph_rgw.pem
+rgw thread pool size = 512
+rgw dns name = overcloud.storage.example.com
+
+[client.rgw.overcloud-controller-1.rgw0]
+host = overcloud-controller-1
+keyring = /var/lib/ceph/radosgw/ceph-rgw.overcloud-controller-1.rgw0/keyring
+log file = /var/log/ceph/ceph-rgw-overcloud-controller-1.rgw0.log
+rgw frontends = beast ssl_endpoint=172.16.1.52:8080 ssl_certificate=/etc/pki/tls/certs/ceph_rgw.pem
+rgw thread pool size = 512
+rgw dns name = overcloud.storage.example.com
+
+[client.rgw.overcloud-controller-2.rgw0]
+host = overcloud-controller-2
+keyring = /var/lib/ceph/radosgw/ceph-rgw.overcloud-controller-2.rgw0/keyring
+log file = /var/log/ceph/ceph-rgw-overcloud-controller-2.rgw0.log
+rgw frontends = beast ssl_endpoint=172.16.1.53:8080 ssl_certificate=/etc/pki/tls/certs/ceph_rgw.pem
+rgw thread pool size = 512
+rgw dns name = overcloud.storage.example.com
+
+# 在 3 个控制节点上重启 ceph-radosgw@rgw.overcloud-controller-*.rgw0.service 服务
+[heat-admin@overcloud-controller-0 ~]$ sudo systemctl restart ceph-radosgw@rgw.overcloud-controller-0.rgw0.service
+[heat-admin@overcloud-controller-0 ~]$ sudo podman ps | grep rgw
+
+# 这次能顺利用 s3cmd 创建 bucket 了，感谢 May_z
+[heat-admin@overcloud-controller-0 ~]$ s3cmd --no-check-hostname mb s3://mybucket
+Bucket 's3://mybucket/' created
 ```
 
 # How Indexes Work In Ceph Rados Gateway

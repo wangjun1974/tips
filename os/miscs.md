@@ -13208,6 +13208,40 @@ cat /var/lib/mistral/overcloud/ceph-ansible/ceph_ansible_command.log
 
 ```
 
+
+
+# 测试 rados gateway 
+https://rhcs-test-drive.readthedocs.io/en/latest/Module-3/
+```
+scp /etc/yum.repos.d/osp.repo heat-admin@overcloud-controller-0.ctlplane:/tmp
+ssh heat-admin@overcloud-controller-0.ctlplane sudo cp /tmp/osp.repo /etc/yum.repos.d
+ssh heat-admin@overcloud-controller-0.ctlplane sudo yum repolist
+ssh heat-admin@overcloud-controller-0.ctlplane sudo yum install -y ceph-common
+
+ssh heat-admin@overcloud-controller-0.ctlplane mkdir -p /tmp/etc
+
+# podman 命令的用法
+# 参考 http://docs.podman.io/en/latest/markdown/podman-ps.1.html
+
+MONID=$(ssh heat-admin@overcloud-controller-0.ctlplane sudo podman ps --filter name=ceph-mon-overcloud-controller-0 --format json | jq '.[] | .ID ' | sed -e 's|"||g')
+ssh heat-admin@overcloud-controller-0.ctlplane sudo podman cp ${MONID}:/etc/ceph /tmp/etc
+
+ssh heat-admin@overcloud-controller-0.ctlplane sudo cp /tmp/etc/ceph/* /etc/ceph
+ssh heat-admin@overcloud-controller-0.ctlplane sudo ceph status
+
+# 列一下 radosgw user
+ssh heat-admin@overcloud-controller-0.ctlplane sudo radosgw-admin user list
+
+# podman 命令的用法
+# 参考 http://docs.podman.io/en/latest/markdown/podman-ps.1.html
+
+# 创建通过 s3 访问 rgw 的 rgw user - user1
+ssh heat-admin@overcloud-controller-0.ctlplane sudo radosgw-admin user create --uid='user1' --display-name='First User' --access-key='S3user1' --secret-key='S3user1key'
+# 创建通过 swift 访问 rgw 的 rgw sub user - user1
+radosgw-admin subuser create --uid='user1' --subuser='user1:swift' --secret-key='Swiftuser1key' --access=full
+
+```
+
 # How Indexes Work In Ceph Rados Gateway
 介绍 Ceph Rados Gateway 的
 https://allthenodes.wordpress.com/2016/01/29/how-indexes-work-in-ceph-rados-gateway/

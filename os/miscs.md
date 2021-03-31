@@ -13576,7 +13576,10 @@ aws s3api put-bucket-policy --bucket first.bucket --policy '{
      }]
 }'
 
-# 关于 aws bucket policy 的说明
+# 关于 aws s3 bucket policy 的说明
+# 其中会涉及 Principal 和 arn
+# arn 是 amazon resource name 的缩写，指向明确指定的资源
+# https://docs.aws.amazon.com/zh_cn/general/latest/gr/aws-arns-and-namespaces.html
 https://blog.csdn.net/u010478127/article/details/106853166
 
 ```

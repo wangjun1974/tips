@@ -13563,6 +13563,22 @@ s3cmd ls s3://mybucket
 2020-07-02 17:38            4  s3://mybucket/file1.txt
 2020-07-02 17:39            4  s3://mybucket/file2.txt
 
+# aws-cli code to set public-read access
+# aws 客户端的例子，设置 bucket policy
+aws s3api put-bucket-policy --bucket first.bucket --policy '{
+     "Version": "2012-10-17",
+     "Statement": [{
+         "Sid": "PublicReadForGetBucketObjects",
+         "Effect": "Allow",
+         "Principal": "*",
+         "Action": ["s3:GetObject"],
+         "Resource": ["arn:aws:s3:::first.bucket/*"]
+     }]
+}'
+
+# 关于 aws bucket policy 的说明
+https://blog.csdn.net/u010478127/article/details/106853166
+
 ```
 
 # How Indexes Work In Ceph Rados Gateway

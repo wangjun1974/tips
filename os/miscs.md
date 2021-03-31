@@ -13324,7 +13324,7 @@ Path to GPG program [/bin/gpg]: # Just Hit Enter
 When using secure HTTPS protocol all communication with Amazon S3
 servers is protected from 3rd party eavesdropping. This method is
 slower than plain HTTP, and can only be proxied with Python 2.7 or newer
-Use HTTPS protocol [Yes]: # Just Hit Enter
+Use HTTPS protocol [Yes]: No
 
 On some networks all internet access must go through a HTTP proxy.
 Try setting it here if you can't connect to S3 directly
@@ -13338,7 +13338,7 @@ New settings:
   DNS-style bucket+hostname:port template for accessing a bucket: %(bucket)s.overcloud.storage.example.com:8080
   Encryption password:
   Path to GPG program: /bin/gpg   
-  Use HTTPS protocol: True
+  Use HTTPS protocol: False
   HTTP Proxy server name:
   HTTP Proxy server port: 0
 
@@ -13358,7 +13358,8 @@ Configuration saved to '/root/.s3cfg'
 # 参考：https://access.redhat.com/solutions/971653
 # 在 IPA 上添加 wildcard DNS record
 # 参见：https://github.com/wangjun1974/tips/blob/master/osp/digitalchina/8_idm.md
-ipa dnsrecord-add example.com *.overcloud.storage --a-ip-address=172.16.1.240
+ipa dnsrecord-add example.com *.overcloud.storage --cname-hostname=overcloud.storage
+
 # 检查是否生效
 dig @localhost a.overcloud.storage.example.com
 
@@ -13366,9 +13367,66 @@ dig @localhost a.overcloud.storage.example.com
 (overcloud) [stack@undercloud ~]$ ssh heat-admin@overcloud-controller-0.ctlplane sudo s3cmd ls
 
 # 创建一下 bucket
-(overcloud) [stack@undercloud ~]$ ssh heat-admin@overcloud-controller-0.ctlplane sudo s3cmd mb s3://mybucket
+(overcloud) [stack@undercloud ~]$ ssh heat-admin@overcloud-controller-0.ctlplane sudo s3cmd --no-check-hostname --debug mb s3://mybucket
 
+RGWID=$(ssh heat-admin@overcloud-controller-0.ctlplane sudo podman ps --filter name=ceph-rgw-overcloud-controller-0-rgw0 --format json | jq '.[] | .ID ' | sed -e 's|"||g')
+ssh heat-admin@overcloud-controller-0.ctlplane sudo podman cp ${RGWID}:/etc/pki/tls/certs/ceph_rgw.pem /tmp
 
+# 创建 aws 风格的 access key 和 secret key
+# 参见：https://docs.ceph.com/en/latest/radosgw/s3/authentication/
+(overcloud) [heat-admin@overcloud-controller-0 ~]$ openstack ec2 credentials create 
++------------+-----------------------------------------------------------------------------------------------------------------------------------------------+
+| Field      | Value                                                                                                                                         |
++------------+-----------------------------------------------------------------------------------------------------------------------------------------------+
+| access     | b93af682c82f4d61a985a8fbc058a465                                                                                                              |
+| links      | {'self': 'https://overcloud.example.com:13000/v3/users/48b88331ab974a70a99c79082309d4c6/credentials/OS-EC2/b93af682c82f4d61a985a8fbc058a465'} |
+| project_id | 013bd8d14e8a4b79a6f3b936778a5142                                                                                                              |
+| secret     | f3485bf9c6b646b7b2ec0e8ad0e7ce30                                                                                                              |
+| trust_id   | None                                                                                                                                          |
+| user_id    | 48b88331ab974a70a99c79082309d4c6                                                                                                              |
++------------+-----------------------------------------------------------------------------------------------------------------------------------------------+
+
+# Create a swift container named container-1 and then list it
+swift post container-1 
+swift list
+
+# 用 s3cmd 列出 bucket
+(overcloud) [heat-admin@overcloud-controller-0 ~]$ s3cmd ls
+2021-03-31 05:13  s3://container-1
+
+# 上传文件 overcloudrc 到 container container-1
+(overcloud) [heat-admin@overcloud-controller-0 ~]$ swift upload container-1 overcloudrc
+
+(overcloud) [heat-admin@overcloud-controller-0 ~]$ s3cmd ls
+
+# 对于 rgw 对 wildcard 域名以及 https 的支持
+# 参见：https://www.redhat.com/en/blog/https-ization-ceph-object-storage-public-endpoint
+
+sudo radosgw-admin key create --uid='013bd8d14e8a4b79a6f3b936778a5142$013bd8d14e8a4b79a6f3b936778a5142' --key-type=s3 --access-key fooAccessKey --secret-key fooSecretKey
+
+# 用以下测试脚本可以创建 bucket
+cat > s3test.py << 'EOF'
+#!/usr/bin/env python
+
+from boto.s3.key import Key
+from boto.s3.connection import S3Connection
+from boto.s3.connection import OrdinaryCallingFormat
+
+apikey='fooAccessKey'
+secretkey='fooSecretKey'
+
+cf=OrdinaryCallingFormat()
+
+conn=S3Connection(aws_access_key_id=apikey,aws_secret_access_key=secretkey,is_secure=True,host='overcloud.storage.example.com',port=8080,calling_format=cf)
+
+conn.create_bucket('foobar')
+EOF
+
+python s3test.py
+
+[heat-admin@overcloud-controller-0 ~]$ s3cmd ls
+2021-03-31 05:13  s3://container-1
+2021-03-31 06:39  s3://foobar
 ```
 
 # How Indexes Work In Ceph Rados Gateway

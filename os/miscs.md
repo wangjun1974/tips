@@ -13462,6 +13462,8 @@ rgw dns name = overcloud.storage.example.com
 # 这次能顺利用 s3cmd 创建 bucket 了，感谢 May_z
 [heat-admin@overcloud-controller-0 ~]$ s3cmd --no-check-hostname mb s3://mybucket
 Bucket 's3://mybucket/' created
+[heat-admin@overcloud-controller-0 ~]$ s3cmd --no-check-hostname ls s3://container-1
+2021-03-31 05:16      1015   s3://container-1/overcloudrc
 ```
 
 # How Indexes Work In Ceph Rados Gateway

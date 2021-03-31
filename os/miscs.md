@@ -13431,6 +13431,7 @@ python s3test.py
 
 # 在控制节点的 /etc/ceph/ceph.conf 文件里
 # client.rgw.overcloud-controller-*.rgw0 添加 rgw dns name = overcloud.storage.example.com
+# 参见：http://lists.ceph.com/pipermail/ceph-users-ceph.com/2016-February/007635.html
 [client.rgw.overcloud-controller-0.rgw0]
 host = overcloud-controller-0
 keyring = /var/lib/ceph/radosgw/ceph-rgw.overcloud-controller-0.rgw0/keyring

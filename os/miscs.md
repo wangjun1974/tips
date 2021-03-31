@@ -13465,6 +13465,104 @@ rgw dns name = overcloud.storage.example.com
 Bucket 's3://mybucket/' created
 [heat-admin@overcloud-controller-0 ~]$ s3cmd --no-check-hostname ls s3://container-1
 2021-03-31 05:16      1015   s3://container-1/overcloudrc
+
+# 上传文件到 s3://mybucket 里
+[heat-admin@overcloud-controller-0 ~]$ s3cmd --no-check-hostname put overcloudrc s3://mybucket
+upload: 'overcloudrc' -> 's3://mybucket/overcloudrc'  [1 of 1]
+ 1015 of 1015   100% in    1s   541.96 B/s  done
+
+# 检查一下 rgw 的日志
+
+ssh heat-admin@overcloud-controller-0.ctlplane sudo podman logs ceph-rgw-overcloud-controller-0-rgw0 | grep beast   | grep -Ev "swift" 
+
+ssh heat-admin@overcloud-controller-1.ctlplane sudo podman logs ceph-rgw-overcloud-controller-1-rgw0 | grep beast   | grep -Ev "swift" 
+
+ssh heat-admin@overcloud-controller-2.ctlplane sudo podman logs ceph-rgw-overcloud-controller-2-rgw0 | grep beast   | grep -Ev "swift" 
+
+# 删除 bucket 里的对象
+s3cmd --no-check-hostname del s3://mybucket --recursive --force 
+s3cmd --no-check-hostname rb s3://mybucket
+```
+
+```
+# 例子：关于使用 sts 
+# 1. create a bucket has a name mybucket owned by the user TESTER through GUI.
+
+# 2. Add the configurable options to /etc/ceph/ceph.conf restart RGW.
+[root@ceph11 ~]# cat /etc/ceph/ceph.conf
+[client.rgw.ceph11.rgw0]
+host = ceph11
+keyring = /var/lib/ceph/radosgw/ceph-rgw.ceph11.rgw0/keyring
+log file = /var/log/ceph/ceph-rgw-ceph11.rgw0.log
+rgw frontends = civetweb port=192.168.191.151:8080 num_threads=2048 request_timeout_ms=100000
+rgw sts key = 1234567890ABCDEFG
+rgw s3 auth use sts = true
+
+systemctl restart ceph-radosgw@rgw.ceph11.rgw0.service 
+
+# 3. Add capabilities to the user TESTER1
+radosgw-admin caps add --uid="TESTER1" --caps="roles=read"
+
+# 4. then create the roles and role policy:
+radosgw-admin role create --role-name=S3Access1 --path=/ --assume-role-policy-doc="{\"Version\":\"2012-10-17\",\"Statement\":{\"Effect\":\"Allow\",\"Principal\":{\"AWS\":[\"arn:aws:iam:::user/TESTER1\"]},\"Action\":[\"sts:AssumeRole\"]}}"
+
+radosgw-admin role-policy put --role-name=S3Access1 --policy-name=Policy1 --policy-doc="{\"Version\":\"2012-10-17\",\"Statement\":{\"Effect\":\"Allow\",\"Action\":\"s3:*\",\"Resource\":\"arn:aws:s3:::*\"}}"
+
+# 5. create file1.txt  then run the following script to upload file1.txt to the bucket of user TESTER with temporary credentials of another user TESTER1
+import boto3
+#import logging
+#logging.basicConfig(
+#level=logging.DEBUG,
+#format='%(asctime)s %(levelname)s %(message)s'
+#)
+#logger = logging.getLogger()
+
+iam_client = boto3.client('iam',
+aws_access_key_id='TESTER1',
+aws_secret_access_key='TESTER1',
+endpoint_url='http://192.168.191.151:8080',
+region_name='us-east-1'
+)
+
+
+role_response = iam_client.get_role(
+RoleName='S3Access1',
+)
+
+
+response = iam_client.get_role_policy(
+RoleName='S3Access1',
+PolicyName='Policy1',
+)
+
+sts_client = boto3.client('sts',
+aws_access_key_id='TESTER1',
+aws_secret_access_key='TESTER1',
+endpoint_url='http://192.168.191.151:8080',
+region_name='us-east-1',
+)
+
+response = sts_client.assume_role(
+RoleArn=role_response['Role']['Arn'],
+RoleSessionName='Bob',
+DurationSeconds=3600
+)
+s3client = boto3.client('s3',
+aws_access_key_id = response['Credentials']['AccessKeyId'],
+aws_secret_access_key = response['Credentials']['SecretAccessKey'],
+aws_session_token = response['Credentials']['SessionToken'],
+endpoint_url='http://192.168.191.151:8080',
+region_name='us-east-1',)
+bucket_name = 'mybucket'
+filename = 'file1.txt'
+s3client.upload_file(filename, bucket_name, filename)
+
+# 6. List the contents of buckets via s3cmd with the user TESTER and verify that file1.txt is listed which is uploaded by another user TESTER1
+s3cmd ls s3://mybucket
+2020-07-02 17:23            4  s3://mybucket/file.txt
+2020-07-02 17:38            4  s3://mybucket/file1.txt
+2020-07-02 17:39            4  s3://mybucket/file2.txt
+
 ```
 
 # How Indexes Work In Ceph Rados Gateway

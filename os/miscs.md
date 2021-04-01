@@ -13585,5 +13585,45 @@ https://blog.csdn.net/u010478127/article/details/106853166
 ```
 
 # How Indexes Work In Ceph Rados Gateway
-介绍 Ceph Rados Gateway 的
+介绍 Ceph Rados Gateway 的 文章
 https://allthenodes.wordpress.com/2016/01/29/how-indexes-work-in-ceph-rados-gateway/
+
+
+# 查看 qcow2 虚拟机磁盘信息
+```
+# 1. 创建空的虚拟机镜像
+# 创建的磁盘镜像大小是 30G
+qemu-img create -f qcow2 -o preallocation=metadata /data/kvm/jwang-anolisos-8.2.qcow2 30G 
+
+# 2. 检查源虚拟机磁盘镜像文件系统情况
+# 虚拟机镜像有两个分区
+# /dev/sda1 1G
+# /dev/sda2 17G
+# virt-filesystems --long --parts --blkdevs -h -a ./AnolisOS-8.2-RC1-x86_64.qcow2 
+Name       Type       MBR  Size  Parent
+/dev/sda1  partition  83   1.0G  /dev/sda
+/dev/sda2  partition  8e   17G   /dev/sda
+/dev/sda   device     -    18G   -
+
+# 3. 拷贝镜像内容到新镜像同时扩展 /dev/sda2 的文件系统适应新镜像磁盘大小
+virt-resize --expand /dev/sda2 ./AnolisOS-8.2-RC1-x86_64.qcow2 /data/kvm/jwang-anolisos-8.2.qcow2
+
+# 4. 定义虚拟机
+virt-install --debug --ram 4096 --vcpus 2 --os-variant rhel7 \
+  --disk path=/data/kvm/jwang-anolisos-8.2.qcow2,device=disk,bus=virtio,format=qcow2 \
+  --noautoconsole --vnc --network network:default \
+  --name jwang-anolisos-8.2 \
+  --cpu host,+vmx \
+  --boot menu=on \
+  --dry-run --print-xml > /tmp/jwang-anolisos-8.2.xml
+
+virsh define --file /tmp/jwang-anolisos-8.2.xml
+
+# 定义 anolisos 的网卡
+nmcli con mod ens3 \
+    connection.autoconnect 'yes' \
+    ipv4.method 'manual' \
+    ipv4.address '192.168.122.111/24' \
+    ipv4.gateway '192.168.122.1' \
+    ipv4.dns '192.168.122.1'
+```

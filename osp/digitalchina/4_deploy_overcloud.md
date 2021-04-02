@@ -23,6 +23,31 @@ openstack overcloud deploy --templates $THT \
 --ntp-server 192.0.2.1
 EOF
 
+# 根据邮件列表里的讨论，为了启用 OVN DVR HA 
+# 需要传递 -e $THT/environments/services/neutron-ovn-dvr-ha.yaml 文件
+# 否则 OVN DVR HA 相关参数有可能被部分配置
+cat > ~/deploy.sh << 'EOF'
+#!/bin/bash
+THT=/usr/share/openstack-tripleo-heat-templates/
+CNF=~/templates/
+
+source ~/stackrc
+openstack overcloud deploy --templates $THT \
+-r $CNF/roles_data.yaml \
+-n $CNF/network_data.yaml \
+-e $CNF/node-info.yaml \
+-e $THT/environments/ceph-ansible/ceph-ansible.yaml \
+-e $THT/environments/ceph-ansible/ceph-rgw.yaml \
+-e $CNF/cephstorage.yaml \
+-e $THT/environments/network-isolation.yaml \
+-e $CNF/environments/network-environment.yaml \
+-e $THT/environments/services/neutron-ovn-dvr-ha.yaml \
+-e $CNF/environments/net-bond-with-vlans.yaml \
+-e ~/containers-prepare-parameter.yaml \
+-e $CNF/fix-nova-reserved-host-memory.yaml \
+--ntp-server 192.0.2.1
+EOF
+
 # 设置脚本可执行
 (undercloud) [stack@undercloud ~]$ chmod 755 ~/deploy.sh
 

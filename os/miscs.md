@@ -13695,4 +13695,14 @@ enabled=1
 gpgcheck=1
 gpgkey=http://repo.openeuler.org/openEuler-21.03/OS/x86_64/RPM-GPG-KEY-openEuler
 EOF
+
+# 记录一下 guestfish 查看虚拟机镜像的步骤
+guestfish --rw -a /data/kvm/jwang-openeuler-2103.qcow2
+><fs> run
+><fs> list-filesystems
+/dev/sda1: ext4
+><fs> mount /dev/sda1 /
+><fs> cat /etc/system-release
+openEuler release 21.03
+><fs> quit
 ```

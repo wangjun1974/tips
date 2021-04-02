@@ -13705,4 +13705,60 @@ guestfish --rw -a /data/kvm/jwang-openeuler-2103.qcow2
 ><fs> cat /etc/system-release
 openEuler release 21.03
 ><fs> quit
+
+# 测试上传镜像到 rhv 
+# 参考:
+# https://libguestfs.org/virt-v2v.1.html
+# https://libguestfs.org/virt-v2v-output-rhv.1.html
+
+# download rhv manager ca.pem
+curl -k -o /tmp/ca.pem 'https://rhvm.rhcnsa.org/ovirt-engine/services/pki-resource?resource=ca-certificate&format=X509-PEM-CA'
+
+# 启用 rhel-7-server-rhv-4.1-rpms 频道
+subscription-manager repos --enable=rhel-7-server-rhv-4.1-rpms
+
+# 安装 python ovirt sdk4
+# 参考：https://access.redhat.com/documentation/en-us/red_hat_virtualization/4.1/html-single/python_sdk_guide/index
+yum install python-ovirt-engine-sdk4 
+
+# 导入 AnolisOS-8.2-RC1-x86_64.qcow2
+# 工具无法识别 AnolisOS
+virt-v2v -i disk ./AnolisOS-8.2-RC1-x86_64.qcow2 \
+  -o rhv-upload -oc https://rhvm.rhcnsa.org/ovirt-engine/api \
+  -os DS21 -op /tmp/ovirt-admin-password \
+  -of raw -oo rhv-cafile=/tmp/ca.pem \
+  --bridge ovirtmgmt
+
+# 上传镜像
+prog=/usr/bin/engine-iso-uploader
+mypass="xxxxxx"
+
+args="-i ISO11 upload AnolisOS-8.2-RC1-x86_64.qcow2 --force"
+/usr/bin/expect <<EOF
+set timeout -1
+spawn "$prog" $args
+expect "Please provide the REST API password for the admin@internal oVirt Engine user (CTRL+D to abort): "
+send "$mypass\r"
+expect eof
+exit
+EOF
+
+# 修改 /etc/sysconfig/libvirtd 配置文件
+# 让服务器能作为 rhv 可导入的 kvm 主机
+# 参见：  
+# https://www.ovirt.org/develop/release-management/features/virt/KvmToOvirt.html
+# https://www.chenyudong.com/archives/libvirt-connect-to-libvirtd-with-tcp-qemu.html
+sed -i 's|#LIBVIRTD_ARGS="--listen"|LIBVIRTD_ARGS="--listen"|' /etc/sysconfig/libvirtd 
+sed -i 's|#listen_tls = 0|listen_tls = 0|' /etc/libvirt/libvirtd.conf 
+sed -i 's|#listen_tcp = 1|listen_tcp = 1|' /etc/libvirt/libvirtd.conf 
+sed -i 's|#auth_tcp = "sasl"|auth_tcp = "none"|' /etc/libvirt/libvirtd.conf 
+# 然后重启 libvirtd 服务
+systemctl restart libvirtd
+# 检查服务器上的虚拟机
+virsh -r -c 'qemu+tcp://$IP/system' list --all
+
+# 然后可根据导入 kvm 虚拟机到 rhv
+# https://www.ovirt.org/develop/release-management/features/virt/KvmToOvirt.html
+# 被导入的虚拟机需关闭
+
 ```

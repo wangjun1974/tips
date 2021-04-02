@@ -13626,4 +13626,73 @@ nmcli con mod ens3 \
     ipv4.address '192.168.122.111/24' \
     ipv4.gateway '192.168.122.1' \
     ipv4.dns '192.168.122.1'
+
+# 试验一下 OpenEuler 21.03
+# 解压缩虚拟机镜像
+xz -d -v openEuler-21.03-x86_64.qcow2.xz
+
+# 虚拟机镜像 openEuler-21.03-x86_64.qcow2 的信息
+# qemu-img info openEuler-21.03-x86_64.qcow2 
+image: openEuler-21.03-x86_64.qcow2
+file format: qcow2
+virtual size: 40G (42949672960 bytes)
+disk size: 1.7G
+cluster_size: 65536
+Format specific information:
+    compat: 1.1
+    lazy refcounts: false
+    refcount bits: 16
+    corrupt: false
+
+# 这个镜像没有使用 lvm
+[root@base-pvg openeuler]# virt-filesystems --long --parts --blkdevs -h -a ./openEuler-21.03-x86_64.qcow2 
+Name       Type       MBR  Size  Parent
+/dev/sda1  partition  83   40G   /dev/sda
+/dev/sda   device     -    40G   -
+
+# 创建虚拟磁盘，创建的虚拟磁盘大小比源虚拟机磁盘镜像要大一些
+qemu-img create -f qcow2 -o preallocation=metadata /data/kvm/jwang-openeuler-2103.qcow2 41G
+# 拷贝源镜像到目标镜像
+virt-resize ./openEuler-21.03-x86_64.qcow2 /data/kvm/jwang-openeuler-2103.qcow2 
+
+# 设置一下root密码
+virt-customize -a /data/kvm/jwang-openeuler-2103.qcow2 --root-password password:redhat
+
+# 生成网卡配置 ifcfg-ens3
+cat > /tmp/ifcfg-ens3 << 'EOF'
+DEVICE="ens3"
+NETBOOT="yes"
+TYPE="Ethernet"
+BOOTPROTO="none"
+NAME="ens3"
+ONBOOT="yes"
+IPADDR="192.168.122.112"
+NETMASK="255.255.255.0"
+GATEWAY="192.168.122.1"
+DNS="192.168.122.1"
+EOF
+
+# 拷贝网卡配置到虚拟机镜像
+virt-customize -a /data/kvm/jwang-openeuler-2103.qcow2 --upload /tmp/ifcfg-ens3:/etc/sysconfig/network-scripts
+
+# 4. 定义虚拟机
+virt-install --debug --ram 4096 --vcpus 2 --os-variant rhel7 \
+  --disk path=/data/kvm/jwang-openeuler-2103.qcow2,device=disk,bus=virtio,format=qcow2 \
+  --noautoconsole --vnc --network network:default \
+  --name jwang-openeuler-2103 \
+  --cpu host,+vmx \
+  --boot menu=on \
+  --dry-run --print-xml > /tmp/jwang-openeuler-2103.xml
+
+virsh define --file /tmp/jwang-openeuler-2103.xml
+
+# 为　openeuler 2103 设置软件仓库
+cat > /etc/yum.repos.d/openeuler.repo << 'EOF'
+[openeuler-21.03]
+name=openeuler-21.03
+baseurl=http://repo.openeuler.org/openEuler-21.03/OS/x86_64/
+enabled=1
+gpgcheck=1
+gpgkey=http://repo.openeuler.org/openEuler-21.03/OS/x86_64/RPM-GPG-KEY-openEuler
+EOF
 ```

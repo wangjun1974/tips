@@ -14032,4 +14032,11 @@ db_devices:
 wal_devices:
   paths:
     - /dev/sdd
+
+# 用 osd service specification 创建 osd 的命令
+ceph orch apply osd -i /path/to/osd_spec.yml
+
+# 获取设备信息
+ceph-volume inventory </path/to/disk>
+
 ```

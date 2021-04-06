@@ -14141,6 +14141,8 @@ ceph orch apply nfs *<svc_id>* *<pool>* *<namespace>* --placement="*<num-daemons
 ceph orch apply nfs foo nfs-ganesha nfs-ns
 
 # nfs service specification
+# pool 是保存 nfs client 恢复数据的 ceph rados pool
+# namespace 是保存 nfs client 恢复数据侧 ceph rados pool namespace
 service_type: nfs
 service_id: mynfs
 placement:

@@ -14136,4 +14136,22 @@ spec:
 # 部署 ha rgw 服务
 ceph orch apply -i <service_spec_file>
 
+# 部署 nfs ganesha 服务
+ceph orch apply nfs *<svc_id>* *<pool>* *<namespace>* --placement="*<num-daemons>* [*<host1>* ...]"
+ceph orch apply nfs foo nfs-ganesha nfs-ns
+
+# nfs service specification
+service_type: nfs
+service_id: mynfs
+placement:
+  hosts:
+    - host1
+    - host2
+spec:
+  pool: mypool
+  namespace: mynamespace
+
+# 应用 nfs service specification
+ceph orch apply -i nfs.yaml
+
 ```

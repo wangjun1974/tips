@@ -14066,4 +14066,11 @@ ceph orch apply rgw foo
 ceph orch host label add gwhost1 rgw
 ceph orch host label add gwhost2 rgw
 ceph orch apply rgw foo '--placement=label:rgw count-per-host:2' --port=8000
+
+# rgw multi zones
+# 部署 rgw service east
+# rgw service east 的 realm 为 myorg
+# rgw service east 的 zone 为 zone-1
+# east 的 rgw 服务将部署到 myhost1 和 myhost2 上，每个节点部署 2 个 rgw daemon
+ceph orch apply rgw east --realm=myorg --zone=us-east-1 --placement="2 myhost1 myhost2"
 ```

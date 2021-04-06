@@ -14073,4 +14073,15 @@ ceph orch apply rgw foo '--placement=label:rgw count-per-host:2' --port=8000
 # rgw service east 的 zone 为 zone-1
 # east 的 rgw 服务将部署到 myhost1 和 myhost2 上，每个节点部署 2 个 rgw daemon
 ceph orch apply rgw east --realm=myorg --zone=us-east-1 --placement="2 myhost1 myhost2"
+
+# 创建 realm
+radosgw-admin realm create --rgw-realm=<realm-name> --default
+# 创建 master zonegroup
+radosgw-admin zonegroup create --rgw-zonegroup=<zonegroup-name>  --master --default
+# 创建 master zonegroup 里的 master zone
+radosgw-admin zone create --rgw-zonegroup=<zonegroup-name> --rgw-zone=<zone-name> --master --default
+# 提交对 realm, zonegroup 和 zone 的更新
+radosgw-admin period update --rgw-realm=<realm-name> --commit
+
+
 ```

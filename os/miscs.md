@@ -13807,7 +13807,7 @@ virsh -r -c 'qemu+tcp://$IP/system' list --all
 
 
 # 安装 Red Hat Ceph 5.x
-
+https://docs.ceph.com/en/latest/cephadm/install/#bootstrap-a-new-cluster<br>
 ```
 # 安装 Red Hat Ceph Storage 5.x 的步骤
 # 1) make sure that lvm2, python3, podman are installed or updated
@@ -14155,5 +14155,33 @@ spec:
 
 # 应用 nfs service specification
 ceph orch apply -i nfs.yaml
+
+# iscsi service specification
+service_type: iscsi
+service_id: iscsi
+placement:
+  hosts:
+  - [...]
+spec:
+  pool: iscsi_pool
+  trusted_ip_list: "IP_ADDRESS_1,IP_ADDRESS_2,IP_ADDRESS_3,..."
+  api_user: API_USERNAME
+  api_password: API_PASSWORD
+  api_secure: true
+  ssl_cert: |
+    -----BEGIN CERTIFICATE-----
+    MIIDtTCCAp2gAwIBAgIYMC4xNzc1NDQxNjEzMzc2MjMyXzxvQ7EcMA0GCSqGSIb3
+    DQEBCwUAMG0xCzAJBgNVBAYTAlVTMQ0wCwYDVQQIDARVdGFoMRcwFQYDVQQHDA5T
+    [...]
+    -----END CERTIFICATE-----
+  ssl_key: |
+    -----BEGIN PRIVATE KEY-----
+    MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQC5jdYbjtNTAKW4
+    /CwQr/7wOiLGzVxChn3mmCIF3DwbL/qvTFTX2d8bDf6LjGwLYloXHscRfxszX/4h
+    [...]
+    -----END PRIVATE KEY-----
+
+# 应用 iscsi service specification
+ceph orch apply -i iscsi.yaml
 
 ```

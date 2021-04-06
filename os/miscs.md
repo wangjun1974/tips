@@ -13938,5 +13938,98 @@ all-available-devices node1 /dev/vdb  -   -
 all-available-devices node2 /dev/vdc  -   -
 all-available-devices node3 /dev/vdd  -   -
 
+# 默认自动在空白磁盘上创建 osd 
+ceph orch apply osd --all-available-devices
 
+# 如果想改变这种行为，可以执行以下命令
+ceph orch apply osd --all-available-devices --unmanaged=true
+
+# 删除 osd 的例子
+# 这个操作将清空 osd 所包含的 pg
+# 然后从集群 CRUSH 里删除掉 osd
+ceph orch osd rm <osd_id(s)> [--replace] [--force]
+ceph orch osd rm 0
+
+# 监控 osd 删除状态
+ceph orch osd rm status
+OSD_ID  HOST         STATE                    PG_COUNT  REPLACE  FORCE  STARTED_AT
+2       cephadm-dev  done, waiting for purge  0         True     False  2020-07-17 13:01:43.147684
+3       cephadm-dev  draining                 17        False    True   2020-07-17 13:01:45.162158
+4       cephadm-dev  started                  42        False    True   2020-07-17 13:01:45.162158
+
+# 取消在队列里等待的 osd 删除操作
+ceph orch osd rm stop <svc_id(s)>
+ceph orch osd rm stop 4
+
+# 删除并替换 osd
+# 这个操作将清空 osd 所包含的 pg
+# 然后标记 osd 为 destroyed，但是并不从 CRUSH 中删除 osd
+# 下一次添加 osd 时将重用此 osd id
+# 新磁盘需满足 OSDSpec
+orch osd rm <svc_id(s)> --replace [--force]
+ceph orch osd rm 4 --replace
+
+# 检查根据 OSDSpec 将差生的动作
+ceph orch apply osd -i <osd_spec_file> --dry-run
+NAME                  HOST  DATA     DB WAL
+<name_of_osd_spec>    node1 /dev/vdb -  -
+
+# 清空设备
+orch device zap <hostname> <path>
+ceph orch device zap my_hostname /dev/sdx
+
+# OSD Service Specification
+# 这部分是对主机部署 OSD 服务的定制
+
+# 假设服务器有以下磁盘配置，HDD 磁盘用做 osd data, SSD 磁盘用做 block db, NVME 磁盘用做 wal
+20 HDDs
+Vendor: VendorA
+Model: SSD-123-foo
+Size: 4TB
+
+2 SSDs
+Vendor: VendorB
+Model: MC-55-44-ZX
+Size: 512GB
+
+2 NVMEs
+Vendor: VendorC
+Model: NVME-QQQQ-987
+Size: 256GB
+
+# osd_spec.yml 可以写成以下格式
+# 这个例子定义了一个 spec
+# 这个 spec 可以作用于所有节点
+# data_device 的 model 是 MC-55-44-XZ
+# db_device 的 model 是 SSD-123-foo
+# wal_device 的 model 是 NVME-QQQQ-987
+service_type: osd
+service_id: osd_spec_default
+placement:
+  host_pattern: '*'
+data_devices:
+  model: MC-55-44-XZ
+db_devices:
+  model: SSD-123-foo
+wal_devices:
+  model: NVME-QQQQ-987
+
+# 对于使用设备名进行描述的方式，osd_spec.yml 也可以写成以下格式
+# 这个例子还包含里 placement -> hosts 的设置
+# 这个例子的用法更像 ceph-ansible 里的 osds.yml 的设置方法
+service_type: osd
+service_id: osd_using_paths
+placement:
+  hosts:
+    - Node01
+    - Node02
+data_devices:
+  paths:
+    - /dev/sdb
+db_devices:
+  paths:
+    - /dev/sdc
+wal_devices:
+  paths:
+    - /dev/sdd
 ```

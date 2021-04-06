@@ -14184,4 +14184,21 @@ spec:
 # 应用 iscsi service specification
 ceph orch apply -i iscsi.yaml
 
+# Red Hat Ceph Storage 5.0 的测试
+
+# 创建磁盘
+qemu-img create -f qcow2 -o preallocation=metadata /data/kvm/jwang-ceph5-01.qcow2 30G 
+
+# 创建 ceph osd 磁盘
+for i in $(seq 1 3)
+do
+  qemu-img create -f qcow2 -o preallocation=metadata /data/kvm/jwang-ceph5-disk-0${i}.qcow2 10G 
+done
+
+# 检查 rhel 8.3 guest disk 的文件系统布局
+virt-filesystems --long --parts --blkdevs -h -a ./rhel-8.3-update-2-x86_64-kvm.qcow2 
+
+# 在 rhel 8 系统上拷贝 rhel-8.3-update-2-x86_64-kvm.qcow2 到 jwang-ceph5-01.qcow2
+# 参见: https://access.redhat.com/solutions/4073061
+virt-resize --expand /dev/sda3 ./rhel-8.3-update-2-x86_64-kvm.qcow2 /data/kvm/jwang-ceph5-01.qcow2
 ```

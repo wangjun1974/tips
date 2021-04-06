@@ -14083,5 +14083,57 @@ radosgw-admin zone create --rgw-zonegroup=<zonegroup-name> --rgw-zone=<zone-name
 # 提交对 realm, zonegroup 和 zone 的更新
 radosgw-admin period update --rgw-realm=<realm-name> --commit
 
+# RGW 高可用解决方案
+# 假设有 N 个节点提供 RGW 服务
+# 每个节点运行 1 个 haproxy, 1 个 keepalived，1 个 rgw daemon
+# keepalive 构成 1 个 1 主多备集群
+# VIP 将运行在 keepalive master 上
+# 客户端通过 VIP + haproxy 访问 rgw 服务
+# keepalived 服务每隔几秒检查一下状态，当 master keepalived 服务或 active haproxy 无响应
+# 备份 keepalived 服务中的某个将被选举为 master keepalived，VIP 将漂移到新的 master keepalived 所在的节点
+# 节点需开启以下配置
+net.ipv4.ip_forward = 1
+net.ipv4.ip_nonlocal_bind = 1
+
+# ha rgw 服务的 service specification 例子
+service_type: ha-rgw
+service_id: haproxy_for_rgw
+placement:
+  hosts:
+    - host1
+    - host2
+    - host3
+spec:
+  virtual_ip_interface: <string> # ex: eth0
+  virtual_ip_address: <string>/<string> # ex: 192.168.20.1/24
+  frontend_port: <integer>  # ex: 8080
+  ha_proxy_port: <integer> # ex: 1967
+  ha_proxy_stats_enabled: <boolean> # ex: true
+  ha_proxy_stats_user: <string> # ex: admin
+  ha_proxy_stats_password: <string> # ex: true
+  ha_proxy_enable_prometheus_exporter: <boolean> # ex: true
+  ha_proxy_monitor_uri: <string> # ex: /haproxy_health
+  keepalived_password: <string> # ex: admin
+  ha_proxy_frontend_ssl_certificate: <optional string> ex:
+    [
+      "-----BEGIN CERTIFICATE-----",
+      "MIIDZTCCAk2gAwIBAgIUClb9dnseOsgJWAfhPQvrZw2MP2kwDQYJKoZIhvcNAQEL",
+      ....
+      "-----END CERTIFICATE-----",
+      "-----BEGIN PRIVATE KEY-----",
+      ....
+      "sCHaZTUevxb4h6dCEk1XdPr2O2GdjV0uQ++9bKahAy357ELT3zPE8yYqw7aUCyBO",
+      "aW5DSCo8DgfNOgycVL/rqcrc",
+      "-----END PRIVATE KEY-----"
+    ]
+  ha_proxy_frontend_ssl_port: <optional integer> # ex: 8090
+  ha_proxy_ssl_dh_param: <optional integer> # ex: 1024
+  ha_proxy_ssl_ciphers: <optional string> # ex: ECDH+AESGCM:!MD5
+  ha_proxy_ssl_options: <optional string> # ex: no-sslv3
+  haproxy_container_image: <optional string> # ex: haproxy:2.4-dev3-alpine
+  keepalived_container_image: <optional string> # ex: arcts/keepalived:1.2.2
+
+# 部署 ha rgw 服务
+ceph orch apply -i <service_spec_file>
 
 ```

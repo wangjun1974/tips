@@ -13819,4 +13819,124 @@ virsh -r -c 'qemu+tcp://$IP/system' list --all
 ceph orch upgrade start --ceph-version 16.2.0
 
 ceph orch upgrade start --image <latest-internal-image>
+
+# 运行 cephadm bootstrap 添加第一个 mon 节点
+cephadm bootstrap --mon-ip *<mon-ip>*
+
+# 如果同时使用 public network 和 cluster network 可以通过参数 --cluster-network 指定 cluster network
+--cluster-network
+
+# 参数 --output-dir 可以指定部署时使用的目录
+--output-dir *<directory>*
+
+# 参数 --config 可用于传递初始参数
+--config *<config-file>*
+
+# 参数 --ssh-user 设置 cephadm 连接其他主机时使用的 用户
+--ssh-user *<user>*
+
+# 以下参数可用于配置镜像服务以及登录信息
+--registry-url <url of registry>
+--registry-username <username of account on registry>
+--registry-password <password of account on registry>
+# 或者
+--registry-json <json file with login info>
+
+# 执行 ceph 命令可执行 cephadm shell
+cephadm shell
+cephadm shell -- ceph -s
+
+# 也可以添加软件仓库，安装 ceph-common 软件包
+cephadm add-repo --release pacific
+cephadm install ceph-common
+
+# 添加节点
+# 为新主机添加 ceph 集群 public key
+ssh-copy-id -f -i /etc/ceph/ceph.pub root@*<new-host>*
+
+# 添加新节点
+ceph orch host add *newhost*
+
+# 删除节点
+# https://docs.ceph.com/en/latest/cephadm/host-management/#removing-hosts
+
+# 如果节点运行非 node-exporter 和 crash 服务
+# 编辑 cluster.yml，在服务的 placement 部分删除主机
+# service_type: rgw
+# placement:
+#  hosts:
+#  - host1
+#  - host2
+# 然后执行命令删除节点
+ceph orch host rm host2
+
+# 如果节点运行 node-exporter 和 crash 服务
+# 执行命令删除节点服务
+cephadm rm-daemon --fsid CLUSTER_ID --name SERVICE_NAME
+
+# 部署其他 mon 节点
+# 默认 cephadm 根据集群规模，自动部署最多 5 个 mon 节点
+
+# 可以用以下命令指定 mon 使用的 public network 
+ceph config set mon public_network *<mon-cidr-network>*
+ceph config set mon public_network 10.1.2.0/24
+
+# 改变 mon 节点数量
+ceph orch apply mon *<number-of-monitors>*
+
+# 部署 mon 到指定节点
+ceph orch apply mon *<host1,host2,host3,...>*
+
+# 为节点打标签
+ceph orch host label add host1 mon
+ceph orch host label add host2 mon
+ceph orch host label add host3 mon
+
+# 列出节点
+ceph orch host ls
+HOST   ADDR   LABELS  STATUS
+host1         mon
+host2         mon
+host3         mon
+host4
+host5
+
+# 将服务 mon 部署到具有 label:mon 的节点
+ceph orch apply mon label:mon
+
+# 将 mon 服务部署到 host1, host2, host3 的方法
+ceph orch apply mon "host1,host2,host3"
+
+# 另外一种将 mon 部署到多节点的方法
+# 编辑 file.yml
+service_type: mon
+placement:
+  hosts:
+   - host1
+   - host2
+   - host3
+# 执行命令
+ceph orch apply -i file.yaml
+
+# 部署 osd 服务，自动寻找可用并且未用的磁盘
+ceph orch apply osd --all-available-devices
+
+# 列出所有节点上的设备
+ceph orch device ls
+
+# 为特定节点的特定设备创建 osd 服务 
+ceph orch daemon add osd *<host>*:*<device-path>*
+ceph orch daemon add osd host1:/dev/sdb
+
+# 指定 spec 文件，根据 spec 文件设置 osd
+ceph orch apply -i spec.yml
+
+# 参数 --dry-run 显示可能产生的变化
+ceph orch apply osd --all-available-devices --dry-run
+NAME                  HOST  DATA      DB  WAL
+all-available-devices node1 /dev/vdb  -   -
+all-available-devices node2 /dev/vdc  -   -
+all-available-devices node3 /dev/vdd  -   -
+
+
 ```

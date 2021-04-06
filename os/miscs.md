@@ -14039,4 +14039,31 @@ ceph orch apply osd -i /path/to/osd_spec.yml
 # 获取设备信息
 ceph-volume inventory </path/to/disk>
 
+# 创建 cephfs 文件系统
+ceph fs volume create <fs_name> --placement="<placement spec>"
+
+# cephfs service placement specification
+service_type: mds
+service_id: fs_name
+placement:
+  count: 3
+
+# 让 cephfs service placement specification 生效
+ceph orch apply -i mds.yaml
+
+# 部署 rgw 服务的命令
+ceph orch apply rgw *<name>* [--realm=*<realm-name>*] [--zone=*<zone-name>*] --placement="*<num-daemons>* [*<host1>* ...]"
+
+# 部署单集群 rgw 服务，将默认部署 2 个 rgw daemon，rgw 的服务 id 为 foo
+ceph orch apply rgw foo
+
+# 为特定主机打标签
+# gwhost1 打标签 rgw
+# gwhost2 打标签 rgw
+# 将 rgw 服务部署到具有标签 rgw 的主机上
+# 每个主机部署 2 个 rgw daemon
+# rgw 服务将使用端口 8000 和 8001
+ceph orch host label add gwhost1 rgw
+ceph orch host label add gwhost2 rgw
+ceph orch apply rgw foo '--placement=label:rgw count-per-host:2' --port=8000
 ```

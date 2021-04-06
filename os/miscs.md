@@ -13608,7 +13608,49 @@ Name       Type       MBR  Size  Parent
 # 3. 拷贝镜像内容到新镜像同时扩展 /dev/sda2 的文件系统适应新镜像磁盘大小
 virt-resize --expand /dev/sda2 ./AnolisOS-8.2-RC1-x86_64.qcow2 /data/kvm/jwang-anolisos-8.2.qcow2
 
-# 4. 定义虚拟机
+# 4. 设置一下root密码
+# 在 RHEL 7 上处理 RHEL 8 guest 
+# guest 的文件系统有 host 不支持的特性
+# 解决方法是参考以下知识库文档
+# 下载 appliance
+# https://access.redhat.com/solutions/3914591
+mkdir libguestfs-appliance
+cd libguestfs-appliance
+wget http://download.libguestfs.org/binaries/appliance/appliance-1.38.0.tar.xz
+
+# 解压缩
+tar -Jxf appliance-1.38.0.tar.xz 
+
+# 查看目录内容
+ls ./appliance
+
+# 设置权限
+chmod -R a+rwX ./appliance
+
+# 输出变量
+export LIBGUESTFS_PATH=/root/jwang/libguestfs-appliance/appliance
+
+# 4. 设置一下root密码
+virt-customize -a /data/kvm/jwang-anolisos-8.2.qcow2 --root-password password:redhat
+
+# 5. 生成网卡配置 ifcfg-ens3 并上传网卡配置
+cat > /tmp/ifcfg-ens3 << 'EOF'
+DEVICE="ens3"
+NETBOOT="yes"
+TYPE="Ethernet"
+BOOTPROTO="none"
+NAME="ens3"
+ONBOOT="yes"
+IPADDR="192.168.122.111"
+NETMASK="255.255.255.0"
+GATEWAY="192.168.122.1"
+DNS1="192.168.122.1"
+EOF
+
+virt-customize -a /data/kvm/jwang-anolisos-8.2.qcow2 --upload /tmp/ifcfg-ens3:/etc/sysconfig/network-scripts
+
+
+# 6. 定义虚拟机
 virt-install --debug --ram 4096 --vcpus 2 --os-variant rhel7 \
   --disk path=/data/kvm/jwang-anolisos-8.2.qcow2,device=disk,bus=virtio,format=qcow2 \
   --noautoconsole --vnc --network network:default \
@@ -13761,4 +13803,20 @@ virsh -r -c 'qemu+tcp://$IP/system' list --all
 # https://www.ovirt.org/develop/release-management/features/virt/KvmToOvirt.html
 # 被导入的虚拟机需关闭
 
+```
+
+
+# 安装 Red Hat Ceph 5.x
+
+```
+# 安装 Red Hat Ceph Storage 5.x 的步骤
+# 1) make sure that lvm2, python3, podman are installed or updated
+# 2) install cephadm - http://download.eng.bos.redhat.com/rhel-8/composes/auto/ceph-5.0-rhel-8/latest-RHCEPH-5-RHEL-8/compose/Tools/x86_64/os/Packages/cephadm-16.1.0-1324.el8cp.noarch.rpm
+(rpm -ivh)
+# 3) Continue from https://docs.ceph.com/en/latest/cephadm/install/#bootstrap-a-new-cluster !
+
+# I upgraded my cluster this weekend from 15.x to 16.x with one command
+ceph orch upgrade start --ceph-version 16.2.0
+
+ceph orch upgrade start --image <latest-internal-image>
 ```

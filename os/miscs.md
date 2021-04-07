@@ -14255,12 +14255,48 @@ subscription-manager list --available --matches 'Red Hat Ceph Storage' | grep -E
 subscription-manager attach --pool=POOL_ID
 
 # 添加软件仓库 rhceph-5-tools-for-rhel-8-x86_64-rpms
-subscription-manager repos --enable=rhceph-5-tools-for-rhel-8-x86_64-rpms
+# 目前这个步骤不工作
+# subscription-manager repos --enable=rhceph-5-tools-for-rhel-8-x86_64-rpms
+
+# 启用 RHCS 5 prerelease repo
+cat > /etc/yum.repos.d/rhcs5.repo << 'EOF'
+[rhcs-5-prerelease-tools]
+name=Red Hat Ceph Storage 5 prerelease - Tools
+baseurl=http://download.eng.bos.redhat.com/rhel-8/composes/raw/ceph-5.0-rhel-8/latest-RHCEPH-5-RHEL-8/compose/Tools/x86_64/os/
+enabled=1
+gpgcheck=0
+gpgkey=http://download.eng.bos.redhat.com/rhel-8/composes/raw/ceph-5.0-rhel-8/latest-RHCEPH-5-RHEL-8/compose/Tools/x86_64/os/RPM-GPG-KEY-redhat-release
+
+[rhcs-5-prerelease-mon]
+name=Red Hat Ceph Storage 5 prerelease - Monitor
+baseurl=http://download.eng.bos.redhat.com/rhel-8/composes/raw/ceph-5.0-rhel-8/latest-RHCEPH-5-RHEL-8/compose/MON/x86_64/os/
+enabled=1
+gpgcheck=0
+gpgkey=http://download.eng.bos.redhat.com/rhel-8/composes/raw/ceph-5.0-rhel-8/latest-RHCEPH-5-RHEL-8/compose/MON/x86_64/os/RPM-GPG-KEY-redhat-release
+
+[rhcs-5-prerelease-osd]
+name=Red Hat Ceph Storage 5 prerelease - OSD
+baseurl=http://download.eng.bos.redhat.com/rhel-8/composes/raw/ceph-5.0-rhel-8/latest-RHCEPH-5-RHEL-8/compose/OSD/x86_64/os/
+enabled=1
+EOF
+
+# 导入 redhat rpm gpg key
+rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
+
+# 更新系统
+dnf update -y
 
 # 安装 cephadm
-dnf install -y ceph-tools
+dnf install -y cephadm
 
+# 更改 /usr/sbin/cephadm 所使用的 DEFAULT_IMAGE
+sed -i "s|DEFAULT_IMAGE = 'docker-registry.upshift.redhat.com/ceph/ceph-5.0-rhel-8'|DEFAULT_IMAGE = 'registry.redhat.io/rhceph-alpha/rhceph-5-rhel8'|" /usr/sbin/cephadm
 
+# 登录 registry.redhat.io
+podman login -u <kerberos> registry.redhat.io
+
+# bootstrap 第一个 mon 
+cephadm bootstrap --mon-ip 192.168.122.112
 ```
 
 # Ansible 相关内容
@@ -14287,3 +14323,6 @@ dnf install -y ceph-tools
 - command: modify command
   when: result.rc != 0
 ```
+
+# 安装 Deepin Desktop Environment on Fedora 30/31
+https://computingforgeeks.com/how-to-install-deepin-desktop-environment-on-fedora/

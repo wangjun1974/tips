@@ -14188,11 +14188,16 @@ ceph orch apply -i iscsi.yaml
 
 # 创建磁盘
 qemu-img create -f qcow2 -o preallocation=metadata /data/kvm/jwang-ceph5-01.qcow2 30G 
+qemu-img create -f qcow2 -o preallocation=metadata /data/kvm/jwang-ceph5-02.qcow2 30G 
+qemu-img create -f qcow2 -o preallocation=metadata /data/kvm/jwang-ceph5-03.qcow2 30G 
 
 # 创建 ceph osd 磁盘
 for i in $(seq 1 3)
 do
-  qemu-img create -f qcow2 -o preallocation=metadata /data/kvm/jwang-ceph5-disk-0${i}.qcow2 10G 
+  for j in $(seq 1 3)
+  do 
+    qemu-img create -f qcow2 -o preallocation=metadata /data/kvm/jwang-ceph5-0${j}-disk-0${i}.qcow2 10G 
+  done  
 done
 
 # 检查 rhel 8.3 guest disk 的文件系统布局
@@ -14201,10 +14206,20 @@ virt-filesystems --long --parts --blkdevs -h -a ./rhel-8.3-update-2-x86_64-kvm.q
 # 在 rhel 8 系统上拷贝 rhel-8.3-update-2-x86_64-kvm.qcow2 到 jwang-ceph5-01.qcow2
 # 参见: https://access.redhat.com/solutions/4073061
 virt-resize --expand /dev/sda3 ./rhel-8.3-update-2-x86_64-kvm.qcow2 /data/kvm/jwang-ceph5-01.qcow2
+virt-resize --expand /dev/sda3 ./rhel-8.3-update-2-x86_64-kvm.qcow2 /data/kvm/jwang-ceph5-02.qcow2
+virt-resize --expand /dev/sda3 ./rhel-8.3-update-2-x86_64-kvm.qcow2 /data/kvm/jwang-ceph5-03.qcow2
+
+# cp --sparse=always ./rhel-8.3-update-2-x86_64-kvm.qcow2 /data/kvm/jwang-ceph5-02.qcow2
+# cp --sparse=always ./rhel-8.3-update-2-x86_64-kvm.qcow2 /data/kvm/jwang-ceph5-03.qcow2
+
 
 # 设置一下 root 密码
 # https://www.unixsysadmin.com/rhel-8-qcow-kvm/
 virt-customize -a /data/kvm/jwang-ceph5-01.qcow2 --root-password password:redhat --uninstall cloud-init --selinux-relabel
+
+virt-customize -a /data/kvm/jwang-ceph5-02.qcow2 --root-password password:redhat --uninstall cloud-init --selinux-relabel
+
+virt-customize -a /data/kvm/jwang-ceph5-03.qcow2 --root-password password:redhat --uninstall cloud-init --selinux-relabel
 
 # 生成网卡配置 ifcfg-eth0 并上传网卡配置
 cat > /tmp/ifcfg-eth0 << 'EOF'
@@ -14222,6 +14237,36 @@ EOF
 
 virt-customize -a /data/kvm/jwang-ceph5-01.qcow2 --upload /tmp/ifcfg-eth0:/etc/sysconfig/network-scripts
 
+cat > /tmp/ifcfg-eth0 << 'EOF'
+DEVICE="eth0"
+NETBOOT="yes"
+TYPE="Ethernet"
+BOOTPROTO="none"
+NAME="eth0"
+ONBOOT="yes"
+IPADDR="192.168.122.113"
+NETMASK="255.255.255.0"
+GATEWAY="192.168.122.1"
+DNS1="192.168.122.1"
+EOF
+
+virt-customize -a /data/kvm/jwang-ceph5-02.qcow2 --upload /tmp/ifcfg-eth0:/etc/sysconfig/network-scripts
+
+cat > /tmp/ifcfg-eth0 << 'EOF'
+DEVICE="eth0"
+NETBOOT="yes"
+TYPE="Ethernet"
+BOOTPROTO="none"
+NAME="eth0"
+ONBOOT="yes"
+IPADDR="192.168.122.114"
+NETMASK="255.255.255.0"
+GATEWAY="192.168.122.1"
+DNS1="192.168.122.1"
+EOF
+
+virt-customize -a /data/kvm/jwang-ceph5-03.qcow2 --upload /tmp/ifcfg-eth0:/etc/sysconfig/network-scripts
+
 # 在服务器间拷贝 sparse 文件
 # rsync --ignore-existing --sparse -v --stats --progress /data/kvm/jwang-ceph5-01.qcow2 10.66.208.240:/data/kvm 
 
@@ -14231,9 +14276,9 @@ virt-customize -a /data/kvm/jwang-ceph5-01.qcow2 --upload /tmp/ifcfg-eth0:/etc/s
 # 定义虚拟机
 virt-install --debug --ram 4096 --vcpus 2 --os-variant rhel7 \
   --disk path=/data/kvm/jwang-ceph5-01.qcow2,device=disk,bus=virtio,format=qcow2 \
-  --disk path=/data/kvm/jwang-ceph5-disk-01.qcow2,device=disk,bus=virtio,format=qcow2 \
-  --disk path=/data/kvm/jwang-ceph5-disk-02.qcow2,device=disk,bus=virtio,format=qcow2 \
-  --disk path=/data/kvm/jwang-ceph5-disk-03.qcow2,device=disk,bus=virtio,format=qcow2 \
+  --disk path=/data/kvm/jwang-ceph5-01-disk-01.qcow2,device=disk,bus=virtio,format=qcow2 \
+  --disk path=/data/kvm/jwang-ceph5-01-disk-02.qcow2,device=disk,bus=virtio,format=qcow2 \
+  --disk path=/data/kvm/jwang-ceph5-01-disk-03.qcow2,device=disk,bus=virtio,format=qcow2 \
   --noautoconsole --vnc --network network:default \
   --name jwang-ceph5-01 \
   --cpu host,+vmx \
@@ -14242,8 +14287,42 @@ virt-install --debug --ram 4096 --vcpus 2 --os-variant rhel7 \
 
 virsh define --file /tmp/jwang-ceph5-01.xml
 
+virt-install --debug --ram 4096 --vcpus 2 --os-variant rhel7 \
+  --disk path=/data/kvm/jwang-ceph5-02.qcow2,device=disk,bus=virtio,format=qcow2 \
+  --disk path=/data/kvm/jwang-ceph5-02-disk-01.qcow2,device=disk,bus=virtio,format=qcow2 \
+  --disk path=/data/kvm/jwang-ceph5-02-disk-02.qcow2,device=disk,bus=virtio,format=qcow2 \
+  --disk path=/data/kvm/jwang-ceph5-02-disk-03.qcow2,device=disk,bus=virtio,format=qcow2 \
+  --noautoconsole --vnc --network network:default \
+  --name jwang-ceph5-02 \
+  --cpu host,+vmx \
+  --boot menu=on \
+  --dry-run --print-xml > /tmp/jwang-ceph5-02.xml
+
+virsh define --file /tmp/jwang-ceph5-02.xml
+
+virt-install --debug --ram 4096 --vcpus 2 --os-variant rhel7 \
+  --disk path=/data/kvm/jwang-ceph5-03.qcow2,device=disk,bus=virtio,format=qcow2 \
+  --disk path=/data/kvm/jwang-ceph5-03-disk-01.qcow2,device=disk,bus=virtio,format=qcow2 \
+  --disk path=/data/kvm/jwang-ceph5-03-disk-02.qcow2,device=disk,bus=virtio,format=qcow2 \
+  --disk path=/data/kvm/jwang-ceph5-03-disk-03.qcow2,device=disk,bus=virtio,format=qcow2 \
+  --noautoconsole --vnc --network network:default \
+  --name jwang-ceph5-03 \
+  --cpu host,+vmx \
+  --boot menu=on \
+  --dry-run --print-xml > /tmp/jwang-ceph5-03.xml
+
+virsh define --file /tmp/jwang-ceph5-03.xml
+
 # 设置主机名
-hostnamectl set-hostname jwang-ceph5-01.localdomain
+hostnamectl set-hostname jwang-ceph5-01
+hostnamectl set-hostname jwang-ceph5-02
+hostnamectl set-hostname jwang-ceph5-03
+
+cat >> /etc/hosts << EOF
+192.168.122.112 jwang-ceph5-01
+192.168.122.113 jwang-ceph5-02
+192.168.122.114 jwang-ceph5-03
+EOF
 
 # 改变 CDN，注册服务器
 subscription-manager config --rhsm.baseurl=https://china.cdn.redhat.com
@@ -14284,12 +14363,15 @@ EOF
 rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
 
 # 更新系统
+dnf makecache
 dnf update -y
 
 # 安装 cephadm
 dnf install -y cephadm
 
 # 更改 /usr/sbin/cephadm 所使用的 DEFAULT_IMAGE
+# 根据实际情况修改
+# 目前 Red Hat Container Catalog 上有的 image 是 registry.redhat.io/rhceph-alpha/rhceph-5-rhel8
 sed -i "s|DEFAULT_IMAGE = 'docker-registry.upshift.redhat.com/ceph/ceph-5.0-rhel-8'|DEFAULT_IMAGE = 'registry.redhat.io/rhceph-alpha/rhceph-5-rhel8'|" /usr/sbin/cephadm
 
 # 登录 registry.redhat.io
@@ -14297,6 +14379,158 @@ podman login -u <kerberos> registry.redhat.io
 
 # bootstrap 第一个 mon 
 cephadm bootstrap --mon-ip 192.168.122.112
+Verifying podman|docker is present...
+Verifying lvm2 is present...   
+Verifying time synchronization is in place...
+Unit chronyd.service is enabled and running
+Repeating the final host check...
+podman|docker (/usr/bin/podman) is present
+systemctl is present
+lvcreate is present
+Unit chronyd.service is enabled and running
+Host looks OK
+Cluster fsid: aa260f08-9766-11eb-aef4-525400412fe4
+Verifying IP 192.168.122.112 port 3300 ...
+Verifying IP 192.168.122.112 port 6789 ...
+Mon IP 192.168.122.112 is in CIDR network 192.168.122.0/24
+- internal network (--cluster-network) has not been provided, OSD replication will default to the public_network
+Pulling container image registry.redhat.io/rhceph-alpha/rhceph-5-rhel8...
+Ceph version: ceph version 16.1.0-486.el8cp (f9701a56b7b8182352532afba8db2bf394c8585a) pacific (rc)
+Extracting ceph user uid/gid from container image...
+Creating initial keys...
+Creating initial monmap...
+Creating mon...
+Waiting for mon to start...
+Waiting for mon...
+mon is available
+Assimilating anything we can from ceph.conf...
+Generating new minimal ceph.conf...
+Restarting the monitor...
+Setting mon public_network to 192.168.122.0/24
+Wrote config to /etc/ceph/ceph.conf
+Wrote keyring to /etc/ceph/ceph.client.admin.keyring
+Creating mgr...
+Verifying port 9283 ...
+Waiting for mgr to start...
+Waiting for mgr...
+mgr not available, waiting (1/15)...
+mgr not available, waiting (2/15)...
+mgr not available, waiting (3/15)...
+mgr not available, waiting (4/15)...
+mgr is available
+Enabling cephadm module...
+Waiting for the mgr to restart...
+Waiting for mgr epoch 5...
+mgr epoch 5 is available
+Setting orchestrator backend to cephadm...
+Generating ssh key...
+Wrote public SSH key to /etc/ceph/ceph.pub
+Adding key to root@localhost authorized_keys...
+Adding host jwang-ceph5-01...  
+Deploying mon service with default placement...
+Deploying mgr service with default placement...
+Deploying crash service with default placement...
+Enabling mgr prometheus module...
+Deploying prometheus service with default placement...
+Deploying grafana service with default placement...
+Deploying node-exporter service with default placement...
+Deploying alertmanager service with default placement...
+Enabling the dashboard module...
+Waiting for the mgr to restart...
+Waiting for mgr epoch 13...
+mgr epoch 13 is available
+Generating a dashboard self-signed certificate...
+Creating initial admin user... 
+Fetching dashboard port number...
+Ceph Dashboard is now available at:
+
+             URL: https://jwang-ceph5-01:8443/
+            User: admin
+        Password: 7gxazvkd78   
+
+You can access the Ceph CLI with:
+
+        sudo /usr/sbin/cephadm shell --fsid aa260f08-9766-11eb-aef4-525400412fe4 -c /etc/ceph/ceph.conf -k /etc/ceph/ceph.client.admin.keyring
+
+# 查看系统上启动的容器
+[root@jwang-ceph5-01 ~]# podman ps 
+CONTAINER ID  IMAGE                                           COMMAND               CREATED        STATUS            PORTS   NAMES
+b1b721aa55d1  registry.redhat.io/rhceph-alpha/rhceph-5-rhel8  -n mgr.jwang-ceph...  5 minutes ago  Up 5 minutes ago          ceph-aa260f08-9766-11eb-aef4-525400412fe4-mgr.jwang-ceph5-01.fknlpv
+db0faf76a450  registry.redhat.io/rhceph-alpha/rhceph-5-rhel8  -n mon.jwang-ceph...  5 minutes ago  Up 5 minutes ago          ceph-aa260f08-9766-11eb-aef4-525400412fe4-mon.jwang-ceph5-01
+
+# 设置别名
+echo "alias ceph='cephadm shell -- ceph'" >> ~/.bashrc
+source ~/.bashrc
+
+# 拷贝 ceph cluster public key 
+ceph cephadm get-pub-key > ~/ceph.pub
+ssh-copy-id -f -i ~/ceph.pub root@jwang-ceph5-02
+ssh-copy-id -f -i ~/ceph.pub root@jwang-ceph5-03
+
+# 在待添加的节点上安装 python3 podman 和 lvm2
+dnf install -y python3 podman lvm2
+
+# 添加节点
+# 参考：https://tracker.ceph.com/issues/49223
+# ceph log last cephadm 
+# 上面这条命令可以查看最近的错误日志
+# 为了修复 unrecognized arguments: --container-init
+# 执行: ceph config set mgr mgr/cephadm/container_init false
+# 参考： https://stackoverflow.com/questions/64783203/cephadm-not-able-to-add-nodes-to-ceph-cluster-error-einval-failed-to-connect
+ceph orch host add jwang-ceph5-02 192.168.122.113
+ceph orch host add jwang-ceph5-03 192.168.122.114
+ceph orch host set-addr jwang-ceph5-01 192.168.122.112
+
+# 为节点打标签
+ceph orch host label add jwang-ceph5-01 mon
+ceph orch host label add jwang-ceph5-02 mon
+ceph orch host label add jwang-ceph5-03 mon
+
+# 查看节点标签
+ceph orch host ls
+
+# 部署 mon
+ceph orch apply mon "jwang-ceph5-01,jwang-ceph5-02,jwang-ceph5-03"
+
+# 设置时间同步
+sed -i 's|pool 2.rhel.pool.ntp.org iburst|server clock.corp.redhat.com iburst|' /etc/chrony.conf
+systemctl restart chronyd
+chronyc -n sources
+
+# 查看可用设备
+ceph orch device ls
+
+# 手工添加设备
+ceph orch daemon add osd jwang-ceph5-01:/dev/vdb
+ceph orch daemon add osd jwang-ceph5-02:/dev/vdb
+ceph orch daemon add osd jwang-ceph5-03:/dev/vdb
+
+# 查看状态
+ceph status 
+Inferring fsid aa260f08-9766-11eb-aef4-525400412fe4
+Inferring config /var/lib/ceph/aa260f08-9766-11eb-aef4-525400412fe4/mon.jwang-ceph5-01/config
+Using recent ceph image registry.redhat.io/rhceph-alpha/rhceph-5-rhel8@sha256:9aaea414e2c263216f3cdcb7a096f57c3adf6125ec9f4b0f5f65fa8c43987155
+WARNING: The same type, major and minor should not be used for multiple devices.
+  cluster:
+    id:     aa260f08-9766-11eb-aef4-525400412fe4
+    health: HEALTH_WARN
+            2 failed cephadm daemon(s)
+ 
+  services:
+    mon: 3 daemons, quorum jwang-ceph5-01,jwang-ceph5-03,jwang-ceph5-02 (age 4m)
+    mgr: jwang-ceph5-01.fknlpv(active, since 85m), standbys: jwang-ceph5-02.zfjyzp
+    osd: 3 osds: 3 up (since 51s), 3 in (since 51s)
+ 
+  data:
+    pools:   1 pools, 128 pgs
+    objects: 0 objects, 0 B
+    usage:   20 MiB used, 30 GiB / 30 GiB avail
+    pgs:     128 active+clean
+ 
+  progress:
+
+# 关于 2 failed cephadm daemon(s)
+
 ```
 
 # Ansible 相关内容

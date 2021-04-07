@@ -14560,3 +14560,10 @@ WARNING: The same type, major and minor should not be used for multiple devices.
 
 # 安装 Deepin Desktop Environment on Fedora 30/31
 https://computingforgeeks.com/how-to-install-deepin-desktop-environment-on-fedora/
+
+# Ansible Tower 3.8.x
+```
+# 测试一下 Ansible Tower 3.8.x
+# 参考：https://docs.ansible.com/ansible-tower/latest/html/quickinstall/install_script.html#example-platform-inventory-file
+
+```

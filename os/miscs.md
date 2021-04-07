@@ -14201,4 +14201,45 @@ virt-filesystems --long --parts --blkdevs -h -a ./rhel-8.3-update-2-x86_64-kvm.q
 # 在 rhel 8 系统上拷贝 rhel-8.3-update-2-x86_64-kvm.qcow2 到 jwang-ceph5-01.qcow2
 # 参见: https://access.redhat.com/solutions/4073061
 virt-resize --expand /dev/sda3 ./rhel-8.3-update-2-x86_64-kvm.qcow2 /data/kvm/jwang-ceph5-01.qcow2
+
+# 设置一下 root 密码
+# https://www.unixsysadmin.com/rhel-8-qcow-kvm/
+virt-customize -a /data/kvm/jwang-ceph5-01.qcow2 --root-password password:redhat --uninstall cloud-init --selinux-relabel
+
+# 生成网卡配置 ifcfg-ens3 并上传网卡配置
+cat > /tmp/ifcfg-ens3 << 'EOF'
+DEVICE="ens3"
+NETBOOT="yes"
+TYPE="Ethernet"
+BOOTPROTO="none"
+NAME="ens3"
+ONBOOT="yes"
+IPADDR="192.168.122.112"
+NETMASK="255.255.255.0"
+GATEWAY="192.168.122.1"
+DNS1="192.168.122.1"
+EOF
+
+virt-customize -a /data/kvm/jwang-ceph5-01.qcow2 --upload /tmp/ifcfg-ens3:/etc/sysconfig/network-scripts
+
+# 在服务器间拷贝 sparse 文件
+# rsync --ignore-existing --sparse --inplace -v --stats --progress /data/kvm/jwang-ceph5-01.qcow2 10.66.208.240:/data/kvm 
+
+# 再次传递时，执行
+# rsync -av --partial --inplace --append --progress /data/kvm/jwang-ceph5-01.qcow2 10.66.208.240:/data/kvm
+
+# 定义虚拟机
+virt-install --debug --ram 4096 --vcpus 2 --os-variant rhel7 \
+  --disk path=/data/kvm/jwang-ceph5-01.qcow2,device=disk,bus=virtio,format=qcow2 \
+  --disk path=/data/kvm/jwang-ceph5-disk-01.qcow2,device=disk,bus=virtio,format=qcow2 \
+  --disk path=/data/kvm/jwang-ceph5-disk-02.qcow2,device=disk,bus=virtio,format=qcow2 \
+  --disk path=/data/kvm/jwang-ceph5-disk-03.qcow2,device=disk,bus=virtio,format=qcow2 \
+  --noautoconsole --vnc --network network:default \
+  --name jwang-ceph5-01 \
+  --cpu host,+vmx \
+  --boot menu=on \
+  --dry-run --print-xml > /tmp/jwang-ceph5-01.xml
+
+virsh define --file /tmp/jwang-ceph5-01.xml
+
 ```

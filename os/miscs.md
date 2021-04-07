@@ -14248,6 +14248,7 @@ hostnamectl set-hostname jwang-ceph5-01.localdomain
 
 # Ansible 相关内容
 ```
+# 参见：https://docs.ansible.com/ansible/latest/user_guide/playbooks_error_handling.html
 # 绝大多数 ansible 模块是支持幂等
 # 因此当任务执行时发生状态改变时，例如：文件内容发生变化，服务状态发生变化
 # 任务的执行结果状态将被标记为: changed

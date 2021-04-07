@@ -14206,13 +14206,13 @@ virt-resize --expand /dev/sda3 ./rhel-8.3-update-2-x86_64-kvm.qcow2 /data/kvm/jw
 # https://www.unixsysadmin.com/rhel-8-qcow-kvm/
 virt-customize -a /data/kvm/jwang-ceph5-01.qcow2 --root-password password:redhat --uninstall cloud-init --selinux-relabel
 
-# 生成网卡配置 ifcfg-ens3 并上传网卡配置
-cat > /tmp/ifcfg-ens3 << 'EOF'
-DEVICE="ens3"
+# 生成网卡配置 ifcfg-eth0 并上传网卡配置
+cat > /tmp/ifcfg-eth0 << 'EOF'
+DEVICE="eth0"
 NETBOOT="yes"
 TYPE="Ethernet"
 BOOTPROTO="none"
-NAME="ens3"
+NAME="eth0"
 ONBOOT="yes"
 IPADDR="192.168.122.112"
 NETMASK="255.255.255.0"
@@ -14220,10 +14220,10 @@ GATEWAY="192.168.122.1"
 DNS1="192.168.122.1"
 EOF
 
-virt-customize -a /data/kvm/jwang-ceph5-01.qcow2 --upload /tmp/ifcfg-ens3:/etc/sysconfig/network-scripts
+virt-customize -a /data/kvm/jwang-ceph5-01.qcow2 --upload /tmp/ifcfg-eth0:/etc/sysconfig/network-scripts
 
 # 在服务器间拷贝 sparse 文件
-# rsync --ignore-existing --sparse --inplace -v --stats --progress /data/kvm/jwang-ceph5-01.qcow2 10.66.208.240:/data/kvm 
+# rsync --ignore-existing --sparse -v --stats --progress /data/kvm/jwang-ceph5-01.qcow2 10.66.208.240:/data/kvm 
 
 # 再次传递时，执行
 # rsync -av --partial --inplace --append --progress /data/kvm/jwang-ceph5-01.qcow2 10.66.208.240:/data/kvm
@@ -14242,4 +14242,30 @@ virt-install --debug --ram 4096 --vcpus 2 --os-variant rhel7 \
 
 virsh define --file /tmp/jwang-ceph5-01.xml
 
+# 设置主机名
+hostnamectl set-hostname jwang-ceph5-01.localdomain
+```
+
+# Ansible 相关内容
+```
+# 绝大多数 ansible 模块是支持幂等
+# 因此当任务执行时发生状态改变时，例如：文件内容发生变化，服务状态发生变化
+# 任务的执行结果状态将被标记为: changed
+# 如果当任务执行时发生状态未改变时，任务的执行结果状态将被标记为: ok
+# 任务可以设置执行条件，当执行条件不满足时，任务将不会被执行，任务的执行结果状态将被标记为: skipped
+
+# 对于少数 ansible 模块，如：command, shell
+# 本身是不支持幂等
+# 需要在写 Playbook 时，添加一些参数，帮助 ansible 了解执行的状态
+# 例如执行某个命令查询命令执行结果
+#  changed_when: False
+#  always_run: yes
+# 以下的例子是先执行一个 task 检查是否需要进行修改状态
+# 当检查结果为非 0 时，条件执行下一个任务作出修改
+- command: check command that returns true when no change needed
+  register: result
+  changed_when: False
+  always_run: yes
+- command: modify command
+  when: result.rc != 0
 ```

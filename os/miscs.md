@@ -14244,6 +14244,23 @@ virsh define --file /tmp/jwang-ceph5-01.xml
 
 # 设置主机名
 hostnamectl set-hostname jwang-ceph5-01.localdomain
+
+# 改变 CDN，注册服务器
+subscription-manager config --rhsm.baseurl=https://china.cdn.redhat.com
+subscription-manager register
+subscription-manager refresh
+
+# 查看满足要求的 pool
+subscription-manager list --available --matches 'Red Hat Ceph Storage' | grep -E "Pool ID|Entitlement Type" 
+subscription-manager attach --pool=POOL_ID
+
+# 添加软件仓库 rhceph-5-tools-for-rhel-8-x86_64-rpms
+subscription-manager repos --enable=rhceph-5-tools-for-rhel-8-x86_64-rpms
+
+# 安装 cephadm
+dnf install -y ceph-tools
+
+
 ```
 
 # Ansible 相关内容

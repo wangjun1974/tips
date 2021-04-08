@@ -15308,4 +15308,49 @@ spec:
 EOF
 
 oc apply -f myawx.yml
+
+# oc get pods
+NAME                                       READY   STATUS    RESTARTS   AGE
+awx-b5f6cf4d4-982bv                        4/4     Running   0          14m
+awx-operator-669b585776-dpbqc              1/1     Running   0          24m
+awx-postgres-0                             1/1     Running   0          14m
+
+# oc get svc
+NAME                              TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)             AGE
+awx-operator-metrics              ClusterIP   172.30.42.247    <none>        8383/TCP,8686/TCP   12m
+awx-postgres                      ClusterIP   None             <none>        5432/TCP            8m49s
+awx-service                       NodePort    172.30.58.88     <none>        80:30897/TCP        8m41s
+
+# oc get svc awx-service      
+NAME          TYPE       CLUSTER-IP     EXTERNAL-IP   PORT(S)        AGE
+awx-service   NodePort   172.30.58.88   <none>        80:30897/TCP   9m10s
+
+# 查看服务 awx-service
+# oc describe service awx-service 
+Name:                     awx-service
+Namespace:                user20
+Labels:                   app.kubernetes.io/component=awx
+                          app.kubernetes.io/managed-by=awx-operator
+                          app.kubernetes.io/name=awx
+                          app.kubernetes.io/part-of=awx
+Annotations:              <none>
+Selector:                 app.kubernetes.io/component=awx,app.kubernetes.io/managed-by=awx-operator,app.kubernetes.io/name=awx
+Type:                     NodePort
+IP:                       172.30.58.88
+Port:                     http  80/TCP
+TargetPort:               8052/TCP
+NodePort:                 http  30897/TCP
+Endpoints:                10.129.2.17:8052
+Session Affinity:         None
+External Traffic Policy:  Cluster
+Events:                   <none>
+
+# 访问 NodePort 服务
+# https://cloud.ibm.com/docs/openshift?topic=openshift-nodeport
+# http://<worker_ip_address>:<NodePort>
+# 如何访问 NodePort 服务呢
+
+# 运行命令获取 worker 的 ip 地址
+oc get nodes -o wide
+
 ```

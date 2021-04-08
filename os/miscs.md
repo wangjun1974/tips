@@ -14481,7 +14481,7 @@ ceph orch host add jwang-ceph5-02 192.168.122.113
 ceph orch host add jwang-ceph5-03 192.168.122.114
 ceph orch host set-addr jwang-ceph5-01 192.168.122.112
 
-# 为节点打标签
+# 为节点打标签 mon
 ceph orch host label add jwang-ceph5-01 mon
 ceph orch host label add jwang-ceph5-02 mon
 ceph orch host label add jwang-ceph5-03 mon
@@ -14504,6 +14504,11 @@ ceph orch device ls
 ceph orch daemon add osd jwang-ceph5-01:/dev/vdb
 ceph orch daemon add osd jwang-ceph5-02:/dev/vdb
 ceph orch daemon add osd jwang-ceph5-03:/dev/vdb
+
+# 为节点打标签 osd
+ceph orch host label add jwang-ceph5-01 osd
+ceph orch host label add jwang-ceph5-02 osd
+ceph orch host label add jwang-ceph5-03 osd
 
 # 查看状态
 ceph status 
@@ -14529,8 +14534,20 @@ WARNING: The same type, major and minor should not be used for multiple devices.
  
   progress:
 
-# 关于 2 failed cephadm daemon(s)
+# 为节点打标签 mds
+ceph orch host label add jwang-ceph5-01 mds
+ceph orch host label add jwang-ceph5-02 mds
+ceph orch host label add jwang-ceph5-03 mds
 
+# 部署 mds 
+ceph orch apply mds cephfs --placement="3 jwang-ceph5-01 jwang-ceph5-02 jwang-ceph5-03"
+
+# 查看节点标签
+ceph orch host ls
+
+# 关于 2 failed cephadm daemon(s)
+# 原因是在 jwang-ceph5-02 和 jwang-ceph5-03 上的 node-exporter 无法启动
+# 解决方法是在对应节点上手工执行 podman pull registry.redhat.io/openshift4/ose-prometheus-node-exporter:v4.5
 ```
 
 # Ansible 相关内容
@@ -14565,5 +14582,72 @@ https://computingforgeeks.com/how-to-install-deepin-desktop-environment-on-fedor
 ```
 # 测试一下 Ansible Tower 3.8.x
 # 参考：https://docs.ansible.com/ansible-tower/latest/html/quickinstall/install_script.html#example-platform-inventory-file
+
+
+# 创建虚拟机磁盘
+# qemu-img create -f qcow2 -o preallocation=metadata /data/kvm/jwang-tower-01.qcow2 50G 
+cp --sparse=always /root/jwang/rhel/rhel-8.3-update-2-x86_64-kvm.qcow2 /data/kvm/jwang-tower-01.qcow2 
+
+# 拷贝虚拟机镜像内容内容到虚拟磁盘
+# virt-resize --expand /dev/sda3 ./rhel-8.3-update-2-x86_64-kvm.qcow2 /data/kvm/jwang-tower-01.qcow2
+
+# 设置口令，卸载 cloud-init，重新生成 selinux label
+virt-customize -a /data/kvm/jwang-tower-01.qcow2 --root-password password:redhat --uninstall cloud-init --selinux-relabel
+
+# 生成网卡配置 ifcfg-eth0 并上传网卡配置
+cat > /tmp/ifcfg-eth0 << 'EOF'
+DEVICE="eth0"
+NETBOOT="yes"
+TYPE="Ethernet"
+BOOTPROTO="none"
+NAME="eth0"
+ONBOOT="yes"
+IPADDR="192.168.122.115"
+NETMASK="255.255.255.0"
+GATEWAY="192.168.122.1"
+DNS1="192.168.122.1"
+EOF
+
+virt-customize -a /data/kvm/jwang-tower-01.qcow2 --upload /tmp/ifcfg-eth0:/etc/sysconfig/network-scripts
+
+# 镜像定制是在 rhel8 下进行的，拷贝镜像到 rhel7 主机
+# 在服务器间拷贝 sparse 文件
+rsync --ignore-existing --sparse -v --stats --progress /data/kvm/jwang-tower-01.qcow2 10.66.208.240:/data/kvm 
+# 在源服务器
+# firewall-cmd --add-port=5000/tcp --zone=public   --permanent
+# firewall-cmd --reload
+# tar cSf - /data/kvm/jwang-tower-01.qcow2 | nc -l 5000
+# 在目标服务器
+# nc 10.66.208.125 5000 | tar xSf - -C /
+
+
+# 定义虚拟机
+virt-install --debug --ram 4096 --vcpus 2 --os-variant rhel7 \
+  --disk path=/data/kvm/jwang-tower-01.qcow2,device=disk,bus=virtio,format=qcow2 \
+  --noautoconsole --vnc --network network:default \
+  --name jwang-tower-01 \
+  --cpu host,+vmx \
+  --boot menu=on \
+  --dry-run --print-xml > /tmp/jwang-tower-01.xml
+
+virsh define --file /tmp/jwang-tower-01.xml
+
+# 设置虚拟机主机名
+hostnamectl set-hostname jwang-tower-01
+
+# 添加主机名
+cat >> /etc/hosts << EOF
+192.168.122.115    jwang-tower-01
+EOF
+
+# 订阅节点
+subscription-manager register
+subscription-manager list --available --matches 'Red Hat Ceph Storage' | grep -E "Pool ID|Entitlement Type" 
+subscription-manager attach --pool=POOL_ID
+
+# 下载 Ansible Automation Platform Setup Bundle
+# https://access.redhat.com/downloads/content/480/
+
+
 
 ```

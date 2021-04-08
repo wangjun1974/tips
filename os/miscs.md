@@ -14747,4 +14747,35 @@ subscription-manager attach --pool=POOL_ID
 # 在 Ansible Tower 里创建 Inventory/Groups/Hosts
 # 在 Ansible Tower 里创建 Job Templates
 # 执行 Job Templates
+
+
+# 删除 Inventory 里的主机的 playbook
+# 在 Ansible Tower Templates 里 添加 Ansible Tower credential type
+# 设置 TOWER_VERIFY_SSL=False, TOWER_HOST, TOWER_USERNAME 和 TOWER_PASSWORD
+---
+- name: Cleanup hosts in the inventory
+  hosts: localhost
+  connection: local
+  gather_facts: False
+  collections:
+    - awx.awx
+  vars:
+    inv_to_scrub: "Demo Inventory"
+  tasks:
+
+    - name: Remove the hosts from an inventory
+      tower_host:
+        name: "{{ item['id'] }}"
+        inventory: "{{ inv_to_scrub }}"
+        state: absent
+      loop:  "{{ lookup('awx.awx.tower_api', 'hosts', query_params={ 'inventory': inventory_id }, wantlist=True) }}"
+      loop_control:
+        label: "{{ item['name'] }}"
+      vars:
+        inventory_id: "{{ lookup('awx.awx.tower_api', 'inventories', query_params={ 'name': inv_to_scrub }, expect_one=True)['id'] }}"
+
+# ansible aws in kubernetes
+https://www.linkedin.com/pulse/awx-1800-containerised-execution-environments-phil-griffiths/ 
+
+
 ```

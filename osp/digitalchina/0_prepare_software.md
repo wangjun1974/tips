@@ -527,4 +527,10 @@ parameter_defaults:
       tag: '16.0'
     tag_from_label: '{version}-{release}'
 
+# 参见
+[0] RHOSP 13: Creating a True Offline Container Image Registry https://mojo.redhat.com/community/communities-at-red-hat/infrastructure/cloud-platforms-community-of-practice/openstack-community-of-practice-deploy-deliver-architect/blog/2019/06/19/rhosp-13-creating-a-true-offline-container-image-registry
+
+[1]  [RHOSP16] Back to the disconnected registry https://mojo.redhat.com/community/communities-at-red-hat/infrastructure/cloud-platforms-community-of-practice/openstack-community-of-practice-deploy-deliver-architect/blog/2020/04/17/rhosp16-back-to-the-disconnected-registry
+
+[2] OpenStack offline registry Ansible role https://gitlab.consulting.redhat.com/tbonds/ansible-role-rhospregistry 
 ```

@@ -332,3 +332,199 @@ EOF
 (undercloud) [stack@undercloud ~]$ openstack subnet show ctlplane-subnet -f json
 (undercloud) [stack@undercloud ~]$ sudo podman ps
 ```
+
+### 离线镜像仓库准备
+
+```
+# 参考：https://source.redhat.com/communitiesatredhat/infrastructure/cloud-platforms-community-of-practice/tracks/openstackcommunityofpracticedeploydeliverarchitect/cloud_infrastructure_cop_cloud_platforms_delivery_blog/openstack_disconnected_registry_revisited
+
+# 首先从在线镜像仓库同步镜像
+# 安装 podman, skopeo, jq
+- name: ensure packages are installed
+  become: true
+  package:
+    name:
+      - podman
+      - skopeo
+      - jq
+    state: latest
+
+# 运行 registry
+- name: pull registry image
+  become: true
+  podman_image:
+    name: registry
+    pull: yes
+
+- name: start registry container
+  become: true
+  command: podman run -d -p 5000:5000 --name registry registry
+  ignore_errors: yes
+
+# 配置运行非安全 registry
+- name: configure insecure registries
+  become: true
+  ini_file:
+    path: /etc/containers/registries.conf
+    section: 'registries.insecure'
+    option: registries
+    value: "['{{ push_registry }}']"
+  when:
+   - (push_registry | length) > 0
+
+# 登录 CDN registry ，执行脚本同步镜像
+- name: login to source registry
+  shell: |-
+    podman login --username=$REGISTRY_USERNAME \
+                 --password=$REGISTRY_PASSWORD \
+                 --tls-verify={{ podman_tls_verify }} \
+                 $REGISTRY
+  environment:
+    REGISTRY_USERNAME: "{{ registry_username }}"
+    REGISTRY_PASSWORD: "{{ registry_password }}"
+    REGISTRY: "{{ registry }}"
+  register: registry_login_podman
+
+- name: sync images
+  command: "/bin/bash syncimgs"
+  args:
+    chdir: "{{ sync_dir_path }}"
+
+# Ansible Roles 在这里
+# https://gitlab.consulting.redhat.com/tbonds/ansible-role-rhospregistry
+
+# 同步镜像的脚本 syncimgs
+#!/bin/env bash
+
+PUSHREGISTRY=localhost:5000
+FORK=4
+
+rhosp_namespace=registry.redhat.io/rhosp-rhel8
+rhosp_tag=16.0
+ceph_namespace=registry.redhat.io/rhceph
+ceph_image=rhceph-4-rhel8
+ceph_tag=latest
+ceph_alertmanager_namespace=registry.redhat.io/openshift4
+ceph_alertmanager_image=ose-prometheus-alertmanager
+ceph_alertmanager_tag=4.1
+ceph_grafana_namespace=registry.redhat.io/rhceph
+ceph_grafana_image=rhceph-3-dashboard-rhel7
+ceph_grafana_tag=3
+ceph_node_exporter_namespace=registry.redhat.io/openshift4
+ceph_node_exporter_image=ose-prometheus-node-exporter
+ceph_node_exporter_tag=v4.1
+ceph_prometheus_namespace=registry.redhat.io/openshift4
+ceph_prometheus_image=ose-prometheus
+ceph_prometheus_tag=4.1
+
+function copyimg() {
+  image=${1}
+  version=${2}
+
+  release=$(skopeo inspect docker://${image}:${version} | jq -r '.Labels | (.version + "-" + .release)')
+  dest="${PUSHREGISTRY}/${image#*\/}"
+  echo Copying ${image} to ${dest}
+  skopeo copy docker://${image}:${release} docker://${dest}:${release} --quiet
+  skopeo copy docker://${image}:${version} docker://${dest}:${version} --quiet
+}
+
+copyimg "${ceph_namespace}/${ceph_image}" ${ceph_tag} &
+copyimg "${ceph_alertmanager_namespace}/${ceph_alertmanager_image}" ${ceph_alertmanager_tag} &
+copyimg "${ceph_grafana_namespace}/${ceph_grafana_image}" ${ceph_grafana_tag} &
+copyimg "${ceph_node_exporter_namespace}/${ceph_node_exporter_image}" ${ceph_node_exporter_tag} &
+copyimg "${ceph_prometheus_namespace}/${ceph_prometheus_image}" ${ceph_prometheus_tag} &
+wait
+
+for rhosp_image in $(podman search ${rhosp_namespace} --limit 1000 --format "{{ .Name }}"); do
+  ((i=i%FORK)); ((i++==0)) && wait
+  copyimg ${rhosp_image} ${rhosp_tag} &
+done
+
+# 在 vault 里保存 registry 帐户信息
+registry_username: "username"
+registry_password: "password"
+
+# defaults/main.yaml
+---
+- hosts: localhost
+  name: setup local registry
+  gather_facts: false
+  roles:
+  - registry
+  vars:
+    push_registry: "localhost:5000"
+  vars_files:
+    - registry_vault.yml
+
+# 执行 playbook
+$ ansible-playbook --ask-vault-pass registry.yml
+
+# 检查本地镜像仓库
+podman search localhost:5000/ --limit 10
+INDEX NAME DESCRIPTION STARS OFFICIAL AUTOMATED
+localhost:5000 localhost:5000/openshift4/ose-prometheus 0 
+localhost:5000 localhost:5000/openshift4/ose-prometheus-alertmanager 0 
+localhost:5000 localhost:5000/openshift4/ose-prometheus-node-exporter 0 
+localhost:5000 localhost:5000/rhceph/rhceph-3-dashboard-rhel7 0 
+localhost:5000 localhost:5000/rhceph/rhceph-4-rhel8 0 
+localhost:5000 localhost:5000/rhosp-rhel8/openstack-aodh-api 0 
+localhost:5000 localhost:5000/rhosp-rhel8/openstack-aodh-base 0 
+localhost:5000 localhost:5000/rhosp-rhel8/openstack-aodh-evaluator 0 
+localhost:5000 localhost:5000/rhosp-rhel8/openstack-aodh-listener 0 
+localhost:5000 localhost:5000/rhosp-rhel8/openstack-aodh-notifier 0
+
+# 导出本地镜像仓库内容
+$ mkdir /tmp/export
+$ sudo podman run --rm --volumes-from registry:ro -v /tmp/export:/export:rw,z -w /export registry tar cf registry.tar /var/lib/registry
+
+# 在离线镜像仓库导入
+$ sudo podman run -d -p 5001:5001 --name newregistry registry
+0a8e4ddc39a3509be02f936fc7986eda51962aad35f41965112f45dde6bda3c0
+
+$ sudo podman run --rm --volumes-from newregistry -v /tmp/export:/export:ro,z -w /export registry sh -c "cd / && tar xf /export/registry.tar"
+
+# 导入后检查离线镜像仓库
+$ podman search localhost:5001/ --limit 10
+
+# 使用离线镜像仓库
+$ sudo crudini --set --format ini /etc/containers/registries.conf registries.insecure "['localregistry:5000']"
+
+$ crudini --set --format ini undercloud.conf DEFAULT container_insecure_registries localregistry:5000
+
+$ openstack tripleo container image prepare default --local-push-destination \
+ | sed 's/registry.redhat.io/localregistry:5000/g' > containers-prepare-parameter.yaml 
+
+$ cat /tmp/containers-prepare-parameter.yaml 
+# Generated with the following on 2020-05-07T16:58:48.470201
+#
+#   openstack tripleo container image prepare default --local-push-destination
+#
+
+parameter_defaults:
+  ContainerImagePrepare:
+  - push_destination: true
+    set:
+      ceph_alertmanager_image: ose-prometheus-alertmanager
+      ceph_alertmanager_namespace: localregistry:5000/openshift4
+      ceph_alertmanager_tag: 4.1
+      ceph_grafana_image: rhceph-3-dashboard-rhel7
+      ceph_grafana_namespace: localregistry:5000/rhceph
+      ceph_grafana_tag: 3
+      ceph_image: rhceph-4-rhel8
+      ceph_namespace: localregistry:5000/rhceph
+      ceph_node_exporter_image: ose-prometheus-node-exporter
+      ceph_node_exporter_namespace: localregistry:5000/openshift4
+      ceph_node_exporter_tag: v4.1
+      ceph_prometheus_image: ose-prometheus
+      ceph_prometheus_namespace: localregistry:5000/openshift4
+      ceph_prometheus_tag: 4.1
+      ceph_tag: latest
+      name_prefix: openstack-
+      name_suffix: ''
+      namespace: localregistry:5000/rhosp-rhel8
+      neutron_driver: ovn
+      rhel_containers: false
+      tag: '16.0'
+    tag_from_label: '{version}-{release}'
+
+```

@@ -14682,6 +14682,7 @@ EOF
 
 # 在 access.redhat.com 生成 manifest
 # 添加 manifest 到 ansible tower
+# 制作 manifest 参见 https://docs.ansible.com/ansible-tower/latest/html/userguide/import_license.html#obtain-sub-manifest
 
 # 准备 playbook
 cd /var/lib/awx/projects

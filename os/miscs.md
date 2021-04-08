@@ -14622,7 +14622,7 @@ rsync --ignore-existing --sparse -v --stats --progress /data/kvm/jwang-tower-01.
 
 
 # 定义虚拟机
-virt-install --debug --ram 4096 --vcpus 2 --os-variant rhel7 \
+virt-install --debug --ram 8192 --vcpus 2 --os-variant rhel7 \
   --disk path=/data/kvm/jwang-tower-01.qcow2,device=disk,bus=virtio,format=qcow2 \
   --noautoconsole --vnc --network network:default \
   --name jwang-tower-01 \
@@ -14644,10 +14644,105 @@ EOF
 subscription-manager register
 subscription-manager list --available --matches 'Red Hat Ceph Storage' | grep -E "Pool ID|Entitlement Type" 
 subscription-manager attach --pool=POOL_ID
+subscription-manager repos --enable=ansible-2.9-for-rhel-8-x86_64-rpms
 
 # 下载 Ansible Automation Platform Setup Bundle
 # https://access.redhat.com/downloads/content/480/
 
+# 解压缩
+tar zxvf ansible-automation-platform-setup-bundle-1.2.2-1.tar.gz
+cd ansible-automation-platform-setup-bundle-1.2.2-1
 
+# 创建 ansible tower single node inventory
+# 这个 inventory 将在本机安装 ansible tower 同时安装 tower db
+cat > inventory << EOF
+[tower]
+localhost ansible_connection=local
 
+[database]
+
+[all:vars]
+admin_password='redhat'
+
+pg_host=''
+pg_port=''
+
+pg_database='awx'
+pg_username='awx'
+pg_password='redhat'
+EOF
+
+# 添加内存到 8192
+# 这条命令执行报 ERROR    Unknown options ['currentMemory']
+# virt-xml jwang-tower-01 --edit --memory memory=8192,currentMemory=8192
+# 还是通过 virsh edit 调整的虚拟机内存
+
+# 执行安装
+./setup.sh
+
+# 在 access.redhat.com 生成 manifest
+# 添加 manifest 到 ansible tower
+
+# 准备 playbook
+cd /var/lib/awx/projects
+
+# 克隆 workshop-examples
+git clone https://github.com/ansible/workshop-examples
+
+# 将 owner 和 group 设置为 awx
+chown awx:awx -R workshop-examples
+
+# 创建被管理的机器
+cp --sparse=always /root/jwang/rhel/rhel-8.3-update-2-x86_64-kvm.qcow2 /data/kvm/jwang-tower-demo-01.qcow2
+
+# 设置口令，卸载 cloud-init，重新生成 selinux label
+virt-customize -a /data/kvm/jwang-tower-demo-01.qcow2 --root-password password:redhat --uninstall cloud-init --selinux-relabel
+
+# 生成网卡配置 ifcfg-eth0 并上传网卡配置
+cat > /tmp/ifcfg-eth0 << 'EOF'
+DEVICE="eth0"
+NETBOOT="yes"
+TYPE="Ethernet"
+BOOTPROTO="none"
+NAME="eth0"
+ONBOOT="yes"
+IPADDR="192.168.122.116"
+NETMASK="255.255.255.0"
+GATEWAY="192.168.122.1"
+DNS1="192.168.122.1"
+EOF
+
+virt-customize -a /data/kvm/jwang-tower-demo-01.qcow2 --upload /tmp/ifcfg-eth0:/etc/sysconfig/network-scripts
+
+# 在服务器间拷贝 sparse 文件
+rsync --ignore-existing --sparse -v --stats --progress /data/kvm/jwang-tower-demo-01.qcow2 10.66.208.240:/data/kvm 
+
+# 定义虚拟机
+virt-install --debug --ram 1024 --vcpus 1 --os-variant rhel7 \
+  --disk path=/data/kvm/jwang-tower-demo-01.qcow2,device=disk,bus=virtio,format=qcow2 \
+  --noautoconsole --vnc --network network:default \
+  --name jwang-tower-demo-01 \
+  --cpu host,+vmx \
+  --boot menu=on \
+  --dry-run --print-xml > /tmp/jwang-tower-demo-01.xml
+
+virsh define --file /tmp/jwang-tower-demo-01.xml
+
+# 启动虚拟机
+virsh start jwang-tower-demo-01
+
+# 设置主机名
+hostnamectl set-hostname jwang-tower-demo-01
+
+# 注册主机
+subscription-manager register
+subscription-manager list --available --matches 'Red Hat Ceph Storage' | grep -E "Pool ID|Entitlement Type" 
+subscription-manager attach --pool=POOL_ID
+
+# 在 Ansible Tower 里创建 ORG
+# 在 Ansible Tower 里创建 Credential
+# 在 Ansible Tower 里创建 Project
+# 在 Ansible Tower 里创建 Inventory/Groups/Hosts
+# 在 Ansible Tower 里创建 Job Templates
+# 执行 Job Templates
 ```

@@ -14648,6 +14648,7 @@ subscription-manager repos --enable=ansible-2.9-for-rhel-8-x86_64-rpms
 
 # 下载 Ansible Automation Platform Setup Bundle
 # https://access.redhat.com/downloads/content/480/
+# https://docs.ansible.com/ansible-tower/latest/html/quickinstall/prepare.html
 
 # 解压缩
 tar zxvf ansible-automation-platform-setup-bundle-1.2.2-1.tar.gz

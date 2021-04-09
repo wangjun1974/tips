@@ -14565,7 +14565,61 @@ mds.mycephfs.jwang-ceph5-02.ltvoxs  jwang-ceph5-02  running (61m)  9m ago     61
 ceph orch apply mds mycephfs --unmanaged
 ceph orch daemon rm mds.mycephfs.jwang-ceph5-01.erllnn
 ceph orch daemon rm mds.mycephfs.jwang-ceph5-02.ltvoxs
-ceph orch ps | grep mds 
+
+# 部署一下 rgw
+ceph orch host label add jwang-ceph5-01 rgw
+ceph orch host label add jwang-ceph5-02 rgw
+ceph orch host label add jwang-ceph5-03 rgw
+
+# 安装一下 ceph-common
+yum install -y ceph-common
+
+# https://shopnpaz.medium.com/deploy-a-ceph-cluster-within-minutes-using-cephadm-53e3b915416f
+# $ radosgw-admin realm create --rgw-realm=default --default
+# $ radosgw-admin zonegroup create --rgw-zonegroup=default --master --default
+# $ radosgw-admin zone create --rgw-zonegroup=default --rgw-zone=default --master --default
+ceph orch apply rgw default default --placement='3 jwang-ceph5-01 jwang-ceph5-02 jwang-ceph5-03'
+
+# 部署完了 rgw 容器并未启动
+# 参考：https://bugzilla.redhat.com/show_bug.cgi?id=1858884
+# 参考：https://bugzilla.redhat.com/show_bug.cgi?id=1934589
+ceph orch daemon add rgw default default --placement jwang-ceph5-01
+ceph orch daemon add rgw default default --placement jwang-ceph5-02
+ceph orch daemon add rgw default default --placement jwang-ceph5-03
+ceph orch apply rgw default default default --placement='3 jwang-ceph5-01 jwang-ceph5-02 jwang-ceph5-03'
+
+# 查看日志
+# cephadm ls
+# cephadm logs --fsid <fsid from `ceph -s` command> --name <mgr name from `ceph -s` command>
+cephadm logs --fsid aa260f08-9766-11eb-aef4-525400412fe4 --name mgr.jwang-ceph5-01.fknlpv | tee /tmp/err 
+
+# cephadm ls
+        "name": "rgw.default.default.default.jwang-ceph5-01.lekjbr",
+        "systemd_unit": "ceph-aa260f08-9766-11eb-aef4-525400412fe4@rgw.default.default.default.jwang-ceph5-01.lekjbr",
+
+# 出错的 systemd service 是 ceph-aa260f08-9766-11eb-aef4-525400412fe4@rgw.default.default.default.jwang-ceph5-01.lekjbr
+
+# 查看它的报错信息
+journalctl -u ceph-aa260f08-9766-11eb-aef4-525400412fe4@rgw.default.default.default.jwang-ceph5-01.lekjbr 
+
+# 报错信息如下
+# Apr 09 04:47:29 jwang-ceph5-01 conmon[375889]: debug 2021-04-09T08:47:29.769+0000 7fb9937d7300  0 rgw_init_ioctx ERROR: librados::Rados::pool_create 
+returned (34) Numerical result out of range (this can be due to a pool or placement group misconfiguration, e.g. pg_num < pgp_num or mon_max_pg_per_o
+sd exceeded)
+Apr 09 04:47:29 jwang-ceph5-01 conmon[375889]: debug 2021-04-09T08:47:29.769+0000 7fb9937d7300  0 ERROR: failed reading data (obj=default.rgw.log:buc
+ket.sync-source-hints.), r=-34
+Apr 09 04:47:29 jwang-ceph5-01 conmon[375889]: debug 2021-04-09T08:47:29.769+0000 7fb9937d7300  0 ERROR: failed to update sources index for bucket=:[
+]) r=-34
+Apr 09 04:47:29 jwang-ceph5-01 conmon[375889]: debug 2021-04-09T08:47:29.769+0000 7fb9937d7300  0 ERROR: failed to initialize bucket sync policy hand
+ler: get_bucket_sync_hints() on bucket=-- returned r=-34
+Apr 09 04:47:29 jwang-ceph5-01 conmon[375889]: debug 2021-04-09T08:47:29.769+0000 7fb9937d7300 -1 ERROR: could not initialize zone policy handler for
+ zone=default
+Apr 09 04:47:29 jwang-ceph5-01 conmon[375889]: debug 2021-04-09T08:47:29.769+0000 7fb9937d7300  0 ERROR: failed to start notify service ((34) Numeric
+al result out of range
+Apr 09 04:47:29 jwang-ceph5-01 conmon[375889]: debug 2021-04-09T08:47:29.769+0000 7fb9937d7300  0 ERROR: failed to init services (ret=(34) Numerical 
+result out of range)
+
+
 
 ```
 

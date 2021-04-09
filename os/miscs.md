@@ -15297,6 +15297,8 @@ oc apply -f awx-operator-1.yaml
 oc patch deployment awx-operator -n user20 --patch='{"spec":{"template":{"spec":{"containers":[{"name": "awx-operator", "image":"quay.io/ansible/awx-operator:devel"}]}}}}'
 
 # 生成 AWX 实例
+# 参考：https://github.com/ansible/awx-operator
+# 注意设置 tower_ingress_type: Route
 cat > myawx.yml <<EOF
 ---
 apiVersion: awx.ansible.com/v1beta1
@@ -15304,7 +15306,7 @@ kind: AWX
 metadata:
   name: awx
 spec:
-  tower_ingress_type: Ingress
+  tower_ingress_type: Route
 EOF
 
 oc apply -f myawx.yml
@@ -15315,15 +15317,11 @@ awx-b5f6cf4d4-982bv                        4/4     Running   0          14m
 awx-operator-669b585776-dpbqc              1/1     Running   0          24m
 awx-postgres-0                             1/1     Running   0          14m
 
-# oc get svc
-NAME                              TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)             AGE
-awx-operator-metrics              ClusterIP   172.30.42.247    <none>        8383/TCP,8686/TCP   12m
-awx-postgres                      ClusterIP   None             <none>        5432/TCP            8m49s
-awx-service                       NodePort    172.30.58.88     <none>        80:30897/TCP        8m41s
-
-# oc get svc awx-service      
-NAME          TYPE       CLUSTER-IP     EXTERNAL-IP   PORT(S)        AGE
-awx-service   NodePort   172.30.58.88   <none>        80:30897/TCP   9m10s
+$ oc get svc
+NAME                   TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)             AGE
+awx-operator-metrics   ClusterIP   172.30.42.247   <none>        8383/TCP,8686/TCP   17h
+awx-postgres           ClusterIP   None            <none>        5432/TCP            4m8s
+awx-service            NodePort    172.30.16.89    <none>        80:30379/TCP        4m1s
 
 # 查看服务 awx-service
 # oc describe service awx-service 
@@ -15348,9 +15346,28 @@ Events:                   <none>
 # 访问 NodePort 服务
 # https://cloud.ibm.com/docs/openshift?topic=openshift-nodeport
 # http://<worker_ip_address>:<NodePort>
-# 如何访问 NodePort 服务呢
+# 如何访问 NodePort 服务
 
-# 运行命令获取 worker 的 ip 地址
-oc get nodes -o wide
+# 查看 route 
+$ oc get route
+NAME   HOST/PORT                         PATH   SERVICES      PORT   TERMINATION     WILDCARD
+awx    awx-user20.apps.ocp1.rhcnsa.com          awx-service   http   edge/Redirect   None
 
+# 获取 awx admin 口令
+oc get secret awx-admin-password -o=jsonpath='{.data.password}'  | base64 --decode
+
+
+```
+
+
+# 设置本地语言
+```
+cat > /etc/yum.repos.d/local.repo << EOF
+[dvd]
+name=dvd
+baseurl=file:///mnt
+enabled=1
+gpgcheck=1
+gpgkey=file:///mnt/RPM-GPG-KEY-redhat-release
+EOF
 ```

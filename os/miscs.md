@@ -14586,7 +14586,7 @@ ceph orch apply rgw default default --placement='3 jwang-ceph5-01 jwang-ceph5-02
 ceph orch daemon add rgw default default --placement jwang-ceph5-01
 ceph orch daemon add rgw default default --placement jwang-ceph5-02
 ceph orch daemon add rgw default default --placement jwang-ceph5-03
-ceph orch apply rgw default default default --placement='3 jwang-ceph5-01 jwang-ceph5-02 jwang-ceph5-03'
+ceph orch apply rgw default default --placement='3 jwang-ceph5-01 jwang-ceph5-02 jwang-ceph5-03'
 
 # 查看日志
 # cephadm ls
@@ -14619,8 +14619,65 @@ al result out of range
 Apr 09 04:47:29 jwang-ceph5-01 conmon[375889]: debug 2021-04-09T08:47:29.769+0000 7fb9937d7300  0 ERROR: failed to init services (ret=(34) Numerical 
 result out of range)
 
+# 再手工添加一些 osd 
+ceph orch daemon add osd jwang-ceph5-01:/dev/vdc
+ceph orch daemon add osd jwang-ceph5-02:/dev/vdc
+ceph orch daemon add osd jwang-ceph5-03:/dev/vdc
+
+# 在添加完磁盘后
+# 删除上次出错的 rgw 服务
+ceph orch apply rgw default default
+ceph orch apply rgw default default --unmanaged
+ceph orch apply rgw default default default --unmanaged
+ceph orch ps | grep rgw | grep error
+ceph orch daemon rm rgw.default.default.default.jwang-ceph5-01.lekjbr 
+ceph orch daemon rm rgw.default.default.default.jwang-ceph5-02.zeckrd 
+ceph orch daemon rm rgw.default.default.default.jwang-ceph5-03.mieynw
+ceph orch apply rgw default default --placement='3 jwang-ceph5-01 jwang-ceph5-02 jwang-ceph5-03'
 
 
+
+# 集群的状态正常了
+# ceph status 
+Inferring fsid aa260f08-9766-11eb-aef4-525400412fe4
+Inferring config /var/lib/ceph/aa260f08-9766-11eb-aef4-525400412fe4/mon.jwang-ceph5-01/config
+Using recent ceph image registry.redhat.io/rhceph-alpha/rhceph-5-rhel8@sha256:9aaea414e2c263216f3cdcb7a096f57c3adf6125ec9f4b0f5f65fa8c43987155
+WARNING: The same type, major and minor should not be used for multiple devices.
+WARNING: The same type, major and minor should not be used for multiple devices.
+  cluster:
+    id:     aa260f08-9766-11eb-aef4-525400412fe4
+    health: HEALTH_OK
+ 
+  services:
+    mon: 3 daemons, quorum jwang-ceph5-01,jwang-ceph5-03,jwang-ceph5-02 (age 2d)
+    mgr: jwang-ceph5-01.fknlpv(active, since 2d), standbys: jwang-ceph5-02.zfjyzp
+    mds: cephfs:1 {0=cephfs.jwang-ceph5-01.ewdwyd=up:active} 2 up:standby
+    osd: 6 osds: 6 up (since 34m), 6 in (since 34m)
+    rgw: 3 daemons active (default.default.jwang-ceph5-01.sufokn, default.default.jwang-ceph5-02.ycvszm, default.default.jwang-ceph5-03.osdnlr)
+ 
+  data:
+    pools:   7 pools, 416 pgs
+    objects: 346 objects, 27 KiB
+    usage:   198 MiB used, 60 GiB / 60 GiB avail
+    pgs:     416 active+clean
+ 
+  io:
+    client:   21 KiB/s rd, 0 B/s wr, 20 op/s rd, 13 op/s wr
+
+# 看看安装完 rgw 之后有哪些 pool
+# ceph osd pool ls detail 
+Inferring fsid aa260f08-9766-11eb-aef4-525400412fe4
+Inferring config /var/lib/ceph/aa260f08-9766-11eb-aef4-525400412fe4/mon.jwang-ceph5-01/config
+Using recent ceph image registry.redhat.io/rhceph-alpha/rhceph-5-rhel8@sha256:9aaea414e2c263216f3cdcb7a096f57c3adf6125ec9f4b0f5f65fa8c43987155
+WARNING: The same type, major and minor should not be used for multiple devices.
+WARNING: The same type, major and minor should not be used for multiple devices.
+pool 1 'device_health_metrics' replicated size 3 min_size 2 crush_rule 0 object_hash rjenkins pg_num 32 pgp_num 32 autoscale_mode on last_change 471 lfor 0/471/469 flags hashpspool stripe_width 0 pg_num_min 1 application mgr_devicehealth
+pool 2 'cephfs.cephfs.meta' replicated size 3 min_size 2 crush_rule 0 object_hash rjenkins pg_num 128 pgp_num 128 autoscale_mode on last_change 53 lfor 0/0/47 flags hashpspool stripe_width 0 pg_autoscale_bias 4 pg_num_min 16 recovery_priority 5 application cephfs
+pool 3 'cephfs.cephfs.data' replicated size 3 min_size 2 crush_rule 0 object_hash rjenkins pg_num 32 pgp_num 32 autoscale_mode on last_change 44 flags hashpspool stripe_width 0 application cephfs
+pool 4 '.rgw.root' replicated size 3 min_size 2 crush_rule 0 object_hash rjenkins pg_num 32 pgp_num 32 autoscale_mode on last_change 477 flags hashpspool stripe_width 0 application rgw
+pool 5 'default.rgw.log' replicated size 3 min_size 2 crush_rule 0 object_hash rjenkins pg_num 32 pgp_num 32 autoscale_mode on last_change 531 flags hashpspool stripe_width 0 application rgw
+pool 6 'default.rgw.control' replicated size 3 min_size 2 crush_rule 0 object_hash rjenkins pg_num 32 pgp_num 32 autoscale_mode on last_change 533 flags hashpspool stripe_width 0 application rgw
+pool 7 'default.rgw.meta' replicated size 3 min_size 2 crush_rule 0 object_hash rjenkins pg_num 128 pgp_num 128 autoscale_mode on last_change 541 lfor 0/0/539 flags hashpspool stripe_width 0 pg_autoscale_bias 4 pg_num_min 8 application rgw
 ```
 
 # Ansible 相关内容

@@ -14548,6 +14548,25 @@ ceph orch host ls
 # 关于 2 failed cephadm daemon(s)
 # 原因是在 jwang-ceph5-02 和 jwang-ceph5-03 上的 node-exporter 无法启动
 # 解决方法是在对应节点上手工执行 podman pull registry.redhat.io/openshift4/ose-prometheus-node-exporter:v4.5
+
+# 看看 cephfs mds 服务
+ceph fs volume create cephfs
+ceph orch apply mds cephfs --placement="3 jwang-ceph5-01 jwang-ceph5-02 jwang-ceph5-03"
+
+# 删除错误部署的 mds 
+# https://tracker.ceph.com/issues/46082
+ceph orch ps | grep mds 
+mds.cephfs.jwang-ceph5-01.ewdwyd    jwang-ceph5-01  running (3h)   9m ago     3h   16.1.0-486.el8cp  registry.redhat.io/rhceph-alpha/rhceph-5-rhel8@sha256:9aaea414e2c263216f3cdcb7a096f57c3adf6125ec9f4b0f5f65fa8c43987155  6f642d99fe72  75fe5c649bb1  
+mds.cephfs.jwang-ceph5-02.sjnbbh    jwang-ceph5-02  running (3h)   9m ago     3h   16.1.0-486.el8cp  registry.redhat.io/rhceph-alpha/rhceph-5-rhel8@sha256:9aaea414e2c263216f3cdcb7a096f57c3adf6125ec9f4b0f5f65fa8c43987155  6f642d99fe72  d3f59e4014b9  
+mds.cephfs.jwang-ceph5-03.lixhgg    jwang-ceph5-03  running (44m)  105s ago   43m  16.1.0-486.el8cp  registry.redhat.io/rhceph-alpha/rhceph-5-rhel8@sha256:9aaea414e2c263216f3cdcb7a096f57c3adf6125ec9f4b0f5f65fa8c43987155  6f642d99fe72  9e2a74beb747  
+mds.mycephfs.jwang-ceph5-01.erllnn  jwang-ceph5-01  running (61m)  9m ago     61m  16.1.0-486.el8cp  registry.redhat.io/rhceph-alpha/rhceph-5-rhel8@sha256:9aaea414e2c263216f3cdcb7a096f57c3adf6125ec9f4b0f5f65fa8c43987155  6f642d99fe72  2d3ca5ae5993  
+mds.mycephfs.jwang-ceph5-02.ltvoxs  jwang-ceph5-02  running (61m)  9m ago     61m  16.1.0-486.el8cp  registry.redhat.io/rhceph-alpha/rhceph-5-rhel8@sha256:9aaea414e2c263216f3cdcb7a096f57c3adf6125ec9f4b0f5f65fa8c43987155  6f642d99fe72  855c4df3a110
+
+ceph orch apply mds mycephfs --unmanaged
+ceph orch daemon rm mds.mycephfs.jwang-ceph5-01.erllnn
+ceph orch daemon rm mds.mycephfs.jwang-ceph5-02.ltvoxs
+ceph orch ps | grep mds 
+
 ```
 
 # Ansible 相关内容

@@ -14708,6 +14708,34 @@ pool 7 'default.rgw.meta' replicated size 3 min_size 2 crush_rule 0 object_hash 
 # 安装 Deepin Desktop Environment on Fedora 30/31
 https://computingforgeeks.com/how-to-install-deepin-desktop-environment-on-fedora/
 
+```
+cat > ks-fedora.cfg << 'EOF'
+ignoredisk --only-use=sda
+lang en_US
+keyboard us
+timezone Asia/Shanghai --isUtc
+rootpw $1$PTAR1+6M$DIYrE6zTEo5dWWzAp9as61 --iscrypted
+#platform x86, AMD64, or Intel EM64T
+reboot
+text
+cdrom
+bootloader --location=mbr --append="rhgb quiet crashkernel=auto"
+zerombr
+clearpart --all --initlabel
+autopart
+network --device=ens3 --hostname=fedora.rhcnsa.org --bootproto=static --ip=192.168.122.121 --netmask=255.255.255.0 --gateway=192.168.122.1 --nameserver=192.168.122.1
+auth --passalgo=sha512 --useshadow
+selinux --enforcing
+firewall --enabled --ssh
+skipx
+firstboot --disable
+%packages
+@^minimal-environment
+kexec-tools
+%end
+EOF
+```
+
 # Ansible Tower 3.8.x
 ```
 # 测试一下 Ansible Tower 3.8.x

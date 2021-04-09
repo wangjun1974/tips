@@ -15362,12 +15362,10 @@ oc get secret awx-admin-password -o=jsonpath='{.data.password}'  | base64 --deco
 
 # 设置本地语言
 ```
-cat > /etc/yum.repos.d/local.repo << EOF
-[dvd]
-name=dvd
-baseurl=file:///mnt
-enabled=1
-gpgcheck=1
-gpgkey=file:///mnt/RPM-GPG-KEY-redhat-release
-EOF
+# 设置语言为中文
+localectl set-locale LANG=zh_CN.UTF-8
+
+# 设置语言环境变量
+export LC_ALL=zh_CN.UTF-8
+export LANG=zh_CN.UTF-8
 ```

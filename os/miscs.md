@@ -15596,7 +15596,15 @@ oc get secret awx-admin-password -o=jsonpath='{.data.password}'  | base64 --deco
 # https://docs.ansible.com/ansible/latest/user_guide/vault.html
 # https://www.digitalocean.com/community/tutorials/how-to-use-vault-to-protect-sensitive-ansible-data-on-ubuntu-16-04
 # https://docs.ansible.com/ansible/2.5/user_guide/playbooks_vault.html
+# https://sensu.github.io/sensu-go-ansible/installation.html#installing-from-automation-hub
+# https://cloud.redhat.com/ansible/automation-hub/token
 ansible-playbook --ask-vault-pass site.yml
+
+# install python3-requests-oauthlib 
+yum install -y python3-requests-oauthlib 
+
+# install collection community-okd-1.1.2.tar.gz
+ansible-galaxy collection install /root/community-okd-1.1.2.tar.gz -p /root/.ansible/collections/
 ```
 
 

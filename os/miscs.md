@@ -13808,6 +13808,7 @@ virsh -r -c 'qemu+tcp://$IP/system' list --all
 
 # 安装 Red Hat Ceph 5.x
 https://docs.ceph.com/en/latest/cephadm/install/#bootstrap-a-new-cluster<br>
+https://shopnpaz.medium.com/deploy-a-ceph-cluster-within-minutes-using-cephadm-53e3b915416f<br>
 ```
 # 安装 Red Hat Ceph Storage 5.x 的步骤
 # 1) make sure that lvm2, python3, podman are installed or updated
@@ -14706,9 +14707,11 @@ pool 7 'default.rgw.meta' replicated size 3 min_size 2 crush_rule 0 object_hash 
 ```
 
 # 安装 Deepin Desktop Environment on Fedora 30/31
-https://computingforgeeks.com/how-to-install-deepin-desktop-environment-on-fedora/
-
+https://computingforgeeks.com/how-to-install-deepin-desktop-environment-on-fedora/<br>
+https://alt.fedoraproject.org/cloud/<br>
 ```
+# 这个 ks 是给使用 iso 安装虚拟机时使用的
+# 我想先尝试一下使用 qcow2 磁盘的方式
 cat > ks-fedora.cfg << 'EOF'
 ignoredisk --only-use=sda
 lang en_US
@@ -14734,6 +14737,61 @@ firstboot --disable
 kexec-tools
 %end
 EOF
+
+# 创建虚拟机磁盘
+qemu-img create -f qcow2 -o preallocation=metadata /data/kvm/jwang-fedora33-01.qcow2 10G 
+
+# 拷贝镜像并且扩展镜像
+virt-resize --expand /dev/sda1 ./Fedora-Cloud-Base-33-1.2.x86_64.qcow2 /data/kvm/jwang-fedora33-01.qcow2
+
+# 设置口令，卸载 cloud-init，重新设置 selinux label
+virt-customize -a /data/kvm/jwang-fedora33-01.qcow2 --root-password password:redhat --uninstall cloud-init --selinux-relabel
+
+# 生成网卡配置 ifcfg-eth0 并上传网卡配置
+cat > /tmp/ifcfg-eth0 << 'EOF'
+DEVICE="eth0"
+NETBOOT="yes"
+TYPE="Ethernet"
+BOOTPROTO="none"
+NAME="eth0"
+ONBOOT="yes"
+IPADDR="192.168.122.151"
+NETMASK="255.255.255.0"
+GATEWAY="192.168.122.1"
+DNS1="192.168.122.1"
+EOF
+
+virt-customize -a /data/kvm/jwang-fedora33-01.qcow2 --upload /tmp/ifcfg-eth0:/etc/sysconfig/network-scripts
+
+# 设置允许 root Login
+# 参考：https://gist.github.com/remoteur/2038c2d45b064524f1e8
+# 参考：https://rwmj.wordpress.com/2010/09/10/copy-incopy-out/
+virt-customize -a /data/kvm/jwang-fedora33-01.qcow2 --run-command 'sed -i s/^#PermitRootLogin.*/PermitRootLogin\ yes/ /etc/ssh/sshd_config' 
+
+# 重新做一下 selinux label 
+virt-customize -a /data/kvm/jwang-fedora33-01.qcow2 --selinux-relabel
+
+# 镜像定制是在 rhel8 下进行的，拷贝镜像到 rhel7 主机
+# 在服务器间拷贝 sparse 文件
+rsync --ignore-existing --sparse -v --stats --progress /data/kvm/jwang-fedora33-01.qcow2 10.66.208.240:/data/kvm 
+
+# 定义虚拟机
+virt-install --debug --ram 8192 --vcpus 2 --os-variant rhel7 \
+  --disk path=/data/kvm/jwang-fedora33-01.qcow2,device=disk,bus=virtio,format=qcow2 \
+  --noautoconsole --vnc --network network:default \
+  --name jwang-fedora33-01 \
+  --boot menu=on \
+  --dry-run --print-xml > /tmp/jwang-fedora33-01.xml
+
+virsh define --file /tmp/jwang-fedora33-01.xml
+
+# 设置主机名
+hostnamectl set-hostname jwang-fedora33-01
+
+# 安装 Deepin Desktop
+dnf group install "Deepin Desktop"
+
+
 ```
 
 # Ansible Tower 3.8.x

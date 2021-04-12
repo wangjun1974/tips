@@ -15591,6 +15591,12 @@ oc get secret awx-admin-password -o=jsonpath='{.data.password}'  | base64 --deco
 
 # OpenShift - Ansible Content Collection
 # https://www.ansible.com/blog/introducing-the-ansible-content-collection-for-red-hat-openshift
+
+# Encrypting content with Ansible Vault
+# https://docs.ansible.com/ansible/latest/user_guide/vault.html
+# https://www.digitalocean.com/community/tutorials/how-to-use-vault-to-protect-sensitive-ansible-data-on-ubuntu-16-04
+# https://docs.ansible.com/ansible/2.5/user_guide/playbooks_vault.html
+ansible-playbook --ask-vault-pass site.yml
 ```
 
 

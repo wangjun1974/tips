@@ -14789,9 +14789,22 @@ virsh define --file /tmp/jwang-fedora33-01.xml
 hostnamectl set-hostname jwang-fedora33-01
 
 # 安装 Deepin Desktop
+dnf group install "Fedora Workstation"
 dnf group install "Deepin Desktop"
 
+# 安装切换桌面环境的工具
+# 参见：https://docs.fedoraproject.org/en-US/quick-docs/switching-desktop-environments/
+dnf install switchdesk switchdesk-gui
 
+# 设置默认进入图形界面
+# systemctl set-default graphical.target
+# systemctl isolate graphical.target
+
+# 添加用户，设置图形登录
+useradd jwang
+passwd jwang
+systemctl disable gdm.service 
+systemctl enable lightdm.service
 ```
 
 # Ansible Tower 3.8.x

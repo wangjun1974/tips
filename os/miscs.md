@@ -15605,8 +15605,14 @@ yum install -y python3-requests-oauthlib
 
 # install collection community-okd-1.1.2.tar.gz
 ansible-galaxy collection install /root/community-okd-1.1.2.tar.gz -p /root/.ansible/collections/
-```
 
+# install openshift python client
+# https://github.com/openshift/openshift-restclient-python/#openshift-python-client
+git clone https://github.com/openshift/openshift-restclient-python.git
+cd openshift-restclient-python
+python setup.py install
+
+```
 
 # 设置本地语言
 ```

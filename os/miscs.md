@@ -15585,7 +15585,12 @@ awx    awx-user20.apps.ocp1.rhcnsa.com          awx-service   http   edge/Redire
 # 获取 awx admin 口令
 oc get secret awx-admin-password -o=jsonpath='{.data.password}'  | base64 --decode
 
+# 其他资源
+# 如何在 minishift 里运行 awx https://opensource.com/article/18/10/how-run-awx-minishift
+# https://www.ansible.com/resources/videos/ansible-openshift-application-deployment-into-container-platform
 
+# OpenShift - Ansible Content Collection
+# https://www.ansible.com/blog/introducing-the-ansible-content-collection-for-red-hat-openshift
 ```
 
 

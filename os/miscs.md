@@ -15595,6 +15595,8 @@ oc get secret awx-admin-password -o=jsonpath='{.data.password}'  | base64 --deco
 # Encrypting content with Ansible Vault
 # https://docs.ansible.com/ansible/latest/user_guide/vault.html
 # https://www.digitalocean.com/community/tutorials/how-to-use-vault-to-protect-sensitive-ansible-data-on-ubuntu-16-04
+ansible-vault create vars/openshift_envs.yml
+
 # https://docs.ansible.com/ansible/2.5/user_guide/playbooks_vault.html
 # https://sensu.github.io/sensu-go-ansible/installation.html#installing-from-automation-hub
 # https://cloud.redhat.com/ansible/automation-hub/token
@@ -15606,11 +15608,12 @@ yum install -y python3-requests-oauthlib
 # install collection community-okd-1.1.2.tar.gz
 ansible-galaxy collection install /root/community-okd-1.1.2.tar.gz -p /root/.ansible/collections/
 
-# install openshift python client
+# install openshift python rest client
 # https://github.com/openshift/openshift-restclient-python/#openshift-python-client
-git clone https://github.com/openshift/openshift-restclient-python.git
-cd openshift-restclient-python
-python setup.py install
+pip3 install openshift
+
+# 如何设置 git push 不提示 username 和 password
+# https://stackoverflow.com/questions/8588768/how-do-i-avoid-the-specification-of-the-username-and-password-at-every-git-push
 
 ```
 

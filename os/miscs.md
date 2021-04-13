@@ -15614,7 +15614,8 @@ pip3 install openshift
 
 # 如何设置 git push 不提示 username 和 password
 # https://stackoverflow.com/questions/8588768/how-do-i-avoid-the-specification-of-the-username-and-password-at-every-git-push
-
+# git config credential.helper store
+# git push https://github.com/repo.git
 ```
 
 # 设置本地语言

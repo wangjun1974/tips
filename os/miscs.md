@@ -15596,11 +15596,10 @@ oc get secret awx-admin-password -o=jsonpath='{.data.password}'  | base64 --deco
 # https://docs.ansible.com/ansible/latest/user_guide/vault.html
 # https://www.digitalocean.com/community/tutorials/how-to-use-vault-to-protect-sensitive-ansible-data-on-ubuntu-16-04
 ansible-vault create vars/openshift_envs.yml
-
-# https://docs.ansible.com/ansible/2.5/user_guide/playbooks_vault.html
-# https://sensu.github.io/sensu-go-ansible/installation.html#installing-from-automation-hub
-# https://cloud.redhat.com/ansible/automation-hub/token
-ansible-playbook --ask-vault-pass site.yml
+...
+openshift_user_name: user20
+openshift_user_password: <password>
+openshift_api_url: https://api.<apps.example.com>:6443
 
 # install python3-requests-oauthlib 
 yum install -y python3-requests-oauthlib 
@@ -15611,6 +15610,50 @@ ansible-galaxy collection install /root/community-okd-1.1.2.tar.gz -p /root/.ans
 # install openshift python rest client
 # https://github.com/openshift/openshift-restclient-python/#openshift-python-client
 pip3 install openshift
+
+# 生成本地运行的 playbook
+cat > ocploginandout.yml << 'EOF'
+- hosts: localhost
+  tasks:
+  - block:
+    # It's good practice to store login credentials in a secure vault and not
+    # directly in playbooks.
+    - include_vars: openshift_envs.yml
+      no_log: true
+
+    - name: Log in (obtain access token)
+      community.okd.openshift_auth:
+        username: "{{ openshift_user_name }}"
+        password: "{{ openshift_user_password }}"
+        host: "{{ openshift_api_url }}"
+        validate_certs: no
+      register: openshift_auth_results
+
+    # Previous task provides the token/api_key, while all other parameters
+    # are taken from module_defaults
+    - name: Get a list of all pods from any namespace
+      kubernetes.core.k8s_info:
+        api_key: "{{ openshift_auth_results.openshift_auth.api_key }}"
+        host: "{{ openshift_api_url }}"
+        kind: Pod
+        validate_certs: no
+      register: pod_list
+
+    always:
+    - name: If login succeeded, try to log out (revoke access token)
+      when: openshift_auth_results.openshift_auth.api_key is defined
+      community.okd.openshift_auth:
+        state: absent
+        api_key: "{{ openshift_auth_results.openshift_auth.api_key }}"
+        host: "{{ openshift_api_url }}"
+        validate_certs: no
+EOF
+
+# 执行 playbook
+# https://docs.ansible.com/ansible/2.5/user_guide/playbooks_vault.html
+# https://sensu.github.io/sensu-go-ansible/installation.html#installing-from-automation-hub
+# https://cloud.redhat.com/ansible/automation-hub/token
+ansible-playbook --ask-vault-pass ocploginandout.yml
 
 # 如何设置 git push 不提示 username 和 password
 # https://stackoverflow.com/questions/8588768/how-do-i-avoid-the-specification-of-the-username-and-password-at-every-git-push

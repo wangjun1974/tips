@@ -15614,6 +15614,15 @@ ansible-galaxy collection install /root/community-okd-1.1.2.tar.gz -p /root/.ans
 # https://github.com/openshift/openshift-restclient-python/#openshift-python-client
 pip3 install openshift
 
+# 生成 collections/requirements.yml 文件
+mkdir -p collections
+cat > collections/requirements.yml << EOF
+---
+collections:
+# With just the collection name
+- community.okd
+EOF
+
 # 生成本地运行的 playbook
 cat > ocploginandout.yml << 'EOF'
 - hosts: localhost

@@ -15595,6 +15595,9 @@ oc get secret awx-admin-password -o=jsonpath='{.data.password}'  | base64 --deco
 # Encrypting content with Ansible Vault
 # https://docs.ansible.com/ansible/latest/user_guide/vault.html
 # https://www.digitalocean.com/community/tutorials/how-to-use-vault-to-protect-sensitive-ansible-data-on-ubuntu-16-04
+mkdir ansibledemo
+cd ansibledemo
+mkdir -p vars
 ansible-vault create vars/openshift_envs.yml
 ...
 openshift_user_name: user20

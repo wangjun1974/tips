@@ -15698,7 +15698,64 @@ ansible-playbook --ask-vault-pass ocploginandout.yml
 # 安装 ansible collections redhat.rhv
 # 参考：https://access.redhat.com/documentation/en-us/red_hat_virtualization/4.4/html/administration_guide/installing_ansible_collection_from_automation_hub
 
+# 切换到 branch rhv 上
+git checkout 'rhv'
+# 测试一下 rhv 
+cat > collections/requirements.yml << EOF
+---
+collections:
+# With just the collection name
+- redhat.rhv
+EOF
 
+# 测试一下
+# 生成 vars/engine_vars.yml
+# 用 ansible-vault 生成 vars/engine_passwords.yml
+cat > testrhv.yml << 'EOF'
+- name: RHV infrastructure
+  hosts: localhost
+  gather_facts: false
+
+  vars_files:
+   # Contains variables to connect to the Manager
+   - engine_vars.yml
+   # Contains encrypted engine_password variable using ansible-vault
+   - engine_passwords.yml
+
+  pre_tasks:
+   # The use of redhat.rhv before ovirt_auth is to check if oVirt Ansible Collection is correctly loaded
+   - name: Login to RHV
+     redhat.rhv.ovirt_auth:
+       hostname: "{{ engine_fqdn }}"
+       username: "{{ engine_user }}"
+       password: "{{ engine_password }}"
+       ca_file: "{{ engine_cafile | default(omit) }}"
+       insecure: "{{ engine_insecure | default(true) }}"
+     tags:
+       - always
+
+ vars:
+   data_center_name: mydatacenter
+   data_center_description: mydatacenter
+   data_center_local: false
+   compatibility_version: 4.3
+
+ roles:
+   - infra
+ collections:
+   - redhat.rhv
+ post_tasks:
+   - name: Logout from RHV
+     ovirt_auth:
+       state: absent
+       ovirt_auth: "{{ ovirt_auth }}"
+     tags:
+       - always
+EOF
+
+# 其他链接
+# https://www.redhat.com/files/summit/session-assets/2018/Automating-day-two-Red-Hat-OpenShift-operations-with-Ansible-Distribution.pdf
+# https://loginlocator.com/ansible-oc/
 ```
 
 # 设置本地语言

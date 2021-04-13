@@ -15592,6 +15592,17 @@ oc get secret awx-admin-password -o=jsonpath='{.data.password}'  | base64 --deco
 # OpenShift - Ansible Content Collection
 # https://www.ansible.com/blog/introducing-the-ansible-content-collection-for-red-hat-openshift
 
+# 添加 automation hub 到 /etc/ansible/ansible.cfg
+cat >> /etc/ansible/ansible.cfg << EOF
+[galaxy]
+server_list = automation_hub
+
+[galaxy_server.automation_hub]
+url=https://cloud.redhat.com/api/automation-hub/
+auth_url=https://sso.redhat.com/auth/realms/redhat-external/protocol/openid-connect/token
+token=<token from c.rh.c>
+EOF
+
 # Encrypting content with Ansible Vault
 # https://docs.ansible.com/ansible/latest/user_guide/vault.html
 # https://www.digitalocean.com/community/tutorials/how-to-use-vault-to-protect-sensitive-ansible-data-on-ubuntu-16-04

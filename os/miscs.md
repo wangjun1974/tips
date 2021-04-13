@@ -15760,6 +15760,7 @@ EOF
 # https://www.densify.com/articles/scaling-openshift-container-resources-ansible
 # https://hackernoon.com/how-to-create-a-cd-pipeline-with-kubernetes-ansible-and-jenkins-i6c03yp2
 # https://www.openshift.com/blog/ansible-and-openshift-connecting-for-success
+# https://github.com/mtekkie/Ansible-OpenShift-Module
 ```
 
 # 设置本地语言

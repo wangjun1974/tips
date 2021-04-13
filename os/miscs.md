@@ -15772,3 +15772,6 @@ localectl set-locale LANG=zh_CN.UTF-8
 export LC_ALL=zh_CN.UTF-8
 export LANG=zh_CN.UTF-8
 ```
+
+# 多 active mds cephfs
+https://docs.ceph.com/en/latest/cephfs/multimds/

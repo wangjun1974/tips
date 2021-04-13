@@ -15603,6 +15603,10 @@ auth_url=https://sso.redhat.com/auth/realms/redhat-external/protocol/openid-conn
 token=<token from c.rh.c>
 EOF
 
+# 上面这个步骤并不工作
+# 参加：https://access.redhat.com/solutions/5642561
+# 需要在组织里添加 Ansible Galaxy Creds
+
 # Encrypting content with Ansible Vault
 # https://docs.ansible.com/ansible/latest/user_guide/vault.html
 # https://www.digitalocean.com/community/tutorials/how-to-use-vault-to-protect-sensitive-ansible-data-on-ubuntu-16-04

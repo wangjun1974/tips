@@ -15638,6 +15638,14 @@ collections:
 - community.okd
 EOF
 
+# 使用 Automation Hub 时
+cat > collections/requirements.yml << EOF
+---
+collections:
+# With just the collection name
+- redhat.openshift
+EOF
+
 # 生成本地运行的 playbook
 cat > ocploginandout.yml << 'EOF'
 - hosts: localhost
@@ -15686,6 +15694,11 @@ ansible-playbook --ask-vault-pass ocploginandout.yml
 # https://stackoverflow.com/questions/8588768/how-do-i-avoid-the-specification-of-the-username-and-password-at-every-git-push
 # git config credential.helper store
 # git push https://github.com/repo.git
+
+# 安装 ansible collections redhat.rhv
+# 参考：https://access.redhat.com/documentation/en-us/red_hat_virtualization/4.4/html/administration_guide/installing_ansible_collection_from_automation_hub
+
+
 ```
 
 # 设置本地语言

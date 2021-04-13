@@ -15756,6 +15756,10 @@ EOF
 # 其他链接
 # https://www.redhat.com/files/summit/session-assets/2018/Automating-day-two-Red-Hat-OpenShift-operations-with-Ansible-Distribution.pdf
 # https://loginlocator.com/ansible-oc/
+# https://github.com/rhtconsulting/ansible-role-oc_tools
+# https://www.densify.com/articles/scaling-openshift-container-resources-ansible
+# https://hackernoon.com/how-to-create-a-cd-pipeline-with-kubernetes-ansible-and-jenkins-i6c03yp2
+# https://www.openshift.com/blog/ansible-and-openshift-connecting-for-success
 ```
 
 # 设置本地语言

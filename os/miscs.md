@@ -14714,6 +14714,49 @@ exported keyring for mgr.jwang-ceph5-01.fknlpv
 
 # ceph mgr
 # 参考：https://docs.ceph.com/en/latest/mgr/administrator/
+
+# 查看 mgr module 
+ceph mgr module ls
+
+# rhcs 5.x 启用的 always_on_modules, enabled_modules 和 disabled_modules 
+    "always_on_modules": [
+        "balancer",
+        "crash",
+        "devicehealth",
+        "orchestrator",
+        "pg_autoscaler",
+        "progress",
+        "rbd_support",
+        "status",
+        "telemetry",
+        "volumes"
+    ],
+    "enabled_modules": [
+        "cephadm",
+        "dashboard",
+        "iostat",
+        "prometheus",
+        "restful"
+    ],
+    "disabled_modules": [
+            "name": "alerts",
+            "name": "diskprediction_local",
+            "name": "influx",
+            "name": "insights",
+            "name": "k8sevents",
+            "name": "localpool",
+            "name": "mds_autoscaler",
+            "name": "mirroring",
+            "name": "osd_support",
+            "name": "rook",
+            "name": "selftest",
+            "name": "snap_schedule",
+            "name": "stats",
+            "name": "telegraf",
+            "name": "test_orchestrator",
+            "name": "zabbix",
+
+
 ```
 
 # Ansible 相关内容

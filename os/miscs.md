@@ -14792,7 +14792,24 @@ ceph orch daemon add osd jwang-ceph5-03:/dev/vdd
  
 # 这个是一个警告信息
 # WARNING: The same type, major and minor should not be used for multiple devices.
- 
+
+# 替换 osd 
+# 计划删除并替换 osd 0
+ceph orch osd rm 0 --replace
+Scheduled OSD(s) for removal
+
+# 清理 osd 0 对应的磁盘
+ceph orch device zap jwang-ceph5-01 /dev/vdb --force
+
+# 查看 osd rm 状态
+ceph orch osd rm status
+
+# 重新添加 osd 0
+# 尝试使用 by-path device 但是失败了
+ceph orch daemon add osd jwang-ceph5-01:/dev/disk/by-path/pci-0000:00:07.0
+# 使用非 by-path device 这条命令可以成功执行
+ceph orch daemon add osd jwang-ceph5-01:/dev/vdb
+
 ```
 
 # Ansible 相关内容

@@ -14697,6 +14697,23 @@ pool 5 'default.rgw.log' replicated size 3 min_size 2 crush_rule 0 object_hash r
 pool 6 'default.rgw.control' replicated size 3 min_size 2 crush_rule 0 object_hash rjenkins pg_num 32 pgp_num 32 autoscale_mode on last_change 533 flags hashpspool stripe_width 0 application rgw
 pool 7 'default.rgw.meta' replicated size 3 min_size 2 crush_rule 0 object_hash rjenkins pg_num 128 pgp_num 128 autoscale_mode on last_change 541 lfor 0/0/539 flags hashpspool stripe_width 0 pg_autoscale_bias 4 pg_num_min 8 application rgw
 
+# 查看认证信息
+# 参见：https://documentation.suse.com/ses/6/html/ses-all/cha-storage-cephx.html
+ceph auth list
+
+ceph auth get mgr.jwang-ceph5-01.fknlpv 
+Inferring fsid aa260f08-9766-11eb-aef4-525400412fe4
+Inferring config /var/lib/ceph/aa260f08-9766-11eb-aef4-525400412fe4/mon.jwang-ceph5-01/config
+Using recent ceph image registry.redhat.io/rhceph-alpha/rhceph-5-rhel8@sha256:9aaea414e2c263216f3cdcb7a096f57c3adf6125ec9f4b0f5f65fa8c43987155
+[mgr.jwang-ceph5-01.fknlpv]
+        key = AQCvS21gT2KmNhAAfS+m7LolGRH8AoEfG/PKrg==
+        caps mds = "allow *"
+        caps mon = "profile mgr"
+        caps osd = "allow *"
+exported keyring for mgr.jwang-ceph5-01.fknlpv
+
+# ceph mgr
+# 参考：https://docs.ceph.com/en/latest/mgr/administrator/
 ```
 
 # Ansible 相关内容

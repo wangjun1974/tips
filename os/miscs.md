@@ -14763,7 +14763,21 @@ ceph mgr services
     "prometheus": "http://jwang-ceph5-01:9283/"
 }
 
+# ceph mgr orchestrator module
+# 参考：https://docs.ceph.com/en/latest/mgr/orchestrator/
+ceph orch status
+Backend: cephadm
+Available: Yes
+Paused: No
 
+ceph orch status --detail
+Backend: cephadm
+Available: Yes
+Paused: No
+Host Parallelism: 10
+
+# ceph mgr orchestrator module backend 当前支持特性列表
+# https://docs.ceph.com/en/latest/mgr/orchestrator/#current-implementation-status
 ```
 
 # Ansible 相关内容

@@ -14756,6 +14756,13 @@ ceph mgr module ls
             "name": "test_orchestrator",
             "name": "zabbix",
 
+# 查看 ceph mgr services endpoint
+ceph mgr services
+{
+    "dashboard": "https://jwang-ceph5-01:8443/",
+    "prometheus": "http://jwang-ceph5-01:9283/"
+}
+
 
 ```
 

@@ -14554,6 +14554,23 @@ ceph orch host ls
 ceph fs volume create cephfs
 ceph orch apply mds cephfs --placement="3 jwang-ceph5-01 jwang-ceph5-02 jwang-ceph5-03"
 
+# 查看 ceph fs 状态
+ceph fs status 
+Inferring fsid aa260f08-9766-11eb-aef4-525400412fe4
+Inferring config /var/lib/ceph/aa260f08-9766-11eb-aef4-525400412fe4/mon.jwang-ceph5-01/config
+Using recent ceph image registry.redhat.io/rhceph-alpha/rhceph-5-rhel8@sha256:9aaea414e2c263216f3cdcb7a096f57c3adf6125ec9f4b0f5f65fa8c43987155
+cephfs - 0 clients
+======
+RANK  STATE               MDS                  ACTIVITY     DNS    INOS   DIRS   CAPS  
+ 0    active  cephfs.jwang-ceph5-01.ewdwyd  Reqs:    0 /s    10     13     12      0   
+       POOL           TYPE     USED  AVAIL  
+cephfs.cephfs.meta  metadata  96.0k  18.0G  
+cephfs.cephfs.data    data       0   18.0G  
+        STANDBY MDS           
+cephfs.jwang-ceph5-02.sjnbbh  
+cephfs.jwang-ceph5-03.lixhgg  
+MDS version: ceph version 16.1.0-486.el8cp (f9701a56b7b8182352532afba8db2bf394c8585a) pacific (rc)
+
 # 删除错误部署的 mds 
 # https://tracker.ceph.com/issues/46082
 ceph orch ps | grep mds 
@@ -14679,6 +14696,7 @@ pool 4 '.rgw.root' replicated size 3 min_size 2 crush_rule 0 object_hash rjenkin
 pool 5 'default.rgw.log' replicated size 3 min_size 2 crush_rule 0 object_hash rjenkins pg_num 32 pgp_num 32 autoscale_mode on last_change 531 flags hashpspool stripe_width 0 application rgw
 pool 6 'default.rgw.control' replicated size 3 min_size 2 crush_rule 0 object_hash rjenkins pg_num 32 pgp_num 32 autoscale_mode on last_change 533 flags hashpspool stripe_width 0 application rgw
 pool 7 'default.rgw.meta' replicated size 3 min_size 2 crush_rule 0 object_hash rjenkins pg_num 128 pgp_num 128 autoscale_mode on last_change 541 lfor 0/0/539 flags hashpspool stripe_width 0 pg_autoscale_bias 4 pg_num_min 8 application rgw
+
 ```
 
 # Ansible 相关内容
@@ -15774,4 +15792,5 @@ export LANG=zh_CN.UTF-8
 ```
 
 # 多 active mds cephfs
-https://docs.ceph.com/en/latest/cephfs/multimds/
+https://docs.ceph.com/en/latest/cephfs/multimds/<br>
+https://blog.csdn.net/weixin_31098573/article/details/112698455<br>

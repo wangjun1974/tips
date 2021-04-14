@@ -14806,9 +14806,25 @@ ceph orch osd rm status
 
 # 重新添加 osd 0
 # 尝试使用 by-path device 但是失败了
+# 看起来 ceph orch daemon add osd 不支持 by-path 设备名称
 ceph orch daemon add osd jwang-ceph5-01:/dev/disk/by-path/pci-0000:00:07.0
 # 使用非 by-path device 这条命令可以成功执行
 ceph orch daemon add osd jwang-ceph5-01:/dev/vdb
+# 磁盘替换回去了
+ID  CLASS  WEIGHT   TYPE NAME                STATUS  REWEIGHT  PRI-AFF
+-1         0.08817  root default
+-3         0.02939      host jwang-ceph5-01 
+ 0    hdd  0.00980          osd.0                up   1.00000  1.00000
+ 3    hdd  0.00980          osd.3                up   1.00000  1.00000
+ 6    hdd  0.00980          osd.6                up   1.00000  1.00000
+-5         0.02939      host jwang-ceph5-02                           
+ 1    hdd  0.00980          osd.1                up   1.00000  1.00000
+ 4    hdd  0.00980          osd.4                up   1.00000  1.00000
+ 7    hdd  0.00980          osd.7                up   1.00000  1.00000
+-7         0.02939      host jwang-ceph5-03                           
+ 2    hdd  0.00980          osd.2                up   1.00000  1.00000
+ 5    hdd  0.00980          osd.5                up   1.00000  1.00000
+ 8    hdd  0.00980          osd.8                up   1.00000  1.00000
 
 ```
 

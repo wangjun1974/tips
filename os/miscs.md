@@ -14778,6 +14778,21 @@ Host Parallelism: 10
 
 # ceph mgr orchestrator module backend 当前支持特性列表
 # https://docs.ceph.com/en/latest/mgr/orchestrator/#current-implementation-status
+
+# 再次添加一些磁盘
+ceph orch daemon add osd jwang-ceph5-01:/dev/vdd
+ceph orch daemon add osd jwang-ceph5-02:/dev/vdd
+ceph orch daemon add osd jwang-ceph5-03:/dev/vdd
+
+# 在虚拟机里遇到这样的警告
+# ceph status 
+    health: HEALTH_WARN  
+            Slow OSD heartbeats on back (longest 1759.731ms)
+            Slow OSD heartbeats on front (longest 1371.153ms)
+ 
+# 这个是一个警告信息
+# WARNING: The same type, major and minor should not be used for multiple devices.
+ 
 ```
 
 # Ansible 相关内容

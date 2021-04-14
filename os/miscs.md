@@ -15779,6 +15779,7 @@ EOF
 # https://hackernoon.com/how-to-create-a-cd-pipeline-with-kubernetes-ansible-and-jenkins-i6c03yp2
 # https://www.openshift.com/blog/ansible-and-openshift-connecting-for-success
 # https://github.com/mtekkie/Ansible-OpenShift-Module
+
 ```
 
 # 设置本地语言
@@ -15794,3 +15795,6 @@ export LANG=zh_CN.UTF-8
 # 多 active mds cephfs
 https://docs.ceph.com/en/latest/cephfs/multimds/<br>
 https://blog.csdn.net/weixin_31098573/article/details/112698455<br>
+
+# DevSecOps 相关的资料
+https://dodcio.defense.gov/Portals/0/Documents/DoD%20Enterprise%20DevSecOps%20Reference%20Design%20v1.0_Public%20Release.pdf<br>

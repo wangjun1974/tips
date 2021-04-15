@@ -15932,3 +15932,15 @@ https://blog.csdn.net/weixin_31098573/article/details/112698455<br>
 
 # DevSecOps 相关的资料
 https://dodcio.defense.gov/Portals/0/Documents/DoD%20Enterprise%20DevSecOps%20Reference%20Design%20v1.0_Public%20Release.pdf<br>
+
+# RHEL7 firefox and html5
+```
+# 启用 epel 软件仓库
+yum install https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+
+# 安装 rpmfusion 
+yum localinstall --nogpgcheck https://download1.rpmfusion.org/free/el/rpmfusion-free-release-7.noarch.rpm https://download1.rpmfusion.org/nonfree/el/rpmfusion-nonfree-release-7.noarch.rpm
+
+# 安装 ffmpeg 编解码
+yum install ffmpeg
+```

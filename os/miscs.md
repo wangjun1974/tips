@@ -15914,6 +15914,10 @@ EOF
 # 在离线环境下，如何在单个 ansible controller 上准备 ansible collection
 # 参考：https://www.redhat.com/sysadmin/install-ansible-disconnected-node
 
+# ansible plugins
+# 参考：https://docs.ansible.com/ansible/latest/plugins/plugins.html
+# 值得仔细阅读
+
 ```
 
 # 设置本地语言

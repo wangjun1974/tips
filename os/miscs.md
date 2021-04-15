@@ -14808,6 +14808,8 @@ ceph orch osd rm status
 # 尝试使用 by-path device 但是失败了
 # 看起来 ceph orch daemon add osd 不支持 by-path 设备名称
 ceph orch daemon add osd jwang-ceph5-01:/dev/disk/by-path/pci-0000:00:07.0
+
+
 # 使用非 by-path device 这条命令可以成功执行
 ceph orch daemon add osd jwang-ceph5-01:/dev/vdb
 # 磁盘替换回去了
@@ -15908,6 +15910,9 @@ EOF
 # https://hackernoon.com/how-to-create-a-cd-pipeline-with-kubernetes-ansible-and-jenkins-i6c03yp2
 # https://www.openshift.com/blog/ansible-and-openshift-connecting-for-success
 # https://github.com/mtekkie/Ansible-OpenShift-Module
+
+# 在离线环境下，如何在单个 ansible controller 上准备 ansible collection
+# 参考：https://www.redhat.com/sysadmin/install-ansible-disconnected-node
 
 ```
 

@@ -15918,6 +15918,18 @@ EOF
 # 参考：https://docs.ansible.com/ansible/latest/plugins/plugins.html
 # 值得仔细阅读
 
+# What is Ansible Plugins and How to Extend Ansible Through Plugins?
+# https://www.devopsschool.com/blog/what-is-ansible-plugins-and-how-to-extend-ansible-through-plugins/
+
+# 假设某个执行结果为
+"metadata": {
+   "labels": {
+       "network.openshift.io/policy-group": "ingress"
+   }
+}
+# 如果希望调试打印变量，在 ansible 下的做法是用 metadata.['labels'].['network.openshift.io/policy-group'] 作为变量
+debug:
+   var: metadata.['labels'].['network.openshift.io/policy-group']
 ```
 
 # 设置本地语言

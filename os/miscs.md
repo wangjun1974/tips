@@ -15930,6 +15930,13 @@ EOF
 # 如果希望调试打印变量，在 ansible 下的做法是用 metadata.['labels'].['network.openshift.io/policy-group'] 作为变量
 debug:
    var: metadata.['labels'].['network.openshift.io/policy-group']
+
+# 在 Ansible Tower 里使用 inventory plugin
+# Using an Inventory Plugin from a Collection in Ansible Tower
+# https://www.ansible.com/blog/using-an-inventory-plugin-from-a-collection-in-ansible-tower
+
+# Ansible Tower 支持定制 Custom Credentials
+# https://www.ansible.com/blog/ansible-tower-feature-spotlight-custom-credentials
 ```
 
 # 设置本地语言

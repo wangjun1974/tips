@@ -15967,3 +15967,25 @@ yum localinstall --nogpgcheck https://download1.rpmfusion.org/free/el/rpmfusion-
 # 安装 ffmpeg 编解码
 yum install ffmpeg
 ```
+
+
+
+# MinIO 相关的内容
+https://docs.min.io/docs/deploy-minio-on-kubernetes.html<br>
+
+# 备份 OpenShift 资源
+https://www.openshift.com/blog/backup-openshift-resources-the-native-way<br>
+https://medium.com/ibm-garage/how-to-install-velero-in-an-openshift-environment-f7484fabbbe4<br>
+```
+# 克隆 Velero repository
+git clone https://github.com/vmware-tanzu/velero.git
+cd velero
+
+# 安装 MinIO
+# 部署前注意改一下 MINIO_SECRET_KEY
+oc apply -f examples/minio/00-minio-deployment.yaml
+
+# 创建 route
+oc project velero
+oc expose svc minio
+```

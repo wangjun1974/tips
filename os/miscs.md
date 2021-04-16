@@ -15988,4 +15988,46 @@ oc apply -f examples/minio/00-minio-deployment.yaml
 # 创建 route
 oc project velero
 oc expose svc minio
+
+# 根据 1.4. Installing OADP for Kubernetes resource collection
+# 安装 oadp operator 
+# https://red-hat-storage.github.io/ocs-training/training/ocs4/ocs4-multisite-replication.html#_installing_oadp_for_kubernetes_resource_collection
+
+# 参考：https://www.ibm.com/docs/en/spp/10.1.7?topic=support-installing-configuring-velero-by-using-oadp-operator
+# 也需要参考：https://blah.cloud/automation/using-velero-for-k8s-backup-and-restore-of-csi-volumes/
+# 创建 Velero CR
+apiVersion: konveyor.openshift.io/v1alpha1
+kind: Velero
+metadata:
+  name: oadp-velero
+  namespace: oadp-operator
+spec:
+  default_velero_plugins:
+    - aws
+    - openshift
+  enable_restic: false
+  olm_managed: true
+  backup_storage_locations:
+    - config:
+        profile: default
+        region: minio  # <-- Modify to bucket AWS region or region for your provider
+        s3ForcePathStyle: true
+        publicUrl: http://minio-velero.apps.ocp1.rhcnsa.com
+        s3Url: http://172.30.76.248
+      credentials_secret_ref:
+        name: cloud-credentials
+        namespace: oadp-operator
+      name: default
+      object_storage:
+        bucket: velero # Modify to your bucket name
+        prefix: velero
+      provider: aws
+  use_upstream_images: false
+  velero_resource_allocation:
+    limits:
+      cpu: '1'
+      memory: 512Mi
+    requests:
+      cpu: 500m
+      memory: 256Mi
 ```

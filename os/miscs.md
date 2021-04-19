@@ -16010,16 +16010,15 @@ spec:
   backup_storage_locations:
     - config:
         profile: default
-        region: minio  # <-- Modify to bucket AWS region or region for your provider
+        region: minio
         s3ForcePathStyle: true
         publicUrl: http://minio-velero.apps.ocp1.rhcnsa.com
-        s3Url: http://172.30.76.248
       credentials_secret_ref:
         name: cloud-credentials
         namespace: oadp-operator
       name: default
       object_storage:
-        bucket: velero # Modify to your bucket name
+        bucket: velero
         prefix: velero
       provider: aws
   use_upstream_images: false
@@ -16030,4 +16029,14 @@ spec:
     requests:
       cpu: 500m
       memory: 256Mi
+```
+
+# 安装 aws cli
+参见：https://linuxconfig.org/install-aws-cli-on-redhat-8 
+```
+# 安装 python3-pip
+dnf install -y python3-pip
+
+# 安装 awscli
+pip3 install awscli --upgrade --user
 ```

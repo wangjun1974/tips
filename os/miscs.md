@@ -16178,3 +16178,43 @@ aws --endpoint-url http://minio-velero.apps.ocp1.rhcnsa.com/ s3 rm s3://mybucket
 aws --endpoint-url http://minio-velero.apps.ocp1.rhcnsa.com/ s3 rb s3://mybucket
 aws --endpoint-url http://minio-velero.apps.ocp1.rhcnsa.com/ s3 ls
 ```
+
+测试一下 rados gateway 
+```
+# 查看用户
+radosgw-admin user list
+[]
+
+# 创建用户
+# uid: admin
+# display-name: admin
+# access-key: admin
+# secret-key: admin123
+radosgw-admin user create --uid='admin' --display-name='admin' --access-key='admin' --secret-key='admin123'
+
+# 查看用户信息
+radosgw-admin user info --uid='admin'
+
+# 配置一下 aws s3 client
+# 设置 access key
+# 设置 secret key
+aws configure 
+AWS Access Key ID: admin
+AWS Secret Access Key: admin123
+Default region name [us-east-1]: 
+Default output format [None]: 
+
+# 查看 bucket
+aws --endpoint=http://192.168.122.112 s3 ls
+
+# 创建 bucket
+aws --endpoint=http://192.168.122.112 s3 mb s3://mybucket
+
+# 查看 bucket
+aws --endpoint=http://192.168.122.112 s3 ls
+aws --endpoint=http://192.168.122.112 s3 ls s3://mybucket
+aws --endpoint=http://192.168.122.112 s3 cp /tmp/err s3://mybucket
+aws --endpoint=http://192.168.122.112 s3 ls s3://mybucket
+aws --endpoint=http://192.168.122.112 s3 cp s3://mybucket/err /tmp/err1
+
+```

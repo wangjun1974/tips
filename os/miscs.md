@@ -16085,6 +16085,8 @@ status:
 oc project default
 oc delete project my-database-app-jwang --wait=true
 oc get project my-database-app-jwang
+Error from server (NotFound): namespaces "my-database-app-jwang" not found
+
 
 # 创建恢复对象 Restore restore1
 cat > restore.yaml << EOF
@@ -16100,6 +16102,36 @@ spec:
 EOF
 
 oc apply -f ./restore.yaml
+
+# 查看恢复情况
+oc get restore -n oadp-operator -o yaml 
+...
+  spec:
+    backupName: backup1
+    excludedResources:
+    - nodes
+    - events
+    - events.events.k8s.io
+    - backups.velero.io
+    - restores.velero.io
+    - resticrepositories.velero.io
+    includedNamespaces:
+    - my-database-app-jwang
+  status:
+    completionTimestamp: "2021-04-19T06:44:04Z"
+    phase: Completed
+    startTimestamp: "2021-04-19T06:43:44Z"
+    warnings: 14
+kind: List
+metadata:
+  resourceVersion: ""
+  selfLink: ""
+
+# 查看 project 
+oc get project my-database-app-jwang
+
+# 访问网址
+oc -n my-database-app-jwang get route rails-pgsql-persistent -o jsonpath='http://{.spec.host}/articles'
 
 ```
 

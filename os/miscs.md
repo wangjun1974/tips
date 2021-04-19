@@ -16039,4 +16039,38 @@ dnf install -y python3-pip
 
 # 安装 awscli
 pip3 install awscli --upgrade --user
+
+# 配置 
+# 参见: https://docs.min.io/docs/aws-cli-with-minio.html
+aws configure
+
+# 设置 s3 signature version 为 s3v4（可选）
+# aws configure set default.s3.signature_version s3v4
+
+# 列出 bucket
+aws --endpoint-url http://minio-velero.apps.ocp1.rhcnsa.com/ s3 ls
+2021-04-15 22:32:05 velero
+
+# 列出 bucket 内容
+aws --endpoint-url http://minio-velero.apps.ocp1.rhcnsa.com/ s3 ls s3://velero
+
+# 上传对象到 bucket velero
+aws --endpoint-url http://minio-velero.apps.ocp1.rhcnsa.com/ s3 cp /tmp/err s3://velero
+
+# 创建 buckect mybucket
+aws --endpoint-url http://minio-velero.apps.ocp1.rhcnsa.com/ s3 mb s3://mybucket
+
+# 列出 buckect
+aws --endpoint-url http://minio-velero.apps.ocp1.rhcnsa.com/ s3 ls
+
+# 上传对象到 bucket mybucket
+aws --endpoint-url http://minio-velero.apps.ocp1.rhcnsa.com/ s3 cp /tmp/err s3://mybucket
+aws --endpoint-url http://minio-velero.apps.ocp1.rhcnsa.com/ s3 ls s3://mybucket
+
+# 删除对象 s3://mybucket/err
+aws --endpoint-url http://minio-velero.apps.ocp1.rhcnsa.com/ s3 rm s3://mybucket/err
+
+# 删除 bucket mybucket
+aws --endpoint-url http://minio-velero.apps.ocp1.rhcnsa.com/ s3 rb s3://mybucket
+aws --endpoint-url http://minio-velero.apps.ocp1.rhcnsa.com/ s3 ls
 ```

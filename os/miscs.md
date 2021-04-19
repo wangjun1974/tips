@@ -15995,6 +15995,7 @@ oc expose svc minio
 
 # 参考：https://www.ibm.com/docs/en/spp/10.1.7?topic=support-installing-configuring-velero-by-using-oadp-operator
 # 也需要参考：https://blah.cloud/automation/using-velero-for-k8s-backup-and-restore-of-csi-volumes/
+# 也需要参考：https://githubmemory.com/repo/konveyor/oadp-operator/issues
 # 创建 Velero CR
 apiVersion: konveyor.openshift.io/v1alpha1
 kind: Velero
@@ -16005,14 +16006,15 @@ spec:
   default_velero_plugins:
     - aws
     - openshift
-  enable_restic: false
+  enable_restic: true
   olm_managed: true
   backup_storage_locations:
     - config:
         profile: default
-        region: minio
-        s3ForcePathStyle: true
-        publicUrl: http://minio-velero.apps.ocp1.rhcnsa.com
+        region: aws
+        insecure_skip_tls_verify: true
+        s3_force_path_style: true
+        s3_url: http://minio-velero.apps.ocp1.rhcnsa.com
       credentials_secret_ref:
         name: cloud-credentials
         namespace: oadp-operator
@@ -16022,13 +16024,9 @@ spec:
         prefix: velero
       provider: aws
   use_upstream_images: false
-  velero_resource_allocation:
-    limits:
-      cpu: '1'
-      memory: 512Mi
-    requests:
-      cpu: 500m
-      memory: 256Mi
+
+# 如果配置 OADP + Noobaa 
+# 参考：https://github.com/konveyor/oadp-operator/blob/master/docs/noobaa/install_oadp_noobaa.md
 ```
 
 # 安装 aws cli

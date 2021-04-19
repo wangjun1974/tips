@@ -16218,3 +16218,6 @@ aws --endpoint=http://192.168.122.112 s3 ls s3://mybucket
 aws --endpoint=http://192.168.122.112 s3 cp s3://mybucket/err /tmp/err1
 
 ```
+
+# rados gateway 负载均衡
+https://www.redhat.com/en/about/videos/load-balancing-rados-red-hat-ceph-storage<br>

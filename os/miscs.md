@@ -16027,6 +16027,80 @@ spec:
 
 # 如果配置 OADP + Noobaa 
 # 参考：https://github.com/konveyor/oadp-operator/blob/master/docs/noobaa/install_oadp_noobaa.md
+
+# 创建演示应用程序
+# 演示应用参见：https://github.com/red-hat-storage/ocs-training/blob/master/training/modules/ocs4/attachments/configurable-rails-app.yaml
+oc get projects | grep -i jwang
+oc new-project my-database-app-jwang
+curl -s https://raw.githubusercontent.com/red-hat-storage/ocs-training/master/training/modules/ocs4/attachments/configurable-rails-app.yaml | oc new-app -p VOLUME_CAPACITY=5Gi -f -
+
+# 在国内服务器上拉取 github 上的内容经常性出错
+# 转换到 gitee 上来 https://gitee.com/wangjun1974/rails-ex.git
+oc patch buildconfig rails-pgsql-persistent -n my-database-app-jwang --type json -p='[{"op": "replace", "path": "/spec/source/git/uri", "value":"https://gitee.com/wangjun1974/rails-ex.git"}]'
+
+# 标记不备份资源 configmaps/rails-pgsql-persistent-3-ca
+oc label -n my-database-app-jwang configmaps rails-pgsql-persistent-3-ca velero.io/exclude-from-backup=true
+
+# 生成备份对象 Backup backup1
+cat > backup.yaml << EOF
+apiVersion: velero.io/v1
+kind: Backup
+metadata:
+  namespace: oadp-operator
+  name: backup1
+spec:
+  includedNamespaces:
+  - my-database-app-jwang
+  excludedResources:
+  - imagetags.image.openshift.io
+  snapshotVolumes: false
+EOF
+
+oc apply -f ./backup.yaml
+
+# 查看 backup1 
+oc get backup backup1 -n oadp-operator -o yaml 
+...
+spec:
+  defaultVolumesToRestic: false
+  excludedResources:
+  - imagetags.image.openshift.io
+  includedNamespaces:
+  - my-database-app-jwang
+  snapshotVolumes: false
+  storageLocation: default
+  ttl: 720h0m0s
+status:
+  completionTimestamp: "2021-04-19T06:36:00Z"
+  expiration: "2021-05-19T06:34:48Z"
+  formatVersion: 1.1.0
+  phase: Completed
+  progress:
+    itemsBackedUp: 122
+    totalItems: 122
+  startTimestamp: "2021-04-19T06:34:48Z"
+  version: 1
+
+# 删除 project my-database-app-jwang
+oc project default
+oc delete project my-database-app-jwang --wait=true
+oc get project my-database-app-jwang
+
+# 创建恢复对象 Restore restore1
+cat > restore.yaml << EOF
+apiVersion: velero.io/v1
+kind: Restore
+metadata:
+  namespace: oadp-operator
+  name: restore1
+spec:
+  backupName: backup1
+  includedNamespaces:
+  - my-database-app-jwang
+EOF
+
+oc apply -f ./restore.yaml
+
 ```
 
 # 安装 aws cli

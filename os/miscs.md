@@ -16363,3 +16363,85 @@ https://itnext.io/use-helm-to-deploy-openvpn-in-kubernetes-to-access-pods-and-se
 ```
 # 未来考虑根据 https://itnext.io/use-helm-to-deploy-openvpn-in-kubernetes-to-access-pods-and-services-217dec344f13 里提供的思路建立 openvpn server
 ```
+
+# ODF OCS Labs
+```
+bash /opt/app-root/src/support/machineset-generator.sh 3 workerocs 0 | oc create -f -
+oc get machineset -n openshift-machine-api -l machine.openshift.io/cluster-api-machine-role=workerocs -o name | xargs oc patch -n openshift-machine-api --type='json' -p '[{"op": "add", "path": "/spec/template/spec/metadata/labels", "value":{"node-role.kubernetes.io/worker":"", "role":"storage-node", "cluster.ocs.openshift.io/openshift-storage":""} }]'
+oc get machineset -n openshift-machine-api -l machine.openshift.io/cluster-api-machine-role=workerocs -o name | xargs oc scale -n openshift-machine-api --replicas=1
+
+oc get machines -n openshift-machine-api | egrep 'NAME|workerocs'
+
+watch "oc get machinesets -n openshift-machine-api | egrep 'NAME|workerocs'"
+
+oc get pv -o 'custom-columns=NAME:.spec.claimRef.name,PVNAME:.metadata.name,STORAGECLASS:.
+spec.storageClassName,VOLUMEHANDLE:.spec.csi.volumeHandle'
+
+CSIVOL=$(oc get pv $(oc get pv | grep my-database-app | awk '{ print $1 }') -o jsonpath='{
+.spec.csi.volumeHandle}' | cut -d '-' -f 6- | awk '{print "csi-vol-"$1}')
+
+TOOLS_POD=$(oc get pods -n openshift-storage -l app=rook-ceph-tools -o name)
+oc rsh -n openshift-storage $TOOLS_POD rbd -p ocs-storagecluster-cephblockpool info $CSIVO
+L
+
+oc get pvc postgresql -n my-database-app -o json 
+oc patch pvc postgresql -n my-database-app --patch='{"spec":{"resources":{"requests":{"storage":"10Gi"}}}}'
+oc describe pvc postgresql -n my-database-app
+oc get pvc postgresql -n my-database-app
+
+oc set volume deploy/file-uploader --add --name=my-shared-storage \
+  -t pvc --claim-mode=ReadWriteMany --claim-size=1Gi \
+  --claim-name=my-shared-storage --claim-class=ocs-storagecluster-cephfs \
+  --mount-path=/opt/app-root/src/uploaded \
+  -n my-shared-storage
+
+oc patch pvc my-shared-storage -n my-shared-storage --type json --patch  '[{ "op": "replace", "path": "/spec/resources/requests/storage", "value": "10Gi" }]'
+
+cat /opt/app-root/src/support/ocslab_cluster-monitoring-noinfra.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cluster-monitoring-config
+  namespace: openshift-monitoring
+data:
+  config.yaml: |
+    prometheusK8s:
+      volumeClaimTemplate:
+        metadata:
+          name: prometheusdb
+        spec:
+          storageClassName: ocs-storagecluster-ceph-rbd
+          resources:
+            requests:
+              storage: 40Gi
+    alertmanagerMain:
+      volumeClaimTemplate:
+        metadata:
+          name: alertmanager
+        spec:
+          storageClassName: ocs-storagecluster-ceph-rbd
+          resources:
+            requests:
+              storage: 40Gi
+
+[~] $ cd /opt/app-root/src/support/photo-album/
+[~/support/photo-album] $ cat demo.sh
+demo_home=$( cd "$(dirname "$([[ $0 != $BASH_SOURCE ]] && echo "$BASH_SOURCE" || echo "$0" )")"
+; pwd -P )
+source $demo_home/format.sh $@
+cd $demo_home; perl -pe "s/\{+domain\}+/$domain/g" app.yaml.tmpl > app.yaml
+
+__ "Object Bucket Demo"
+___ "Cleanup existing environment"
+oc delete --ignore-not-found=1 -f app.yaml
+oc delete --ignore-not-found=1 bc photo-album -n demo
+___ "Import dependencies and create build config"
+oc import-image ubi8/python-38 --from=registry.redhat.io/ubi8/python-38 --confirm -n demo
+__ " * Deploy application"
+oc create -f app.yaml
+__ " * Build the application image"
+oc new-build --binary --strategy=docker --name photo-album -n demo
+oc start-build photo-album --from-dir . -F -n demo
+cd -
+
+```

@@ -1311,7 +1311,13 @@ openstack image create --container-format bare --disk-format qcow2 --property im
 ```
 
 ### rbd mirror practice
-https://github.com/MiracleMa/Blog/issues/2
+https://github.com/MiracleMa/Blog/issues/2<br>
+https://docs.ceph.com/en/latest/rbd/rbd-mirroring/<br>
+```
+# rbd mirror 有两种方式
+# 1. journal based，基于日志；当写 io 发生时，写操作首先记入源集群日志，待日志记录完成后，再完成数据写入；目标集群的 rbd-mirror 服务会读取源集群日志，根据日志里的记录，在目标集群中完成写操作回放
+# 2. snapshot based，基于定期快照
+```
 
 ### 创建6个3gb的卷，让filters和weighters帮助选择合适的volume backend
 ```
@@ -14828,6 +14834,129 @@ ID  CLASS  WEIGHT   TYPE NAME                STATUS  REWEIGHT  PRI-AFF
  5    hdd  0.00980          osd.5                up   1.00000  1.00000
  8    hdd  0.00980          osd.8                up   1.00000  1.00000
 
+# 架设 keepalived 和 haproxy
+# 参考: https://access.redhat.com/documentation/en-us/red_hat_ceph_storage/1.3/html/object_gateway_guide_for_red_hat_enterprise_linux/haproxy_keepalived_configuration
+
+# keepalived
+# 安装 keepalived
+yum install -y keepalived
+
+# 在 jwang-ceph5-01 上生成 keepalived 配置文件 
+cat > /etc/keepalived/keepalived.conf << EOF
+vrrp_script chk_haproxy {
+  script "killall -0 haproxy" # check the haproxy process
+  interval 2 # every 2 seconds
+  weight 2 # add 2 points if OK
+}
+
+vrrp_instance VI_1 {
+  interface eth0 # interface to monitor
+  state MASTER # MASTER on jwang-ceph5-01, BACKUP on jwang-ceph5-02, BACKUP on jwang-ceph5-03
+  virtual_router_id 51
+  priority 102 # 102 on jwang-ceph5-01, 101 on jwang-ceph5-02, 100 on jwang-ceph5-03
+  virtual_ipaddress {
+    192.168.122.201 # virtual ip address
+  }
+  track_script {
+    chk_haproxy
+  }
+}
+EOF
+
+# 在 jwang-ceph5-02 上生成 keepalived 配置文件 
+cat > /etc/keepalived/keepalived.conf << EOF
+vrrp_script chk_haproxy {
+  script "killall -0 haproxy" # check the haproxy process
+  interval 2 # every 2 seconds
+  weight 2 # add 2 points if OK
+}
+
+vrrp_instance VI_1 {
+  interface eth0 # interface to monitor
+  state BACKUP # MASTER on jwang-ceph5-01, BACKUP on jwang-ceph5-02, BACKUP on jwang-ceph5-03
+  virtual_router_id 51
+  priority 101 # 102 on jwang-ceph5-01, 101 on jwang-ceph5-02, 100 on jwang-ceph5-03
+  virtual_ipaddress {
+    192.168.122.201 # virtual ip address
+  }
+  track_script {
+    chk_haproxy
+  }
+}
+EOF
+
+# 在 jwang-ceph5-03 上生成 keepalived 配置文件 
+cat > /etc/keepalived/keepalived.conf << EOF
+vrrp_script chk_haproxy {
+  script "killall -0 haproxy" # check the haproxy process
+  interval 2 # every 2 seconds
+  weight 2 # add 2 points if OK
+}
+
+vrrp_instance VI_1 {
+  interface eth0 # interface to monitor
+  state BACKUP # MASTER on jwang-ceph5-01, BACKUP on jwang-ceph5-02, BACKUP on jwang-ceph5-03
+  virtual_router_id 51
+  priority 100 # 102 on jwang-ceph5-01, 101 on jwang-ceph5-02, 100 on jwang-ceph5-03
+  virtual_ipaddress {
+    192.168.122.201 # virtual ip address
+  }
+  track_script {
+    chk_haproxy
+  }
+}
+EOF
+
+# 启用 keepalived 服务
+sudo systemctl enable keepalived
+# 启动 keepalived 服务
+sudo systemctl start keepalived
+
+# haproxy
+# 安装 haproxy
+yum install -y haproxy
+
+# 生成 haproxy 配置文件
+cat > /etc/haproxy/haproxy.cfg << 'EOF'
+global
+  daemon  
+  group  haproxy
+  log  /dev/log local0
+  maxconn  20480
+  pidfile  /var/run/haproxy.pid
+  ssl-default-bind-ciphers  !SSLv2:kEECDH:kRSA:kEDH:kPSK:+3DES:!aNULL:!eNULL:!MD5:!EXP:!RC4:!SEED:!IDEA:!DES
+  ssl-default-bind-options  no-sslv3 no-tlsv10
+  stats  socket /var/lib/haproxy/stats mode 600 level user
+  stats  timeout 2m
+  user  haproxy
+
+defaults
+  log  global
+  maxconn  4096
+  mode  tcp
+  retries  3
+  timeout  http-request 10s
+  timeout  queue 2m
+  timeout  connect 10s
+  timeout  client 2m
+  timeout  server 2m
+  timeout  check 10s
+
+listen ceph_rgw
+    bind *:8080
+    mode http
+    server jwang-ceph5-01 192.168.122.112:80 check
+    server jwang-ceph5-02 192.168.122.113:80 check
+    server jwang-ceph5-03 192.168.122.114:80 check
+EOF
+# 启用 haproxy 服务
+systemctl enable haproxy
+# 启动 haproxy 服务
+systemctl start haproxy
+
+# 查看 bucket 
+aws --endpoint-url=http://192.168.122.201:8080 s3 ls
+1969-12-31 19:00:00 mybucket
 ```
 
 # Ansible 相关内容
@@ -16221,3 +16350,12 @@ aws --endpoint=http://192.168.122.112 s3 cp s3://mybucket/err /tmp/err1
 
 # rados gateway 负载均衡
 https://www.redhat.com/en/about/videos/load-balancing-rados-red-hat-ceph-storage<br>
+
+# centos 8 与 ansible
+https://computingforgeeks.com/how-to-install-and-configure-ansible-on-rhel-8-centos-8/
+
+# vpn 与 kubernetes
+https://bugraoz93.medium.com/openvpn-client-in-a-pod-kubernetes-d3345c66b014<br>
+https://cloud.ibm.com/docs/containers?topic=containers-vpn<br>
+https://github.com/bbrowning/openshift-openvpn<br>
+https://access.redhat.com/documentation/en-us/openshift_dedicated/4.5/html/configuring_private_connections_for_aws/proc-aws-vpn-config<br>

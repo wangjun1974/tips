@@ -16444,4 +16444,56 @@ oc new-build --binary --strategy=docker --name photo-album -n demo
 oc start-build photo-album --from-dir . -F -n demo
 cd -
 
+oc -n demo get obc
+oc -n demo get secret photo-album -o jsonpath='{.data.AWS_ACCESS_KEY_ID}' | base64 --decode 
+oc -n demo get secret photo-album -o jsonpath='{.data.AWS_SECRET_ACCESS_KEY}' | base64 --decode 
+oc -n demo get cm photo-album -o jsonpath='{.data.BUCKET_HOST}{"\n"}'
+oc -n demo get cm photo-album -o jsonpath='{.data.BUCKET_NAME}{"\n"}'
+oc -n demo get cm photo-album -o jsonpath='{.data.BUCKET_PORT}{"\n"}'
+
+
+---
+apiVersion: objectbucket.io/v1alpha1
+kind: ObjectBucketClaim
+metadata:
+  name: "photo-album"
+  namespace: demo
+spec:
+  generateBucketName: "photo-album"
+  storageClassName: openshift-storage.noobaa.io
+---
+[...]
+     spec:
+        containers:
+        - image: image-registry.openshift-image-registry.svc:5000/default/photo-album
+          name: photo-album
+          env:
+            - name: ENDPOINT_URL
+              value: 'https://s3-openshift-storage.apps.cluster-7c31.7c31.sandbox905.opentlc.com'
+            - name: BUCKET_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: photo-album
+                  key: BUCKET_NAME
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: photo-album
+                  key: AWS_ACCESS_KEY_ID
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: photo-album
+                  key: AWS_SECRET_ACCESS_KEY
+[...]
+
+watch "oc get machinesets -n openshift-machine-api | egrep 'NAME|workerocs'"
+
+oc get pod -o=custom-columns=NAME:.metadata.name,STATUS:.status.phase,NODE:.spec.nodeName -n openshift-storage | grep osd | grep -v prepare
+
+ceph osd crush tree
+
+oc adm must-gather
+oc adm must-gather --image=registry.redhat.io/ocs4/ocs-must-gather-rhel8:v4.6
+
 ```

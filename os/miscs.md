@@ -16359,3 +16359,7 @@ https://bugraoz93.medium.com/openvpn-client-in-a-pod-kubernetes-d3345c66b014<br>
 https://cloud.ibm.com/docs/containers?topic=containers-vpn<br>
 https://github.com/bbrowning/openshift-openvpn<br>
 https://access.redhat.com/documentation/en-us/openshift_dedicated/4.5/html/configuring_private_connections_for_aws/proc-aws-vpn-config<br>
+https://itnext.io/use-helm-to-deploy-openvpn-in-kubernetes-to-access-pods-and-services-217dec344f13<br>
+```
+# 未来考虑根据 https://itnext.io/use-helm-to-deploy-openvpn-in-kubernetes-to-access-pods-and-services-217dec344f13 里提供的思路建立 openvpn server
+```

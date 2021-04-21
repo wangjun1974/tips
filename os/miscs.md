@@ -16553,6 +16553,8 @@ Wed Apr 21 05:28:42 2021 ROUTE_GATEWAY 10.131.0.1/255.255.254.0 IFACE=eth0 HWADD
 Wed Apr 21 05:28:42 2021 ERROR: Cannot open TUN/TAP dev /dev/net/tun: No such file or directory (errno=2)
 Wed Apr 21 05:28:42 2021 Exiting due to fatal error
 
+# 能添加哪些 capabilities 
+# https://docs.docker.com/engine/reference/run/#runtime-privilege-and-linux-capabilities
 # 参考：https://gist.github.com/miminar/6df90b92e1ea08862acc57693446c801
 # 感谢朱贺提供的链接
  oc get scc anyuid -o json | jq '.metadata |= {
@@ -16638,6 +16640,10 @@ Wed Apr 21 06:31:04 2021 Exiting due to fatal error
 # 根据 https://bugzilla.redhat.com/show_bug.cgi?id=1939061
 # 这个问题应该在 ocp 4.7 的某个版本解决了
 # 等待集群升级到 ocp 4.7
+
+# 参考知识库文档：https://access.redhat.com/articles/5100521#preload-kernel-modules-post
+# SAP Data Intelligence 3 on OpenShift Container Platform 4
+# https://access.redhat.com/articles/5100521#preload-kernel-modules-post
 ```
 
 # ODF OCS Labs

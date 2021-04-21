@@ -16369,6 +16369,8 @@ oc create namespace openvpn
 oc project openvpn
 
 # 为 default serviceaccount 添加 privileged scc
+# 尝试：根据后续步骤创建 net-raw scc 并且为 default serviceaccount 添加 net-raw scc
+# oc adm policy add-scc-to-user net-raw -z default -n openvpn
 oc adm policy add-scc-to-user privileged -z default -n openvpn
 
 cat > openvpn-pvc.yaml << EOF
@@ -16537,6 +16539,16 @@ oc patch deployment my-openvpn -n openvpn --type json -p '[{ "op": "remove", "pa
 oc patch deployment my-openvpn -n openvpn --type json -p '[{ "op": "remove", "path": "/spec/template/spec/containers/0/resources/requests" }]'
 oc patch deployment my-openvpn -n openvpn --type json -p '[{ "op": "remove", "path": "/spec/template/spec/containers/0/readinessProbe" }]'
 
+# 编辑 deployment - oc edit deployment my-openvpn
+# 添加 NET_RAW capabilities 和 runAsUser: 0
+# https://bugzilla.redhat.com/show_bug.cgi?id=1895032
+    securityContext:
+      capabilities:
+        add:
+        - NET_ADMIN
+        - NET_RAW
+      runAsUser: 0
+      
 # 查看出错的容器日志 
 # 参考 https://bugzilla.redhat.com/show_bug.cgi?id=1895032
 # oc logs my-openvpn-679494c657-hwc4b -p 
@@ -16650,7 +16662,9 @@ chroot /host
 modprobe iptable_nat
 modprobe iptable_filter
 
-
+# 再试试触发部署 iptablestest
+oc patch deployment/iptablestest --patch \
+   "{\"spec\":{\"template\":{\"metadata\":{\"annotations\":{\"last-restart\":\"`date +'%s'`\"}}}}}"
 ```
 
 # ODF OCS Labs

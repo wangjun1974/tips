@@ -16362,6 +16362,160 @@ https://access.redhat.com/documentation/en-us/openshift_dedicated/4.5/html/confi
 https://itnext.io/use-helm-to-deploy-openvpn-in-kubernetes-to-access-pods-and-services-217dec344f13<br>
 ```
 # 未来考虑根据 https://itnext.io/use-helm-to-deploy-openvpn-in-kubernetes-to-access-pods-and-services-217dec344f13 里提供的思路建立 openvpn server
+
+# 实际实验一下
+# 创建 openvpn namespace
+oc create namespace openvpn
+oc project openvpn
+
+# 为 default serviceaccount 添加 anyuid 权限
+oc adm policy add-scc-to-user anyuid -z default
+
+# 生成 openvpn 的 helm values.yaml
+# 集群网络信息
+# spec:
+#  clusterNetwork:
+#    - cidr: 10.128.0.0/14
+#      hostPrefix: 23
+#  externalIP:
+#    policy: {}
+#  networkType: OpenShiftSDN
+#  serviceNetwork:
+#    - 172.30.0.0/16
+cat > values.yaml << 'EOF'
+# Default values for openvpn.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+replicaCount: 1
+image:
+  repository: jfelten/openvpn-docker
+  tag: 1.1.0
+  pullPolicy: IfNotPresent
+service:
+  name: openvpn
+  type: LoadBalancer
+  externalPort: 443
+  internalPort: 443
+  # nodePort: 32085
+resources:
+  limits:
+    cpu: 300m
+    memory: 128Mi
+  requests:
+    cpu: 300m
+    memory: 128Mi
+persistence:
+  enabled: true
+  ## A manually managed Persistent Volume and Claim
+  ## Requires persistence.enabled: true
+  ## If defined, PVC must be created manually before volume will be bound
+  # existingClaim:
+  existingClaim: openvpn-data-claim
+  ## openvpn data Persistent Volume Storage Class
+  ## If defined, storageClassName: <storageClass>
+  ## If set to "-", storageClassName: "", which disables dynamic provisioning
+  ## If undefined (the default) or set to null, no storageClassName spec is
+  ##   set, choosing the default provisioner.  (gp2 on AWS, standard on
+  ##   GKE, AWS & OpenStack)
+  ##
+  # storageClass: "-"
+  accessMode: ReadWriteOnce
+  size: 1Gi
+openvpn:
+  # Network allocated for openvpn clients (default: 10.240.0.0).
+  OVPN_NETWORK: 10.240.0.0
+  # Network subnet allocated for openvpn client (default: 255.255.0.0).
+  OVPN_SUBNET: 255.255.0.0
+  # Protocol used by openvpn tcp or udp (default: udp).
+  OVPN_PROTO: tcp
+  # Kubernetes pod network (optional).
+  ##OVPN_K8S_POD_NETWORK: "10.0.0.0"
+  # This is for clusterIpv4Cidr 10.128.0.0/14
+  OVPN_K8S_POD_NETWORK: "10.128.0.0"
+  # Kubernetes pod network subnet (optional).
+  ##OVPN_K8S_POD_SUBNET: "255.0.0.0"
+  OVPN_K8S_POD_SUBNET: "255.252.0.0"
+  # Arbitrary lines appended to the end of the server configuration file
+  # conf: |
+  #  max-clients 100
+  #  client-to-client
+EOF
+
+# https://github.com/helm/charts/blob/master/stable/openvpn/README.md
+# https://pythontaotao.github.io/2020/07/06/helm%E9%83%A8%E7%BD%B2OpenPN-4-2-3/
+# http://mirror.azure.cn/kubernetes/charts/
+# 替换 helm repo stable 指向 
+helm repo add stable http://mirror.azure.cn/kubernetes/charts/ --force-update
+helm pull stable/openvpn 
+helm install my-openvpn stable/openvpn -f values.yaml --namespace openvpn
+
+# 上述命令安装 openvpn 到 namespace openvpn
+# 命令输出如下
+WARNING: This chart is deprecated
+I0421 10:27:27.403026   24130 request.go:621] Throttling request took 1.057624011s, request: GET:https://api.ocp1.rhcnsa.com:6443/apis/maistra.io/v1?timeout=3
+2s
+NAME: my-openvpn   
+LAST DEPLOYED: Wed Apr 21 10:27:31 2021
+NAMESPACE: openvpn 
+STATUS: deployed   
+REVISION: 1
+TEST SUITE: None   
+NOTES:
+OpenVPN is now starting.
+
+Please be aware that certificate generation is variable and may take some time (minutes).
+
+Check pod status with the command:
+
+  POD_NAME=$(kubectl get pods --namespace "openvpn" -l app=openvpn -o jsonpath='{ .items[0].metadata.name }') && kubectl --namespace "openvpn" logs $POD_NAME --follow
+
+LoadBalancer ingress creation can take some time as well. Check service status with the command:
+
+  kubectl --namespace "openvpn" get svc
+
+Once the external IP is available and all the server certificates are generated create client key .ovpn files by pasting the following into a shell:
+
+  POD_NAME=$(kubectl get pods --namespace "openvpn" -l "app=openvpn,release=my-openvpn" -o jsonpath='{ .items[0].metadata.name }')
+  SERVICE_NAME=$(kubectl get svc --namespace "openvpn" -l "app=openvpn,release=my-openvpn" -o jsonpath='{ .items[0].metadata.name }')
+  SERVICE_IP=$(kubectl get svc --namespace "openvpn" "$SERVICE_NAME" -o go-template='{{ range $k, $v := (index .status.loadBalancer.ingress 0)}}{{ $v }}{{end}}')
+  KEY_NAME=kubeVPN
+  kubectl --namespace "openvpn" exec -it "$POD_NAME" /etc/openvpn/setup/newClientCert.sh "$KEY_NAME" "$SERVICE_IP"
+  kubectl --namespace "openvpn" exec -it "$POD_NAME" cat "/etc/openvpn/certs/pki/$KEY_NAME.ovpn" > "$KEY_NAME.ovpn"
+
+Revoking certificates works just as easy:
+  KEY_NAME=<name>
+  POD_NAME=$(kubectl get pods -n "openvpn" -l "app=openvpn,release=my-openvpn" -o jsonpath='{.items[0].metadata.name}')
+  kubectl -n "openvpn" exec -it "$POD_NAME" /etc/openvpn/setup/revokeClientCert.sh $KEY_NAME
+
+Copy the resulting $KEY_NAME.ovpn file to your open vpn client (ex: in tunnelblick, just double click on the file).  Do this for each user that needs to connect to the VPN.  Change KEY_NAME for each additional user.
+
+# 报错处理
+oc get replicaset my-openvpn-579689d6c5 -o json
+...
+    "status": {
+        "conditions": [
+            {
+                "lastTransitionTime": "2021-04-21T02:27:03Z",
+                "message": "pods \"my-openvpn-579689d6c5-\" is forbidden: unable to validate against any security context constraint: [spec.containers[0].securityContext.capabilities.add: Invalid value: \"NET_ADMIN\": capability may not be added]",
+                "reason": "FailedCreate",
+                "status": "True",
+                "type": "ReplicaFailure"
+            }
+        ],
+        "observedGeneration": 1,
+        "replicas": 0
+    }
+}
+
+# 为 default serviceaccount 添加 privileged scc，需要 capabilities NET_ADMIN
+# 添加 anyuid scc 并不能提供所需 capabilities
+# oc adm policy add-scc-to-user anyuid -z default -n openvpn
+# oc adm policy remove-scc-from-user anyuid -z default -n openvpn
+# oc adm policy add-scc-to-user privileged -z default -n openvpn
+# 然后执行重新部署
+# oc patch deployment/my-openvpn --patch \
+   "{\"spec\":{\"template\":{\"metadata\":{\"annotations\":{\"last-restart\":\"`date +'%s'`\"}}}}}"
+
 ```
 
 # ODF OCS Labs

@@ -16368,8 +16368,23 @@ https://itnext.io/use-helm-to-deploy-openvpn-in-kubernetes-to-access-pods-and-se
 oc create namespace openvpn
 oc project openvpn
 
-# 为 default serviceaccount 添加 anyuid 权限
-oc adm policy add-scc-to-user anyuid -z default
+# 为 default serviceaccount 添加 privileged scc
+oc adm policy add-scc-to-user privileged -z default -n openvpn
+
+cat > openvpn-pvc.yaml << EOF
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: openvpn-data-claim
+  namespace: openvpn
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+EOF
+oc apply -f ./openvpn-pvc.yaml
 
 # 生成 openvpn 的 helm values.yaml
 # 集群网络信息

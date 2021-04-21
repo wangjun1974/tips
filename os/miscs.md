@@ -16644,6 +16644,13 @@ Wed Apr 21 06:31:04 2021 Exiting due to fatal error
 # 参考知识库文档：https://access.redhat.com/articles/5100521#preload-kernel-modules-post
 # SAP Data Intelligence 3 on OpenShift Container Platform 4
 # https://access.redhat.com/articles/5100521#preload-kernel-modules-post
+# 尝试手工加载内核模块
+oc debug node/xxx 
+chroot /host
+modprobe iptable_nat
+modprobe iptable_filter
+
+
 ```
 
 # ODF OCS Labs

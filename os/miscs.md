@@ -16565,6 +16565,63 @@ Wed Apr 21 05:28:42 2021 Exiting due to fatal error
      ]' | oc create -f -
 
 oc adm policy add-scc-to-user net-raw -z default -n openvpn
+oc adm policy add-scc-to-user net-raw -z iptablestest -n openvpn
+
+# 两个容器分别为 Containers 和 initContainers
+# 两个镜像替换从 quay.io/fedora/fedora:32 成 quay.io/fedora/fedora:32-x86_64
+oc create -f https://gist.githubusercontent.com/miminar/6df90b92e1ea08862acc57693446c801/raw/81407890712c9a96640365b66db5526729526691/iptablestest.yaml --dry-run -o json | \
+     jq 'if (.kind == "Deployment") then
+         .spec.template.spec.initContainers[0].image |=
+            "quay.io/fedora/fedora:32-x86_64"
+     else
+         .
+     end' | \
+     jq 'if (.kind == "Deployment") then
+         .spec.template.spec.Containers[0].image |=
+            "quay.io/fedora/fedora:32-x86_64"
+     else
+         .
+     end' | \
+     jq 'if (.kind == "Deployment") then
+         .spec.template.spec.initContainers[0].securityContext.capabilities.add |=
+             (. // []) + ["NET_RAW"]
+     else
+         .
+     end' | oc create -f -
+
+# 也可这样为 deployment 设置 Containers 和 initContainers 新镜像
+oc -n openvpn patch deployment iptablestest --type json -p '[{"op": "replace", "path": "/spec/template/spec/containers/0/image", "value": "quay.io/fedora/fedora:34"}]'
+oc -n openvpn patch deployment iptablestest --type json -p '[{"op": "replace", "path": "/spec/template/spec/initcontainers[0]/image", "value": "quay.io/fedora/fedora:34"}]'
+
+# 触发新部署
+oc patch deployment/iptablestest --patch \
+   "{\"spec\":{\"template\":{\"metadata\":{\"annotations\":{\"last-restart\":\"`date +'%s'`\"}}}}}"
+
+# deployment iptablestest 的 pod 出错消息为
+# 这个出错消息与 https://bugzilla.redhat.com/show_bug.cgi?id=1895032 非常类似
+# 参考：https://gist.github.com/miminar/6df90b92e1ea08862acc57693446c801
+# oc logs iptablestest-88cfcdf95-ftmrt -c vsystem-iptables -p 
+I0421 15:43:25.469634   32436 request.go:645] Throttling request took 1.122297976s, request: GET:https://api.ocp1.rhcnsa.com:6443/apis/infinispan.org/v2alpha1?timeout=32s
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100  106k  100  106k    0     0  27129      0  0:00:04  0:00:04 --:--:-- 27129
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100   425  100   425    0     0    486      0 --:--:-- --:--:-- --:--:--   486
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100  4201  100  4201    0     0   5579      0 --:--:-- --:--:-- --:--:--  5579
++ date '+%F %T.%6N'
+2021-04-21 07:39:42.226595
++ iptables -D PREROUTING -t nat -j VSYSTEM-AGENT-PREROUTING
++ true
++ iptables -F VSYSTEM-AGENT-PREROUTING -t nat
++ true
++ iptables -X VSYSTEM-AGENT-PREROUTING -t nat
++ true
++ iptables -N VSYSTEM-AGENT-PREROUTING -t nat
+iptables v1.8.4 (legacy): can't initialize iptables table `nat': Permission denied
+Perhaps iptables or your kernel needs to be upgraded.
 
 # 出错消息变成
 # oc logs my-openvpn-5b5685556b-tr7jh -p 
@@ -16581,7 +16638,6 @@ Wed Apr 21 06:31:04 2021 Exiting due to fatal error
 # 根据 https://bugzilla.redhat.com/show_bug.cgi?id=1939061
 # 这个问题应该在 ocp 4.7 的某个版本解决了
 # 等待集群升级到 ocp 4.7
-# 参考：https://gist.github.com/miminar/6df90b92e1ea08862acc57693446c801
 ```
 
 # ODF OCS Labs

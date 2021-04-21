@@ -16540,7 +16540,7 @@ oc patch deployment my-openvpn -n openvpn --type json -p '[{ "op": "remove", "pa
 oc patch deployment my-openvpn -n openvpn --type json -p '[{ "op": "remove", "path": "/spec/template/spec/containers/0/readinessProbe" }]'
 
 # 编辑 deployment - oc edit deployment my-openvpn
-# 添加 NET_RAW capabilities 和 runAsUser: 0
+# 添加 MKNOD and NET_RAW capabilities 和 runAsUser: 0
 # https://bugzilla.redhat.com/show_bug.cgi?id=1895032
     securityContext:
       capabilities:
@@ -16550,6 +16550,7 @@ oc patch deployment my-openvpn -n openvpn --type json -p '[{ "op": "remove", "pa
         - MKNOD
       runAsUser: 0
 
+oc logs my-openvpn-7456d86c6f-4dzpg -p 
 # 查看出错的容器日志 
 # 参考 https://bugzilla.redhat.com/show_bug.cgi?id=1895032
 # oc logs my-openvpn-679494c657-hwc4b -p 
@@ -16658,10 +16659,39 @@ Wed Apr 21 06:31:04 2021 Exiting due to fatal error
 # SAP Data Intelligence 3 on OpenShift Container Platform 4
 # https://access.redhat.com/articles/5100521#preload-kernel-modules-post
 # 尝试手工加载内核模块
+# oc debug node/ip-10-0-216-190.cn-northwest-1.compute.internal -- chroot /host modprobe tun
+# oc debug node/ip-10-0-216-190.cn-northwest-1.compute.internal -- chroot /host ls -l /dev/net/tun
+# oc debug node/ip-10-0-170-163.cn-northwest-1.compute.internal -- chroot /host modprobe tun
+# oc debug node/ip-10-0-170-163.cn-northwest-1.compute.internal -- chroot /host ls -l /dev/net/tun
+# oc debug node/ip-10-0-138-27.cn-northwest-1.compute.internal -- chroot /host modprobe tun
+# oc debug node/ip-10-0-138-27.cn-northwest-1.compute.internal -- chroot /host ls -l /dev/net/tun
+# oc debug node/ip-10-0-138-27.cn-northwest-1.compute.internal -- chroot /host lsmod | grep tun
+
 oc debug node/xxx 
 chroot /host
 modprobe iptable_nat
 modprobe iptable_filter
+modprobe tun
+
+# 设置 POD_NAME，SERVICE_NAME
+$ POD_NAME=$(oc get pods --namespace openvpn -l app=openvpn -o jsonpath='{ .items[0].metadata.name }')
+$ echo $POD_NAME
+$ SERVICE_NAME=$(oc get svc --namespace openvpn -l app=openvpn  -o jsonpath='{ .items[0].metadata.name }')
+$ echo $SERVICE_NAME
+
+# 获取 SERVICE_IP
+$ SERVICE_IP=$(oc get svc --namespace openvpn $SERVICE_NAME -o go-template='{{ range $k, $v := (index .status.loadBalancer.ingress 0)}}{{ $v }}{{end}}')
+$ echo $SERVICE_IP
+
+# 定义 KEY_NAME
+$ KEY_NAME=kubeVPN
+$ echo $KEY_NAME
+
+# 生成 $KEY_NAME.ovpn
+$ oc -n openvpn exec -it $POD_NAME -- /etc/openvpn/setup/newClientCert.sh $KEY_NAME $SERVICE_IP
+$ oc -n openvpn exec -it $POD_NAME -- cat /etc/openvpn/certs/pki/$KEY_NAME.ovpn > $KEY_NAME.ovpn
+
+# 客户端使用 kubeVPN.ovpn 连接这个 vpn 服务
 
 # 再试试触发部署 iptablestest
 oc patch deployment/iptablestest --patch \

@@ -16547,8 +16547,9 @@ oc patch deployment my-openvpn -n openvpn --type json -p '[{ "op": "remove", "pa
         add:
         - NET_ADMIN
         - NET_RAW
+        - MKNOD
       runAsUser: 0
-      
+
 # 查看出错的容器日志 
 # 参考 https://bugzilla.redhat.com/show_bug.cgi?id=1895032
 # oc logs my-openvpn-679494c657-hwc4b -p 

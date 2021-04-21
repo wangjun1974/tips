@@ -16411,7 +16411,7 @@ service:
   type: LoadBalancer
   externalPort: 443
   internalPort: 443
-  # nodePort: 32085
+  nodePort: 32085
 resources:
   limits:
     cpu: 300m
@@ -16527,10 +16527,61 @@ oc get replicaset my-openvpn-579689d6c5 -o json
 # oc adm policy add-scc-to-user anyuid -z default -n openvpn
 # oc adm policy remove-scc-from-user anyuid -z default -n openvpn
 # oc adm policy add-scc-to-user privileged -z default -n openvpn
+# oc adm policy remove-scc-from-user privileged -z default -n openvpn
 # 然后执行重新部署
 # oc patch deployment/my-openvpn --patch \
    "{\"spec\":{\"template\":{\"metadata\":{\"annotations\":{\"last-restart\":\"`date +'%s'`\"}}}}}"
 
+# 删除 deployment 的 limits 和 requests
+oc patch deployment my-openvpn -n openvpn --type json -p '[{ "op": "remove", "path": "/spec/template/spec/containers/0/resources/limits" }]'
+oc patch deployment my-openvpn -n openvpn --type json -p '[{ "op": "remove", "path": "/spec/template/spec/containers/0/resources/requests" }]'
+oc patch deployment my-openvpn -n openvpn --type json -p '[{ "op": "remove", "path": "/spec/template/spec/containers/0/readinessProbe" }]'
+
+# 查看出错的容器日志 
+# 参考 https://bugzilla.redhat.com/show_bug.cgi?id=1895032
+# oc logs my-openvpn-679494c657-hwc4b -p 
+I0421 13:30:24.615834   28669 request.go:645] Throttling request took 1.122955974s, request: GET:https://api.ocp1.rhcnsa.com:6443/apis/networking.istio.io/v1beta1?timeout=32s
+found existing certs - reusing
+iptables v1.6.0: can't initialize iptables table `nat': Permission denied (you must be root)
+Perhaps iptables or your kernel needs to be upgraded.
+mknod: /dev/net/tun: Operation not permitted
+Wed Apr 21 05:28:42 2021 OpenVPN 2.3.14 x86_64-alpine-linux-musl [SSL (OpenSSL)] [LZO] [EPOLL] [MH] [IPv6] built on Dec 18 2016
+Wed Apr 21 05:28:42 2021 library versions: LibreSSL 2.4.4, LZO 2.09
+Wed Apr 21 05:28:42 2021 Diffie-Hellman initialized with 2048 bit key
+Wed Apr 21 05:28:42 2021 Socket Buffers: R=[87380->87380] S=[16384->16384]
+Wed Apr 21 05:28:42 2021 ROUTE_GATEWAY 10.131.0.1/255.255.254.0 IFACE=eth0 HWADDR=0a:58:0a:83:01:58
+Wed Apr 21 05:28:42 2021 ERROR: Cannot open TUN/TAP dev /dev/net/tun: No such file or directory (errno=2)
+Wed Apr 21 05:28:42 2021 Exiting due to fatal error
+
+# 参考：https://gist.github.com/miminar/6df90b92e1ea08862acc57693446c801
+# 感谢朱贺提供的链接
+ oc get scc anyuid -o json | jq '.metadata |= {
+         "name": "net-raw"
+     } | del(.requiredDropCapabilities) |
+     .users |= [] |
+     .groups |= ["system:cluster-admins"] |
+     .allowedCapabilities |= (. // []) + [
+         "MKNOD", "NET_RAW", "NET_ADMIN"
+     ]' | oc create -f -
+
+oc adm policy add-scc-to-user net-raw -z default -n openvpn
+
+# 出错消息变成
+# oc logs my-openvpn-5b5685556b-tr7jh -p 
+iptables v1.6.0: can't initialize iptables table `nat': Permission denied
+Perhaps iptables or your kernel needs to be upgraded.
+Wed Apr 21 06:31:04 2021 OpenVPN 2.3.14 x86_64-alpine-linux-musl [SSL (OpenSSL)] [LZO] [EPOLL] [MH] [IPv6] built on Dec 18 2016
+Wed Apr 21 06:31:04 2021 library versions: LibreSSL 2.4.4, LZO 2.09
+Wed Apr 21 06:31:04 2021 Diffie-Hellman initialized with 2048 bit key
+Wed Apr 21 06:31:04 2021 Socket Buffers: R=[87380->87380] S=[16384->16384]
+Wed Apr 21 06:31:04 2021 ROUTE_GATEWAY 10.131.0.1/255.255.254.0 IFACE=eth0 HWADDR=0a:58:0a:83:01:71
+Wed Apr 21 06:31:04 2021 ERROR: Cannot open TUN/TAP dev /dev/net/tun: No such device (errno=19)
+Wed Apr 21 06:31:04 2021 Exiting due to fatal error
+
+# 根据 https://bugzilla.redhat.com/show_bug.cgi?id=1939061
+# 这个问题应该在 ocp 4.7 的某个版本解决了
+# 等待集群升级到 ocp 4.7
+# 参考：https://gist.github.com/miminar/6df90b92e1ea08862acc57693446c801
 ```
 
 # ODF OCS Labs

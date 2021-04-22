@@ -16697,6 +16697,8 @@ $ oc -n openvpn exec -it $POD_NAME -- cat /etc/openvpn/certs/pki/$KEY_NAME.ovpn 
 # https://www.howtoforge.com/tutorial/how-to-install-openvpn-on-centos-7/
 sudo openvpn --config kubeVPN.ovpn
 
+# 在 k8s 环境下运行 openvpn client side 组件
+# https://bugraoz93.medium.com/openvpn-client-in-a-pod-kubernetes-d3345c66b014
 ```
 
 # ODF OCS Labs

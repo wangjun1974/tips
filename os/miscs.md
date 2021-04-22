@@ -16692,10 +16692,10 @@ $ oc -n openvpn exec -it $POD_NAME -- /etc/openvpn/setup/newClientCert.sh $KEY_N
 $ oc -n openvpn exec -it $POD_NAME -- cat /etc/openvpn/certs/pki/$KEY_NAME.ovpn > $KEY_NAME.ovpn
 
 # 客户端使用 kubeVPN.ovpn 连接这个 vpn 服务
+# 拷贝上面生成的 ovpn 文件到 openvpn 的客户端
+# 然后运行 openvpn 客户端
+sudo openvpn --config kubeVPN.ovpn
 
-# 再试试触发部署 iptablestest
-oc patch deployment/iptablestest --patch \
-   "{\"spec\":{\"template\":{\"metadata\":{\"annotations\":{\"last-restart\":\"`date +'%s'`\"}}}}}"
 ```
 
 # ODF OCS Labs
@@ -16829,5 +16829,12 @@ ceph osd crush tree
 
 oc adm must-gather
 oc adm must-gather --image=registry.redhat.io/ocs4/ocs-must-gather-rhel8:v4.6
+
+```
+
+# 删除一下 deployment 里的 requests 和 limits 
+```
+oc patch deployment awx -n user20 --type json -p '[{ "op": "remove", "path": "/spec/template/spec/containers/1/resources/requests" }]'
+oc patch deployment awx -n user20 --type json -p '[{ "op": "remove", "path": "/spec/template/spec/containers/2/resources/requests" }]'
 
 ```

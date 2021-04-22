@@ -16694,6 +16694,7 @@ $ oc -n openvpn exec -it $POD_NAME -- cat /etc/openvpn/certs/pki/$KEY_NAME.ovpn 
 # 客户端使用 kubeVPN.ovpn 连接这个 vpn 服务
 # 拷贝上面生成的 ovpn 文件到 openvpn 的客户端
 # 然后运行 openvpn 客户端
+# https://www.howtoforge.com/tutorial/how-to-install-openvpn-on-centos-7/
 sudo openvpn --config kubeVPN.ovpn
 
 ```

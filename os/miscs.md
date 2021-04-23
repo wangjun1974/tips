@@ -16852,3 +16852,23 @@ oc patch deployment awx -n user20 --type json -p '[{ "op": "remove", "path": "/s
 oc patch deployment awx -n user20 --type json -p '[{ "op": "remove", "path": "/spec/template/spec/containers/2/resources/requests" }]'
 
 ```
+
+
+
+# 关于 OCS Internal 和 OCS Internal - Attached Devices
+
+Internal: this is like OpenShift IPI, the OCS operator uses the storage class thin to create the disks as PVs needed for OCS to work (we could call it: Installer Provisioned Disks). It creates 3 x 10 GB disks for 3 monitors, and 3 disks for OSDs of the chosen size: 0.5 TB, 2 TB or 4 TB.<br>
+
+Internal - Attached Devices: this is like OpenShift UPI, the user has to create or prepare the disks that should be used by OCS to work. It's not so automatic but you have more control about what you want to use for your OCS-Ceph cluster (we could call it: User Provisioned Disks...). You have to provide 1 or more disks for OSDs of the same size (up to 4 TB capacity) in each node, 3 nodes minimum. If you choose this option, OCS operator UI will suggest during Storage Cluster creation to install Local Storage Operator (LSO) and it will do an automatic discovery of the devices in the nodes you select, so LSO can initilize those Linux devices as PVs, and then use them for Storage Cluster creation.<br>
+
+When you say you have 3 nodes with 2 x 500 GB disks, I'm guessing you want to use them for OCS-Ceph... so you should go for (2) Internal - Attached Devices. In this option, the Storage class thin is not used. The 3 x 10 GB for Monitors are not created, and /var/lib/rook host path in the nodes is used for the monitor files.<br>
+
+In the issue you are facing it looks like you are going (1) Internal, so OCS won't use the existing 500 GB disks but will create 3 new ones of 500 GB using thin sc that is pointing to the default datastore used during OpenShift deployment.<br>
+
+
+# Disaster Recovery Strategies for Applications Running on OpenShift 
+https://www.openshift.com/blog/disaster-recovery-strategies-for-applications-running-on-openshift<br>
+
+
+# openstack 备份恢复解决方案 TrilloVault
+https://docs.ukcloud.com/articles/openstack/ostack-vid-trilio.html

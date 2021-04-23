@@ -14834,6 +14834,17 @@ ID  CLASS  WEIGHT   TYPE NAME                STATUS  REWEIGHT  PRI-AFF
  5    hdd  0.00980          osd.5                up   1.00000  1.00000
  8    hdd  0.00980          osd.8                up   1.00000  1.00000
 
+# 关于 Pool Placement 和 Storage Class
+# 概念：Placement Targets
+# 概念：Storage Classes
+# ZoneGroup 和 Zone 的配置里包含 Placement Targets 和 Storage Classes
+# 默认的 Placement
+# 用户定义的 Placement
+# S3 Bucket Placement
+# Swift Bucket Placement
+# 如何使用 Storage Classes
+# https://docs.ceph.com/en/latest/radosgw/placement/
+
 # 架设 keepalived 和 haproxy
 # 参考: https://access.redhat.com/documentation/en-us/red_hat_ceph_storage/1.3/html/object_gateway_guide_for_red_hat_enterprise_linux/haproxy_keepalived_configuration
 

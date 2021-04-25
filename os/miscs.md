@@ -14970,6 +14970,27 @@ systemctl start haproxy
 aws --endpoint-url=http://192.168.122.201:8080 s3 ls
 1969-12-31 19:00:00 mybucket
 
+# 查看 buckets 下的 s3api list-object-versions 
+# 参考：https://ceph.io/planet/on-ceph-rgw-s3-object-versioning/
+aws --endpoint=http://192.168.122.112 s3api list-object-versions --bucket mybucket
+{
+    "Versions": [
+        {
+            "ETag": "\"01d942f36852e181c937ad43e8cc09a8\"",
+            "Size": 66178,
+            "StorageClass": "STANDARD",
+            "Key": "err",
+            "VersionId": "null",
+            "IsLatest": true,
+            "LastModified": "2021-04-19T07:35:52.471Z",
+            "Owner": {
+                "DisplayName": "admin",
+                "ID": "admin"
+            }
+        }
+    ]
+}
+
 # 设置类型为 replicated 的 crush rule ，故障域为 zone，每个 zone 里在两个 host 上保存数据
 # 一共 4 个副本，在 2 个 zone 间放置，每个对象在每个 zone 里的 2 个 host 上存放副本
 rule two_rep_per_dc {
@@ -14982,7 +15003,14 @@ rule two_rep_per_dc {
         step chooseleaf firstn 2 type host
         step emit
 }
-
+# 关于 crush rule 
+# 参考：https://docs.ceph.com/en/latest/rados/operations/crush-map-edits/
+# 参考：http://ceph.org.cn/2016/05/02/ceph-crush-rule%e6%a0%b7%e4%be%8b%e4%b8%a4%e5%88%99/
+# 参考：https://zhuanlan.zhihu.com/p/123351674
+ceph osd getcrushmap -o {compiled-crushmap-filename}
+crushtool -d {compiled-crushmap-filename} -o {decompiled-crushmap-filename}
+crushtool -c {decompiled-crushmap-filename} -o {compiled-crushmap-filename}
+ceph osd setcrushmap -i {compiled-crushmap-filename}
 
 ```
 

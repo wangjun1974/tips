@@ -14966,8 +14966,24 @@ systemctl enable haproxy
 systemctl start haproxy
 
 # 查看 bucket 
+# TODO: 为什么显示 1969-12-31 这个问题需要调查一下
 aws --endpoint-url=http://192.168.122.201:8080 s3 ls
 1969-12-31 19:00:00 mybucket
+
+# 设置类型为 replicated 的 crush rule ，故障域为 zone，每个 zone 里在两个 host 上保存数据
+# 一共 4 个副本，在 2 个 zone 间放置，每个对象在每个 zone 里的 2 个 host 上存放副本
+rule two_rep_per_dc {
+        id 1
+        type replicated
+        min_size 1
+        max_size 10
+        step take root
+        step choose firstn 0 type zone
+        step chooseleaf firstn 2 type host
+        step emit
+}
+
+
 ```
 
 # Ansible 相关内容
@@ -16872,3 +16888,4 @@ https://www.openshift.com/blog/disaster-recovery-strategies-for-applications-run
 
 # openstack 备份恢复解决方案 TrilloVault
 https://docs.ukcloud.com/articles/openstack/ostack-vid-trilio.html
+

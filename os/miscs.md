@@ -14972,6 +14972,8 @@ aws --endpoint-url=http://192.168.122.201:8080 s3 ls
 
 # 查看 buckets 下的 s3api list-object-versions 
 # 参考：https://ceph.io/planet/on-ceph-rgw-s3-object-versioning/
+# 参考：https://docs.aws.amazon.com/zh_cn/AmazonS3/latest/userguide/list-obj-version-enabled-bucket.html
+# 参考：https://docs.aws.amazon.com/zh_cn/AmazonS3/latest/userguide/object-lock.html
 aws --endpoint=http://192.168.122.112 s3api list-object-versions --bucket mybucket
 {
     "Versions": [

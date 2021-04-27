@@ -16926,4 +16926,4 @@ https://docs.ukcloud.com/articles/openstack/ostack-vid-trilio.html
 |SASE|Secure Access Service Edge|https://en.wikipedia.org/wiki/Secure_Access_Service_Edge|
 
 SolarWinds and the Supply Chain, the Threat We’ve Ignored for Too Long<br>
-https://www.youtube.com/watch?v=tS3PbgiIHtI
+https://www.youtube.com/watch?v=tS3PbgiIHtI<br>

@@ -16919,3 +16919,9 @@ https://www.openshift.com/blog/disaster-recovery-strategies-for-applications-run
 # openstack 备份恢复解决方案 TrilloVault
 https://docs.ukcloud.com/articles/openstack/ostack-vid-trilio.html
 
+# 安全相关
+|术语|全名|链接|
+|---|---|---|
+|EDR|Endpoint Detection and Response|https://en.wikipedia.org/wiki/Endpoint_detection_and_response|
+|SASE|Secure Access Service Edge|https://en.wikipedia.org/wiki/Secure_Access_Service_Edge|
+

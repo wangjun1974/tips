@@ -16322,6 +16322,8 @@ oc get project my-database-app-jwang
 # 访问网址
 oc -n my-database-app-jwang get route rails-pgsql-persistent -o jsonpath='http://{.spec.host}/articles'
 
+# velero 提供的 quiescing 的例子
+# https://github.com/konveyor/velero-examples/tree/master/cassandra
 ```
 
 # 安装 aws cli

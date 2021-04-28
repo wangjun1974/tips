@@ -16324,6 +16324,19 @@ oc -n my-database-app-jwang get route rails-pgsql-persistent -o jsonpath='http:/
 
 # velero 提供的 quiescing 的例子
 # https://github.com/konveyor/velero-examples/tree/master/cassandra
+
+# k8s volume snapshot
+# https://kubernetes.io/blog/2020/12/10/kubernetes-1.20-volume-snapshot-moves-to-ga/
+
+# 如何为 Pod 做 velero 相关的标记 
+# pre.hook.backup.velero.io/command 和 post.hook.restore.velero.io/command
+# https://github.com/vmware-tanzu/velero/issues/2116
+# kubectl -n bitamani-postgres-11-hook  annotate pod/postgres-hook-postgresql-0   backup.velero.io/backup-volumes=data --overwrite
+# kubectl -n bitamani-postgres-11-hook  annotate pod/postgres-hook-postgresql-0 pre.hook.backup.velero.io/timeout=3600s --overwrite
+# kubectl -n bitamani-postgres-11-hook  annotate pod/postgres-hook-postgresql-0   pre.hook.backup.velero.io/command='["bash", "-c", "mkdir -p /bitnami/postgresql/dumps; eval export PGPASSWORD=${POSTGRES_PASSWORD}; pg_dumpall --clean --username=postgres | gzip -4 > /bitnami/postgresql/dumps/dumpall.out.gz" ]' --overwrite
+# kubectl -n bitamani-postgres-11-hook  annotate pod/postgres-hook-postgresql-0 post.hook.restore.velero.io/timeout=3600s --overwrite
+# kubectl -n bitamani-postgres-11-hook  annotate pod/postgres-hook-postgresql-0   post.hook.restore.velero.io/command='["bash", "-c", ""bash", "-c", "eval export PGPASSWORD=${POSTGRES_PASSWORD}; cat /bitnami/postgresql/dumps/dumpall.out.gz | gunzip | psql --username=postgres" ]' --overwrite
+
 ```
 
 # 安装 aws cli

@@ -16215,6 +16215,8 @@ spec:
   use_upstream_images: false
 
 # 尝试另外一个配置
+# 这个配置里同时指定了 BackupStorageLocation 和 VolumeSnapshotLocation
+# https://github.com/konveyor/oadp-operator/blob/master/docs/bsl_and_vsl.md
 apiVersion: konveyor.openshift.io/v1alpha1
 kind: Velero
 metadata:
@@ -16241,21 +16243,44 @@ spec:
         bucket: velero
         prefix: velero
       provider: aws
+  volume_snapshot_locations:
+  - name: default
+    provider: aws
+    config:
+      region: cn-northwest-1
+      profile: "default"
   use_upstream_images: false
 
 # Volume Snapshot Location
 # https://github.com/vmware-tanzu/velero-plugin-for-aws/blob/main/volumesnapshotlocation.md
 # volume snapshot class
 # https://kubernetes.io/docs/concepts/storage/volume-snapshot-classes/
+# https://documentation.suse.com/suse-caasp/4.2/html/caasp-admin/_backup_and_restore_with_velero.html
 
 # 如果配置 OADP + Noobaa 
 # 参考：https://github.com/konveyor/oadp-operator/blob/master/docs/noobaa/install_oadp_noobaa.md
 
+# 创建 VolumeSnapshotClass
+# https://aws.amazon.com/cn/blogs/containers/using-ebs-snapshots-for-persistent-storage-with-your-eks-cluster/
+
+cat > volumesnapshotclass.yaml << EOF
+apiVersion: snapshot.storage.k8s.io/v1beta1
+kind: VolumeSnapshotClass
+metadata:
+  name: test-snapclass
+driver: ebs.csi.aws.com
+deletionPolicy: Delete
+EOF
+
+oc create -f volumesnapshotclass.yaml 
+
+
 # 创建演示应用程序
 # 演示应用参见：https://github.com/red-hat-storage/ocs-training/blob/master/training/modules/ocs4/attachments/configurable-rails-app.yaml
+# 转换到 gitee 上来 
 oc get projects | grep -i jwang
 oc new-project my-database-app-jwang
-curl -s https://raw.githubusercontent.com/red-hat-storage/ocs-training/master/training/modules/ocs4/attachments/configurable-rails-app.yaml | oc new-app -p VOLUME_CAPACITY=5Gi -f -
+curl -s https://gitee.com/wangjun1974/ocs-training/raw/master/training/modules/ocs4/attachments/configurable-rails-app.yaml | oc new-app -p VOLUME_CAPACITY=5Gi -p STORAGE_CLASS=gp2-csi -p SOURCE_REPOSITORY_URL="https://gitee.com/wangjun1974/rails-ex.git" -f -
 
 # 在国内服务器上拉取 github 上的内容经常性出错
 # 转换到 gitee 上来 https://gitee.com/wangjun1974/rails-ex.git
@@ -16385,6 +16410,12 @@ oc -n my-database-app-jwang get route rails-pgsql-persistent -o jsonpath='http:/
 # kubectl -n bitamani-postgres-11-hook  annotate pod/postgres-hook-postgresql-0   pre.hook.backup.velero.io/command='["bash", "-c", "mkdir -p /bitnami/postgresql/dumps; eval export PGPASSWORD=${POSTGRES_PASSWORD}; pg_dumpall --clean --username=postgres | gzip -4 > /bitnami/postgresql/dumps/dumpall.out.gz" ]' --overwrite
 # kubectl -n bitamani-postgres-11-hook  annotate pod/postgres-hook-postgresql-0 post.hook.restore.velero.io/timeout=3600s --overwrite
 # kubectl -n bitamani-postgres-11-hook  annotate pod/postgres-hook-postgresql-0   post.hook.restore.velero.io/command='["bash", "-c", ""bash", "-c", "eval export PGPASSWORD=${POSTGRES_PASSWORD}; cat /bitnami/postgresql/dumps/dumpall.out.gz | gunzip | psql --username=postgres" ]' --overwrite
+
+
+# 查看 backup 日志
+# 有消息记录 Persistent volume is not a supported volume type for snapshots
+time="2021-04-28T13:04:47Z" level=info msg="Persistent volume is not a supported volume type for snapshots, skipping." backup=oadp-operator/backup1 logSource="pkg/backup/item_backupper.go:469" name=pvc-d4cc8866-41e7-4411-b5dd-b61425c5c8e7 namespace= persistentVolume=pvc-d4cc8866-41e7-4411-b5dd-b61425c5c8e7 resource=persistentvolumes
+
 
 ```
 

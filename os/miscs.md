@@ -16179,6 +16179,9 @@ oc expose svc minio
 # 安装 oadp operator 
 # https://red-hat-storage.github.io/ocs-training/training/ocs4/ocs4-multisite-replication.html#_installing_oadp_for_kubernetes_resource_collection
 
+# 创建 secret cloud-credentials
+oc create secret generic cloud-credentials --namespace oadp-operator --from-file cloud=<CREDENTIALS_FILE_PATH>/cloud-credentials
+
 # 参考：https://www.ibm.com/docs/en/spp/10.1.7?topic=support-installing-configuring-velero-by-using-oadp-operator
 # 也需要参考：https://blah.cloud/automation/using-velero-for-k8s-backup-and-restore-of-csi-volumes/
 # 也需要参考：https://githubmemory.com/repo/konveyor/oadp-operator/issues

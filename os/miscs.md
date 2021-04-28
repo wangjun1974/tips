@@ -16214,6 +16214,40 @@ spec:
       provider: aws
   use_upstream_images: false
 
+# 尝试另外一个配置
+apiVersion: konveyor.openshift.io/v1alpha1
+kind: Velero
+metadata:
+  name: oadp-velero
+  namespace: oadp-operator
+spec:
+  default_velero_plugins:
+    - aws
+    - openshift
+  enable_restic: false
+  olm_managed: true
+  backup_storage_locations:
+    - config:
+        profile: default
+        region: aws
+        insecure_skip_tls_verify: true
+        s3_force_path_style: true
+        s3_url: http://minio-velero.apps.ocp1.rhcnsa.com
+      credentials_secret_ref:
+        name: cloud-credentials
+        namespace: oadp-operator
+      name: default
+      object_storage:
+        bucket: velero
+        prefix: velero
+      provider: aws
+  use_upstream_images: false
+
+# Volume Snapshot Location
+# https://github.com/vmware-tanzu/velero-plugin-for-aws/blob/main/volumesnapshotlocation.md
+# volume snapshot class
+# https://kubernetes.io/docs/concepts/storage/volume-snapshot-classes/
+
 # 如果配置 OADP + Noobaa 
 # 参考：https://github.com/konveyor/oadp-operator/blob/master/docs/noobaa/install_oadp_noobaa.md
 
@@ -16226,6 +16260,7 @@ curl -s https://raw.githubusercontent.com/red-hat-storage/ocs-training/master/tr
 # 在国内服务器上拉取 github 上的内容经常性出错
 # 转换到 gitee 上来 https://gitee.com/wangjun1974/rails-ex.git
 oc patch buildconfig rails-pgsql-persistent -n my-database-app-jwang --type json -p='[{"op": "replace", "path": "/spec/source/git/uri", "value":"https://gitee.com/wangjun1974/rails-ex.git"}]'
+oc start-build rails-pgsql-persistent
 
 # 标记不备份资源 configmaps/rails-pgsql-persistent-3-ca
 oc label -n my-database-app-jwang configmaps rails-pgsql-persistent-3-ca velero.io/exclude-from-backup=true
@@ -16243,6 +16278,20 @@ spec:
   excludedResources:
   - imagetags.image.openshift.io
   snapshotVolumes: false
+EOF
+# 生成备份对象 Backup backup1，设置 snapshotVolumes: true
+cat > backup.yaml << EOF
+apiVersion: velero.io/v1
+kind: Backup
+metadata:
+  namespace: oadp-operator
+  name: backup1
+spec:
+  includedNamespaces:
+  - my-database-app-jwang
+  excludedResources:
+  - imagetags.image.openshift.io
+  snapshotVolumes: true
 EOF
 
 oc apply -f ./backup.yaml

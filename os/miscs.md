@@ -16253,9 +16253,11 @@ spec:
 
 # Volume Snapshot Location
 # https://github.com/vmware-tanzu/velero-plugin-for-aws/blob/main/volumesnapshotlocation.md
-# volume snapshot class
+# Volume Snapshot Class
 # https://kubernetes.io/docs/concepts/storage/volume-snapshot-classes/
 # https://documentation.suse.com/suse-caasp/4.2/html/caasp-admin/_backup_and_restore_with_velero.html
+# https://aws.amazon.com/cn/blogs/containers/using-ebs-snapshots-for-persistent-storage-with-your-eks-cluster/
+# https://blog.kubernauts.io/backup-and-restore-pvcs-using-velero-with-restic-and-openebs-from-baremetal-cluster-to-aws-d3ac54386109
 
 # 如果配置 OADP + Noobaa 
 # 参考：https://github.com/konveyor/oadp-operator/blob/master/docs/noobaa/install_oadp_noobaa.md
@@ -16284,7 +16286,7 @@ curl -s https://gitee.com/wangjun1974/ocs-training/raw/master/training/modules/o
 
 # 在国内服务器上拉取 github 上的内容经常性出错
 # 转换到 gitee 上来 https://gitee.com/wangjun1974/rails-ex.git
-oc patch buildconfig rails-pgsql-persistent -n my-database-app-jwang --type json -p='[{"op": "replace", "path": "/spec/source/git/uri", "value":"https://gitee.com/wangjun1974/rails-ex.git"}]'
+# oc patch buildconfig rails-pgsql-persistent -n my-database-app-jwang --type json -p='[{"op": "replace", "path": "/spec/source/git/uri", "value":"https://gitee.com/wangjun1974/rails-ex.git"}]'
 oc start-build rails-pgsql-persistent
 
 # 标记不备份资源 configmaps/rails-pgsql-persistent-3-ca

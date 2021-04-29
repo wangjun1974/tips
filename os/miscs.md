@@ -16280,6 +16280,7 @@ oc create -f volumesnapshotclass.yaml
 # 创建演示应用程序
 # 演示应用参见：https://github.com/red-hat-storage/ocs-training/blob/master/training/modules/ocs4/attachments/configurable-rails-app.yaml
 # 转换到 gitee 上来 
+# https://gitee.com/wangjun1974/ocs-training/raw/master/training/modules/ocs4/attachments/configurable-rails-app.yaml
 oc get projects | grep -i jwang
 oc new-project my-database-app-jwang
 curl -s https://gitee.com/wangjun1974/ocs-training/raw/master/training/modules/ocs4/attachments/configurable-rails-app.yaml | oc new-app -p VOLUME_CAPACITY=5Gi -p STORAGE_CLASS=gp2-csi -p SOURCE_REPOSITORY_URL="https://gitee.com/wangjun1974/rails-ex.git" -f -

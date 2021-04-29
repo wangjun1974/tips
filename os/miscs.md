@@ -16463,6 +16463,8 @@ time="2021-04-28T13:04:47Z" level=info msg="Persistent volume is not a supported
 # 查看 backup 日志
 time="2021-04-29T06:33:45Z" level=error msg="Error backing up item" backup=oadp-operator/backup1 error="error executing custom action (groupResource=persistentvolumeclaims, namespace=my-database-app-jwang, name=postgresql): rpc error: code = Unknown desc = failed to get volumesnapshotclass for storageclass gp2-csi: failed to get volumesnapshotclass for provisioner ebs.csi.aws.com, ensure that the desired volumesnapshot class has the velero.io/csi-volumesnapshot-class label" logSource="pkg/backup/backup.go:455" name=postgresql-1-zsr5f
 
+# 使用 OADP 备份 cassandra 和 Postgres
+# https://github.com/konveyor/oadp-capstone
 ```
 
 # 安装 aws cli

@@ -16225,7 +16225,7 @@ spec:
     - aws
     - openshift
     - csi
-  enable_restic: true
+  enable_restic: false
   enable_csi_plugin: true
   olm_managed: true
   backup_storage_locations:
@@ -16296,11 +16296,15 @@ spec:
 # 创建 VolumeSnapshotClass
 # https://aws.amazon.com/cn/blogs/containers/using-ebs-snapshots-for-persistent-storage-with-your-eks-cluster/
 
+# 创建 VolumeSnapshotClass
+# 为 volumesnapshotclass 添加 label velero.io/csi-volumesnapshot-class: "true"
 cat > volumesnapshotclass.yaml << EOF
 apiVersion: snapshot.storage.k8s.io/v1beta1
 kind: VolumeSnapshotClass
 metadata:
   name: test-snapclass
+  labels:
+    velero.io/csi-volumesnapshot-class: "true"
 driver: ebs.csi.aws.com
 deletionPolicy: Delete
 EOF
@@ -16455,6 +16459,9 @@ time="2021-04-28T13:04:47Z" level=info msg="Persistent volume is not a supported
 
 # Data Mover
 # https://github.com/konveyor/data-mover/blob/master/docs/design/initial-design.md
+
+# 查看 backup 日志
+time="2021-04-29T06:33:45Z" level=error msg="Error backing up item" backup=oadp-operator/backup1 error="error executing custom action (groupResource=persistentvolumeclaims, namespace=my-database-app-jwang, name=postgresql): rpc error: code = Unknown desc = failed to get volumesnapshotclass for storageclass gp2-csi: failed to get volumesnapshotclass for provisioner ebs.csi.aws.com, ensure that the desired volumesnapshot class has the velero.io/csi-volumesnapshot-class label" logSource="pkg/backup/backup.go:455" name=postgresql-1-zsr5f
 
 ```
 

@@ -16465,6 +16465,23 @@ time="2021-04-29T06:33:45Z" level=error msg="Error backing up item" backup=oadp-
 
 # 使用 OADP 备份 cassandra 和 Postgres
 # https://github.com/konveyor/oadp-capstone
+# https://www.openshift.com/blog/hybrid-cloud-disaster-recovery-on-openshift
+
+# oadp restic 的用法
+# defaultVolumesToRestic: true
+apiVersion: velero.io/v1
+kind: Backup
+metadata:
+  namespace: oadp-operator
+  name: backup3
+spec:
+  includedNamespaces:
+  - my-database-app-jwang
+  excludedResources:
+  - imagetags.image.openshift.io
+  snapshotVolumes: false
+  defaultVolumesToRestic: true
+# https://githubmemory.com/repo/konveyor/oadp-operator/issues
 ```
 
 # 安装 aws cli

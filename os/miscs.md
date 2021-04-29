@@ -16179,6 +16179,13 @@ oc expose svc minio
 # 安装 oadp operator 
 # https://red-hat-storage.github.io/ocs-training/training/ocs4/ocs4-multisite-replication.html#_installing_oadp_for_kubernetes_resource_collection
 
+# 创建 cloud-credentials 文件
+# 如何将 restic 的 repository 和 password 设置进去呢
+# https://www.digitalocean.com/community/tutorials/how-to-back-up-data-to-an-object-storage-service-with-the-restic-backup-client
+[default]
+aws_access_key_id=<access_key>
+aws_secret_access_key=<secret_access_key>
+
 # 创建 secret cloud-credentials
 oc create secret generic cloud-credentials --namespace oadp-operator --from-file cloud=<CREDENTIALS_FILE_PATH>/cloud-credentials
 

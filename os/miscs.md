@@ -16214,6 +16214,37 @@ spec:
       provider: aws
   use_upstream_images: false
 
+# 如果启用 csi plugin
+apiVersion: konveyor.openshift.io/v1alpha1
+kind: Velero
+metadata:
+  name: oadp-velero
+  namespace: oadp-operator
+spec:
+  default_velero_plugins:
+    - aws
+    - openshift
+    - csi
+  enable_restic: true
+  enable_csi_plugin: true
+  olm_managed: true
+  backup_storage_locations:
+    - config:
+        profile: default
+        region: aws
+        insecure_skip_tls_verify: true
+        s3_force_path_style: true
+        s3_url: http://minio-velero.apps.ocp1.rhcnsa.com
+      credentials_secret_ref:
+        name: cloud-credentials
+        namespace: oadp-operator
+      name: default
+      object_storage:
+        bucket: velero
+        prefix: velero
+      provider: aws
+  use_upstream_images: false
+
 # 尝试另外一个配置
 # 这个配置里同时指定了 BackupStorageLocation 和 VolumeSnapshotLocation
 # https://github.com/konveyor/oadp-operator/blob/master/docs/bsl_and_vsl.md

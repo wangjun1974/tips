@@ -16289,8 +16289,8 @@ curl -s https://gitee.com/wangjun1974/ocs-training/raw/master/training/modules/o
 # oc patch buildconfig rails-pgsql-persistent -n my-database-app-jwang --type json -p='[{"op": "replace", "path": "/spec/source/git/uri", "value":"https://gitee.com/wangjun1974/rails-ex.git"}]'
 oc start-build rails-pgsql-persistent
 
-# 标记不备份资源 configmaps/rails-pgsql-persistent-3-ca
-oc label -n my-database-app-jwang configmaps rails-pgsql-persistent-3-ca velero.io/exclude-from-backup=true
+# 标记不备份资源 configmaps/rails-pgsql-persistent-1-ca
+oc label -n my-database-app-jwang configmaps rails-pgsql-persistent-1-ca velero.io/exclude-from-backup=true
 
 # 生成备份对象 Backup backup1
 cat > backup.yaml << EOF
@@ -16418,6 +16418,11 @@ oc -n my-database-app-jwang get route rails-pgsql-persistent -o jsonpath='http:/
 # 有消息记录 Persistent volume is not a supported volume type for snapshots
 time="2021-04-28T13:04:47Z" level=info msg="Persistent volume is not a supported volume type for snapshots, skipping." backup=oadp-operator/backup1 logSource="pkg/backup/item_backupper.go:469" name=pvc-d4cc8866-41e7-4411-b5dd-b61425c5c8e7 namespace= persistentVolume=pvc-d4cc8866-41e7-4411-b5dd-b61425c5c8e7 resource=persistentvolumes
 
+# Add a new data movement layer to Velero's architecture (Velero 2.0 Epic) #3229
+# https://github.com/vmware-tanzu/velero/issues/3229
+
+# Data Mover
+# https://github.com/konveyor/data-mover/blob/master/docs/design/initial-design.md
 
 ```
 
@@ -17027,3 +17032,6 @@ https://docs.ukcloud.com/articles/openstack/ostack-vid-trilio.html
 
 SolarWinds and the Supply Chain, the Threat We’ve Ignored for Too Long<br>
 https://www.youtube.com/watch?v=tS3PbgiIHtI<br>
+
+# Kubernetes enhancement for sig-storage
+https://github.com/kubernetes/enhancements/tree/master/keps/sig-storage

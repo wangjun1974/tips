@@ -16599,7 +16599,9 @@ velero install \
  --backup-location-config region=default,s3ForcePathStyle="true",s3Url=http://minio-velero.apps.ocp1.rhcnsa.com  \
  --image velero/velero:v1.5.2  \
  --use-restic
-# 
+# 消除一下 resources/requests 和 resources/limits
+oc patch deployment velero -n velero --type json -p '[{ "op": "remove", "path": "/spec/template/spec/containers/0/resources/requests" }]'
+
 ```
 
 # 安装 aws cli

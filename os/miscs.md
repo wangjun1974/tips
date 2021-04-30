@@ -16185,6 +16185,7 @@ oc expose svc minio
 [default]
 aws_access_key_id=<access_key>
 aws_secret_access_key=<secret_access_key>
+restic_password=<restic_password>
 
 # 创建 secret cloud-credentials
 oc create secret generic cloud-credentials --namespace oadp-operator --from-file cloud=<CREDENTIALS_FILE_PATH>/cloud-credentials
@@ -16519,6 +16520,25 @@ time="2021-04-29T08:49:40Z" level=error msg="Error backing up item" backup=oadp-
 
 RESTIC=$(oc -n oadp-operator get pods -l name=restic -o jsonpath='{range .items[?(@.status.phase=="Running")]}{@.metadata.name}{"\n"}' | head -1) 
 oc -n oadp-operator rsh $RESTIC
+
+# 在 RHEL7 上安装 restic 客户端
+# https://restic.readthedocs.io/en/stable/020_installation.html
+$ yum-config-manager --add-repo https://copr.fedorainfracloud.org/coprs/copart/restic/repo/epel-7/copart-restic-epel-7.repo
+$ sudo yum install restic
+
+# 初始化 restic repo
+$ export AWS_ACCESS_KEY_ID=<YOUR-MINIO-ACCESS-KEY-ID>
+$ export AWS_SECRET_ACCESS_KEY= <YOUR-MINIO-SECRET-ACCESS-KEY>
+$ restic -r s3:http://minio-velero.apps.ocp1.rhcnsa.com/velero/velero/restic/my-database-app-jwang init
+
+# 下载 velero client，解压缩，拷贝解压缩后的可执行文件 velero 到 /usr/local/bin
+# https://github.com/vmware-tanzu/velero/releases/tag/v1.5.2
+# https://github.com/vmware-tanzu/velero/releases/download/v1.5.2/velero-v1.5.2-linux-amd64.tar.gz
+# 使用 oc login 登录安装 OADP 的 openshift API server
+# 然后查看 velero 对象
+$ velero backup get -n oadp-operator
+NAME      STATUS            ERRORS   WARNINGS   CREATED                         EXPIRES   STORAGE LOCATION   SELECTOR
+backup3   PartiallyFailed   2        0          2021-04-30 13:32:43 +0800 CST   29d       default            <none>
 
 
 ```

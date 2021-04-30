@@ -16601,6 +16601,9 @@ velero install \
  --use-restic
 # 消除一下 resources/requests 和 resources/limits
 oc patch deployment velero -n velero --type json -p '[{ "op": "remove", "path": "/spec/template/spec/containers/0/resources/requests" }]'
+oc patch deployment velero -n velero --type json -p '[{ "op": "remove", "path": "/spec/template/spec/containers/0/resources/limits" }]'
+oc patch daemonset restic -n velero --type json -p '[{ "op": "remove", "path": "/spec/template/spec/containers/0/resources/requests" }]'
+oc patch daemonset restic -n velero --type json -p '[{ "op": "remove", "path": "/spec/template/spec/containers/0/resources/limits" }]'
 
 ```
 

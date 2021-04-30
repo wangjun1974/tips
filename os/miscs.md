@@ -16569,6 +16569,17 @@ Errors:
 velero -n oadp-operator backup create backup5 --include-namespaces my-database-app-jwang --exclude-resources imagetags.image.openshift.io --snapshot-volumes=true 
 velero -n oadp-operator backup describe backup5
 
+# 删除对象
+oc delete build rails-pgsql-persistent-1 ; oc delete buildconfig rails-pgsql-persistent ; oc delete deploymentconfig postgresql ; oc delete service rails-pgsql-persistent  ; oc delete service postgresql
+
+# 恢复
+velero -n oadp-operator restore create --from-backup backup5
+velero -n oadp-operator restore describe backup5-20210430151659
+
+# 创建 restic backup
+velero -n oadp-operator backup create backup6 --include-namespaces my-database-app-jwang --exclude-resources imagetags.image.openshift.io --default-volumes-to-restic=true --snapshot-volumes=false
+velero -n oadp-operator backup describe backup6
+
 ```
 
 # 安装 aws cli

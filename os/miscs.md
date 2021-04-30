@@ -16557,6 +16557,18 @@ oc delete build rails-pgsql-persistent-1 ; oc delete buildconfig rails-pgsql-per
 # 恢复
 velero -n oadp-operator restore create --from-backup backup4
 
+velero restore describe backup4-20210430150304 -n oadp-operator
+...
+Errors:
+  Velero:     <none>
+  Cluster:    <none>
+  Namespaces:
+    my-database-app-jwang:  error restoring imagetags.image.openshift.io/my-database-app-jwang/rails-pgsql-persistent:latest: ImageTag.image.openshift.io "rails-pgsql-persistent:latest" is invalid: spec: Required value: spec is a required field during creation
+
+# 备份时需要 Exclude imagetags.image.openshift.io 类型的资源
+velero -n oadp-operator backup create backup5 --include-namespaces my-database-app-jwang --exclude-resources imagetags.image.openshift.io --snapshot-volumes=true 
+velero -n oadp-operator backup describe backup5
+
 ```
 
 # 安装 aws cli

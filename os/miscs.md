@@ -16540,6 +16540,11 @@ $ velero backup get -n oadp-operator
 NAME      STATUS            ERRORS   WARNINGS   CREATED                         EXPIRES   STORAGE LOCATION   SELECTOR
 backup3   PartiallyFailed   2        0          2021-04-30 13:32:43 +0800 CST   29d       default            <none>
 
+# 查看 backup-location
+$ velero backup-location get -n oadp-operator
+NAME      PROVIDER   BUCKET/PREFIX   PHASE       LAST VALIDATED                  ACCESS MODE
+default   aws        velero/velero   Available   2021-04-30 14:31:50 +0800 CST   ReadWrite
+
 
 ```
 

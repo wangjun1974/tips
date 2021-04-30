@@ -16520,6 +16520,11 @@ time="2021-04-29T08:49:40Z" level=error msg="Error backing up item" backup=oadp-
 
 RESTIC=$(oc -n oadp-operator get pods -l name=restic -o jsonpath='{range .items[?(@.status.phase=="Running")]}{@.metadata.name}{"\n"}' | head -1) 
 oc -n oadp-operator rsh $RESTIC
+sh-4.4# restic init --repo=s3:http://minio-velero.apps.ocp1.rhcnsa.com/velero/velero/restic/my-database-app-jwang --password-file=/tmp/velero-restic-credentials-my-database-app-jwang069427583  --cache-dir=/scratch/.cache/restic
+
+cat > /tmp/velero-restic-credentials-my-database-app-jwang069427583 << EOF
+RESTIC_PASSWORD=minio
+EOF
 
 # 在 RHEL7 上安装 restic 客户端
 # https://restic.readthedocs.io/en/stable/020_installation.html
@@ -16579,7 +16584,22 @@ velero -n oadp-operator restore describe backup5-20210430151659
 # 创建 restic backup
 velero -n oadp-operator backup create backup6 --include-namespaces my-database-app-jwang --exclude-resources imagetags.image.openshift.io --default-volumes-to-restic=true --snapshot-volumes=false
 velero -n oadp-operator backup describe backup6
+velero -n oadp-operator backup logs backup6
 
+# 安装 velero 
+# 参考: https://medium.com/ibm-garage/how-to-install-velero-in-an-openshift-environment-f7484fabbbe4
+# 参考：https://docs.pivotal.io/tkgi/1-9/velero-install.html
+oc project velero
+velero install \
+ --provider aws \
+ --plugins velero/velero-plugin-for-aws:v1.0.0 \
+ --bucket velero  \
+ --secret-file ./cloud-credentials \
+ --use-volume-snapshots=false \
+ --backup-location-config region=default,s3ForcePathStyle="true",s3Url=http://minio-velero.apps.ocp1.rhcnsa.com  \
+ --image velero/velero:v1.5.2  \
+ --use-restic
+# 
 ```
 
 # 安装 aws cli

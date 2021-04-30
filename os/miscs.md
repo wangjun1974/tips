@@ -16495,6 +16495,9 @@ spec:
 
 # Restic is not ready
 # https://github.com/vmware-tanzu/velero/issues/3134
+
+# minio and restic
+# https://docs.min.io/docs/restic-with-minio.html
 ```
 
 # 安装 aws cli

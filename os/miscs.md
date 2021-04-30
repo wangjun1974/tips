@@ -16545,6 +16545,17 @@ $ velero backup-location get -n oadp-operator
 NAME      PROVIDER   BUCKET/PREFIX   PHASE       LAST VALIDATED                  ACCESS MODE
 default   aws        velero/velero   Available   2021-04-30 14:31:50 +0800 CST   ReadWrite
 
+# 创建一个备份试试
+velero -n oadp-operator backup create backup4 --include-namespaces my-database-app-jwang --snapshot-volumes=true 
+
+velero -n oadp-operator backup describe backup4
+
+# 删除一些对象
+oc project my-database-app-jwang
+oc delete build rails-pgsql-persistent-1 ; oc delete buildconfig rails-pgsql-persistent ; oc delete deploymentconfig postgresql ; oc delete service rails-pgsql-persistent  ; oc delete service postgresql
+
+# 恢复
+velero -n oadp-operator restore create --from-backup backup4
 
 ```
 

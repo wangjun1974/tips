@@ -16517,6 +16517,10 @@ sh-4.4$ ./velero backup logs backup3 | grep -v "level=info"
 time="2021-04-29T08:49:40Z" level=error msg="Error backing up item" backup=oadp-operator/backup3 error="restic repository is not ready: error running command=restic init --repo=s3:http://minio-velero.apps.ocp1.rhcnsa.com/velero/velero/restic/my-database-app-jwang --password-file=/tmp/velero-restic-credentials-my-database-app-jwang122533340 --insecure-skip-tls-verify --cache-dir=/scratch/.cache/restic, stdout=, stderr=Fatal: create repository at s3:http://minio-velero.apps.ocp1.rhcnsa.com/velero/velero/restic/my-database-app-jwang failed: client.BucketExists: The request signature we calculated does not match the signature you provided. Check your key and signing method.\n\n: exit status 1" error.file="/go/src/github.com/vmware-tanzu/velero/pkg/restic/repository_ensurer.go:186" error.function="github.com/vmware-tanzu/velero/pkg/restic.(*repositoryEnsurer).EnsureRepo" logSource="pkg/backup/backup.go:455" name=postgresql-1-frmsg
 time="2021-04-29T08:49:40Z" level=error msg="Error backing up item" backup=oadp-operator/backup3 error="restic repository is not ready: error running command=restic init --repo=s3:http://minio-velero.apps.ocp1.rhcnsa.com/velero/velero/restic/my-database-app-jwang --password-file=/tmp/velero-restic-credentials-my-database-app-jwang122533340 --insecure-skip-tls-verify --cache-dir=/scratch/.cache/restic, stdout=, stderr=Fatal: create repository at s3:http://minio-velero.apps.ocp1.rhcnsa.com/velero/velero/restic/my-database-app-jwang failed: client.BucketExists: The request signature we calculated does not match the signature you provided. Check your key and signing method.\n\n: exit status 1" error.file="/go/src/github.com/vmware-tanzu/velero/pkg/restic/repository_ensurer.go:144" error.function="github.com/vmware-tanzu/velero/pkg/restic.(*repositoryEnsurer).EnsureRepo" logSource="pkg/backup/backup.go:455" name=rails-pgsql-persistent-1-build
 
+RESTIC=$(oc -n oadp-operator get pods -l name=restic -o jsonpath='{range .items[?(@.status.phase=="Running")]}{@.metadata.name}{"\n"}' | head -1) 
+oc -n oadp-operator rsh $RESTIC
+
+
 ```
 
 # 安装 aws cli

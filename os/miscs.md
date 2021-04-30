@@ -16498,6 +16498,25 @@ spec:
 
 # minio and restic
 # https://docs.min.io/docs/restic-with-minio.html
+
+# 查看 velero 版本
+VELERO=$(oc -n oadp-operator get pods -l component=velero -o name) 
+oc -n oadp-operator rsh $VELERO
+sh-4.4$ ./velero version
+Client:
+        Version: v1.5.2-konveyor
+        Git commit: -
+Server:
+        Version: v1.5.2-konveyor
+# 查看 backup
+sh-4.4$ ./velero backup get         
+NAME      STATUS            ERRORS   WARNINGS   CREATED                         EXPIRES   STORAGE LOCATION   SELECTOR
+backup3   PartiallyFailed   2        0          2021-04-29 08:48:54 +0000 UTC   29d       default            <none>
+# 查看 backup backup3 的日志
+sh-4.4$ ./velero backup logs backup3 | grep -v "level=info"
+time="2021-04-29T08:49:40Z" level=error msg="Error backing up item" backup=oadp-operator/backup3 error="restic repository is not ready: error running command=restic init --repo=s3:http://minio-velero.apps.ocp1.rhcnsa.com/velero/velero/restic/my-database-app-jwang --password-file=/tmp/velero-restic-credentials-my-database-app-jwang122533340 --insecure-skip-tls-verify --cache-dir=/scratch/.cache/restic, stdout=, stderr=Fatal: create repository at s3:http://minio-velero.apps.ocp1.rhcnsa.com/velero/velero/restic/my-database-app-jwang failed: client.BucketExists: The request signature we calculated does not match the signature you provided. Check your key and signing method.\n\n: exit status 1" error.file="/go/src/github.com/vmware-tanzu/velero/pkg/restic/repository_ensurer.go:186" error.function="github.com/vmware-tanzu/velero/pkg/restic.(*repositoryEnsurer).EnsureRepo" logSource="pkg/backup/backup.go:455" name=postgresql-1-frmsg
+time="2021-04-29T08:49:40Z" level=error msg="Error backing up item" backup=oadp-operator/backup3 error="restic repository is not ready: error running command=restic init --repo=s3:http://minio-velero.apps.ocp1.rhcnsa.com/velero/velero/restic/my-database-app-jwang --password-file=/tmp/velero-restic-credentials-my-database-app-jwang122533340 --insecure-skip-tls-verify --cache-dir=/scratch/.cache/restic, stdout=, stderr=Fatal: create repository at s3:http://minio-velero.apps.ocp1.rhcnsa.com/velero/velero/restic/my-database-app-jwang failed: client.BucketExists: The request signature we calculated does not match the signature you provided. Check your key and signing method.\n\n: exit status 1" error.file="/go/src/github.com/vmware-tanzu/velero/pkg/restic/repository_ensurer.go:144" error.function="github.com/vmware-tanzu/velero/pkg/restic.(*repositoryEnsurer).EnsureRepo" logSource="pkg/backup/backup.go:455" name=rails-pgsql-persistent-1-build
+
 ```
 
 # 安装 aws cli

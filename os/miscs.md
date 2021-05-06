@@ -16287,8 +16287,10 @@ spec:
 
 # 另外一个配置，无 csi，启用 restic
 # 设置 insecure_skip_tls_verify 为 false
-# 设置 restic_resource_allocation
+# 设置 velero_resource_allocation and restic_resource_allocation
 # https://github.com/konveyor/oadp-operator/blob/master/docs/resource_req_limits.md
+# 设置 insecure_skip_tls_verify: "true"
+# https://github.com/konveyor/oadp-operator/blob/master/docs/self_signed_certs.md
 apiVersion: konveyor.openshift.io/v1alpha1
 kind: Velero
 metadata:
@@ -16304,8 +16306,8 @@ spec:
     - config:
         profile: default
         region: aws
-        insecure_skip_tls_verify: false
-        s3_force_path_style: true
+        insecure_skip_tls_verify: "true"
+        s3_force_path_style: "true"
         s3_url: http://minio-velero.apps.ocp1.rhcnsa.com
       credentials_secret_ref:
         name: cloud-credentials
@@ -16316,6 +16318,13 @@ spec:
         prefix: velero
       provider: aws
   use_upstream_images: false
+  velero_resource_allocation:
+    limits:
+      cpu: "1"
+      memory: 256Mi
+    requests:
+      cpu: 1m
+      memory: 128Mi  
   restic_resource_allocation:
     limits:
       cpu: "1"

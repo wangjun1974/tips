@@ -16354,6 +16354,7 @@ spec:
         profile: default
         region: aws
         s3_force_path_style: "true"
+        insecure_skip_tls_verify: "false"
         s3_url: http://minio-velero.apps.ocp1.rhcnsa.com
       credentials_secret_ref:
         name: cloud-credentials
@@ -17381,3 +17382,12 @@ https://www.youtube.com/watch?v=tS3PbgiIHtI<br>
 
 # Kubernetes enhancement for sig-storage
 https://github.com/kubernetes/enhancements/tree/master/keps/sig-storage
+
+# MinIO Helm chart operator
+https://github.com/minio/charts<br>
+```
+helm repo remove minio
+helm repo add minio https://operator.min.io/
+helm install --namespace minio-operator --create-namespace --generate-name minio/minio-operator
+kubectl apply -f https://github.com/minio/operator/blob/master/examples/tenant.yaml
+```

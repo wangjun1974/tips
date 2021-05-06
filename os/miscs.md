@@ -16333,6 +16333,53 @@ spec:
       cpu: 1m
       memory: 128Mi
 
+# 另外一个配置，无 csi，启用 restic
+# 设置 insecure_skip_tls_verify 为 false
+# 设置 velero_resource_allocation and restic_resource_allocation
+# https://github.com/konveyor/oadp-operator/blob/master/docs/resource_req_limits.md
+# 取消设置 insecure_skip_tls_verify
+# 根据 slack 信息
+apiVersion: konveyor.openshift.io/v1alpha1
+kind: Velero
+metadata:
+  name: oadp-velero
+  namespace: oadp-operator
+spec:
+  default_velero_plugins:
+    - aws
+    - openshift
+  enable_restic: true
+  olm_managed: true
+  backup_storage_locations:
+    - config:
+        profile: default
+        region: aws
+        s3_force_path_style: "true"
+        s3_url: http://minio-velero.apps.ocp1.rhcnsa.com
+      credentials_secret_ref:
+        name: cloud-credentials
+        namespace: oadp-operator
+      name: default
+      object_storage:
+        bucket: velero
+        prefix: velero
+      provider: aws
+  use_upstream_images: false
+  velero_resource_allocation:
+    limits:
+      cpu: "1"
+      memory: 256Mi
+    requests:
+      cpu: 1m
+      memory: 128Mi  
+  restic_resource_allocation:
+    limits:
+      cpu: "1"
+      memory: 256Mi
+    requests:
+      cpu: 1m
+      memory: 128Mi
+
 # 尝试另外一个配置
 # 这个配置里同时指定了 BackupStorageLocation 和 VolumeSnapshotLocation
 # https://github.com/konveyor/oadp-operator/blob/master/docs/bsl_and_vsl.md

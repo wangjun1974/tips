@@ -16185,7 +16185,6 @@ oc expose svc minio
 [default]
 aws_access_key_id=<access_key>
 aws_secret_access_key=<secret_access_key>
-restic_password=<restic_password>
 
 # 创建 secret cloud-credentials
 oc create secret generic cloud-credentials --namespace oadp-operator --from-file cloud=<CREDENTIALS_FILE_PATH>/cloud-credentials
@@ -17537,7 +17536,18 @@ spec:
     app: minio # must match with the label used in the deployment
 EOF
 oc apply -f ./minio-service.yaml 
+oc expose svc/minio-service
 
+# 配置 minio
+# download mc client
+wget https://dl.min.io/client/mc/release/linux-amd64/mc -P /usr/local/bin
+chmod +x /usr/local/bin/mc
+
+# minio 添加 host velero
+/usr/local/bin/mc --insecure config host add velero $(oc get route minio-service -o jsonpath='https://{.spec.host}') minio minio123123
+
+# 创建 bucket velero
+/usr/local/bin/mc --insecure mb -p velero/velero
 
 # 报错处理 
 # ERROR Unable to create certs CA directory at /root/.minio/certs/CAs: mkdir /root/.minio/certs/CAs: read-only file system

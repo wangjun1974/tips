@@ -17390,4 +17390,158 @@ helm repo remove minio
 helm repo add minio https://operator.min.io/
 helm install --namespace minio-operator --create-namespace --generate-name minio/minio-operator
 kubectl apply -f https://github.com/minio/operator/blob/master/examples/tenant.yaml
+
+NOTES:
+1. Get the JWT for logging in to the console:
+  kubectl get secret $(kubectl get serviceaccount console-sa --namespace minio-operator -o jsonpath="{.secrets[0].name}") --namespace minio-operator -o jsonpath="{.data.token}" | base64 --decode 
+2. Get the Operator Console URL by running these commands:
+  kubectl --namespace minio-operator port-forward svc/console 9090:9090
+  echo "Visit the Operator Console at http://127.0.0.1:9090"
+```
+
+https://mykidong.medium.com/secure-minio-not-on-kubernetes-46dd90ccb1c<br>
+https://stash.run/docs/0.7.0-rc.0/guides/minio_server/<br>
+```
+# 安装 onessl
+curl -fsSL -o onessl https://github.com/appscode/onessl/releases/download/0.1.0/onessl-linux-amd64 \
+  && chmod +x onessl \
+  && sudo mv onessl /usr/local/bin/
+
+# 生成 ca.crt 和 ca.key
+onessl create ca-cert
+
+# 生成 server cert 
+onessl create server-cert --domains minio-velero.apps.ocp1.rhcnsa.com
+
+# 生成 public.crt 和 private.key
+cat {server.crt,ca.crt} > public.crt
+cat server.key > private.key
+
+# 创建 minio-server-secret
+# 为 minio-server-secret 打标签
+oc project velero
+oc create secret generic minio-server-secret --from-file=./public.crt --from-file=./private.key
+oc label secret minio-server-secret app=minio -n velero
+
+# 创建 pvc minio-pvc 
+cat > minio-pvc.yaml << 'EOF'
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  # This name uniquely identifies the PVC. Will be used in minio deployment.
+  name: minio-pvc
+  labels:
+    app: minio
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    # This is the request for storage. Should be available in the cluster.
+    requests:
+      storage: 2Gi
+EOF
+oc apply -f ./minio-pvc.yaml 
+
+# minio deployment 需要 priveileged scc 
+oc adm policy add-scc-to-user privileged -z default
+
+# 创建 Deployment minio-deployment
+# 参考: https://github.com/minio/minio/tree/master/docs/tls/kubernetes
+cat > minio-deployment.yaml << EOF
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  # This name uniquely identifies the Deployment
+  name: minio-deployment
+  labels:
+    app: minio
+spec:
+  strategy:
+    type: Recreate # If pod fail, we want to recreate pod rather than restarting it.
+  selector:
+    matchLabels:
+      app: minio
+  template:
+    metadata:
+      labels:
+        # Label is used as a selector in the service.
+        app: minio
+    spec:
+      volumes:
+      # Refer to the PVC have created earlier
+      - name: storage
+        persistentVolumeClaim:
+          # Name of the PVC created earlier
+          claimName: minio-pvc
+      # Refer to minio-server-secret we have created earlier
+      - name: minio-server-secret
+        secret:
+          secretName: minio-server-secret
+      containers:
+      - name: minio
+        # Pulls the default Minio image from Docker Hub
+        image: minio/minio
+        securityContext:
+          privileged: true
+        args:
+        - server
+        - --address
+        - ":443"
+        - /storage
+        env:
+        # Minio access key and secret key
+        - name: MINIO_ACCESS_KEY
+          value: "minio"
+        - name: MINIO_SECRET_KEY
+          value: "<your minio secret key(any string)>"
+        ports:
+        - containerPort: 443
+          # This ensures containers are allocated on separate hosts. Remove hostPort to allow multiple Minio containers on one host
+          hostPort: 443
+        # Mount the volumes into the pod
+        volumes:
+          - name: sminio-server-secret
+            secret:
+              secretName: minio-server-secret
+              items:
+              - key: public.crt
+                path: public.crt
+              - key: private.key
+                path: private.key
+              - key: public.crt
+                path: CAs/public.crt
+        volumeMounts:
+        - name: storage # must match the volume name, above
+          mountPath: "/storage"
+        - name: minio-server-secret
+          mountPath: "/root/.minio/certs/" # directory where the certificates will be mounted
+EOF
+oc apply -f ./minio-deployment.yaml
+
+
+# 创建 Service minio-service
+cat > minio-service.yaml << EOF
+apiVersion: v1
+kind: Service
+metadata:
+  name: minio-service
+  labels:
+    app: minio
+spec:
+  type: LoadBalancer
+  ports:
+    - port: 443
+      targetPort: 443
+      protocol: TCP
+  selector:
+    app: minio # must match with the label used in the deployment
+EOF
+oc apply -f ./minio-service.yaml 
+
+
+# 报错处理 
+# ERROR Unable to create certs CA directory at /root/.minio/certs/CAs: mkdir /root/.minio/certs/CAs: read-only file system
+
+# 设置 securityContext
+oc -n velero patch deployments/minio-deployment --type json -p '[{"op":"add","path":"/spec/template/spec/containers/0/securityContext","value": { "privileged": true}}]'
 ```

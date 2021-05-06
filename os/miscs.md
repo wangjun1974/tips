@@ -16337,8 +16337,7 @@ spec:
 # 设置 insecure_skip_tls_verify 为 false
 # 设置 velero_resource_allocation and restic_resource_allocation
 # https://github.com/konveyor/oadp-operator/blob/master/docs/resource_req_limits.md
-# 取消设置 insecure_skip_tls_verify
-# 根据 slack 信息
+# 根据 slack 信息，取消设置 insecure_skip_tls_verify
 apiVersion: konveyor.openshift.io/v1alpha1
 kind: Velero
 metadata:

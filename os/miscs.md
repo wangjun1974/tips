@@ -16254,6 +16254,76 @@ spec:
       provider: aws
   use_upstream_images: false
 
+# 另外一个配置，无 csi，启用 restic
+# 设置 insecure_skip_tls_verify 为 false
+apiVersion: konveyor.openshift.io/v1alpha1
+kind: Velero
+metadata:
+  name: oadp-velero
+  namespace: oadp-operator
+spec:
+  default_velero_plugins:
+    - aws
+    - openshift
+  enable_restic: true
+  olm_managed: true
+  backup_storage_locations:
+    - config:
+        profile: default
+        region: aws
+        insecure_skip_tls_verify: false
+        s3_force_path_style: true
+        s3_url: http://minio-velero.apps.ocp1.rhcnsa.com
+      credentials_secret_ref:
+        name: cloud-credentials
+        namespace: oadp-operator
+      name: default
+      object_storage:
+        bucket: velero
+        prefix: velero
+      provider: aws
+  use_upstream_images: false
+
+
+# 另外一个配置，无 csi，启用 restic
+# 设置 insecure_skip_tls_verify 为 false
+# 设置 restic_resource_allocation
+# https://github.com/konveyor/oadp-operator/blob/master/docs/resource_req_limits.md
+apiVersion: konveyor.openshift.io/v1alpha1
+kind: Velero
+metadata:
+  name: oadp-velero
+  namespace: oadp-operator
+spec:
+  default_velero_plugins:
+    - aws
+    - openshift
+  enable_restic: true
+  olm_managed: true
+  backup_storage_locations:
+    - config:
+        profile: default
+        region: aws
+        insecure_skip_tls_verify: false
+        s3_force_path_style: true
+        s3_url: http://minio-velero.apps.ocp1.rhcnsa.com
+      credentials_secret_ref:
+        name: cloud-credentials
+        namespace: oadp-operator
+      name: default
+      object_storage:
+        bucket: velero
+        prefix: velero
+      provider: aws
+  use_upstream_images: false
+  restic_resource_allocation:
+    limits:
+      cpu: "1"
+      memory: 256Mi
+    requests:
+      cpu: 1m
+      memory: 128Mi
+
 # 尝试另外一个配置
 # 这个配置里同时指定了 BackupStorageLocation 和 VolumeSnapshotLocation
 # https://github.com/konveyor/oadp-operator/blob/master/docs/bsl_and_vsl.md
@@ -16596,7 +16666,7 @@ velero install \
  --bucket velero  \
  --secret-file ./cloud-credentials \
  --use-volume-snapshots=false \
- --backup-location-config region=default,s3ForcePathStyle="true",s3Url=http://minio-velero.apps.ocp1.rhcnsa.com  \
+ --backup-location-config region=default,s3ForcePathStyle="true",insecureSkipTLSVerify="true",s3Url=http://minio-velero.apps.ocp1.rhcnsa.com \
  --image velero/velero:v1.5.2  \
  --use-restic
 # 消除一下 resources/requests 和 resources/limits
@@ -16604,6 +16674,46 @@ oc patch deployment velero -n velero --type json -p '[{ "op": "remove", "path": 
 oc patch deployment velero -n velero --type json -p '[{ "op": "remove", "path": "/spec/template/spec/containers/0/resources/limits" }]'
 oc patch daemonset restic -n velero --type json -p '[{ "op": "remove", "path": "/spec/template/spec/containers/0/resources/requests" }]'
 oc patch daemonset restic -n velero --type json -p '[{ "op": "remove", "path": "/spec/template/spec/containers/0/resources/limits" }]'
+
+# 消除一下 resources/requests 和 resources/limits
+oc patch daemonset restic -n oadp-operator --type json -p '[{ "op": "remove", "path": "/spec/template/spec/containers/0/resources/requests" }]'
+oc patch daemonset restic -n oadp-operator --type json -p '[{ "op": "remove", "path": "/spec/template/spec/containers/0/resources/limits" }]'
+
+
+# 遇到报错
+# https://github.com/vmware-tanzu/velero/issues/2085
+An error occurred: could not read pod volumes host path: open /host_pods/: permission denied
+# 这个报错会不会与 scc 有关呢，设置一下试试
+oc adm policy add-scc-to-user anyuid -z velero -n velero
+# 经过测试，这个报错与 scc 无关
+# 检查 securityContext 是否已经设置
+oc -n velero get ds/restic -o jsonpath='{.spec.template.spec.containers[?(@.name == "restic")].securityContext.privileged}'
+# 设置 securityContext
+oc -n velero patch ds/restic --type json -p '[{"op":"add","path":"/spec/template/spec/containers/0/securityContext","value": { "privileged": true}}]'
+
+# backuplocation 有问题
+# 参考一下 oadp-operator/backupstoragelocation default
+    "spec": {
+        "accessMode": "ReadWrite",
+        "config": {
+            "insecureSkipTLSVerify": "True",
+            "profile": "default",
+            "region": "aws",
+            "s3ForcePathStyle": "True",
+            "s3Url": "http://minio-velero.apps.ocp1.rhcnsa.com"
+        },
+        "objectStorage": {
+            "bucket": "velero",
+            "prefix": "velero"
+        },
+        "provider": "aws"
+    },
+oc -n velero patch backupstoragelocation/default --type json -p '[{"op":"replace","path":"/spec/config","value": { "insecureSkipTLSVerify": "True","profile": "default","region": "aws","s3ForcePathStyle": "True","s3Url": "http://minio-velero.apps.ocp1.rhcnsa.com"}}]'
+
+
+# 试着用 velero restic 创建一个备份
+
+
 
 ```
 

@@ -158,5 +158,14 @@ spec:
 EOF
 oc apply -f ./minio-route.yaml
 
+# 配置 minio
+# 下载客户端 mc client
+wget https://dl.min.io/client/mc/release/linux-amd64/mc -P /usr/local/bin
+chmod +x /usr/local/bin/mc
 
+# minio 添加 host velero
+/usr/local/bin/mc --insecure config host add velero $(oc get route minio-service -o jsonpath='https://{.spec.host}') minio minio123123
+
+# 创建 bucket velero
+/usr/local/bin/mc --insecure mb -p velero/velero
 ```

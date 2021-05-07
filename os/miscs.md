@@ -16534,6 +16534,7 @@ spec:
   backupName: backup1
   includedNamespaces:
   - my-database-app-jwang
+  restorePVs: true
 EOF
 
 oc apply -f ./restore.yaml

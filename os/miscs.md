@@ -17476,6 +17476,13 @@ spec:
       - name: minio-server-secret
         secret:
           secretName: minio-server-secret
+          items:
+          - key: public.crt
+            path: public.crt
+          - key: private.key
+            path: private.key
+          - key: public.crt
+            path: CAs/public.crt  
       containers:
       - name: minio
         # Pulls the default Minio image from Docker Hub
@@ -17498,17 +17505,6 @@ spec:
           # This ensures containers are allocated on separate hosts. Remove hostPort to allow multiple Minio containers on one host
           hostPort: 443
         # Mount the volumes into the pod
-        volumes:
-          - name: sminio-server-secret
-            secret:
-              secretName: minio-server-secret
-              items:
-              - key: public.crt
-                path: public.crt
-              - key: private.key
-                path: private.key
-              - key: public.crt
-                path: CAs/public.crt
         volumeMounts:
         - name: storage # must match the volume name, above
           mountPath: "/storage"
@@ -17517,6 +17513,70 @@ spec:
 EOF
 oc apply -f ./minio-deployment.yaml
 
+# 根据 velero 项目里的例子创建 minio Deployment
+# 这个 Deployment 不需要特殊 scc
+cat > minio-deployment.yaml << EOF
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  # This name uniquely identifies the Deployment
+  name: minio
+  labels:
+    app: minio
+spec:
+  strategy:
+    type: Recreate # If pod fail, we want to recreate pod rather than restarting it.
+  selector:
+    matchLabels:
+      app: minio
+  template:
+    metadata:
+      labels:
+        # Label is used as a selector in the service.
+        app: minio
+    spec:
+      volumes:
+      # Refer to the PVC have created earlier
+      - name: storage
+        persistentVolumeClaim:
+          # Name of the PVC created earlier
+          claimName: minio-pvc
+      # Refer to minio-server-secret we have created earlier
+      - name: minio-server-secret
+        secret:
+          secretName: minio-server-secret
+          items:
+          - key: public.crt
+            path: public.crt
+          - key: private.key
+            path: private.key
+          - key: public.crt
+            path: CAs/public.crt       
+      containers:
+      - name: minio
+        # Pulls the default Minio image from Docker Hub
+        image: minio/minio:latest
+        imagePullPolicy: IfNotPresent
+        args:
+        - server
+        - /storage
+        - --config-dir=/config
+        env:
+        # Minio access key and secret key
+        - name: MINIO_ACCESS_KEY
+          value: "minio"
+        - name: MINIO_SECRET_KEY
+          value: "<your minio secret key(any string)>"
+        ports:
+        - containerPort: 9000
+        # Mount the volumes into the pod
+        volumeMounts:
+        - name: storage # must match the volume name, above
+          mountPath: "/storage"
+        - name: minio-server-secret
+          mountPath: "${HOME}/.minio/certs/" # directory where the certificates will be mounted
+EOF
+oc apply -f ./minio-deployment.yaml
 
 # 创建 Service minio-service
 cat > minio-service.yaml << EOF
@@ -17535,8 +17595,32 @@ spec:
   selector:
     app: minio # must match with the label used in the deployment
 EOF
+
+# 不需要特殊 scc 的 minio service
+cat > minio-service.yaml << EOF
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: wang-jun-1974-dev
+  name: minio
+  labels:
+    app: minio
+spec:
+  # ClusterIP is recommended for production environments.
+  # Change to NodePort if needed per documentation,
+  # but only if you run Minio in a test/trial environment, for example with Minikube.
+  type: ClusterIP
+  ports:
+    - port: 9000
+      targetPort: 9000
+      protocol: TCP
+  selector:
+    app: minio
+EOF
+
 oc apply -f ./minio-service.yaml 
 oc expose svc/minio-service
+oc expose svc/minio
 
 # 配置 minio
 # download mc client

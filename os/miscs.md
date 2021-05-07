@@ -17515,6 +17515,8 @@ oc apply -f ./minio-deployment.yaml
 
 # 根据 velero 项目里的例子创建 minio Deployment
 # 这个 Deployment 不需要特殊 scc
+# 尝试 tls/443
+# 参考：https://canlogger.csselectronics.com/canedge-getting-started/transfer-data/s3-server/https/
 cat > minio-deployment.yaml << EOF
 apiVersion: apps/v1
 kind: Deployment
@@ -17559,8 +17561,11 @@ spec:
         imagePullPolicy: IfNotPresent
         args:
         - server
+        - --address
+        - ":9443"
+        - --certs-dir
+        - "${HOME}/.minio/certs"     
         - /storage
-        - --config-dir=/config
         env:
         # Minio access key and secret key
         - name: MINIO_ACCESS_KEY
@@ -17568,7 +17573,7 @@ spec:
         - name: MINIO_SECRET_KEY
           value: "<your minio secret key(any string)>"
         ports:
-        - containerPort: 9000
+        - containerPort: 9443
         # Mount the volumes into the pod
         volumeMounts:
         - name: storage # must match the volume name, above
@@ -17611,8 +17616,8 @@ spec:
   # but only if you run Minio in a test/trial environment, for example with Minikube.
   type: ClusterIP
   ports:
-    - port: 9000
-      targetPort: 9000
+    - port: 9443
+      targetPort: 9443
       protocol: TCP
   selector:
     app: minio
@@ -17632,7 +17637,7 @@ metadata:
 spec:
   host: minio-wang-jun-1974-dev.apps.sandbox.x8i5.p1.openshiftapps.com
   port:
-    targetPort: 9000
+    targetPort: 9443
   to:
     kind: Service
     name: minio
@@ -17660,4 +17665,10 @@ chmod +x /usr/local/bin/mc
 
 # 设置 securityContext
 oc -n velero patch deployments/minio-deployment --type json -p '[{"op":"add","path":"/spec/template/spec/containers/0/securityContext","value": { "privileged": true}}]'
+
+# 报错 
+ERROR Unable to start the server: Insufficient permissions to use specified port
+      > Please ensure MinIO binary has 'cap_net_bind_service=+ep' permissions
+      HINT:
+        Use 'sudo setcap cap_net_bind_service=+ep /path/to/minio' to provide sufficient permissions
 ```

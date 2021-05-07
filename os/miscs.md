@@ -16524,6 +16524,7 @@ Error from server (NotFound): namespaces "my-database-app-jwang" not found
 
 
 # 创建恢复对象 Restore restore1
+# 参考：https://github.com/konveyor/oadp-operator/issues/74
 cat > restore.yaml << EOF
 apiVersion: velero.io/v1
 kind: Restore
@@ -17667,9 +17668,12 @@ chmod +x /usr/local/bin/mc
 # 设置 securityContext
 oc -n velero patch deployments/minio-deployment --type json -p '[{"op":"add","path":"/spec/template/spec/containers/0/securityContext","value": { "privileged": true}}]'
 
-# 报错 
+# 报错，根据默认 scc，minio 没有 cap_net_bind_service=+ep 的权限
+# 解决方法是将端口调整到非特权端口
 ERROR Unable to start the server: Insufficient permissions to use specified port
       > Please ensure MinIO binary has 'cap_net_bind_service=+ep' permissions
       HINT:
         Use 'sudo setcap cap_net_bind_service=+ep /path/to/minio' to provide sufficient permissions
+
+# 参见：https://blogs.oracle.com/cloud-infrastructure/backing-up-your-oke-environment-with-velero
 ```

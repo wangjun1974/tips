@@ -17647,8 +17647,6 @@ spec:
     termination: passthrough    
 EOF
 oc apply -f ./minio-route.yaml
-# 目前 openshift minio service / route 未工作于 https 模式
-# 如何能让 minio 工作于 tls 模式呢
 # https://blog.min.io/object_storage_as_a_service_on_minio/
 
 # 配置 minio

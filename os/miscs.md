@@ -17620,7 +17620,27 @@ EOF
 
 oc apply -f ./minio-service.yaml 
 oc expose svc/minio-service
-oc expose svc/minio
+
+cat > minio-route.yaml << EOF
+apiVersion: v1
+kind: Route
+metadata:
+  name: minio
+  namespace: wang-jun-1974-dev
+  labels:
+    app: minio
+spec:
+  host: minio-wang-jun-1974-dev.apps.sandbox.x8i5.p1.openshiftapps.com
+  port:
+    targetPort: 9000
+  to:
+    kind: Service
+    name: minio
+  tls:
+    termination: passthrough    
+EOF
+oc apply -f ./minio-route.yaml
+# 目前 openshift minio service / route 未工作于 https 模式
 
 # 配置 minio
 # download mc client

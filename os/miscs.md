@@ -16773,8 +16773,150 @@ oc -n velero patch backupstoragelocation/default --type json -p '[{"op":"replace
 
 # 试着用 velero restic 创建一个备份
 
+# Volume Backup by Default when Restic Enabled
+# 参考：https://drive.google.com/file/d/1i5IQfuOtsHhGuYiiTrCZ6zjVhtKWLRqV/view
+# 参考：https://hackmd.io/Jq6F5zqZR7S80CeDWUklkA?view
 
+# 参考这个文档里的步骤测试 velero restic backup and restore
+# https://medium.com/techlogs/using-velero-and-restic-to-backup-kubernetes-2f0f812da4db
 
+# 创建测试用的 Pod 和 PV
+cat << EOF | oc apply -f -
+apiVersion: v1
+kind: Namespace
+metadata:   
+  name: test-nginx
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: gp2-ext
+  labels:
+    app: nginx
+  namespace: test-nginx
+spec:
+  storageClassName: gp2
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi 
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx-test
+  namespace: test-nginx
+spec:
+  volumes:
+    - name: mystorage
+      persistentVolumeClaim:
+        claimName: gp2-ext
+  containers:
+    - name: task-pv-container
+      image: nginx
+      ports:
+        - containerPort: 80
+          name: "http-server"
+      volumeMounts:
+        - mountPath: "/usr/share/nginx/html"
+          name: mystorage
+EOF
+
+# 生成一些随机数据
+oc -n test-nginx exec -it nginx-test -- dd if=/dev/urandom of=/tmp/test-file3.txt count=512000 bs=1024
+oc -n test-nginx exec -it nginx-test -- ls -laSh /tmp/
+$ oc get pods,pvc -n test-nginx
+NAME             READY   STATUS    RESTARTS   AGE
+pod/nginx-test   1/1     Running   0          14m
+
+NAME                            STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   AGE
+persistentvolumeclaim/gp2-ext   Bound    pvc-336c6e92-5661-4321-978f-97c010816b73   1Gi        RWO            gp2            14m
+
+$ oc get pv | grep test-nginx
+NAME                                       CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS   CLAIM                                                                                    STORAGECLASS   REASON   AGE
+pvc-336c6e92-5661-4321-978f-97c010816b73   1Gi        RWO            Delete           Bound    test-nginx/gp2-ext                                                                       gp2                     15m
+
+# annotate pod backup volume
+# v1.5之后 这个步骤应该可以不需要执行
+# 经测试这个步骤还是需要执行的，否则不会备份 volume
+# https://github.com/vmware-tanzu/velero/issues/1871
+oc -n test-nginx annotate pod/nginx-test backup.velero.io/backup-volumes=mystorage
+
+# 创建备份
+velero -n oadp-operator backup create test-nginx-b1 --include-namespaces test-nginx --wait
+
+# 查看备份
+$ velero -n oadp-operator get backup
+NAME            STATUS      ERRORS   WARNINGS   CREATED                         EXPIRES   STORAGE LOCATION   SELECTOR
+backup1         Completed   0        0          2021-05-07 16:36:22 +0800 CST   29d       default            <none>
+test-nginx-b1   Completed   0        0          2021-05-08 09:28:16 +0800 CST   29d       default            <none>
+
+# 删除 namespace
+oc delete namespace test-nginx
+
+# 恢复 
+velero -n oadp-operator restore create --from-backup test-nginx-b1
+velero -n oadp-operator restore describe test-nginx-b1-20210508094622 --details
+
+# 报错分析
+$ oc -n test-nginx logs nginx-test -p 
+/docker-entrypoint.sh: /docker-entrypoint.d/ is not empty, will attempt to perform configuration
+/docker-entrypoint.sh: Looking for shell scripts in /docker-entrypoint.d/
+/docker-entrypoint.sh: Launching /docker-entrypoint.d/10-listen-on-ipv6-by-default.sh
+10-listen-on-ipv6-by-default.sh: info: can not modify /etc/nginx/conf.d/default.conf (read-only file system?)
+/docker-entrypoint.sh: Launching /docker-entrypoint.d/20-envsubst-on-templates.sh
+/docker-entrypoint.sh: Launching /docker-entrypoint.d/30-tune-worker-processes.sh
+/docker-entrypoint.sh: Configuration complete; ready for start up
+2021/05/08 01:57:46 [warn] 1#1: the "user" directive makes sense only if the master process runs with super-user privileges, ignored in /etc/nginx/nginx.conf:2
+nginx: [warn] the "user" directive makes sense only if the master process runs with super-user privileges, ignored in /etc/nginx/nginx.conf:2
+2021/05/08 01:57:46 [emerg] 1#1: mkdir() "/var/cache/nginx/client_temp" failed (13: Permission denied)
+nginx: [emerg] mkdir() "/var/cache/nginx/client_temp" failed (13: Permission denied)
+
+# 参考：https://github.com/vmware-tanzu/velero/issues/1871
+
+# 参考：
+cat << EOF | oc apply -f -
+apiVersion: v1
+kind: Namespace
+metadata:   
+  name: test-nginx
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: gp2-ext
+  labels:
+    app: nginx
+  namespace: test-nginx
+spec:
+  storageClassName: gp2
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi 
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx-test
+  namespace: test-nginx
+spec:
+  volumes:
+    - name: mystorage
+      persistentVolumeClaim:
+        claimName: gp2-ext
+  containers:
+    - name: task-pv-container
+      image: nginxinc/nginx-unprivileged
+      ports:
+        - containerPort: 80
+          name: "http-server"
+      volumeMounts:
+        - mountPath: "/usr/share/nginx/html"
+          name: mystorage
+EOF
 ```
 
 # 安装 aws cli

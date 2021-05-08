@@ -17885,8 +17885,35 @@ Thank you for using StackRox!
 # 设置 namespace/stackrox annotate 在 OpenShift 集群里
 oc annotate namespace/stackrox --overwrite openshift.io/node-selector=""
 
-# 消除一下 resources/requests 和 resources/limits 
+# 消除一下 deployment scanner 和 central 的 resources/requests 和 resources/limits 
 oc patch deployment scanner -n stackrox --type json -p '[{ "op": "remove", "path": "/spec/template/spec/containers/0/resources/requests" }]'
 oc patch deployment scanner -n stackrox --type json -p '[{ "op": "remove", "path": "/spec/template/spec/containers/0/resources/limits" }]'
+oc patch deployment central -n stackrox --type json -p '[{ "op": "remove", "path": "/spec/template/spec/containers/0/resources/requests" }]'
+oc patch deployment central -n stackrox --type json -p '[{ "op": "remove", "path": "/spec/template/spec/containers/0/resources/limits" }]'
 
+# 获取 Token
+# 参考：https://help.stackrox.com/docs/use-the-cli/#authentication
+# 登录 RHACS Central Portal.
+# 选择 Platform Configuration > Integrations.
+# 向下滚动到 Authentication Tokens, 选择 API Token.
+# 选择 Generate Token.
+# 输入 Token 名，选择适当角色 (例如：Continuous Integration or Sensor Creator).
+# 选择 Generate
+
+# 设置变量 ROX_API_TOKEN 和 ROX_CENTRAL_ADDRESS
+export ROX_API_TOKEN=<api-token>
+export ROX_CENTRAL_ADDRESS=<address>:<port-number>
+# 在 OpenShift 下，设置 ROX_CENTRAL_ADDRESS
+export ROX_CENTRAL_ADDRESS=$(oc -n stackrox get route central -o jsonpath='{.spec.host}:443')
+
+# 生成 cluster-init-bundle
+roxctl -e "$ROX_CENTRAL_ADDRESS" central init-bundles generate cluster-init-bundle-ocp1  --output cluster-init-bundle.yaml
+
+# 根据文档在 Central Portal 上创建集群，并且下载 'Download YAML FILE AND KEYS'
+# 解压缩并且执行 sensor.sh
+# 消除一下 deployment sensor 和 admission-control 的 resources/requests 和 resources/limits 
+oc patch deployment sensor -n stackrox --type json -p '[{ "op": "remove", "path": "/spec/template/spec/containers/0/resources/requests" }]'
+oc patch deployment sensor -n stackrox --type json -p '[{ "op": "remove", "path": "/spec/template/spec/containers/0/resources/limits" }]'
+oc patch deployment admission-control -n stackrox --type json -p '[{ "op": "remove", "path": "/spec/template/spec/containers/0/resources/requests" }]'
+oc patch deployment admission-control -n stackrox --type json -p '[{ "op": "remove", "path": "/spec/template/spec/containers/0/resources/limits" }]'
 ```

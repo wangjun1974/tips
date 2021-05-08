@@ -17911,9 +17911,26 @@ roxctl -e "$ROX_CENTRAL_ADDRESS" central init-bundles generate cluster-init-bund
 
 # 根据文档在 Central Portal 上创建集群，并且下载 'Download YAML FILE AND KEYS'
 # 解压缩并且执行 sensor.sh
+# 处理镜像的问题
+# sensor : registry.redhat.io/rh-acs/main:3.0.59.1
+oc -n stackrox patch deployment sensor --type json -p '[{"op": "replace", "path": "/spec/template/spec/containers/0/image", "value": "registry.redhat.io/rh-acs/main:3.0.59.1"}]'
+# admission-control: registry.redhat.io/rh-acs/main:3.0.59.1
+oc -n stackrox patch deployment admission-control --type json -p '[{"op": "replace", "path": "/spec/template/spec/containers/0/image", "value": "registry.redhat.io/rh-acs/main:3.0.59.1"}]'
+# collector: collector: registry.redhat.io/rh-acs/collector:3.1.22-slim
+# collector: compliance: registry.redhat.io/rh-acs/main:3.0.59.1
+oc -n stackrox patch daemonset collector --type json -p '[{"op": "replace", "path": "/spec/template/spec/containers/0/image", "value": "registry.redhat.io/rh-acs/collector:3.1.22-slim"}]'
+oc -n stackrox patch daemonset collector --type json -p '[{"op": "replace", "path": "/spec/template/spec/containers/1/image", "value": "registry.redhat.io/rh-acs/main:3.0.59.1"}]'
+
 # 消除一下 deployment sensor 和 admission-control 的 resources/requests 和 resources/limits 
 oc patch deployment sensor -n stackrox --type json -p '[{ "op": "remove", "path": "/spec/template/spec/containers/0/resources/requests" }]'
 oc patch deployment sensor -n stackrox --type json -p '[{ "op": "remove", "path": "/spec/template/spec/containers/0/resources/limits" }]'
 oc patch deployment admission-control -n stackrox --type json -p '[{ "op": "remove", "path": "/spec/template/spec/containers/0/resources/requests" }]'
 oc patch deployment admission-control -n stackrox --type json -p '[{ "op": "remove", "path": "/spec/template/spec/containers/0/resources/limits" }]'
+
+# 消除一下 daemonset collector 的 resources/requests 和 resources/limits 
+oc patch daemonset collector -n stackrox --type json -p '[{ "op": "remove", "path": "/spec/template/spec/containers/0/resources/requests" }]'
+oc patch daemonset collector -n stackrox --type json -p '[{ "op": "remove", "path": "/spec/template/spec/containers/0/resources/limits" }]'
+oc patch daemonset collector -n stackrox --type json -p '[{ "op": "remove", "path": "/spec/template/spec/containers/1/resources/requests" }]'
+oc patch daemonset collector -n stackrox --type json -p '[{ "op": "remove", "path": "/spec/template/spec/containers/1/resources/limits" }]'
+
 ```

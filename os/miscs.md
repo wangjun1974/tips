@@ -17933,4 +17933,12 @@ oc patch daemonset collector -n stackrox --type json -p '[{ "op": "remove", "pat
 oc patch daemonset collector -n stackrox --type json -p '[{ "op": "remove", "path": "/spec/template/spec/containers/1/resources/requests" }]'
 oc patch daemonset collector -n stackrox --type json -p '[{ "op": "remove", "path": "/spec/template/spec/containers/1/resources/limits" }]'
 
+# 访问 central portal
+oc get route central -o jsonpath='https://{.spec.host}'
+
+# RHACS v3.0.59.1 使用的镜像如下
+admission-controller.yaml:        - image: "registry.redhat.io/rh-acs/main:3.0.59.1"
+collector.yaml:        image: "registry.redhat.io/rh-acs/collector:3.1.22-slim"
+collector.yaml:        image: "registry.redhat.io/rh-acs/main:3.0.59.1"
+sensor.yaml:      - image: "registry.redhat.io/rh-acs/main:3.0.59.1"
 ```

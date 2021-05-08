@@ -16689,6 +16689,9 @@ oc delete build rails-pgsql-persistent-1 ; oc delete buildconfig rails-pgsql-per
 # 恢复
 velero -n oadp-operator restore create --from-backup backup4
 
+# 恢复时包含 PVC 和 PV
+velero -n oadp-operator restore create --from-backup backup1  --include-resources persistentvolumeclaims,persistentvolumes
+
 velero restore describe backup4-20210430150304 -n oadp-operator
 ...
 Errors:

@@ -18021,6 +18021,67 @@ oc delete networkpolicy stackrox-generated-deny-by-default -n oadp-operator
 # 博客：NetworkPolicy 和 MicroSegmentation
 # https://www.openshift.com/blog/networkpolicies-and-microsegmentation
 
+# 添加 EgressNetworkPolicy
+# 参考：https://bugzilla.redhat.com/show_bug.cgi?id=1835646
+一个 EgressNetworkPolicy 的例子
+
+# 添加一个 EgressNetworkPolicy 
+oc project oadp-operator
+
+cat << EOF | oc apply -f -
+apiVersion: network.openshift.io/v1
+kind: EgressNetworkPolicy
+metadata:
+  name: default-egress-rules
+spec:
+  egress:
+  - to:
+      dnsName: registry.redhat.io
+    type: Allow
+  - to:
+      dnsName: registry.connect.redhat.com
+    type: Allow
+  - to:
+      dnsName: registry.access.redhat.com
+    type: Allow
+  - to:
+      dnsName: quay.io
+    type: Allow
+  - to:
+      dnsName: image-registry.openshift-image-registry.svc
+    type: Allow
+  - to:
+      cidrSelector: 172.30.0.0/16
+    type: Allow
+  - to:
+      cidrSelector: 10.128.0.0/14
+    type: Allow
+  - to:
+      cidrSelector: 10.0.0.0/16
+    type: Allow
+  - to:
+      cidrSelector: 0.0.0.0/0
+    type: Deny
+EOF
+
+# 查看 egressnetworkpolicy
+$ oc get egressnetworkpolicy
+NAME                   AGE
+default-egress-rules   113m
+
+# 回到 StackRox 的 Network Graph 界面观察 namespace oadp-operator 在一个小时以后是否还有对外的访问
+# 界面仍显示有 Egress Flow
+# 但是这些 Egress Flow 实际使用时应被 egressnetworkpolicy 拒绝
+
+# 创建 velero backup
+# 备份应失败
+velero -n oadp-operator backup create test-nginx-b7 --include-namespaces test-nginx --wait
+Backup request "test-nginx-b7" submitted successfully.
+Waiting for backup to complete. You may safely press ctrl-c to stop waiting - your backup will continue in the background.
+........................................................................................................................
+Backup completed with status: Failed. You may check for more information using the commands `velero backup describe test-nginx-b7` and `velero backup logs tes
+t-nginx-b7`.
+
 
 ```
 

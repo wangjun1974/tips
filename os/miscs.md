@@ -18092,6 +18092,10 @@ Backup request "test-nginx-b8" submitted successfully.
 Waiting for backup to complete. You may safely press ctrl-c to stop waiting - your backup will continue in the background.
 ....................................................
 Backup completed with status: Completed. You may check for more information using the commands `velero backup describe test-nginx-b8` and `velero backup logs test-nginx-b8`.
+
+# 备注
+# 安装 secured cluster 的 helm 命令
+helm install -n stackrox stackrox-secured-cluster-services rhacs/secured-cluster-services -f lab-cluster-init-bundle.yaml --set clusterName=production --set imagePullSecrets.allowNone=true
 ```
 
 # eBPF 好文 - CSDN - ebpf深入理解和应用介绍

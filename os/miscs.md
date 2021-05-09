@@ -18018,5 +18018,9 @@ curl -v $(oc get route oadp-default-aws-registry-route -o jsonpath='http://{.spe
 # 删除 NetworkPolicy
 oc delete networkpolicy stackrox-generated-deny-by-default -n oadp-operator
 
+# 博客：NetworkPolicy 和 MicroSegmentation
+# https://www.openshift.com/blog/networkpolicies-and-microsegmentation
+
+
 ```
 

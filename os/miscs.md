@@ -16848,6 +16848,7 @@ oc -n test-nginx annotate pod/nginx-test backup.velero.io/backup-volumes=mystora
 
 # 创建备份
 velero -n oadp-operator backup create test-nginx-b1 --include-namespaces test-nginx --wait
+velero -n oadp-operator backup create test-nginx-b2 --include-namespaces test-nginx --wait
 
 # 查看备份
 $ velero -n oadp-operator get backup
@@ -16881,7 +16882,7 @@ nginx: [emerg] mkdir() "/var/cache/nginx/client_temp" failed (13: Permission den
 # 参考：
 cat << EOF | oc apply -f -
 apiVersion: v1
-kind: Namespace
+kind: Project
 metadata:   
   name: test-nginx
 ---
@@ -17942,24 +17943,80 @@ collector.yaml:        image: "registry.redhat.io/rh-acs/collector:3.1.22-slim"
 collector.yaml:        image: "registry.redhat.io/rh-acs/main:3.0.59.1"
 sensor.yaml:      - image: "registry.redhat.io/rh-acs/main:3.0.59.1"
 
+# 测试 Ingress NetworkPolicy
+curl -v $(oc get route oadp-default-aws-registry-route -o jsonpath='http://{.spec.host}')
+* About to connect() to oadp-default-aws-registry-route-oadp-operator.apps.ocp1.rhcnsa.com port 80 (#0)
+*   Trying 52.83.56.19...
+* Connected to oadp-default-aws-registry-route-oadp-operator.apps.ocp1.rhcnsa.com (52.83.56.19) port 80 (#0)
+> GET / HTTP/1.1
+> User-Agent: curl/7.29.0
+> Host: oadp-default-aws-registry-route-oadp-operator.apps.ocp1.rhcnsa.com
+> Accept: */*
+> 
+< HTTP/1.1 200 OK
+< Cache-Control: no-cache
+< Date: Sun, 09 May 2021 07:22:29 GMT
+< Content-Length: 0
+< Set-Cookie: 3d40d2cd9c2fe7504e0dbd222e1a66d3=988046cb0800c60e15a84b4fb0e833f1; path=/; HttpOnly
+< 
+* Connection #0 to host oadp-default-aws-registry-route-oadp-operator.apps.ocp1.rhcnsa.com left intact
+
 # 参考以下网址生成 NetworkPolicy
 # https://kubernetes.io/docs/concepts/services-networking/network-policies/
-
-# 默认禁止访问 oadp-operator Pod
----
+# 默认禁止访问 ingress 
+# https://bugzilla.redhat.com/show_bug.cgi?id=1927841
+cat > deny-all-ingress-oadp.yaml << EOF
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  creationTimestamp: "2021-05-09T04:22:52Z"
+  creationTimestamp: "2021-05-09T07:17:24Z"
   labels:
     network-policy-generator.stackrox.io/generated: "true"
-  name: stackrox-generated-oadp-operator
+  name: stackrox-generated-deny-by-default
   namespace: oadp-operator
+  uid: 5d63e757-c1a2-4c23-b666-9369b0f9efb3
 spec:
-  podSelector:
-    matchLabels:
-      name: oadp-operator
+  podSelector: {}
   policyTypes:
   - Ingress
+EOF
+oc apply -f ./deny-all-ingress-oadp.yaml
+
+# 再次执行命令
+curl -v $(oc get route oadp-default-aws-registry-route -o jsonpath='http://{.spec.host}')
+...
+  </style>
+  </head>
+  <body>
+    <div>
+      <h1>Application is not available</h1>
+      <p>The application is currently not serving requests at this endpoint. It may not have been started or is still starting.</p>
+
+      <div class="alert alert-info">
+        <p class="info">
+          Possible reasons you are seeing this page:
+        </p>
+        <ul>
+          <li>
+            <strong>The host doesn't exist.</strong>
+            Make sure the hostname was typed correctly and that a route matching this hostname exists.
+          </li>
+          <li>
+            <strong>The host exists, but doesn't have a matching path.</strong>
+            Check if the URL path was typed correctly and that the route was created using the desired path.
+          </li>
+          <li>
+            <strong>Route and path matches, but all pods are down.</strong>
+            Make sure that the resources exposed by this route (pods, services, deployment configs, etc) have at least one pod running.
+          </li>
+        </ul>
+      </div>
+    </div>
+  </body>
+</html>
+
+# 删除 NetworkPolicy
+oc delete networkpolicy stackrox-generated-deny-by-default -n oadp-operator
+
 ```
 

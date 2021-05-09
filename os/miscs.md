@@ -18097,3 +18097,7 @@ Backup completed with status: Completed. You may check for more information usin
 # eBPF 好文 - CSDN - ebpf深入理解和应用介绍
 引用自作者：网络安全研发随想 的好文<br>
 https://blog.csdn.net/gengzhikui1992/article/details/105364645<br>
+
+# NetworkPolicies and Microsegmentation
+关于 NetworkPolicies 和 MicroSegmentation。这篇博客值得在需要的时候随时作为参考资料翻出来阅读<br>
+https://www.openshift.com/blog/networkpolicies-and-microsegmentation<br>

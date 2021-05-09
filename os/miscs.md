@@ -18082,6 +18082,15 @@ Waiting for backup to complete. You may safely press ctrl-c to stop waiting - yo
 Backup completed with status: Failed. You may check for more information using the commands `velero backup describe test-nginx-b7` and `velero backup logs tes
 t-nginx-b7`.
 
+# 删除 egressnetworkpolicy default-egress-rules
+oc delete egressnetworkpolicy default-egress-rules -n oadp-operator
 
+# 创建 velero backup
+# 备份应成功
+velero -n oadp-operator backup create test-nginx-b8 --include-namespaces test-nginx --wait
+Backup request "test-nginx-b8" submitted successfully.
+Waiting for backup to complete. You may safely press ctrl-c to stop waiting - your backup will continue in the background.
+....................................................
+Backup completed with status: Completed. You may check for more information using the commands `velero backup describe test-nginx-b8` and `velero backup logs test-nginx-b8`.
 ```
 

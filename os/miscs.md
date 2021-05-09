@@ -18101,3 +18101,7 @@ https://blog.csdn.net/gengzhikui1992/article/details/105364645<br>
 # NetworkPolicies and Microsegmentation
 关于 NetworkPolicies 和 MicroSegmentation。这篇博客值得在需要的时候随时作为参考资料翻出来阅读<br>
 https://www.openshift.com/blog/networkpolicies-and-microsegmentation<br>
+
+# 关于 OLM 的好文
+如何管理越来越多的 operator？OLM 给你答案<br>
+https://www.kubernetes.org.cn/8371.html<br>

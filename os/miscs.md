@@ -17825,7 +17825,7 @@ ERROR Unable to start the server: Insufficient permissions to use specified port
 # 参见：https://blogs.oracle.com/cloud-infrastructure/backing-up-your-oke-environment-with-velero
 ```
 
-# 尝试 StackRoxc
+# 尝试 RHACS - StackRoxc
 参考：https://help.stackrox.com/docs/get-started/quick-start-helm/
 ```
 # 添加 rhacs helm repo

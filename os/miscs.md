@@ -17941,4 +17941,25 @@ admission-controller.yaml:        - image: "registry.redhat.io/rh-acs/main:3.0.5
 collector.yaml:        image: "registry.redhat.io/rh-acs/collector:3.1.22-slim"
 collector.yaml:        image: "registry.redhat.io/rh-acs/main:3.0.59.1"
 sensor.yaml:      - image: "registry.redhat.io/rh-acs/main:3.0.59.1"
+
+# 参考以下网址生成 NetworkPolicy
+# https://kubernetes.io/docs/concepts/services-networking/network-policies/
+
+# 默认禁止访问 oadp-operator Pod
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  creationTimestamp: "2021-05-09T04:22:52Z"
+  labels:
+    network-policy-generator.stackrox.io/generated: "true"
+  name: stackrox-generated-oadp-operator
+  namespace: oadp-operator
+spec:
+  podSelector:
+    matchLabels:
+      name: oadp-operator
+  policyTypes:
+  - Ingress
 ```
+

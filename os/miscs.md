@@ -18096,6 +18096,11 @@ Backup completed with status: Completed. You may check for more information usin
 # 备注
 # 安装 secured cluster 的 helm 命令
 helm install -n stackrox stackrox-secured-cluster-services rhacs/secured-cluster-services -f lab-cluster-init-bundle.yaml --set clusterName=production --set imagePullSecrets.allowNone=true
+
+# SensorCreateToken-for-cluster-ocp4
+eyJhbGciOiJSUzI1NiIsImtpZCI6Imp3dGswIiwidHlwIjoiSldUIn0.eyJhdWQiOlsiaHR0cHM6Ly9zdGFja3JveC5pby9qd3Qtc291cmNlcyNhcGktdG9rZW5zIl0sImV4cCI6MTY1MjEwNTI0MiwiaWF0IjoxNjIwNTY5MjQyLCJpc3MiOiJodHRwczovL3N0YWNrcm94LmlvL2p3dCIsImp0aSI6ImJmNGI3ZjM3LWYzZDQtNDY1MC05MzlmLWRkYjQ2YmY2MzUzNCIsIm5hbWUiOiJTZW5zb3JDcmVhdG9yVG9rZW4tZm9yLWNsdXN0ZXItb2NwNCIsInJvbGVzIjpbIlNlbnNvciBDcmVhdG9yIl19.b072UEfOfSdpAfiKCIW-6fsKaiYUSka43E_eVkBfo3QQMAs--5pfnf58vnxAkDkWEJcLZbUHjbbLrEXUllzigtHZSrcle8Pooq-oDv6sgXuYIDjo2NDEIkppSkS9S1bXDV3p7kWV9TCrkUWrowIhfgIIFj_bGadTZU1daQe0bdrZAnhOnAUNi1gevC6Hzhu_1MjQJl86HqcjsOO-77A_Zk-A4QG-SRmrHuMLOZ3uVbvxyUoSR1TF9dDV0RaTDDKo3fixzVT_I_z_5mPQzrBqAEXtdwr--B_JOXCAQ1CnpxW1nZ3_KX7iSUC1v9xluvlJUyhNRThKhHYOhAF4SgbjvVU5iRMhxb-dE7jhHdZPMv-3zpZxEPa_z7ITDXKbXDsSc6atRoKWMoMHSHODtaW6024_o2fUMjX4Iod3DVZJnyTjox2cGTW8cIAofokHcCIoR9DvTv_7XTboy-4UyvKE1CKrF_KqGFLF9W_62eIN_ANWzI60pYjtticJbZxyKqdKlf23gtJ7Mj3i0rpts1sdwT4kDf4fAMAECRPsEUyZDzWKk1eZCjHKLtGS7yOC6pscXMPBwG0F2kgmKYTghKwhOoQ0-GUncmpOPFcBzu85fvnx8ePtWSRFh5bWmr73pcdaZ8kgycglbd11rwQ0AxR_PFyd7Mudt86Mu75cUIWObHo
+
+roxctl -e "$ROX_CENTRAL_ADDRESS" central init-bundles generate cluster-init-bundle-ocp4 --output cluster-init-bundle-ocp4.yaml
 ```
 
 # eBPF 好文 - CSDN - ebpf深入理解和应用介绍
@@ -18109,3 +18114,383 @@ https://www.openshift.com/blog/networkpolicies-and-microsegmentation<br>
 # 关于 OLM 的好文
 如何管理越来越多的 operator？OLM 给你答案<br>
 https://www.kubernetes.org.cn/8371.html<br>
+
+# OpenShift Logging
+```
+# 切换到 openshift-logging 项目
+oc project openshift-logging
+
+# 创建 ClusterLogging 实例
+cat << EOF | oc apply -f -
+apiVersion: "logging.openshift.io/v1"
+kind: "ClusterLogging"
+metadata:
+  name: "instance" 
+  namespace: "openshift-logging"
+spec:
+  managementState: "Managed"  
+  logStore:
+    type: "elasticsearch"  
+    retentionPolicy: 
+      application:
+        maxAge: 1d
+      infra:
+        maxAge: 2d
+      audit:
+        maxAge: 2d
+    elasticsearch:
+      nodeCount: 3 
+      storage:
+        size: 100G
+      resources:
+        requests:
+          cpu: 1m
+          memory: 1Gi
+      proxy:
+        resources:
+          limits:
+            memory: 256Mi
+          requests:
+            cpu: 1m
+            memory: 256Mi
+      redundancyPolicy: "SingleRedundancy"
+  visualization:
+    type: "kibana"  
+    kibana:
+      resources:
+        limits:
+          memory: 1Gi
+        requests:
+          cpu: 1m
+          memory: 1Gi
+      replicas: 1
+  curation:
+    type: "curator"
+    curator:
+      resources:
+        limits:
+          memory: 200Mi
+        requests:
+          cpu: 1m
+          memory: 200Mi
+      schedule: "30 3 * * *" 
+  collection:
+    logs:
+      type: "fluentd"  
+      fluentd:
+        resources:
+          limits:
+            memory: 256Mi        
+          requests:
+            cpu: 1m
+            memory: 256Mi     
+EOF
+
+# 剩下的操作参考微信公众号：撞墙秀 
+# OpenShift 日志组件的安装和使用
+
+
+# 安装 docker-ce
+sudo amazon-linux-extras install docker
+sudo systemctl start docker
+sudo systemctl enable docker
+sudo systemctl status docker
+sudo usermod -a -G docker ec2-user
+
+# 安装 docker-compose
+sudo curl -L https://github.com/docker/compose/releases/download/1.29.1/docker-compose-$(uname -s)-$(uname -m) -o /usr/local/bin/docker-compose
+sudo chmod +x /usr/local/bin/docker-compose
+export PATH=$PATH:/usr/local/bin
+
+# 检查软件版本
+docker version
+docker-compose version
+
+cd /root/
+echo "vm.max_map_count=262144" | sudo tee -a /etc/sysctl.conf
+sudo sysctl -p
+
+iptables -A INPUT -i eth0 -p tcp --dport 9092 -j ACCEPT
+iptables -A INPUT -i eth0 -p tcp --dport 9200 -j ACCEPT
+
+
+# 生成 logstash.yml
+cat > logstash.yml << EOF
+http.host: "0.0.0.0"
+xpack.monitoring.elasticsearch.hosts: [ "http://$(ifconfig eth0 | grep -E "inet "  | awk '{print $2}'):9200" ]
+
+EOF
+
+# 生成 logstash.conf
+cat > logstash.conf << EOF
+input { 
+  kafka {
+    bootstrap_servers => "kafka:9092"
+    topics => ["app-logs","infra-logs","audit-logs"]
+    codec => json
+  }
+}
+
+filter {
+
+}
+
+output {
+  stdout { codec => rubydebug }
+  elasticsearch {
+    hosts => ["$(ifconfig eth0 | grep -E "inet "  | awk '{print $2}'):9200"]
+  }
+}
+EOF
+
+cat > docker-compose.yml << EOF
+version: "3"
+services:
+  es01:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.12.1
+    container_name: es01
+    environment:
+      - node.name=es01
+      - cluster.name=es-docker-cluster
+      - discovery.seed_hosts=es02,es03
+      - cluster.initial_master_nodes=es01,es02,es03
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - es-data01:/usr/share/elasticsearch/data
+    ports:
+      - 9200:9200
+    networks:
+      - elastic
+
+  es02:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.12.1
+    container_name: es02
+    environment:
+      - node.name=es02
+      - cluster.name=es-docker-cluster
+      - discovery.seed_hosts=es01,es03
+      - cluster.initial_master_nodes=es01,es02,es03
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - es-data02:/usr/share/elasticsearch/data
+    networks:
+      - elastic
+
+  es03:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.12.1
+    container_name: es03
+    environment:
+      - node.name=es03
+      - cluster.name=es-docker-cluster
+      - discovery.seed_hosts=es01,es02
+      - cluster.initial_master_nodes=es01,es02,es03
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - es-data03:/usr/share/elasticsearch/data
+    networks:
+      - elastic
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:7.12.1
+    container_name: kibana
+    ports:
+      - 5601:5601
+    environment:
+      ELASTICSEARCH_URL: http://es01:9200
+      ELASTICSEARCH_HOSTS: '["http://es01:9200","http://es02:9200","http://es03:9200"]'
+    networks:
+      - elastic
+
+  zookeeper:
+    image: zookeeper:3.7.0
+    restart: always
+    container_name: zookeeper
+    ports:
+      - 12181:2181
+    expose:
+      - 2181
+    networks:
+      - elastic
+
+  kafka:
+    image: bitnami/kafka:2.8.0
+    restart: always
+    container_name: kafka
+    ports:
+      - 9092:9092
+    environment:
+      - KAFKA_BROKER_ID=1
+      - KAFKA_LISTENERS=PLAINTEXT://0.0.0.0:9092
+      - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://$(ifconfig eth0 | grep -E "inet "  | awk '{print $2}'):9092
+      - KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181
+      - KAFKA_MESSAGE_MAX_BYTES=2000000
+      - KAFKA_CREATE_TOPICS="app-logs:3:1,infra-logs:3:1,audit-logs:3:1"
+      - ALLOW_PLAINTEXT_LISTENER=yes
+    expose:
+      - 9092
+    depends_on:
+      - zookeeper
+    networks:
+      - elastic
+
+  kafka-manager:
+    image: hlebalbau/kafka-manager:3.0.0.5
+    container_name: kafka-manager
+    ports:
+      - 19000:9000
+    environment:
+      ZK_HOSTS: zookeeper:2181
+      APPLICATION_SECRET: "admin"
+    depends_on:
+      - zookeeper
+    networks:
+      - elastic
+
+  logstash:
+    image: logstash:7.12.1
+    container_name: logstash
+    ports:
+      - 5044:5044
+      - 5000:5000/tcp
+      - 5000:5000/udp
+      - 9600:9600
+    environment:
+      LS_JAVA_OPTS: "-Xmx256m -Xms256m"
+    volumes:
+      - type: bind
+        source: ./logstash.yml
+        target: /usr/share/logstash/config/logstash.yml
+        read_only: true
+      - type: bind
+        source: ./logstash.conf
+        target: /usr/share/logstash/pipeline/logstash.conf
+        read_only: true
+    depends_on:
+      - kafka
+      - es01
+      - es02
+      - es03
+    networks:
+      - elastic 
+
+volumes:
+  es-data01:
+    driver: local
+  es-data02:
+    driver: local
+  es-data03:
+    driver: local
+
+networks:
+  elastic:
+    driver: bridge
+EOF
+
+# 生成 ClusterLogForwarder 
+# 转发日志到 EXTERNAL_KAFKA_BROKER
+export EXTERNAL_KAFKA_BROKER="ec2-52-83-61-88.cn-northwest-1.compute.amazonaws.com.cn"
+
+cat << EOF | oc apply -f -
+apiVersion: logging.openshift.io/v1
+kind: ClusterLogForwarder
+metadata:
+  name: instance 
+  namespace: openshift-logging 
+spec:
+  outputs:
+   - name: app-logs 
+     type: kafka 
+     url: tcp://${EXTERNAL_KAFKA_BROKER}:9092/app-logs
+   - name: infra-logs
+     type: kafka
+     url: tcp://${EXTERNAL_KAFKA_BROKER}:9092/infra-logs 
+   - name: audit-logs
+     type: kafka
+     url: tcp://${EXTERNAL_KAFKA_BROKER}:9092/audit-logs
+  pipelines:
+   - name: app-topic 
+     inputRefs: 
+     - application
+     outputRefs: 
+     - app-logs
+     labels:
+       logType: application 
+   - name: infra-topic 
+     inputRefs:
+     - infrastructure
+     outputRefs:
+     - infra-logs
+     labels:
+       logType: infra
+   - name: audit-topic
+     inputRefs:
+     - audit
+     outputRefs:
+     - audit-logs
+     - default 
+     labels:
+       logType: audit
+EOF
+
+# 参考：https://github.com/sermilrod/kafka-elk-docker-compose
+# 参考：https://www.jianshu.com/p/4f55daa9d2cd
+docker exec -it kafka /bin/bash
+cd opt/bitnami/kafka/bin
+# 执行以下命令查看 topic 列表
+./kafka-topics.sh --bootstrap-server localhost:9092 --list
+app-logs
+audit-logs
+infra-logs
+# 执行以下命令查看指定 topic 相关信息
+./kafka-topics.sh --describe --bootstrap-server localhost:9092 --topic app-logs
+./kafka-console-consumer.sh --bootstrap-server localhost:9092 --from-beginning --topic app-logs
+
+./kafka-console-producer.sh --broker-list localhost:9092 --topic app-logs
+
+EXTERNAL_KAFKA_BROKER="ec2-52-83-61-88.cn-northwest-1.compute.amazonaws.com.cn"
+./kafka-console-producer.sh --broker-list ${EXTERNAL_KAFKA_BROKER}:9092 --topic app-logs
+./kafka-console-consumer.sh --bootstrap-server ${EXTERNAL_KAFKA_BROKER}:9092 --from-beginning --topic app-logs
+
+# 在 Linux 上安装 kafka 
+# https://timber.io/blog/hello-world-in-kafka-using-python/
+pip3 install kafka-python
+
+# Producer
+python3
+
+from kafka import KafkaProducer
+producer = KafkaProducer(bootstrap_servers='10.0.48.27:9092')
+producer.send('app-logs', b'Hello, World!')
+producer.send('app-logs', key=b'message-two', value=b'This is Kafka-Python')
+
+# Consumer
+from kafka import KafkaConsumer
+consumer = KafkaConsumer('app-logs')
+for message in consumer:
+    print (message)
+
+# https://blog.csdn.net/weixin_38890593/article/details/106335308
+wget https://archive.apache.org/dist/kafka/2.4.0/kafka_2.12-2.4.0.tgz
+
+# Mac kafka-console-producer
+# https://medium.com/@at_ishikawa/getting-started-with-kafka-on-mac-f6aa8924fcda
+kafka-console-producer --broker-list ec2-52-83-61-88.cn-northwest-1.compute.amazonaws.com.cn:9092 --topic app-logs
+>HELLO Kafka
+
+kafka-console-consumer --bootstrap-server ec2-52-83-61-88.cn-northwest-1.compute.amazonaws.com.cn:9092 --topic app-logs --from-beginning
+```

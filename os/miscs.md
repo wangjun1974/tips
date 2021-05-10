@@ -18243,6 +18243,8 @@ output {
 }
 EOF
 
+# 备注：KAFKA_LISTENERS 设置为 PLAINTEXT://0.0.0.0:9092
+# 备注：KAFKA_ADVERTISED_LISTENERS 设置为 PLAINTEXT://<容器主机IP>:9092
 cat > docker-compose.yml << EOF
 version: "3"
 services:

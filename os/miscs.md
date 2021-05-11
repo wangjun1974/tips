@@ -18461,13 +18461,14 @@ infra-logs
 # 执行以下命令查看指定 topic 相关信息
 ./kafka-topics.sh --describe --bootstrap-server localhost:9092 --topic app-logs
 ./kafka-console-consumer.sh --bootstrap-server localhost:9092 --from-beginning --topic app-logs
-./kafka-console-producer.sh --broker-list localhost:9092 --topic app-logs
+# 测试消息发送，如有其他消息可不执行此命令 ./kafka-console-producer.sh --broker-list localhost:9092 --topic app-logs
 
 # 检查使用外部主机名可访问 kafka broker
 EXTERNAL_KAFKA_BROKER="ec2-52-83-61-88.cn-northwest-1.compute.amazonaws.com.cn"
 ./kafka-topics.sh --bootstrap-server ${EXTERNAL_KAFKA_BROKER}:9092 --list
-./kafka-console-producer.sh --broker-list ${EXTERNAL_KAFKA_BROKER}:9092 --topic app-logs
 ./kafka-console-consumer.sh --bootstrap-server ${EXTERNAL_KAFKA_BROKER}:9092 --from-beginning --topic app-logs
+# 测试消息发送，如有其他消息可不执行此命令 ./kafka-console-producer.sh --broker-list ${EXTERNAL_KAFKA_BROKER}:9092 --topic app-logs
+
 
 # 查看 kafka 日志
 docker logs kafka

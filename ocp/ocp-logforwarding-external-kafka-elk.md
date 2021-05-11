@@ -33,8 +33,10 @@ spec:
     elasticsearch:
       nodeCount: 3 
       storage:
-        size: 100G
+        size: 200G
       resources:
+        limits:
+          memory: 4Gi      
         requests:
           cpu: 1m
           memory: 1Gi
@@ -72,10 +74,10 @@ spec:
       fluentd:
         resources:
           limits:
-            memory: 256Mi        
+            memory: 512Mi        
           requests:
             cpu: 1m
-            memory: 256Mi     
+            memory: 512Mi     
 EOF
 
 # 安装 docker-ce

@@ -18542,4 +18542,33 @@ kafka-console-consumer --bootstrap-server ec2-52-83-61-88.cn-northwest-1.compute
 docker-compose down
 docker rm -f $(docker ps -a -q)
 docker volume rm $(docker volume ls -q)
+
+# OpenShift Logging Troubleshooting
+查看 ES indices
+curl -s -k --cert /etc/elasticsearch//secret/admin-cert --key /etc/elasticsearch//secret/admin-key -H Content-type:application/json 'https://localhost:9200/_cat/indices?v&pretty=true'
+health status index                       uuid                   pri rep docs.count docs.deleted store.size pri.store.size
+green  open   infra-000001                XaZKaktcRomqNqBu-fFwyw   3   1    5711370            0      5.6gb          2.8gb
+green  open   audit-000001                BqBgA2zuS0iQFQGOoe1Aig   3   1    3748857            0      6.4gb          3.2gb
+green  open   .kibana_-836031671_user20_1 ZBvwsrL-QF6tRnUuynY0Kw   1   1          4            0     96.4kb         48.2kb
+green  open   app-000001                  uoOnlaG4RnG0trVrG3XQcQ   3   1    2300666            0      2.6gb          1.3gb
+green  open   .kibana_1                   aoKggnDNT16-jpRL1AWDsg   1   1          0            0       522b           261b
+green  open   .security                   7-TzgBEGSLaQs-WPIkOqIg   1   1          6            0     64.7kb  
+
+# 查看 es 的 health 状态
+oc exec elasticsearch-cdm-dtjwkeyg-1-67777cfcfb-9ktrf -c elasticsearch -n openshift-logging -- health
+
+# 查看 fluentd 的本地数据大小
+for f in $(oc get pod -oname |grep fluent);do echo $f; oc rsh $f du -d 0 -h /var/lib/fluentd/clo_default_output_es; done
+
+for f in $(oc get pod -oname |grep fluent);do echo $f; oc rsh $f ls -l -h /var/lib/fluentd/; done
+pod/fluentd-6nrw2
+total 20K
+drwxr-xr-x. 2 root root 56K May 11 07:40 app_logs
+drwxr-xr-x. 2 root root 172 May 11 07:40 audit_logs
+drwxr-xr-x. 2 root root 115 May 11 07:40 default
+drwxr-xr-x. 2 root root 115 May 11 07:40 infra_logs
+drwxr-xr-x. 2 root root   6 May 10 08:28 retry_default
+
+# 本地的 kibana 看不到 apps 日志是因为 ClusterLogForwader 的配置造成的，pipeline 里每配置往本地发送
 ```
+

@@ -18189,7 +18189,6 @@ EOF
 # 剩下的操作参考微信公众号：撞墙秀 
 # OpenShift 日志组件的安装和使用
 
-
 # 安装 docker-ce
 sudo amazon-linux-extras install docker
 sudo systemctl start docker
@@ -18214,7 +18213,6 @@ sudo sysctl -p
 iptables -A INPUT -i eth0 -p tcp --dport 9092 -j ACCEPT
 iptables -A INPUT -i eth0 -p tcp --dport 9200 -j ACCEPT
 iptables -A INPUT -i eth0 -p tcp --dport 5601 -j ACCEPT
-
 
 # 生成 logstash.yml
 cat > logstash.yml << EOF
@@ -18489,7 +18487,6 @@ EXTERNAL_KAFKA_BROKER="ec2-52-83-61-88.cn-northwest-1.compute.amazonaws.com.cn"
 ./kafka-console-consumer.sh --bootstrap-server ${EXTERNAL_KAFKA_BROKER}:9092 --from-beginning --topic app-logs
 # 测试消息发送，如有其他消息可不执行此命令 ./kafka-console-producer.sh --broker-list ${EXTERNAL_KAFKA_BROKER}:9092 --topic app-logs
 
-
 # 查看 kafka 日志
 docker logs kafka
 
@@ -18500,6 +18497,17 @@ docker logs logstash
 curl -X GET 'http://127.0.0.1:9200/_cat/indices?v&pretty=true'
 health status index                      uuid                   pri rep docs.count docs.deleted store.size pri.store.size
 yellow open   logstash-2021.05.10-000001 BUqK_dGvSAuhxrzulOTFqA   1   1     460011            0    265.8mb        265.8mb
+
+# 查看 kibana 日志
+docker logs kibana
+
+# 访问 kibana Web 界面
+# Management -> StackManagement -> Kibana -> Index Patterns 
+# 创建 Index Patterns
+# Index pattern name: logstash-*
+# Time field: @timestamp
+# 创建完成后，访问
+# Discover 
 
 # 后续内容可以忽略
 # 在 Linux 上安装 kafka 

@@ -315,8 +315,8 @@ networks:
 EOF
 
 # 生成 ClusterLogForwarder 
-# 转发日志到 EXTERNAL_KAFKA_BROKER
-export EXTERNAL_KAFKA_BROKER="ec2-52-83-61-88.cn-northwest-1.compute.amazonaws.com.cn"
+# 根据实际情况设置EXTERNAL_KAFKA_BROKER，转发日志到 EXTERNAL_KAFKA_BROKER
+export EXTERNAL_KAFKA_BROKER="xxx.compute.amazonaws.com.cn"
 
 cat << EOF | oc apply -f -
 apiVersion: logging.openshift.io/v1

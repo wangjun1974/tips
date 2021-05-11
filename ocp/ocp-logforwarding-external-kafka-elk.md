@@ -3,6 +3,9 @@
 # 参考发哥的文档安装 OpenShift Logging
 # 微信公众号：撞墙秀 
 # OpenShift 日志组件的安装和使用
+# https://mp.weixin.qq.com/s/E6eusGZvoYd_LfjWfq6IRQ
+# OpenShift转发日志到外部系统
+# https://mp.weixin.qq.com/s/xA2Qn6DGp_SOsWzwh0w6jg
 
 # 切换到 openshift-logging 项目
 oc project openshift-logging

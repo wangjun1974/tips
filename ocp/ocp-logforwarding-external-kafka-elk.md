@@ -157,6 +157,9 @@ services:
       - bootstrap.memory_lock=true
       - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
     ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536    
       memlock:
         soft: -1
         hard: -1
@@ -178,6 +181,9 @@ services:
       - bootstrap.memory_lock=true
       - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
     ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536    
       memlock:
         soft: -1
         hard: -1
@@ -197,6 +203,9 @@ services:
       - bootstrap.memory_lock=true
       - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
     ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536    
       memlock:
         soft: -1
         hard: -1
@@ -210,6 +219,8 @@ services:
     container_name: kibana
     ports:
       - 5601:5601
+    expose:
+      - 5601      
     volumes:
       - type: bind
         source: ./kibana.yml

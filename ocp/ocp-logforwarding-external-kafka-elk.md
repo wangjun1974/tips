@@ -101,7 +101,15 @@ iptables -A INPUT -i eth0 -p tcp --dport 9092 -j ACCEPT
 iptables -A INPUT -i eth0 -p tcp --dport 9200 -j ACCEPT
 iptables -A INPUT -i eth0 -p tcp --dport 5601 -j ACCEPT
 
+# 创建目录
+mkdir kafka-elk
+cd kafka-eld
+mkdir es-data01
+mkdir es-data02
+mkdir es-data03
+
 # 生成 logstash.yml
+# 注意：请使用实际网卡名替换 eth0，后续相同命令也需要同样替换
 cat > logstash.yml << EOF
 http.host: "0.0.0.0"
 xpack.monitoring.elasticsearch.hosts: [ "http://$(ifconfig eth0 | grep -E "inet "  | awk '{print $2}'):9200" ]
@@ -131,9 +139,8 @@ output {
 EOF
 
 # 生成 kibana 配置文件
-# 参考：https://blog.csdn.net/humanbeng/article/details/95459892
-# 参考：https://blog.csdn.net/weixin_41228362/article/details/107640671
-# 备注：elasticsearch.hosts 设置为<宿主机IP:9200>
+# 注意：请使用实际网卡名替换 eth0，后续相同命令也需要同样替换
+# 注意：elasticsearch.hosts 设置为 <宿主机IP:9200>
 cat > kibana.yml << EOF
 server.name: kibana
 server.host: "0.0.0.0"
@@ -141,8 +148,8 @@ elasticsearch.hosts: [ "http://$(ifconfig eth0 | grep -E "inet "  | awk '{print 
 xpack.monitoring.ui.container.elasticsearch.enabled: true
 EOF
 
-# 备注：KAFKA_LISTENERS 设置为 PLAINTEXT://0.0.0.0:9092
-# 备注：KAFKA_ADVERTISED_LISTENERS 设置为 PLAINTEXT://<容器主机IP>:9092
+# 注意：KAFKA_LISTENERS 设置为 PLAINTEXT://0.0.0.0:9092
+# 注意：KAFKA_ADVERTISED_LISTENERS 设置为 PLAINTEXT://<容器主机IP>:9092
 cat > docker-compose.yml << EOF
 version: "3"
 services:
@@ -359,31 +366,6 @@ spec:
      labels:
        logType: audit
 EOF
-
-# 参考：https://github.com/sermilrod/kafka-elk-docker-compose
-# 参考：https://www.jianshu.com/p/4f55daa9d2cd
-docker exec -it kafka /bin/bash
-cd opt/bitnami/kafka/bin
-# 执行以下命令查看 topic 列表
-./kafka-topics.sh --bootstrap-server localhost:9092 --list
-app-logs
-audit-logs
-infra-logs
-# 执行以下命令查看指定 topic 相关信息
-./kafka-topics.sh --describe --bootstrap-server localhost:9092 --topic app-logs
-./kafka-console-consumer.sh --bootstrap-server localhost:9092 --from-beginning --topic app-logs
-# 测试消息发送，如有其他消息可不执行此命令 ./kafka-console-producer.sh --broker-list localhost:9092 --topic app-logs
-
-# 在宿主机上安装 kafka 
-wget https://archive.apache.org/dist/kafka/2.4.0/kafka_2.12-2.4.0.tgz
-tar zxf kafka_2.12-2.4.0.tgz
-cd kafka_2.12-2.4.0/bin
-
-# 检查使用外部可访问主机名可访问 kafka broker
-EXTERNAL_KAFKA_BROKER="ec2-52-83-61-88.cn-northwest-1.compute.amazonaws.com.cn"
-./kafka-topics.sh --bootstrap-server ${EXTERNAL_KAFKA_BROKER}:9092 --list
-./kafka-console-consumer.sh --bootstrap-server ${EXTERNAL_KAFKA_BROKER}:9092 --from-beginning --topic app-logs
-# 测试消息发送，如有其他消息可不执行此命令 ./kafka-console-producer.sh --broker-list ${EXTERNAL_KAFKA_BROKER}:9092 --topic app-logs
 
 # 查看 kafka 日志
 docker logs kafka

@@ -18210,8 +18210,10 @@ cd /root/
 echo "vm.max_map_count=262144" | sudo tee -a /etc/sysctl.conf
 sudo sysctl -p
 
+# 开放操作系统防火墙端口
 iptables -A INPUT -i eth0 -p tcp --dport 9092 -j ACCEPT
 iptables -A INPUT -i eth0 -p tcp --dport 9200 -j ACCEPT
+iptables -A INPUT -i eth0 -p tcp --dport 5601 -j ACCEPT
 
 
 # 生成 logstash.yml
@@ -18241,6 +18243,17 @@ output {
     hosts => ["$(ifconfig eth0 | grep -E "inet "  | awk '{print $2}'):9200"]
   }
 }
+EOF
+
+# 生成 kibana 配置文件
+# 参考：https://blog.csdn.net/humanbeng/article/details/95459892
+# 参考：https://blog.csdn.net/weixin_41228362/article/details/107640671
+# 备注：elasticsearch.hosts 设置为<宿主机IP:9200>
+cat > kibana.yml << EOF
+server.name: kibana
+server.host: "0.0.0.0"
+elasticsearch.hosts: [ "http://$(ifconfig eth0 | grep -E "inet "  | awk '{print $2}'):9200" ]
+xpack.monitoring.ui.container.elasticsearch.enabled: true
 EOF
 
 # 备注：KAFKA_LISTENERS 设置为 PLAINTEXT://0.0.0.0:9092
@@ -18463,7 +18476,12 @@ infra-logs
 ./kafka-console-consumer.sh --bootstrap-server localhost:9092 --from-beginning --topic app-logs
 # 测试消息发送，如有其他消息可不执行此命令 ./kafka-console-producer.sh --broker-list localhost:9092 --topic app-logs
 
-# 检查使用外部主机名可访问 kafka broker
+# 在宿主机上安装 kafka 
+wget https://archive.apache.org/dist/kafka/2.4.0/kafka_2.12-2.4.0.tgz
+tar zxf kafka_2.12-2.4.0.tgz
+cd kafka_2.12-2.4.0/bin
+
+# 检查使用外部可访问主机名可访问 kafka broker
 EXTERNAL_KAFKA_BROKER="ec2-52-83-61-88.cn-northwest-1.compute.amazonaws.com.cn"
 ./kafka-topics.sh --bootstrap-server ${EXTERNAL_KAFKA_BROKER}:9092 --list
 ./kafka-console-consumer.sh --bootstrap-server ${EXTERNAL_KAFKA_BROKER}:9092 --from-beginning --topic app-logs

@@ -18570,5 +18570,8 @@ drwxr-xr-x. 2 root root 115 May 11 07:40 infra_logs
 drwxr-xr-x. 2 root root   6 May 10 08:28 retry_default
 
 # 本地的 kibana 看不到 apps 日志是因为 ClusterLogForwader 的配置造成的，pipeline 里每配置往本地发送
+
+# 查看 pods 资源占用情况
+oc adm top pod
 ```
 

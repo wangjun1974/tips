@@ -126,17 +126,15 @@ input {
     bootstrap_servers => "kafka:9092"
     topics => ["app-logs","infra-logs","audit-logs"]
     codec => json
+    decorate_events => true
   }
-}
-
-filter {
-
 }
 
 output {
   stdout { codec => rubydebug }
   elasticsearch {
     hosts => ["$(ifconfig eth0 | grep -E "inet "  | awk '{print $2}'):9200"]
+    index => "%{[@metadata][kafka][topic]}-%{+YYYY.MM.dd}"
   }
 }
 EOF

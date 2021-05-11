@@ -18537,4 +18537,9 @@ kafka-console-producer --broker-list ec2-52-83-61-88.cn-northwest-1.compute.amaz
 >HELLO Kafka
 
 kafka-console-consumer --bootstrap-server ec2-52-83-61-88.cn-northwest-1.compute.amazonaws.com.cn:9092 --topic app-logs --from-beginning
+
+# 清理 docker-compose 后的环境
+docker-compose down
+docker rm -f $(docker ps -a -q)
+docker volume rm $(docker volume ls -q)
 ```

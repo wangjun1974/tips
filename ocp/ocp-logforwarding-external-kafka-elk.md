@@ -259,7 +259,7 @@ services:
       - KAFKA_LISTENERS=PLAINTEXT://0.0.0.0:9092
       - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://$(ifconfig eth0 | grep -E "inet "  | awk '{print $2}'):9092
       - KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181
-      - KAFKA_MESSAGE_MAX_BYTES=2000000
+      - KAFKA_MESSAGE_MAX_BYTES=314572800
       - KAFKA_CREATE_TOPICS="app-logs:3:1,infra-logs:3:1,audit-logs:3:1"
       - ALLOW_PLAINTEXT_LISTENER=yes
     expose:

@@ -103,7 +103,7 @@ iptables -A INPUT -i eth0 -p tcp --dport 5601 -j ACCEPT
 
 # 创建目录
 mkdir kafka-elk
-cd kafka-eld
+cd kafka-elk
 mkdir es-data01
 mkdir es-data02
 mkdir es-data03

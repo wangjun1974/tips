@@ -18461,13 +18461,26 @@ infra-logs
 # 执行以下命令查看指定 topic 相关信息
 ./kafka-topics.sh --describe --bootstrap-server localhost:9092 --topic app-logs
 ./kafka-console-consumer.sh --bootstrap-server localhost:9092 --from-beginning --topic app-logs
-
 ./kafka-console-producer.sh --broker-list localhost:9092 --topic app-logs
 
+# 检查使用外部主机名可访问 kafka broker
 EXTERNAL_KAFKA_BROKER="ec2-52-83-61-88.cn-northwest-1.compute.amazonaws.com.cn"
+./kafka-topics.sh --bootstrap-server ${EXTERNAL_KAFKA_BROKER}:9092 --list
 ./kafka-console-producer.sh --broker-list ${EXTERNAL_KAFKA_BROKER}:9092 --topic app-logs
 ./kafka-console-consumer.sh --bootstrap-server ${EXTERNAL_KAFKA_BROKER}:9092 --from-beginning --topic app-logs
 
+# 查看 kafka 日志
+docker logs kafka
+
+# 查看 logstash 日志
+docker logs logstash
+
+# 查询 elasticsearch 所有索引
+curl -X GET 'http://127.0.0.1:9200/_cat/indices?v&pretty=true'
+health status index                      uuid                   pri rep docs.count docs.deleted store.size pri.store.size
+yellow open   logstash-2021.05.10-000001 BUqK_dGvSAuhxrzulOTFqA   1   1     460011            0    265.8mb        265.8mb
+
+# 后续内容可以忽略
 # 在 Linux 上安装 kafka 
 # https://timber.io/blog/hello-world-in-kafka-using-python/
 pip3 install kafka-python

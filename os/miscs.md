@@ -18617,5 +18617,19 @@ virt-install --debug --name=${VMNAME} --vcpus=4 --ram=16384 \
   --initrd-inject /tmp/ks.cfg \
   --extra-args='ks=file:/ks.cfg console=ttyS0 nameserver=192.168.8.1 ip=192.168.8.22::192.168.8.1:255.255.255.0:logging.example.com:eth0:none'
 
+nmcli con mod 'eth0' \
+  connection.autoconnect 'yes' \
+  ipv4.method 'manual' \
+  ipv4.address '192.168.8.22/24' \
+  ipv4.gateway '192.168.8.1' \
+  ipv4.dns '192.168.8.1'
+
+# 有可能下载不到此文件
+curl -o docker-compose-Linux-x86_64 https://github.com/docker/compose/releases/download/1.29.1/docker-compose-Linux-x86_64
+
+# save docker image to file
+docker save -o zookeeper.tar zookeeper:3.7.0
+# load docker image file
+docker load -i zookeeper.tar
 ```
 

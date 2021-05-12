@@ -18555,7 +18555,7 @@ green  open   .kibana_1                   aoKggnDNT16-jpRL1AWDsg   1   1        
 green  open   .security                   7-TzgBEGSLaQs-WPIkOqIg   1   1          6            0     64.7kb  
 
 # 查看 es 的 health 状态
-oc exec elasticsearch-cdm-dtjwkeyg-1-67777cfcfb-9ktrf -c elasticsearch -n openshift-logging -- health
+oc exec $( oc get pods | grep elasticsearch-cdm | head -1) -c elasticsearch -n openshift-logging -- health
 
 # 查看 fluentd 的本地数据大小
 for f in $(oc get pod -oname |grep fluent);do echo $f; oc rsh $f du -d 0 -h /var/lib/fluentd/clo_default_output_es; done
@@ -18573,5 +18573,49 @@ drwxr-xr-x. 2 root root   6 May 10 08:28 retry_default
 
 # 查看 pods 资源占用情况
 oc adm top pod
+
+# 外部 kibana 报错
+# 这个时候磁盘已经满了
+index [.async-search] blocked by: [TOO_MANY_REQUESTS/12/disk usage exceeded flood-stage watermark, index has read-only-allow-delete block];
+
+# 创建虚拟机 ks 文件 - CentOS 7
+# CentOS 7 下网络设备名是 eth0
+# CentOS 7 下软件组是 Core
+cat > /tmp/ks.cfg <<'EOF'
+lang en_US
+keyboard us
+timezone Asia/Shanghai --isUtc
+rootpw $1$PTAR1+6M$DIYrE6zTEo5dWWzAp9as61 --iscrypted
+#platform x86, AMD64, or Intel EM64T
+reboot
+text
+cdrom
+bootloader --location=mbr --append="rhgb quiet crashkernel=auto"
+zerombr
+clearpart --all --initlabel
+autopart
+network --device=eth0 --hostname=logging.example.com --bootproto=static --ip=192.168.8.22 --netmask=255.255.255.0 --gateway=192.168.8.1 --nameserver=192.168.8.11
+auth --passalgo=sha512 --useshadow
+selinux --enforcing
+firewall --enabled --ssh
+skipx
+firstboot --disable
+%packages
+@Core
+chrony
+%end
+EOF
+
+# 创建虚拟机
+VMNAME="jwang-tianma-01"
+ISONAME="CentOS-7-x86_64-Minimal-1810.iso"
+virt-install --debug --name=${VMNAME} --vcpus=4 --ram=16384 \
+  --disk path=/data/kvm/${VMNAME}.qcow2,bus=virtio,size=100 \
+  --os-variant rhel7 --network network=openshift4v6,model=virtio \
+  --boot menu=on --graphics none \
+  --location /root/jwang/isos/${ISONAME} \
+  --initrd-inject /tmp/ks.cfg \
+  --extra-args='ks=file:/ks.cfg console=ttyS0 nameserver=192.168.8.1 ip=192.168.8.22::192.168.8.1:255.255.255.0:logging.example.com:eth0:none'
+
 ```
 

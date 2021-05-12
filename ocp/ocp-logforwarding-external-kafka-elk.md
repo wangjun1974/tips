@@ -109,12 +109,10 @@ iptables -A INPUT -i eth0 -p tcp --dport 5601 -j ACCEPT
 # 创建目录
 mkdir kafka-elk
 cd kafka-elk
-mkdir es-data01
-mkdir es-data02
-mkdir es-data03
 
 # 生成 logstash.yml
 # 注意：请使用实际网卡名替换 eth0，后续相同命令也需要同样替换
+# CentOS 7 下如果未安装 ifconfig 工具，可执行命令 ‘yum install net-tools’ 安装
 cat > logstash.yml << EOF
 http.host: "0.0.0.0"
 xpack.monitoring.elasticsearch.hosts: [ "http://$(ifconfig eth0 | grep -E "inet "  | awk '{print $2}'):9200" ]

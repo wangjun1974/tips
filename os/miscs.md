@@ -18580,7 +18580,8 @@ index [.async-search] blocked by: [TOO_MANY_REQUESTS/12/disk usage exceeded floo
 
 # 创建虚拟机 ks 文件 - CentOS 7
 # CentOS 7 下网络设备名是 eth0
-# CentOS 7 下软件组是 Core
+# CentOS 7 下软件组是 @Core
+# CentOS 7 下的 ifconfig 软件包包含在 
 cat > /tmp/ks.cfg <<'EOF'
 lang en_US
 keyboard us
@@ -18603,6 +18604,7 @@ firstboot --disable
 %packages
 @Core
 chrony
+net-tools
 %end
 EOF
 

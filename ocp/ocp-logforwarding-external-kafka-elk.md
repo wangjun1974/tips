@@ -103,7 +103,6 @@ sudo sysctl -p
 
 # 开放操作系统防火墙端口
 iptables -A INPUT -i eth0 -p tcp --dport 9092 -j ACCEPT
-iptables -A INPUT -i eth0 -p tcp --dport 9200 -j ACCEPT
 iptables -A INPUT -i eth0 -p tcp --dport 5601 -j ACCEPT
 
 # 创建目录

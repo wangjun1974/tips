@@ -18782,5 +18782,140 @@ spec:
             cpu: 1m
             memory: 256Mi     
 EOF
+
+
+cat << EOF | oc apply -f -
+apiVersion: "logging.openshift.io/v1"
+kind: "ClusterLogging"
+metadata:
+  name: "instance"
+  namespace: "openshift-logging"
+spec:
+  managementState: "Managed"
+  logStore:
+    type: "elasticsearch"  
+    retentionPolicy: 
+      application:
+        maxAge: 1d
+      infra:
+        maxAge: 2d
+      audit:
+        maxAge: 2d
+    elasticsearch:
+      nodeCount: 1 
+      storage:
+        size: 100G
+      resources:
+        limits:
+          memory: 4Gi      
+        requests:
+          cpu: 1m
+          memory: 1Gi
+      proxy:
+        resources:
+          limits:
+            memory: 256Mi
+          requests:
+            cpu: 1m
+            memory: 256Mi
+      redundancyPolicy: "ZeroRedundancy"
+  visualization: 
+    type: "kibana"
+    kibana:
+      resources:
+        limits:
+          memory: 256Mi
+        requests:
+          cpu: 1m
+          memory: 256Mi
+      proxy:
+        resources:
+          limits:
+            memory: 256Mi
+          requests:
+            cpu: 1m
+            memory: 256Mi
+      replicas: 1
+  curation: 
+    type: "curator"
+    curator:
+      resources:
+        limits:
+          memory: 256Mi
+        requests:
+          cpu: 1m
+          memory: 256Mi
+      schedule: "30 3 * * *"
+  collection: 
+    logs:
+      type: "fluentd"
+      fluentd:
+        resources:
+          limits:
+            memory: 256Mi
+          requests:
+            cpu: 1m
+            memory: 256Mi
+EOF
+
+cat << EOF | oc apply -f -
+apiVersion: "logging.openshift.io/v1"
+kind: "ClusterLogging"
+metadata:
+  name: "instance"
+  namespace: "openshift-logging"
+spec:
+  managementState: "Managed"
+  logStore:
+    type: "elasticsearch"
+    retentionPolicy:
+      application:
+        maxAge: 1d
+      infra:
+        maxAge: 7d
+      audit:
+        maxAge: 7d
+    elasticsearch:
+      nodeCount: 3
+      resources:
+        limits:
+          memory: 4Gi
+        requests:
+          cpu: 500m
+          memory: 4Gi
+      storage:
+        size: "200G"
+      redundancyPolicy: "SingleRedundancy"
+  visualization: 
+    type: "kibana"
+    kibana:
+      resources:
+        limits:
+          memory: 512Mi
+        requests:
+          cpu: 100m
+          memory: 512Mi
+      replicas: 1
+  curation: 
+    type: "curator"
+    curator:
+      resources:
+        limits:
+          memory: 256Mi
+        requests:
+          cpu: 100m
+          memory: 256Mi
+      schedule: "30 3 * * *"
+  collection: 
+    logs:
+      type: "fluentd"
+      fluentd:
+        resources:
+          limits:
+            memory: 256Mi
+          requests:
+            cpu: 100m
+            memory: 256Mi
+EOF
 ```
 

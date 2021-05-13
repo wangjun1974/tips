@@ -384,8 +384,106 @@ docker logs kibana
 # 访问 kibana Web 界面
 # Management -> StackManagement -> Kibana -> Index Patterns 
 # 创建 Index Patterns
-# Index pattern name: logstash-*
+# Index pattern name: logstash-*, app-*, infra-*, audit-*
 # Time field: @timestamp
 # 创建完成后，访问
 # Discover 
+
+# 多个 docker-compose 启动 ES + Kafka 
+# 参见：https://mp.weixin.qq.com/s/xA2Qn6DGp_SOsWzwh0w6jg
+mkdir /root/es
+cd /root/es
+
+vim docker-compose.yml
+------
+version: "3"
+services:
+  es01:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.12.1
+    container_name: es01
+    environment:
+      - node.name=es01
+      - cluster.name=es-docker-cluster
+      - discovery.seed_hosts=es02,es03
+      - cluster.initial_master_nodes=es01,es02,es03
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - es-data01:/usr/share/elasticsearch/data
+    ports:
+      - 9200:9200
+    networks:
+      - elastic
+
+  es02:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.12.1
+    container_name: es02
+    environment:
+      - node.name=es02
+      - cluster.name=es-docker-cluster
+      - discovery.seed_hosts=es01,es03
+      - cluster.initial_master_nodes=es01,es02,es03
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - es-data02:/usr/share/elasticsearch/data
+    networks:
+      - elastic
+
+  es03:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.12.1
+    container_name: es03
+    environment:
+      - node.name=es03
+      - cluster.name=es-docker-cluster
+      - discovery.seed_hosts=es01,es02
+      - cluster.initial_master_nodes=es01,es02,es03
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - es-data03:/usr/share/elasticsearch/data
+    networks:
+      - elastic
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:7.12.1
+    container_name: kibana
+    ports:
+      - 5601:5601
+    environment:
+      ELASTICSEARCH_URL: http://es01:9200
+      ELASTICSEARCH_HOSTS: '["http://es01:9200","http://es02:9200","http://es03:9200"]'
+    depends_on:
+      - es01
+      - es02
+      - es03
+    networks:
+      - elastic
+
+volumes:
+  es-data01:
+    driver: local
+  es-data02:
+    driver: local
+  es-data03:
+    driver: local
+
+networks:
+  elastic:
+    driver: bridge
+------
+
+
 ```

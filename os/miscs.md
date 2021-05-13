@@ -18610,12 +18610,14 @@ EOF
 
 # 创建虚拟机
 VMNAME="jwang-tianma-01"
-ISONAME="CentOS-7-x86_64-Minimal-1810.iso"
+VMDISKPATH="/data/kvm"
+VMNETWORK1="openshift4v6"
+ISONAME="/root/jwang/isos/CentOS-7-x86_64-Minimal-1810.iso"
 virt-install --debug --name=${VMNAME} --vcpus=4 --ram=16384 \
-  --disk path=/data/kvm/${VMNAME}.qcow2,bus=virtio,size=100 \
-  --os-variant rhel7 --network network=openshift4v6,model=virtio \
+  --disk path=${VMDISKPATH}/${VMNAME}.qcow2,bus=virtio,size=100 \
+  --os-variant rhel7 --network network=${VMNETWORK1},model=virtio \
   --boot menu=on --graphics none \
-  --location /root/jwang/isos/${ISONAME} \
+  --location ${ISONAME} \
   --initrd-inject /tmp/ks.cfg \
   --extra-args='ks=file:/ks.cfg console=ttyS0 nameserver=192.168.8.1 ip=192.168.8.22::192.168.8.1:255.255.255.0:logging.example.com:eth0:none'
 
@@ -18633,5 +18635,105 @@ curl -o docker-compose-Linux-x86_64 https://github.com/docker/compose/releases/d
 docker save -o zookeeper.tar zookeeper:3.7.0
 # load docker image file
 docker load -i zookeeper.tar
+
+# ClusterLogging instance
+apiVersion: "logging.openshift.io/v1"
+kind: "ClusterLogging"
+metadata:
+  name: "instance"
+  namespace: "openshift-logging"
+spec:
+  managementState: "Managed"
+  logStore:
+    type: "elasticsearch"
+    retentionPolicy:
+      application:
+        maxAge: 1d
+      infra:
+        maxAge: 7d
+      audit:
+        maxAge: 7d
+    elasticsearch:
+      nodeCount: 1
+      resources:
+        limits:
+          memory: 4Gi
+        requests:
+          cpu: 1m
+          memory: 1Gi
+      storage:
+        size: "200G"
+      redundancyPolicy: "ZeroRedundancy"
+  visualization: 
+    type: "kibana"
+    kibana:
+      resources:
+        limits:
+          memory: 512Mi
+        requests:
+          cpu: 1m
+          memory: 256Mi
+      replicas: 1
+  curation: 
+    type: "curator"
+    curator:
+      resources:
+        limits:
+          memory: 256Mi
+        requests:
+          cpu: 1m
+          memory: 256Mi
+      schedule: "30 3 * * *"
+  collection: 
+    logs:
+      type: "fluentd"
+      fluentd:
+        resources:
+          limits:
+            memory: 512Mi
+          requests:
+            cpu: 1m
+            memory: 256Mi
+
+
+# 参见: https://access.redhat.com/solutions/5750141
+# oc get secrets/elasticsearch -n openshift-logging -o template='{{index .data "admin-ca"}}' | base64 --decode > /tmp/a.pem
+# openssl x509 -in /tmp/a.pem -noout -text | grep -A 7 "Serial Number"
+# oc rsh -n openshift-logging -c elasticsearch $(oc -n openshift-logging get pods | grep elasticsearch | head -1 | awk '{print $1}') openssl x509 -in /etc/elasticsearch/secret/admin-ca -noout -text | grep -A 7 "Serial Number"   
+
+# ocp4.6 下检查 kibana 是否可以访问 elasticsearch svc
+oc exec $(oc get pods -n openshift-logging -o jsonpath='{range .items[*]}{.metadata.name}{"\n"}'| grep kibana | head -1 ) -- curl -vvvv --cacert /etc/kibana/keys/ca --cert /etc/kibana/keys/cert --key /etc/kibana/keys/key -vvvv https://elasticsearch.openshift-logging.svc.cluster.local:9200/_cluster/health
+
+oc exec $(oc get pods -n openshift-logging -o jsonpath='{range .items[*]}{.metadata.name}{"\n"}'| grep kibana | head -1 ) -- openssl x509 -in /etc/kibana/keys/cert -noout -text
+Certificate:
+    Data:
+        Version: 3 (0x2)
+        Serial Number: 1 (0x1)
+        Signature Algorithm: sha512WithRSAEncryption
+        Issuer: CN = openshift-cluster-logging-signer
+        Validity
+            Not Before: May 13 06:20:13 2021 GMT
+            Not After : May 13 06:20:13 2023 GMT
+        Subject: O = Logging, OU = OpenShift, CN = system.logging.kibana
+
+oc exec $(oc get pods -n openshift-logging -o jsonpath='{range .items[*]}{.metadata.name}{"\n"}'| grep kibana | head -1 ) -- openssl x509 -in /etc/kibana/keys/cert -noout -subject -issuer  -dates
+# oc exec $(oc get pods -n openshift-logging -o jsonpath='{range .items[*]}{.metadata.name}{"\n"}'| grep kibana | head -1 ) -- openssl x509 -in /etc/kibana/keys/cert -noout -subject -issuer  -dates
+Defaulting container name to kibana.
+Use 'oc describe pod/kibana-58854f7ff9-ccqtm -n openshift-logging' to see all of the containers in this pod.
+subject=O = Logging, OU = OpenShift, CN = system.logging.kibana
+issuer=CN = openshift-cluster-logging-signer
+notBefore=May 13 06:20:13 2021 GMT
+notAfter=May 13 06:20:13 2023 GMT
+
+
+# 
+kibana
+  nodeName: ip-10-0-216-190.cn-northwest-1.compute.internal
+
+# 
+
+  nodeName: ip-10-0-216-190.cn-northwest-1.compute.internal
+
+
 ```
 

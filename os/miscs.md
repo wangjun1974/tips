@@ -18734,6 +18734,53 @@ kibana
 
   nodeName: ip-10-0-216-190.cn-northwest-1.compute.internal
 
+# 可以定义 ClusterLogForwarder，然后只安装 Cluster Logging 的 collector fluentd ，通过 collector 将日志转发出去
+export EXTERNAL_KAFKA_BROKER="xxx.compute.amazonaws.com.cn"
+cat << EOF | oc apply -f -
+apiVersion: logging.openshift.io/v1
+kind: ClusterLogForwarder
+metadata:
+  name: instance 
+  namespace: openshift-logging 
+spec:
+  outputs:
+   - name: app-logs 
+     type: kafka 
+     url: tcp://${EXTERNAL_KAFKA_BROKER}:9092/app-logs
+   - name: infra-logs
+     type: kafka
+     url: tcp://${EXTERNAL_KAFKA_BROKER}:9092/infra-logs 
+   - name: audit-logs
+     type: kafka
+     url: tcp://${EXTERNAL_KAFKA_BROKER}:9092/audit-logs
+  pipelines:
+   - name: app-topic 
+     inputRefs: 
+     - application
+     outputRefs: 
+     - app-logs
+     labels:
+       logType: application 
+EOF
 
+cat << EOF | oc apply -f -
+apiVersion: "logging.openshift.io/v1"
+kind: "ClusterLogging"
+metadata:
+  name: "instance" 
+  namespace: "openshift-logging"
+spec:
+  managementState: "Managed"  
+  collection:
+    logs:
+      type: "fluentd"  
+      fluentd:
+        resources:
+          limits:
+            memory: 512Mi        
+          requests:
+            cpu: 1m
+            memory: 256Mi     
+EOF
 ```
 

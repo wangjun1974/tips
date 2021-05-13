@@ -33,7 +33,7 @@ spec:
     elasticsearch:
       nodeCount: 3 
       storage:
-        size: 200G
+        size: 100G
       resources:
         limits:
           memory: 4Gi      
@@ -77,7 +77,7 @@ spec:
             memory: 512Mi        
           requests:
             cpu: 1m
-            memory: 512Mi     
+            memory: 256Mi     
 EOF
 
 # 安装 docker-ce

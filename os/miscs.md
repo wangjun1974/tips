@@ -18919,3 +18919,61 @@ spec:
 EOF
 ```
 
+
+# openssl 与国密算法
+参考收集一些网上的文章:
+
+通过openssl生成sm2的公私钥的方法<br>
+https://blog.csdn.net/dong_beijing/article/details/81365060
+
+Centos7 编译安装 Openssl 1.1.1 支持国密标准<br>
+https://blog.csdn.net/weixin_34128411/article/details/92947164
+
+SM2国密算法被Linux内核社区接受了<br>
+https://os.51cto.com/art/202010/629817.htm<br>
+
+```
+安装编译工具
+# yum install -y "Development Tools"
+
+安装 yum-utils rpm-build
+# yum -y install yum-utils rpm-build 
+
+下载源码
+# cd /root
+# yumdownloader --source openssl.x86_64
+
+创建相关目录
+# mkdir -p ~/rpmbuild/{BUILD,BUILDROOT,RPMS,SOURCES,SPECS,SRPMS}
+# rpm -ivh openssl-1.1.1g-15.el8_3.src.rpm 
+
+安装依赖
+# cd /root/rpmbuild/SPECS
+# yum-builddep openssl.spec
+
+修改 openssl.spec
+# diff -urN openssl.spec.orig openssl.spec
+--- openssl.spec.orig   2021-05-13 22:03:42.767979813 -0400
++++ openssl.spec        2021-05-13 22:08:49.197330595 -0400
+@@ -22,7 +22,7 @@
+ Summary: Utilities from the general purpose cryptography library with TLS implementation
+ Name: openssl
+ Version: 1.1.1g
+-Release: 15%{?dist}
++Release: 15%{?dist}sm2sm4
+ Epoch: 1
+ # We have to remove certain patented algorithms from the openssl source
+ # tarball with the hobble-openssl script which is included below.
+@@ -281,7 +281,7 @@
+        zlib enable-camellia enable-seed enable-rfc3779 enable-sctp \
+        enable-cms enable-md2 enable-rc5\
+        enable-weak-ssl-ciphers \
+-       no-mdc2 no-ec2m no-sm2 no-sm4 \
++       no-mdc2 no-ec2m \
+        shared  ${sslarch} $RPM_OPT_FLAGS '-DDEVRANDOM="\"/dev/urandom\""'
+
+准备编译环境
+# rpmbuild -bb --target=`uname -m` openssl.spec 2>build-err.log | tee build-out.log
+
+
+```

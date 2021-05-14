@@ -18938,6 +18938,9 @@ https://www.cnblogs.com/toolsMan/p/14045404.html<br>
 通过openssl源码生成国密SM2密钥对<br>
 https://www.it610.com/article/1297803195824807936.htm<br>
 
+RSA，SM2非对称密钥对的生成和公私钥pkcs1与pkcs8格式的转换<br>
+https://blog.csdn.net/boweiqiang/article/details/116309452<br>
+
 ```
 安装编译工具
 # yum install -y "Development Tools"
@@ -18994,4 +18997,36 @@ https://www.it610.com/article/1297803195824807936.htm<br>
 
 检查 openssl ecparam 是否支持 SM2
 # openssl ecparam -list_curves | grep SM2
+
+测试sm3 哈希算法
+# openssl dgst -sm3 - /etc/fstab 
+
+测试sm4 加解密
+# cp /etc/fstab .
+# openssl enc -sm4 -pbkdf2  -in fstab -out fstab.sm4
+# openssl enc -sm4 -pbkdf2 -d -in fstab.sm4 -out fstab2
+
+下载 openssl
+# mkdir -p /root/build
+# cd /root/build
+# curl -o openssl-1.1.1d.tar.gz https://www.openssl.org/source/openssl-1.1.1d.tar.gz
+# tar zxf openssl-1.1.1d.tar.gz
+
+编译安装 openssl 
+# cd openssl-1.1.1d
+# ./config --prefix=/usr/local/openssl
+# make install
+
+设置 openssl lib so 加载位置
+# echo "/usr/local/openssl/lib" >> /etc/ld.so.conf
+# ldconfig -v
+
+生成私钥
+# mkdir -p /root/test
+# cd /root/test
+# /usr/local/openssl/bin/openssl ecparam -genkey -name SM2 -out SM2PrivateKey.pem
+
+生成公钥
+# /usr/local/openssl/bin/openssl ec -in SM2PrivateKey.pem -pubout -out SM2PublicKey.pem
+
 ```

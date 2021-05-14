@@ -18932,6 +18932,9 @@ https://blog.csdn.net/weixin_34128411/article/details/92947164
 SM2国密算法被Linux内核社区接受了<br>
 https://os.51cto.com/art/202010/629817.htm<br>
 
+利用openssl生成SM2公私钥对<br>
+https://www.cnblogs.com/toolsMan/p/14045404.html
+
 ```
 安装编译工具
 # yum install -y "Development Tools"
@@ -18972,8 +18975,20 @@ https://os.51cto.com/art/202010/629817.htm<br>
 +       no-mdc2 no-ec2m \
         shared  ${sslarch} $RPM_OPT_FLAGS '-DDEVRANDOM="\"/dev/urandom\""'
 
+ # Do not run this in a production package the FIPS symbols must be patched-in
+@@ -320,7 +320,7 @@
+ export OPENSSL_ENABLE_MD5_VERIFY
+ OPENSSL_SYSTEM_CIPHERS_OVERRIDE=xyz_nonexistent_file
+ export OPENSSL_SYSTEM_CIPHERS_OVERRIDE
+-make test
++#make test
+ 
+ # Add generation of HMAC checksum of the final stripped library
+ %define __spec_install_post \
+
 准备编译环境
 # rpmbuild -bb --target=`uname -m` openssl.spec 2>build-err.log | tee build-out.log
 
-
+检查 openssl ecparam 是否支持 SM2
+# openssl ecparam -list_curves | grep SM2
 ```

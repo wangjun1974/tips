@@ -18933,7 +18933,10 @@ SM2国密算法被Linux内核社区接受了<br>
 https://os.51cto.com/art/202010/629817.htm<br>
 
 利用openssl生成SM2公私钥对<br>
-https://www.cnblogs.com/toolsMan/p/14045404.html
+https://www.cnblogs.com/toolsMan/p/14045404.html<br>
+
+通过openssl源码生成国密SM2密钥对<br>
+https://www.it610.com/article/1297803195824807936.htm<br>
 
 ```
 安装编译工具

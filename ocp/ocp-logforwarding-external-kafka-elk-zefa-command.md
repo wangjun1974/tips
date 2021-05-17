@@ -1,3 +1,4 @@
+```
 OpenShift转发日志到外部系统
 原创 jonkey
 
@@ -488,3 +489,4 @@ spec:
 
 导航到应用的日志页面
 点击Show in Kibana，进行日志查看
+```

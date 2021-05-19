@@ -19029,6 +19029,30 @@ https://blog.csdn.net/boweiqiang/article/details/116309452<br>
 生成公钥
 # /usr/local/openssl/bin/openssl ec -in SM2PrivateKey.pem -pubout -out SM2PublicKey.pem
 
+原文参见：https://blog.csdn.net/weixin_43951955/article/details/104416952
+
+公钥秘钥使用sm2算法
+
+根证书制作步骤：
+
+生成根证书秘钥
+openssl ecparam -out ca.key -name SM2 -genkey
+生成根证书请求文件
+openssl req -key ca.key -new -out ca.req
+生成根证书
+openssl x509 -req -in ca.req -signkey ca.key -out ca.pem
+
+sm2证书制作步骤
+
+生成sm2秘钥对
+openssl ecparam -out site.key -name SM2 -genkey
+生成证书请求文件
+openssl req -key site.key -new -out site.req
+生成证书
+openssl x509 -req -in site.req -CA ca.pem -CAkey ca.key -out site.pem -CAcreateserial
+转为der格式
+openssl x509 -outform der -in site.pem -out site.der
+
 ```
 
 ### docker compose network change

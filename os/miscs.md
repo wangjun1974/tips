@@ -19030,3 +19030,16 @@ https://blog.csdn.net/boweiqiang/article/details/116309452<br>
 # /usr/local/openssl/bin/openssl ec -in SM2PrivateKey.pem -pubout -out SM2PublicKey.pem
 
 ```
+
+### docker compose network change
+https://support.getjoan.com/hc/en-us/articles/360008889859-How-to-change-the-Docker-default-subnet-IP-address<br>
+```
+{
+  "default-address-pools":
+  [
+    {"base":"10.10.0.0/16","size":24}
+  ]
+}
+
+oc get pods -o jsonpath='{range .items[*]}{.metadata.name}{"\n"}' | grep fluentd | while read i ; do echo oc rsh $i 'cat /var/log/es-containers.log.pos | grep -E "redhat-operators-rjnhh"' ;done 
+```

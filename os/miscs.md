@@ -19066,4 +19066,82 @@ https://support.getjoan.com/hc/en-us/articles/360008889859-How-to-change-the-Doc
 }
 
 oc get pods -o jsonpath='{range .items[*]}{.metadata.name}{"\n"}' | grep fluentd | while read i ; do echo oc rsh $i 'cat /var/log/es-containers.log.pos | grep -E "redhat-operators-rjnhh"' ;done 
+
+
+创建用户目录
+创建用户KeyPair
+设置ImageID
+创建用户HelperVM
+创建用户bootstrapVM
+创建用户masterVMs
+创建用户workerVMs
+
+认证到 ipa
+删除用户 vms dns 记录
+遍历用户全部虚拟机
+  获取虚拟机IP
+  如果虚拟机 ExpiredTime 为空则设置 AutoReleaseTime
+  预配置 helper 虚拟机
+    拷贝 ocp4-upi-helpernode-master.zip
+    拷贝 filetranspiler.tgz
+    拷贝 rhcos-4.3.8-x86_64-metal.x86_64.raw.gz
+    拷贝 rhcos-4.3.8-x86_64-installer-initramfs.x86_64.img
+    拷贝 rhcos-4.3.8-x86_64-installer-kernel-x86_64
+    拷贝 openshift-client-linux-4.3.21.tar.gz
+    拷贝 openshift-install-linux-4.3.21.tar.gz
+    拷贝 ocp-cacert.pem
+    拷贝 ocp-privkey.pem
+    拷贝 ntp.conf
+    从模版 config-helper.sh.tmpl 拷贝到 config_${HostName}_${IP}.sh
+    替换 <<HOSTNAMEROLE>> 为 helper
+    替换 <<HOST_IP>>
+    替换 <<HOSTNAME>>
+    设置 HELPER_IP
+  预配置 bootstrap 虚拟机
+    拷贝 rhcos-4.3.8-x86_64-installer-kernel-x86_64
+    拷贝 rhcos-4.3.8-x86_64-installer-initramfs.x86_64.img
+    拷贝 config-bootrap.sh.tmpl
+    从模版 config-bootrap.sh.tmpl 拷贝到 config_${HostName}_${IP}.sh
+    替换 <<HOSTNAMEROLE>> 为 bootstrap-static
+    替换 <<HOST_IP>>
+    替换 <<HOSTNAME>>
+    设置 BOOTSTRAP_IP
+  预配置 masters 虚拟机
+    拷贝 rhcos-4.3.8-x86_64-installer-kernel-x86_64
+    拷贝 rhcos-4.3.8-x86_64-installer-initramfs.x86_64.img
+    拷贝 config-master.sh.tmpl
+    从模版 config-master.sh.tmpl 拷贝到 config_${HostName}_${IP}.sh
+    替换 <<HOSTNAMEROLE>> 为 master
+    替换 <<HOST_IP>>
+    替换 <<HOSTNAME>>
+    设置 MASTER_IPS
+  预配置 workers 虚拟机
+    拷贝 rhcos-4.3.8-x86_64-installer-kernel-x86_64
+    拷贝 rhcos-4.3.8-x86_64-installer-initramfs.x86_64.img
+    拷贝 config-worker.sh.tmpl
+    从模版 config-worker.sh.tmpl 拷贝到 config_${HostName}_${IP}.sh
+    替换 <<HOSTNAMEROLE>> 为 worker
+    替换 <<HOST_IP>>
+    替换 <<HOSTNAME>>
+    设置 WORKER_IPS
+  处理配置脚本
+    替换 <<OCP4_USERNAME>>
+    替换 <<OCP4_IPS>>
+    替换 <<OCP4_WORKER_IPS>>
+    替换 <<OCP4_MASTER_IPS>>
+    替换 <<OCP4_HELPER_IP>>
+    替换 <<OCP4_BOOTSTRAP_IP>>
+    替换 <<GATEWATE>>
+    替换 <<DNS>>
+    替换 <<NETMASK>>
+    替换 <<HELPER_IP>>
+    拷贝配置脚本到虚拟机
+  执行配置脚本配置 helper
+  执行配置脚本配置 bootstrap
+  执行配置脚本配置 master
+  执行配置脚本配置 worker
+  helper 执行 install_bootstap_monitor.sh
+  helper 执行 install_monitor.sh
+  helper 执行 ~/ocp4-upi-helpernode-master/files/nfs-provisioner-setup.sh
+  
 ```

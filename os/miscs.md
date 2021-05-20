@@ -19154,6 +19154,33 @@ config_user
 https://github.com/wangzheng422/docker_env/blob/master/redhat/ocp4/4.2/4.2.ccn.devops.deploy.md<br>
 
 ```
-记录一下学习心得体会
+
+https://github.com/redhat-cop/agnosticd/blob/development/docs/First_OSP_Env_walkthrough.adoc
+
+
+sudo yum install gcc python3 python3-devel python3-libs python3-pip -y
+python3 -m venv ansible2.8-python3.6
+source ansible2.8-python3.6/bin/activate
+
+pip3 install -r https://raw.githubusercontent.com/redhat-cop/agnosticd/development/tools/virtualenvs/ansible2.9-python3.6-2020-11-30.txt
+
+mkdir -p ~/.config/openstack
+vim ~/.config/openstack/clouds.yaml
+
+cat ~/.config/openstack/clouds.yaml
+clouds:
+  35eb-project:
+    auth:
+      auth_url: "http://169.47.17.15:5000/v3"
+      username: "35eb-user"
+      project_name: "35eb-project"
+      project_id: "1a79cf800ff94754bb495e2c1fd9d433"
+      user_domain_name: "Default"
+      password: "YOUR_TEMP_PASSWORD"
+    region_name: "regionOne"
+    interface: "public"
+    identity_api_version: 3
+
+openstack --os-cloud=GUID-project server list
 
 ```

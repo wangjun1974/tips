@@ -19149,3 +19149,11 @@ config_user
   helper 执行 ~/ocp4-upi-helpernode-master/files/nfs-provisioner-setup.sh
   
 ```
+
+### 学习 CCN 离线
+https://github.com/wangzheng422/docker_env/blob/master/redhat/ocp4/4.2/4.2.ccn.devops.deploy.md<br>
+
+```
+记录一下学习心得体会
+
+```

@@ -19066,8 +19066,11 @@ https://support.getjoan.com/hc/en-us/articles/360008889859-How-to-change-the-Doc
 }
 
 oc get pods -o jsonpath='{range .items[*]}{.metadata.name}{"\n"}' | grep fluentd | while read i ; do echo oc rsh $i 'cat /var/log/es-containers.log.pos | grep -E "redhat-operators-rjnhh"' ;done 
+```
 
-
+### 记录配置流程
+```
+create_user
 创建用户目录
 创建用户KeyPair
 设置ImageID
@@ -19076,6 +19079,7 @@ oc get pods -o jsonpath='{range .items[*]}{.metadata.name}{"\n"}' | grep fluentd
 创建用户masterVMs
 创建用户workerVMs
 
+config_user
 认证到 ipa
 删除用户 vms dns 记录
 遍历用户全部虚拟机

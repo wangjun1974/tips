@@ -19324,11 +19324,14 @@ ansible-playbook -i /root/ccn/inventory ./configs/ocp-workloads/ocp-workload.yml
     -e"ocp_workload=${WORKLOAD}" \
     -e"silent=False" \
     -e"guid=${GUID}" \
-    -e"user_count=${USER_COUNT}" \
+    -e"num_users=${USER_COUNT}" \
     -e"module_type=${MODULE_TYPE}" \
     -vvvv \
     -e"ACTION=create"
 FOE
+
+# 可定制参数参见：https://github.com/redhat-cop/agnosticd/blob/development/ansible/roles/ocp4-workload-ccnrd/defaults/main.yml
+
 
 
 ```

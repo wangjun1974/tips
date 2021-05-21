@@ -19266,6 +19266,9 @@ https://github.com/wangzheng422/docker_env/blob/master/redhat/ocp4/4.2/4.2.ccn.d
 
 Middleware workshop
 https://github.com/RedHat-Middleware-Workshops?page=1
+
+CCN Workshop Ansible Playbook
+https://github.com/redhat-cop/agnosticd/tree/development/ansible/roles/ocp4-workload-ccnrd
 ```
 
 

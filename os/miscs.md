@@ -19183,4 +19183,91 @@ clouds:
 
 openstack --os-cloud=GUID-project server list
 
+ssh YOUR-OPENTLC-USER@bastion.GUID.red.osp.opentlc.com
+
+git clone https://github.com/redhat-cop/agnosticd
+
+$ cat secrets.yaml 
+# Dynamic DNS
+ddns_key_name: opentlc_students
+ddns_key_algorithm: hmac-md5
+ddns_key_secret: xxxxxx
+osp_cluster_dns_server: ddns01.opentlc.com
+osp_cluster_dns_zone: students.osp.opentlc.com
+
+# OpenStack Auth
+osp_auth_project_domain: default
+osp_auth_user_domain: default
+osp_auth_username_member: "d939-user"
+osp_auth_password_member: "xxxxxxxxxxxxxxxx"
+osp_auth_url: "https://api.red.sc01.infra.opentlc.com:13000//v3"
+osp_project_name: "d939-project"
+osp_project_id: "04a8793db6ce482182c4e12bea351f9c"
+
+osp_project_create: false
+
+cd agnosticd/ansible
+
+ansible-playbook main.yml \
+  -e @configs/test-empty-config/sample_vars_osp.yml \
+  -e @~/secrets.yaml
+
+cp configs/just-a-bunch-of-nodes/sample_vars_osp.yml \
+  configs/just-a-bunch-of-nodes/my_vars.yml
+
+vim configs/just-a-bunch-of-nodes/my_vars.yml
+---
+own_repo_path: http://admin.na.shared.opentlc.com/repos/ocp/4.6.0
+
+ansible-playbook main.yml \
+  -e @configs/just-a-bunch-of-nodes/my_vars.yml \
+  -e @~/secrets.yaml
+
+openstack --os-cloud=GUID-project server list
++--------------------------------------+---------+--------+--------------------------------------------------------------+--------------------------+---------+
+| ID                                   | Name    | Status | Networks                                                     | Image                    | Flavor  |
++--------------------------------------+---------+--------+--------------------------------------------------------------+--------------------------+---------+
+| ac3d7ce7-e296-474a-8f30-f7583bef7b9f | node    | ACTIVE | testgucorejwang-default-network=192.168.47.230               | N/A (booted from volume) | 2c2g30d |
+| c8e58b70-1c60-446a-a29c-2a90842a2643 | bastion | ACTIVE | testgucorejwang-default-network=192.168.47.44, 52.118.31.143 | N/A (booted from volume) | 2c2g30d |
+| 5f3bfd27-230b-463b-8fca-4e286a63d261 | bastion | ACTIVE | d939-testnet-network=192.168.0.246, 52.118.31.177            | N/A (booted from volume) | 2c2g30d |
++--------------------------------------+---------+--------+--------------------------------------------------------------+--------------------------+---------+
+
+
+$ ll /tmp/output_dir/
+total 40
+-rw-r--r--. 1 jwang-redhat.com users  235 May 20 00:25 basic_heat_template.yml
+-rw-r--r--. 1 jwang-redhat.com users 7310 May 20 02:18 just-a-bunch-of-nodes.testgucorejwang.osp_cloud_master_template.yaml
+-rw-r--r--. 1 jwang-redhat.com users 1211 May 20 02:19 just-a-bunch-of-nodes_testgucorejwang_ssh_conf
+-rw-r--r--. 1 jwang-redhat.com users  400 May 20 02:20 just-a-bunch-of-nodes_testgucorejwang_ssh_known_hosts
+-rw-------. 1 jwang-redhat.com users 1679 May 20 02:19 testgucorejwang_infra_ssh_key.pem
+-r--------. 1 jwang-redhat.com users 1675 May 20 02:20 testgucorejwangkey
+-rw-r--r--. 1 jwang-redhat.com users  406 May 20 02:20 testgucorejwangkey.pub
+-rw-r--r--. 1 jwang-redhat.com users    4 May 20 00:39 user-data.yaml
+-rw-r--r--. 1 jwang-redhat.com users    4 May 20 00:39 user-info.yaml
+
+openstack --os-cloud=GUID-project server list
+
+scp -i /tmp/output_dir/testgucorejwang_infra_ssh_key.pem /tmp/output_dir/testgucorejwang_infra_ssh_key.pem cloud-user@52.118.31.143:~
+ssh -i /tmp/output_dir/testgucorejwang_infra_ssh_key.pem cloud-user@52.118.31.143
+ssh -i ~/testgucorejwang_infra_ssh_key.pem cloud-user@192.168.47.230
+
+ansible-playbook destroy.yml \
+  -e @configs/just-a-bunch-of-nodes/my_vars.yml \
+  -e @~/secrets.yaml
+
+问题追踪：
+https://github.com/redhat-cop/agnosticd/issues/3726
+
+RHEL7 
+yum install -y rh-python34-python-devel.x86_64
+scl enable rh-python34 bash
+
+https://github.com/wangzheng422/docker_env/blob/master/redhat/ocp4/4.2/4.2.ccn.devops.deploy.md
+
+Middleware workshop
+https://github.com/RedHat-Middleware-Workshops?page=1
 ```
+
+
+### Satellite
+https://www.redhat.com/security/data/metrics/summary-rhel7-critical.html<br>

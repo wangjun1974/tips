@@ -19269,6 +19269,13 @@ https://github.com/RedHat-Middleware-Workshops?page=1
 
 CCN Workshop Ansible Playbook
 https://github.com/redhat-cop/agnosticd/tree/development/ansible/roles/ocp4-workload-ccnrd
+
+github proxy example
+cat ~/.gitconfig
+[http]
+        proxy = http://squid.aaaa.bbbbbb.com:3128
+        sslverify = false
+
 ```
 
 

@@ -19297,6 +19297,40 @@ ansible-playbook -i ${TARGET_HOST}, ./configs/ocp-workloads/ocp-workload.yml \
     -e"module_type=${MODULE_TYPE}" \
     -vvvv \
     -e"ACTION=create"
+
+
+# 本地测试创建 CCN 环境
+cat > /root/ccn/create-env.sh << 'FOE'
+source ~/ansible2.9-python3.6/bin/activate
+
+cat > /root/ccn/inventory << ‘EOF’
+[localhost]
+localhost ansible_host=localhost ansible_connection=local ansible_python_interpreter=/root/ansible2.9-python3.6/bin/python
+EOF
+
+TARGET_HOST="localhost"
+OCP_USERNAME="kubeadmin"
+WORKLOAD="ocp4-workload-ccnrd"
+GUID=abcd
+USER_COUNT=1
+MODULE_TYPE=m1
+SSH_KEY=~/.ssh/id_rsa
+
+# a TARGET_HOST is specified in the command line, without using an inventory file
+ansible-playbook -i /root/ccn/inventory ./configs/ocp-workloads/ocp-workload.yml \
+    -e"ansible_ssh_private_key_file=${SSH_KEY}" \
+    -e"ansible_user=root" \
+    -e"ocp_username=${OCP_USERNAME}" \
+    -e"ocp_workload=${WORKLOAD}" \
+    -e"silent=False" \
+    -e"guid=${GUID}" \
+    -e"user_count=${USER_COUNT}" \
+    -e"module_type=${MODULE_TYPE}" \
+    -vvvv \
+    -e"ACTION=create"
+FOE
+
+
 ```
 
 

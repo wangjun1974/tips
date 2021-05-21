@@ -19276,6 +19276,27 @@ cat ~/.gitconfig
         proxy = http://squid.aaaa.bbbbbb.com:3128
         sslverify = false
 
+
+TARGET_HOST="localhost"
+OCP_USERNAME="doh-redhat.com"
+WORKLOAD="ocp4-workload-ccnrd"
+GUID=abcd
+USER_COUNT=1
+MODULE_TYPE=m1
+SSH_KEY=~/.ssh/id_rsa
+
+# a TARGET_HOST is specified in the command line, without using an inventory file
+ansible-playbook -i ${TARGET_HOST}, ./configs/ocp-workloads/ocp-workload.yml \
+    -e"ansible_ssh_private_key_file=${SSH_KEY}" \
+    -e"ansible_user=${OCP_USERNAME}" \
+    -e"ocp_username=${OCP_USERNAME}" \
+    -e"ocp_workload=${WORKLOAD}" \
+    -e"silent=False" \
+    -e"guid=${GUID}" \
+    -e"user_count=${USER_COUNT}" \
+    -e"module_type=${MODULE_TYPE}" \
+    -vvvv \
+    -e"ACTION=create"
 ```
 
 

@@ -19339,3 +19339,19 @@ FOE
 
 ### Satellite
 https://www.redhat.com/security/data/metrics/summary-rhel7-critical.html<br>
+
+
+
+### Evicted Pods
+https://support.huaweicloud.com/intl/en-us/cce_faq/cce_faq_00209.html<br>
+```
+切换到 namespace
+oc project nfs-provisioner
+
+删除状态为 Evicted 的 Pods
+kubectl get pods | grep Evicted | awk '{print $1}' | xargs kubectl delete pod 
+
+
+E0525 07:20:40.412216       1 controller.go:1181] delete "pvc-13d2a4a4-31c3-4948-8ab4-cab3faf7c0ab": volume deletion failed: remove /persistentvolumes/threesc
+ale-admin17-mysql-storage-pvc-13d2a4a4-31c3-4948-8ab4-cab3faf7c0ab/mysql/db.opt: permission denied
+```

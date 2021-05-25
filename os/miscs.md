@@ -19360,3 +19360,6 @@ oc patch awx awx -n jwang -p '{"metadata":{"finalizers":[]}}' --type=merge
 
 ### 国产 CPU
 http://www.cxyzjd.com/article/xiaoxiaole0313/109733514<br>
+
+### StackRox 离线安装
+https://www.talkwithtrend.com/Article/255377<br>

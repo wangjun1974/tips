@@ -19354,4 +19354,9 @@ kubectl get pods | grep Evicted | awk '{print $1}' | xargs kubectl delete pod
 
 E0525 07:20:40.412216       1 controller.go:1181] delete "pvc-13d2a4a4-31c3-4948-8ab4-cab3faf7c0ab": volume deletion failed: remove /persistentvolumes/threesc
 ale-admin17-mysql-storage-pvc-13d2a4a4-31c3-4948-8ab4-cab3faf7c0ab/mysql/db.opt: permission denied
+
+oc patch awx awx -n jwang -p '{"metadata":{"finalizers":[]}}' --type=merge
 ```
+
+### 国产 CPU
+http://www.cxyzjd.com/article/xiaoxiaole0313/109733514<br>

@@ -283,6 +283,35 @@ oc adm catalog mirror \
   --filter-by-os='linux/amd64' \
   -a ${LOCAL_SECRET_JSON}
 
+# 同步 4.7 的 catalog 到本地，共有 4 个镜像
+OPERATOR_OCP_RELEASE="4.7"
+oc adm catalog mirror \
+  registry.redhat.io/redhat/redhat-operator-index:v${OPERATOR_OCP_RELEASE} \
+  ${LOCAL_REGISTRY}/redhat/redhat-operator-index:v${OPERATOR_OCP_RELEASE} \
+  -a ${LOCAL_SECRET_JSON} \
+  --index-filter-by-os='linux/amd64'
+
+oc adm catalog mirror \
+  registry.redhat.io/redhat/certified-operator-index:v${OPERATOR_OCP_RELEASE} \
+  ${LOCAL_REGISTRY}/redhat/certified-operator-index:v${OPERATOR_OCP_RELEASE} \
+  -a ${LOCAL_SECRET_JSON} \
+  --index-filter-by-os='linux/amd64'
+
+oc adm catalog mirror \
+  registry.redhat.io/redhat/community-operator-index:v${OPERATOR_OCP_RELEASE} \
+  ${LOCAL_REGISTRY}/redhat/community-operator-index:v${OPERATOR_OCP_RELEASE} \
+  -a ${LOCAL_SECRET_JSON} \
+  --index-filter-by-os='linux/amd64'
+
+oc adm catalog mirror \
+  registry.redhat.io/redhat/redhat-marketplace-index:v${OPERATOR_OCP_RELEASE} \
+  ${LOCAL_REGISTRY}/redhat/redhat-marketplace-index:v${OPERATOR_OCP_RELEASE} \
+  -a ${LOCAL_SECRET_JSON} \
+  --index-filter-by-os='linux/amd64'  
+# 同步 4.7 的 catalog 到本地
+
+
+
 oc adm catalog build \
   --appregistry-org certified-operators \
   --from=registry.redhat.io/openshift4/ose-operator-registry:v${OPERATOR_OCP_RELEASE} \

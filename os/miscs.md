@@ -19475,3 +19475,50 @@ horizontalpodautoscaler.autoscaling/scanner created
 
 
 ```
+
+### 命令行方式设置 proxy
+https://computingforgeeks.com/configure-system-wide-proxy-settings-on-centos-rhel-fedora/
+```
+# set proxy config via profie.d - should apply for all users
+# 
+PROXY_URL="http://10.10.1.10:8080/"
+
+export http_proxy="$PROXY_URL"
+export https_proxy="$PROXY_URL"
+export ftp_proxy="$PROXY_URL"
+export no_proxy="127.0.0.1,localhost"
+
+# For curl
+export HTTP_PROXY="$PROXY_URL"
+export HTTPS_PROXY="$PROXY_URL"
+export FTP_PROXY="$PROXY_URL"
+export NO_PROXY="127.0.0.1,localhost"
+``` 
+
+### 使用 redhat-cop openshift-disconnected-operators 工具同步离线 operator catalog 和 images
+https://github.com/redhat-cop/openshift-disconnected-operators
+```
+准备工具机，安装 rhel 8.2 +
+
+挂载光盘
+mount /dev/sr0 /mnt
+
+设置软件仓库
+cat > /etc/yum.repos.d/local.repo << 'EOF'
+[baseos]
+name=baseos
+baseurl=file:///mnt/BaseOS
+enabled=1
+gpgcheck=0
+
+[appstream]
+name=appstream
+baseurl=file:///mnt/AppStream
+enabled=1
+gpgcheck=0
+EOF
+
+安装软件
+yum install -y jq python3 python3-pyyaml python3-jinja2 podman skopeo wget
+
+```

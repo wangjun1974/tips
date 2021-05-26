@@ -177,6 +177,7 @@ curl -u dummy:dummy -s -X GET https://$REPO_URL/v2/_catalog \
 
 ### prepare artifacts
 ```
+注意：在下载 client 和 install 时确保两者一致，可以比 iso 新
 MAJORBUILDNUMBER=4.5
 EXTRABUILDNUMBER=4.5.6
 
@@ -187,6 +188,7 @@ tar -xzf /var/www/html/openshift-client-linux-${EXTRABUILDNUMBER}.tar.gz -C /usr
 tar -xzf /var/www/html/openshift-install-linux-${EXTRABUILDNUMBER}.tar.gz -C /usr/local/bin/
 
 # download bios and iso
+注意: iso 版本可以比 client 和 install 版本旧
 MAJORBUILDNUMBER=4.5
 EXTRABUILDNUMBER=4.5.6
 wget https://mirror.openshift.com/pub/openshift-v4/dependencies/rhcos/${MAJORBUILDNUMBER}/${EXTRABUILDNUMBER}/rhcos-${EXTRABUILDNUMBER}-x86_64-installer.x86_64.iso -P /var/www/html/

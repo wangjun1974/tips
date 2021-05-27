@@ -204,6 +204,7 @@ podman login --authfile /root/pull-secret-2.json registry.connect.redhat.com
 
 # setup env and record imageContentSources section from output
 # see: https://docs.openshift.com/container-platform/4.5/installing/install_config/installing-restricted-networks-preparations.html
+# 这里面的 OCP_RELEASE 需要与 openshift-install 的版本保持一致
 export OCP_RELEASE="4.6.5"
 export LOCAL_REGISTRY='helper.cluster-0001.rhsacn.org:5000'
 export LOCAL_REPOSITORY='ocp4/openshift4'

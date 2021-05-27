@@ -19648,3 +19648,43 @@ export LOCAL_REGISTRY='helper.cluster-0001.rhsacn.org:5000'
 --operator-file ./offline-operator-list \
 --icsp-scope=namespace
 ```
+
+### 如何快速拷贝稀疏文件
+https://serverfault.com/questions/665335/what-is-fastest-way-to-copy-a-sparse-file-what-method-results-in-the-smallest-f
+```
+ls -lhs srcFile 
+16G -rw-r--r-- 1 qemu qemu 201G Feb  4 11:50 srcFile
+
+Via cp - best speed
+cp --sparse=always srcFile dstFile
+Performance Notes:
+    Copied 200GB max/16GB actual VM as 200GB max/26GB actual, bloat: 10GB
+    Copy time: 1:02 (mm:ss) 
+
+Via dd - best overall performer
+dd if=srcFile of=dstFile iflag=direct oflag=direct bs=4M conv=sparse
+Performance Notes:
+    Copied 200GB max/16GB actual VM as 200GB max/21GB actual, bloat: 5GB
+    Copy time: 2:02 (mm:ss)
+
+Via cpio
+mkdir tmp$$
+echo srcFile | cpio -p --sparse tmp$$; mv tmp$$/srcFile dstFile
+rmdir tmp$$
+Performance Notes:
+    Copied 200GB max/16GB actual VM as 200GB max/26GB actual, bloat: 10GB
+    Copy time: 9:26 (mm:ss)
+
+Via rsync
+rsync --ignore-existing -aS srcFile dstFile
+Performance Notes:
+    Copied 200GB max/16GB actual VM as 200GB max/26GB actual, bloat: 10GB
+    Copy time: 24:49 (mm:ss)
+
+Via virt-sparsify - best size
+virt-sparsify srcFile dstFile
+    Copied 200GB max/16GB actual VM as 200GB max/16GB actual, bloat: 0
+    Copy time: 17:37 (mm:ss)
+
+
+```

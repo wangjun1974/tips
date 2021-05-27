@@ -19584,8 +19584,35 @@ wget https://mirror.openshift.com/pub/openshift-v4/clients/ocp/${EXTRABUILDNUMBE
 
 tar -xzf /var/www/html/openshift-client-linux-${EXTRABUILDNUMBER}.tar.gz -C /usr/local/bin/
 
+登录远程 registry 和 本地 registry
 podman login -u ****** -p ******** registry.redhat.io
 podman login -u ****** -p ******** registry.access.redhat.com
 podman login -u ****** -p ******** registry.connect.redhat.com
 podman login -u ****** -p ******** helper.cluster-0001.rhsacn.org:5000
+
+
+克隆软件仓库
+cd /root
+git clone https://github.com/redhat-cop/openshift-disconnected-operators 
+cd openshift-disconnected-operators 
+
+查看 offline-operator-list 文件
+# cat offline-operator-list 
+kubevirt-hyperconverged
+local-storage-operator
+cluster-logging
+codeready-workspaces
+
+# 同步 operator 到离线 registry
+export LOCAL_REGISTRY='helper.cluster-0001.rhsacn.org:5000'
+
+./mirror-operator-catalogue.py \
+--catalog-version 1.0.0 \
+--authfile /root/pull-secret-2.json \
+--ocp-version 4.7 \
+--operator-channel 4.7 \
+--registry-olm ${LOCAL_REGISTRY} \
+--registry-catalog ${LOCAL_REGISTRY} \
+--operator-file ./offline-operator-list \
+--icsp-scope=namespace
 ```

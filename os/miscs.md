@@ -19622,7 +19622,6 @@ podman login -u ****** -p ******** registry.access.redhat.com
 podman login -u ****** -p ******** registry.connect.redhat.com
 podman login -u ****** -p ******** helper.cluster-0001.rhsacn.org:5000
 
-
 克隆软件仓库
 cd /root
 git clone https://github.com/redhat-cop/openshift-disconnected-operators 

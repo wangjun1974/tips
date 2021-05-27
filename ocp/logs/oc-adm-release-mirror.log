@@ -1,0 +1,160 @@
+sha256:88f4c0f76aaa0783c08def62890ac7c4e82bbaefcefa7f1869a1ac2ff343edf5 helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-operator-registry
+sha256:65bf6095e878071104abe0ad9d27dbfa5ec7872769582d877a91d2bb4b90ab76 helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-operator-lifecycle-manager
+sha256:48853cfb120c1c0323d76d9717f30a865aeed96a1c13c41737b1d43b72f0c99e helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-cluster-update-keys
+sha256:a651257eff4bdd6445f32fb1c1bd534b255bf2f7f2eefb0ec8c14750aa1a61b4 helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-openshift-apiserver
+sha256:5dc007f55402c9da9c6a9ca6de62098409d6034974409028f6da79fa194b2713 helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-baremetal-operator
+sha256:2978a2d7a7faa535f7711b1c4b3e86348a71443cdc58445055b89017e2b0a91c helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-ironic-static-ip-manager
+sha256:b3df5d5c0bb50d3beb2c9b93345aab58ee486bf7ed379f78fa2316803331fefd helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-kube-state-metrics
+sha256:fd146834b97fe5323352e8085183f9535b76bf7c5c246d80388c32c0dde4644e helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-cluster-autoscaler-operator
+sha256:8e8da079e767cd316e9ab67597c1a0fb1b07e836c8dd4c521546a5a701621758 helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-mdns-publisher
+sha256:9bf0f650ddcfbf37fa5d34f201f73cd73e3191930e2ba6e3999ded63ffc5d22f helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-multus-cni
+sha256:3acaf864976339a96fa8482835658c261ef5947431a0df68a9808e8808561cdf helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-aws-pod-identity-webhook
+sha256:6cae902887157f4626bbb258c6a3bfa741cd03e2284eaec37970993db46300ef helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-configmap-reloader
+sha256:6cb7f1c1bb6ea8b4e7793bae3d5850213dc94a0a4227950400b88f688ca0fd73 helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-thanos
+sha256:a15398e3822d13c922ef937c835171070b8c3004c713e208c73cba9dc5aec883 helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-baremetal-installer
+sha256:b1037ee43c04a7742638b68ca35bf455cb03a369ab627fbadd85e8a9f2c4f1bf helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-cluster-kube-scheduler-operator
+sha256:65764c0dd717eab8436e07c6aa65ed394ab9465a0ad6f0f9d3764b37dc0b1abc helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-kube-storage-version-migrator
+sha256:6028a87f17b7ecb9fe4b5a9f1ab25999cd414924cbba5721320f14df9faec44a helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-machine-os-content
+sha256:600bbfc4007b5051b6d0b7d17b2ce6256fa27946fdd4b6f75f2d3ca693799be2 helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-multus-route-override-cni
+sha256:74a477c9c7689d3a2af3c679e13b9aad28685c0a2ae2385a5255315dbe43c6b0 helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-csi-driver-manila
+sha256:ea9b0024a94063a2170dc797da343e4d00dff95758acfcbdb682b2a91215c451 helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-prometheus
+sha256:64cd566b338c553dfa30847ea1d17d071e1a04c390a65b673f4d8f5473023351 helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-ovirt-machine-controllers
+sha256:29f777f6b3d00ef282ddc4eb65c1f0a11e8681b1ffbcb2f8e15ad2d5bab0b76a helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-multus-whereabouts-ipam-cni
+sha256:2c3c8b32d4239e129f9ce203afabdde4474d109ea1d9a99f00897a6c1822f9c9 helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-csi-external-snapshotter
+sha256:e52ef8f9f7f3eac1768a9d68a132fb6e57538b7a439bb81ab02a3f2cc3d9c188 helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-k8s-prometheus-adapter
+sha256:371f840df6014f87ded960aded57ea4f788a64b92f603c24fcbbfec7c9c4d320 helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-gcp-machine-controllers
+sha256:77a5cbd7316f45b7629a999d600639d37af2cf044bb36031cfefea9b976f018a helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-csi-driver-nfs
+sha256:1b20cb0cffa36d80cff4fb91016e1f999bc264ec0abd1bbb5d76c1ccacdc540b helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-ironic-ipa-downloader
+sha256:715149cbe4bfd518d8ee6b263ff86f4ef82ede38cc80c53d1d04f00da1acc327 helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-network-metrics-daemon
+sha256:1d71ccb37e30fe4b8ed948ec603694f4e0d839d87c7603a1f3723afa30d190dd helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-egress-router-cni
+sha256:303d94d48452344007cad7f5d65eaec56dafe371462132c4917249a88a5a1186 helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-cli
+sha256:803773165c7be80f313a3bd6dae0793667ca6696ca5fc3a85494e9df72eb4269 helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-cloud-credential-operator
+sha256:213395ab10ec95e923018fa6609f5bd3d5e146d7149b47d3bff72c00782717b6 helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-baremetal-runtimecfg
+sha256:bdad60bf22da9b8b1819ef6126eee3c0259b5213a5c9a445c50197f2b3238f4e helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-cluster-version-operator
+sha256:7515d7798974355b0a2aa295bab08ac180a16fb2a0382c367b36f151ec06e557 helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-cluster-storage-operator
+sha256:9b03df7325f06c30ac08b0c73ace26c5c811964c0edf6bcc480266d7fe5d0499 helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-cluster-config-operator
+sha256:e81afd0bb9ea7d80694fb39ac6bc1caecbf30bb8e95acbb833254344d1e8150d helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-prometheus-alertmanager
+sha256:404fe1b6c832d7a52aa175f26f363bfedc33afdd2f32dbf67a14c9e99246af5a helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-azure-machine-controllers
+sha256:903aea6bb38ecbc9c8dc2b153a18455b244a0c62fbd5e016880ccf3edea3e346 helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-hello-openshift
+sha256:0028f1394020213555b8c90d294d5ba1fb3c9a5d11b6fb76874dad1f54d5251c helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-installer-artifacts
+sha256:cc333c64eee7aa83a7255ce01413eb97c8801e051828e72f0342471f15a65b03 helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-deployer
+sha256:73a9dfb2c4ea4a32bc91cb58b3ed21910502c4255005c067f75ec111bbc3d9a3 helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-haproxy-router
+sha256:569b415e7f991a1c23c70597818d00b635286b4683f3f0edb80f9ff2b9e8f244 helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-oauth-apiserver
+sha256:b17fa62b7bb67f721e62b61427179ed0330f46b29c8259e3b19257722fdcbdd7 helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-ironic-inspector
+sha256:cbd0c2490e889f139a7a2706865b91624bba1ebe4fca4fbc6db8b3ad3cda8ac2 helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-service-ca-operator
+sha256:5c7d3768237eac7b5a2f221595581f24eb3cd561c5f03bcb61e93237bfd3d564 helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-cluster-policy-controller
+sha256:20c420de970a25abd5ccbf6d5d5dd6371717b5c994ba49984ac80132cb49c6e6 helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-csi-livenessprobe
+sha256:beb73aeb271f26159c4a7f7efe72b95a3a3a390a1ff9d5b4d4a7c7742ddf9dd6 helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-oauth-server
+sha256:3808c4976b72ff7504fb02ce10191754aa03ab2c8980d277f73a9e24cc5f7a86 helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-console-operator
+sha256:06a3a9b1f61ba38a8f5c40476d807c9dd933fbcbb87af15b9bac4560c5a15713 helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-jenkins
+sha256:d7fdcdcc2754359ab49422d6f2f3e9612eb4332ed73d58705c5f086c343d3793 helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-kube-rbac-proxy
+sha256:927d88e70cd37ceb145ad10d5503bb49176935090c306da6bd9ddba054272be5 helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-telemeter
+sha256:aee8055875707962203197c4306e69b024bea1a44fa09ea2c2c621e8c5000794 helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64
+sha256:609836c45ef0f6b527ebbda913fec2f9e868b42d309b0c023fceeab4e39d921b helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-aws-ebs-csi-driver
+sha256:358ca1bd1284adee326c37e3f7ef8adeb00410d3ae7319c3d7ebc2959f060f42 helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-docker-builder
+sha256:8691ccf023b7c74bc4773a65488fea7d925f8524d171bb72b75b714e94dc5bdd helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-cluster-network-operator
+sha256:de539a9de26b227baad63eca9a932ad1fd6c31fa40829a1e9da55f030e298159 helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-gcp-pd-csi-driver
+sha256:53282961e49af4aec7ea8329a47c3c04ee1974fb97d609cb6cec6c6dd129dd3d helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-prom-label-proxy
+sha256:f78dc36c9a83b48bc0994f91d8c706e21232293a292358a48925088cef3be19b helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-pod
+sha256:045f819bd37d35109414c7113347382f5c2ebcf82c3a3875d58b2332575b9dcb helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-openstack-machine-controllers
+sha256:57fa115c698ba4913f3c71b6cc2368f9406af1c831e50a71476b792d647c3f73 helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-cluster-bootstrap
+sha256:33a95981aa0d340c87065b298fbab3fc2095aaeee9311410ecb6fabdb0f1bdf4 helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-docker-registry
+sha256:13b95fd0a78033b8366c97ff426e8da23e2f8a9183409ea5c49204ae7d1f1ce5 helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-csi-external-provisioner
+sha256:f8c4d258e3eea7903d8d76a1ef91f4a99c5a4b43f21827ce095bf28987fa46eb helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-csi-external-resizer
+sha256:e918d714d5c4f9fed0baaf62faba5f3c6850786a3dad0b60dac5752ed8653b73 helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-prometheus-config-reloader
+sha256:d6b6d5904a2fb31e26eaf4c4a2430ecf6dfaa9d2c1a150c01bcc0a292e26f41d helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-cluster-kube-storage-version-migrator-operator
+sha256:9b5139821aea4965c27950c3c32cb36ef7bbbada06e18018326af41178c7b9f0 helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-cluster-autoscaler
+sha256:32b2ebd27e07a39d4905e27ceb1256e571566e75186fee1884e551afc1cb86dc helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-kuryr-controller
+sha256:eda681a6df9b29c693e1f4fdd46dec6f9e4cd9e4c2da1d327d83e5fdab500806 helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-openshift-controller-manager
+sha256:b6370d62ebffe0094453043d8ee086c13a198e69d08604bb3a6bd0ef0e32ddc4 helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-cluster-machine-approver
+sha256:9ccc84fdd34d869dc681c8251e0d51696ebee80f7fe9c9b5cacd17a7a78e34b0 helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-cluster-image-registry-operator
+sha256:89b111fd17717ed3254c57def1d55d81b3e62baf3689be0addb25c1669a4eded helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-console
+sha256:8a6ffacd8befa86af6a4d8d93ce1ac4bc6d4b6ddcc7dcdd39a50a09eb2349c14 helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-insights-operator
+sha256:d458439d8e75709ecc94dd163dcc84228ac37c9e9853bda9398eed6384ae4412 helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-tools
+sha256:1b90ba86dfebb5438a5349019db715f8f5162a758ace8f8d1973129907bbe1db helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-cluster-openshift-apiserver-operator
+sha256:b9e4e8860a8d4f9ec9a4d0b7ef07c3790eea8c9a7ab9ec24e780e7cfccf1e2f0 helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-cluster-openshift-controller-manager-operator
+sha256:1c5920a5d38c7f5cd17f46680108b6e36fcea8bb12b458cbde3408157524c4fe helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-must-gather
+sha256:af1bff9e3790c0e3dd014e79fc9b2bafd2311435c6a4a33cc3ce533cd95bee29 helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-cluster-node-tuning-operator
+sha256:f9329093d0ad0a8b54ade9515f61214353016a2beea106490421cc73886b5768 helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-gcp-pd-csi-driver-operator
+sha256:82d73d1402435e687f62c0ed18ff2e02f2fa5b93c95467cedf03072d24e37678 helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-cluster-etcd-operator
+sha256:60d7c8d22f62f89329a62a491646a2f1e83593d2ff0d35d1b0198b430e551bd5 helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-openshift-state-metrics
+sha256:dcd0bd2870a4429034ba4a9e5d7781047ed4902c0b21c3ba775a4e67fb28d16f helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-sdn
+sha256:843accaa9efd7b1c33a9da539b37bfa4fb55154e709e765f6360a944f83f0c74 helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-installer
+sha256:464b24ade2b45bbb53ed41581af8a59225305bbacd08af7e64a358e5e12c63ec helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-oauth-proxy
+sha256:fa27dfa0ebcc45af4f0d403b5c052a22d59eb7e73f56074c77d0c55efa2322fb helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-ovirt-csi-driver-operator
+sha256:b855b7ee9eb048773b784350d56c8e8556d282ac8721b308b134d07f05d5ab35 helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-jenkins-agent-maven
+sha256:f84c8e53ebdf4d1d4826356c32e92ab9afe59b7635a97c6010538e4708677e67 helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-tests
+sha256:7346e173cc8552ea73392aa62174fde2e2aa9473d89c63b836b29187154e7fe4 helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-cluster-authentication-operator
+sha256:d6915878450499bec9d15e4d650d8383bc9a37e62895d9b0bcc244ac94aa20e5 helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-operator-marketplace
+sha256:59d0d0883211b2f382649ed274bcdf77eb6db3447666852e5763012485564b64 helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-csi-snapshot-validation-webhook
+sha256:399c14e7d30d9bffebd38e01b8e6afce4a33f3f3c5524ccfca25b857545e3cc1 helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-grafana
+sha256:57a0dbb04977589cddb7dd2c71c88056a86090a398ca246c3531912c9b506577 helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-cluster-monitoring-operator
+sha256:7667a52ef6a7b923c311394bd6734fac5571a29a0dcaee3c457ae64abd8ac959 helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-cluster-kube-apiserver-operator
+sha256:3c2eefa97bf1415843571ae4848b3006aed4ab857bf73671b9590d81184d536c helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-openstack-cinder-csi-driver
+sha256:bcd0338bdc58f20adcb407e71abf053873885d68d072361b1b30f65c332d5310 helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-prometheus-node-exporter
+sha256:6a9003d71c03b1eb4088706a0d0ca878e6189149a7e7e140af0c3b9164b99e3b helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-csi-external-attacher
+sha256:431fffd9c0e136694e1f118e982127f05fa7bef00f7f87da8913473503e1f3bd helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-hyperkube
+sha256:162a959b9a34afd473ff60e53c4070f3d034777fdcd67649eb2b6c3059da3520 helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-cluster-samples-operator
+sha256:a4e902fa2c6d4bd111885bbe6218e840c6bb02bfe4ee02b2caff7715ab158676 helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-cluster-kube-controller-manager-operator
+sha256:d9777cf6020ef32b83ddf431cf1e61f2fc38bf15974c1fd28d3181535a0cec53 helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-ironic
+sha256:a8e2500fdb00108ded00fc66cda33b1e50d8d4a55e502655cd7e95c354c0014d helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-cli-artifacts
+sha256:f3c84f4e88501493e08eae9c71cadb0695eafe7642ce9695d03469e97019ba17 helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-machine-config-operator
+sha256:707dd81a7b10f6be41ceecfe51d0de0a59f6211c3b56586c8d92febd713e5444 helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-kuryr-cni
+sha256:dfeba816df7ae18384f332cf0b3e87386577ddc99143ea6bf56572d38929175a helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-csi-node-driver-registrar
+sha256:5c6644c1c96c02e76a18bf5962b34c8fda7bcf4d13d890845367a08b649e746f helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-ovirt-csi-driver
+sha256:08a21ea6fdf19003ad1d710d9b92fa758345002b0d53d5b9543ecbc6b708b543 helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-csi-driver-manila-operator
+sha256:07374e80ed6dae24206522e72d33b1d937cef0a4d03da25be6a92e3be6990e31 helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-kube-proxy
+sha256:2fd1f68dfc271b844b76924a480fdedc3e12b09376f698804a6334629147e3bd helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-openstack-cinder-csi-driver-operator
+sha256:d0d49ba25b6682bb5bdab783fe8a91b597c53ddf997dd036c81e2c9b5138ebc5 helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-baremetal-machine-controllers
+sha256:fc636adfff84b9cbd107a853bf47451a15b32e1aca1d8640ee1f0175dc19e1ba helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-container-networking-plugins
+sha256:1cc3de7b35cbb33b02e6b339413dd83fef790fe3313d39434b2fabd37e4cec58 helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-cluster-dns-operator
+sha256:9cb8b2ddced1533e5b0d5c489bda2c830693f9a509cb59e3375cb520a8c5bcc6 helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-ironic-machine-os-downloader
+sha256:b486e134e356d040701a4b7217e22b2ca412adaf523af833e432871664a5f873 helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-machine-api-operator
+sha256:a2949525322c927f207673a79fbd643070bc0994d648e8116b7159cb0a2e66ee helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-multus-admission-controller
+sha256:bfd7076aea00ff59aabeab800df93f73a06188c714edc79c5a6c0d431fd2ce34 helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-vsphere-problem-detector
+sha256:21fe5430ca20b8843e24ede7bf6165359e75b74ba75628d92f8ae894d59a640f helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-jenkins-agent-nodejs
+sha256:42b5ce25c613bef646552558ac4396308ed3254b9f140b79592821b50d6ca8a9 helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-libvirt-machine-controllers
+sha256:df2d386c0e716eff54c7dd7df47cab9a3b54be89723eaa36e5abfdcf86eae729 helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-aws-ebs-csi-driver-operator
+sha256:388bd331a58e8a83b294055d267a82001e7b429ac77a8339e90d7580f6937cdf helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-etcd
+sha256:07ba2472607dda75716013e314a3d06d8d376bfe173df3691e3d9798bba7151f helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-coredns
+sha256:aa1f521a6ef7f41e2d8782fc7e4313303ab6872c57fea1174ebe0892814b79d0 helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-csi-snapshot-controller
+sha256:c26eda1c1b954e970664fbf831ac8518881dab96254ddef4db33daa6f45d2a8c helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-keepalived-ipfailover
+sha256:87a1d64330d2c0a8133fbae647572baba82f80394c34110ea3ba1fe5a6d8e0ae helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-aws-machine-controllers
+sha256:86daba4f71ce8f8132bfa739903e22e246db09bc8819b1807baac445b1a9e5fe helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-cluster-csi-snapshot-controller-operator
+sha256:14ffe04d43f8c03f102f426c6262b15fdc77a1fdecb356ccb94f947b1860fed2 helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-cluster-ingress-operator
+sha256:2f28232ac8a3ea7fe95ffbfe47abd2218bb7fa43a775d0973d9decc8f2848029 helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-ironic-hardware-inventory-recorder
+sha256:321f48929849653b92eb7e55def8f96f7f203d4432d1e263bb5b4d510efdf14e helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-ovn-kubernetes
+sha256:14da65fe42c5280b4e7dcc36f96aef5872e7a21b0234badd9696d1b880a85f80 helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-cluster-baremetal-operator
+sha256:2e647337bf3a16ba9c507872ee91283a43936842c4d14dd75b147ea23e87109e helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-jenkins-agent-base
+sha256:1bd52a4849575bf4c70e00504ababe23dc992fbc8f9fe73dfde42c0d982abf55 helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64-prometheus-operator
+
+Success
+Update image:  helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64
+Mirror prefix: helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4
+Mirror prefix: helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64
+
+To use the new mirrored repository to install, add the following section to the install-config.yaml:
+
+imageContentSources:
+- mirrors:
+  - helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4
+  source: quay.io/openshift-release-dev/ocp-release
+- mirrors:
+  - helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4
+  source: quay.io/openshift-release-dev/ocp-v4.0-art-dev
+
+
+To use the new mirrored repository for upgrades, use the following to create an ImageContentSourcePolicy:
+
+apiVersion: operator.openshift.io/v1alpha1
+kind: ImageContentSourcePolicy
+metadata:
+  name: example
+spec:
+  repositoryDigestMirrors:
+  - mirrors:
+    - helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4
+    source: quay.io/openshift-release-dev/ocp-release
+  - mirrors:
+    - helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4
+    source: quay.io/openshift-release-dev/ocp-v4.0-art-dev

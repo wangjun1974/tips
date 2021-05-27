@@ -1,0 +1,1795 @@
+Getting image list signatures
+Copying 1 of 1 images in list
+Copying image sha256:68dcd9ccf178fed5adf63e7a0b10e197b9287890b3cf27691c1e784f035f9456 (1/1)
+Getting image source signatures
+Copying blob sha256:7777f1ac6191174d87a07f322fa8e1054da2c0a4fa21d0fbbcf9175cea83e0d7
+Copying blob sha256:77a02d8cede158bc6378b21930e2fae2039e8124cceeed8e77d3121340f73172
+Copying blob sha256:7209c0d63a977614b381c3d50c9e7d6c141ba1a9a833f2457f8299934f83392a
+Copying config sha256:454905f9bc8140ec14b8443aef8d9fc8c195dff2473320a8e2c9bee36185a66a
+Writing manifest to image destination
+Storing signatures
+Writing manifest list to image destination
+Storing list signatures
+Getting image list signatures
+Copying 1 of 1 images in list
+Copying image sha256:c5787ebadcb830b29a58a02905065bfae58a5643cd296ec2924d373dde2c661a (1/1)
+Getting image source signatures
+Copying blob sha256:77a02d8cede158bc6378b21930e2fae2039e8124cceeed8e77d3121340f73172
+Copying blob sha256:7777f1ac6191174d87a07f322fa8e1054da2c0a4fa21d0fbbcf9175cea83e0d7
+Copying blob sha256:9830040c2b91176baf718e6df507595612077c6e05ba626cf7e55a6ab75ae63f
+Copying config sha256:83400589557aad7eddd422454110d70ff860d40884c9fe2e19f4601fd45c6007
+Writing manifest to image destination
+Storing signatures
+Writing manifest list to image destination
+Storing list signatures
+Getting image list signatures
+Copying 1 of 1 images in list
+Copying image sha256:ccb65d69a19d87a661c624e756e8640f6e41195479cf6f7980b3f3d44d906b27 (1/1)
+Getting image source signatures
+Copying blob sha256:7777f1ac6191174d87a07f322fa8e1054da2c0a4fa21d0fbbcf9175cea83e0d7
+Copying blob sha256:77a02d8cede158bc6378b21930e2fae2039e8124cceeed8e77d3121340f73172
+Copying blob sha256:3568672ce0822cc0602eb79d17faa8b7c1d96ab1d58fc541cf1aec56788b19ae
+Copying config sha256:93b4bd397a4b77b0c6501e5695e65f7a15b200663b5d23c362f43879efab5ea6
+Writing manifest to image destination
+Storing signatures
+Writing manifest list to image destination
+Storing list signatures
+Getting image list signatures
+Copying 1 of 1 images in list
+Copying image sha256:76f356f1f5da0804f459425d0c32bd8b3dcd9d72aef5a64e2eae0c813b53b352 (1/1)
+Getting image source signatures
+Copying blob sha256:64607cc74f9cbe0e12f167547df0cf661de5a8b1fb4ebe930a43b9f621ca457f
+Copying blob sha256:7fb9f7c4965b21f72b96d2d446bb3fce432a7f09971f4adcc017d63f311d3807
+Copying blob sha256:04e55b6d003f274397cae8559cab0ea26ae7b634ad485b52ecb207199ef07acd
+Copying blob sha256:d437c7ab45680ea9ef5ce1b7ae751b87a3b794e29e67e60ae32a57b633de52b3
+Copying blob sha256:6e26238978bde7e44331a3ed2f950cf865dabe6740609b032c3f6e7272716a69
+Copying blob sha256:13897c84ca5715a68feafcce9acf779f35806f42d1fcd37e8a2a5706c075252d
+Copying blob sha256:37474fc9a259a7801b518d5554dc57abd098e798b36d82541f6e02f0ab7c6d0f
+Copying config sha256:ef109a7d85b1503f810fe4e559a9f62d35d324cfd88b6325524cacaeccddaca8
+Writing manifest to image destination
+Storing signatures
+Writing manifest list to image destination
+Storing list signatures
+Getting image list signatures
+Copying 1 of 1 images in list
+Copying image sha256:d990472bfd4424ea4c5e07f06f9d72ee8ab1df6c9b40a462396e6cc35a1a0660 (1/1)
+Getting image source signatures
+Copying blob sha256:65c0f2178ac8a3c28f48efd26ccf16bd6f344fa88d1aa20efd3a25d5f99587c0
+Copying blob sha256:37d4d9716411d61d5d9634dc94b06f5724371c7654b00f20f99d1966435d662a
+Copying blob sha256:8f403cb21126270e2d1551022b82c77c695ce40c9812795daf7ad77a05c2b9f6
+Copying config sha256:1c1a3a9b13a7172ea18109eb05c700a2f36431d5bb35bdbdd0f9ce8a8f42447f
+Writing manifest to image destination
+Storing signatures
+Writing manifest list to image destination
+Storing list signatures
+Getting image list signatures
+Copying 1 of 1 images in list
+Copying image sha256:dc8126a520b8bbf8e94f649d21227c533a679006be87312129d6b4ca54145eea (1/1)
+Getting image source signatures
+Copying blob sha256:8f403cb21126270e2d1551022b82c77c695ce40c9812795daf7ad77a05c2b9f6
+Copying blob sha256:65c0f2178ac8a3c28f48efd26ccf16bd6f344fa88d1aa20efd3a25d5f99587c0
+Copying blob sha256:bac3daa73b6043e4b0620d4a7bc7960e6d1936e44c7d15260da204fcc6e5a8b8
+Copying config sha256:d720e423d4087f13304a9598c4e539c2ca409b2290ed3acdb6214740179e93c8
+Writing manifest to image destination
+Storing signatures
+Writing manifest list to image destination
+Storing list signatures
+Getting image list signatures
+Copying 1 of 1 images in list
+Copying image sha256:08a502b88e888afaf7b10617aace59f5dd5b856ade3a7fd47e875edd06437872 (1/1)
+Getting image source signatures
+Copying blob sha256:8f403cb21126270e2d1551022b82c77c695ce40c9812795daf7ad77a05c2b9f6
+Copying blob sha256:65c0f2178ac8a3c28f48efd26ccf16bd6f344fa88d1aa20efd3a25d5f99587c0
+Copying blob sha256:e4ea5ffc93edde2e086b08607b54fdec947d6fa306970e5812e6fbaec883efdd
+Copying config sha256:93a32fe673a29bdf192e51f4622af0ecf11eee1f6a36a830c8c666a8a86e775d
+Writing manifest to image destination
+Storing signatures
+Writing manifest list to image destination
+Storing list signatures
+Getting image list signatures
+Copying 1 of 1 images in list
+Copying image sha256:4da579016a8f0850be4b1f8f93cc4578339051af45fbe0187df492bb8bf36ef7 (1/1)
+Getting image source signatures
+Copying blob sha256:8f403cb21126270e2d1551022b82c77c695ce40c9812795daf7ad77a05c2b9f6
+Copying blob sha256:65c0f2178ac8a3c28f48efd26ccf16bd6f344fa88d1aa20efd3a25d5f99587c0
+Copying blob sha256:24bf3b6fd4206375f900b3952d3489648830449d19b2d041c8d8b98daea37cf8
+Copying config sha256:e0c2b6b3fa61be7fa1296e00017d89def4db6f87c4cf6826b6ada70f36c29564
+Writing manifest to image destination
+Storing signatures
+Writing manifest list to image destination
+Storing list signatures
+Getting image list signatures
+Copying 1 of 1 images in list
+Copying image sha256:8b3a81e5cf910ebfd6c8580a1305178965f14c920d6240ca77a09170936bfc3b (1/1)
+Getting image source signatures
+Copying blob sha256:7777f1ac6191174d87a07f322fa8e1054da2c0a4fa21d0fbbcf9175cea83e0d7
+Copying blob sha256:77a02d8cede158bc6378b21930e2fae2039e8124cceeed8e77d3121340f73172
+Copying blob sha256:24f3c61692e6718714eaf0862b485c3c455140abcda4fb92c59c66ea07c55f20
+Copying config sha256:ab5645626a8c4f5965cd169750f3e58b43988e594f1bb9422e94926e4f183a99
+Writing manifest to image destination
+Storing signatures
+Writing manifest list to image destination
+Storing list signatures
+Getting image list signatures
+Copying 1 of 1 images in list
+Copying image sha256:545d4948815131c89433ee346b40febec65dc1441365f1a5dbb740b9e792a646 (1/1)
+Getting image source signatures
+Copying blob sha256:77a02d8cede158bc6378b21930e2fae2039e8124cceeed8e77d3121340f73172
+Copying blob sha256:7777f1ac6191174d87a07f322fa8e1054da2c0a4fa21d0fbbcf9175cea83e0d7
+Copying blob sha256:689139b3fb80f243c0851d0226150ac0031859f388adf2349c5cade3ae8a4942
+Copying config sha256:fbebef0b1398e3adea383d3bd5b8f4095875cef99e0e46392b536daa4c334d6a
+Writing manifest to image destination
+Storing signatures
+Writing manifest list to image destination
+Storing list signatures
+Getting image list signatures
+Copying 1 of 1 images in list
+Copying image sha256:5052e745e6a48cb0babf226cd840c79de8efa3b453c1e5ff3a6b54700d5e83aa (1/1)
+Getting image source signatures
+Copying blob sha256:8f403cb21126270e2d1551022b82c77c695ce40c9812795daf7ad77a05c2b9f6
+Copying blob sha256:65c0f2178ac8a3c28f48efd26ccf16bd6f344fa88d1aa20efd3a25d5f99587c0
+Copying blob sha256:45352bb11de6e8107c40d9e366f7868accc428ad3252973001d20e99738e4bf1
+Copying config sha256:54e72c68c4bf70e07cc44a0653ee4391f61b23c436e7d950a438d0167add408a
+Writing manifest to image destination
+Storing signatures
+Writing manifest list to image destination
+Storing list signatures
+Getting image list signatures
+Copying 1 of 1 images in list
+Copying image sha256:0e328d3a7484988b89ba8a7da2a7ff4ff5eae4644e6bdffcae2582cced4653f8 (1/1)
+Getting image source signatures
+Copying blob sha256:65c0f2178ac8a3c28f48efd26ccf16bd6f344fa88d1aa20efd3a25d5f99587c0
+Copying blob sha256:8f403cb21126270e2d1551022b82c77c695ce40c9812795daf7ad77a05c2b9f6
+Copying blob sha256:d1df1f373f8b84a91107e43ac6e48548d031eb46d3fd5dec68528682306bc415
+Copying config sha256:08681cd3484d33a4f83c58051e39eb61522e12a9678b780d76fc44e8f092b312
+Writing manifest to image destination
+Storing signatures
+Writing manifest list to image destination
+Storing list signatures
+Getting image list signatures
+Copying 1 of 1 images in list
+Copying image sha256:0042ddce2bc5ec35433b128a64034ee2c9449e1b47f3fa82a9d22376399dbd45 (1/1)
+Getting image source signatures
+Copying blob sha256:8f403cb21126270e2d1551022b82c77c695ce40c9812795daf7ad77a05c2b9f6
+Copying blob sha256:65c0f2178ac8a3c28f48efd26ccf16bd6f344fa88d1aa20efd3a25d5f99587c0
+Copying blob sha256:ddc7db3c9bc74dc34e0d9f536c7cbebe5b99e155a81df64d6d44215fdca01680
+Copying config sha256:1a5532106ae80722761b5774ed68e76f476253c8bd7413b923c9f64fa17943b5
+Writing manifest to image destination
+Storing signatures
+Writing manifest list to image destination
+Storing list signatures
+Getting image list signatures
+Copying 1 of 1 images in list
+Copying image sha256:7207d49fed718490dfcfb1b1462ea1725ed1a503819cd7828c3f23bb894a7b0a (1/1)
+Getting image source signatures
+Copying blob sha256:8f403cb21126270e2d1551022b82c77c695ce40c9812795daf7ad77a05c2b9f6
+Copying blob sha256:65c0f2178ac8a3c28f48efd26ccf16bd6f344fa88d1aa20efd3a25d5f99587c0
+Copying blob sha256:0d25a721110a5472a4f4a7aebdd1b07405423326c184e8b1797ac4e0bcbd8f66
+Copying config sha256:3e561d30b6cba27e03030fd0c96ecca41a298cb1c4e62a98355665c8d4fe4b70
+Writing manifest to image destination
+Storing signatures
+Writing manifest list to image destination
+Storing list signatures
+Getting image list signatures
+Copying 1 of 1 images in list
+Copying image sha256:2d2d82954de36e2c77985e6bdc03b17999640afa84ad768e19a9ed9380a9fb0e (1/1)
+Getting image source signatures
+Copying blob sha256:65c0f2178ac8a3c28f48efd26ccf16bd6f344fa88d1aa20efd3a25d5f99587c0
+Copying blob sha256:8f403cb21126270e2d1551022b82c77c695ce40c9812795daf7ad77a05c2b9f6
+Copying blob sha256:761fab1642229d1355608677fc85131cbfc0aa5a0cb2cbb61f895f24ecb81af6
+Copying config sha256:636681b3d4a9b094b40f6db0b00ed498b0ab81cc47ce7078c34e4a8e2e002e3d
+Writing manifest to image destination
+Storing signatures
+Writing manifest list to image destination
+Storing list signatures
+Getting image list signatures
+Copying 1 of 1 images in list
+Copying image sha256:e65c6702f61b7ab36cd801f39a76010a3d677284b951d3a63a10e43ca221c946 (1/1)
+Getting image source signatures
+Copying blob sha256:55eda774346862e410811e3fa91cefe805bc11ff46fad425dd1b712709c05bbc
+Copying blob sha256:51207564715ede2cf2e03c96d2f754769fc30c5cf3f26d519af4fdb68afd24bb
+Copying blob sha256:4b21dcdd136d133a4df0840e656af2f488c226dd384a98b89ced79064a4081b4
+Copying config sha256:40b560c3a2753567f504a46a07a2827fc21c770397cccdfff5016aacd1f9219a
+Writing manifest to image destination
+Storing signatures
+Writing manifest list to image destination
+Storing list signatures
+Getting image list signatures
+Copying 1 of 1 images in list
+Copying image sha256:3fd1117a085fbeda4cecca41de70af82a4aee8adc0b1516bfdf2d268d8a6e301 (1/1)
+Getting image source signatures
+Copying blob sha256:8f403cb21126270e2d1551022b82c77c695ce40c9812795daf7ad77a05c2b9f6
+Copying blob sha256:65c0f2178ac8a3c28f48efd26ccf16bd6f344fa88d1aa20efd3a25d5f99587c0
+Copying blob sha256:d18090d05b68aac5523127cb4b6444466cd696e75c6f829c3e994c406039fe63
+Copying config sha256:7c313ac0f5c2bca4c0bedcbd55da644c6f65aedf686bec6cd1e3ed1bf7f13b70
+Writing manifest to image destination
+Storing signatures
+Writing manifest list to image destination
+Storing list signatures
+Getting image list signatures
+Copying 1 of 1 images in list
+Copying image sha256:2a02ac1da132bf616800dca69f77b68dec62c2275de5384deec0083ce64150bc (1/1)
+Getting image source signatures
+Copying blob sha256:76b9354adec626b01ffb0faae4a217cebd616661fd90c4b54ba4415f53392fb8
+Copying blob sha256:bc284e27fa739c91363efb442d88dcdcc58c90095f111e520754222e25aa368b
+Copying blob sha256:a591faa84ab05242a17131e396a336da172b0e1ec66d921c9f130b7c4c24586d
+Copying config sha256:30d70e1473a303b0c712b028b318aec58a3ea65836605ecf728735ad82673c72
+Writing manifest to image destination
+Storing signatures
+Writing manifest list to image destination
+Storing list signatures
+Getting image list signatures
+Copying 1 of 1 images in list
+Copying image sha256:0fa02813c67a5079baed1d82f7298279a1187dea8a6e90286a016b75f7ac1310 (1/1)
+Getting image source signatures
+Copying blob sha256:7777f1ac6191174d87a07f322fa8e1054da2c0a4fa21d0fbbcf9175cea83e0d7
+Copying blob sha256:77a02d8cede158bc6378b21930e2fae2039e8124cceeed8e77d3121340f73172
+Copying blob sha256:8ffb2af17bb1bd068fa0d967e4825b3614f113d8102407b25272e6c347bbd21f
+Copying config sha256:dbbea759f3c5b2cb657a6d6b2a3a8e4d2f2dfb5677843aa223c45d8c8addaa21
+Writing manifest to image destination
+Storing signatures
+Writing manifest list to image destination
+Storing list signatures
+Getting image list signatures
+Copying 1 of 1 images in list
+Copying image sha256:eb9244908d4c3cdd0a428fda3ee0f39864fe6eee3d6514b62522fa177925c3d3 (1/1)
+Getting image source signatures
+Copying blob sha256:7777f1ac6191174d87a07f322fa8e1054da2c0a4fa21d0fbbcf9175cea83e0d7
+Copying blob sha256:77a02d8cede158bc6378b21930e2fae2039e8124cceeed8e77d3121340f73172
+Copying blob sha256:f70c33e9a87c6c000a316ba907db5b3e7a160e1686dd4a881de82c995da2dad9
+Copying config sha256:033c2e00847357373b50587a48277a360ee1e31e0b6739e21f8c47ba305e7023
+Writing manifest to image destination
+Storing signatures
+Writing manifest list to image destination
+Storing list signatures
+Getting image list signatures
+Copying 1 of 1 images in list
+Copying image sha256:4fba1b15dc1f2048cd84e71f1dc15ca8409baeb115e53c9745f15ed817a8ebe9 (1/1)
+Getting image source signatures
+Copying blob sha256:77a02d8cede158bc6378b21930e2fae2039e8124cceeed8e77d3121340f73172
+Copying blob sha256:7777f1ac6191174d87a07f322fa8e1054da2c0a4fa21d0fbbcf9175cea83e0d7
+Copying blob sha256:e650b66e84e5693dc407cb664472a3fde7854d16d34529e657d2f0e5ffa9a4b6
+Copying config sha256:fdd0f489df983b22365ad06f699df47586a2b351313e3ae5723970fa4aa76f61
+Writing manifest to image destination
+Storing signatures
+Writing manifest list to image destination
+Storing list signatures
+Getting image list signatures
+Copying 1 of 1 images in list
+Copying image sha256:76bfc008616da5191766f6b43265dad57bb49d28cd1d941a19512b90df514740 (1/1)
+Getting image source signatures
+Copying blob sha256:a591faa84ab05242a17131e396a336da172b0e1ec66d921c9f130b7c4c24586d
+Copying blob sha256:76b9354adec626b01ffb0faae4a217cebd616661fd90c4b54ba4415f53392fb8
+Copying blob sha256:f873ae465c8878efddc965de946beb923373718e9e9b6af4905eed79a40acfaf
+Copying config sha256:8d4e5d71426c51cc524765b7551f7521c1a662f46f95d9587df50cf5df1d2aad
+Writing manifest to image destination
+Storing signatures
+Writing manifest list to image destination
+Storing list signatures
+Getting image list signatures
+Copying 1 of 1 images in list
+Copying image sha256:a9bfb58476e3d3c1e4104d6c8c06261ea868c9457109e0e7e5063b7eb24545d7 (1/1)
+Getting image source signatures
+Copying blob sha256:76b9354adec626b01ffb0faae4a217cebd616661fd90c4b54ba4415f53392fb8
+Copying blob sha256:a591faa84ab05242a17131e396a336da172b0e1ec66d921c9f130b7c4c24586d
+Copying blob sha256:5c74140ea96d61f0096ef978cada1f20721497f457f8ed953202d91ae5a171e9
+Copying config sha256:0d5b1afcbce2763e41f9f6134feb8ad7263c2dac363a68d120f8c248402c1edb
+Writing manifest to image destination
+Storing signatures
+Writing manifest list to image destination
+Storing list signatures
+Getting image list signatures
+Copying 1 of 1 images in list
+Copying image sha256:ce793fcac33abd3d2a6989137bdd5d0902c109a988c91fdf9139e76d16cdc4ef (1/1)
+Getting image source signatures
+Copying blob sha256:a591faa84ab05242a17131e396a336da172b0e1ec66d921c9f130b7c4c24586d
+Copying blob sha256:76b9354adec626b01ffb0faae4a217cebd616661fd90c4b54ba4415f53392fb8
+Copying blob sha256:23bc05e26e8958f644dd1a1a617d77e257320ed0ee02cb4946b575e0c3f44ec1
+Copying config sha256:a24af527a843692d6433dcca8090b118992679868e7900321932b1c058200d63
+Writing manifest to image destination
+Storing signatures
+Writing manifest list to image destination
+Storing list signatures
+Starting Catalog Build and Mirror...
+Getting opm CLI...
+https://mirror.openshift.com/pub/openshift-v4/clients/ocp/fast-4.7/opm-linux.tar.gz
+Downloading opm Cli...
+Extracting oc Cli...
+Getting the list of operators for custom catalogue..
+Pruning OLM catalogue...
+Running: /root/openshift-disconnected-operators/run/opm index prune -f registry.redhat.io/redhat/redhat-operator-index:v4.7 -p kubevirt-hyperconverged,local-storage-operator,cluster-logging,codeready-workspaces -t helper.cluster-0001.rhsacn.org:5000/custom-redhat-operator-index:1.0.0
+extracting operator bundles for analysis and gathering images to mirror...
+sqlite3 -line /root/openshift-disconnected-operators/run/index.db "select bundlepath from operatorbundle where (name like '%kubevirt-hyperconverged%' or bundlepath like '%kubevirt-hyperconverged%') and version='2.6.2';"
+sqlite3 -line /root/openshift-disconnected-operators/run/index.db "select bundlepath from operatorbundle where (name like '%local-storage-operator%' or bundlepath like '%local-storage-operator%') and version='4.7.0-202104250659.p0';"
+sqlite3 -line /root/openshift-disconnected-operators/run/index.db "select bundlepath from operatorbundle where (name like '%cluster-logging%' or bundlepath like '%cluster-logging%') and version='5.0.3-6';"
+sqlite3 -line /root/openshift-disconnected-operators/run/index.db "select bundlepath from operatorbundle where (name like '%codeready-workspaces%' or bundlepath like '%codeready-workspaces%') and version='2.8.0';"
+Mirroring related images to offline registry...
+Copying image list to offline registry...
+----------------------------------------------
+Mirroring image 1 of 76
+Image: registry.redhat.io/container-native-virtualization/bridge-marker@sha256:5f28057fccea98c7f17835b337e058789904fd3a3986c9377a9b82e729df1c20
+----------------------------------------------
+----------------------------------------------
+Mirroring image 2 of 76
+Image: registry.redhat.io/container-native-virtualization/cluster-network-addons-operator@sha256:3ffcfc70d33a676cc5e8e8078be11c5108e09ce0baf0d90ad3bfe4a653595bed
+----------------------------------------------
+----------------------------------------------
+Mirroring image 3 of 76
+Image: registry.redhat.io/container-native-virtualization/cnv-containernetworking-plugins@sha256:dc6710a3d73d6021b17e8c2338e288ec64f1c9ca3fc1acdbc489ee5b6dded578
+----------------------------------------------
+----------------------------------------------
+Mirroring image 4 of 76
+Image: registry.redhat.io/container-native-virtualization/cnv-must-gather-rhel8@sha256:53f9fbc043bb839747bc8ee994acaefd040ecbb826d01dedb1d7eb2f3f04572e
+----------------------------------------------
+----------------------------------------------
+Mirroring image 5 of 76
+Image: registry.redhat.io/container-native-virtualization/hostpath-provisioner-rhel8-operator@sha256:9dd159a501067bf82e1687cd4ea5d1aef75628a78378561ace8ccbfa6548627f
+----------------------------------------------
+----------------------------------------------
+Mirroring image 6 of 76
+Image: registry.redhat.io/container-native-virtualization/hostpath-provisioner-rhel8@sha256:ac5599056d28755156b12561cc34b43c6dd0e8b0b09f13c3c95dd5f694113bef
+----------------------------------------------
+----------------------------------------------
+Mirroring image 7 of 76
+Image: registry.redhat.io/container-native-virtualization/hyperconverged-cluster-operator@sha256:f9acb6a3a66d6f83fc6d6a43599e5be394e3b38b1fd1d450f09c1f6bc0f2281b
+----------------------------------------------
+----------------------------------------------
+Mirroring image 8 of 76
+Image: registry.redhat.io/container-native-virtualization/hyperconverged-cluster-webhook-rhel8@sha256:48a045c9d9db72d3c60168199e20235a80c93b8dae25a62a7bd1aa304383b9c0
+----------------------------------------------
+----------------------------------------------
+Mirroring image 9 of 76
+Image: registry.redhat.io/container-native-virtualization/kubemacpool@sha256:a1bf49432ade99f1b3ed3163d71f558f55460c3c62251fac08a0e006254dfe53
+----------------------------------------------
+----------------------------------------------
+Mirroring image 10 of 76
+Image: registry.redhat.io/container-native-virtualization/kubernetes-nmstate-handler-rhel8@sha256:dd8c97eaa8074554c3025d2cc6239199ae68913bc07a073837d92910f3da0267
+----------------------------------------------
+----------------------------------------------
+Mirroring image 11 of 76
+Image: registry.redhat.io/container-native-virtualization/kubevirt-cpu-model-nfd-plugin@sha256:9abceac1cb752a320f381c256d4f9f25e17e3879962e1ae039038adf6de8492f
+----------------------------------------------
+----------------------------------------------
+Mirroring image 12 of 76
+Image: registry.redhat.io/container-native-virtualization/kubevirt-cpu-node-labeller@sha256:ad2a70f5e76e87aa4ca7a4e5c83937565dea7d7e870f3dfaf08a282284e1432f
+----------------------------------------------
+----------------------------------------------
+Mirroring image 13 of 76
+Image: registry.redhat.io/container-native-virtualization/kubevirt-kvm-info-nfd-plugin@sha256:566fedeb70f15dbbe026c6f7ae331e00b91084ddb8551a634568555595cc400e
+----------------------------------------------
+----------------------------------------------
+Mirroring image 14 of 76
+Image: registry.redhat.io/container-native-virtualization/kubevirt-ssp-operator@sha256:40da3d0a3b0ada649098b5251f1b929b9d88247e4782b53b4b7d3abc5814feea
+----------------------------------------------
+----------------------------------------------
+Mirroring image 15 of 76
+Image: registry.redhat.io/container-native-virtualization/kubevirt-template-validator@sha256:09d39c4b340474346ab2421c918a04fa03c82698577d84b3db35679def5a16e6
+----------------------------------------------
+----------------------------------------------
+Mirroring image 16 of 76
+Image: registry.redhat.io/container-native-virtualization/kubevirt-v2v-conversion@sha256:112c70031e0065a18283e766abcdf051fa7e634e6a97438c79e4f4b785c33e63
+----------------------------------------------
+----------------------------------------------
+Mirroring image 17 of 76
+Image: registry.redhat.io/container-native-virtualization/kubevirt-vmware@sha256:4ed4da657c082871d06a12674a7138b82abdfc99082f4f19dcf289bde37558f6
+----------------------------------------------
+----------------------------------------------
+Mirroring image 18 of 76
+Image: registry.redhat.io/container-native-virtualization/node-maintenance-operator@sha256:ea22699069dc3d92ec202e6e9e2c5a5c3a1308faf5a0312fb826f632c310f80a
+----------------------------------------------
+----------------------------------------------
+Mirroring image 19 of 76
+Image: registry.redhat.io/container-native-virtualization/ovs-cni-marker@sha256:68d0dcfa7a775342ff1c5ce20e97e25f6d1989d978b7ac3097d0b374f4e413bd
+----------------------------------------------
+----------------------------------------------
+Mirroring image 20 of 76
+Image: registry.redhat.io/container-native-virtualization/ovs-cni-plugin@sha256:0a49cc3b26a89cb7c62507550c532c4bffe46f9ea1528d0ce575fd9c09cae9b1
+----------------------------------------------
+----------------------------------------------
+Mirroring image 21 of 76
+Image: registry.redhat.io/container-native-virtualization/virt-api@sha256:b796b85330f276b180ec30f7701d6260682750923aa0b853043e9ab665eb7caf
+----------------------------------------------
+----------------------------------------------
+Mirroring image 22 of 76
+Image: registry.redhat.io/container-native-virtualization/virt-cdi-apiserver@sha256:14d74bd2abe91eaf5cfc6f4aad5f9b6995f6e2124e678cbb3730b144711e38a2
+----------------------------------------------
+----------------------------------------------
+Mirroring image 23 of 76
+Image: registry.redhat.io/container-native-virtualization/virt-cdi-cloner@sha256:af8433082e2978cc941323252fe5946cb3827d3366171bfc0698c19c5c656910
+----------------------------------------------
+----------------------------------------------
+Mirroring image 24 of 76
+Image: registry.redhat.io/container-native-virtualization/virt-cdi-controller@sha256:33b6a55a564cb0a9df8832fbb8e31d671b2bfa5fdbcf09022f28d690674fdb56
+----------------------------------------------
+----------------------------------------------
+Mirroring image 25 of 76Getting image list signatures
+Copying 1 of 1 images in list
+Copying image sha256:7a1754225e1167ec7f20ab1734a945d9dc5ac5a6d3f90842b92956959e8c15f2 (1/1)
+Getting image source signatures
+Copying blob sha256:a591faa84ab05242a17131e396a336da172b0e1ec66d921c9f130b7c4c24586d
+Copying blob sha256:76b9354adec626b01ffb0faae4a217cebd616661fd90c4b54ba4415f53392fb8
+Copying blob sha256:77b2398d9ccb8e31e4f8fdf622a6dddb4e78a60c95495701f79bd7a12d1137e2
+Copying config sha256:eaa43ddbe29a6b656cf800fabf22035842df5e3d1c6b4f6012f59f35e3cd7a0e
+Writing manifest to image destination
+Storing signatures
+Writing manifest list to image destination
+Storing list signatures
+Getting image list signatures
+Copying 1 of 1 images in list
+Copying image sha256:6e4ef201dfdfcefce750aaeebcc71fb26a68b959df2cf3bf31919aa1cf505c02 (1/1)
+Getting image source signatures
+Copying blob sha256:a591faa84ab05242a17131e396a336da172b0e1ec66d921c9f130b7c4c24586d
+Copying blob sha256:76b9354adec626b01ffb0faae4a217cebd616661fd90c4b54ba4415f53392fb8
+Copying blob sha256:b8487f7667ee309b477a8015238f1d98e2563a91a6dd5ee1f3e34b7df01ede5a
+Copying config sha256:10c887a49c9d63e5d5aeaaf7164c4b598efe617ce8fc855d9436062f8cd350ae
+Writing manifest to image destination
+Storing signatures
+Writing manifest list to image destination
+Storing list signatures
+Getting image list signatures
+Copying 1 of 1 images in list
+Copying image sha256:26ee82bfb54f2b8bd0b5d13aa0371859c49a9f9dbab004cbc88528c8e12ce71c (1/1)
+Getting image source signatures
+Copying blob sha256:76b9354adec626b01ffb0faae4a217cebd616661fd90c4b54ba4415f53392fb8
+Copying blob sha256:a591faa84ab05242a17131e396a336da172b0e1ec66d921c9f130b7c4c24586d
+Copying blob sha256:dd17734c4379b8edfdfd9e94fb58d23df9e964f9d080254955db735064bef8b1
+Copying config sha256:f591bc4415021def78f77bfef7341e24856b435d2f2fcafdbe2e57d76a5262ec
+Writing manifest to image destination
+Storing signatures
+Writing manifest list to image destination
+Storing list signatures
+Getting image list signatures
+Copying 1 of 1 images in list
+Copying image sha256:63b418514a041bf9e4a75235bdc07b105c935a9e08c8993e72b398bdaae38352 (1/1)
+Getting image source signatures
+Copying blob sha256:76b9354adec626b01ffb0faae4a217cebd616661fd90c4b54ba4415f53392fb8
+Copying blob sha256:a591faa84ab05242a17131e396a336da172b0e1ec66d921c9f130b7c4c24586d
+Copying blob sha256:0a592c10b006b81d30536012c38b547201a4c08fab4df0bcabf0372c30c7f7c5
+Copying config sha256:e67b7c6849b8a19060680301f49cb46d49a4a1604d01881ee9de76ad7363903f
+Writing manifest to image destination
+Storing signatures
+Writing manifest list to image destination
+Storing list signatures
+Getting image list signatures
+Copying 1 of 1 images in list
+Copying image sha256:0bc54c9d5b3da4301eb789eb8e544bcf0bc25c71d4e3732eac1eca13ca88ac9a (1/1)
+Getting image source signatures
+Copying blob sha256:77a02d8cede158bc6378b21930e2fae2039e8124cceeed8e77d3121340f73172
+Copying blob sha256:7777f1ac6191174d87a07f322fa8e1054da2c0a4fa21d0fbbcf9175cea83e0d7
+Copying blob sha256:d4f166c90e372a36c5d4284e0ba88f5e613e65a4023d3c97bdbe28e3aa84a4db
+Copying config sha256:eac92f0eebe443137d8bf5565cf746e0880f618f1cd1aa6d5bf12854cb27c1b8
+Writing manifest to image destination
+Storing signatures
+Writing manifest list to image destination
+Storing list signatures
+Getting image list signatures
+Copying 1 of 1 images in list
+Copying image sha256:84400908eb032941fe486e48863eab7903742eacf24e9ba2e24a3991b2dbfc49 (1/1)
+Getting image source signatures
+Copying blob sha256:7777f1ac6191174d87a07f322fa8e1054da2c0a4fa21d0fbbcf9175cea83e0d7
+Copying blob sha256:77a02d8cede158bc6378b21930e2fae2039e8124cceeed8e77d3121340f73172
+Copying blob sha256:2bf9c2849540a8b3b967b7b26b79faf59550a119e0b8212c18c8327dae856f47
+Copying config sha256:ccbadcc0a0c95b1721d01a579d88e97af8ce486b78469f2abff08911af3613d5
+Writing manifest to image destination
+Storing signatures
+Writing manifest list to image destination
+Storing list signatures
+Getting image list signatures
+Copying 1 of 1 images in list
+Copying image sha256:f1bba5bca1617a15c8e56ba804c0003f3bcbc34bcbe578b3bd51699044bfdb8a (1/1)
+Getting image source signatures
+Copying blob sha256:77a02d8cede158bc6378b21930e2fae2039e8124cceeed8e77d3121340f73172
+Copying blob sha256:7777f1ac6191174d87a07f322fa8e1054da2c0a4fa21d0fbbcf9175cea83e0d7
+Copying blob sha256:705504702e1f0bd35cac73661d2e681bfc5d6fefa921c1785a191dcbbd70d621
+Copying config sha256:28d97d0bf9eaba17d9b1a6ca0e5d316c217624993c540a3c67bd6327595e6a2a
+Writing manifest to image destination
+Storing signatures
+Writing manifest list to image destination
+Storing list signatures
+Getting image list signatures
+Copying 1 of 1 images in list
+Copying image sha256:1516ed5c65471d006cc33154e90de30e0566d00ec8993af181d037604297a19d (1/1)
+Getting image source signatures
+Copying blob sha256:7777f1ac6191174d87a07f322fa8e1054da2c0a4fa21d0fbbcf9175cea83e0d7
+Copying blob sha256:77a02d8cede158bc6378b21930e2fae2039e8124cceeed8e77d3121340f73172
+Copying blob sha256:7c4f7b750d57b897a0ca731165dc02b0e3a067795975b89b46db58cf77cc556f
+Copying config sha256:cefa51ec4c08e4fe04563ffb97d6fc6c27831774a74eb8e0e77d3186c7b84cd7
+Writing manifest to image destination
+Storing signatures
+Writing manifest list to image destination
+Storing list signatures
+Getting image list signatures
+Copying 1 of 1 images in list
+Copying image sha256:db7c7c06b3f3b1be3fb1c8fcc5aed62f16ba9e5c5ca22bed5716b4747b5926ad (1/1)
+Getting image source signatures
+Copying blob sha256:8f403cb21126270e2d1551022b82c77c695ce40c9812795daf7ad77a05c2b9f6
+Copying blob sha256:65c0f2178ac8a3c28f48efd26ccf16bd6f344fa88d1aa20efd3a25d5f99587c0
+Copying blob sha256:7944a2db13d1e3b575fc2fb8a2c123301a4588dc544cec5f5a251a178376437c
+Copying config sha256:2766c7c3f9b5a40139e8aa0084bafaffb053e7f1e69b539025ce215fc0658cd9
+Writing manifest to image destination
+Storing signatures
+Writing manifest list to image destination
+Storing list signatures
+Getting image list signatures
+Copying 1 of 1 images in list
+Copying image sha256:313fd79ba10f146433f1e6d71a1d5d73f679350f0df3ec514cb04fc2589867e6 (1/1)
+Getting image source signatures
+Copying blob sha256:7777f1ac6191174d87a07f322fa8e1054da2c0a4fa21d0fbbcf9175cea83e0d7
+Copying blob sha256:77a02d8cede158bc6378b21930e2fae2039e8124cceeed8e77d3121340f73172
+Copying blob sha256:84a4918082a21f4e02cf4590dd81d2146053063d0f2c144e3e29d6368752d0f4
+Copying config sha256:4de6be946b5204c03d219e1b64b36ffd8b4957d1f3ee3b80c778aa594a136138
+Writing manifest to image destination
+Storing signatures
+Writing manifest list to image destination
+Storing list signatures
+Getting image list signatures
+Copying 1 of 1 images in list
+Copying image sha256:013aa3d4c874c27de1511f97d7acff278d7c7f32b3dfb987697c1643b7d65d7d (1/1)
+Getting image source signatures
+Copying blob sha256:77a02d8cede158bc6378b21930e2fae2039e8124cceeed8e77d3121340f73172
+Copying blob sha256:7777f1ac6191174d87a07f322fa8e1054da2c0a4fa21d0fbbcf9175cea83e0d7
+Copying blob sha256:cf8397195e32132d88f434b44aa599c3d2ce46f080798bde4e72fdb371c54540
+Copying config sha256:d8aa4d0291b2d2b064fe6d7dd9dd3254fa87343f6e4560ec06ffa229aebc2421
+Writing manifest to image destination
+Storing signatures
+Writing manifest list to image destination
+Storing list signatures
+Getting image list signatures
+Copying 1 of 1 images in list
+Copying image sha256:87d47e0adca50f11084b6eea600e838621e09f5d017051210e9cd3fe1b8e7e59 (1/1)
+Getting image source signatures
+Copying blob sha256:7777f1ac6191174d87a07f322fa8e1054da2c0a4fa21d0fbbcf9175cea83e0d7
+Copying blob sha256:77a02d8cede158bc6378b21930e2fae2039e8124cceeed8e77d3121340f73172
+Copying blob sha256:5ad1773ee88d46f4eae65dbaec5baa8c2dd7471a245e8dfcc90bfa5888c973aa
+Copying config sha256:0df5e67fe037044af5f636f8805c3fba3fc93432eda2c0a82affcddadc0c74f9
+Writing manifest to image destination
+Storing signatures
+Writing manifest list to image destination
+Storing list signatures
+Getting image list signatures
+Copying 3 of 3 images in list
+Copying image sha256:17f0412f5e2c367febe6cba7d6561425e39e8f50d19f72f6827a59a2a59eec57 (1/3)
+Getting image source signatures
+Copying blob sha256:64607cc74f9cbe0e12f167547df0cf661de5a8b1fb4ebe930a43b9f621ca457f
+Copying blob sha256:13897c84ca5715a68feafcce9acf779f35806f42d1fcd37e8a2a5706c075252d
+Copying blob sha256:5bb79a0e49ed9a6d15989d3d322b175de85ed1c8d7b381a34ddc52fda0d001f8
+Copying blob sha256:b71d7392cc674aa31313364ee2df6495f46575f461ab215deb4e70178dc0dc37
+Copying blob sha256:a4ee19afd3e9f8e69d645eeda9d6694a76057d873cf574d2ad0760c5f6a54967
+Copying config sha256:0fbe79ad10e511d7fcd636f2a61284bc76891acd86b42e16f5227873bc849898
+Writing manifest to image destination
+Storing signatures
+Copying image sha256:1d45fba4ff4223fffb91c4bfbdc900543bb2cc66bceaab5ea0fafc194553a0ad (2/3)
+Getting image source signatures
+Copying blob sha256:789f189e0129985933aad4956a2d8afe41e0f44ad5a9edfd49d9ebf5745c3313
+Copying blob sha256:4ce25adc849a37eabfbc45e64ff4d9bafa95b4fed07e4f64c7a842de292e7875
+Copying blob sha256:173c6e74c4c30d943bf4f24a17bdfbd2a15e5e70bd5f6fadaadd6c626feef118
+Copying blob sha256:12759cfb2d9fd40b1f65b14a9194473f85b9c54eb6d07143f0e0e2124d918143
+Copying blob sha256:c774fb495daba97f74b37fc5ecafabeec661722fc1d0fb12b555ba1d5c43e4d3
+Copying config sha256:bc0c55e1e0980a41ce49b534a414d2c92a553350204aff90213e3a14e6196951
+Writing manifest to image destination
+Storing signatures
+Copying image sha256:961047f3fb95c7878fdf879b3cbfe3f1bd4888e14028f7b07c4483bb91b5f1b4 (3/3)
+Getting image source signatures
+Copying blob sha256:f4144bd04375fd6b47077188591be65d787a2b6ab87ba6c45df69fd1ec78150e
+Copying blob sha256:9f48903daae81ef304d0fac9af9f7a5de505321993c16ec892e61bbe7a2a2293
+Copying blob sha256:174e47727a3560ec5d85f4cdac2fd06193ccf4d17b3946777ae8ff90ecdbf83a
+Copying blob sha256:9323cedc950d95b183bd9439537a64287d1bd6b6c298a97b0a56832126783cae
+Copying blob sha256:47648b8cff33d1855c328610d999a8bcd71a1239ed82d84e2f702ca6f94565f0
+Copying config sha256:e967bb465c8fd639248363470218fcb1a5da4d216c756acf5e93790c1181a98a
+Writing manifest to image destination
+Storing signatures
+Writing manifest list to image destination
+Storing list signatures
+Getting image list signatures
+Copying 3 of 3 images in list
+Copying image sha256:33992954b2ad117a992b52a8a205bf1c76b4cff26945ccaaddf9ae426ecbd264 (1/3)
+Getting image source signatures
+Copying blob sha256:a4ee19afd3e9f8e69d645eeda9d6694a76057d873cf574d2ad0760c5f6a54967
+Copying blob sha256:64607cc74f9cbe0e12f167547df0cf661de5a8b1fb4ebe930a43b9f621ca457f
+Copying blob sha256:b71d7392cc674aa31313364ee2df6495f46575f461ab215deb4e70178dc0dc37
+Copying blob sha256:13897c84ca5715a68feafcce9acf779f35806f42d1fcd37e8a2a5706c075252d
+Copying blob sha256:d2075e9740d4267adb63fe3643d4d775e8a207b3623f0a93e74e16a26b61b59b
+Copying config sha256:0fbe69397d0540523b741fd038c62ceafd004f6073d23c32ebd9f40ac53cf3dc
+Writing manifest to image destination
+Storing signatures
+Copying image sha256:e76ec06d8afa19000286b9e67689e63ce72942d676ed6da5cf9fdf3fb0e97a13 (2/3)
+Getting image source signatures
+Copying blob sha256:12759cfb2d9fd40b1f65b14a9194473f85b9c54eb6d07143f0e0e2124d918143
+Copying blob sha256:789f189e0129985933aad4956a2d8afe41e0f44ad5a9edfd49d9ebf5745c3313
+Copying blob sha256:4ce25adc849a37eabfbc45e64ff4d9bafa95b4fed07e4f64c7a842de292e7875
+Copying blob sha256:173c6e74c4c30d943bf4f24a17bdfbd2a15e5e70bd5f6fadaadd6c626feef118
+Copying blob sha256:4b8cc2545497f3a91bdc7aa2758eb48f5913bc0c326f621e69ce3c0bfe2e4eaf
+Copying config sha256:653a3bca9b5c802eba02d5f6f6b672a2c103c40ce9d131935a663024107ec3af
+Writing manifest to image destination
+Storing signatures
+Copying image sha256:8b98e03aa7b4171fec0859fa823cb907415e9886111f4c758ae488edf022c607 (3/3)
+Getting image source signatures
+Copying blob sha256:f4144bd04375fd6b47077188591be65d787a2b6ab87ba6c45df69fd1ec78150e
+Copying blob sha256:47648b8cff33d1855c328610d999a8bcd71a1239ed82d84e2f702ca6f94565f0
+Copying blob sha256:174e47727a3560ec5d85f4cdac2fd06193ccf4d17b3946777ae8ff90ecdbf83a
+Copying blob sha256:9f48903daae81ef304d0fac9af9f7a5de505321993c16ec892e61bbe7a2a2293
+Copying blob sha256:01a05f1c295ee44ed92e6df51952e66083b789504c7dc2b528bfba5e88801f43
+Copying config sha256:1aecfee27e0dac4dbae1b9dd7f6eb534cfdc6fbc611c32069771020eed69039b
+Writing manifest to image destination
+Storing signatures
+Writing manifest list to image destination
+Storing list signatures
+Getting image list signatures
+Copying 3 of 3 images in list
+Copying image sha256:4229c1e443d1f54b2823c09b2851de63d2d07a739ff2773380516a3fe00b0b8b (1/3)
+Getting image source signatures
+Copying blob sha256:13897c84ca5715a68feafcce9acf779f35806f42d1fcd37e8a2a5706c075252d
+Copying blob sha256:64607cc74f9cbe0e12f167547df0cf661de5a8b1fb4ebe930a43b9f621ca457f
+Copying blob sha256:b71d7392cc674aa31313364ee2df6495f46575f461ab215deb4e70178dc0dc37
+Copying blob sha256:a4ee19afd3e9f8e69d645eeda9d6694a76057d873cf574d2ad0760c5f6a54967
+Copying blob sha256:9aa683f6033bc1d63bd5ca444185f3f46d3519bf10cc38cf13f1e1914e2f64fc
+Copying config sha256:a0de760943e0a6e84cde80cff7f8f2058bda217539f922106228bb1ada86371c
+Writing manifest to image destination
+Storing signatures
+Copying image sha256:a63904b952721d15740af4fb43b206ddaefb21563d4d9742b90f0dcf961a822c (2/3)
+Getting image source signatures
+Copying blob sha256:4ce25adc849a37eabfbc45e64ff4d9bafa95b4fed07e4f64c7a842de292e7875
+Copying blob sha256:789f189e0129985933aad4956a2d8afe41e0f44ad5a9edfd49d9ebf5745c3313
+Copying blob sha256:12759cfb2d9fd40b1f65b14a9194473f85b9c54eb6d07143f0e0e2124d918143
+Copying blob sha256:173c6e74c4c30d943bf4f24a17bdfbd2a15e5e70bd5f6fadaadd6c626feef118
+Copying blob sha256:f566fcc279f0b292fd25f15a78e121c6aa300c3530d6eb556352a6bc0d145173
+Copying config sha256:56ff39a280fbdbffd464309b60e48bfb8374e65f2790ede8b0805c2fdf2e5778
+Writing manifest to image destination
+Storing signatures
+Copying image sha256:eed2b93eebe811e7a495529c72636fc85897d0650ffe4656ac5c2e2b544ab49e (3/3)
+Getting image source signatures
+Copying blob sha256:9f48903daae81ef304d0fac9af9f7a5de505321993c16ec892e61bbe7a2a2293
+Copying blob sha256:f4144bd04375fd6b47077188591be65d787a2b6ab87ba6c45df69fd1ec78150e
+Copying blob sha256:174e47727a3560ec5d85f4cdac2fd06193ccf4d17b3946777ae8ff90ecdbf83a
+Copying blob sha256:47648b8cff33d1855c328610d999a8bcd71a1239ed82d84e2f702ca6f94565f0
+Copying blob sha256:5871eb3d9b179a9578937aa7a1ff1f29ea56548c1c8a9615098c5ee60a3453d5
+Copying config sha256:7c6221bbb894322caceac3a0b74c3b36c5c5a7710ddc066f73576ef919a83214
+Writing manifest to image destination
+Storing signatures
+Writing manifest list to image destination
+Storing list signatures
+Getting image list signatures
+Copying 3 of 3 images in list
+Copying image sha256:c143f6d1ec4d3d9a917a99c65815752e24e93a5be212c8d41a7f945ffffa67cf (1/3)
+Getting image source signatures
+Copying blob sha256:13897c84ca5715a68feafcce9acf779f35806f42d1fcd37e8a2a5706c075252d
+Copying blob sha256:64607cc74f9cbe0e12f167547df0cf661de5a8b1fb4ebe930a43b9f621ca457f
+Copying blob sha256:db2dc8563f6f458259368e51a2fd161274dcbeee6ae15aafb2b9b9bb92432e69
+Copying blob sha256:c06391366a6b281be480629c9afb0339e58794f3158f4d22ca42ab8aa7da18b0
+Copying config sha256:74f1e0478f35aa94cac726bdd25032253ef65ecca34515e92423b6d0d6f08c54
+Writing manifest to image destination
+Storing signatures
+Copying image sha256:0b3edcd073a1f331c011ebcd4aaa8371f9114b78a48e590df450e1e9006404c3 (2/3)
+Getting image source signatures
+Copying blob sha256:12759cfb2d9fd40b1f65b14a9194473f85b9c54eb6d07143f0e0e2124d918143
+Copying blob sha256:789f189e0129985933aad4956a2d8afe41e0f44ad5a9edfd49d9ebf5745c3313
+Copying blob sha256:22728761436129d37fd7fc25831d7de3e19d8c80d428f4989a6df72549664ef4
+Copying blob sha256:64134551511d040398e17495c69bbd4a20d9fb6b4d378e69b11a314f217e318c
+Copying config sha256:6924dcc828e62d9b5a0a088d9306825d5a8e928f63a1225d3f748b9cec8986e8
+Writing manifest to image destination
+Storing signatures
+Copying image sha256:f42594e7760bf45ccba9d0494391b07b355d147a8ccfae3db602bceb74d8e35f (3/3)
+Getting image source signatures
+Copying blob sha256:174e47727a3560ec5d85f4cdac2fd06193ccf4d17b3946777ae8ff90ecdbf83a
+Copying blob sha256:f4144bd04375fd6b47077188591be65d787a2b6ab87ba6c45df69fd1ec78150e
+Copying blob sha256:23342e5c7b74355c4047ce28956b627160d7152d7c3193f76bfe80268d3a64c7
+Copying blob sha256:3e8137cee2f4f2df47ffb48cb4e317fba8b3b05799fb39aa48cf7ef97453ae46
+Copying config sha256:5ff6934700b1ab547282bb29e9f35eb244d33f5ce8cdef873fba8d77aca2a16d
+Writing manifest to image destination
+Storing signatures
+Writing manifest list to image destination
+Storing list signatures
+Getting image list signatures
+Copying 3 of 3 images in list
+Copying image sha256:508186184b17d924659ad9dcaa468cd4086bbe958b4dac1a6297e7cd4f88a418 (1/3)
+Getting image source signatures
+Copying blob sha256:64607cc74f9cbe0e12f167547df0cf661de5a8b1fb4ebe930a43b9f621ca457f
+Copying blob sha256:13897c84ca5715a68feafcce9acf779f35806f42d1fcd37e8a2a5706c075252d
+Copying blob sha256:bc7307aea17d9a8c8097ff89849189d5afd2055d551cbcc792d5b1e9b85a16c4
+Copying blob sha256:3ad2b51a56d2bbae8e930711d2c872869a2abecab836ec5ba608e8ef6fb7d1a8
+Copying blob sha256:a564ccff8bf3b72fc177298b9cc5fed232e42a1fa2e3404d38e26cd6c13ed194
+Copying blob sha256:320ae7fa06a797df3fe461cbb7aad0df469b747bca961f0a6e4f778b4081b7ac
+Copying blob sha256:666be21779ed3a0279ded8849c3f7eebe9e6f2bcfe66c275b6802a9f474ef665
+Copying config sha256:b30477f1445623862cb224168c3f79eaae82d38d105dbdb9286246e20911bca1
+Writing manifest to image destination
+Storing signatures
+Copying image sha256:ea0fb56298089dfd6ea04c4933e6e15668fe422b60b521cf1388783797ac7852 (2/3)
+Getting image source signatures
+Copying blob sha256:12759cfb2d9fd40b1f65b14a9194473f85b9c54eb6d07143f0e0e2124d918143
+Copying blob sha256:789f189e0129985933aad4956a2d8afe41e0f44ad5a9edfd49d9ebf5745c3313
+Copying blob sha256:640b89ca7dca65540e286d9cb453fe03bfd0799909f094d9717b795ec5ba13e6
+Copying blob sha256:de7bab1520a1ddfd33688e871e36c95e560677575b7948a99737fa9ce6d6de7d
+Copying blob sha256:006452dd8da0231f75d11fb75eddd5c26c1c7deb9498f8438dec598b3df5a8ef
+Copying blob sha256:938966c11d3c32bc6c9226c8f31c43e31fc32cc01bee9a3b2cb0d6605ca6e645
+Copying blob sha256:7f2e0344c6dd3e84c228400227cf169c4cf82fb777dbd2fc6cfb7707a7ffc48a
+Copying config sha256:1cdcc11c5d6f459cbc56f9dbdef8dac4f8781a552ff643ad8d797876861a1a42
+Writing manifest to image destination
+Storing signatures
+Copying image sha256:c9d56d0bfd800bd72c990829b81676a261c288f783ab44788feffdaa00bd069c (3/3)
+Getting image source signatures
+Copying blob sha256:174e47727a3560ec5d85f4cdac2fd06193ccf4d17b3946777ae8ff90ecdbf83a
+Copying blob sha256:f4144bd04375fd6b47077188591be65d787a2b6ab87ba6c45df69fd1ec78150e
+Copying blob sha256:849a976e48df5aad013f9d2302e5847c873a9b56ea9baf925b8dac5e96b7d3ad
+Copying blob sha256:84b26482bb3bca7542d2ce99e2d1275311afc49eb764e56ef00b11306131f0d8
+Copying blob sha256:0ff4db5d532025f94fcbaeb565c5cc9cd1a56f1ae28b1a28be99fac6ca7343e8
+Copying blob sha256:6543f677e204e87b84f2e097d1cc1b69a0ccc54cf18882db2d08e4ec501a08f9
+Copying blob sha256:c7d50b93ada67f1112d62f644c177ffe4a60c2a63b07e4026eb3784512a9b660
+Copying config sha256:a43687db3effe2cd2513697d07d7c842bf58c0839cfb76df5f80df858e747f1c
+Writing manifest to image destination
+Storing signatures
+Writing manifest list to image destination
+Storing list signatures
+Getting image list signatures
+Copying 3 of 3 images in list
+Copying image sha256:bb16d7f7ef2310afacf12a11808c3b792ed1f30929ef9a62ff9b094d3d8512cc (1/3)
+Getting image source signatures
+Copying blob sha256:320ae7fa06a797df3fe461cbb7aad0df469b747bca961f0a6e4f778b4081b7ac
+Copying blob sha256:13897c84ca5715a68feafcce9acf779f35806f42d1fcd37e8a2a5706c075252d
+Copying blob sha256:64607cc74f9cbe0e12f167547df0cf661de5a8b1fb4ebe930a43b9f621ca457f
+Copying blob sha256:666be21779ed3a0279ded8849c3f7eebe9e6f2bcfe66c275b6802a9f474ef665
+Copying blob sha256:3eea2d2398f88b0fa4f2a5e69a7e3b446a54ba4d7648664700d11e7e5e2acf1b
+Copying blob sha256:3e42a6006a5b7ab456301c26fbba637873b0eee90ef9c33a31c3c00ded02a01f
+Copying blob sha256:92d59d21f39c544e6754b11c49859e45d90e6ceff394824ad351cc10149d53db
+Copying config sha256:9c1dadef639cfedc930f822862507484234bdfc9d3c29356b735d64d85f3222a
+Writing manifest to image destination
+Storing signatures
+Copying image sha256:7904a53e3117acf2baeae3911c6d1cdfb78964080bf5ff3ff5bff531ca6ef366 (2/3)
+Getting image source signatures
+Copying blob sha256:006452dd8da0231f75d11fb75eddd5c26c1c7deb9498f8438dec598b3df5a8ef
+Copying blob sha256:12759cfb2d9fd40b1f65b14a9194473f85b9c54eb6d07143f0e0e2124d918143
+Copying blob sha256:640b89ca7dca65540e286d9cb453fe03bfd0799909f094d9717b795ec5ba13e6
+Copying blob sha256:789f189e0129985933aad4956a2d8afe41e0f44ad5a9edfd49d9ebf5745c3313
+Copying blob sha256:7ffccc408dca36fc738d1d774967dc5e010b5d1659a33980341de1839dfd21e8
+Copying blob sha256:47ff41b8ad78a370ea7eb5317e5fe4e6bc90c7b6fb5a8c008845933727159a11
+Copying blob sha256:c255b62aad6ce35cde5f125a8f5a68a4f78f646905cd0f9c06de5e8f24225109
+Copying config sha256:8f6e88fd9883b83fc9a2d25d53aaaa17db69321c2e08b5a9c5bb0d9324ed631f
+Writing manifest to image destination
+Storing signatures
+Copying image sha256:adbab231c9403261c85b6e4ff2c81c0d19e206106df60fd1551c9e30cb2d83f7 (3/3)
+Getting image source signatures
+Copying blob sha256:174e47727a3560ec5d85f4cdac2fd06193ccf4d17b3946777ae8ff90ecdbf83a
+Copying blob sha256:849a976e48df5aad013f9d2302e5847c873a9b56ea9baf925b8dac5e96b7d3ad
+Copying blob sha256:0ff4db5d532025f94fcbaeb565c5cc9cd1a56f1ae28b1a28be99fac6ca7343e8
+Copying blob sha256:f4144bd04375fd6b47077188591be65d787a2b6ab87ba6c45df69fd1ec78150e
+Copying blob sha256:c6b088a8a3755a09efb5b3ae9b8aaa96d371c4a8b857e46b714f8c009f1d8778
+Copying blob sha256:4acb64c308ba24292b2263f0d56f63af43fdd5c4aba6ed9d20ab97d5d6756f37
+Copying blob sha256:1463a5dbef80a57a560145eab3d6cc4f355a001715fd11d8be3bc685b40cbae8
+Copying config sha256:5671c0c6abf237d6494ebfec6fa82c8dc45235a73e0091248b375a6642aa244c
+Writing manifest to image destination
+Storing signatures
+Writing manifest list to image destination
+Storing list signatures
+Getting image list signatures
+Copying 3 of 3 images in list
+Copying image sha256:71192144544b370217add2e9af809e8749edb5c3850ded77c92e12f38936e2cd (1/3)
+Getting image source signatures
+Copying blob sha256:65c0f2178ac8a3c28f48efd26ccf16bd6f344fa88d1aa20efd3a25d5f99587c0
+Copying blob sha256:8f403cb21126270e2d1551022b82c77c695ce40c9812795daf7ad77a05c2b9f6
+Copying blob sha256:201872c7d1607bb6424e6e31a4e0f5ebfb3c2afbcc8bd8a2e0e296c42779d6f4
+Copying config sha256:5df2471274dfe5d814ac44e34be2d305cce98fcc1edfdf48f4be499b4f6bfedf
+Writing manifest to image destination
+Storing signatures
+Copying image sha256:2b9dddb29423e82d19f8c7924bedd51ae1d0a51071a7b4191ceab3629cfdf13e (2/3)
+Getting image source signatures
+Copying blob sha256:01dd17d19a2b0680d366ba2bed310b7ddd7312e1599dc1bd1d9b70b307b2ba1d
+Copying blob sha256:82367ee3d2d6a6a264ed2bc1011d2fac4480e8ada0734f668b024615cc109244
+Copying blob sha256:f43be2e8cab897e14b4038ee1e966b795f4231dd3f20227eb14cc8ec1dfa5ac7
+Copying config sha256:1f82e75b77b04b6c495c72de1e48cde3b3c01c71b23d98af5822135494badd83
+Writing manifest to image destination
+Storing signatures
+Copying image sha256:d874d3b66db36e0b7b149d15f82e277f49588a8a247d537c91d40136f40fd4d6 (3/3)
+Getting image source signatures
+Copying blob sha256:36c462461b287879ac5ad1ce62cbcff3d9d45c81fa8fb604c99e0836a9cfd46c
+Copying blob sha256:c33e1fa6fefb3faeca8f3ccd53f7a0ff5e13cac49b5a0f96a2b574f40d2f6cc5
+Copying blob sha256:ffa9ece6c97d766ca14657e9dc0cc8a7cdf1e985756017f83e52e3b1cf2dcf18
+Copying config sha256:403eede73c9079ee3539a50dc6905b118dbf010a4bdc6702899077f52af2449a
+Writing manifest to image destination
+Storing signatures
+Writing manifest list to image destination
+Storing list signatures
+Getting image list signatures
+Copying 3 of 3 images in list
+Copying image sha256:d059ff3bc9fc391c553d13e75e7f3eab46e1e97c1ff8032174ee1a068f9d15b3 (1/3)
+Getting image source signatures
+Copying blob sha256:65c0f2178ac8a3c28f48efd26ccf16bd6f344fa88d1aa20efd3a25d5f99587c0
+Copying blob sha256:8f403cb21126270e2d1551022b82c77c695ce40c9812795daf7ad77a05c2b9f6
+Copying blob sha256:8d81ae2a19082f4ca56957257354c8d14747dd20c76d3d01d7bfe84833065530
+Copying config sha256:555d49291699eb1ae34d4f73da0beb2f66c1df8cc6b6258cdb6c2e84019fe939
+Writing manifest to image destination
+Storing signatures
+Copying image sha256:a2f1afefc5c455bd949670b4554dd5a88dd9e317fa3f4e2716c54d5b035c44cc (2/3)
+Getting image source signatures
+Copying blob sha256:f43be2e8cab897e14b4038ee1e966b795f4231dd3f20227eb14cc8ec1dfa5ac7
+Copying blob sha256:01dd17d19a2b0680d366ba2bed310b7ddd7312e1599dc1bd1d9b70b307b2ba1d
+Copying blob sha256:7c5a52496f1251dface31b3dd8ace9f2cd3206e197a0e021f5b4147ea6beb6aa
+Copying config sha256:4fd83fcfafd1b888db83e5d19b4dfac1d910922f98039c8512d996e204c5e85f
+Writing manifest to image destination
+Storing signatures
+Copying image sha256:dca4d64173c3a4148b99238c7fbabadba96528fc932c66172f9c230622dfd0d1 (3/3)
+Getting image source signatures
+Copying blob sha256:ffa9ece6c97d766ca14657e9dc0cc8a7cdf1e985756017f83e52e3b1cf2dcf18
+Copying blob sha256:36c462461b287879ac5ad1ce62cbcff3d9d45c81fa8fb604c99e0836a9cfd46c
+Copying blob sha256:8196d61c15536e28647e10a07036247c073299e8fc831295e4f18cfa71bd57a2
+Copying config sha256:212bcdad32a0085339031026c94b493b24ee208081a1049fd679f61eefa98e09
+Writing manifest to image destination
+Storing signatures
+Writing manifest list to image destination
+Storing list signatures
+Getting image list signatures
+Copying 3 of 3 images in list
+Copying image sha256:2a1787273b7f598155075b09d9b6baa59bc8d8d4dc9e5ccca5b5118e8cba2662 (1/3)
+Getting image source signatures
+Copying blob sha256:7777f1ac6191174d87a07f322fa8e1054da2c0a4fa21d0fbbcf9175cea83e0d7
+Copying blob sha256:77a02d8cede158bc6378b21930e2fae2039e8124cceeed8e77d3121340f73172
+Copying blob sha256:777445433b1ce9dd2680816c012b4bfca1faeb87d5d64aeac70235cc3e781bcb
+Copying config sha256:bb95bad93e6139421c7909946cb1818df817e3e060fc3719b9aa75e266bf8e3b
+Writing manifest to image destination
+Storing signatures
+Copying image sha256:4b48b963ee13c095693a346099824767be2fb03a7f473b6fea55f261cc4a5c96 (2/3)
+Getting image source signatures
+Copying blob sha256:fd13085e75a289e3eb072fc7454faa8df09f6a1b1d0e171178abd90aee5fa74e
+Copying blob sha256:8e2882a6bef88fb1ee613b0cbeea2c9fd15c81845d710dc928019212624baa23
+Copying blob sha256:ff3145ec8c37ce5ae923f92d362f09a80f38a3826221380d684145dad401757e
+Copying config sha256:157c5cd66517466919b28ff643a8de28f91ba335eee7a8bd5f2391433aa24861
+Writing manifest to image destination
+Storing signatures
+Copying image sha256:0432021960a6d54d5bb6ae6272911ab28ff4b68a8bdd89dc50cbbcf1ce07653f (3/3)
+Getting image source signatures
+Copying blob sha256:56b28da116c29d10f050656b724b570671b6d81970d332ac01ee84be1597de33
+Copying blob sha256:9647855adc6ddaee281906f579fe04d7798a000a4c09b1daf6241db614f03707
+Copying blob sha256:e25ac8f45a2ff08f3b99e6d4cc0a5d957aa12692a3d4e7f0013c951bb6d7cb46
+Copying config sha256:07a1f734c754529f04d364cfca7c91572e539c320367770d1727860f6c273592
+Writing manifest to image destination
+Storing signatures
+Writing manifest list to image destination
+Storing list signatures
+Getting image list signatures
+Copying 3 of 3 images in list
+Copying image sha256:a6530b55405c3ec180c6e926956e383d2ae1ef211e13802838d74b733dc6272f (1/3)
+Getting image source signatures
+Copying blob sha256:77a02d8cede158bc6378b21930e2fae2039e8124cceeed8e77d3121340f73172
+Copying blob sha256:7777f1ac6191174d87a07f322fa8e1054da2c0a4fa21d0fbbcf9175cea83e0d7
+Copying blob sha256:5186181fa2d4ac30bfcd96b537b3a597f909a8eb036760f4fba30d2cb73d5fe2
+Copying config sha256:8efa8cd8df452e97b728f2293ccfc0a6a4ec646d48af289a338171654c6ef9ca
+Writing manifest to image destination
+Storing signatures
+Copying image sha256:2652421bcc671f2082b941dd80fed3d8d89cc04d5c0241634b0561d49263528f (2/3)
+Getting image source signatures
+Copying blob sha256:fd13085e75a289e3eb072fc7454faa8df09f6a1b1d0e171178abd90aee5fa74e
+Copying blob sha256:8e2882a6bef88fb1ee613b0cbeea2c9fd15c81845d710dc928019212624baa23
+Copying blob sha256:066cf61263c7299a42c8921e9d648929ce145457530a0bb004a54069450e4dd0
+Copying config sha256:c3bbf9dcc44f376dc4c22c86e1113732b2b9b8fe33534900aa4e7d74d736f4ed
+Writing manifest to image destination
+Storing signatures
+Copying image sha256:f7c4d2f0e90dcee35ee730f5775205e678c7fee5be3923c8d1dea4acfb965461 (3/3)
+Getting image source signatures
+Copying blob sha256:56b28da116c29d10f050656b724b570671b6d81970d332ac01ee84be1597de33
+Copying blob sha256:e25ac8f45a2ff08f3b99e6d4cc0a5d957aa12692a3d4e7f0013c951bb6d7cb46
+Copying blob sha256:665de0c7906db629ccb9196c6f59fc8e579919fe88dd117793e26997585ae030
+Copying config sha256:a1c0017e93df95c302183dba07a0a9d98325c020c9612084591ad9d23ace0bc4
+Writing manifest to image destination
+Storing signatures
+Writing manifest list to image destination
+Storing list signatures
+Getting image list signatures
+Copying 3 of 3 images in list
+Copying image sha256:c9f9b5c7859cf33a9b5370bfa66ce64a3ff0d2eb83207254da7e3872d50f2c1b (1/3)
+Getting image source signatures
+Copying blob sha256:77a02d8cede158bc6378b21930e2fae2039e8124cceeed8e77d3121340f73172
+Copying blob sha256:7777f1ac6191174d87a07f322fa8e1054da2c0a4fa21d0fbbcf9175cea83e0d7
+Copying blob sha256:90f81db1e38d282a115c5104f4aa2c87b209866980239cb046f7eb9636b22c65
+Copying config sha256:1c8ab9deef09aca4c8a75d1693938e7d7fa74d0d115c9835c2d48a3b2f7b2524
+Writing manifest to image destination
+Storing signatures
+Copying image sha256:b15cf0e7f1628a23a778507b8fb00bc2234cb34253f08d6e4d4ceed44585f44c (2/3)
+Getting image source signatures
+Copying blob sha256:fd13085e75a289e3eb072fc7454faa8df09f6a1b1d0e171178abd90aee5fa74e
+Copying blob sha256:8e2882a6bef88fb1ee613b0cbeea2c9fd15c81845d710dc928019212624baa23
+Copying blob sha256:a6bbb6faa3e263f9945157f2131fff7be3a99f71b6284294cf6805d6a0e644d2
+Copying config sha256:cfb396a864108dbf833275bedc248e77498dea674e81d7682caf8c726e878daf
+Writing manifest to image destination
+Storing signatures
+Copying image sha256:a1493a222bae3ac6177369dd35d0783eab83db6c493c624253fde9a971a6642d (3/3)
+Getting image source signatures
+Copying blob sha256:56b28da116c29d10f050656b724b570671b6d81970d332ac01ee84be1597de33
+Copying blob sha256:e25ac8f45a2ff08f3b99e6d4cc0a5d957aa12692a3d4e7f0013c951bb6d7cb46
+Copying blob sha256:01ee6964b4df5d433b49333066bf467c38a9cbe4b74e5548a3dcc7b0db762720
+Copying config sha256:92637c74958444acfa9fb48a7293ca087bf507a22a3bd818431286a741b9f205
+Writing manifest to image destination
+Storing signatures
+Writing manifest list to image destination
+Storing list signatures
+Getting image list signatures
+Copying 3 of 3 images in list
+Copying image sha256:26a18841c7a3284b6756af3958fb99a065e9ad73380a64dc40ccd49bb71edaa5 (1/3)
+Getting image source signatures
+Copying blob sha256:4f4fb700ef54461cfa02571ae0db9a0dc1e0cdb5577484a6d75e68dc38e8acc1
+Copying blob sha256:b86e5febbedf60b7189d9b1f5ab6109e8d2979e2eca56b03e6988a711e78e3f9
+Copying config sha256:20cb7f32d4f8631ca93666a58b32dd47672b1cf8d95c933b5ac074d483b57e9a
+Writing manifest to image destination
+Storing signatures
+Copying image sha256:c42c3a051c4a7293036cbcf1c8e9990e8dec3172647efa8f52781e5940d4ca5f (2/3)
+Getting image source signatures
+Copying blob sha256:4f4fb700ef54461cfa02571ae0db9a0dc1e0cdb5577484a6d75e68dc38e8acc1
+Copying blob sha256:3cd4eae26c6480fcb4af88ac6b0fe420d23c184c7d0e53f7d9ebbddef530e8cd
+Copying config sha256:70ac257583e536117eb7a5c8bca377daf223116163063829070dc65ef2846189
+Writing manifest to image destination
+Storing signatures
+Copying image sha256:cf5c8520fb001bc54943d1dcdd7ca018fdecadf7c8e077cd933af263c49df94a (3/3)
+Getting image source signatures
+Copying blob sha256:4f4fb700ef54461cfa02571ae0db9a0dc1e0cdb5577484a6d75e68dc38e8acc1
+Copying blob sha256:7d356e0a90cdc8ca00b09b4ff3338f8c3a49434b2019deccd01adfb6de529110
+Copying config sha256:644a09b09277149284ed235ce64dd1539710cd684471716ecae2df8753e3c209
+Writing manifest to image destination
+Storing signatures
+Writing manifest list to image destination
+Storing list signatures
+Getting image list signatures
+Copying 1 of 1 images in list
+Copying image sha256:14639f05358eb0bad96518bd2f42a2cc321d66be82779f88529f1f9679aeca9d (1/1)
+Getting image source signatures
+Copying blob sha256:77a02d8cede158bc6378b21930e2fae2039e8124cceeed8e77d3121340f73172
+Copying blob sha256:7777f1ac6191174d87a07f322fa8e1054da2c0a4fa21d0fbbcf9175cea83e0d7
+Copying blob sha256:24508385833c079438d88aa7b4c9be62c21b76804b7a4639442f8244593fec47
+Copying config sha256:94dbef7ea14a16687b685dd3bcd66c6b1920ae5bd613c35192ac9ba7ec7ce669
+Writing manifest to image destination
+Storing signatures
+Writing manifest list to image destination
+Storing list signatures
+Getting image list signatures
+Copying 2 of 2 images in list
+Copying image sha256:06ed4602437e5e07c0a00f5f7bcdcceb80c5045d6335516608cd87b194443c3b (1/2)
+Getting image source signatures
+Copying blob sha256:fd13085e75a289e3eb072fc7454faa8df09f6a1b1d0e171178abd90aee5fa74e
+Copying blob sha256:8e2882a6bef88fb1ee613b0cbeea2c9fd15c81845d710dc928019212624baa23
+Copying blob sha256:e021c7aedcc296e37f47fc50aec61c6edcb5b486bf2137294677c4b63d3e82e7
+Copying config sha256:08baba3b991f7c8e6f7a2fb21d4569ce06d37bb12b07016bb49f618805ced5da
+Writing manifest to image destination
+Storing signatures
+Copying image sha256:40b35c2df058309d6e8044aff68819543454e5a7346bf1bf70abf39aabc1fcb2 (2/2)
+Getting image source signatures
+Copying blob sha256:e25ac8f45a2ff08f3b99e6d4cc0a5d957aa12692a3d4e7f0013c951bb6d7cb46
+Copying blob sha256:56b28da116c29d10f050656b724b570671b6d81970d332ac01ee84be1597de33
+Copying blob sha256:1f0678896ea3f22fdf06b775fda8f45c8e985afc69c20890e1071b9e02306c1e
+Copying config sha256:80a76e4af8055e6b75280f1b6745ff5514e115e5a143c4c7bacfd476777e5ca9
+Writing manifest to image destination
+Storing signatures
+Writing manifest list to image destination
+Storing list signatures
+Getting image list signatures
+Copying 1 of 1 images in list
+Copying image sha256:940aeeb3d5beb9abaa9f1025452f30f1e8eaf735389932b3a4368d685916ee01 (1/1)
+Getting image source signatures
+Copying blob sha256:a591faa84ab05242a17131e396a336da172b0e1ec66d921c9f130b7c4c24586d
+Copying blob sha256:76b9354adec626b01ffb0faae4a217cebd616661fd90c4b54ba4415f53392fb8
+Copying blob sha256:2b9e46cda108aa4e83583dcab8481cc203443062159538cb2fbe9adb49a8687d
+Copying config sha256:38b730966a68e6a133ad4e92ddb9ac20720ec69bbfdd0ea0d7f9e31482b7e3e1
+Writing manifest to image destination
+Storing signatures
+Writing manifest list to image destination
+Storing list signatures
+Getting image list signatures
+Copying 2 of 2 images in list
+Copying image sha256:3a5600788554fe8035c3425ac54fd43d15650664e2fe35f861581bd4428a4710 (1/2)
+Getting image source signatures
+Copying blob sha256:e54640ae33a5fe60aeee076aaab9e2cd67a60fc5b9090dbe34b3fd322d7832ea
+Copying blob sha256:64ed36aae4446caf95d7519c3367a24feb07ad75b391a95f540f7422f24763f9
+Copying blob sha256:557a3c5575cd783e7cda92d5f0449164b780e7223989578419a9a002c4a325d8
+Copying config sha256:da4fc75f3e24d6258756f1ffce7812865644ca2f70d7674b9099636ba6c50acc
+Writing manifest to image destination
+Storing signatures
+Copying image sha256:5f72e1cc9b28c1dd267a58cd5bdb8fbb368f24972a1b00f2665ef2507cd9a6a2 (2/2)
+Getting image source signatures
+Copying blob sha256:19c7f6d1b6344a668d2e986408e1066d4b9403633f161769699c5a8920309447
+Copying blob sha256:92d3dc523f22d142b474340bc8e2818e2f74039968583dc8d1a1b8fa77b0a515
+Copying blob sha256:e912700a568b7cc191aaf2ed2b1a1d572f3807fd7cd756912a40a583fd99f46e
+Copying config sha256:39f8ec4de097fc53e1f8d0d7be87680f77b566960e88d0cefa135ecd54e70e06
+Writing manifest to image destination
+Storing signatures
+Writing manifest list to image destination
+Storing list signatures
+Getting image list signatures
+Copying 3 of 3 images in list
+Copying image sha256:a0af5152964ab812eab07bb6a55df253510ad334765eb69f6b4a4a178c32687c (1/3)
+Getting image source signatures
+Copying blob sha256:76b9354adec626b01ffb0faae4a217cebd616661fd90c4b54ba4415f53392fb8
+Copying blob sha256:a591faa84ab05242a17131e396a336da172b0e1ec66d921c9f130b7c4c24586d
+Copying blob sha256:063f4d5fe1966d72e804d73f36ecd6577c4ec3b1a7c2b7a0d01e5157befaeaca
+Copying config sha256:a98f7602923d473ec26f1f89a429f772395a4286f967415e22d4dd1b1a4d0882
+Writing manifest to image destination
+Storing signatures
+Copying image sha256:08bfe37324b5c2f3ab38c18c642e6ee94fd6b6bfcfa49064744061c66382c756 (2/3)
+Getting image source signatures
+Copying blob sha256:557a3c5575cd783e7cda92d5f0449164b780e7223989578419a9a002c4a325d8
+Copying blob sha256:e54640ae33a5fe60aeee076aaab9e2cd67a60fc5b9090dbe34b3fd322d7832ea
+Copying blob sha256:b3095fb5705e569d452f8f55d20f073727b645fe78a2753a9b914fb0b754d0d7
+Copying config sha256:3eb5239302d5a94a37265b5061f2bf4a6f3f0b5e33e200bf03b41be9b21dabea
+Writing manifest to image destination
+Storing signatures
+Copying image sha256:4ed4b3cc70da46ac9391935dfa92fcd1faad6acf71d5661f6cece192ea406fb1 (3/3)
+Getting image source signatures
+Copying blob sha256:92d3dc523f22d142b474340bc8e2818e2f74039968583dc8d1a1b8fa77b0a515
+Copying blob sha256:e912700a568b7cc191aaf2ed2b1a1d572f3807fd7cd756912a40a583fd99f46e
+Copying blob sha256:1573fc724ecec6ce105cb8c20536b39f45efe3ccebea839b86d86ed24602a687
+Copying config sha256:651626171525ae519aea67bfa74e2abfee9492a586b64f213e155f11aa063928
+Writing manifest to image destination
+Storing signatures
+Writing manifest list to image destination
+Storing list signatures
+Getting image list signatures
+Copying 3 of 3 images in list
+Copying image sha256:603343ad0999e0a6eeb827eeba2138eb61b04b7f1f46957cbbfbd9fd5b4343b0 (1/3)
+Getting image source signatures
+Copying blob sha256:76b9354adec626b01ffb0faae4a217cebd616661fd90c4b54ba4415f53392fb8
+Copying blob sha256:a591faa84ab05242a17131e396a336da172b0e1ec66d921c9f130b7c4c24586d
+Copying blob sha256:437a2f4380a97a08e0434c7804f44b6aa2a32d6a55577990b35fa8d19e4fdc2d
+Copying config sha256:cb88082aa817f34f96f1dc172a4031f93d15efcd56cd84bbc9495b3054c08f39
+Writing manifest to image destination
+Storing signatures
+Copying image sha256:b5c804bb99ea709273337f62572846b510a17f8673309100afaf4ba2217ad01f (2/3)
+Getting image source signatures
+Copying blob sha256:557a3c5575cd783e7cda92d5f0449164b780e7223989578419a9a002c4a325d8
+Copying blob sha256:e54640ae33a5fe60aeee076aaab9e2cd67a60fc5b9090dbe34b3fd322d7832ea
+Copying blob sha256:e5e12a365a9dcd12c69bd8e6d5600d9a15521107d667644c87f1dd94fe8adb90
+Copying config sha256:1dd26d58450afa70f3fece0af732cd2b0dd0e7ee7193d79f75abf7559692bfee
+Writing manifest to image destination
+Storing signatures
+Copying image sha256:b9e1544520714ba1914181402be56b709e5ea013e0a93a0d25e0a04a960a875c (3/3)
+Getting image source signatures
+Copying blob sha256:92d3dc523f22d142b474340bc8e2818e2f74039968583dc8d1a1b8fa77b0a515
+Copying blob sha256:e912700a568b7cc191aaf2ed2b1a1d572f3807fd7cd756912a40a583fd99f46e
+Copying blob sha256:90a19c351283366c63569b187d5c9a1f04f942b8883eec39afeb52b4c5fd52f9
+Copying config sha256:ee3bfe4d0a1d31bdc6bc261398a8f2a8a2549f787b2270dd0a9745f08e9bfd82
+Writing manifest to image destination
+Storing signatures
+Writing manifest list to image destination
+Storing list signatures
+Getting image list signatures
+Copying 3 of 3 images in list
+Copying image sha256:49f03546a7b55d071ab30dd0be46c1b0b7d24769e47edd4f58f659a30f3ba1fe (1/3)
+Getting image source signatures
+Copying blob sha256:33f7cb563f04ece5bc41e77b4ec0dfa09d6f4c12cbe7f9e4f3232b20eb74d2ee
+Copying blob sha256:7eefb7bd17980b0c8403d23b08203acc16a751f58dc567a5e5ec75410b4573f8
+Copying blob sha256:e4de525e560cfb3f62a0e1f1e4d3e3aae21b17854e2a7d78d3665c6c6b16bba9
+Copying blob sha256:6b536614e8f89a67294fb2b5a743b44675697c47e22b116d03249fbf1f0da8c0
+Copying blob sha256:fdb393d8227cbe9756537d3f215a3098ae797bd4bde422aaa10ebde84a940893
+Copying blob sha256:fb0a77464e97476d5c5bd5f055cff51dd522facbf400d7d4dfa48a9714048414
+Copying config sha256:0b3ef3f139a2ebf5551cb270874e0029d35f7b882d8657f22848f5ae8adf829d
+Writing manifest to image destination
+Storing signatures
+Copying image sha256:13bf3ea22f62cb776d3a5696c48e00bf9305560bf53cc88ce2d2012e122350a5 (2/3)
+Getting image source signatures
+Copying blob sha256:03207439e2d034ffe0edbd26e111d579e2ef0126936ed97398060983c6b0c707
+Copying blob sha256:d7cf191a62817a2b1f202a606a4951d9318fc21fcde5f8ed43ac008f1643175b
+Copying blob sha256:5e27485a87beb676323511c7064825248135b1b897da9f85740afada08335b57
+Copying blob sha256:922b421e35632f3b49b2f37a889823d2b1ceb29ae96b8f0a92120574cd060aa5
+Copying blob sha256:248975698085ef840c2738c5f6c0d3fd6251919bd6dc969829d3cd9d97e1140a
+Copying blob sha256:786a0a33ba9629867cee0a32e8251d2d9a0591fa94bb0382ca539efe675ac248
+Copying config sha256:0940cae4def0e6e2a10cd62047d72be535a564093d6841d5d64ec4763c7cf22e
+Writing manifest to image destination
+Storing signatures
+Copying image sha256:5d86aad993b59c9f8cf9caf43afe78fa9a0002403095388d104eea6db7b14eba (3/3)
+Getting image source signatures
+Copying blob sha256:3d8b0f60ea010b05d7f9e0a79399e78d5266f306523e6e1e09a351df262d4663
+Copying blob sha256:6b8104639b30ab2809f36a8cd2e74efa7b8699dde718dd3e76ae3cc21c843172
+Copying blob sha256:aa7a15397e0425a9ef6979e4a6b79ce541cb8e722cf5dd8a436a0484e3c67286
+Copying blob sha256:df0afd1dbccb630a6bc6b3d73616f11b264259ff8bdb3d470c3f56623002d482
+Copying blob sha256:227190c891da5b7fa883dc122b4ffd390a282cfb2b3e1de9dcd86c607cd077bb
+Copying blob sha256:7a294444146770f9cfb9c73d43609148a6c0880e076e73144d15a66f45a71e14
+Copying config sha256:e27d3aa67a0dbe1ee8c206d5497127828eafdb9c074dfa947e79685393854568
+Writing manifest to image destination
+Storing signatures
+Writing manifest list to image destination
+Storing list signatures
+
+Image: registry.redhat.io/container-native-virtualization/virt-cdi-importer@sha256:6cd9fa712417b8f8bd88017cd357207404820b531ab50576dd079643d9c0f7c8
+----------------------------------------------
+----------------------------------------------
+Mirroring image 26 of 76
+Image: registry.redhat.io/container-native-virtualization/virt-cdi-operator@sha256:cda0b22054eafcb1fc33fe5deea72719d59743a7fff84d5ac3b9a13802a03574
+----------------------------------------------
+----------------------------------------------
+Mirroring image 27 of 76
+Image: registry.redhat.io/container-native-virtualization/virt-cdi-uploadproxy@sha256:458133c2818087ca7e8912f2b149d888cf16635e4ac619ae60d8886394bcb794
+----------------------------------------------
+----------------------------------------------
+Mirroring image 28 of 76
+Image: registry.redhat.io/container-native-virtualization/virt-cdi-uploadserver@sha256:c57808efe7668aad6035a2701b60fbccdd9b7479b165de7d822d5e880e6f20d5
+----------------------------------------------
+----------------------------------------------
+Mirroring image 29 of 76
+Image: registry.redhat.io/container-native-virtualization/virt-controller@sha256:e5a2ed39b1c1710118fb5e6612e550fad40af3a5be673c1f896dfbf2a51c40d6
+----------------------------------------------
+----------------------------------------------
+Mirroring image 30 of 76
+Image: registry.redhat.io/container-native-virtualization/virt-handler@sha256:b5522d1a20602c17c33d2541f4985dca1397d1e97b7fae1f30b11040173780a5
+----------------------------------------------
+----------------------------------------------
+Mirroring image 31 of 76
+Image: registry.redhat.io/container-native-virtualization/virt-launcher@sha256:97c5d5fe8006f76e28f5bdabe65260eea826c805a4f1184272f966ae4d622164
+----------------------------------------------
+----------------------------------------------
+Mirroring image 32 of 76
+Image: registry.redhat.io/container-native-virtualization/virt-operator@sha256:889c7637d3ff7b5d1b0fa3e0dcbd78920528e877ab59532230b1613d36a892f8
+----------------------------------------------
+----------------------------------------------
+Mirroring image 33 of 76
+Image: registry.redhat.io/container-native-virtualization/virtio-win@sha256:694d0b0cadc8aa332382d89dfad27c76340e5155bc308006c021e0454a169533
+----------------------------------------------
+----------------------------------------------
+Mirroring image 34 of 76
+Image: registry.redhat.io/container-native-virtualization/vm-import-controller-rhel8@sha256:f2f33a483ad31d2ce801a9a566783a569843019b7f436906d88858b021fa264e
+----------------------------------------------
+----------------------------------------------
+Mirroring image 35 of 76
+Image: registry.redhat.io/container-native-virtualization/vm-import-operator-rhel8@sha256:84476979a3987e700065b2a344c04cec562c3d11e34064f31d7bd7a35ff49bc3
+----------------------------------------------
+----------------------------------------------
+Mirroring image 36 of 76
+Image: registry.redhat.io/container-native-virtualization/vm-import-virtv2v-rhel8@sha256:3a657cb2e16ada288411ec7f8ba6b35b278f224e6a76f86a7c9f925c670d6020
+----------------------------------------------
+----------------------------------------------
+Mirroring image 37 of 76
+Image: registry.redhat.io/openshift4/ose-local-storage-diskmaker@sha256:123fb00e5c7ffccc50d16d9db0f5d20a14ee18be008606e18c4e013f36203231
+----------------------------------------------
+----------------------------------------------
+Mirroring image 38 of 76
+Image: registry.redhat.io/openshift4/ose-local-storage-operator@sha256:665269ca62c035c049927f5a1a8f3fa72c9eb36aa6ef79e4f9f6bba80143c4d3
+----------------------------------------------
+----------------------------------------------
+Mirroring image 39 of 76
+Image: registry.redhat.io/openshift4/ose-local-storage-static-provisioner@sha256:70dec551dd5903ad8b0b4a46f89008e59082c22c56803dea34af3a41870bbd15
+----------------------------------------------
+----------------------------------------------
+Mirroring image 40 of 76
+Image: registry.redhat.io/openshift-logging/cluster-logging-rhel8-operator@sha256:936f1627dcff4d20b838b1a3a367c0ca7ce552dba90d868ff08ed464bbb80ef8
+----------------------------------------------
+----------------------------------------------
+Mirroring image 41 of 76
+Image: registry.redhat.io/openshift-logging/fluentd-rhel8@sha256:1b4d3c8fdd099bd3fca49214ded5f754dab03c7fb85fe4c7ea264cc4196b8b13
+----------------------------------------------
+----------------------------------------------
+Mirroring image 42 of 76
+Image: registry.redhat.io/openshift-logging/logging-curator5-rhel8@sha256:6d5b316b7415c0eea65b744ab1d0150d86c47d0ae99c7894cacd7a2d864e9e2c
+----------------------------------------------
+----------------------------------------------
+Mirroring image 43 of 76
+Image: registry.redhat.io/codeready-workspaces/crw-2-rhel8-operator@sha256:a24dc83d8cdd8af715f0c4f235dcba0736bf395b7029ceaed0b8a683da5f74e0
+----------------------------------------------
+----------------------------------------------
+Mirroring image 44 of 76
+Image: registry.redhat.io/codeready-workspaces/server-rhel8@sha256:6635e8c160c8c73c00c9b05eccab08a4ff23d344f102ef0097a3798bf108217a
+----------------------------------------------
+----------------------------------------------
+Mirroring image 45 of 76
+Image: registry.redhat.io/codeready-workspaces/jwtproxy-rhel8@sha256:3f40bb8a2022545ac06a0b41cdb0239fdacfc34b37faffb21348a2041e96d0f2
+----------------------------------------------
+----------------------------------------------
+Mirroring image 46 of 76
+Image: registry.redhat.io/codeready-workspaces/pluginbroker-artifacts-rhel8@sha256:cda306cb7e5c42faa6ab43218d39984d4955134b3ca9654968c28b05e0796c3a
+----------------------------------------------
+----------------------------------------------
+Mirroring image 47 of 76
+Image: registry.redhat.io/codeready-workspaces/pluginbroker-metadata-rhel8@sha256:0143a80b869620af08a0d60165dc9d13357a79e7243502832326cf053c17ee38
+----------------------------------------------
+----------------------------------------------
+Mirroring image 48 of 76
+Image: registry.redhat.io/codeready-workspaces/machineexec-rhel8@sha256:19a8daf7f9adde981dcd588b0526fa7682111097849f60a9b0e81137bdde8f6c
+----------------------------------------------
+----------------------------------------------
+Mirroring image 49 of 76
+Image: registry.redhat.io/codeready-workspaces/plugin-java11-rhel8@sha256:d93195134cef6351b1f9e3165fecc09f464dc99ab33d11b68fadd613d04d1636
+----------------------------------------------
+----------------------------------------------
+Mirroring image 50 of 76
+Image: registry.redhat.io/codeready-workspaces/plugin-java11-openj9-rhel8@sha256:ee7c41053b4c8615886745566fc306dbf5bd1b1d367e525266477ae17a26673e
+----------------------------------------------
+----------------------------------------------
+Mirroring image 51 of 76
+Image: registry.redhat.io/codeready-workspaces/plugin-java8-rhel8@sha256:ecaa9ddef5ca8db9552f1b5e66f7aacb19d72e488d718d8135b1e1d9f66a1a7a
+----------------------------------------------
+----------------------------------------------
+Mirroring image 52 of 76
+Image: registry.redhat.io/codeready-workspaces/plugin-java8-openj9-rhel8@sha256:8d8948134405e45bdd895932afa85b6cf0fbfe4e9bb58ae9753d233ddf74672b
+----------------------------------------------
+----------------------------------------------
+Mirroring image 53 of 76
+Image: registry.redhat.io/codeready-workspaces/plugin-kubernetes-rhel8@sha256:cf1d0e24f8bae0f87cae0b1577dfd25e124437d78031d7076fabebb2dcf48d7f
+----------------------------------------------
+----------------------------------------------
+Mirroring image 54 of 76
+Image: registry.redhat.io/codeready-workspaces/plugin-openshift-rhel8@sha256:13ce6d8fdeeea0cc5a220ebe8abd2811c31bb2a424736759be9a6df15c8f77fd
+----------------------------------------------
+----------------------------------------------
+Mirroring image 55 of 76
+Image: registry.redhat.io/codeready-workspaces/stacks-cpp-rhel8@sha256:06cd3600c3b6c3dca0451b10b46961fd0db4140c7dddc4f9637984022f5cfc09
+----------------------------------------------
+----------------------------------------------
+Mirroring image 56 of 76
+Image: registry.redhat.io/codeready-workspaces/stacks-dotnet-rhel8@sha256:ea77974b206c7d7abcad5cd32149f6bb669d3cf867135553af4d7dddd24ba9cfGetting image list signatures
+Copying 1 of 1 images in list
+Copying image sha256:fda26b7386a4fe6d6053fdbd48c223bed7a635370288610b6220d76d09c6c9c3 (1/1)
+Getting image source signatures
+Copying blob sha256:6500ac87b29ffd00c8655be65a6824dfcf9fc0accc625158ef1060bcedc84ca8
+Copying blob sha256:052baad69940cbd05bf4d96c1294ece0f7a46d51feec6ddb433484ad02890256
+Copying blob sha256:1b8dabac56ed728c17a670d327474ab87dc392dc17721854ea599a7753326579
+Copying blob sha256:37bc9f2a67ce21d557f8cecf46b5d6d58e41d033f994f42a5fbbdd070dbf48d6
+Copying blob sha256:5600ea0f3d17629f9f59914dea3185e451e9e09dd6d60df08edf7c9d36202cbd
+Copying config sha256:ec5d4805975e4635e06ea0c69d5470159d5fbe5b5d06f6985c3c25c533de2dad
+Writing manifest to image destination
+Storing signatures
+Writing manifest list to image destination
+Storing list signatures
+Getting image list signatures
+Copying 3 of 3 images in list
+Copying image sha256:6942fab207fcaee819c249f3c828dd2d31ee9484a1569ea6895b6992d8adeab2 (1/3)
+Getting image source signatures
+Copying blob sha256:fdb393d8227cbe9756537d3f215a3098ae797bd4bde422aaa10ebde84a940893
+Copying blob sha256:33f7cb563f04ece5bc41e77b4ec0dfa09d6f4c12cbe7f9e4f3232b20eb74d2ee
+Copying blob sha256:7eefb7bd17980b0c8403d23b08203acc16a751f58dc567a5e5ec75410b4573f8
+Copying blob sha256:6b536614e8f89a67294fb2b5a743b44675697c47e22b116d03249fbf1f0da8c0
+Copying blob sha256:bdfe501cbca8a1932abfbb2f05265eb9529851585cad8a9898593701fb327a69
+Copying blob sha256:327ff5cffbe491b625f36078a84b44c56027b5643032eb4288a05db60b6a45db
+Copying config sha256:cea3b7147a69e6ca4f91ae54c7d0633f3c22dbe0f3b4fede5eda73486caa994d
+Writing manifest to image destination
+Storing signatures
+Copying image sha256:3d7cf6f557605701fb8a805d2125e09bd4cbf4e443d6dae6bccf484f61c2a747 (2/3)
+Getting image source signatures
+Copying blob sha256:5e27485a87beb676323511c7064825248135b1b897da9f85740afada08335b57
+Copying blob sha256:922b421e35632f3b49b2f37a889823d2b1ceb29ae96b8f0a92120574cd060aa5
+Copying blob sha256:786a0a33ba9629867cee0a32e8251d2d9a0591fa94bb0382ca539efe675ac248
+Copying blob sha256:248975698085ef840c2738c5f6c0d3fd6251919bd6dc969829d3cd9d97e1140a
+Copying blob sha256:eaebfb30375ae05f31696980da8d6a656aaee7d2ecc360a2e5ca532f3f72fd37
+Copying blob sha256:db6316da421769b6a00e4e18b9fa2b267b8244e4cc4a437e05dfe4d8e777f19b
+Copying config sha256:69de81e6822b07dd07a15ed931c0f548d13b085b9c19dd6a9567df63ab645909
+Writing manifest to image destination
+Storing signatures
+Copying image sha256:7afea67b70a3d7206635e9921396fec9020789c9a78479a0def8d0f12f2a6216 (3/3)
+Getting image source signatures
+Copying blob sha256:227190c891da5b7fa883dc122b4ffd390a282cfb2b3e1de9dcd86c607cd077bb
+Copying blob sha256:7a294444146770f9cfb9c73d43609148a6c0880e076e73144d15a66f45a71e14
+Copying blob sha256:aa7a15397e0425a9ef6979e4a6b79ce541cb8e722cf5dd8a436a0484e3c67286
+Copying blob sha256:6b8104639b30ab2809f36a8cd2e74efa7b8699dde718dd3e76ae3cc21c843172
+Copying blob sha256:45df795ca60adc6e56421561e319137661b702ae6c59716eb7748efd9354050f
+Copying blob sha256:9d6ced1186297cf6b4bb2a24e0edea1560167bdbe76742d705206f0135fd0b12
+Copying config sha256:15f9f83d36e5a133073fb8381642aa966a27b84f01b04d4db4c03f213b93e561
+Writing manifest to image destination
+Storing signatures
+Writing manifest list to image destination
+Storing list signatures
+Getting image list signatures
+Copying 3 of 3 images in list
+Copying image sha256:a91ab60292a0e969a3fe095e92ae3c2008f05e91949441b6ee7d9c385f2b867a (1/3)
+Getting image source signatures
+Copying blob sha256:6b536614e8f89a67294fb2b5a743b44675697c47e22b116d03249fbf1f0da8c0
+Copying blob sha256:fdb393d8227cbe9756537d3f215a3098ae797bd4bde422aaa10ebde84a940893
+Copying blob sha256:33f7cb563f04ece5bc41e77b4ec0dfa09d6f4c12cbe7f9e4f3232b20eb74d2ee
+Copying blob sha256:9425d637d302491c230e3abefc5c3f0eb7a9e33ed6ab63a68c82b277bda3570c
+Copying blob sha256:3f2c47174aa5e38b46edecbbdad3ad9455b944eefa5f27d718115c810d1075d7
+Copying blob sha256:b3b2a74c342a6ab178a7e6a394d1202c5d06e879d24f3a59f3c0051234efc405
+Copying config sha256:062ce5407356010cbd85034c960010b5e0b8d81b39b283a0ce6886fd38b0e5e7
+Writing manifest to image destination
+Storing signatures
+Copying image sha256:db8089dbd04a07326dbc823087b355e3d98644b267eef831d5cb03ffe0224857 (2/3)
+Getting image source signatures
+Copying blob sha256:786a0a33ba9629867cee0a32e8251d2d9a0591fa94bb0382ca539efe675ac248
+Copying blob sha256:922b421e35632f3b49b2f37a889823d2b1ceb29ae96b8f0a92120574cd060aa5
+Copying blob sha256:248975698085ef840c2738c5f6c0d3fd6251919bd6dc969829d3cd9d97e1140a
+Copying blob sha256:f98b5bc0af15fd2133015dde6469b4140c8422243411cf558e2a518b8e557d5e
+Copying blob sha256:bd95b8a1c9df8e11df02f6fcf0d07b7079467fdb5e64e99909e4b8f9549d3b4c
+Copying blob sha256:bb9e419b5b409bde3f5916baa4f1afdeda8aa0579c9c4a46d625da6858ffd8c2
+Copying config sha256:b81695d492b7a9cf9d4fb478bd8b9ce7e91993ef386b69aa1dc9c59210bdccd5
+Writing manifest to image destination
+Storing signatures
+Copying image sha256:92927737f9a8b2c53833cce8ced709eb1b86f0bbdfc76f074409aa62c0a8246f (3/3)
+Getting image source signatures
+Copying blob sha256:6b8104639b30ab2809f36a8cd2e74efa7b8699dde718dd3e76ae3cc21c843172
+Copying blob sha256:227190c891da5b7fa883dc122b4ffd390a282cfb2b3e1de9dcd86c607cd077bb
+Copying blob sha256:7a294444146770f9cfb9c73d43609148a6c0880e076e73144d15a66f45a71e14
+Copying blob sha256:c6a142fa58dda80ed216ef408cbe63f5fd8adacb54734e86b74eaf1cde20954f
+Copying blob sha256:0b9ad7d5002a00270638698078953598ffd471947b6ef0d5f1fd8edaa8b595b1
+Copying blob sha256:ebe5f4919de495d04cb720d5dbdb7be5008a9c0320cb259b8ef073117f42b982
+Copying config sha256:15f470cc755d334b1bffb67720dfb5b789e7074987f60be8358f909fdd562779
+Writing manifest to image destination
+Storing signatures
+Writing manifest list to image destination
+Storing list signatures
+Getting image list signatures
+Copying 3 of 3 images in list
+Copying image sha256:6572be86707d04aef7c360eaeb8e1b7f37736813ede33cfed639b8d71f1d95ce (1/3)
+Getting image source signatures
+Copying blob sha256:320ae7fa06a797df3fe461cbb7aad0df469b747bca961f0a6e4f778b4081b7ac
+Copying blob sha256:666be21779ed3a0279ded8849c3f7eebe9e6f2bcfe66c275b6802a9f474ef665
+Copying blob sha256:13897c84ca5715a68feafcce9acf779f35806f42d1fcd37e8a2a5706c075252d
+Copying blob sha256:64607cc74f9cbe0e12f167547df0cf661de5a8b1fb4ebe930a43b9f621ca457f
+Copying blob sha256:57cd0f715ceda08932978bf592fa9ceb9459a222d7cbbd24a26788b4d72feeea
+Copying blob sha256:727c4e820df866d3592d30954a03c4243e3a00fc2cc944f65ea668796057827f
+Copying config sha256:e262bc4209159b9bbd4b9d38c54212f68ddd10afc333365a958fc79a4606a763
+Writing manifest to image destination
+Storing signatures
+Copying image sha256:82b5182607ae9caf721f5fdad6f23e1e65cdfb73715101513a57cb7c865ed94a (2/3)
+Getting image source signatures
+Copying blob sha256:006452dd8da0231f75d11fb75eddd5c26c1c7deb9498f8438dec598b3df5a8ef
+Copying blob sha256:12759cfb2d9fd40b1f65b14a9194473f85b9c54eb6d07143f0e0e2124d918143
+Copying blob sha256:789f189e0129985933aad4956a2d8afe41e0f44ad5a9edfd49d9ebf5745c3313
+Copying blob sha256:640b89ca7dca65540e286d9cb453fe03bfd0799909f094d9717b795ec5ba13e6
+Copying blob sha256:0f411e43bb98d887421440548c2d592a09a166472207676eef554292f80de887
+Copying blob sha256:fce242e9af72aad78628643a6f2c5111f9b07f5079171f1f520e7a6992fa7275
+Copying config sha256:6a9785979a68bc4f0b12c502fc27da34efea2d2b2a30cef9b9a0f5a5da8b1f6e
+Writing manifest to image destination
+Storing signatures
+Copying image sha256:1b908be8be0d7d00955c0db84638eac119cdfc75d54a91d6c851261cd48d1ab8 (3/3)
+Getting image source signatures
+Copying blob sha256:849a976e48df5aad013f9d2302e5847c873a9b56ea9baf925b8dac5e96b7d3ad
+Copying blob sha256:174e47727a3560ec5d85f4cdac2fd06193ccf4d17b3946777ae8ff90ecdbf83a
+Copying blob sha256:0ff4db5d532025f94fcbaeb565c5cc9cd1a56f1ae28b1a28be99fac6ca7343e8
+Copying blob sha256:f4144bd04375fd6b47077188591be65d787a2b6ab87ba6c45df69fd1ec78150e
+Copying blob sha256:106a39e2dceac9f050bb66fd60f0e13e02c78a912e1238fd0b4d42172c9cb19d
+Copying blob sha256:7fa28cb5f897b893cf713183eff8eb45a549f1a7f9f8df8f21e9ecd0116d6268
+Copying config sha256:c9ce23cd91340183a5a9829f29df95467d028bfaf2aa41e0b8ff7f1ae21b068f
+Writing manifest to image destination
+Storing signatures
+Writing manifest list to image destination
+Storing list signatures
+Getting image list signatures
+Copying 3 of 3 images in list
+Copying image sha256:d456de8715a883fd8fe1bfd715d5d4226199a6dcaf8ddcc2771212a78f3631da (1/3)
+Getting image source signatures
+Copying blob sha256:8f403cb21126270e2d1551022b82c77c695ce40c9812795daf7ad77a05c2b9f6
+Copying blob sha256:65c0f2178ac8a3c28f48efd26ccf16bd6f344fa88d1aa20efd3a25d5f99587c0
+Copying blob sha256:95e1bf521734177f84300d9814b9e3d76a8ba5120f3fe18f2b968b411600f70a
+Copying config sha256:50a7237446aafed40ad44a7f18f98face0aad4f913b9d787b7f64b5ada38e6f9
+Writing manifest to image destination
+Storing signatures
+Copying image sha256:d061cb702c3e0a0f347d37ed7bf7eb5ebfed3dafbff9b0e392536c490712a25b (2/3)
+Getting image source signatures
+Copying blob sha256:f43be2e8cab897e14b4038ee1e966b795f4231dd3f20227eb14cc8ec1dfa5ac7
+Copying blob sha256:01dd17d19a2b0680d366ba2bed310b7ddd7312e1599dc1bd1d9b70b307b2ba1d
+Copying blob sha256:34c7bf7c4fe97ed72859e67bcd603bf6b9e12f3a17e7b93389054a0aab0cdcce
+Copying config sha256:e674bb86ae347344d538892ea842d150bb85375f9a6a3c3c980a18862d93dc65
+Writing manifest to image destination
+Storing signatures
+Copying image sha256:f731fb8f75d6ba6318603a03e10bed3f67e99085529490448fa3cbadbfaf17cf (3/3)
+Getting image source signatures
+Copying blob sha256:36c462461b287879ac5ad1ce62cbcff3d9d45c81fa8fb604c99e0836a9cfd46c
+Copying blob sha256:ffa9ece6c97d766ca14657e9dc0cc8a7cdf1e985756017f83e52e3b1cf2dcf18
+Copying blob sha256:b9f873635b79192a1bb02c7db7099bfcc593053bbc8dbb0906222fb3168a29c6
+Copying config sha256:e0c2d43dd8bc6371bb96dfd1d20ba261184a7b950cb778a3b1d9a7cba96ee52a
+Writing manifest to image destination
+Storing signatures
+Writing manifest list to image destination
+Storing list signatures
+Getting image list signatures
+Copying 3 of 3 images in list
+Copying image sha256:f87004655efca3a6f7c6f3e079f96d24d454e3bbeebbca130da3dcb9800d9d88 (1/3)
+Getting image source signatures
+Copying blob sha256:64607cc74f9cbe0e12f167547df0cf661de5a8b1fb4ebe930a43b9f621ca457f
+Copying blob sha256:13897c84ca5715a68feafcce9acf779f35806f42d1fcd37e8a2a5706c075252d
+Copying blob sha256:320ae7fa06a797df3fe461cbb7aad0df469b747bca961f0a6e4f778b4081b7ac
+Copying blob sha256:8411971deee452bb85ebe68779c6c8fb852ddae4da12afc22feb819a1f154959
+Copying blob sha256:037919fe2c5f3a7c7796228f28c97a79d7054be25d4accc12c148431a16a3f76
+Copying config sha256:a00de24c9150b53a1e93207a42afcc5510e429e891497e2efebf425bc7824c91
+Writing manifest to image destination
+Storing signatures
+Copying image sha256:a4f3c74bca84b840d2144bc6a27336d768476ec66172c163248722514b6a77d2 (2/3)
+Getting image source signatures
+Copying blob sha256:789f189e0129985933aad4956a2d8afe41e0f44ad5a9edfd49d9ebf5745c3313
+Copying blob sha256:12759cfb2d9fd40b1f65b14a9194473f85b9c54eb6d07143f0e0e2124d918143
+Copying blob sha256:006452dd8da0231f75d11fb75eddd5c26c1c7deb9498f8438dec598b3df5a8ef
+Copying blob sha256:b8d4ee34410150790cea998b7fc1fa4dadb610c36018a851803b966ac4bd6200
+Copying blob sha256:b55bbeaf26682429a6cfd6572eb0e466d76d7782e054844c9b6535f51db68bf6
+Copying config sha256:0f14f630d78e802ce70473c65922196ba9abe7020f2b96e6cdda56f68882d478
+Writing manifest to image destination
+Storing signatures
+Copying image sha256:48143215a3b2350251129d509386045c9352073643f0f165e0f4eee32e6e73a8 (3/3)
+Getting image source signatures
+Copying blob sha256:0ff4db5d532025f94fcbaeb565c5cc9cd1a56f1ae28b1a28be99fac6ca7343e8
+Copying blob sha256:174e47727a3560ec5d85f4cdac2fd06193ccf4d17b3946777ae8ff90ecdbf83a
+Copying blob sha256:f4144bd04375fd6b47077188591be65d787a2b6ab87ba6c45df69fd1ec78150e
+Copying blob sha256:259ef1c4710c73a5a2c34e529648dcd757d529d0492184a5d296591f7bcd8f08
+Copying blob sha256:d04271bf9bc3691686dab4e8069b2ac91bf46167d70389f4930c1613ee3a6485
+Copying config sha256:199c8450d9a9188abcc0a8cd62d3e0768c3eb4e95de18c82feac7df0c5da57aa
+Writing manifest to image destination
+Storing signatures
+Writing manifest list to image destination
+Storing list signatures
+Getting image list signatures
+Copying 1 of 1 images in list
+Copying image sha256:a2143b89751a435b0f29f8a79c5919f7ef3d39498aecc5267611cb0c577d2eaa (1/1)
+Getting image source signatures
+Copying blob sha256:a8d8a88bbf1f0800d17bbd5bf3d3d8de6d755ccabfd019abf042f9f1b6c88d19
+Copying blob sha256:6c2878590548362b8c4c4903d6e9f09ef8fcdbdee3bf786cccc85a6e614a79cc
+Copying blob sha256:1f209e06e85d1c9a1b44b7a5b87360d7976245957624fcb9eededb7b5a8a0651
+Copying config sha256:98567c014522ed32cb510bd22f370ccb4640dad81e6c0b06fee0a9b8ec34fab8
+Writing manifest to image destination
+Storing signatures
+Writing manifest list to image destination
+Storing list signatures
+Getting image list signatures
+Copying 2 of 2 images in list
+Copying image sha256:1ca7aad430993d5609d131cdbc40d39438d526022adb4f4a9b307a869cd55d18 (1/2)
+Getting image source signatures
+Copying blob sha256:313d7b11f547f52d321f2a708510f53690a04fca850651124590d47663f049f2
+Copying blob sha256:92ca44283ba9f660cae764b32f0d7af210589866805a7262035197256c828f4b
+Copying blob sha256:dacdfb3d272144a59980a1c945e1bb99c9ba4c5a64f7a7b2dbfeaefa13fa25e8
+Copying config sha256:045e9494f97bf2444ef33d01866966db6c3c00476c4f6cb724a7762d545c2b7d
+Writing manifest to image destination
+Storing signatures
+Copying image sha256:2c59e627eab9f503bdea3e03d52fa14e9271cfae0c91ff2709d7759e57728668 (2/2)
+Getting image source signatures
+Copying blob sha256:ec1a692bba396bb615e6feeaf136f8d44823dd34975b78c678c5b6021f780526
+Copying blob sha256:3f4131a398931e168b647552ee8d04ae3debde38af8d77852d072f1a4a78a8bb
+Copying blob sha256:f3dba404d30120844b4c007d58d570e5426f250bcbaacb2012ac95015872344b
+Getting image list signatures
+Copying 2 of 2 images in list
+Copying image sha256:1ca7aad430993d5609d131cdbc40d39438d526022adb4f4a9b307a869cd55d18 (1/2)
+Getting image source signatures
+Copying blob sha256:dacdfb3d272144a59980a1c945e1bb99c9ba4c5a64f7a7b2dbfeaefa13fa25e8
+Copying blob sha256:92ca44283ba9f660cae764b32f0d7af210589866805a7262035197256c828f4b
+Copying blob sha256:313d7b11f547f52d321f2a708510f53690a04fca850651124590d47663f049f2
+Copying config sha256:045e9494f97bf2444ef33d01866966db6c3c00476c4f6cb724a7762d545c2b7d
+Writing manifest to image destination
+Storing signatures
+Copying image sha256:2c59e627eab9f503bdea3e03d52fa14e9271cfae0c91ff2709d7759e57728668 (2/2)
+Getting image source signatures
+Copying blob sha256:3f4131a398931e168b647552ee8d04ae3debde38af8d77852d072f1a4a78a8bb
+Copying blob sha256:ec1a692bba396bb615e6feeaf136f8d44823dd34975b78c678c5b6021f780526
+Copying blob sha256:f3dba404d30120844b4c007d58d570e5426f250bcbaacb2012ac95015872344b
+Copying config sha256:477f810e80a0ee43edca3c600517f52d766256bc093a513718c1690306686f0b
+Writing manifest to image destination
+Storing signatures
+Writing manifest list to image destination
+Storing list signatures
+Getting image list signatures
+Copying 1 of 1 images in list
+Copying image sha256:e0c4d4cf35db15236d043339b902413d8a4d4c7e70e3af1ccd661a96b9f6bf51 (1/1)
+Getting image source signatures
+Copying blob sha256:256df10e0a969197cc9ef1b089fd91f4797c222b40dbcf6a9d0c63c6bc7a9ec4
+Copying blob sha256:cca21acb641a96561e0cf9a0c1c7b7ffbaaefc92185bd8a9440f6049c838e33b
+Copying blob sha256:d9e72d058dc507f406dc9377495e3d29ce17596f885c09d0aba6b21e10e27ce6
+Copying config sha256:859538194eb9c334cd8a7072d9c094c72aea7375a138e20ed049844d1ce03973
+Writing manifest to image destination
+Storing signatures
+Writing manifest list to image destination
+Storing list signatures
+Getting image list signatures
+Copying 1 of 1 images in list
+Copying image sha256:6ef9fa537a1f831b56e9cc3ab39f5ab74126d4ba8e1ec47dc9e9b64e6b8aca63 (1/1)
+Getting image source signatures
+Copying blob sha256:8f403cb21126270e2d1551022b82c77c695ce40c9812795daf7ad77a05c2b9f6
+Copying blob sha256:65c0f2178ac8a3c28f48efd26ccf16bd6f344fa88d1aa20efd3a25d5f99587c0
+Copying blob sha256:d7e01fab4f6e3fc28dba55be216ab2480fefd50be27b9bb158ebad0a7a2e62e2
+Copying config sha256:892329279ecb7e8812825fcf46860fd11269e3c69be79563b18f7ae311b8a469
+Writing manifest to image destination
+Storing signatures
+Writing manifest list to image destination
+Storing list signatures
+Getting image list signatures
+Copying 2 of 2 images in list
+Copying image sha256:e2946b2bfe6ec643a99094e1f63a720550e0e3e1d8fdbd0335ab3332edb1ba4e (1/2)
+Getting image source signatures
+Copying blob sha256:f43be2e8cab897e14b4038ee1e966b795f4231dd3f20227eb14cc8ec1dfa5ac7
+Copying blob sha256:01dd17d19a2b0680d366ba2bed310b7ddd7312e1599dc1bd1d9b70b307b2ba1d
+Copying blob sha256:57e215f71ccb46562dc6210a5224f874aab389ec7f896eb472d356d68a61d25f
+Copying config sha256:dbd84ce1d4e9d923b2d464892bb6b40c8ea9a0d49f1fdbf56833dc66071e0147
+Writing manifest to image destination
+Storing signatures
+Copying image sha256:499e55d2fd8edcc2c721d7f19c1aa87b5fa38ebe50bcda792428541fc61ca593 (2/2)
+Getting image source signatures
+Copying blob sha256:36c462461b287879ac5ad1ce62cbcff3d9d45c81fa8fb604c99e0836a9cfd46c
+Copying blob sha256:ffa9ece6c97d766ca14657e9dc0cc8a7cdf1e985756017f83e52e3b1cf2dcf18
+Copying blob sha256:950b53a069c6226514fae56f56c67f4f57dd329fb0e4aa3d40929a065d526bfd
+Copying config sha256:86bc1c78c8ecbc02e4a43821b63b05a9a81247b4d7073c88bd87a09d06ca5468
+Writing manifest to image destination
+Storing signatures
+Writing manifest list to image destination
+Storing list signatures
+Getting image list signatures
+Copying 3 of 3 images in list
+Copying image sha256:11bc50e3b8960e9b9ef715a22a5d00a164da1c0b329e66ea5a7448d7bd968b00 (1/3)
+Getting image source signatures
+Copying blob sha256:55eda774346862e410811e3fa91cefe805bc11ff46fad425dd1b712709c05bbc
+Copying blob sha256:4b21dcdd136d133a4df0840e656af2f488c226dd384a98b89ced79064a4081b4
+Copying blob sha256:1b6a9fa025700d1866c53ebd5b3897ceef94bcb269240df432d4e03f04b67bb0
+Copying blob sha256:d59cc20b348c23f67b328206490c240b0c7aabe33d6fb2bb42cccd973aeeded5
+Copying blob sha256:f2213e96fd98177fbf87a573798759b238420ea2d15cccdbd80d5ed0b132a424
+Copying config sha256:dc8db012fd11e4eb928348d5b9b4e67c1f894222357f6052636fb78aa10c3ec0
+Writing manifest to image destination
+Storing signatures
+Copying image sha256:5ab7775a9604b539e53628c97a4b489a6cb642776469e3732b52f876420fca02 (2/3)
+Getting image source signatures
+Copying blob sha256:313d7b11f547f52d321f2a708510f53690a04fca850651124590d47663f049f2
+Copying blob sha256:dacdfb3d272144a59980a1c945e1bb99c9ba4c5a64f7a7b2dbfeaefa13fa25e8
+Copying blob sha256:90a0f8206afa2f6b87a7cf4dd2a22f130d65bae9631b9bfd68d739a06b9073b4
+Copying blob sha256:4c74d1fbf34a958648326c9fb0f313f839cb4ded68eba94846f4593d86183aad
+Copying blob sha256:9744f06aadc95046df062f18d7552efbec010d02b95c249cc6328da00c729088
+Copying config sha256:2166c415fffa21093ff5c55c07301e4ee86540a27371f4d0c5ca6d41c69ca723
+Writing manifest to image destination
+Storing signatures
+Copying image sha256:1781e092765ade8e1fe26fcb788bd9cd7c9aa35a4674b68f51e3e32cb7d1be5c (3/3)
+Getting image source signatures
+Copying blob sha256:ec1a692bba396bb615e6feeaf136f8d44823dd34975b78c678c5b6021f780526
+Copying blob sha256:f3dba404d30120844b4c007d58d570e5426f250bcbaacb2012ac95015872344b
+Copying blob sha256:f6edeacbe65b7c2f0b1eb5376a0b6cb75e32ddff73f2b24273ed823a23da1728
+Copying blob sha256:617c619ccc2d66ba6bfdce90957b8fb06392afed011f1d927dc50170b1b08758
+Copying blob sha256:8e13768c2ab78bd56210b247f4df71c36ffe45128676ade97436862696f70510
+Copying config sha256:2d9e806a5ebaa2d700f836278125d0978ede449bfe58b75e93a605f7ed307cda
+Writing manifest to image destination
+Storing signatures
+Writing manifest list to image destination
+Storing list signatures
+Getting image list signatures
+Copying 4 of 4 images in list
+Copying image sha256:47dcb70df44717123ba71cac6a1d9c4bf1ef773479843d3f86e05bd2f3c5b77a (1/4)
+Getting image source signatures
+Copying blob sha256:55eda774346862e410811e3fa91cefe805bc11ff46fad425dd1b712709c05bbc
+Copying blob sha256:1b6a9fa025700d1866c53ebd5b3897ceef94bcb269240df432d4e03f04b67bb0
+Copying blob sha256:4b21dcdd136d133a4df0840e656af2f488c226dd384a98b89ced79064a4081b4
+Copying blob sha256:cb86e32f29edeb465a03cca7e5f32f103000c022e1b708f5af46199d85031c4d
+Copying config sha256:7118501568938897855bdc0ab855016b627343a6395f4a336bfecda674d3dead
+Writing manifest to image destination
+Storing signatures
+Copying image sha256:a545d09fde3e61aa754c93a0a52e1af05e360cd19b836faf0a089d887a21e784 (2/4)
+Getting image source signatures
+Copying blob sha256:8044a90e1865c3ac3953ecd58bc79333c19724a7633726b33ddfd292acb1f8ed
+Copying blob sha256:d70e513932ff1cb3c0d8182809709417d96fe18f101a6858b022b80928ae916d
+Copying blob sha256:e172e31a9c19c59b9c1908e1eb6bd136e2011c35bea6e1ea923971923654313a
+Copying blob sha256:e1d7ab35b7d016d30f4eb2c9d5f67234eb196248b30b9a9c657cbbf23bd30587
+Copying config sha256:8e3bb42b4e36cb9914f45e722e4768920bae2e80c9d30aa9cd9376c61eee6b5d
+Writing manifest to image destination
+Storing signatures
+Copying image sha256:6122cabb01c494c9f09b9d2124efa70d59706a00c10f9c768527ab7e34a9aa77 (3/4)
+Getting image source signatures
+Copying blob sha256:dacdfb3d272144a59980a1c945e1bb99c9ba4c5a64f7a7b2dbfeaefa13fa25e8
+Copying blob sha256:4c74d1fbf34a958648326c9fb0f313f839cb4ded68eba94846f4593d86183aad
+Copying blob sha256:313d7b11f547f52d321f2a708510f53690a04fca850651124590d47663f049f2
+Copying blob sha256:8bd9cc3b2ea5e9061a7c7acda54536a79578b28eb854f9e3b47632e8bedfa275
+Copying config sha256:ce5fb01101f7b79864dadeb5259a04c3a52dfbb3329975ed7419d87c69d46aab
+Writing manifest to image destination
+Storing signatures
+Copying image sha256:d714f452575f982d0f635b53680f635e74237f8f4c72ebb8d01cef43b6842341 (4/4)
+Getting image source signatures
+Copying blob sha256:ec1a692bba396bb615e6feeaf136f8d44823dd34975b78c678c5b6021f780526
+Copying blob sha256:f3dba404d30120844b4c007d58d570e5426f250bcbaacb2012ac95015872344b
+Copying blob sha256:8e13768c2ab78bd56210b247f4df71c36ffe45128676ade97436862696f70510
+Copying blob sha256:c26e78e9ddb11853f6cb49e41a88d660aa57ead7553d2b77cc009c1b23b90a7a
+Copying config sha256:548c800322e87b93fda3e968f8e1fc298c118c01ac5dbfbe144b09569af4f739
+Writing manifest to image destination
+Storing signatures
+Writing manifest list to image destination
+Storing list signatures
+Getting image list signatures
+Copying 4 of 4 images in list
+Copying image sha256:a62d408337bb50546019e2334fdd43ec1ecc150d60f5f195fd324c578c25ab3a (1/4)
+Getting image source signatures
+Copying blob sha256:65c0f2178ac8a3c28f48efd26ccf16bd6f344fa88d1aa20efd3a25d5f99587c0
+Copying blob sha256:8f403cb21126270e2d1551022b82c77c695ce40c9812795daf7ad77a05c2b9f6
+Copying config sha256:332744c1854d8e87f41dc67bf3d7e1c08d7a6b1322b5b5bd0b126bf8282ca1f8
+Writing manifest to image destination
+Storing signatures
+Copying image sha256:231d86e11434aeace9f879006fbba111ce4cf03db6441fd43e172e4c7212606c (2/4)
+Getting image source signatures
+Copying blob sha256:56a04d997355c19a50990df9442628967dba3293799b2c058e9e6feae7c00e91
+Copying blob sha256:9f2d1a2655b9b1c4e7a454a14b61d91972c2d9c6b5936eca839a994cf6483017
+Copying config sha256:161b5eee3a1af34f1f9432ca11debf7abef432824a12418508256c38d1de18fa
+Writing manifest to image destination
+Storing signatures
+Copying image sha256:0d42603bf9f539f28c133e9a13e74cec8d3baaa0165c6f873ff931d50c708d8c (3/4)
+Getting image source signatures
+Copying blob sha256:f43be2e8cab897e14b4038ee1e966b795f4231dd3f20227eb14cc8ec1dfa5ac7
+Copying blob sha256:01dd17d19a2b0680d366ba2bed310b7ddd7312e1599dc1bd1d9b70b307b2ba1d
+Copying config sha256:88b7feca21692b223bbfc4e12eb4de0f39aab52f114b767e159dcc1d6a14cc1e
+Writing manifest to image destination
+Storing signatures
+Copying image sha256:4b3905174e708d2656df72b4800a7abf87284a20ab44b3ef4d7136193caccf9f (4/4)
+Getting image source signatures
+Copying blob sha256:36c462461b287879ac5ad1ce62cbcff3d9d45c81fa8fb604c99e0836a9cfd46c
+Copying blob sha256:ffa9ece6c97d766ca14657e9dc0cc8a7cdf1e985756017f83e52e3b1cf2dcf18
+Copying config sha256:1264d9863dfd9bedef87ff83d69e194ccdbf2b636d78284d2379cdd3e0d54eff
+Writing manifest to image destination
+Storing signatures
+Writing manifest list to image destination
+Storing list signatures
+Getting image list signatures
+Copying 3 of 3 images in list
+Copying image sha256:e2460bd732c38b281c0b8f7ca9ca0c1f8a131935db1b69fb2f840b252c494847 (1/3)
+Getting image source signatures
+Copying blob sha256:82a8f4ea76cb6f833c5f179b3e6eda9f2267ed8ac7d1bf652f88ac3e9cc453d1
+Copying blob sha256:a0672674b2e3d7610a4b45a54747607b7fc9b87940a478e913c04c46bc889ba1
+Copying blob sha256:a3ac36470b00df382448e79f7a749aa6833e4ac9cc90e3391f778820db9fa407
+Copying blob sha256:ae0142e4334bd7281b3645ddc7952ce800ced5e63a6ffd87e920ea8a06afd77a
+Copying config sha256:0fcc6a097358387fb3d6c25db298f5f2c88c8cbe445552ab665f4cc9ecc7d8e1
+Writing manifest to image destination
+Storing signatures
+Copying image sha256:81ab6428d77d3f054871ac4250213c2c88f5eeaf06996005b950e36b4ddc1e0d (2/3)
+Getting image source signatures
+Copying blob sha256:9d5339271b1ddf7e83859785da02be426f440cdb7015594a008e087a5c86f6e7
+Copying blob sha256:2a2f1934862bda23c2f12eb0415edde37396fd1cccd9b7ac3a161c1bf298c6aa
+Copying blob sha256:a5866f14b299af2cb35c78399d535f4616a69ac0f99a6e0d84f24f384d47bf63
+Copying blob sha256:79f707e01732aa4dddde2a3e1cbef2d0cf0dfce7bac3eef8b57d0849a951ee5f
+Copying config sha256:89ea5e47d909c06576e897661b0eafc3bbc6ed6adb32eeb1a1095514063d1b43
+Writing manifest to image destination
+Storing signatures
+Copying image sha256:d6964162b3441d1f662273b342879ced8bdc4aa64cac121aaceefe03a0f7a1c1 (3/3)
+Getting image source signatures
+Copying blob sha256:bb56477b756102345c4bb72160f5424d983779a8ab61e4bd825e2f500375e254
+Copying blob sha256:6fcb5f06aeeabded4e8691a3aacef6ce36a74823b56dd59221c62b70cc9e4016
+Copying blob sha256:40701aa8f23efe0c9e7902d36ce3c51d0726ca8a4f6c1058bb19a0b2152b3a7a
+Copying blob sha256:ca2dbc8f9c501b5a247ba937baf8ccfd332bd8cfc23be37c589ddef69738bb89
+Copying config sha256:2bd68840ca42a69eeb6d8516d3b2f11ef657fb94d49c710256811419800cf530
+Writing manifest to image destination
+Storing signatures
+Writing manifest list to image destination
+Storing list signatures
+Getting image list signatures
+Copying 3 of 3 images in list
+Copying image sha256:bd85544bc1dbedce54c94d23510aea9b022b8be7acb4c326730915ff8971919f (1/3)
+Getting image source signatures
+Copying blob sha256:77a02d8cede158bc6378b21930e2fae2039e8124cceeed8e77d3121340f73172
+Copying blob sha256:7777f1ac6191174d87a07f322fa8e1054da2c0a4fa21d0fbbcf9175cea83e0d7
+Copying blob sha256:6a7f92f424542d5abc1e1c3907b38cdf84beb3cf9c75b25d1a72355cb2733b14
+Copying config sha256:b12af451aee5a9ad7e05517b9eef71d9fa8e7248664749ff928fe4573d2ec734
+Writing manifest to image destination
+Storing signatures
+Copying image sha256:d75ea18d642ec2eb14705122abbd10df5f7f9ac2453413a66bb76bd00acf1ef5 (2/3)
+Getting image source signatures
+Copying blob sha256:8e2882a6bef88fb1ee613b0cbeea2c9fd15c81845d710dc928019212624baa23
+Copying blob sha256:fd13085e75a289e3eb072fc7454faa8df09f6a1b1d0e171178abd90aee5fa74e
+Copying blob sha256:f9003c106175944c9835e5b0096b09ca4f6b5080d5a7ef49adb152ccf50deadb
+Copying config sha256:170d1c4a58ed1c32e61351ae206425695b5082cc20caa39cdd8f7a5a9382f1c9
+Writing manifest to image destination
+Storing signatures
+Copying image sha256:71fdbb97ade53a8e01f76dcefb36a12c58df7b0be383b6c7e530e41380c1067e (3/3)
+Getting image source signatures
+Copying blob sha256:56b28da116c29d10f050656b724b570671b6d81970d332ac01ee84be1597de33
+Copying blob sha256:e25ac8f45a2ff08f3b99e6d4cc0a5d957aa12692a3d4e7f0013c951bb6d7cb46
+Copying blob sha256:d81b9d784d4b01ab28a4f488781e8fc197044fcb47a965152d5a553fbc5f6b91
+Copying config sha256:d42e060afe3d338156ec809b837c98f1cad28b0a467ba2e7f06cbf7b06fb7bed
+Writing manifest to image destination
+Storing signatures
+Writing manifest list to image destination
+Storing list signatures
+Getting image list signatures
+Copying 3 of 3 images in list
+Copying image sha256:df3daebe8dfcf973d2e13b46cfb843e5c2936ac3d6e5acc528dda1924ecee430 (1/3)
+Getting image source signatures
+Copying blob sha256:7777f1ac6191174d87a07f322fa8e1054da2c0a4fa21d0fbbcf9175cea83e0d7
+Copying blob sha256:77a02d8cede158bc6378b21930e2fae2039e8124cceeed8e77d3121340f73172
+Copying blob sha256:91cee7b2d5a058e1f080fb8bbc61c02378a29757ee408664090a22152c2cd622
+Copying config sha256:cae81d95292fabf98b907d0447b3c2bf1e7dc0ae2c648bd1c966ee6f0e31e392
+Writing manifest to image destination
+Storing signatures
+Copying image sha256:631e4f1bfd54320a16cf08d4ffca2a142c6b36f7759e6bb62c5dcb036dd563b4 (2/3)
+Getting image source signatures
+Copying blob sha256:8e2882a6bef88fb1ee613b0cbeea2c9fd15c81845d710dc928019212624baa23
+Copying blob sha256:fd13085e75a289e3eb072fc7454faa8df09f6a1b1d0e171178abd90aee5fa74e
+Copying blob sha256:dc68761337e386fcb0606fe3c3b94234d0a4baf1b30462dfaf0ffea6c5cc94c1
+Copying config sha256:276bc84ddf42ce6e2523997b31c396e21b52c01500fc0c38b627ad40d7a81e09
+Writing manifest to image destination
+Storing signatures
+Copying image sha256:085072ca8ba4789b0b5e68edf24f82620685c677d35f00079de22986f4ad7b39 (3/3)
+Getting image source signatures
+Copying blob sha256:e25ac8f45a2ff08f3b99e6d4cc0a5d957aa12692a3d4e7f0013c951bb6d7cb46
+Copying blob sha256:56b28da116c29d10f050656b724b570671b6d81970d332ac01ee84be1597de33
+Copying blob sha256:96d6fc104c313f89a91e797060e054509be1630df721ca3aaa26abbf3d639c63
+Copying config sha256:b73b21ab48d168ebcebf4284a30cddfbfbeb6f2cfb58b8fdbe44b6b2892bbbca
+Writing manifest to image destination
+Storing signatures
+Writing manifest list to image destination
+Storing list signatures
+Getting image source signatures
+Copying blob sha256:4f4fb700ef54461cfa02571ae0db9a0dc1e0cdb5577484a6d75e68dc38e8acc1
+Copying blob sha256:b4f8c8a107bee3857dca4f5396d5dafffabfded1571865f508b3dad5ea9685e9
+Copying config sha256:a7075047cf267547cf7f7e38242673d1ab0433f881d9de04c71a3e29678b76b1
+Writing manifest to image destination
+Storing signatures
+Getting image source signatures
+Copying blob sha256:a48c4d70834fb0a219d11c0efbf75c8fbe44f55193e6eb258a0269dc6e95c3ae
+Copying config sha256:de40a7f809dad0e61f15f45dc68fd9a89d53eb1a2535e074b0a17af4a2c0f6e2
+Writing manifest to image destination
+Storing signatures
+Getting image source signatures
+Copying blob sha256:7659c004f7aeab0574f2b9b4154dbbd5154148719f9dac185c3f820f4f4c02c0
+Copying config sha256:ab47ac90c72f83fe50365e2fe519f6f5e0248be1064c6e9749c9d6a894a5606c
+Writing manifest to image destination
+Storing signatures
+Getting image source signatures
+Copying blob sha256:4f4fb700ef54461cfa02571ae0db9a0dc1e0cdb5577484a6d75e68dc38e8acc1
+Copying blob sha256:abcd49ff0240aa86572d9390b28f5936af95a7353c39329a3cd6cb95530f1192
+Copying config sha256:36c9e8ecb3e9d1f4fc71196968a1be262401ac16cd470b922c78f0b1d51960db
+Writing manifest to image destination
+Storing signatures
+
+----------------------------------------------
+----------------------------------------------
+Mirroring image 57 of 76
+Image: registry.redhat.io/codeready-workspaces/stacks-golang-rhel8@sha256:e01d32e58a55a552f0d35b9a6210b7a2cc8ed444f8ae54a24113dcc85f4d80db
+----------------------------------------------
+----------------------------------------------
+Mirroring image 58 of 76
+Image: registry.redhat.io/codeready-workspaces/stacks-php-rhel8@sha256:95c324ed660924bf76e10b461d75aa5be2a323f26e5033239f7cbfe1ec10b26e
+----------------------------------------------
+----------------------------------------------
+Mirroring image 59 of 76
+Image: registry.redhat.io/codeready-workspaces/theia-rhel8@sha256:de36fdf140ba6367e6edf577d6dbaffa270e5e5ecf0890e498f5907f8287858f
+----------------------------------------------
+----------------------------------------------
+Mirroring image 60 of 76
+Image: registry.redhat.io/codeready-workspaces/theia-endpoint-rhel8@sha256:60c84fca55a997a6aab4ca07b8ff7d859948c1f525adeba2ae624c84fe059a56
+----------------------------------------------
+----------------------------------------------
+Mirroring image 61 of 76
+Image: registry.redhat.io/codeready-workspaces/devfileregistry-rhel8@sha256:e3c360c031d8e68b62d1a28a4d736f41c5bfbc17c23999b9e1f1e5820858bf1d
+----------------------------------------------
+----------------------------------------------
+Mirroring image 62 of 76
+Image: registry.redhat.io/jboss-eap-7/eap73-openjdk8-openshift-rhel7@sha256:d16cfe30eaf20a157cd5d5980a6c34f3fcbcfd2fd225e670a0138d81007dd919
+----------------------------------------------
+----------------------------------------------
+Mirroring image 63 of 76
+Image: registry.redhat.io/jboss-eap-7/eap-xp2-openj9-11-openshift-rhel8@sha256:95d2ce73a0759de5befdbec115514a555752e2f20070fbfe356801da6d0a2bd6
+ERROR Copying image: registry.redhat.io/jboss-eap-7/eap-xp2-openj9-11-openshift-rhel8@sha256:95d2ce73a0759de5befdbec115514a555752e2f20070fbfe356801da6d0a2bd6
+TO
+helper.cluster-0001.rhsacn.org:5000/jboss-eap-7/eap-xp2-openj9-11-openshift-rhel8@sha256:95d2ce73a0759de5befdbec115514a555752e2f20070fbfe356801da6d0a2bd6
+ERROR copying image!
+RETRY ATTEMPT: 1
+Image: registry.redhat.io/jboss-eap-7/eap-xp2-openj9-11-openshift-rhel8@sha256:95d2ce73a0759de5befdbec115514a555752e2f20070fbfe356801da6d0a2bd6
+----------------------------------------------
+----------------------------------------------
+Mirroring image 64 of 76
+Image: registry.redhat.io/jboss-eap-7/eap-xp2-openjdk11-openshift-rhel8@sha256:647d092383a760edc083eafb2d7bc3208d6409097281bedbd5eaccde360e7e39
+----------------------------------------------
+----------------------------------------------
+Mirroring image 65 of 76
+Image: registry.redhat.io/rh-sso-7/sso74-openshift-rhel8@sha256:3154fd4f6ce080260de9d2b4c02930b67b57f1181f4e660f5ddfc9f6050420b1
+----------------------------------------------
+----------------------------------------------
+Mirroring image 66 of 76
+Image: registry.redhat.io/rh-sso-7/sso74-openj9-openshift-rhel8@sha256:ed11770a85ca95fc9cbb2cade539a67ff0e127cff73a89a017415800e032bd5b
+----------------------------------------------
+----------------------------------------------
+Mirroring image 67 of 76
+Image: registry.redhat.io/codeready-workspaces/pluginregistry-rhel8@sha256:3f5163a2303de7f538eca2cc560403f38b920af1169821dfa06dbef695fb10c6
+----------------------------------------------
+----------------------------------------------
+Mirroring image 68 of 76
+Image: registry.redhat.io/rhel8/postgresql-96@sha256:32d73d737acec3daabc3f5c8236588454c8f57f7a2656ac7a50cf3a04f520b9b
+----------------------------------------------
+----------------------------------------------
+Mirroring image 69 of 76
+Image: registry.redhat.io/ubi8/ubi-minimal@sha256:2f6b88c037c0503da7704bccd3fc73cb76324101af39ad28f16460e7bce98324
+----------------------------------------------
+----------------------------------------------
+Mirroring image 70 of 76
+Image: registry.redhat.io/rhscl/mongodb-36-rhel7@sha256:9f799d356d7d2e442bde9d401b720600fd9059a3d8eefea6f3b2ffa721c0dc73
+----------------------------------------------
+----------------------------------------------
+Mirroring image 71 of 76
+Image: registry.redhat.io/codeready-workspaces/traefik-rhel8@sha256:0698a776c6ae2f08238cf011d69ac2c67f934b1e25ec38701a9e360430fd10f7
+----------------------------------------------
+----------------------------------------------
+Mirroring image 72 of 76
+Image: registry.redhat.io/codeready-workspaces/configbump-rhel8@sha256:db34b20374d99c2055612663a669a06f6dd0fc1fc19603761e993fd0870eddfe
+----------------------------------------------
+----------------------------------------------
+Mirroring image 73 of 76
+Image: registry.redhat.io/container-native-virtualization/hco-bundle-registry@sha256:6639ea7b8cf2d0f4a1df71116525c3383c9a55962403fee4bae461e1095d3718
+----------------------------------------------
+----------------------------------------------
+Mirroring image 74 of 76
+Image: registry.redhat.io/openshift4/ose-local-storage-operator-bundle@sha256:537e635ed63cf3acb743557304dc86528129174129d4db6a4125aad96d2ab397
+----------------------------------------------
+----------------------------------------------
+Mirroring image 75 of 76
+Image: registry.redhat.io/openshift-logging/cluster-logging-operator-bundle@sha256:523e689589595cff9ee11393506309c00d23bf8fb945e1475aeeffea3d517897
+----------------------------------------------
+----------------------------------------------
+Mirroring image 76 of 76
+Image: registry.redhat.io/codeready-workspaces/crw-2-rhel8-operator-metadata@sha256:080bc58804ca40380c5ed58a5bbdd5fe035fed84a07e58d1c590e06695bbb720
+----------------------------------------------
+Finished mirroring related images.
+Creating Image Content Source Policy YAML...
+Creating Mapping File...
+Creating Catalog Source YAML...
+Catalogue creation and image mirroring complete
+See Publish folder for the image content source policy and catalog source yaml files to apply to your cluster

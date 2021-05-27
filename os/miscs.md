@@ -19495,6 +19495,41 @@ export FTP_PROXY="$PROXY_URL"
 export NO_PROXY="127.0.0.1,localhost"
 ``` 
 
+### operator catalog index image 信息
+```
+[root@helper ~]# cd /opt/registry/data/docker/registry/v2/repositories/redhat/redhat-operator-index-stf-smart-gateway-rhel8
+[root@helper redhat-operator-index-stf-smart-gateway-rhel8]# tree 
+.
+|-- _layers
+|   `-- sha256
+|       |-- 323197ab36282e3493f1fd1b537afcfbf1f262483d5a37f5f85166ea393193e2
+|       |   `-- link
+|       |-- cca21acb641a96561e0cf9a0c1c7b7ffbaaefc92185bd8a9440f6049c838e33b
+|       |   `-- link
+|       |-- d9e72d058dc507f406dc9377495e3d29ce17596f885c09d0aba6b21e10e27ce6
+|       |   `-- link
+|       `-- eb1824d5971bcc34dd68cce176cccf758eb8c72ef9581da338bfe323e3e34e92
+|           `-- link
+|-- _manifests
+|   |-- revisions
+|   |   `-- sha256
+|   |       |-- a922babd63c2cb3cc0bec59618b6eef31147a11f72603f729583c818540dfd42
+|   |       |   `-- link
+|   |       `-- c342d4701a37040967942d569e935c9472c848859cf4edd0d54791baf4142dbe
+|   |           `-- link
+|   `-- tags
+|       `-- 7ffe52cf
+|           |-- current
+|           |   `-- link
+|           `-- index
+|               `-- sha256
+|                   `-- c342d4701a37040967942d569e935c9472c848859cf4edd0d54791baf4142dbe
+|                       `-- link
+`-- _uploads
+
+18 directories, 8 files
+```
+
 ### 使用 redhat-cop openshift-disconnected-operators 工具同步离线 operator catalog 和 images
 https://github.com/redhat-cop/openshift-disconnected-operators
 ```
@@ -19519,6 +19554,38 @@ gpgcheck=0
 EOF
 
 安装软件
-yum install -y jq python3 python3-pyyaml python3-jinja2 podman skopeo wget
+yum install -y jq python3 python3-pyyaml python3-jinja2 podman skopeo wget git sqlite
 
+设置代理
+cat >> ~/.bashrc << EOF
+PROXY_URL="http://proxy.server.domain.name:8080/"
+
+export http_proxy="$PROXY_URL"
+export https_proxy="$PROXY_URL"
+export ftp_proxy="$PROXY_URL"
+export no_proxy="127.0.0.1,localhost"
+
+# For curl
+export HTTP_PROXY="$PROXY_URL"
+export HTTPS_PROXY="$PROXY_URL"
+export FTP_PROXY="$PROXY_URL"
+export NO_PROXY="127.0.0.1,localhost,*.rhsacn.org"
+EOF
+source ~/.bashrc
+
+cat >> /etc/hosts << EOF
+10.66.208.xxx helper.cluster-0001.rhsacn.org
+EOF
+
+下载 openshift client
+MAJORBUILDNUMBER=4.7
+EXTRABUILDNUMBER=4.7.11
+wget https://mirror.openshift.com/pub/openshift-v4/clients/ocp/${EXTRABUILDNUMBER}/openshift-client-linux-${EXTRABUILDNUMBER}.tar.gz -P /var/www/html/
+
+tar -xzf /var/www/html/openshift-client-linux-${EXTRABUILDNUMBER}.tar.gz -C /usr/local/bin/
+
+podman login -u ****** -p ******** registry.redhat.io
+podman login -u ****** -p ******** registry.access.redhat.com
+podman login -u ****** -p ******** registry.connect.redhat.com
+podman login -u ****** -p ******** helper.cluster-0001.rhsacn.org:5000
 ```

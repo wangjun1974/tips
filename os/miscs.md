@@ -19486,13 +19486,13 @@ PROXY_URL="http://10.10.1.10:8080/"
 export http_proxy="$PROXY_URL"
 export https_proxy="$PROXY_URL"
 export ftp_proxy="$PROXY_URL"
-export no_proxy="127.0.0.1,localhost"
+export no_proxy="127.0.0.1,localhost,*.rhsacn.org"
 
 # For curl
 export HTTP_PROXY="$PROXY_URL"
 export HTTPS_PROXY="$PROXY_URL"
 export FTP_PROXY="$PROXY_URL"
-export NO_PROXY="127.0.0.1,localhost"
+export NO_PROXY="127.0.0.1,localhost,*.rhsacn.org"
 ``` 
 
 ### operator catalog index image 信息

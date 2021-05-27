@@ -19528,6 +19528,38 @@ export NO_PROXY="127.0.0.1,localhost"
 `-- _uploads
 
 18 directories, 8 files
+
+...
+Success
+Update image:  helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64
+Mirror prefix: helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4
+Mirror prefix: helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4:4.7.7-x86_64
+
+To use the new mirrored repository to install, add the following section to the install-config.yaml:
+
+imageContentSources:
+- mirrors:
+  - helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4
+  source: quay.io/openshift-release-dev/ocp-release
+- mirrors:
+  - helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4
+  source: quay.io/openshift-release-dev/ocp-v4.0-art-dev
+
+
+To use the new mirrored repository for upgrades, use the following to create an ImageContentSourcePolicy:
+
+apiVersion: operator.openshift.io/v1alpha1
+kind: ImageContentSourcePolicy
+metadata:
+  name: example
+spec:
+  repositoryDigestMirrors:
+  - mirrors:
+    - helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4
+    source: quay.io/openshift-release-dev/ocp-release
+  - mirrors:
+    - helper.cluster-0001.rhsacn.org:5000/ocp4/openshift4
+    source: quay.io/openshift-release-dev/ocp-v4.0-art-dev
 ```
 
 ### 使用 redhat-cop openshift-disconnected-operators 工具同步离线 operator catalog 和 images

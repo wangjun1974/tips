@@ -50,7 +50,8 @@ reboot
 ### setup time service
 ```
 cat > /etc/chrony.conf << 'EOF'
-server 127.127.1.0 iburst
+server $(ip a s dev eth0 | grep "inet " | awk '{print $2}' | sed -e 's|/24||' ) iburst
+bindaddress $(ip a s dev eth0 | grep "inet " | awk '{print $2}' | sed -e 's|/24||' )
 allow all
 local stratum 4
 EOF

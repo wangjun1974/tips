@@ -19787,3 +19787,39 @@ cat ./tmp/sample-imageslist.txt | grep access.redhat | tee ./tmp/sample-imagesli
 for i in `cat ./tmp/sample-imageslist-access-redhat.txt`; do oc image mirror -a ${LOCAL_SECRET_JSON} $i ${LOCAL_REGISTRY}/$(echo $i | sed -e 's|registry.access.redhat.com/||') ; done
 
 ```
+
+### Setting up a nested KVM guest for developing & testing PCI device assignment with NUMA
+https://www.berrange.com/posts/2017/02/16/setting-up-a-nested-kvm-guest-for-developing-testing-pci-device-assignment-with-numa/
+```
+CTRL_N="ctrl01 ctrl02 ctrl03"
+CTRL_MEM='12288'
+CTRL_VCPU='4'
+LIBVIRT_D="/data/kvm"
+
+for i in $CTRL_N;
+do
+    echo "Defining node jwang-nested-overcloud-$i..."
+    virt-install --ram $CTRL_MEM --vcpus $CTRL_VCPU --os-variant rhel7 \
+    --disk path=${LIBVIRT_D}/jwang-overcloud-$i.qcow2,device=disk,bus=virtio,format=qcow2 \
+    --noautoconsole --vnc --network network:provisioning \
+    --network network:default --network network:default \
+    --name jwang-nested-overcloud-$i \
+    --cpu host,+vmx,cell0.id=0,cell0.cpus=0-1,cell0.memory=6291456,cell1.id=1,cell1.cpus=2-3,cell1.memory=6291456 \
+    --machine q35 \
+    --check all=off \
+    --dry-run --print-xml > /root/jwang/tmp/jwang-overcloud-$i.xml;
+done
+```
+
+### 关于 Nested Virtualization KVM 以及 OpenNebula 
+https://storpool.com/blog/nested-virtualization-with-kvm-and-opennebula
+
+### OCP 4.6 OpenStack UPI
+https://access.redhat.com/documentation/en-us/openshift_container_platform/4.6/html-single/installing_on_openstack/index#installing-openstack-user<br>
+
+Baremetal UPI 方式
+1. 使用 ISO 启动临时 instance 完成安装并将安装结果保存到 Volumes 中<br>
+https://desertislandit.wordpress.com/2016/02/29/openstack-create-a-bootable-volume-using-an-iso-image/<br>
+2. 使用 Volumes 创建最终的实例<br>
+
+

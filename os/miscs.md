@@ -19817,9 +19817,85 @@ https://storpool.com/blog/nested-virtualization-with-kvm-and-opennebula
 ### OCP 4.6 OpenStack UPI
 https://access.redhat.com/documentation/en-us/openshift_container_platform/4.6/html-single/installing_on_openstack/index#installing-openstack-user<br>
 
+```
 Baremetal UPI 方式
-1. 使用 ISO 启动临时 instance 完成安装并将安装结果保存到 Volumes 中<br>
+0. 上传 ISO 到镜像，格式是 ISO
+1. 创建 Cinder Volume
+2. 使用 ISO 镜像启动临时 instance
+3. 将 Cinder Volume 附加到临时 instance 上
+4. 重启临时实例
 https://desertislandit.wordpress.com/2016/02/29/openstack-create-a-bootable-volume-using-an-iso-image/<br>
-2. 使用 Volumes 创建最终的实例<br>
+5. 使用 Volumes 创建最终的实例
+
+# 开放项目安全组
+SGID=$(openstack security group list --project admin -c ID -f value)
+openstack security group rule create --proto icmp $SGID
+openstack security group rule create --dst-port 1:65535 --proto tcp $SGID
+openstack security group rule create --dst-port 1:65535 --proto udp $SGID
+
+# 创建端口 
+openstack port create --network private --fixed-ip subnet=public-subnet,ip-address=172.16.1.141 test-instance-port1
+
+# 从 instance 上移除 floating ip
+openstack server remove floating ip test-instance $FIP
+
+# 下载 openstack upi ansible 脚本
+xargs -n 1 curl -O <<< '
+        https://raw.githubusercontent.com/openshift/installer/release-4.6/upi/openstack/bootstrap.yaml
+        https://raw.githubusercontent.com/openshift/installer/release-4.6/upi/openstack/common.yaml
+        https://raw.githubusercontent.com/openshift/installer/release-4.6/upi/openstack/compute-nodes.yaml
+        https://raw.githubusercontent.com/openshift/installer/release-4.6/upi/openstack/control-plane.yaml
+        https://raw.githubusercontent.com/openshift/installer/release-4.6/upi/openstack/inventory.yaml
+        https://raw.githubusercontent.com/openshift/installer/release-4.6/upi/openstack/network.yaml
+        https://raw.githubusercontent.com/openshift/installer/release-4.6/upi/openstack/security-groups.yaml
+        https://raw.githubusercontent.com/openshift/installer/release-4.6/upi/openstack/down-bootstrap.yaml
+        https://raw.githubusercontent.com/openshift/installer/release-4.6/upi/openstack/down-compute-nodes.yaml
+        https://raw.githubusercontent.com/openshift/installer/release-4.6/upi/openstack/down-control-plane.yaml
+        https://raw.githubusercontent.com/openshift/installer/release-4.6/upi/openstack/down-load-balancers.yaml
+        https://raw.githubusercontent.com/openshift/installer/release-4.6/upi/openstack/down-network.yaml
+        https://raw.githubusercontent.com/openshift/installer/release-4.6/upi/openstack/down-security-groups.yaml
+        https://raw.githubusercontent.com/openshift/installer/release-4.6/upi/openstack/down-containers.yaml'
+
+# 提高项目的 secgroups 和 secgroup-rules quota
+openstack quota set --secgroups 3 --secgroup-rules 60 <project>
 
 
+```
+
+Cinder Backup Volume Backup 及 Restore
+https://access.redhat.com/documentation/en-us/red_hat_openstack_platform/13/html-single/block_storage_backup_guide/index
+
+
+### RHV-M 健康检查
+```
+
+在 RHV-M 上收集日志
+# ovirt-log-collector
+Please provide the REST API password for the admin@internal oVirt Engine user (CTRL+D to skip): 
+WARNING: This ovirt-log-collector call will collect logs from all available hosts. This may take long time, depending on the size of your deployment
+INFO: Gathering oVirt Engine information...
+INFO: Gathering PostgreSQL the oVirt Engine database and log files from localhost...
+About to collect information from 3 hypervisors. Continue? (Y/n): Y
+INFO: Gathering information from selected hypervisors...
+INFO: collecting information from 10.66.208.53
+INFO: collecting information from 10.66.208.52
+INFO: collecting information from node1.rhcnsa.org
+ERROR: Failed to collect logs from: 10.66.208.52; /bin/ls: cannot open directory /rhev/data-center/mnt/node1:_data/32e6bfba-3370-4ecd-984b-cb23b1b4725b/ha_agent: Permission denied
+/bin/ls: cannot open directory /rhev/data-center/mnt/node1:_data/32e6bfba-3370-4ecd-984b-cb23b1b4725b/images/061bcdbf-71b1-408d-a707-780769644594: Permission denied
+
+INFO: finished collecting information from 10.66.208.52
+
+
+
+ERROR: Failed to collect logs from: 10.66.208.53; /bin/ls: cannot open directory /rhev/data-center/mnt/node1:_data/32e6bfba-3370-4ecd-984b-cb23b1b4725b/ha_agent: Permission denied
+/bin/ls: cannot open directory /rhev/data-center/mnt/node1:_data/32e6bfba-3370-4ecd-984b-cb23b1b4725b/images/061bcdbf-71b1-408d-a707-780769644594: Permission denied
+
+INFO: finished collecting information from 10.66.208.53
+ERROR: Failed to collect logs from: node1.rhcnsa.org; /bin/ls: cannot open directory /rhev/data-center/mnt/node1:_data/32e6bfba-3370-4ecd-984b-cb23b1b4725b/ha_agent: Permission denied
+/bin/ls: cannot open directory /rhev/data-center/mnt/node1:_data/32e6bfba-3370-4ecd-984b-cb23b1b4725b/images/061bcdbf-71b1-408d-a707-780769644594: Permission denied
+
+INFO: finished collecting information from node1.rhcnsa.org
+Creating compressed archive...
+INFO: Log files have been collected and placed in /tmp/sosreport-LogCollector-20210603115247.tar.xz.
+The MD5 for this file is b2f98d756426763b84f159b6bba5ed30 and its size is 645.7M
+```

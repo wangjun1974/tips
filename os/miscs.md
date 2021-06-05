@@ -19866,7 +19866,7 @@ Cinder Backup Volume Backup 及 Restore
 https://access.redhat.com/documentation/en-us/red_hat_openstack_platform/13/html-single/block_storage_backup_guide/index
 
 
-### RHV-M 健康检查
+### RHV 健康检查
 ```
 
 在 RHV-M 上收集日志
@@ -19898,4 +19898,106 @@ INFO: finished collecting information from node1.rhcnsa.org
 Creating compressed archive...
 INFO: Log files have been collected and placed in /tmp/sosreport-LogCollector-20210603115247.tar.xz.
 The MD5 for this file is b2f98d756426763b84f159b6bba5ed30 and its size is 645.7M
+
+
+
+Red Hat Virtualization Manager (ImageIO Proxy server)
+http://ovirt.github.io/ovirt-imageio/modules.html
+ovirt-imageio-daemon
+ovirt-imageio-daemon provides direct access to oVirt disks using HTTPS protocol. Together with ovirt-imageio-proxy, it allows uploading a disk image directly into an oVirt disk, downloading an oVirt disk, or performing random I/O.
+
+The goal is to keep ovirt-imageio-daemon simple as possible. We use a single protocol (HTTP) for everything, and avoid dependencies on Vdsm.
+
+This daemon provides these services:
+images service read and write data to/from images. This service is available via HTTPS on port 54322. This service is accessed by ovirt-imageio-proxy or directly by clients.
+
+tickets service manage tickets authorizing images service operations. Available localy via HTTP over unix domain socket. Vdsm is using this service to add, remove, and extend tickets per ovirt-engine request.
+
+progress service report progress for ongoing images operations. Available locally via HTTP over unix domain socket. Vdsm will access this to report progress to Engine.
+
+
+ovirt-imageio-proxy
+The oVirt ImageIO Proxy provides a proxy server allowing clients to perform I/O with VM disk images and ISOs located within the oVirt virtualization environment.
+
+The proxy provides the following service:
+
+images service read and write data to/from the imageio daemon. By default this service is available via HTTPS on port 54323. This service is accessed by clients wishing to transfer data to/from images that do not wish to transfer directly via the daemon.
+
+# 检查 rhv manager var/log/messages 信息
+for i in var/log/messages* ; do echo $i ; cat $i | grep -Ev "rhvm systemd: Starting Session|rhvm systemd: Started Session|rhvm systemd: Starting Cleanup|rhvm systemd: Started" ; done
+
+
+https://access.redhat.com/solutions/1360383
+Kdump integration is enabled for host 'XYZ', but kdump is not configured properly on host
+
+检查节点状态
+nodectl status
+
+https://www.cnovirt.com/archives/378
+vdsm-client命令行
+
+1.获取主机的状态信息
+vdsm-client Host getStats
+
+2. 获取存储域的状态
+vdsm-client Host getStorageRepoStats 
+
+3.获取主机的capabilities
+vdsm-client Host getCapabilities
+
+4.获取主机连接的存储池
+vdsm-client Host getConnectedStoragePools
+
+5.获取主机连接的存储域
+vdsm-client Host getStorageDomains
+
+6.获取存储设备列表
+vdsm-client Host getDeviceList
+
+7.获取卷组信息
+vdsm-client Host getLVMVolumeGroups
+
+8.获取主机的硬件信息
+vdsm-client Host getHardwareInfo
+
+9.获取所有虚拟机的状态信息
+vdsm-client Host getAllVmStats
+
+10.获取所有虚拟机的IOTune Policies
+vdsm-client Host getAllVmIoTunePolicies
+
+11.获取主机的状态信息
+vdsm-client Host getStats
+
+12.获取虚拟机列表
+vdsm-client Host getVMList
+
+（注：在实际使用时，vmID, storagepoolID， storagedomainID， imageID，volumeID时自己环境中的ID，读者应该替换为自己实际环境对应的ID）
+21.获取存储域的状态
+vdsm-client StorageDomain getStats storagepoolID=5b7fcd73-02af-02ef-0377-000000000064 storagedomainID=1804173d-7310-42ed-95bd-2125b9d14f21
+
+22.获取存储域的信息
+vdsm-client StorageDomain getInfo storagepoolID=5b7fcd73-02af-02ef-0377-000000000064 storagedomainID=1804173d-7310-42ed-95bd-2125b9d14f21
+
+25.验证存储域是否有效
+vdsm-client StorageDomain validate storagepoolID=5b7fcd73-02af-02ef-0377-000000000064 storagedomainID=7a549016-bc8d-406f-9f59-411d95ae67cd
+
+18.查看SPM的状态（只有在SPM主机上执行才正确）
+vdsm-client StoragePool getSpmStatus storagepoolID=5b7fcd73-02af-02ef-0377-000000000064
+
+检查状态不为 Normal 的所有 Events
+Events: severity != "normal"
+
+ 
+
+
+
+
+
+
+
+
+
+
+
 ```

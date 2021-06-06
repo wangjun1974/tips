@@ -19865,6 +19865,15 @@ openstack quota set --secgroups 3 --secgroup-rules 60 <project>
 Cinder Backup Volume Backup 及 Restore
 https://access.redhat.com/documentation/en-us/red_hat_openstack_platform/13/html-single/block_storage_backup_guide/index
 
+### 更新 ipa admin password
+https://manastri.blogspot.com/2020/04/how-to-reset-freeipa-admin-admin.html
+```
+export LDAPTLS_CACERT=/etc/ipa/ca.crt
+ldappasswd -ZZ -D 'cn=directory manager' -W -S uid=admin,cn=users,cn=accounts,dc=example,dc=com -H ldap://ipa.example.com
+
+# 设置全局 dns forwarder
+ipa dnsconfig-mod --forwarder=114.114.114.114
+```
 
 ### RHV 健康检查
 ```
@@ -19988,16 +19997,8 @@ vdsm-client StoragePool getSpmStatus storagepoolID=5b7fcd73-02af-02ef-0377-00000
 检查状态不为 Normal 的所有 Events
 Events: severity != "normal"
 
- 
-
-
-
-
-
-
-
-
-
-
-
 ```
+
+### 安全相关
+NIST的安全内容自动化协议（SCAP）以及SCAP中文社区简介<br>
+https://blog.csdn.net/langkew/article/details/8795530<br>

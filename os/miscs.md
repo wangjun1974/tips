@@ -19997,6 +19997,13 @@ vdsm-client StoragePool getSpmStatus storagepoolID=5b7fcd73-02af-02ef-0377-00000
 检查状态不为 Normal 的所有 Events
 Events: severity != "normal"
 
+备份 engine 数据库
+https://access.redhat.com/solutions/797463
+
+mkdir /var/lib/ovirt-engine-backups/
+/usr/bin/engine-backup --mode=backup --scope=all --file="/var/lib/ovirt-engine-backups/engine-backup-$(date +%Y%m%d%H%M%S).tar.bz2" --log=/var/log/ovirt-engine-backups.log
+
+
 ```
 
 ### 安全相关

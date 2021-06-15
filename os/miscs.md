@@ -12827,7 +12827,6 @@ $ ansible-playbook -i inventory site-container.yml
 参考： https://access.redhat.com/solutions/2486301<br>
 
 ```
-hosted-engine --set-maintenance --mode=global 
 hosted-engine --vm-shutdown 
 hosted-engine --vm-status
 virsh -r list
@@ -17502,6 +17501,8 @@ oc patch deployment awx -n user20 --type json -p '[{ "op": "remove", "path": "/s
 ```
 
 
+###
+
 
 # 关于 OCS Internal 和 OCS Internal - Attached Devices
 
@@ -20003,9 +20004,37 @@ https://access.redhat.com/solutions/797463
 mkdir /var/lib/ovirt-engine-backups/
 /usr/bin/engine-backup --mode=backup --scope=all --file="/var/lib/ovirt-engine-backups/engine-backup-$(date +%Y%m%d%H%M%S).tar.bz2" --log=/var/log/ovirt-engine-backups.log
 
+qemu-img: error while reading at byte Cannot send after transport endpoint shutdown virt-v2v
+https://bugzilla.redhat.com/show_bug.cgi?id=1819240
+https://bugzilla.redhat.com/show_bug.cgi?id=1689637
+https://bugzilla.redhat.com/show_bug.cgi?id=1848862
+https://bugzilla.redhat.com/show_bug.cgi?id=1933656
+
+https://access.redhat.com/solutions/5851871
+
+https://access.redhat.com/solutions/46518
+
+https://bugzilla.redhat.com/show_bug.cgi?id=1848862
+修改 /etc/vmware-vpx/vpxd.cfg
+参考 https://bugzilla.redhat.com/show_bug.cgi?id=1848862 Comment#21
+
+firewall-cmd --remove-rich-rule 'rule family="ipv4" destination address="172.29.11.106" forward-port to-addr="192.168.122.10" to-port="22" protocol="tcp" port="22"'
+
+存储域额外配置
+
+新建存储域截图
+
+NFS ISO 说明
+
+Hosted Engine 截图
+
+集群配置去掉
+
+ovirt-aaa-jdbc-tool user show redhat-demo
 
 ```
 
 ### 安全相关
 NIST的安全内容自动化协议（SCAP）以及SCAP中文社区简介<br>
 https://blog.csdn.net/langkew/article/details/8795530<br>
+

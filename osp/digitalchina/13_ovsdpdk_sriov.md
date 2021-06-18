@@ -10,6 +10,67 @@ parameter_defaults:
       neutron_driver: null
 
 
+mkdir -p ~/templates
+openstack overcloud roles generate -o ~/templates/roles_data.yaml Controller ComputeOvsDpdkSriov
+
+# ovs 部署脚本
+# -e $THT/environments/services/neutron-ovs.yaml
+# -e $THT/environments/services/neutron-ovs-dpdk.yaml
+# -e $THT/environments/services/neutron-sriov.yaml
+#!/bin/bash
+THT=/usr/share/openstack-tripleo-heat-templates/
+CNF=~/templates/
+
+source ~/stackrc
+openstack overcloud deploy --debug --templates $THT \
+-r $CNF/roles_data.yaml \
+-n $CNF/network_data.yaml \
+-e $CNF/node-info.yaml \
+-e $THT/environments/network-isolation.yaml \
+-e $CNF/environments/network-environment.yaml \
+-e $THT/environments/services/neutron-ovs.yaml \
+-e $THT/environments/services/neutron-ovs-dpdk.yaml \
+-e $THT/environments/services/neutron-sriov.yaml \
+-e $CNF/environments/fixed-ips.yaml \
+-e $CNF/environments/net-bond-with-vlans.yaml \
+-e ~/containers-prepare-parameter.yaml \
+-e $CNF/fix-nova-reserved-host-memory.yaml \
+--ntp-server 192.0.2.1
+
+# 设置 inspection root password
+(undercloud) [stack@undercloud ~]$ openssl passwd -1 redhat
+$1$J5QN13Eg$fg1DdFcfDAEROPnMnkrgK1
+
+cat /var/lib/ironic/httpboot/inspector.ipxe 
+#!ipxe
+
+:retry_boot
+imgfree
+kernel --timeout 60000 http://192.0.2.1:8088/agent.kernel ipa-inspection-callback-url=http://192.0.2.1:5050/v1/continue ipa-inspection-collectors=default,extra-hardware,numa-topology,logs systemd.journald.forward_to_console=yes BOOTIF=${mac} ipa-inspection-dhcp-all-interfaces=1 ipa-collect-lldp=1 rootpwd="$1$J5QN13Eg$fg1DdFcfDAEROPnMnkrgK1" initrd=agent.ramdisk || goto retry_boot
+initrd --timeout 60000 http://192.0.2.1:8088/agent.ramdisk || goto retry_boot
+boot
+
+                                             
+需要附加在 network-environment 文件里的参数
+
+  NeutronOVSFirewallDriver: openvswitch
+  NovaEnableNUMALiveMigration: true
+
+  ComputeOvsDpdkSriovParameters:
+    IsolCpusList: 1,2,3
+    KernelArgs: default_hugepagesz=1GB hugepagesz=1G hugepages=2 iommu=pt intel_iommu=on
+      isolcpus=1,2,3
+    NovaReservedHostMemory: 1024
+    NovaComputeCpuDedicatedSet: 2,3
+    OvsDpdkCoreList: 0
+    OvsDpdkMemoryChannels: 4
+    OvsDpdkSocketMemory: "1024"
+    OvsPmdCoreList: 1
+
+更新 plan
+openstack overcloud deploy --templates $THT --update-plan-only -r $CNF/roles_data.yaml -n $CNF/network_data.yaml -e $CNF/node-info.yaml -e $THT/environments/network-isolation.yaml -e $CNF/environments/network-environment.yaml -e $THT/environments/services/neutron-ovs.yaml -e $THT/environments/services/neutron-ovs-dpdk.yaml -e $THT/environments/services/neutron-sriov.yaml -e $CNF/environments/net-bond-with-vlans.yaml -e ~/containers-prepare-parameter.yaml -e $CNF/fix-nova-reserved-host-memory.yaml --ntp-server 192.0.2.1
+
+
 ```
 
 

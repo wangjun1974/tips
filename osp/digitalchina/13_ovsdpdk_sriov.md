@@ -57,19 +57,66 @@ boot
   NovaEnableNUMALiveMigration: true
 
   ComputeOvsDpdkSriovParameters:
-    IsolCpusList: 1,2,3
-    KernelArgs: default_hugepagesz=1GB hugepagesz=1G hugepages=2 iommu=pt intel_iommu=on
-      isolcpus=1,2,3
-    NovaReservedHostMemory: 1024
-    NovaComputeCpuDedicatedSet: 2,3
-    OvsDpdkCoreList: 0
+    IsolCpusList: "1,2,3"
+    KernelArgs: "default_hugepagesz=2M hugepagesz=2M hugepages=1024 iommu=pt intel_iommu=on isolcpus=1,2,3"
+    NovaReservedHostMemory: "1024"
+    NovaComputeCpuDedicatedSet: ['2,3']
+    OvsDpdkCoreList: "0"
     OvsDpdkMemoryChannels: 4
     OvsDpdkSocketMemory: "1024"
-    OvsPmdCoreList: 1
+    OvsPmdCoreList: "1"
 
 更新 plan
 openstack overcloud deploy --templates $THT --update-plan-only -r $CNF/roles_data.yaml -n $CNF/network_data.yaml -e $CNF/node-info.yaml -e $THT/environments/network-isolation.yaml -e $CNF/environments/network-environment.yaml -e $THT/environments/services/neutron-ovs.yaml -e $THT/environments/services/neutron-ovs-dpdk.yaml -e $THT/environments/services/neutron-sriov.yaml -e $CNF/environments/net-bond-with-vlans.yaml -e ~/containers-prepare-parameter.yaml -e $CNF/fix-nova-reserved-host-memory.yaml --ntp-server 192.0.2.1
 
+
+查看节点 cpu NUMA 信息
+lscpu |  grep NUMA
+
+
+
+2021-06-18 13:56:51,290 p=403090 u=mistral n=ansible | fatal: [overcloud-computeovsdpdksriov-0]: FAILED! => {
+    "NetworkConfig_result.stderr_lines": [
+        "+ '[' -n '{\"network_config\": [{\"addresses\": [{\"ip_netmask\": \"192.0.2.23/24\"}], \"mtu\": 1500, \"name\": \"ens3\", \"routes\": [{\"default\": t
+rue, \"next_hop\": \"192.0.2.1\"}], \"type\": \"interface\", \"use_dhcp\": false}, {\"addresses\": [{\"ip_netmask\": \"172.16.1.46/24\"}], \"device\": \"eno4\"
+, \"mtu\": 1500, \"type\": \"vlan\", \"vlan_id\": 30}, {\"addresses\": [{\"ip_netmask\": \"172.16.0.28/24\"}], \"members\": [{\"members\": [{\"name\": \"eno5\"
+, \"type\": \"interface\"}], \"name\": \"br-dpdk0-dpdk-port0\", \"rx_queue\": 1, \"type\": \"ovs_dpdk_port\"}], \"name\": \"br-dpdk0\", \"ovs_extra\": [\"set p
+ort br-dpdk0 tag=50\"], \"type\": \"ovs_user_bridge\", \"use_dhcp\": false}]}' ']'",
+        "+ '[' -z '' ']'",
+        "+ trap configure_safe_defaults EXIT",
+        "++ date +%Y-%m-%dT%H:%M:%S",
+        "+ DATETIME=2021-06-18T01:55:34",
+        "+ '[' -f /etc/os-net-config/config.json ']'",
+        "+ mkdir -p /etc/os-net-config",
+        "+ echo '{\"network_config\": [{\"addresses\": [{\"ip_netmask\": \"192.0.2.23/24\"}], \"mtu\": 1500, \"name\": \"ens3\", \"routes\": [{\"default\": tru
+e, \"next_hop\": \"192.0.2.1\"}], \"type\": \"interface\", \"use_dhcp\": false}, {\"addresses\": [{\"ip_netmask\": \"172.16.1.46/24\"}], \"device\": \"eno4\", 
+\"mtu\": 1500, \"type\": \"vlan\", \"vlan_id\": 30}, {\"addresses\": [{\"ip_netmask\": \"172.16.0.28/24\"}], \"members\": [{\"members\": [{\"name\": \"eno5\", 
+\"type\": \"interface\"}], \"name\": \"br-dpdk0-dpdk-port0\", \"rx_queue\": 1, \"type\": \"ovs_dpdk_port\"}], \"name\": \"br-dpdk0\", \"ovs_extra\": [\"set por
+t br-dpdk0 tag=50\"], \"type\": \"ovs_user_bridge\", \"use_dhcp\": false}]}'",
+        "++ type -t network_config_hook",
+        "+ '[' '' = function ']'",
+        "+ sed -i 's/: \"bridge_name/: \"br-ex/g' /etc/os-net-config/config.json",
+        "+ sed -i s/interface_name/nic1/g /etc/os-net-config/config.json",
+        "+ set +e",
+        "+ os-net-config -c /etc/os-net-config/config.json -v --detailed-exit-codes",
+        "[2021/06/18 01:55:35 AM] [INFO] Using config file at: /etc/os-net-config/config.json",
+        "[2021/06/18 01:55:35 AM] [INFO] Ifcfg net config provider created.",
+        "[2021/06/18 01:55:35 AM] [INFO] Not using any mapping file.",
+        "[2021/06/18 01:55:36 AM] [INFO] Finding active nics",
+        "[2021/06/18 01:55:36 AM] [INFO] ens3 is an active nic",
+        "[2021/06/18 01:55:36 AM] [INFO] ens4 is an active nic",
+        "[2021/06/18 01:55:36 AM] [INFO] lo is not an active nic",
+        "[2021/06/18 01:55:36 AM] [INFO] ens5 is an active nic",
+        "[2021/06/18 01:55:36 AM] [INFO] No DPDK mapping available in path (/var/lib/os-net-config/dpdk_mapping.yaml)",
+        "[2021/06/18 01:55:36 AM] [INFO] Active nics are ['ens3', 'ens4', 'ens5']",
+        "[2021/06/18 01:55:36 AM] [INFO] nic2 mapped to: ens4",
+        "[2021/06/18 01:55:36 AM] [INFO] nic3 mapped to: ens5",
+        "[2021/06/18 01:55:36 AM] [INFO] nic1 mapped to: ens3",
+        "[2021/06/18 01:55:36 AM] [INFO] adding interface: ens3",
+        "[2021/06/18 01:55:36 AM] [INFO] adding custom route for interface: ens3",
+
+考虑在 network-environments.yaml 文件里设置，让更新时网络的变化仍然生效
+  NetworkDeploymentActions: ['CREATE','UPDATE']
 
 ```
 

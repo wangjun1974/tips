@@ -20038,3 +20038,5 @@ ovirt-aaa-jdbc-tool user show redhat-demo
 NIST的安全内容自动化协议（SCAP）以及SCAP中文社区简介<br>
 https://blog.csdn.net/langkew/article/details/8795530<br>
 
+### 内核参数 isolcpus 说明
+https://www.kernel.org/doc/html/latest/admin-guide/kernel-parameters.html?highlight=isolcpus

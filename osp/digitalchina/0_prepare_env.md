@@ -129,7 +129,7 @@ LIBVIRT_D="/data/kvm"
 for i in $COMPT_N;
 do
     echo "Defining node jwang-overcloud-$i..."
-    virt-install --ram $COMPT_MEM --vcpus $CTRL_VCPU --os-variant rhel7 \
+    virt-install --ram $COMPT_MEM --vcpus $COMPT_VCPU --os-variant rhel7 \
     --disk path=${LIBVIRT_D}/jwang-overcloud-$i.qcow2,device=disk,bus=virtio,format=qcow2 \
     --noautoconsole --vnc --network network:provisioning \
     --network network:default --network network:default \

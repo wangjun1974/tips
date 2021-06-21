@@ -535,3 +535,101 @@ parameter_defaults:
 
 [2] OpenStack offline registry Ansible role https://gitlab.consulting.redhat.com/tbonds/ansible-role-rhospregistry 
 ```
+
+### 在 Undercloud 上安装虚拟化软件，准备 Helper 虚拟机
+```
+加载 rhel 8.2 iso 到 /mnt
+[root@director ~]# mount -o loop  /software/openstack/os/rhel-8.2-x86_64-dvd.iso /mnt
+
+生成本地 yum 源
+[root@director ~]# cat > /etc/yum.repos.d/local.repo << EOF
+[baseos]
+name=baseos
+baseurl=file:///mnt/BaseOS
+enabled=1
+gpgcheck=0
+
+[appstream]
+name=appstream
+baseurl=file:///mnt/AppStream
+enabled=1
+gpgcheck=0
+EOF
+
+安装虚拟化软件
+[root@director ~]# dnf module install virt
+[root@director ~]# dnf install virt-install
+[root@director ~]# systemctl start libvirtd
+
+创建 bridge 类型的 conn br0
+[root@undercloud #] nmcli con add type bridge con-name br0 ifname br0
+
+(可选) 根据实际情况设置 bridge.stp，有时可能因为 bridge.stp 设置导致网络通信不正常
+[root@undercloud #] nmcli con mod br0 bridge.stp no
+
+修改 vlan 类型的 conn ens35f1.10 设置 master 为 br0 （参考）
+[root@undercloud #] nmcli con mod ens35f1.10 connection.master br0 connection.slave-type 'bridge'
+
+为 br0 设置 ip 地址（参考）
+[root@undercloud #] nmcli con mod br0 \
+    connection.autoconnect 'yes' \
+    connection.autoconnect-slaves 'yes' \
+    ipv4.method 'manual' \
+    ipv4.address '192.168.10.41/24' \
+    ipv4.gateway '192.168.10.1' \
+    ipv4.dns '119.29.29.29'
+
+[root@undercloud #] nmcli con up br0
+[root@undercloud #] nmcli con down br0 && nmcli con up br0
+
+查看参数状态
+[root@undercloud #] nmcli con show br0
+
+创建新的 libvirt network br0
+cat << EOF > /root/host-bridge.xml
+<network>
+  <name>br0</name>
+  <forward mode="bridge"/>
+  <bridge name="br0"/>
+</network>
+EOF
+
+virsh net-define /root/host-bridge.xml
+virsh net-start br0
+virsh net-autostart --network br0
+virsh net-autostart --network default --disable
+virsh net-destroy default
+
+创建 helper 虚拟机的例子
+# virt-install --name=helper-undercloud --vcpus=2 --ram=4096 --disk path=/var/lib/libvirt/images/helper-undercloud.qcow2,bus=virtio,size=100 --os-variant rhel8.0 --network network=br0,model=virtio --boot menu=on --graphics none --location  /software/openstack/rhel-8.2-x86_64-dvd.iso --initrd-inject /tmp/ks.cfg --extra-args='ks=file:/ks.cfg console=ttyS0 nameserver=119.29.29.29 ip=192.168.10.42::192.168.10.1:255.255.255.0:helper.example.com:enp1s0:none'
+
+# ks-helper.cfg 可参考以下链接，根据实际情况在线生成
+https://github.com/wangjun1974/ospinstall/blob/main/ks-helper.cfg.example.md
+
+样例
+[root@undercloud ~]# cat > /tmp/ks.cfg <<'EOF'
+lang en_US
+keyboard us
+timezone Asia/Shanghai --isUtc
+rootpw $1$PTAR1+6M$DIYrE6zTEo5dWWzAp9as61 --iscrypted
+#platform x86, AMD64, or Intel EM64T
+reboot
+text
+cdrom
+bootloader --location=mbr --append="rhgb quiet crashkernel=auto"
+zerombr
+clearpart --all --initlabel
+autopart
+network --device=enp1s0 --hostname=helper.example.com --bootproto=static --ip=192.168.10.42 --netmask=255.255.255.0 --gateway=192.168.10.1 --nameserver=119.29.29.29
+auth --passalgo=sha512 --useshadow
+selinux --enforcing
+firewall --enabled --ssh
+skipx
+firstboot --disable
+%packages
+@^minimal-environment
+kexec-tools
+%end
+EOF
+
+```

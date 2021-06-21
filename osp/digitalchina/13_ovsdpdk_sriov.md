@@ -118,6 +118,50 @@ t br-dpdk0 tag=50\"], \"type\": \"ovs_user_bridge\", \"use_dhcp\": false}]}'",
 考虑在 network-environments.yaml 文件里设置，让更新时网络的变化仍然生效
   NetworkDeploymentActions: ['CREATE','UPDATE']
 
+--
+        "  File \"/usr/lib/python3.6/site-packages/os_net_config/utils.py\", line 329, in bind_dpdk_interfaces",
+        "    raise OvsDpdkBindException(msg)",
+        "os_net_config.utils.OvsDpdkBindException: Interface eno5 cannot be found",
+
+设备名称在虚拟机里应该是 ens3, ens4, ens5
+
+
+  virt-install \
+  --ram 6144 --vcpus 8 \
+  --os-variant rhel7 \
+  --disk path=/home/images/overcloud-node${nodeid}.qcow2,device=disk,bus=virtio,format=qcow2 \
+  --noautoconsole --vnc \
+  --network network:provisioning,model=e1000 \
+  --network network:trunk,model=e1000 \
+  --network network:trunk,model=e1000 \
+  --network network:redhat,model=e1000 \
+  --network network:stonith,model=e1000 \
+  --name overcloud-node${nodeid} \
+  --cpu SandyBridge,+vmx,cell0.id=0,cell0.cpus=0-3,cell0.memory=3072000,cell1.id=1,cell1.cpus=4-7,cell1.memory=3072000\
+  --machine q35\
+  --dry-run --print-xml > overcloud-node${nodeid}.xml;
+
+COMPT_N="compute01 compute02"
+COMPT_MEM='6144'
+COMPT_VCPU='4'
+LIBVIRT_D="/data/kvm"
+
+# 创建计算节点虚拟机
+for i in $COMPT_N;
+do
+    echo "Defining node jwang-overcloud-$i-temp..."
+    virt-install --ram $COMPT_MEM --vcpus $COMPT_VCPU --os-variant rhel7 \
+    --disk path=${LIBVIRT_D}/jwang-overcloud-$i.qcow2,device=disk,bus=virtio,format=qcow2 \
+    --noautoconsole --vnc --network network:provisioning,model=e1000 \
+    --network network:default,model=e1000 --network network:default,model=e1000 \
+    --name jwang-overcloud-$i-temp \
+    --cpu SandyBridge,+vmx \
+    --machine q35 \
+    --check path_in_use=off \
+    --dry-run --print-xml > /tmp/jwang-overcloud-$i-temp.xml;
+
+    # virsh define --file /tmp/jwang-overcloud-$i.xml || { echo "Unable to define jwang-overcloud-$i"; return 1; }
+done
 ```
 
 

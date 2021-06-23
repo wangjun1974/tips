@@ -20123,6 +20123,20 @@ ologyFilter']
 
 查看节点 numa node 情况
 # openstack baremetal introspection data save <UUID> | jq .numa_topology
+
+根据配置，查看 sr-iov 节点 的 pci 配置
+http://lists.openstack.org/pipermail/openstack/2018-January/045916.html
+cat /var/lib/config-data/nova_libvirt/etc/nova/nova.conf | grep -Ev "^$|^#" | grep pci -A1
+--
+[pci]
+passthrough_whitelist={"devname":"enp130s0f1","physical_network":"sriov-1","trusted":"true"}
+
+控制节点查看启用的 nova scheduler filter 
+cat /var/lib/config-data/nova/etc/nova/nova.conf | grep -E "^enabled_filters"
+
+SR-IOV 节点内核启动参数
+[heat-admin@overcloud-computeovsdpdksriov-0 ~]$ sudo cat /proc/cmdline 
+BOOT_IMAGE=(hd0,msdos2)/boot/vmlinuz-4.18.0-193.29.1.el8_2.x86_64 root=UUID=0ec3dea5-f293-4729-b676-5d38a611ce81 ro console=ttyS0 console=ttyS0,115200n81 no_timer_check crashkernel=auto rhgb quiet default_hugepagesz=1GB hugepagesz=1G hugepages=32 iommu=pt intel_iommu=on isolcpus=2,18,4,20,6,22,8,24,10,26,12,28,14,30,3,19,5,21,7,23,9,25,11,27,13,29,15,31 skew_tick=1 nohz=on nohz_full=2,18,4,20,6,22,8,24,10,26,12,28,14,30,3,19,5,21,7,23,9,25,11,27,13,29,15,31 rcu_nocbs=2,18,4,20,6,22,8,24,10,26,12,28,14,30,3,19,5,21,7,23,9,25,11,27,13,29,15,31 tuned.non_isolcpus=00030003 intel_pstate=disable nosoftlockup skew_tick=1 nohz=on nohz_full=2,18,4,20,6,22,8,24,10,26,12,28,14,30,3,19,5,21,7,23,9,25,11,27,13,29,15,31 rcu_nocbs=2,18,4,20,6,22,8,24,10,26,12,28,14,30,3,19,5,21,7,23,9,25,11,27,13,29,15,31 tuned.non_isolcpus=00030003 intel_pstate=disable nosoftlockup
 ```
 
 ### NFV BIOS 配置

@@ -20135,8 +20135,7 @@ ologyFilter']
 |DCU Data Prefetcher|Enabled|
 |DCA|Enabled|
 |CPU Power and Performance|Performance|
-|Memory RAS and Performance Config →
-NUMA Optimized|Enabled|
+|Memory RAS and Performance Config → NUMA Optimized|Enabled|
 |Turbo Boost|Disabled|
 |VT-d|Enabled for Intel cards if VFIO functionality is needed|
 |NUMA memory interleave|Disabled|

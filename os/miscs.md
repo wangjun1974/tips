@@ -20079,7 +20079,7 @@ SELECT user_creds_id FROM stack WHERE name='overcloud';
 UPDATE stack SET user_creds_id=NULL WHERE user_creds_id=xxx ;
 DELETE FROM user_creds WHERE id=xxx;
 
-
+ComputeOvsDpdkSriov 节点 nova_compute 容器不断重启，导致部署失败，在 /var/log/containers/nova/nova-compute.log.1 里查看报错信息
 报错信息
 2021-06-22 22:00:50.214 12 INFO nova.service [-] Starting compute node (version 20.4.1-1.20200917173450.el8ost)
 2021-06-22 22:00:50.216 12 ERROR oslo_service.service [-] Error starting thread.: nova.exception.InvalidConfiguration: The '[compute] cpu_dedicated_set

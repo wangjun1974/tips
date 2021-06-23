@@ -162,6 +162,12 @@ do
 
     # virsh define --file /tmp/jwang-overcloud-$i.xml || { echo "Unable to define jwang-overcloud-$i"; return 1; }
 done
+
+for i in computeovsdpdksriov; do
+  openstack flavor create $i --ram 4096 --vcpus 1 --disk 40
+  openstack flavor set --property "capabilities:boot_option"="local" \
+                       --property "capabilities:profile"="${i}" ${i}
+done
 ```
 
 

@@ -20040,3 +20040,63 @@ https://blog.csdn.net/langkew/article/details/8795530<br>
 
 ### 内核参数 isolcpus 说明
 https://www.kernel.org/doc/html/latest/admin-guide/kernel-parameters.html?highlight=isolcpus
+
+### 查看 overcloud 状态
+```
+openstack overcloud status
+openstack overcloud status --plan overcloud
+
+手工设置部署状态
+openstack workflow execution create tripleo.deployment.v1.set_deployment_status_success
+
+看看是否可以强制删除节点
+openstack overcloud node delete --stack overcloud overcloud-novacompute-0.localdomain
+
+
+openstack baremetal node set --property capabilities='node:controller-0,boot_option:local' controller-0
+openstack baremetal node set --property capabilities='node:controller-1,boot_option:local' controller-1
+openstack baremetal node set --property capabilities='node:controller-2,boot_option:local' controller-2
+
+openstack baremetal node set --property capabilities='node:computeovsdpdk-0,boot_option:local' computedpdk-0
+openstack baremetal node set --property capabilities='node:computeovsdpdk-1,boot_option:local' computedpdk-1
+openstack baremetal node set --property capabilities='node:computeovsdpdk-2,boot_option:local' computedpdk-2
+
+openstack baremetal node set --property capabilities='node:computeovsdpdksriov-0,boot_option:local' computedpdk-3
+```
+
+### osp troubleshooting
+```
+执行完 openstack undercloud install 之后，再执行 openstack overcloud deploy ...
+
+报错信息
+heatclient.exc.HTTPInternalServerError: ERROR: Can not decrypt data with the auth_encryption_key in heat config.
+
+解决方法
+参考: https://access.redhat.com/support/cases/#/case/02683705
+MariaDB [heat]>
+UPDATE resource_data SET redact=0 WHERE resource_id IN (SELECT r.id FROM resource r, stack s WHERE r.root_stack_id=s.id AND s.name='overcloud');
+SELECT user_creds_id FROM stack WHERE name='overcloud';
+UPDATE stack SET user_creds_id=NULL WHERE user_creds_id=xxx ;
+DELETE FROM user_creds WHERE id=xxx;
+
+
+报错信息
+2021-06-22 22:00:50.214 12 INFO nova.service [-] Starting compute node (version 20.4.1-1.20200917173450.el8ost)
+2021-06-22 22:00:50.216 12 ERROR oslo_service.service [-] Error starting thread.: nova.exception.InvalidConfiguration: The '[compute] cpu_dedicated_set
+' and '[compute] cpu_shared_set' configuration options must be disjoint.
+
+调整模版，让 NovaComputeCpuDedicatedSet 与 NovaComputeCpuSharedSet 没有重合的部分
+  ComputeOvsDpdkSriovParameters:
+    IsolCpusList: 2,18,4,20,6,22,8,24,10,26,12,28,14,30,3,19,5,21,7,23,9,25,11,27,13,29,15,31
+    KernelArgs: default_hugepagesz=1GB hugepagesz=1G hugepages=32 iommu=pt intel_iommu=on
+      isolcpus=2,18,4,20,6,22,8,24,10,26,12,28,14,30,3,19,5,21,7,23,9,25,11,27,13,29,15,31
+    TunedProfileName: "cpu-partitioning"
+    NovaComputeCpuDedicatedSet: 4,20,6,22,8,24,10,26,12,28,14,30,5,21,7,23,9,25,11,27,13,29,15,31
+    NovaReservedHostMemory: 4096
+    OvsDpdkSocketMemory: "1024,4096"
+    OvsDpdkMemoryChannels: "4"
+    OvsDpdkCoreList: 0,16,1,17
+    OvsPmdCoreList: 2,18,3,19
+    NovaComputeCpuSharedSet: [0,16,1,17]
+
+```

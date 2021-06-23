@@ -20137,6 +20137,39 @@ cat /var/lib/config-data/nova/etc/nova/nova.conf | grep -E "^enabled_filters"
 SR-IOV 节点内核启动参数
 [heat-admin@overcloud-computeovsdpdksriov-0 ~]$ sudo cat /proc/cmdline 
 BOOT_IMAGE=(hd0,msdos2)/boot/vmlinuz-4.18.0-193.29.1.el8_2.x86_64 root=UUID=0ec3dea5-f293-4729-b676-5d38a611ce81 ro console=ttyS0 console=ttyS0,115200n81 no_timer_check crashkernel=auto rhgb quiet default_hugepagesz=1GB hugepagesz=1G hugepages=32 iommu=pt intel_iommu=on isolcpus=2,18,4,20,6,22,8,24,10,26,12,28,14,30,3,19,5,21,7,23,9,25,11,27,13,29,15,31 skew_tick=1 nohz=on nohz_full=2,18,4,20,6,22,8,24,10,26,12,28,14,30,3,19,5,21,7,23,9,25,11,27,13,29,15,31 rcu_nocbs=2,18,4,20,6,22,8,24,10,26,12,28,14,30,3,19,5,21,7,23,9,25,11,27,13,29,15,31 tuned.non_isolcpus=00030003 intel_pstate=disable nosoftlockup skew_tick=1 nohz=on nohz_full=2,18,4,20,6,22,8,24,10,26,12,28,14,30,3,19,5,21,7,23,9,25,11,27,13,29,15,31 rcu_nocbs=2,18,4,20,6,22,8,24,10,26,12,28,14,30,3,19,5,21,7,23,9,25,11,27,13,29,15,31 tuned.non_isolcpus=00030003 intel_pstate=disable nosoftlockup
+
+创建 sriov aggregate
+openstack aggregate create sriov-group-1
+openstack aggregate add host sriov-group-1 overcloud-computeovsdpdksriov-0.localdomain
+
+
+
+创建 network 和 subnet
+openstack network create sriov-net-1 \
+  --provider-physical-network sriov-1 \
+  --provider-network-type vlan --provider-segment 900
+openstack subnet create sriov-subnet-1 --network sriov-net-1 \
+  --no-dhcp --subnet-range 192.168.2.0/24 \
+  --allocation-pool start=192.168.2.100,end=192.168.2.200 --gateway none
+
+创建 sriov port
+openstack port create --network sriov-net-1 --vnic-type direct sriov-port-1
+
+创建 security group rule 
+SGID=$(openstack security group list --project admin -c ID -f value)
+openstack security group rule create --proto icmp $SGID
+openstack security group rule create --dst-port 22 --proto tcp $SGID
+
+创建 flavor
+openstack flavor create m1.sriov --ram 4096 --disk 10 --vcpus 4
+
+设置 flavor property
+openstack flavor set --property sriov=true --property hw:cpu_policy=dedicated --property hw:mem_page_size=1GB m1.sriov
+
+上传镜像
+openstack image create --file ~/rhel-8.3-x86_64-kvm-password.qcow2 --disk-format qcow2 rhel8u3
+
+
 ```
 
 ### NFV BIOS 配置

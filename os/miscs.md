@@ -20099,4 +20099,26 @@ ComputeOvsDpdkSriov 节点 nova_compute 容器不断重启，导致部署失败�
     OvsPmdCoreList: 2,18,3,19
     NovaComputeCpuSharedSet: [0,16,1,17]
 
+
+NovaSchedulerDefaultFilters: ['AggregateInstanceExtraSpecsFilter',
+'RetryFilter','AvailabilityZoneFilter','ComputeFilter','ComputeCapabilitiesFilter','ImagePropertiesF
+ilter','ServerGroupAntiAffinityFilter','ServerGroupAffinityFilter','PciPassthroughFilter','NUMATop
+ologyFilter']
+
+添加 Scheduler configuration 到模版
+  ############################
+  #  Scheduler configuration #
+  ############################
+  NovaSchedulerDefaultFilters:
+    - "RetryFilter"
+    - "AvailabilityZoneFilter"
+    - "ComputeFilter"
+    - "ComputeCapabilitiesFilter"
+    - "ImagePropertiesFilter"
+    - "ServerGroupAntiAffinityFilter"
+    - "ServerGroupAffinityFilter"
+    - "PciPassthroughFilter"
+    - "NUMATopologyFilter"
+    - "AggregateInstanceExtraSpecsFilter"
+
 ```

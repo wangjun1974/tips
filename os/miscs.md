@@ -20121,4 +20121,23 @@ ologyFilter']
     - "NUMATopologyFilter"
     - "AggregateInstanceExtraSpecsFilter"
 
+查看节点 numa node 情况
+# openstack baremetal introspection data save <UUID> | jq .numa_topology
 ```
+
+### NFV BIOS 配置
+|参数|设置|
+|---|---|
+|C3 Power State|Disabled|
+|C6 Power State|Disabled|
+|MLC Streamer|Enabled|
+|MLC Spacial Prefetcher|Enabled|
+|DCU Data Prefetcher|Enabled|
+|DCA|Enabled|
+|CPU Power and Performance|Performance|
+|Memory RAS and Performance Config →
+NUMA Optimized|Enabled|
+|Turbo Boost|Disabled|
+|VT-d|Enabled for Intel cards if VFIO functionality is needed|
+|NUMA memory interleave|Disabled|
+

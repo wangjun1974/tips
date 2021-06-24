@@ -20141,16 +20141,31 @@ BOOT_IMAGE=(hd0,msdos2)/boot/vmlinuz-4.18.0-193.29.1.el8_2.x86_64 root=UUID=0ec3
 创建 sriov aggregate
 openstack aggregate create sriov-group-1
 openstack aggregate add host sriov-group-1 overcloud-computeovsdpdksriov-0.localdomain
+openstack aggregate set --property sriov=true sriov-group-1
 
+创建 dpdk aggregate
+openstack aggregate create dpdk-group-1
+openstack aggregate add host dpdk-group-1 overcloud-computeovsdpdk-0.localdomain
+openstack aggregate add host dpdk-group-1 overcloud-computeovsdpdk-1.localdomain
+openstack aggregate add host dpdk-group-1 overcloud-computeovsdpdk-2.localdomain
+openstack aggregate add host dpdk-group-1 overcloud-computeovsdpdksriov-0.localdomain
+openstack aggregate set --property dpdk=true dpdk-group-1
 
-
-创建 network 和 subnet
+创建 sriov network 和 subnet
 openstack network create sriov-net-1 \
   --provider-physical-network sriov-1 \
   --provider-network-type vlan --provider-segment 900
 openstack subnet create sriov-subnet-1 --network sriov-net-1 \
   --no-dhcp --subnet-range 192.168.2.0/24 \
   --allocation-pool start=192.168.2.100,end=192.168.2.200 --gateway none
+
+创建 dpdk network 和 subnet
+openstack network create dpdk-net-1 \
+  --provider-physical-network dpdk0 \
+  --provider-network-type vlan --provider-segment 900
+openstack subnet create dpdk-subnet-1 --network dpdk-net-1 \
+  --no-dhcp --subnet-range 192.168.2.0/24 \
+  --allocation-pool start=192.168.2.50,end=192.168.2.99 --gateway none
 
 创建 sriov port
 openstack port create --network sriov-net-1 --vnic-type direct sriov-port-1
@@ -20160,14 +20175,133 @@ SGID=$(openstack security group list --project admin -c ID -f value)
 openstack security group rule create --proto icmp $SGID
 openstack security group rule create --dst-port 22 --proto tcp $SGID
 
-创建 flavor
+创建 sriov flavor
 openstack flavor create m1.sriov --ram 4096 --disk 10 --vcpus 4
 
-设置 flavor property
+设置 sriov flavor property
 openstack flavor set --property sriov=true --property hw:cpu_policy=dedicated --property hw:mem_page_size=1GB m1.sriov
+
+创建 dpdk flavor
+openstack flavor create m1.dpdk --ram 4096 --disk 10 --vcpus 4
+
+设置 dpdk flavor property
+openstack flavor set --property dpdk=true --property hw:cpu_policy=dedicated --property hw:mem_page_size=1GB --property hw:emulator_threads_policy=isolate m1.dpdk
 
 上传镜像
 openstack image create --file ~/rhel-8.3-x86_64-kvm-password.qcow2 --disk-format qcow2 rhel8u3
+
+启动 sriov 测试实例
+sriov_port_id=$(openstack port show sriov-port-1 -f value -c id)
+openstack server create --flavor m1.sriov --image rhel8u3 --nic port-id=$sriov_port_id test-sriov-1
+
+启动 dpdk 测试实例
+dpdk_network_id=$(openstack network show dpdk-net-1 -f value -c id)
+openstack server create --flavor m1.dpdk --image rhel8u3 --nic net-id=$dpdk_network_id test-dpdk-1
+
+查看 dpdk 计算节点的网桥的 datapath_type 是 netdev
+ssh heat-admin@192.168.24.10 sudo ovs-vsctl list bridge br-dpdk0 
+ssh heat-admin@192.168.24.10 sudo ovs-vsctl get Open_vSwitch . other_config
+
+https://fabianlee.org/2020/03/22/kvm-testing-cloud-init-locally-using-kvm-for-a-rhel-cloud-image/
+
+cat <<EOF > mydata.file
+#cloud-config
+password: redhat
+chpasswd: { expire: False }
+ssh_pwauth: True
+network-interfaces: |
+  iface eth0 inet static
+  address 192.168.2.101
+  network 192.168.2.0
+  netmask 255.255.255.0
+  broadcast 192.168.2.255
+bootcmd:
+  - ifdown eth0
+  - ifup eth0
+EOF
+
+启动 dpdk 实例1
+dpdk_network_id=$(openstack network show dpdk-net-1 -f value -c id)
+openstack port create --network ${dpdk_network_id} dpdk-port-1 --fixed-ip ip-address=192.168.2.51
+
+cat <<EOF > mydata.file
+#cloud-config
+password: redhat
+chpasswd: { expire: False }
+ssh_pwauth: True
+ethernets:
+  eth0:
+    addresses:
+      - 192.168.2.51/24
+EOF
+
+dpdk_port_id=$(openstack port show dpdk-port-1 -f value -c id)
+openstack server create --flavor m1.dpdk --image rhel8u3 --nic port-id=$dpdk_port_id --config-drive True --user-data mydata.file test-dpdk-1
+
+启动 dpdk 实例2
+dpdk_network_id=$(openstack network show dpdk-net-1 -f value -c id)
+openstack port create --network ${dpdk_network_id} dpdk-port-2 --fixed-ip ip-address=192.168.2.52
+
+cat <<EOF > mydata.file
+#cloud-config
+password: redhat
+chpasswd: { expire: False }
+ssh_pwauth: True
+ethernets:
+  eth0:
+    addresses:
+      - 192.168.2.52/24
+EOF
+
+dpdk_port_id=$(openstack port show dpdk-port-2 -f value -c id)
+openstack server create --flavor m1.dpdk --image rhel8u3 --nic port-id=$dpdk_port_id --config-drive True --user-data mydata.file test-dpdk-2
+
+启动 sriov 实例
+sriov_network_id=$(openstack network show sriov-net-1 -f value -c id)
+openstack port create --network ${sriov_network_id} sriov-port-1 --vnic-type direct --fixed-ip ip-address=192.168.2.101
+
+cat <<EOF > mydata.file
+#cloud-config
+password: redhat
+chpasswd: { expire: False }
+ssh_pwauth: True
+ethernets:
+  eth0:
+    addresses:
+      - 192.168.2.101/24
+EOF
+
+sriov_port_id=$(openstack port show sriov-port-1 -f value -c id)
+openstack server create --flavor m1.sriov --image rhel8u3 --nic port-id=$sriov_port_id --config-drive True --user-data mydata.file test-sriov-1
+https://docs.openstack.org/nova/rocky/user/config-drive.html
+
+查看实例所在的 Hypervisor
+openstack server show test-dpdk-1 -f yaml | grep hypervisor 
+openstack server show test-dpdk-2 -f yaml | grep hypervisor 
+openstack server show test-sriov-1 -f yaml | grep hypervisor 
+
+清理实例和 port
+openstack server delete test-dpdk-1
+openstack server delete test-dpdk-2
+openstack server delete test-sriov-1
+openstack port delete dpdk-port-1
+openstack port delete dpdk-port-2
+openstack port delete sriov-port-1
+
+测试 cloud-init 与 rhel cloud image
+https://fabianlee.org/2020/03/22/kvm-testing-cloud-init-locally-using-kvm-for-a-rhel-cloud-image/
+
+报错
+(undercloud) [stack@dell-per730-02 ovs-dpdk]$ /bin/bash -x ./plan-deploy.sh 
++ CUSTOM=/home/stack/ovs-dpdk
++ openstack overcloud deploy --templates --update-plan-only -r /home/stack/ovs-dpdk/templates/roles_data.yaml -n /home/stack/ovs-dpdk/templates/network_data.yaml -e /usr/share/openstack-tripleo-heat-templates/environments/ceph-ansible/ceph-ansible.yaml -e /usr/share/openstack-tripleo-heat-templates/environments/ceph-ansible/ceph-dashboard.yaml -e /usr/share/openstack-tripleo-heat-templates/environments/ceph-ansible/ceph-rgw.yaml -e /usr/share/openstack-tripleo-heat-templates/environments/cinder-backup.yaml -e /usr/share/openstack-tripleo-heat-templates/environments/network-isolation.yaml -e /usr/share/openstack-tripleo-heat-templates/environments/services/neutron-ovs.yaml -e /usr/share/openstack-tripleo-heat-templates/environments/services/neutron-ovs-dpdk.yaml -e /usr/share/openstack-tripleo-heat-templates/environments/services/neutron-sriov.yaml -e /home/stack/ovs-dpdk/containers-prepare-parameter.yaml -e /home/stack/ovs-dpdk/templates/ceph_config.yaml -e /home/stack/ovs-dpdk/templates/node_info.yaml -e /home/stack/ovs-dpdk/templates/network-environment.yaml -e /home/stack/ovs-dpdk/templates/overcloud-image.yaml -e /home/stack/ovs-dpdk/templates/root_password.yaml -e /home/stack/ovs-dpdk/templates/externalvip.yaml -e /home/stack/ovs-dpdk/templates/fencing.yaml -p /home/stack/ovs-dpdk/plan-environment-derived-params.yaml
+Removing the current plan files
+Uploading new plan files
+Temporary Swift GET/PUT URL parameters have successfully been updated.
+Plan updated.
+Processing templates in the directory /tmp/tripleoclient-zvltz93r/tripleo-heat-templates
+Invoking workflow (tripleo.derive_params.v1.derive_parameters) specified in plan-environment file
+Workflow execution is failed: Role 'ComputeOvsDpdk': The action raised an exception [action_ex_id=3bf98f2f-d52e-499c-bbf0-bb2ef1738c33, msg='BaremetalIntrospectionAction.get_data failed: Swift failed to get object inspector_data-65f4716f-5ecc-457e-93f3-d5bd9aa64ec7 in container ironic-inspector. Error was: ResourceNotFound: 404: Client Error for url: http://192.168.24.3:8080/v1/AUTH_5c17cb587cf14d3ea01996861c6e1aa8/ironic-inspector/inspector_data-65f4716f-5ecc-457e-93f3-d5bd9aa64ec7, Not FoundThe resource could not be found.', action_cls='<class 'mistral.actions.action_factory.BaremetalIntrospectionAction'>', attributes='{'client_method_name': 'get_data'}', params='{'uuid': '65f4716f-5ecc-457e-93f3-d5bd9aa64ec7'}'], Role 'ComputeOvsDpdkSriov': The action raised an exception [action_ex_id=a0820ae5-0e3c-4628-85c0-4efa527787e1, msg='BaremetalIntrospectionAction.get_data failed: Swift failed to get object inspector_data-ed1ade8c-92e2-45b3-abec-76be8abf1266 in container ironic-inspector. Error was: ResourceNotFound: 404: Client Error for url: http://192.168.24.3:8080/v1/AUTH_5c17cb587cf14d3ea01996861c6e1aa8/ironic-inspector/inspector_data-ed1ade8c-92e2-45b3-abec-76be8abf1266, Not FoundThe resource could not be found.', action_cls='<class 'mistral.actions.action_factory.BaremetalIntrospectionAction'>', attributes='{'client_method_name': 'get_data'}', params='{'uuid': 'ed1ade8c-92e2-45b3-abec-76be8abf1266'}']
 
 
 ```

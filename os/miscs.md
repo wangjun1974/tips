@@ -20291,6 +20291,12 @@ openstack port delete sriov-port-1
 测试 cloud-init 与 rhel cloud image
 https://fabianlee.org/2020/03/22/kvm-testing-cloud-init-locally-using-kvm-for-a-rhel-cloud-image/
 
+生成包含 ComputeOvsDpdkSriov 角色的 roles_data_dpdksriov.yaml 文件
+openstack overcloud roles generate -o roles_data_dpdksriov.yaml Controller ComputeOvsDpdkSriov
+
+编辑 network nic-configs 文件
+
+
 报错
 (undercloud) [stack@dell-per730-02 ovs-dpdk]$ /bin/bash -x ./plan-deploy.sh 
 + CUSTOM=/home/stack/ovs-dpdk

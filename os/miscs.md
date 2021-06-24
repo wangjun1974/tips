@@ -20400,6 +20400,27 @@ Invoking workflow (tripleo.derive_params.v1.derive_parameters) specified in plan
 Workflow execution is failed: Role 'ComputeOvsDpdk': The action raised an exception [action_ex_id=3bf98f2f-d52e-499c-bbf0-bb2ef1738c33, msg='BaremetalIntrospectionAction.get_data failed: Swift failed to get object inspector_data-65f4716f-5ecc-457e-93f3-d5bd9aa64ec7 in container ironic-inspector. Error was: ResourceNotFound: 404: Client Error for url: http://192.168.24.3:8080/v1/AUTH_5c17cb587cf14d3ea01996861c6e1aa8/ironic-inspector/inspector_data-65f4716f-5ecc-457e-93f3-d5bd9aa64ec7, Not FoundThe resource could not be found.', action_cls='<class 'mistral.actions.action_factory.BaremetalIntrospectionAction'>', attributes='{'client_method_name': 'get_data'}', params='{'uuid': '65f4716f-5ecc-457e-93f3-d5bd9aa64ec7'}'], Role 'ComputeOvsDpdkSriov': The action raised an exception [action_ex_id=a0820ae5-0e3c-4628-85c0-4efa527787e1, msg='BaremetalIntrospectionAction.get_data failed: Swift failed to get object inspector_data-ed1ade8c-92e2-45b3-abec-76be8abf1266 in container ironic-inspector. Error was: ResourceNotFound: 404: Client Error for url: http://192.168.24.3:8080/v1/AUTH_5c17cb587cf14d3ea01996861c6e1aa8/ironic-inspector/inspector_data-ed1ade8c-92e2-45b3-abec-76be8abf1266, Not FoundThe resource could not be found.', action_cls='<class 'mistral.actions.action_factory.BaremetalIntrospectionAction'>', attributes='{'client_method_name': 'get_data'}', params='{'uuid': 'ed1ade8c-92e2-45b3-abec-76be8abf1266'}']
 
 
+rhcos-4.6.1-x86_64-live.x86_64.iso
+openstack image create --file ~/rhcos-4.6.1-x86_64-live.x86_64.iso --disk-format iso rhcos-4.6.1-iso
+openstack image create --file ~/rhcos-4.6.1-x86_64-qemu.x86_64.qcow2 --disk-format qcow2 rhcos-4.6.1-qcow2
+
+private_network_id=$(openstack network show private -f value -c id)
+openstack port create --network ${private_network_id} private-port-1 --fixed-ip ip-address=172.16.1.11
+
+禁用端口 security
+openstack port set --no-security-group --disable-port-security private-port-1
+
+nmcli con mod 'Wired Connection' connection.autoconnect 'yes' \
+  ipv4.method 'manual' ipv4.address '192.168.2.53/24' \
+  ipv4.gateway '192.168.2.1' ipv4.dns '192.168.2.1'
+
+dpdk_network_id=$(openstack network show dpdk-net-1 -f value -c id)
+openstack port create --network ${dpdk_network_id} dpdk-port-3 --fixed-ip ip-address=192.168.2.53
+
+
+在 ovsdpdk 或者 sriov 的节点上，如果希望网络能通，需要在 flavor 设置
+
+
 ```
 
 ### NFV BIOS 配置

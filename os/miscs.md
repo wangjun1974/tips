@@ -20296,6 +20296,96 @@ openstack overcloud roles generate -o roles_data_dpdksriov.yaml Controller Compu
 
 编辑 network nic-configs 文件
 
+查看 computeovsdpdksriov 节点的 ovs 设置
+[heat-admin@overcloud-computeovsdpdksriov-0 ~]$ sudo ovs-vsctl get Open_vSwitch . other_config
+{dpdk-extra=" -n 4", dpdk-init="true", dpdk-lcore-mask="30003", dpdk-socket-mem="1024,4096", pmd-cpu-mask=c000c}
+
+查看 hugepage 使用情况
+[heat-admin@overcloud-computeovsdpdksriov-0 ~]$ cat /proc/meminfo | grep Huge 
+AnonHugePages:      2048 kB
+ShmemHugePages:        0 kB
+HugePages_Total:      32
+HugePages_Free:       19
+HugePages_Rsvd:        0
+HugePages_Surp:        0
+Hugepagesize:    1048576 kB
+Hugetlb:        33554432 kB
+
+Public Network
+(overcloud) [stack@dell-per730-02 ovs-dpdk]$ openstack network show public -f yaml 
+admin_state_up: true
+availability_zone_hints: []
+availability_zones:
+- nova
+created_at: '2021-06-24T02:21:16Z'
+description: ''
+dns_domain: null
+id: c72cb25d-3328-4738-80e3-c585698c9d73
+ipv4_address_scope: null
+ipv6_address_scope: null
+is_default: false
+is_vlan_transparent: null
+location:
+  cloud: ''
+  project:
+    domain_id: null
+    domain_name: Default
+    id: a8d448313676410f976f660f40065d0a
+    name: admin
+  region_name: regionOne
+  zone: null
+mtu: 1500
+name: public
+port_security_enabled: true
+project_id: a8d448313676410f976f660f40065d0a
+provider:network_type: vlan
+provider:physical_network: datacentre
+provider:segmentation_id: 187
+qos_policy_id: null
+revision_number: 2
+router:external: true
+segments: null
+shared: true
+status: ACTIVE
+subnets:
+- d2144e63-51e3-422e-b79c-c212398f1f5c
+tags: []
+updated_at: '2021-06-24T02:21:17Z'
+
+(overcloud) [stack@dell-per730-02 ovs-dpdk]$ openstack subnet show publicSub -f yaml 
+allocation_pools:
+- end: 10.72.51.155
+  start: 10.72.51.136
+cidr: 10.72.51.128/27
+created_at: '2021-06-24T02:21:17Z'
+description: ''
+dns_nameservers: []
+enable_dhcp: true
+gateway_ip: 10.72.51.158
+host_routes: []
+id: d2144e63-51e3-422e-b79c-c212398f1f5c
+ip_version: 4
+ipv6_address_mode: null
+ipv6_ra_mode: null
+location:
+  cloud: ''
+  project:
+    domain_id: null
+    domain_name: Default
+    id: a8d448313676410f976f660f40065d0a
+    name: admin
+  region_name: regionOne
+  zone: null
+name: publicSub
+network_id: c72cb25d-3328-4738-80e3-c585698c9d73
+prefix_length: null
+project_id: a8d448313676410f976f660f40065d0a
+revision_number: 0
+segment_id: null
+service_types: []
+subnetpool_id: null
+tags: []
+updated_at: '2021-06-24T02:21:17Z'
 
 报错
 (undercloud) [stack@dell-per730-02 ovs-dpdk]$ /bin/bash -x ./plan-deploy.sh 

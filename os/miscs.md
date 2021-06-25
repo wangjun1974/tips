@@ -20438,3 +20438,9 @@ openstack port create --network ${dpdk_network_id} dpdk-port-3 --fixed-ip ip-add
 |VT-d|Enabled for Intel cards if VFIO functionality is needed|
 |NUMA memory interleave|Disabled|
 
+### rhcos qcow2 镜像启动命令参数
+https://www.openshift.com/blog/openshift-upi-using-static-ips
+```
+启动命令参数
+[    4.873269] dracut-cmdline[355]: Using kernel command line parameters: ip=dhcp,dhcp6 rd.driver.pre=dm_multipath BOOT_IMAGE=(hd0,gpt1)/ostree/rhcos-d0d48870a3b17a8805d47bc409e1885940c7248a99a95ce32f971725c987e92d/vmlinuz-4.18.0-193.24.1.el8_2.dt1.x86_64 rhcos.root=crypt_rootfs random.trust_cpu=on console=tty0 console=ttyS0,115200n8 ignition.platform.id=qemu rd.luks.options=discard ignition.firstboot ostree=/ostree/boot.1/rhcos/d0d48870a3b17a8805d47bc409e1885940c7248a99a95ce32f971725c987e92d/0
+```

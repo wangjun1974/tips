@@ -1,5 +1,8 @@
-### 配置 ovsdpdk 
+### 配置 ovsdpdksriov 
 ```
+# 设置 ComputeOvsDpdkSriov 节点 BIOS
+# 参考 https://access.redhat.com/documentation/en-us/red_hat_openstack_platform/16.1/html/network_functions_virtualization_planning_and_configuration_guide/ch-hardware-requirements#bios_settings
+
 # 部署 RHOSP 使用 OVS mechanism driver
 # 修改 containers-prepare-parameter.yaml, 设置 neutron_driver 参数为 null
 # 参考: https://github.com/wangjun1974/ospinstall/blob/main/containers-prepare-parameter.yaml.example.md
@@ -9,10 +12,249 @@ parameter_defaults:
     set:
       neutron_driver: null
 
-
 # 生成 ComputeOvsDpdkSriov 角色
 mkdir -p ~/templates
-openstack overcloud roles generate -o ~/templates/roles_data.yaml Controller ComputeOvsDpdkSriov
+openstack overcloud roles generate -o ~/templates/roles_data_dpdksriov.yaml Controller ComputeOvsDpdkSriov
+
+# 将 ComputeOvsDpdkSriov 角色的内容添加到 ~/templates/roles_data.yaml 文件中
+(undercloud) [stack@dell-per730-02 ovs-dpdk]$ cat templates/roles_data.yaml | grep ComputeOvsDpdkSriov -A60 -B1
+###############################################################################
+# Role: ComputeOvsDpdkSriov                                                   #
+###############################################################################
+- name: ComputeOvsDpdkSriov
+  description: |
+    Compute role with OvS-DPDK and SR-IOV services
+  CountDefault: 1
+  networks:
+    - InternalApi
+    - Tenant
+    - Storage
+  RoleParametersDefault:
+    VhostuserSocketGroup: "hugetlbfs"
+    TunedProfileName: "cpu-partitioning"
+    NovaLibvirtRxQueueSize: 1024
+    NovaLibvirtTxQueueSize: 1024
+  update_serial: 25
+  ServicesDefault:
+    - OS::TripleO::Services::Aide
+    - OS::TripleO::Services::AuditD
+    - OS::TripleO::Services::BootParams
+    - OS::TripleO::Services::CACerts
+    - OS::TripleO::Services::CephClient
+    - OS::TripleO::Services::CephExternal
+    - OS::TripleO::Services::CertmongerUser
+    - OS::TripleO::Services::Collectd
+    - OS::TripleO::Services::ComputeCeilometerAgent
+    - OS::TripleO::Services::ComputeNeutronCorePlugin
+    - OS::TripleO::Services::ComputeNeutronL3Agent
+    - OS::TripleO::Services::ComputeNeutronMetadataAgent
+    - OS::TripleO::Services::ComputeNeutronOvsDpdk
+    - OS::TripleO::Services::Docker
+    - OS::TripleO::Services::IpaClient
+    - OS::TripleO::Services::Ipsec
+    - OS::TripleO::Services::Iscsid
+    - OS::TripleO::Services::Kernel
+    - OS::TripleO::Services::LoginDefs
+    - OS::TripleO::Services::MetricsQdr
+    - OS::TripleO::Services::Multipathd
+    - OS::TripleO::Services::MySQLClient
+    - OS::TripleO::Services::NeutronBgpVpnBagpipe
+    - OS::TripleO::Services::NeutronSriovAgent
+    - OS::TripleO::Services::NeutronSriovHostConfig
+    - OS::TripleO::Services::NovaAZConfig
+    - OS::TripleO::Services::NovaCompute
+    - OS::TripleO::Services::NovaLibvirt
+    - OS::TripleO::Services::NovaLibvirtGuests
+    - OS::TripleO::Services::NovaMigrationTarget
+    - OS::TripleO::Services::ContainersLogrotateCrond
+    - OS::TripleO::Services::OVNController
+    - OS::TripleO::Services::OVNMetadataAgent
+    - OS::TripleO::Services::OvsDpdkNetcontrold
+    - OS::TripleO::Services::Rhsm
+    - OS::TripleO::Services::Rsyslog
+    - OS::TripleO::Services::RsyslogSidecar
+    - OS::TripleO::Services::Securetty
+    - OS::TripleO::Services::Snmp
+    - OS::TripleO::Services::Sshd
+    - OS::TripleO::Services::Timesync
+    - OS::TripleO::Services::Timezone
+    - OS::TripleO::Services::TripleoFirewall
+    - OS::TripleO::Services::TripleoPackages
+    - OS::TripleO::Services::Podman
+    - OS::TripleO::Services::Ptp
+
+# 生成 ComputeDpdkSriov 节点 nic-configs
+# computedpdksriov.yaml 从已有的 compute.yaml 文件拷贝
+# 然后根据网卡所承载的部署网络，内部网络，dpdk 网络和 sriov 网络定制修改 computedpdksriov.yaml 文件
+(undercloud) [stack@dell-per730-02 ovs-dpdk]$ cat templates/nic-configs/computedpdksriov.yaml
+...
+resources:
+  OsNetConfigImpl:
+    type: OS::Heat::SoftwareConfig
+    properties:
+      group: script
+      config:
+        str_replace:
+          template:
+            get_file: /usr/share/openstack-tripleo-heat-templates/network/scripts/run-os-net-config.sh
+          params:
+            $network_config:
+              network_config:
+              - type: interface
+                name: eno2
+                mtu:
+                  get_param: ControlPlaneMtu
+                use_dhcp: false
+                dns_servers:
+                  get_param: DnsServers
+                domain:
+                  get_param: DnsSearchDomains
+                addresses:
+                - ip_netmask:
+                    list_join:
+                    - /
+                    - - get_param: ControlPlaneIp
+                      - get_param: ControlPlaneSubnetCidr
+ 
+              - type: interface
+                name: eno1
+                use_dhcp: false
+              - type: vlan
+                device: eno4
+                use_dhcp: false
+                mtu:
+                  get_param: StorageMtu
+                vlan_id:
+                  get_param: StorageNetworkVlanID
+                addresses:
+                - ip_netmask:
+                    get_param: StorageIpSubnet
+ 
+              - type: vlan
+                use_dhcp: false
+                device: eno4
+                mtu:
+                  get_param: InternalApiMtu
+                vlan_id:
+                  get_param: InternalApiNetworkVlanID
+                addresses:
+                - ip_netmask:
+                    get_param: InternalApiIpSubnet   
+ 
+              - type: ovs_user_bridge
+                name: br-dpdk0
+                use_dhcp: false
+                ovs_extra:
+                 - str_replace:
+                     template: set port br-dpdk0 tag=_VLAN_TAG_
+                     params:
+                       _VLAN_TAG_:
+                         get_param: TenantNetworkVlanID
+                addresses:
+                 - ip_netmask:
+                     get_param: TenantIpSubnet
+                members:
+                - type: ovs_dpdk_port
+                  name: br-dpdk0-dpdk-port0
+                  rx_queue: 1
+                  members:
+                  - type: interface
+                    name: enp130s0f0
+ 
+              - type: sriov_pf
+                name: enp130s0f1
+                use_dhcp: false
+                numvfs: 8
+                defroute: false
+                nm_controlled: true
+                hotplug: true
+                promisc: false
+
+# 修改 network-environments.yaml 文件
+# 在 resource_registry 段添加 OS::TripleO::ComputeOvsDpdkSriov::Net::SoftwareConfig
+resource_registry:
+...
+  # Port assignments for the Compute DPDK-SRIOV
+  OS::TripleO::ComputeOvsDpdkSriov::Net::SoftwareConfig:
+    /home/stack/ovs-dpdk/templates/nic-configs/computedpdksriov.yaml
+# 定义环境参数
+...
+  NeutronNetworkType: 'vxlan, vlan'
+  NeutronTunnelTypes: 'vxlan'
+  NeutronEnableDVR: false
+  NeutronBridgeMappings: "datacentre:br-ex,dpdk0:br-dpdk0"
+  # Neutron VLAN ranges per network, for example 'datacentre:1:499,tenant:500:1000':
+  NeutronNetworkVLANRanges: 'datacentre:187:187,dpdk0:900:904,sriov-1:900:904'
+  # Customize bonding options, e.g. "mode=4 lacp_rate=1 updelay=1000 miimon=100"
+  # for Linux bonds w/LACP, or "bond_mode=active-backup" for OVS active/backup.
+  #BondInterfaceOvsOptions: "bond_mode=active-backup"
+ 
+  NeutronOVSFirewallDriver: openvswitch
+  NovaEnableNUMALiveMigration: true
+
+# OVS DPDK 节点配置
+  ##########################
+  # OVS DPDK configuration #
+  ##########################
+ 
+  ComputeOvsDpdkParameters:
+    IsolCpusList: 2,18,4,20,6,22,8,24,10,26,12,28,14,30,3,19,5,21,7,23,9,25,11,27,13,29,15,31
+    KernelArgs: default_hugepagesz=1GB hugepagesz=1G hugepages=32 iommu=pt intel_iommu=on
+      isolcpus=2,18,4,20,6,22,8,24,10,26,12,28,14,30,3,19,5,21,7,23,9,25,11,27,13,29,15,31
+    NovaReservedHostMemory: 4096
+    NovaComputeCpuDedicatedSet: 4,20,6,22,8,24,10,26,12,28,14,30,5,21,7,23,9,25,11,27,13,29,15,31
+    OvsDpdkCoreList: 0,16,1,17
+    OvsDpdkMemoryChannels: 4
+    OvsDpdkSocketMemory: "1024,4096"
+    OvsPmdCoreList: 2,18,3,19
+
+# OVS DPDK SR-IOV 节点配置
+  #################################
+  # OVS DPDK SR-IOV configuration #
+  #################################
+ 
+  ComputeOvsDpdkSriovParameters:
+    IsolCpusList: 2,18,4,20,6,22,8,24,10,26,12,28,14,30,3,19,5,21,7,23,9,25,11,27,13,29,15,31
+    KernelArgs: default_hugepagesz=1GB hugepagesz=1G hugepages=32 iommu=pt intel_iommu=on
+      isolcpus=2,18,4,20,6,22,8,24,10,26,12,28,14,30,3,19,5,21,7,23,9,25,11,27,13,29,15,31
+    TunedProfileName: "cpu-partitioning"
+    NovaComputeCpuDedicatedSet: 4,20,6,22,8,24,10,26,12,28,14,30,5,21,7,23,9,25,11,27,13,29,15,31
+    NovaReservedHostMemory: 4096
+    OvsDpdkSocketMemory: "1024,4096"
+    OvsDpdkMemoryChannels: "4"
+    OvsDpdkCoreList: 0,16,1,17
+    OvsPmdCoreList: 2,18,3,19
+    NovaComputeCpuSharedSet: [0,16,1,17]
+    # When using NIC partioning on SR-IOV enabled setups, 'derive_pci_passthrough_whitelist.py'
+    # script will be executed which will override NovaPCIPassthrough.
+    # No option to disable as of now - https://bugzilla.redhat.com/show_bug.cgi?id=1774403
+    NovaPCIPassthrough:
+      - devname: "enp130s0f1"
+        trusted: "true"
+        physical_network: "sriov-1"
+ 
+    # NUMA aware vswitch
+    # NeutronPhysnetNUMANodesMapping: {dpdk-mgmt: [0]}
+    # NeutronTunnelNUMANodes: [0]
+    NeutronPhysicalDevMappings:
+    - sriov-1:enp130s0f1
+
+# Scheduler Filters 配置
+  ############################
+  #  Scheduler configuration #
+  ############################
+  NovaSchedulerDefaultFilters:
+    - "RetryFilter"
+    - "AvailabilityZoneFilter"
+    - "ComputeFilter"
+    - "ComputeCapabilitiesFilter"
+    - "ImagePropertiesFilter"
+    - "ServerGroupAntiAffinityFilter"
+    - "ServerGroupAffinityFilter"
+    - "PciPassthroughFilter"
+    - "NUMATopologyFilter"
+    - "AggregateInstanceExtraSpecsFilter"
+
 
 # 修改部署脚本，包含如下模版文件
 # -e $THT/environments/services/neutron-ovs.yaml
@@ -38,6 +280,123 @@ openstack overcloud deploy --debug --templates $THT \
 -e $CNF/fix-nova-reserved-host-memory.yaml \
 --ntp-server 192.0.2.1
 
+创建 sriov aggregate
+openstack aggregate create sriov-group-1
+openstack aggregate add host sriov-group-1 overcloud-computeovsdpdksriov-0.localdomain
+openstack aggregate set --property sriov=true sriov-group-1
+
+创建 dpdk aggregate
+openstack aggregate create dpdk-group-1
+openstack aggregate add host dpdk-group-1 overcloud-computeovsdpdk-0.localdomain
+openstack aggregate add host dpdk-group-1 overcloud-computeovsdpdk-1.localdomain
+openstack aggregate add host dpdk-group-1 overcloud-computeovsdpdk-2.localdomain
+openstack aggregate add host dpdk-group-1 overcloud-computeovsdpdksriov-0.localdomain
+openstack aggregate set --property dpdk=true dpdk-group-1
+
+创建 sriov network 和 subnet
+openstack network create sriov-net-1 \
+  --provider-physical-network sriov-1 \
+  --provider-network-type vlan --provider-segment 900
+openstack subnet create sriov-subnet-1 --network sriov-net-1 \
+  --no-dhcp --subnet-range 192.168.2.0/24 \
+  --allocation-pool start=192.168.2.100,end=192.168.2.200 --gateway 192.168.2.1
+
+创建 dpdk network 和 subnet
+openstack network create dpdk-net-1 \
+  --provider-physical-network dpdk0 \
+  --provider-network-type vlan --provider-segment 900
+openstack subnet create dpdk-subnet-1 --network dpdk-net-1 \
+  --no-dhcp --subnet-range 192.168.2.0/24 \
+  --allocation-pool start=192.168.2.50,end=192.168.2.99 --gateway 192.168.2.1
+
+创建 security group rule 
+SGID=$(openstack security group list --project admin -c ID -f value)
+openstack security group rule create --proto icmp $SGID
+openstack security group rule create --dst-port 22 --proto tcp $SGID
+
+创建 sriov flavor
+openstack flavor create m1.sriov --ram 4096 --disk 10 --vcpus 4
+
+设置 sriov flavor property
+openstack flavor set --property sriov=true --property hw:cpu_policy=dedicated --property hw:mem_page_size=1GB m1.sriov
+
+创建 dpdk flavor
+openstack flavor create m1.dpdk --ram 4096 --disk 10 --vcpus 4
+
+设置 dpdk flavor property
+openstack flavor set --property dpdk=true --property hw:cpu_policy=dedicated --property hw:mem_page_size=1GB --property hw:emulator_threads_policy=isolate m1.dpdk
+
+上传镜像
+openstack image create --file ~/rhel-8.3-x86_64-kvm-password.qcow2 --disk-format qcow2 rhel8u3
+
+启动 dpdk 实例1
+dpdk_network_id=$(openstack network show dpdk-net-1 -f value -c id)
+openstack port create --network ${dpdk_network_id} dpdk-port-1 --fixed-ip ip-address=192.168.2.51
+
+cat <<EOF > mydata.file
+#cloud-config
+password: redhat
+chpasswd: { expire: False }
+ssh_pwauth: True
+ethernets:
+  eth0:
+    addresses:
+      - 192.168.2.51/24
+EOF
+
+dpdk_port_id=$(openstack port show dpdk-port-1 -f value -c id)
+openstack server create --flavor m1.dpdk --image rhel8u3 --nic port-id=$dpdk_port_id --config-drive True --user-data mydata.file test-dpdk-1
+
+启动 dpdk 实例2
+dpdk_network_id=$(openstack network show dpdk-net-1 -f value -c id)
+openstack port create --network ${dpdk_network_id} dpdk-port-2 --fixed-ip ip-address=192.168.2.52
+
+cat <<EOF > mydata.file
+#cloud-config
+password: redhat
+chpasswd: { expire: False }
+ssh_pwauth: True
+ethernets:
+  eth0:
+    addresses:
+      - 192.168.2.52/24
+EOF
+
+dpdk_port_id=$(openstack port show dpdk-port-2 -f value -c id)
+openstack server create --flavor m1.dpdk --image rhel8u3 --nic port-id=$dpdk_port_id --config-drive True --user-data mydata.file test-dpdk-2
+
+启动 sriov 实例
+sriov_network_id=$(openstack network show sriov-net-1 -f value -c id)
+openstack port create --network ${sriov_network_id} sriov-port-1 --vnic-type direct --fixed-ip ip-address=192.168.2.101
+
+cat <<EOF > mydata.file
+#cloud-config
+password: redhat
+chpasswd: { expire: False }
+ssh_pwauth: True
+ethernets:
+  eth0:
+    addresses:
+      - 192.168.2.101/24
+EOF
+
+sriov_port_id=$(openstack port show sriov-port-1 -f value -c id)
+openstack server create --flavor m1.sriov --image rhel8u3 --nic port-id=$sriov_port_id --config-drive True --user-data mydata.file test-sriov-1
+
+查看实例所在的 Hypervisor
+openstack server show test-dpdk-1 -f yaml | grep hypervisor 
+openstack server show test-dpdk-2 -f yaml | grep hypervisor 
+openstack server show test-sriov-1 -f yaml | grep hypervisor 
+
+清理实例和 port
+openstack server delete test-dpdk-1
+openstack server delete test-dpdk-2
+openstack server delete test-sriov-1
+openstack port delete dpdk-port-1
+openstack port delete dpdk-port-2
+openstack port delete sriov-port-1
+
+
 # 设置 inspection root password
 (undercloud) [stack@undercloud ~]$ openssl passwd -1 redhat
 $1$J5QN13Eg$fg1DdFcfDAEROPnMnkrgK1
@@ -52,28 +411,12 @@ initrd --timeout 60000 http://192.0.2.1:8088/agent.ramdisk || goto retry_boot
 boot
 
                                              
-需要附加在 network-environment 文件里的参数
-
-  NeutronOVSFirewallDriver: openvswitch
-  NovaEnableNUMALiveMigration: true
-
-  ComputeOvsDpdkSriovParameters:
-    IsolCpusList: "1,2,3"
-    KernelArgs: "default_hugepagesz=2M hugepagesz=2M hugepages=1024 iommu=pt intel_iommu=on isolcpus=1,2,3"
-    NovaReservedHostMemory: "1024"
-    NovaComputeCpuDedicatedSet: ['2,3']
-    OvsDpdkCoreList: "0"
-    OvsDpdkMemoryChannels: 4
-    OvsDpdkSocketMemory: "1024"
-    OvsPmdCoreList: "1"
-
 更新 plan
 openstack overcloud deploy --templates $THT --update-plan-only -r $CNF/roles_data.yaml -n $CNF/network_data.yaml -e $CNF/node-info.yaml -e $THT/environments/network-isolation.yaml -e $CNF/environments/network-environment.yaml -e $THT/environments/services/neutron-ovs.yaml -e $THT/environments/services/neutron-ovs-dpdk.yaml -e $THT/environments/services/neutron-sriov.yaml -e $CNF/environments/net-bond-with-vlans.yaml -e ~/containers-prepare-parameter.yaml -e $CNF/fix-nova-reserved-host-memory.yaml --ntp-server 192.0.2.1
 
 
 查看节点 cpu NUMA 信息
 lscpu |  grep NUMA
-
 
 
 2021-06-18 13:56:51,290 p=403090 u=mistral n=ansible | fatal: [overcloud-computeovsdpdksriov-0]: FAILED! => {
@@ -171,11 +514,6 @@ for i in computeovsdpdksriov; do
 done
 ```
 
-
-### 配置 sriov
-```
-
-```
 
 ### 软件频道 rhel-8-for-x86_64-nfv-rpms 包含那些软件包
 ```

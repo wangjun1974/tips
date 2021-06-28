@@ -10,10 +10,11 @@ parameter_defaults:
       neutron_driver: null
 
 
+# 生成 ComputeOvsDpdkSriov 角色
 mkdir -p ~/templates
 openstack overcloud roles generate -o ~/templates/roles_data.yaml Controller ComputeOvsDpdkSriov
 
-# ovs 部署脚本
+# 修改部署脚本，包含如下模版文件
 # -e $THT/environments/services/neutron-ovs.yaml
 # -e $THT/environments/services/neutron-ovs-dpdk.yaml
 # -e $THT/environments/services/neutron-sriov.yaml

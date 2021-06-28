@@ -20443,4 +20443,11 @@ https://www.openshift.com/blog/openshift-upi-using-static-ips
 ```
 启动命令参数
 [    4.873269] dracut-cmdline[355]: Using kernel command line parameters: ip=dhcp,dhcp6 rd.driver.pre=dm_multipath BOOT_IMAGE=(hd0,gpt1)/ostree/rhcos-d0d48870a3b17a8805d47bc409e1885940c7248a99a95ce32f971725c987e92d/vmlinuz-4.18.0-193.24.1.el8_2.dt1.x86_64 rhcos.root=crypt_rootfs random.trust_cpu=on console=tty0 console=ttyS0,115200n8 ignition.platform.id=qemu rd.luks.options=discard ignition.firstboot ostree=/ostree/boot.1/rhcos/d0d48870a3b17a8805d47bc409e1885940c7248a99a95ce32f971725c987e92d/0
+
+编辑文件，设置静态 ip 地址
+cp rhcos-4.6.1-x86_64-qemu-static.x86_64.qcow2 rhcos-4.6.1-x86_64-qemu-master0-static.x86_64.qcow2
+guestfish --rw -a rhcos-4.6.1-x86_64-qemu-master0-static.x86_64.qcow2
+><fs> run
+><fs> cat /ignition.firstboot 
+set ignition_network_kcmdline='rd.neednet=1 ip=172.16.1.11::172.16.1.1:255.255.255.0:master0.cluster.example.com:ens3:none nameserver=172.16.1.1'
 ```

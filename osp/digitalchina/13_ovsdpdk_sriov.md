@@ -255,6 +255,33 @@ resource_registry:
     - "NUMATopologyFilter"
     - "AggregateInstanceExtraSpecsFilter"
 
+# 设置 node_info.yaml
+(undercloud) [stack@dell-per730-02 ovs-dpdk]$ cat templates/node_info.yaml 
+parameter_defaults:
+  ControllerCount: 3
+  ComputeCount: 0
+  ComputeOvsDpdkCount: 3
+  ComputeOvsDpdkSriovCount: 1
+
+  ControllerSchedulerHints:
+    'capabilities:node': 'controller-%index%'
+  ComputeSchedulerHints:
+    'capabilities:node': 'compute-%index%'
+  ComputeOvsDpdkSchedulerHints:
+    'capabilities:node': 'computeovsdpdk-%index%'
+  ComputeOvsDpdkSriovSchedulerHints:
+    'capabilities:node': 'computeovsdpdksriov-%index%'
+
+# 为节点打标签
+openstack baremetal node set --property capabilities='node:controller-0,boot_option:local' controller-0
+openstack baremetal node set --property capabilities='node:controller-1,boot_option:local' controller-1
+openstack baremetal node set --property capabilities='node:controller-2,boot_option:local' controller-2
+
+openstack baremetal node set --property capabilities='node:computeovsdpdk-0,boot_option:local' computedpdk-0
+openstack baremetal node set --property capabilities='node:computeovsdpdk-1,boot_option:local' computedpdk-1
+openstack baremetal node set --property capabilities='node:computeovsdpdk-2,boot_option:local' computedpdk-2
+
+openstack baremetal node set --property capabilities='node:computeovsdpdksriov-0,boot_option:local' computedpdk-3
 
 # 修改部署脚本，包含如下模版文件
 # -e $THT/environments/services/neutron-ovs.yaml

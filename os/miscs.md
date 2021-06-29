@@ -20418,9 +20418,6 @@ dpdk_network_id=$(openstack network show dpdk-net-1 -f value -c id)
 openstack port create --network ${dpdk_network_id} dpdk-port-3 --fixed-ip ip-address=192.168.2.53
 
 
-在 ovsdpdk 或者 sriov 的节点上，如果希望网络能通，需要在 flavor 设置
-
-
 ```
 
 ### NFV BIOS 配置

@@ -273,6 +273,9 @@ https://bugzilla.redhat.com/show_bug.cgi?id=1762691
 在 overcloud 节点上，这个程序完成 sriov 相关配置
 /usr/lib/python3.6/site-packages/os_net_config/sriov_config.py
 
+如何通过 ip link 命令或者 sysfs 设置 min_tx_rate 和 max_tx_rate
+https://community.mellanox.com/s/article/HowTo-Configure-Rate-Limit-per-VF-for-ConnectX-4-ConnectX-5-ConnectX-6
+
 
 # 修改 network-environments.yaml 文件
 # 在 resource_registry 段添加 OS::TripleO::ComputeOvsDpdkSriov::Net::SoftwareConfig

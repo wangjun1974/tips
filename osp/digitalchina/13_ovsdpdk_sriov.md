@@ -119,6 +119,7 @@ resources:
               - type: interface
                 name: eno1
                 use_dhcp: false
+
               - type: vlan
                 device: eno4
                 use_dhcp: false
@@ -140,7 +141,7 @@ resources:
                 addresses:
                 - ip_netmask:
                     get_param: InternalApiIpSubnet   
- 
+
               - type: ovs_user_bridge
                 name: br-dpdk0
                 use_dhcp: false
@@ -160,7 +161,7 @@ resources:
                   members:
                   - type: interface
                     name: enp130s0f0
- 
+
               - type: sriov_pf
                 name: enp130s0f1
                 use_dhcp: false
@@ -169,6 +170,109 @@ resources:
                 nm_controlled: true
                 hotplug: true
                 promisc: false
+
+# 生成 ComputeDpdkSriov Nic Partitioning 节点 nic-configs
+# computedpdksriov.yaml 从已有的 compute.yaml 文件拷贝
+# 然后根据网卡所承载的部署网络，内部网络，dpdk 网络和 sriov 网络定制修改 computedpdksriov.yaml 文件
+# 参考：https://blueprints.launchpad.net/tripleo/+spec/sriov-vfs-as-network-interface
+(undercloud) [stack@dell-per730-02 ovs-dpdk]$ cat templates/nic-configs/computedpdksriov.yaml
+...
+resources:
+  OsNetConfigImpl:
+    type: OS::Heat::SoftwareConfig
+    properties:
+      group: script
+      config:
+        str_replace:
+          template:
+            get_file: /usr/share/openstack-tripleo-heat-templates/network/scripts/run-os-net-config.sh
+          params:
+            $network_config:
+              network_config:
+              - type: interface
+                name: eno2
+                mtu:
+                  get_param: ControlPlaneMtu
+                use_dhcp: false
+                dns_servers:
+                  get_param: DnsServers
+                domain:
+                  get_param: DnsSearchDomains
+                addresses:
+                - ip_netmask:
+                    list_join:
+                    - /
+                    - - get_param: ControlPlaneIp
+                      - get_param: ControlPlaneSubnetCidr
+ 
+              - type: interface
+                name: eno1
+                use_dhcp: false
+
+              - type: vlan
+                device: eno4
+                use_dhcp: false
+                mtu:
+                  get_param: StorageMtu
+                vlan_id:
+                  get_param: StorageNetworkVlanID
+                addresses:
+                - ip_netmask:
+                    get_param: StorageIpSubnet
+ 
+              - type: vlan
+                use_dhcp: false
+                device: eno4
+                mtu:
+                  get_param: InternalApiMtu
+                vlan_id:
+                  get_param: InternalApiNetworkVlanID
+                addresses:
+                - ip_netmask:
+                    get_param: InternalApiIpSubnet   
+
+              - type: sriov_pf
+                name: enp130s0f0
+                use_dhcp: false
+                numvfs: 8
+                defroute: false
+                nm_controlled: true
+                hotplug: true
+                promisc: false
+
+              - type: ovs_user_bridge
+                name: br-dpdk0
+                use_dhcp: false
+                ovs_extra:
+                 - str_replace:
+                     template: set port br-dpdk0 tag=_VLAN_TAG_
+                     params:
+                       _VLAN_TAG_:
+                         get_param: TenantNetworkVlanID
+                addresses:
+                 - ip_netmask:
+                     get_param: TenantIpSubnet
+                members:
+                - type: ovs_dpdk_port
+                  name: br-dpdk0-dpdk-port0
+                  rx_queue: 1
+                  members:
+                  - type: sriov_vf
+                    device: enp130s0f0
+                    vfid: 0
+
+
+https://freesoft.dev/program/156193590
+
+在计算节点上测试网络配置
+os-net-config /etc/os-net-config/config.json --debug
+
+https://github.com/Mellanox/k8s-rdma-sriov-dev-plugin/issues/21
+https://bugzilla.redhat.com/show_bug.cgi?id=1762691
+
+在 overcloud 节点上，这个程序完成 sriov 相关配置
+/usr/lib/python3.6/site-packages/os_net_config/sriov_config.py
+
 
 # 修改 network-environments.yaml 文件
 # 在 resource_registry 段添加 OS::TripleO::ComputeOvsDpdkSriov::Net::SoftwareConfig
@@ -440,6 +544,10 @@ boot
                                              
 更新 plan
 openstack overcloud deploy --templates $THT --update-plan-only -r $CNF/roles_data.yaml -n $CNF/network_data.yaml -e $CNF/node-info.yaml -e $THT/environments/network-isolation.yaml -e $CNF/environments/network-environment.yaml -e $THT/environments/services/neutron-ovs.yaml -e $THT/environments/services/neutron-ovs-dpdk.yaml -e $THT/environments/services/neutron-sriov.yaml -e $CNF/environments/net-bond-with-vlans.yaml -e ~/containers-prepare-parameter.yaml -e $CNF/fix-nova-reserved-host-memory.yaml --ntp-server 192.0.2.1
+
+# 设置 nic partitioning， 内部网络在 sriov vf 上，dpdk ovs_user_bridge 也在 sriov vf 上
+https://blueprints.launchpad.net/tripleo/+spec/sriov-vfs-as-network-interface
+
 
 
 查看节点 cpu NUMA 信息

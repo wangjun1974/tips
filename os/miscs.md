@@ -20454,6 +20454,9 @@ https://downloads.dell.com/manuals/all-products/esuprt_ser_stor_net/esuprt_pedge
 
 如何使用 TRex 测试网络
 https://github.com/chaudron/ovs_perf/blob/master/README.md
+
+ceph ansible log on director/tripleo
+/var/lib/mistral/overcloud/ceph-ansible/ceph_ansible_command.log 
 ```
 
 ### NFV BIOS 配置

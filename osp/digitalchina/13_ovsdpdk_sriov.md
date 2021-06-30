@@ -344,7 +344,7 @@ resource_registry:
     # NeutronPhysnetNUMANodesMapping: {dpdk-mgmt: [0]}
     # NeutronTunnelNUMANodes: [0]
     NeutronPhysicalDevMappings:
-    - sriov-1:enp130s0f1
+      - sriov-1:enp130s0f1
 
 # Scheduler Filters 配置
   ############################

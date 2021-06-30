@@ -686,6 +686,11 @@ ovs-vsctl show
                 options: {dpdk-devargs="0000:82:10.0", n_rxq="1"}
     ovs_version: "2.13.2"
 
+vlan 4095 是 trunk 的意思吗?
+https://community.mellanox.com/s/article/howto-set-virtual-network-attributes-on-a-virtual-function--sr-iov-x
+
+Deployment Template Library
+https://gitlab.cee.redhat.com/mnietoji/deployment_templates/-/tree/master
 ```
 
 

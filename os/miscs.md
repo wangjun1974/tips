@@ -20488,7 +20488,7 @@ https://access.redhat.com/documentation/en-us/red_hat_openstack_platform/16.1/ht
 在启用 instanceha 时首先在控制节点上将节点的 stonith 禁止
 [root@controller-0 ~]# pcs node attribute compute-0  stonith-enabled=false
 
-然后将物理节点关机
+然后将物理节点关机，经验证这个步骤无需执行，如果提前关机了的话，后面的 openstack overcloud node delete 命令会失败
 [root@controller-0 ~]$ source stackrc
 [root@controller-0 ~]$ openstack baremetal node power off <UUID>
 

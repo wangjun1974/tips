@@ -20446,8 +20446,11 @@ https://github.com/m4r1k/nfvi_lab
 Mellanox 网卡设置 max_tx_rate
 https://docs.mellanox.com/pages/viewpage.action?pageId=47033949
 
-历史文档 Sriov + Dpdk测试
+历史文档 Sriov + Dpdk 测试
 http://www.i4box.com/blog/2017/12/13/sriov-plus-dpdkce-shi/
+
+Intel 网卡手册，包含 Nic Partitioning 型号列表
+https://downloads.dell.com/manuals/all-products/esuprt_ser_stor_net/esuprt_pedge_srvr_ethnt_nic/intel-pro-adapters_users-guide_en-us.pdf
 ```
 
 ### NFV BIOS 配置

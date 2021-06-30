@@ -20417,7 +20417,28 @@ nmcli con mod 'Wired Connection' connection.autoconnect 'yes' \
 dpdk_network_id=$(openstack network show dpdk-net-1 -f value -c id)
 openstack port create --network ${dpdk_network_id} dpdk-port-3 --fixed-ip ip-address=192.168.2.53
 
+查看 openvswitch bridge 和 port
+https://kb.juniper.net/InfoCenter/index?page=content&id=KB32283&actp=METADATA
 
+显示节点 pci 设备信息以及驱动
+(undercloud) [stack@dell-per730-02 ovs-dpdk]$ ssh heat-admin@192.168.24.28 sudo driverctl -v list-devices | grep -i net
+0000:01:00.0 tg3 (NetXtreme BCM5720 Gigabit Ethernet PCIe)
+0000:01:00.1 tg3 (NetXtreme BCM5720 Gigabit Ethernet PCIe)
+0000:02:00.0 tg3 (NetXtreme BCM5720 Gigabit Ethernet PCIe)
+0000:02:00.1 tg3 (NetXtreme BCM5720 Gigabit Ethernet PCIe)
+0000:82:00.0 ixgbe (Ethernet 10G 2P X520 Adapter (10GbE 2P X520 Adapter))
+0000:82:00.1 ixgbe (Ethernet 10G 2P X520 Adapter (10GbE 2P X520 Adapter))
+0000:82:10.0 vfio-pci [*] (82599 Ethernet Controller Virtual Function)
+0000:82:10.2 vfio-pci [*] (82599 Ethernet Controller Virtual Function)
+0000:82:10.4 ixgbevf (82599 Ethernet Controller Virtual Function)
+0000:82:10.6 ixgbevf (82599 Ethernet Controller Virtual Function)
+0000:82:11.0 ixgbevf (82599 Ethernet Controller Virtual Function)
+0000:82:11.2 ixgbevf (82599 Ethernet Controller Virtual Function)
+0000:82:11.4 ixgbevf (82599 Ethernet Controller Virtual Function)
+0000:82:11.6 ixgbevf (82599 Ethernet Controller Virtual Function)
+
+下载 rhel cloud image
+https://access.redhat.com/downloads/content/479/ver=/rhel---8/8.4/x86_64/product-software
 ```
 
 ### NFV BIOS 配置

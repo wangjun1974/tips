@@ -20448,3 +20448,9 @@ guestfish --rw -a rhcos-4.6.1-x86_64-qemu-master0-static.x86_64.qcow2
 ><fs> cat /ignition.firstboot 
 set ignition_network_kcmdline='rd.neednet=1 ip=172.16.1.11::172.16.1.1:255.255.255.0:master0.cluster.example.com:ens3:none nameserver=172.16.1.1'
 ```
+
+### NetApp Simulator on kvm
+https://schmaustech.blogspot.com/2020/03/netapp-simulator-on-red-hat-kvm.html
+
+### OSP 13 删除计算节点
+https://access.redhat.com/documentation/en-us/red_hat_openstack_platform/13/html/director_installation_and_usage/sect-scaling_the_overcloud#sect-Removing_Compute_Nodes

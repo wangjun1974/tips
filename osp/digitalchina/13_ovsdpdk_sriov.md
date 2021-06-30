@@ -681,11 +681,5 @@ comps.xml for repository rhel-8-for-x86_64-nfv-rpms saved
 (22/22): rteval-loads-1.4-6.el8.noarch.rpm      817 kB/s | 101 MB     02:06 
 ```
 
-### NetApp Simulator on kvm
-https://schmaustech.blogspot.com/2020/03/netapp-simulator-on-red-hat-kvm.html
-
-### OSP 13 删除计算节点
-https://access.redhat.com/documentation/en-us/red_hat_openstack_platform/13/html/director_installation_and_usage/sect-scaling_the_overcloud#sect-Removing_Compute_Nodes
-
 
 

@@ -20504,3 +20504,14 @@ $ source ~/overcloudrc
 [root@controller-0 ~]$ sudo cibadmin -o status --delete-all --xml-text '<node id="<scaled_down_node>"/>' --force
 [root@controller-0 ~]$ sudo pcs stonith delete <device-name>
 ```
+
+### 通过模版设置 overcloud 节点口令
+```
+$ cat templates/root_password.yaml 
+resource_registry:
+  OS::TripleO::NodeUserData: /usr/share/openstack-tripleo-heat-templates/firstboot/userdata_root_password.yaml
+
+parameter_defaults:
+  NodeRootPassword: 'xxxXXX'
+  AdminPassword: 'xxxXXXyyyYYY'
+```

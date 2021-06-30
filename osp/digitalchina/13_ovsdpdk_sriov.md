@@ -270,9 +270,16 @@ os-net-config /etc/os-net-config/config.json --debug
 https://github.com/Mellanox/k8s-rdma-sriov-dev-plugin/issues/21
 https://bugzilla.redhat.com/show_bug.cgi?id=1762691
 
-在 overcloud 节点上，这个程序完成 sriov 相关配置
+在 overcloud 计算节点上，这个程序完成 sriov 相关配置
 /usr/lib/python3.6/site-packages/os_net_config/sriov_config.py
 
+对于报错
+ip link set dev enp130s0f0 vf 0 max_tx_rate 0
+RTNETLINK answers: Invalid argument
+
+编辑 /usr/lib/python3.6/site-packages/os_net_config/sriov_config.py 文件，不执行 min_tx_rate 和 max_tx_rate 的设置
+ 
+ 
 如何通过 ip link 命令或者 sysfs 设置 min_tx_rate 和 max_tx_rate
 https://community.mellanox.com/s/article/HowTo-Configure-Rate-Limit-per-VF-for-ConnectX-4-ConnectX-5-ConnectX-6
 

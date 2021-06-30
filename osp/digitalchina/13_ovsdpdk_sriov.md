@@ -279,7 +279,7 @@ RTNETLINK answers: Invalid argument
 
 编辑 /usr/lib/python3.6/site-packages/os_net_config/sriov_config.py 文件，不执行 min_tx_rate 和 max_tx_rate 的设置
  
- 
+
 如何通过 ip link 命令或者 sysfs 设置 min_tx_rate 和 max_tx_rate
 https://community.mellanox.com/s/article/HowTo-Configure-Rate-Limit-per-VF-for-ConnectX-4-ConnectX-5-ConnectX-6
 
@@ -657,6 +657,35 @@ for i in computeovsdpdksriov; do
   openstack flavor set --property "capabilities:boot_option"="local" \
                        --property "capabilities:profile"="${i}" ${i}
 done
+
+https://downloads.dell.com/manuals/all-products/esuprt_data_center_infra_int/esuprt_data_center_infra_network_adapters/mellanox-adapters_users-guide_en-us.pdf
+
+https://docs.mellanox.com/pages/viewpage.action?pageId=47033949
+
+设置节点 vf trunk ，这种方式应该是 Mellanox 网卡特有的
+echo "add 900 904" > /sys/class/net/enp130s0f0/device/sriov/0/trunk
+
+ovs-vsctl show
+...
+    Bridge br-dpdk0
+        Controller "tcp:127.0.0.1:6633"
+            is_connected: true
+        fail_mode: secure
+        datapath_type: netdev
+        Port br-dpdk0
+            tag: 191
+            Interface br-dpdk0
+                type: internal
+        Port phy-br-dpdk0
+            Interface phy-br-dpdk0
+                type: patch
+                options: {peer=int-br-dpdk0}
+        Port br-dpdk0-dpdk-port0
+            Interface br-dpdk0-dpdk-port0
+                type: dpdk
+                options: {dpdk-devargs="0000:82:10.0", n_rxq="1"}
+    ovs_version: "2.13.2"
+
 ```
 
 

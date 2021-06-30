@@ -20439,6 +20439,12 @@ https://kb.juniper.net/InfoCenter/index?page=content&id=KB32283&actp=METADATA
 
 下载 rhel cloud image
 https://access.redhat.com/downloads/content/479/ver=/rhel---8/8.4/x86_64/product-software
+
+
+https://github.com/m4r1k/nfvi_lab
+
+Mellanox 网卡设置 max_tx_rate
+https://docs.mellanox.com/pages/viewpage.action?pageId=47033949
 ```
 
 ### NFV BIOS 配置

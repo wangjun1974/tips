@@ -20452,5 +20452,55 @@ set ignition_network_kcmdline='rd.neednet=1 ip=172.16.1.11::172.16.1.1:255.255.2
 ### NetApp Simulator on kvm
 https://schmaustech.blogspot.com/2020/03/netapp-simulator-on-red-hat-kvm.html
 
-### OSP 13 删除计算节点
-https://access.redhat.com/documentation/en-us/red_hat_openstack_platform/13/html/director_installation_and_usage/sect-scaling_the_overcloud#sect-Removing_Compute_Nodes
+### OSP 16.1 删除计算节点
+https://access.redhat.com/documentation/en-us/red_hat_openstack_platform/16.1/html/director_installation_and_usage/scaling-overcloud-nodes#removing-compute-nodes
+```
+在启用 instanceha 时首先在控制节点上将节点的 stonith 禁止
+[root@controller-0 ~]# pcs node attribute compute-0  stonith-enabled=false
+
+然后将物理节点关机
+[root@controller-0 ~]$ source stackrc
+[root@controller-0 ~]$ openstack baremetal node power off <UUID>
+
+禁用即将删除节点的 overcloud nova-compute 服务
+$ source ~/overcloudrc
+(overcloud)$ openstack compute service list
+(overcloud)$ openstack compute service set <hostname> nova-compute --disable
+
+获取 stack 和 server 的 name 以及 uuid
+(overcloud)$ source ~/stackrc
+(undercloud)$ openstack stack list
+(undercloud)$ openstack server list
+
+(可选) 用 --update-plan-only 更新 plan，此步骤需结合实际的部署脚本
+(undercloud)$ openstack overcloud deploy --update-plan-only \
+  --templates  \
+  -e /usr/share/openstack-tripleo-heat-templates/environments/network-isolation.yaml \
+  -e /home/stack/templates/network-environment.yaml \
+  -e /home/stack/templates/storage-environment.yaml \
+  -e /home/stack/templates/rhel-registration/environment-rhel-registration.yaml \
+  [-e |...]
+
+删除 overcloud node
+(undercloud)$ openstack overcloud node delete --stack <overcloud> \
+ <node_1> ... [node_n]
+
+确认删除成功
+(undercloud)$ openstack stack list
+
+检查 overcloud network agent
+(overcloud)$ openstack network agent list
+
+如果删除节点的 network agent 仍然存在则删除 network agent
+(overcloud)$ for AGENT in $(openstack network agent list --host <scaled_down_node> -c ID -f value) ; do openstack network agent delete $AGENT ; done
+
+修改 node-info.yaml 里的 ComputeCount 反映最新的计算节点数量
+
+如果启用了 instanceha，清除控制节点 pcs cluster 里相关资源，然后删除节点对应的 stonith device
+[root@controller-0 ~]$ sudo pcs resource delete <scaled_down_node>
+[root@controller-0 ~]$ sudo cibadmin -o nodes --delete --xml-text '<node id="<scaled_down_node>"/>'
+[root@controller-0 ~]$ sudo cibadmin -o fencing-topology --delete --xml-text '<fencing-level target="<scaled_down_node>"/>'
+[root@controller-0 ~]$ sudo cibadmin -o status --delete --xml-text '<node_state id="<scaled_down_node>"/>'
+[root@controller-0 ~]$ sudo cibadmin -o status --delete-all --xml-text '<node id="<scaled_down_node>"/>' --force
+[root@controller-0 ~]$ sudo pcs stonith delete <device-name>
+```

@@ -680,3 +680,6 @@ comps.xml for repository rhel-8-for-x86_64-nfv-rpms saved
 (21/22): kernel-rt-debug-4.18.0-193.28.1.rt13.7 886 kB/s | 2.8 MB     00:03    
 (22/22): rteval-loads-1.4-6.el8.noarch.rpm      817 kB/s | 101 MB     02:06 
 ```
+
+### NetApp Simulator on kvm
+https://schmaustech.blogspot.com/2020/03/netapp-simulator-on-red-hat-kvm.html

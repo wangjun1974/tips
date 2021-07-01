@@ -20458,6 +20458,87 @@ https://github.com/chaudron/ovs_perf/blob/master/README.md
 ceph ansible log on director/tripleo
 /var/lib/mistral/overcloud/ceph-ansible/ceph_ansible_command.log 
 
+# create test vm
+cat <<EOF > mydata.file
+#cloud-config
+password: redhat
+chpasswd: { expire: False }
+ssh_pwauth: True
+ethernets:
+  eth0:
+    addresses:
+      - 192.168.2.54/24
+EOF
+
+dpdk_port_id=$(openstack port show dpdk-port-4 -f value -c id)
+openstack server create --flavor m1.dpdk --image rhel8u3 --nic port-id=$dpdk_port_id --config-drive True --user-data mydata.file --availability-zone nova:overcloud-computeovsdpdksriov-1.localdomain test-dpdk-4
+
+
+# 创建 3 个 port: vm-sriov6-rhel7_oam_port, vm-sriov6-rhel7_provider_port1, vm-sriov6-rhel7_provider_port2
+# 这 3 个 port 传递参数 --no-security-group 和 --disable-port-security 
+# 有 2 个 port 传递参数 --enable-uplink-status-propagation
+openstack port create --network Rome_Virtual_OAM_DC1_Net  --no-security-group  --disable-port-security vm-sriov6-rhel7_oam_port
+openstack port create --network Provider_Net_SR-IOV_1 --fixed-ip subnet=Provider_Net_SR-IOV_1_subnet,ip-address=172.100.16.126 --vnic-type direct --no-security-group  --disable-port-security --enable-uplink-status-propagation vm-sriov6-rhel7_provider_port1
+openstack port create --network Provider_Net_SR-IOV_2 --fixed-ip subnet=Provider_Net_SR-IOV_2_subnet,ip-address=172.100.16.126 --vnic-type direct --no-security-group  --disable-port-security --enable-uplink-status-propagation vm-sriov6-rhel7_provider_port2
+
+# 创建虚拟机
+openstack server create --key-name ansible_key --port vm-sriov6-rhel7_oam_port --port vm-sriov6-rhel7_provider_port1 --port vm-sriov6-rhel7_provider_port2 \
+--image rhel7.8 --availability-zone central --flavor dpdk_sriov_medium vm-sriov6-rhel7
+
+# 在虚拟机里，禁用 NetworkManager
+systemctl disable NetworkManager
+
+# 在虚拟机里，创建 ifcfg-bond0
+# 设置参数 BONDING_OPTS 为 mode=active-backup miimon=100 fail_over_mac=active
+cat << EOF > /etc/sysconfig/network-scripts/ifcfg-bond0
+DEVICE=bond0
+BONDING_OPTS="mode=active-backup miimon=100 fail_over_mac=active"
+TYPE=Bond
+BONDING_MASTER=yes
+BOOTPROTO=static
+IPADDR=172.100.16.126
+PREFIX=24
+DEFROUTE=yes
+IPV4_FAILURE_FATAL=no
+IPV6INIT=yes
+IPV6_AUTOCONF=yes
+IPV6_DEFROUTE=yes
+IPV6_PEERDNS=yes
+IPV6_PEERROUTES=yes
+IPV6_FAILURE_FATAL=no
+
+IPV6_ADDR_GEN_MODE=stable-privacy
+NAME=bond0
+ONBOOT=yes
+MTU=9000
+NM_CONTROLLED="no"
+EOF
+
+# 在虚拟机里，创建 ifcfg-eth1
+cat << EOF > /etc/sysconfig/network-scripts/ifcfg-eth1
+DEVICE=eth1
+NAME=eth1
+TYPE=Ethernet
+BOOTPROTO=none
+ONBOOT=yes
+MASTER=bond0
+SLAVE=yes
+NM_CONTROLLED="no"
+MTU=9000
+EOF
+ 
+# 在虚拟机里，创建 ifcfg-eth2
+cat << EOF > /etc/sysconfig/network-scripts/ifcfg-eth2
+DEVICE=eth2
+NAME=eth2
+TYPE=Ethernet
+BOOTPROTO=none
+ONBOOT=yes
+MASTER=bond0
+SLAVE=yes
+NM_CONTROLLED="no"
+MTU=9000
+EOF
 
 ```
 

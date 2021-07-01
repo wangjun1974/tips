@@ -20457,6 +20457,8 @@ https://github.com/chaudron/ovs_perf/blob/master/README.md
 
 ceph ansible log on director/tripleo
 /var/lib/mistral/overcloud/ceph-ansible/ceph_ansible_command.log 
+
+
 ```
 
 ### NFV BIOS 配置
@@ -20553,4 +20555,12 @@ resource_registry:
 parameter_defaults:
   NodeRootPassword: 'xxxXXX'
   AdminPassword: 'xxxXXXyyyYYY'
+```
+
+### 如何使用 GitHub application access token 
+```
+git remote set-url origin https://[APPLICATION]:[NEW TOKEN]@github.com/[ORGANISATION]/[REPO].git
+
+e.g.:
+git remote set-url origin https://wangjun1974:[NEW TOKEN]@github.com/wangjun1974/tips.git
 ```

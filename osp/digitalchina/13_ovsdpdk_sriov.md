@@ -552,18 +552,17 @@ initrd --timeout 60000 http://192.0.2.1:8088/agent.ramdisk || goto retry_boot
 boot
 
                                              
-更新 plan
+# 更新 plan
 openstack overcloud deploy --templates $THT --update-plan-only -r $CNF/roles_data.yaml -n $CNF/network_data.yaml -e $CNF/node-info.yaml -e $THT/environments/network-isolation.yaml -e $CNF/environments/network-environment.yaml -e $THT/environments/services/neutron-ovs.yaml -e $THT/environments/services/neutron-ovs-dpdk.yaml -e $THT/environments/services/neutron-sriov.yaml -e $CNF/environments/net-bond-with-vlans.yaml -e ~/containers-prepare-parameter.yaml -e $CNF/fix-nova-reserved-host-memory.yaml --ntp-server 192.0.2.1
 
 # 设置 nic partitioning， 内部网络在 sriov vf 上，dpdk ovs_user_bridge 也在 sriov vf 上
 https://blueprints.launchpad.net/tripleo/+spec/sriov-vfs-as-network-interface
 
 
-
-查看节点 cpu NUMA 信息
+# 查看节点 cpu NUMA 信息
 lscpu |  grep NUMA
 
-
+# 报错信息
 2021-06-18 13:56:51,290 p=403090 u=mistral n=ansible | fatal: [overcloud-computeovsdpdksriov-0]: FAILED! => {
     "NetworkConfig_result.stderr_lines": [
         "+ '[' -n '{\"network_config\": [{\"addresses\": [{\"ip_netmask\": \"192.0.2.23/24\"}], \"mtu\": 1500, \"name\": \"ens3\", \"routes\": [{\"default\": t
@@ -658,11 +657,11 @@ for i in computeovsdpdksriov; do
                        --property "capabilities:profile"="${i}" ${i}
 done
 
+# Mellanox 网卡指南
 https://downloads.dell.com/manuals/all-products/esuprt_data_center_infra_int/esuprt_data_center_infra_network_adapters/mellanox-adapters_users-guide_en-us.pdf
 
+# 设置节点 vf trunk ，这种方式应该是 Mellanox 网卡特有的
 https://docs.mellanox.com/pages/viewpage.action?pageId=47033949
-
-设置节点 vf trunk ，这种方式应该是 Mellanox 网卡特有的
 echo "add 900 904" > /sys/class/net/enp130s0f0/device/sriov/0/trunk
 
 ovs-vsctl show
@@ -686,7 +685,7 @@ ovs-vsctl show
                 options: {dpdk-devargs="0000:82:10.0", n_rxq="1"}
     ovs_version: "2.13.2"
 
-vlan 4095 是 trunk 的意思吗?
+# 为 vf 设置 vlan, vlan 4095 是 trunk 的意思吗?
 https://community.mellanox.com/s/article/howto-set-virtual-network-attributes-on-a-virtual-function--sr-iov-x
 
 Deployment Template Library

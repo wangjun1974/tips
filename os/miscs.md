@@ -20496,7 +20496,7 @@ BONDING_OPTS="mode=active-backup miimon=100 fail_over_mac=active"
 TYPE=Bond
 BONDING_MASTER=yes
 BOOTPROTO=static
-IPADDR=172.100.16.126
+IPADDR=192.168.2.101
 PREFIX=24
 DEFROUTE=yes
 IPV4_FAILURE_FATAL=no
@@ -20506,31 +20506,28 @@ IPV6_DEFROUTE=yes
 IPV6_PEERDNS=yes
 IPV6_PEERROUTES=yes
 IPV6_FAILURE_FATAL=no
-
 IPV6_ADDR_GEN_MODE=stable-privacy
 NAME=bond0
 ONBOOT=yes
-MTU=9000
 NM_CONTROLLED="no"
 EOF
 
 # 在虚拟机里，创建 ifcfg-eth1
-cat << EOF > /etc/sysconfig/network-scripts/ifcfg-eth1
-DEVICE=eth1
-NAME=eth1
+cat << EOF > /etc/sysconfig/network-scripts/ifcfg-eth0
+DEVICE=eth0
+NAME=eth0
 TYPE=Ethernet
 BOOTPROTO=none
 ONBOOT=yes
 MASTER=bond0
 SLAVE=yes
 NM_CONTROLLED="no"
-MTU=9000
 EOF
  
-# 在虚拟机里，创建 ifcfg-eth2
-cat << EOF > /etc/sysconfig/network-scripts/ifcfg-eth2
-DEVICE=eth2
-NAME=eth2
+# 在虚拟机里，创建 ifcfg-eth1
+cat << EOF > /etc/sysconfig/network-scripts/ifcfg-eth1
+DEVICE=eth1
+NAME=eth1
 TYPE=Ethernet
 BOOTPROTO=none
 ONBOOT=yes

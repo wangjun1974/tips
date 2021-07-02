@@ -537,9 +537,11 @@ openstack port create --network ${sriov_network_1_id} sriov-port-1 --vnic-type d
 sriov_network_2_id=$(openstack network show sriov-net-2 -f value -c id)
 openstack port create --network ${sriov_network_2_id} sriov-port-2 --vnic-type direct --fixed-ip ip-address=192.168.2.101
 
-通过 cloud-config 配置 bond 
+通过 cloud-config 配置 bond，这个配置不工作
+https://cloudinit.readthedocs.io/en/latest/topics/network-config.html
 https://bugs.launchpad.net/cloud-init/+bug/1701417
 https://netplan.io/examples/
+https://bugzilla.redhat.com/show_bug.cgi?id=1536946
 cat <<EOF > mydata.file
 #cloud-config
 password: redhat
@@ -560,8 +562,44 @@ bonds:
       fail-over-mac-policy: active
 EOF
 
-sriov_port_id=$(openstack port show sriov-port-1 -f value -c id)
-openstack server create --flavor m1.sriov --image rhel8u3 --nic port-id=$sriov_port_id --config-drive True --user-data mydata.file test-sriov-1
+cat <<EOF > mydata.file
+#cloud-config
+disable_ec2_metadata: true
+password: redhat
+chpasswd: { expire: False }
+ssh_pwauth: True
+network:
+   version: 2
+   renderer: networkd
+   bonds:
+       bond0:
+           addresses: [192.168.2.101/24]
+           gateway4: 192.168.2.1
+           interfaces:
+               - eth0                    
+               - eth1                    
+           parameters:
+               mode: active-backup
+               mii-monitor-interval: 100
+               fail-over-mac-policy: active
+       ethernets:
+           eth0:
+               match:
+                   macaddress: 'fa:16:3e:1e:96:6f'
+               addresses: []
+               dhcp4: false
+               dhcp6: false
+           eth1:
+               match:
+                   macaddress: 'fa:16:3e:1e:96:6f'          
+               addresses: []
+               dhcp4: false
+               dhcp6: false
+EOF
+
+sriov_port_1_id=$(openstack port show sriov-port-1 -f value -c id)
+sriov_port_2_id=$(openstack port show sriov-port-2 -f value -c id)
+openstack server create --flavor m1.sriov --image rhel8u3 --nic port-id=$sriov_port_1_id --nic port-id=$sriov_port_2_id --config-drive True --user-data mydata.file test-sriov-1
 
 查看实例所在的 Hypervisor
 openstack server show test-dpdk-1 -f yaml | grep hypervisor 

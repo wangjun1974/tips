@@ -18,6 +18,25 @@ nmcli con add type bond \
     ipv4.dns '10.64.63.6'
 ```
 
+创建bond0，模式为active-backup，设置bond_options, 设置静态ip地址
+```
+nmcli con add type bond \
+    con-name bond0 \
+    ifname bond0 \
+    bond.options "mode=active-backup,miimon=100,fail_over_mac=active" \
+    ipv4.method 'manual' \
+    ipv4.address '192.168.2.101/24'
+
+nmcli con add type bond-slave ifname eth0 con-name eth0 master bond0
+nmcli con add type bond-slave ifname eth1 con-name eth1 master bond0
+
+nmcli con down eth0 && nmcli con up eth0
+nmcli con down eth1 && nmcli con up eth1
+
+nmcli con down bond0 && nmcli con up bond0
+
+```
+
 设置bond0的模式为802.3ad
 ```
 nmcli con mod id bond0 bond.options \

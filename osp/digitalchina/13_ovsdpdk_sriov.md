@@ -442,6 +442,13 @@ openstack subnet create sriov-subnet-1 --network sriov-net-1 \
   --no-dhcp --subnet-range 192.168.2.0/24 \
   --allocation-pool start=192.168.2.100,end=192.168.2.200 --gateway 192.168.2.1
 
+openstack network create sriov-net-2 \
+  --provider-physical-network sriov-2 \
+  --provider-network-type vlan --provider-segment 900
+openstack subnet create sriov-subnet-2 --network sriov-net-2 \
+  --no-dhcp --subnet-range 192.168.2.0/24 \
+  --allocation-pool start=192.168.2.100,end=192.168.2.200 --gateway 192.168.2.1
+
 创建 dpdk network 和 subnet
 openstack network create dpdk-net-1 \
   --provider-physical-network dpdk0 \
@@ -519,6 +526,38 @@ ethernets:
   eth0:
     addresses:
       - 192.168.2.101/24
+EOF
+
+sriov_port_id=$(openstack port show sriov-port-1 -f value -c id)
+openstack server create --flavor m1.sriov --image rhel8u3 --nic port-id=$sriov_port_id --config-drive True --user-data mydata.file test-sriov-1
+
+启动 sriov 双网卡实例
+sriov_network_1_id=$(openstack network show sriov-net-1 -f value -c id)
+openstack port create --network ${sriov_network_1_id} sriov-port-1 --vnic-type direct --fixed-ip ip-address=192.168.2.101
+sriov_network_2_id=$(openstack network show sriov-net-2 -f value -c id)
+openstack port create --network ${sriov_network_2_id} sriov-port-2 --vnic-type direct --fixed-ip ip-address=192.168.2.101
+
+通过 cloud-config 配置 bond 
+https://bugs.launchpad.net/cloud-init/+bug/1701417
+https://netplan.io/examples/
+cat <<EOF > mydata.file
+#cloud-config
+password: redhat
+chpasswd: { expire: False }
+ssh_pwauth: True
+ethernets:
+  eth0:
+    dhcp4: no
+  eth1:
+    dhcp4: no
+bonds:
+  bond0:
+    interfaces: [eth0,eth1]
+    addresses: [192.168.2.101/24]
+    parameters:
+      mode: active-backup
+      mii-monitor-interval: 100
+      fail-over-mac-policy: active
 EOF
 
 sriov_port_id=$(openstack port show sriov-port-1 -f value -c id)

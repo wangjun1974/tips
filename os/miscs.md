@@ -20609,6 +20609,7 @@ $ source ~/overcloudrc
 
 确认删除成功
 (undercloud)$ openstack stack list
+(undercloud)$ openstack overcloud status
 
 检查 overcloud network agent
 (overcloud)$ openstack network agent list

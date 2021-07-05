@@ -20542,6 +20542,102 @@ https://www.vultr.com/resources/subnet-calculator-ipv6/
 
 Providing globally routed IPv6 adresses to your OpenStack Pike projects
 https://cloudbau.github.io/openstack/neutron/networking/ipv6/2017/09/11/neutron-pike-ipv6.html
+
+
+(undercloud) [stack@dell-per730-02 ovs-dpdk]$ ssh heat-admin@192.168.24.19 sudo ip netns exec qdhcp-18eec330-5dfb-41a3-86f0-e72b536dd176 ip a s
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+       valid_lft forever preferred_lft forever
+    inet6 ::1/128 scope host 
+       valid_lft forever preferred_lft forever
+26: tap802f9700-de: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1450 qdisc noqueue state UNKNOWN group default qlen 1000
+    link/ether fa:16:3e:c4:fe:57 brd ff:ff:ff:ff:ff:ff
+    inet6 fdf8:f53b:82e5:0:f816:3eff:fec4:fe57/64 scope global 
+       valid_lft forever preferred_lft forever
+    inet6 fdf8:f53b:82e4::3/64 scope global 
+       valid_lft forever preferred_lft forever
+    inet6 fe80::f816:3eff:fec4:fe57/64 scope link 
+       valid_lft forever preferred_lft forever
+(undercloud) [stack@dell-per730-02 ovs-dpdk]$ ssh heat-admin@192.168.24.25 sudo ip netns exec qdhcp-18eec330-5dfb-41a3-86f0-e72b536dd176 ip a s 
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+       valid_lft forever preferred_lft forever
+    inet6 ::1/128 scope host 
+       valid_lft forever preferred_lft forever
+26: tapda580d34-3f: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1450 qdisc noqueue state UNKNOWN group default qlen 1000
+    link/ether fa:16:3e:e0:d5:8f brd ff:ff:ff:ff:ff:ff
+    inet6 fdf8:f53b:82e5:0:f816:3eff:fee0:d58f/64 scope global 
+       valid_lft forever preferred_lft forever
+    inet6 fdf8:f53b:82e4::4/64 scope global 
+       valid_lft forever preferred_lft forever
+    inet6 fe80::f816:3eff:fee0:d58f/64 scope link 
+       valid_lft forever preferred_lft forever
+(undercloud) [stack@dell-per730-02 ovs-dpdk]$ ssh heat-admin@192.168.24.8 sudo ip netns exec qdhcp-18eec330-5dfb-41a3-86f0-e72b536dd176 ip a s 
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+       valid_lft forever preferred_lft forever
+    inet6 ::1/128 scope host 
+       valid_lft forever preferred_lft forever
+26: tap852d20c8-8a: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1450 qdisc noqueue state UNKNOWN group default qlen 1000
+    link/ether fa:16:3e:f6:31:5a brd ff:ff:ff:ff:ff:ff
+    inet6 fdf8:f53b:82e5:0:f816:3eff:fef6:315a/64 scope global 
+       valid_lft forever preferred_lft forever
+    inet6 fdf8:f53b:82e4::2/64 scope global 
+       valid_lft forever preferred_lft forever
+    inet6 fe80::f816:3eff:fef6:315a/64 scope link 
+       valid_lft forever preferred_lft forever
+
+
+dpdk_ipv6_network_id=$(openstack network show dpdk-ipv6-net-1 -f value -c id)
+openstack port create --network ${dpdk_ipv6_network_id} dpdk-ipv6-port-1
+
+dpdk_ipv6_port_1_ipv6address=$(openstack port show dpdk-ipv6-port-1 -f yaml | grep ip_address | awk '{print $3}' )
+
+cat <<EOF > mydata.file
+#cloud-config
+password: redhat
+chpasswd: { expire: False }
+ssh_pwauth: True
+ethernets:
+  eth0:
+    addresses:
+      - fdf8:f53b:82e5:0:f816:3eff:feca:b261/64
+EOF
+
+# 参考：https://cloudinit.readthedocs.io/en/latest/topics/network-config-format-v2.html
+# 参考：https://serverfault.com/questions/866696/how-do-i-enable-ipv6-in-rhel-7-4-on-amazon-ec2/934405#934405
+cat <<EOF > mydata.file
+#cloud-config
+password: redhat
+chpasswd: { expire: False }
+ssh_pwauth: True
+write_files:
+  - path: /etc/cloud/cloud.cfg.d/99-custom-networking.cfg
+    owner: root:root
+    permissions: 0600
+    content: |
+      network:
+        version: 2
+        ethernets:
+          eth0:
+            dhcp: false
+            dhcp6: false
+            match:
+              name: eth0
+            addresses:
+              - "[fdf8:f53b:82e5:0:f816:3eff:feca:b261/64]"
+
+power_state:
+  mode: reboot
+  delay: now
+  message: Rebooting post-config
+  timeout: 30
+  condition: True
+EOF
+
 ```
 
 ### NFV BIOS 配置

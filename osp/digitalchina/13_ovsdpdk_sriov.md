@@ -461,13 +461,17 @@ openstack subnet create dpdk-subnet-1 --network dpdk-net-1 \
 openstack network create dpdk-ipv6-net-1
 openstack subnet create dpdk-ipv6-subnet-1 --network dpdk-ipv6-net-1 \
   --ip-version 6 --ipv6-address-mode dhcpv6-stateful \
-  --subnet-range fdf8:f53b:82e4::53/125 
-
+  --subnet-range fdf8:f53b:82e4::0/64 
+openstack subnet create dpdk-ipv6-subnet-1-slaac --network dpdk-ipv6-net-1 \
+  --ip-version 6 --ipv6-ra-mode slaac --ipv6-address-mode slaac \
+  --subnet-range fdf8:f53b:82e5::0/64 
 
 创建 security group rule 
-SGID=$(openstack security group list --project admin -c ID -f value)
+PGID=$(openstack project show admin -c id -f value)
+SGID=$(openstack security group list | grep $PGID | grep default | awk '{print $2}')
 openstack security group rule create --proto icmp $SGID
 openstack security group rule create --dst-port 22 --proto tcp $SGID
+openstack security group rule create --proto ipv6-icmp --ingress $SGID
 
 创建 sriov flavor
 openstack flavor create m1.sriov --ram 4096 --disk 10 --vcpus 4
@@ -681,7 +685,142 @@ openstack port delete dpdk-port-2
 openstack port delete sriov-port-1
 
 
+设置静态 ipv6 地址
+nmcli con mod 'System eth0' \
+  ipv6.method 'manual' \
+  ipv6.address 'fdf8:f53b:82e5:0:f816:3eff:fe9c:9449/64'
 
+# 通过 cloud-init config-drive 配置静态 ipv6 地址
+# 配置思路是生成 version: 2 的 
+# 参考：https://cloudinit.readthedocs.io/en/latest/topics/network-config-format-v2.html
+# 参考：https://serverfault.com/questions/866696/how-do-i-enable-ipv6-in-rhel-7-4-on-amazon-ec2/
+
+举例来说，在 ipv6 subnet 上创建端口，port 的 fixed ip 地址是 fdf8:f53b:82e5:0:f816:3eff:feca:b261
+首先生成 cloud-init 配置文件 /etc/cloud/cloud.cfg.d/99-custom-networking.cfg
+文件内容是
+      network:
+        version: 2
+        ethernets:
+          eth0:
+            dhcp: false
+            dhcp6: false
+            match:
+              name: eth0
+            addresses:
+              - "[fdf8:f53b:82e5:0:f816:3eff:feca:b261/64]"
+然后重启实例
+power_state:
+  mode: reboot
+  delay: now
+  message: Rebooting post-config
+  timeout: 30
+  condition: True
+
+cat <<EOF > mydata.file
+#cloud-config
+password: redhat
+chpasswd: { expire: False }
+ssh_pwauth: True
+write_files:
+  - path: /etc/cloud/cloud.cfg.d/99-custom-networking.cfg
+    owner: root:root
+    permissions: 0600
+    content: |
+      network:
+        version: 2
+        ethernets:
+          eth0:
+            dhcp: false
+            dhcp6: false
+            match:
+              name: eth0
+            addresses:
+              - "[fdf8:f53b:82e5:0:f816:3eff:feca:b261/64]"
+
+power_state:
+  mode: reboot
+  delay: now
+  message: Rebooting post-config
+  timeout: 30
+  condition: True
+EOF
+
+创建2个 dpdk ipv6 port
+dpdk_ipv6_network_id=$(openstack network show dpdk-ipv6-net-1 -f value -c id)
+openstack port create --network ${dpdk_ipv6_network_id} dpdk-ipv6-port-1
+openstack port create --network ${dpdk_ipv6_network_id} dpdk-ipv6-port-2
+
+获取这两个 port 的 ipv6地址
+dpdk_ipv6_port_1_ipv6address=$(openstack port show dpdk-ipv6-port-1 -f yaml | grep ip_address | awk '{print $3}' )
+dpdk_ipv6_port_2_ipv6address=$(openstack port show dpdk-ipv6-port-2 -f yaml | grep ip_address | awk '{print $3}' )
+
+cat <<EOF > mydata.file
+#cloud-config
+password: redhat
+chpasswd: { expire: False }
+ssh_pwauth: True
+write_files:
+  - path: /etc/cloud/cloud.cfg.d/99-custom-networking.cfg
+    owner: root:root
+    permissions: 0600
+    content: |
+      network:
+        version: 2
+        ethernets:
+          eth0:
+            dhcp: false
+            dhcp6: false
+            match:
+              name: eth0
+            addresses:
+              - "[${dpdk_ipv6_port_1_ipv6address}/64]"
+
+power_state:
+  mode: reboot
+  delay: now
+  message: Rebooting post-config
+  timeout: 30
+  condition: True
+EOF
+
+dpdk_ipv6_port_1_id=$(openstack port show dpdk-ipv6-port-1 -f value -c id)
+openstack server create --flavor m1.dpdk --image rhel8u3 --nic port-id=$dpdk_ipv6_port_1_id --config-drive True --user-data mydata.file test-dpdk-ipv6-1
+
+cat <<EOF > mydata.file
+#cloud-config
+password: redhat
+chpasswd: { expire: False }
+ssh_pwauth: True
+write_files:
+  - path: /etc/cloud/cloud.cfg.d/99-custom-networking.cfg
+    owner: root:root
+    permissions: 0600
+    content: |
+      network:
+        version: 2
+        ethernets:
+          eth0:
+            dhcp: false
+            dhcp6: false
+            match:
+              name: eth0
+            addresses:
+              - "[${dpdk_ipv6_port_2_ipv6address}/64]"
+
+power_state:
+  mode: reboot
+  delay: now
+  message: Rebooting post-config
+  timeout: 30
+  condition: True
+EOF
+
+dpdk_ipv6_port_2_id=$(openstack port show dpdk-ipv6-port-2 -f value -c id)
+openstack server create --flavor m1.dpdk --image rhel8u3 --nic port-id=$dpdk_ipv6_port_2_id --config-drive True --user-data mydata.file test-dpdk-ipv6-2
+
+# 删除 2 个 dpdk ipv6 实例
+openstack server delete test-dpdk-ipv6-1
+openstack server delete test-dpdk-ipv6-1
 
 # 设置 inspection root password
 (undercloud) [stack@undercloud ~]$ openssl passwd -1 redhat

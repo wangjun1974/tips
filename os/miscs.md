@@ -20537,6 +20537,10 @@ NM_CONTROLLED="no"
 MTU=9000
 EOF
 
+IPv6 地址计算器
+https://www.vultr.com/resources/subnet-calculator-ipv6/
+
+
 ```
 
 ### NFV BIOS 配置

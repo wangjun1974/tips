@@ -457,6 +457,13 @@ openstack subnet create dpdk-subnet-1 --network dpdk-net-1 \
   --no-dhcp --subnet-range 192.168.2.0/24 \
   --allocation-pool start=192.168.2.50,end=192.168.2.99 --gateway 192.168.2.1
 
+创建 dpdk ipv6 tenant network 和 subnet
+openstack network create dpdk-ipv6-net-1
+openstack subnet create dpdk-ipv6-subnet-1 --network dpdk-ipv6-net-1 \
+  --ip-version 6 --ipv6-address-mode dhcpv6-stateful \
+  --subnet-range fdf8:f53b:82e4::53/125 
+
+
 创建 security group rule 
 SGID=$(openstack security group list --project admin -c ID -f value)
 openstack security group rule create --proto icmp $SGID
@@ -597,6 +604,62 @@ network:
                dhcp6: false
 EOF
 
+cat <<EOF > mydata.file
+#cloud-config
+password: redhat
+chpasswd: { expire: False }
+ssh_pwauth: True
+network:
+  config:
+  - id: eth0
+    mac_address: fa:16:3e:1e:96:6f
+    mtu: 1500
+    name: eth0
+    subnets:
+    - type: manual
+    type: physical
+  - id: eth1
+    mac_address: fa:16:3e:1e:96:6f
+    mtu: 1500
+    name: eth1
+    subnets:
+    - type: manual
+    type: physical
+  - bond_interfaces:
+    - eth0
+    - eth1
+    id: bond0
+    mtu: 1500
+    name: bond0
+    params:
+      bond-miimon: 100
+      bond-mode: active-backup
+      bond-xmit-hash-policy: active
+    subnets:
+    - address: 192.168.2.101/24
+      dns_nameservers: []
+      gateway: 192.168.2.1
+      type: static
+    type: bond
+EOF
+
+cat <<EOF > mydata.file
+#cloud-config
+password: redhat
+chpasswd: { expire: False }
+ssh_pwauth: True
+
+runcmd:
+  - '/bin/nmcli con delete "System eth0"'
+  - '/bin/nmcli con delete "System eth1"'
+  - '/bin/nmcli con add type bond con-name bond0 ifname bond0 bond.options "mode=active-backup,miimon=100,fail_over_mac=active" connection.autoconnect "yes" ipv4.method "manual" ipv4.address "192.168.2.101/24"'
+  - '/bin/nmcli con add type bond-slave ifname eth0 con-name eth0 master bond0'
+  - '/bin/nmcli con add type bond-slave ifname eth1 con-name eth1 master bond0'
+
+power_state:
+  mode: reboot
+EOF
+
 sriov_port_1_id=$(openstack port show sriov-port-1 -f value -c id)
 sriov_port_2_id=$(openstack port show sriov-port-2 -f value -c id)
 openstack server create --flavor m1.sriov --image rhel8u3 --nic port-id=$sriov_port_1_id --nic port-id=$sriov_port_2_id --config-drive True --user-data mydata.file test-sriov-1
@@ -604,7 +667,10 @@ openstack server create --flavor m1.sriov --image rhel8u3 --nic port-id=$sriov_p
 查看实例所在的 Hypervisor
 openstack server show test-dpdk-1 -f yaml | grep hypervisor 
 openstack server show test-dpdk-2 -f yaml | grep hypervisor 
-openstack server show test-sriov-1 -f yaml | grep hypervisor 
+openstack server show test-sriov-1 -f yaml | grep hypervisor
+openstack server show test-dpdk-ipv6-1 -f yaml | grep hypervisor 
+openstack server show test-dpdk-ipv6-2 -f yaml | grep hypervisor 
+
 
 清理实例和 port
 openstack server delete test-dpdk-1
@@ -613,6 +679,8 @@ openstack server delete test-sriov-1
 openstack port delete dpdk-port-1
 openstack port delete dpdk-port-2
 openstack port delete sriov-port-1
+
+
 
 
 # 设置 inspection root password

@@ -820,7 +820,7 @@ openstack server create --flavor m1.dpdk --image rhel8u3 --nic port-id=$dpdk_ipv
 
 # 删除 2 个 dpdk ipv6 实例
 openstack server delete test-dpdk-ipv6-1
-openstack server delete test-dpdk-ipv6-1
+openstack server delete test-dpdk-ipv6-2
 
 # 设置 inspection root password
 (undercloud) [stack@undercloud ~]$ openssl passwd -1 redhat

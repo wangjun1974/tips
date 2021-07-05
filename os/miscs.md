@@ -20540,7 +20540,8 @@ EOF
 IPv6 地址计算器
 https://www.vultr.com/resources/subnet-calculator-ipv6/
 
-
+Providing globally routed IPv6 adresses to your OpenStack Pike projects
+https://cloudbau.github.io/openstack/neutron/networking/ipv6/2017/09/11/neutron-pike-ipv6.html
 ```
 
 ### NFV BIOS 配置

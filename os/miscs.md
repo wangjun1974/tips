@@ -20659,7 +20659,13 @@ fa:16:3e:80:e7:5b (oui Unknown), length 294
 
 /128 ipv6 netmask
 http://lists.openstack.org/pipermail/openstack-dev/2015-February/057369.html
+https://openstack.nimeyo.com/33951/openstack-dev-neutron-ipv6-dhcp-stateful
 
+手工添加一个 link-local ipv6 地址
+ip address add dev eth0 scope link fe80::21b:21ff:febb:5db0/64
+
+查看
+dhclient -6 -P -d -v --no-pid  eth0
 ```
 
 ### NFV BIOS 配置

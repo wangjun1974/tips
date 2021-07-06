@@ -470,6 +470,13 @@ openstack subnet create dpdk-ipv6-subnet-1-slaac --network dpdk-ipv6-net-1 \
 openstack subnet create dpdk-ipv6-subnet-1 --network dpdk-ipv6-net-1 \
   --ip-version 6 --ipv6-address-mode dhcpv6-stateful \
   --subnet-range fdf8:f53b:82e5::0/64
+（再次尝试，再把 ipv6 subent 添加到 router 之后，ipv6.method 设置成为 auto 好像是可以的 ）
+openstack subnet create dpdk-ipv6-subnet-1-slaac --network dpdk-ipv6-net-1 \
+  --ip-version 6 --ipv6-ra-mode slaac --ipv6-address-mode slaac \
+  --subnet-range fdf8:f53b:82e5::0/64 
+openstack router add subnet adminrouter dpdk-ipv6-subnet-1-slaac 
+# 删除 subnet 
+openstack router remove subnet adminrouter dpdk-ipv6-subnet-1-slaac 
 
 
 创建 security group rule 
@@ -846,6 +853,16 @@ EOF
 
 dpdk_ipv6_port_2_id=$(openstack port show dpdk-ipv6-port-2 -f value -c id)
 openstack server create --flavor m1.dpdk --image rhel8u3 --nic port-id=$dpdk_ipv6_port_2_id --config-drive True --user-data mydata.file test-dpdk-ipv6-2
+
+在指定节点上创建实例
+openstack server create --flavor m1.dpdk --image rhel8u3 --nic port-id=$dpdk_ipv6_port_1_id --availability-zone nova:overcloud-computeovsdpdksriov-2.localdomain test-dpdk-ipv6-1 
+
+(不工作，因为配置完 Nic Partitioning 之后，节点 overcloud-computeovsdpdksriov-2.localdomain 的 ovs-dpdk tunnel endpoint 无法 ping 通)
+openstack server create --flavor m1.dpdk --image rhel8u3 --nic port-id=$dpdk_port_id --config-drive True --user-data mydata.file --availability-zone nova:overcloud-computeovsdpdksriov-2.localdomain test-dpdk-ipv6-1 
+
+（选择另外一个节点，创建测试实例）
+openstack server create --flavor m1.dpdk --image rhel8u3 --nic port-id=$dpdk_port_id --config-drive True --user-data mydata.file --availability-zone nova:overcloud-computeovsdpdk-1.localdomain test-dpdk-ipv6-1 
+
 
 # 删除 2 个 dpdk ipv6 实例
 openstack server delete test-dpdk-ipv6-1

@@ -784,6 +784,8 @@ EOF
 创建2个 dpdk ipv6 port
 dpdk_ipv6_network_id=$(openstack network show dpdk-ipv6-net-1 -f value -c id)
 openstack port create --network ${dpdk_ipv6_network_id} dpdk-ipv6-port-1
+openstack port set --no-security-group --disable-port-security dpdk-ipv6-port-1
+
 openstack port create --network ${dpdk_ipv6_network_id} dpdk-ipv6-port-2
 
 获取这两个 port 的 ipv6地址
@@ -860,8 +862,8 @@ openstack server create --flavor m1.dpdk --image rhel8u3 --nic port-id=$dpdk_ipv
 (不工作，因为配置完 Nic Partitioning 之后，节点 overcloud-computeovsdpdksriov-2.localdomain 的 ovs-dpdk tunnel endpoint 无法 ping 通)
 openstack server create --flavor m1.dpdk --image rhel8u3 --nic port-id=$dpdk_port_id --config-drive True --user-data mydata.file --availability-zone nova:overcloud-computeovsdpdksriov-2.localdomain test-dpdk-ipv6-1 
 
-（选择另外一个节点，创建测试实例）
-openstack server create --flavor m1.dpdk --image rhel8u3 --nic port-id=$dpdk_port_id --config-drive True --user-data mydata.file --availability-zone nova:overcloud-computeovsdpdk-1.localdomain test-dpdk-ipv6-1 
+（选择另外一个节点，创建测试实例，经测试可以通过 ipv6.method 获取 dhcp ip 地址）
+openstack server create --flavor m1.dpdk --image rhel8u3 --nic port-id=$dpdk_port_id  --nic port-id=$dpdk_ipv6_port_1_id --config-drive True --user-data mydata.file --availability-zone nova:overcloud-computeovsdpdk-1.localdomain test-dpdk-ipv6-1
 
 
 # 删除 2 个 dpdk ipv6 实例

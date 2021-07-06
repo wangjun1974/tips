@@ -20638,6 +20638,11 @@ power_state:
   condition: True
 EOF
 
+https://access.redhat.com/solutions/3490881
+设置 cloud-init 不要配置网络
+echo 'network: {config: disabled}' >> /etc/cloud/cloud.cfg
+
+
 ```
 
 ### NFV BIOS 配置

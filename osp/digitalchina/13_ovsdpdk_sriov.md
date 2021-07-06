@@ -697,6 +697,7 @@ nmcli con mod 'System eth0' \
 # 因此还是在内部结合 nmcli 的配置方法更有效
 # 参考：https://cloudinit.readthedocs.io/en/latest/topics/network-config-format-v2.html
 # 参考：https://serverfault.com/questions/866696/how-do-i-enable-ipv6-in-rhel-7-4-on-amazon-ec2/
+# 参考：https://cloudinit.readthedocs.io/en/latest/topics/network-config-format-v2.html#network-config-v2
 
 举例来说，在 ipv6 subnet 上创建端口，port 的 fixed ip 地址是 fdf8:f53b:82e5:0:f816:3eff:feca:b261
 首先生成 cloud-init 配置文件 /etc/cloud/cloud.cfg.d/99-custom-networking.cfg
@@ -710,7 +711,7 @@ nmcli con mod 'System eth0' \
             match:
               name: eth0
             addresses:
-              - "[fdf8:f53b:82e5:0:f816:3eff:feca:b261/64]"
+              - fdf8:f53b:82e5:0:f816:3eff:feca:b261/64
 然后重启实例
 power_state:
   mode: reboot
@@ -738,7 +739,7 @@ write_files:
             match:
               name: eth0
             addresses:
-              - "[fdf8:f53b:82e5:0:f816:3eff:feca:b261/64]"
+              - fdf8:f53b:82e5:0:f816:3eff:feca:b261/64
 
 power_state:
   mode: reboot
@@ -756,7 +757,7 @@ ssh_pwauth: True
 
 runcmd:
   - "/bin/nmcli -t -f uuid con | while read i ; do /bin/nmcli con delete $i; done"
-  - '/bin/nmcli con add type ethernet con-name eth0 ifname eth0 connection.autoconnect "yes" ipv6.method "manual" ipv6.address "fdf8:f53b:82e5:0:f816:3eff:feca:b261/64"'
+  - '/bin/nmcli con add type ethernet con-name eth0 ifname eth0 connection.autoconnect "yes" ipv6.method "manual" ipv6.address "fdf8:f53b:82e5:0:f816:3eff:fe6d:edea/64"'
   - '/bin/nmcli con add type ethernet con-name eth1 ifname eth1 connection.autoconnect "yes" ipv4.method "manual" ipv4.address "192.168.2.53/24" ipv4.gateway "192.168.2.1"'
 
 power_state:

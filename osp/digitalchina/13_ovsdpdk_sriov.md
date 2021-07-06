@@ -691,7 +691,10 @@ nmcli con mod 'System eth0' \
   ipv6.address 'fdf8:f53b:82e5:0:f816:3eff:fe9c:9449/64'
 
 # 通过 cloud-init config-drive 配置静态 ipv6 地址
-# 配置思路是生成 version: 2 的 
+# 配置思路是生成 version: 2 的 network 配置
+# 这种方法与系统的内部 network manager 配置的结果有冲突
+# 配置完后接口短期获得 ipv6 地址，过一段时间后就会被 dhcp 的配置冲掉
+# 因此还是在内部结合 nmcli 的配置方法更有效
 # 参考：https://cloudinit.readthedocs.io/en/latest/topics/network-config-format-v2.html
 # 参考：https://serverfault.com/questions/866696/how-do-i-enable-ipv6-in-rhel-7-4-on-amazon-ec2/
 
@@ -736,6 +739,25 @@ write_files:
               name: eth0
             addresses:
               - "[fdf8:f53b:82e5:0:f816:3eff:feca:b261/64]"
+
+power_state:
+  mode: reboot
+  delay: now
+  message: Rebooting post-config
+  timeout: 30
+  condition: True
+EOF
+
+cat <<EOF > mydata.file
+#cloud-config
+password: redhat
+chpasswd: { expire: False }
+ssh_pwauth: True
+
+runcmd:
+  - "/bin/nmcli -t -f uuid con | while read i ; do /bin/nmcli con delete $i; done"
+  - '/bin/nmcli con add type ethernet con-name eth0 ifname eth0 connection.autoconnect "yes" ipv6.method "manual" ipv6.address "fdf8:f53b:82e5:0:f816:3eff:feca:b261/64"'
+  - '/bin/nmcli con add type ethernet con-name eth1 ifname eth1 connection.autoconnect "yes" ipv4.method "manual" ipv4.address "192.168.2.53/24" ipv4.gateway "192.168.2.1"'
 
 power_state:
   mode: reboot

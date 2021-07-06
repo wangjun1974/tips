@@ -20642,6 +20642,23 @@ https://access.redhat.com/solutions/3490881
 设置 cloud-init 不要配置网络
 echo 'network: {config: disabled}' >> /etc/cloud/cloud.cfg
 
+()[root@overcloud-controller-0 /]# cat /var/lib/neutron/dhcp/18eec330-5dfb-41a3-86f0-e72b536dd176/addn_hosts 
+fdf8:f53b:82e5:0:f816:3eff:fe43:5da9	host-fdf8-f53b-82e5-0-f816-3eff-fe43-5da9.openstacklocal host-fdf8-f53b-82e5-0-f816-3eff-fe43-5da9
+fdf8:f53b:82e5:0:f816:3eff:fe78:425d	host-fdf8-f53b-82e5-0-f816-3eff-fe78-425d.openstacklocal host-fdf8-f53b-82e5-0-f816-3eff-fe78-425d
+fdf8:f53b:82e5:0:f816:3eff:fe57:3d6c	host-fdf8-f53b-82e5-0-f816-3eff-fe57-3d6c.openstacklocal host-fdf8-f53b-82e5-0-f8
+
+
+ 729172 ?        S      0:00 /usr/sbin/dnsmasq -k --no-hosts --no-resolv --pid-file=/var/lib/neutron/dhcp/8c558698-e2f7-4fea-9b81-4e3180f2df0e/pid --dhcp-hostsfile=/var/lib/neutron/dhcp/8c558698-e2f7-4fea-9b81-4e3180f2df0e/host --addn-hosts=/var/lib/neutron/dhcp/8c558698-e2f7-4fea-9b81-4e3180f2df0e/addn_hosts --dhcp-optsfile=/var/lib/neutron/dhcp/8c558698-e2f7-4fea-9b81-4e3180f2df0e/opts --dhcp-leasefile=/var/lib/neutron/dhcp/8c558698-e2f7-4fea-9b81-4e3180f2df0e/leases --dhcp-match=set:ipxe,175 --dhcp-userclass=set:ipxe6,iPXE --local-service --bind-dynamic --dhcp-range=set:subnet-be2ce9b3-38cc-4aaf-89d5-2d1a552d8795,172.16.1.0,static,255.255.255.0,86400s --dhcp-option-force=option:mtu,1450 --dhcp-lease-max=256 --conf-file= --domain=openstacklocal
+
+配置 ipv6 dhcp 的命令
+# 参考：https://www.golinuxcloud.com/how-to-configure-ipv6-address-in-linux-rhel-centos-7/
+/bin/nmcli con add type ethernet con-name eth0 ifname eth0 connection.autoconnect "yes" ipv6.method 'dhcp'
+
+22:59:33.567687 IP 0.0.0.0.bootpc > 255.255.255.255.bootps: BOOTP/DHCP, Request from 
+fa:16:3e:80:e7:5b (oui Unknown), length 294
+
+/128 ipv6 netmask
+http://lists.openstack.org/pipermail/openstack-dev/2015-February/057369.html
 
 ```
 

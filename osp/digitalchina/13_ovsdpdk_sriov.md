@@ -462,9 +462,15 @@ openstack network create dpdk-ipv6-net-1
 openstack subnet create dpdk-ipv6-subnet-1 --network dpdk-ipv6-net-1 \
   --ip-version 6 --ipv6-address-mode dhcpv6-stateful \
   --subnet-range fdf8:f53b:82e4::0/64 
+（不工作）  
 openstack subnet create dpdk-ipv6-subnet-1-slaac --network dpdk-ipv6-net-1 \
   --ip-version 6 --ipv6-ra-mode slaac --ipv6-address-mode slaac \
   --subnet-range fdf8:f53b:82e5::0/64 
+（不工作）  
+openstack subnet create dpdk-ipv6-subnet-1 --network dpdk-ipv6-net-1 \
+  --ip-version 6 --ipv6-address-mode dhcpv6-stateful \
+  --subnet-range fdf8:f53b:82e5::0/64
+
 
 创建 security group rule 
 PGID=$(openstack project show admin -c id -f value)
@@ -796,7 +802,7 @@ write_files:
             match:
               name: eth0
             addresses:
-              - "[${dpdk_ipv6_port_1_ipv6address}/64]"
+              - ${dpdk_ipv6_port_1_ipv6address}/64
 
 power_state:
   mode: reboot

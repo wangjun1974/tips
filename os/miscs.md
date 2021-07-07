@@ -20673,6 +20673,9 @@ dhclient -6 -P -d -v --no-pid  eth0
 设置 dpdk 物理接口 multiqueue 
 https://access.redhat.com/documentation/en-us/red_hat_openstack_platform/13/html/network_functions_virtualization_planning_and_configuration_guide/appe-sample-ovsdpdk-sriov-files#ap-vxlan-dpdk-sriov-compute
 
+IPv6 指南
+https://source.redhat.com/groups/public/segteam/segteam_wiki/ipv6_guide
+
 ```
 
 ### NFV BIOS 配置

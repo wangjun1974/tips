@@ -20666,6 +20666,10 @@ ip address add dev eth0 scope link fe80::21b:21ff:febb:5db0/64
 
 查看
 dhclient -6 -P -d -v --no-pid  eth0
+
+设置 openstack port allowed-address 参数
+# openstack port set <port-uuid> --allowed-address mac_address=<mac_address>,ip_address=<ip_cidr>
+
 ```
 
 ### NFV BIOS 配置
@@ -20772,3 +20776,6 @@ git remote set-url origin https://[APPLICATION]:[NEW TOKEN]@github.com/[ORGANISA
 e.g.:
 git remote set-url origin https://wangjun1974:[NEW TOKEN]@github.com/wangjun1974/tips.git
 ```
+
+### Intel SST-BF 如何在 openstack 下工作
+https://github.com/intel/sst-bf-openstack-setup-automation

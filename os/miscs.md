@@ -20670,6 +20670,9 @@ dhclient -6 -P -d -v --no-pid  eth0
 设置 openstack port allowed-address 参数
 # openstack port set <port-uuid> --allowed-address mac_address=<mac_address>,ip_address=<ip_cidr>
 
+设置 dpdk 物理接口 multiqueue 
+https://access.redhat.com/documentation/en-us/red_hat_openstack_platform/13/html/network_functions_virtualization_planning_and_configuration_guide/appe-sample-ovsdpdk-sriov-files#ap-vxlan-dpdk-sriov-compute
+
 ```
 
 ### NFV BIOS 配置

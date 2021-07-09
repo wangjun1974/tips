@@ -20811,3 +20811,15 @@ ExecStart=/bin/systemctl --no-block reboot
 [Install]
 WantedBy=multi-user.target
 ```
+
+ISO 启动运行
+```
+coreos-installer iso kargs modify --append console=ttyS1,115200n8 --delete
+console=ttyS0,115200n8
+```
+
+coreos-installer 命令
+```
+coreos-installer install --append-karg console=ttyS1,115200n8 --delete-karg
+console=ttyS0,115200n8
+```

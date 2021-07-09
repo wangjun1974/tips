@@ -20676,6 +20676,10 @@ https://access.redhat.com/documentation/en-us/red_hat_openstack_platform/13/html
 IPv6 指南
 https://source.redhat.com/groups/public/segteam/segteam_wiki/ipv6_guide
 
+Configuring Noobaa S3 Storage for Red Hat Advanced Cluster Management Observability
+https://schmaustech.blogspot.com/2021/05/configuring-noobaa-s3-storage-for-red.html
+
+
 ```
 
 ### NFV BIOS 配置
@@ -20785,3 +20789,25 @@ git remote set-url origin https://wangjun1974:[NEW TOKEN]@github.com/wangjun1974
 
 ### Intel SST-BF 如何在 openstack 下工作
 https://github.com/intel/sst-bf-openstack-setup-automation
+
+### 用 Ignition config 生成 systemd unit，将 console=ttyS0,115200n8 改为 console=ttyS1,115200n8
+```
+[Unit]
+Description=Switch console to S1
+# We run after `systemd-machine-id-commit.service` to ensure that
+# `ConditionFirstBoot=true` services won't rerun on the next boot.
+After=systemd-machine-id-commit.service
+ConditionKernelCommandLine=!systemd.unified_cgroup_hierarchy
+ConditionPathExists=!/var/lib/console-to-s1.stamp
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/bin/rpm-ostree kargs --delete=console=ttyS0,115200n8
+ExecStart=/bin/rpm-ostree kargs --append=console=ttyS1,115200n8
+ExecStart=/bin/touch /var/lib/console-to-s1.stamp
+ExecStart=/bin/systemctl --no-block reboot
+
+[Install]
+WantedBy=multi-user.target
+```

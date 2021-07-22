@@ -21119,7 +21119,7 @@ PLAY RECAP *********************************************************************
 +++ 040-Crd-kafka.yaml  2021-07-22 12:56:15.000000000 +0800
 @@ -1,4 +1,4 @@
 -apiVersion: apiextensions.k8s.io/v1beta1
-+apiVersion: apiextensions.k8s.io/v1beta2
++apiVersion: apiextensions.k8s.io/v1
  kind: CustomResourceDefinition
  metadata:
    name: kafkas.kafka.strimzi.io
@@ -21128,7 +21128,7 @@ PLAY RECAP *********************************************************************
 +++ 041-Crd-kafkaconnect.yaml   2021-07-22 12:56:15.000000000 +0800
 @@ -1,4 +1,4 @@
 -apiVersion: apiextensions.k8s.io/v1beta1
-+apiVersion: apiextensions.k8s.io/v1beta2
++apiVersion: apiextensions.k8s.io/v1
  kind: CustomResourceDefinition
  metadata:
    name: kafkaconnects.kafka.strimzi.io
@@ -21138,7 +21138,7 @@ PLAY RECAP *********************************************************************
 +++ 042-Crd-kafkaconnects2i.yaml        2021-07-22 12:56:15.000000000 +0800
 @@ -1,4 +1,4 @@
 -apiVersion: apiextensions.k8s.io/v1beta1
-+apiVersion: apiextensions.k8s.io/v1beta2
++apiVersion: apiextensions.k8s.io/v1
  kind: CustomResourceDefinition
  metadata:
    name: kafkaconnects2is.kafka.strimzi.io
@@ -21147,7 +21147,7 @@ PLAY RECAP *********************************************************************
 +++ 043-Crd-kafkatopic.yaml     2021-07-22 12:56:15.000000000 +0800
 @@ -1,4 +1,4 @@
 -apiVersion: apiextensions.k8s.io/v1beta1
-+apiVersion: apiextensions.k8s.io/v1beta2
++apiVersion: apiextensions.k8s.io/v1
  kind: CustomResourceDefinition
  metadata:
    name: kafkatopics.kafka.strimzi.io
@@ -21156,7 +21156,7 @@ PLAY RECAP *********************************************************************
 +++ 044-Crd-kafkauser.yaml      2021-07-22 12:56:15.000000000 +0800
 @@ -1,4 +1,4 @@
 -apiVersion: apiextensions.k8s.io/v1beta1
-+apiVersion: apiextensions.k8s.io/v1beta2
++apiVersion: apiextensions.k8s.io/v1
  kind: CustomResourceDefinition
  metadata:
    name: kafkausers.kafka.strimzi.io
@@ -21165,8 +21165,31 @@ PLAY RECAP *********************************************************************
 +++ 045-Crd-kafkamirrormaker.yaml       2021-07-22 12:56:15.000000000 +0800
 @@ -1,4 +1,4 @@
 -apiVersion: apiextensions.k8s.io/v1beta1
-+apiVersion: apiextensions.k8s.io/v1beta2
++apiVersion: apiextensions.k8s.io/v1
  kind: CustomResourceDefinition
  metadata:
    name: kafkamirrormakers.kafka.strimzi.io
+[junwang@JundeMacBook-Pro ~/work/opendatahub/opendatahub-operator/deploy/kafka]$ diff -urN operator-objects.sav/050-Deployment-strimzi-cluster-operator.yaml.orig operator-objects.sav/050-Deployment-strimzi-cluster-operator.yaml
+--- operator-objects.sav/050-Deployment-strimzi-cluster-operator.yaml.orig      2021-07-22 13:15:37.000000000 +0800
++++ operator-objects.sav/050-Deployment-strimzi-cluster-operator.yaml   2021-07-22 13:38:30.000000000 +0800
+@@ -1,4 +1,4 @@
+-apiVersion: extensions/v1beta1
++apiVersion: extensions/v1
+ kind: Deployment
+ metadata:
+   name: strimzi-cluster-operator
+@@ -6,6 +6,10 @@
+     app: strimzi
+ spec:
+   replicas: 1
++  selector:
++    matchLabels:
++      name: strimzi-cluster-operator
++      strimzi.io/kind: cluster-operator
+   template:
+     metadata:
+       labels:
+
+
+failed: [127.0.0.1] (item={'path': 'operator-objects/050-Deployment-strimzi-cluster-operator.yaml', 'mode': '0644', 'isdir': False, 'ischr': False, 'isblk': False, 'isreg': True, 'isfifo': False, 'islnk': False, 'issock': False, 'uid': 501, 'gid': 20, 'size': 2980, 'inode': 32504335, 'dev': 16777220, 'nlink': 1, 'atime': 1626931168.0214803, 'mtime': 1626931166.9111478, 'ctime': 1626931166.912944, 'gr_name': 'staff', 'pw_name': 'junwang', 'wusr': True, 'rusr': True, 'xusr': False, 'wgrp': False, 'rgrp': True, 'xgrp': False, 'woth': False, 'roth': True, 'xoth': False, 'isuid': False, 'isgid': False}) => {"changed": false, "error": 422, "item": {"atime": 1626931168.0214803, "ctime": 1626931166.912944, "dev": 16777220, "gid": 20, "gr_name": "staff", "inode": 32504335, "isblk": false, "ischr": false, "isdir": false, "isfifo": false, "isgid": false, "islnk": false, "isreg": true, "issock": false, "isuid": false, "mode": "0644", "mtime": 1626931166.9111478, "nlink": 1, "path": "operator-objects/050-Deployment-strimzi-cluster-operator.yaml", "pw_name": "junwang", "rgrp": true, "roth": true, "rusr": true, "size": 2980, "uid": 501, "wgrp": false, "woth": false, "wusr": true, "xgrp": false, "xoth": false, "xusr": false}, "msg": "Failed to create object: b'{\"kind\":\"Status\",\"apiVersion\":\"v1\",\"metadata\":{},\"status\":\"Failure\",\"message\":\"Deployment.apps \\\\\"strimzi-cluster-operator\\\\\" is invalid: [spec.selector: Required value, spec.template.metadata.labels: Invalid value: map[string]string{\\\\\"name\\\\\":\\\\\"strimzi-cluster-operator\\\\\", \\\\\"strimzi.io/kind\\\\\":\\\\\"cluster-operator\\\\\"}: `selector` does not match template `labels`]\",\"reason\":\"Invalid\",\"details\":{\"name\":\"strimzi-cluster-operator\",\"group\":\"apps\",\"kind\":\"Deployment\",\"causes\":[{\"reason\":\"FieldValueRequired\",\"message\":\"Required value\",\"field\":\"spec.selector\"},{\"reason\":\"FieldValueInvalid\",\"message\":\"Invalid value: map[string]string{\\\\\"name\\\\\":\\\\\"strimzi-cluster-operator\\\\\", \\\\\"strimzi.io/kind\\\\\":\\\\\"cluster-operator\\\\\"}: `selector` does not match template `labels`\",\"field\":\"spec.template.metadata.labels\"}]},\"code\":422}\\n'", "reason": "Unprocessable Entity", "status": 422}
 ```

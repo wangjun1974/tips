@@ -21114,4 +21114,59 @@ PLAY RECAP *********************************************************************
 127.0.0.1                  : ok=4    changed=0    unreachable=0    failed=1 
 
 
+[junwang@JundeMacBook-Pro ~/work/opendatahub/opendatahub-operator/deploy/kafka/operator-objects.sav]$ diff -urN 040-Crd-kafka.yaml.orig 040-Crd-kafka.yaml                         
+--- 040-Crd-kafka.yaml.orig     2021-07-22 12:56:15.000000000 +0800
++++ 040-Crd-kafka.yaml  2021-07-22 12:56:15.000000000 +0800
+@@ -1,4 +1,4 @@
+-apiVersion: apiextensions.k8s.io/v1beta1
++apiVersion: apiextensions.k8s.io/v1beta2
+ kind: CustomResourceDefinition
+ metadata:
+   name: kafkas.kafka.strimzi.io
+[junwang@JundeMacBook-Pro ~/work/opendatahub/opendatahub-operator/deploy/kafka/operator-objects.sav]$ diff -urN 041-Crd-kafkaconnect.yaml.orig 041-Crd-kafkaconnect.yaml
+--- 041-Crd-kafkaconnect.yaml.orig      2021-07-22 12:56:15.000000000 +0800
++++ 041-Crd-kafkaconnect.yaml   2021-07-22 12:56:15.000000000 +0800
+@@ -1,4 +1,4 @@
+-apiVersion: apiextensions.k8s.io/v1beta1
++apiVersion: apiextensions.k8s.io/v1beta2
+ kind: CustomResourceDefinition
+ metadata:
+   name: kafkaconnects.kafka.strimzi.io
+[junwang@JundeMacBook-Pro ~/work/opendatahub/opendatahub-operator/deploy/kafka/operator-objects.sav]$ diff -urN 042-Crd-kafkaconnects2i.yaml 042-Crd-kafkaconnects2i.yaml
+[junwang@JundeMacBook-Pro ~/work/opendatahub/opendatahub-operator/deploy/kafka/operator-objects.sav]$ diff -urN 042-Crd-kafkaconnects2i.yaml.orig 042-Crd-kafkaconnects2i.yaml
+--- 042-Crd-kafkaconnects2i.yaml.orig   2021-07-22 12:56:15.000000000 +0800
++++ 042-Crd-kafkaconnects2i.yaml        2021-07-22 12:56:15.000000000 +0800
+@@ -1,4 +1,4 @@
+-apiVersion: apiextensions.k8s.io/v1beta1
++apiVersion: apiextensions.k8s.io/v1beta2
+ kind: CustomResourceDefinition
+ metadata:
+   name: kafkaconnects2is.kafka.strimzi.io
+[junwang@JundeMacBook-Pro ~/work/opendatahub/opendatahub-operator/deploy/kafka/operator-objects.sav]$ diff -urN 043-Crd-kafkatopic.yaml.orig 043-Crd-kafkatopic.yaml
+--- 043-Crd-kafkatopic.yaml.orig        2021-07-22 12:56:15.000000000 +0800
++++ 043-Crd-kafkatopic.yaml     2021-07-22 12:56:15.000000000 +0800
+@@ -1,4 +1,4 @@
+-apiVersion: apiextensions.k8s.io/v1beta1
++apiVersion: apiextensions.k8s.io/v1beta2
+ kind: CustomResourceDefinition
+ metadata:
+   name: kafkatopics.kafka.strimzi.io
+[junwang@JundeMacBook-Pro ~/work/opendatahub/opendatahub-operator/deploy/kafka/operator-objects.sav]$ diff -urN 044-Crd-kafkauser.yaml.orig 044-Crd-kafkauser.yaml
+--- 044-Crd-kafkauser.yaml.orig 2021-07-22 12:56:15.000000000 +0800
++++ 044-Crd-kafkauser.yaml      2021-07-22 12:56:15.000000000 +0800
+@@ -1,4 +1,4 @@
+-apiVersion: apiextensions.k8s.io/v1beta1
++apiVersion: apiextensions.k8s.io/v1beta2
+ kind: CustomResourceDefinition
+ metadata:
+   name: kafkausers.kafka.strimzi.io
+[junwang@JundeMacBook-Pro ~/work/opendatahub/opendatahub-operator/deploy/kafka/operator-objects.sav]$ diff -urN 045-Crd-kafkamirrormaker.yaml.orig 045-Crd-kafkamirrormaker.yaml
+--- 045-Crd-kafkamirrormaker.yaml.orig  2021-07-22 12:56:15.000000000 +0800
++++ 045-Crd-kafkamirrormaker.yaml       2021-07-22 12:56:15.000000000 +0800
+@@ -1,4 +1,4 @@
+-apiVersion: apiextensions.k8s.io/v1beta1
++apiVersion: apiextensions.k8s.io/v1beta2
+ kind: CustomResourceDefinition
+ metadata:
+   name: kafkamirrormakers.kafka.strimzi.io
 ```

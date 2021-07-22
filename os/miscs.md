@@ -20823,3 +20823,51 @@ coreos-installer 命令
 coreos-installer install --append-karg console=ttyS1,115200n8 --delete-karg
 console=ttyS0,115200n8
 ```
+
+### 创建 AZ
+https://www.redhat.com/en/blog/how-define-openstack-edge-sites-through-availability-zones
+
+根据这个 Blog 的内容，AZ 是 HostAggregate 的子集
+```
+创建 3 个 hostaggregate 和 zone (central, east, west)
+$ openstack aggregate create central --zone central
+$ openstack aggregate create east --zone east
+$ openstack aggregate create west --zone west
+
+设置默认 aggregate/zone 为 central
+parameter_defaults:
+  ControllerExtraConfig:
+    nova::availability_zone::default_schedule_zone: central
+    controller_classes:
+      - ::nova::availability_zone
+
+添加主机到 aggregate/zone
+$ openstack aggregate add host central hostA
+$ openstack aggregate add host central hostB
+$ openstack aggregate add host east hostC
+$ openstack aggregate add host east hostD
+$ openstack aggregate add host west hostE
+$ openstack aggregate add host west hostF
+
+创建实例 test1，未指定 aggregate/zone 时默认创建到 central
+$ openstack server create --flavor tiny --image rhel test1
+$ openstack server show -f value -c OS-EXT-AZ:availability_zone -c OS-EXT-SRV-ATTR:host test1
+central
+hostA
+
+创建实例 test2, 指定创建到 aggregate/zone east
+$ openstack server create --flavor tiny --image rhel --availability-zone east test2
+$ openstack server show -f value -c OS-EXT-AZ:availability_zone -c OS-EXT-SRV-ATTR:host test2
+east
+hostC
+```
+
+### pipenv
+https://developers.redhat.com/blog/2018/08/13/install-python3-rhel#troubleshooting
+
+### Open DataHub
+查看 OpenDataHub 相关资源
+```
+在 openshift-operators namespace 下查看有哪些对象及其类型
+oc api-resources --verbs=list --namespaced -o name | xargs -n 1 oc get --show-kind --ignore-not-found -n openshift-operators
+```

@@ -20865,9 +20865,253 @@ hostC
 ### pipenv
 https://developers.redhat.com/blog/2018/08/13/install-python3-rhel#troubleshooting
 
-### Open DataHub
-查看 OpenDataHub 相关资源
+### Open Data Hub
+https://gitlab.com/opendatahub/fraud-detection-tutorial
+
 ```
 在 openshift-operators namespace 下查看有哪些对象及其类型
 oc api-resources --verbs=list --namespaced -o name | xargs -n 1 oc get --show-kind --ignore-not-found -n openshift-operators
+
+查看部署哪些组件
+这个例子里会部署: jupyterhub, spark-opeartor, seldon, jupyter-on-openshift, kafka, monitoring
+这个例子未部署: beakerx, ai-library, argo, superset, data-catalog
+$ cat frauddetection_cr.yaml  | grep -E "odh_deploy" -B2 
+  aicoe-jupyterhub:
+    # Deploy the ODH aicoe-jupyterhub role if True
+    odh_deploy: true
+--
+  spark-operator:
+    # Deploy the ODH spark-operator role if True
+    odh_deploy: true
+--
+  # Seldon Delployment
+  seldon:
+    odh_deploy: true
+--
+  jupyter-on-openshift:
+    # Deploy the ODH jupyter-on-openshift role if True
+    odh_deploy: false
+--
+
+  kafka:
+    odh_deploy: true
+--
+  # Deployment of Prometheus and Grafana for Monitoring of ODH
+  monitoring:
+    odh_deploy: true
+--
+  # Deployment of Two Sigma's BeakerX Jupyter notebook
+  beakerx:
+    odh_deploy: false
+--
+  # Deployment of AI Library models as SeldonDeployments.  Can only be done if Seldon is also deployed.
+  ai-library:
+    odh_deploy: false
+--
+  # Deployment of Argo 
+  argo:
+    odh_deploy: false
+--
+  # Deployment of Superset
+  superset:
+    odh_deploy: false
+--
+  # Tech preview feature
+  data-catalog:
+    odh_deploy: false
+
+设置
+  vars:
+    ansible_python_interpreter: '{{ ansible_playbook_python }}'
+
+
+在 mac 下执行
+$ pipenv install 
+Creating a virtualenv for this project…
+Pipfile: /Users/junwang/work/opendatahub/opendatahub-operator/deploy/kafka/Pipfile
+Using /usr/local/bin/python3 (3.7.7) to create virtualenv…
+⠼ Creating virtual environment...created virtual environment CPython3.7.7.final.0-64 in 934ms
+  creator CPython3Posix(dest=/Users/junwang/.local/share/virtualenvs/kafka-PLr17TZ_, clear=False, global=False)
+  seeder FromAppData(download=False, pip=latest, setuptools=latest, wheel=latest, via=copy, app_data_dir=/Users/junwang/Library/Application Support/virtualenv/seed-app-data/v1)
+  activators BashActivator,CShellActivator,FishActivator,PowerShellActivator,PythonActivator,XonshActivator
+
+✔ Successfully created virtual environment! 
+Virtualenv location: /Users/junwang/.local/share/virtualenvs/kafka-PLr17TZ_
+Installing dependencies from Pipfile.lock (fa244b)…
+  🐍   ▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉ 31/31 — 00:00:38
+
+$ pipenv run ansible-playbook deploy_kafka_operator.yaml -e kubeconfig=~/Downloads/salabs/ocp1/ocp1-kubeconfig -e NAMESPACE=open-data-hub
+ [WARNING]: Unable to parse /etc/ansible/hosts as an inventory source                                                                                                              
+                                                                                                                                                                                   
+ [WARNING]: No inventory was parsed, only implicit localhost is available                                                                                                          
+                                                                                                                                                                                   
+ [WARNING]: provided hosts list is empty, only localhost is available. Note that the implicit localhost does not match 'all'                                                       
+                                                                                                                                                                                   
+                                                                                                                                                                                   
+PLAY [Deploy the ODH operator to Openshift] **************************************************************************************************************************************$
+                                                                                                                                                                                   
+TASK [Gathering Facts] ************************************************************************************************************************************************************
+ok: [127.0.0.1]                                                                                                                                                                    
+                                                                                                                                                                                   
+TASK [Load the appropriate vars file] *********************************************************************************************************************************************
+ok: [127.0.0.1]                                                                                                                                                                    
+                                                                                                                                                                                   
+TASK [Ensure that the required variables are set] *********************************************************************************************************************************
+ [WARNING]: when statements should not include jinja2 templating delimiters such as {{ }} or {% %}. Found: {{ item }} is undefined                
+                                                                                                                                                                                   
+skipping: [127.0.0.1] => (item=kubeconfig)                                                                                                                                         
+skipping: [127.0.0.1] => (item=NAMESPACE)                                                                                                                                          
+skipping: [127.0.0.1] => (item=kafka_admins)                                                                                                                                       
+                                                                                                                                                                                   
+TASK [Determine the list of yaml files to apply] **********************************************************************************************************************************
+ok: [127.0.0.1]
+
+TASK [Verify namespace exists] ****************************************************************************************************************************************************
+ok: [127.0.0.1]
+
+TASK [Deploy the ODH objects to Openshift] ****************************************************************************************************************************************
+failed: [127.0.0.1] (item={'path': 'operator-objects/040-Crd-kafka.yaml', 'mode': '0644', 'isdir': False, 'ischr': False, 'isblk': False, 'isreg': True, 'isfifo': False, 'islnk': 
+False, 'issock': False, 'uid': 501, 'gid': 20, 'size': 87561, 'inode': 32308010, 'dev': 16777220, 'nlink': 1, 'atime': 1626773049.2576835, 'mtime': 1626686265.2648702, 'ctime': 16
+26686265.2648702, 'gr_name': 'staff', 'pw_name': 'junwang', 'wusr': True, 'rusr': True, 'xusr': False, 'wgrp': False, 'rgrp': True, 'xgrp': False, 'woth': False, 'roth': True, 'xo
+th': False, 'isuid': False, 'isgid': False}) => {"changed": false, "error": 422, "item": {"atime": 1626773049.2576835, "ctime": 1626686265.2648702, "dev": 16777220, "gid": 20, "gr
+_name": "staff", "inode": 32308010, "isblk": false, "ischr": false, "isdir": false, "isfifo": false, "isgid": false, "islnk": false, "isreg": true, "issock": false, "isuid": false
+, "mode": "0644", "mtime": 1626686265.2648702, "nlink": 1, "path": "operator-objects/040-Crd-kafka.yaml", "pw_name": "junwang", "rgrp": true, "roth": true, "rusr": true, "size": 8
+7561, "uid": 501, "wgrp": false, "woth": false, "wusr": true, "xgrp": false, "xoth": false, "xusr": false}, "msg": "Failed to patch object: b'{\"kind\":\"Status\",\"apiVersion\":\
+"v1\",\"metadata\":{},\"status\":\"Failure\",\"message\":\"CustomResourceDefinition.apiextensions.k8s.io \\\\\"kafkas.kafka.strimzi.io\\\\\" is invalid: [spec.validation: Forbidde
+n: top-level and per-version schemas are mutually exclusive, spec.version: Invalid value: \\\\\"v1alpha1\\\\\": must match the first version in spec.versions]\",\"reason\":\"Inval
+id\",\"details\":{\"name\":\"kafkas.kafka.strimzi.io\",\"group\":\"apiextensions.k8s.io\",\"kind\":\"CustomResourceDefinition\",\"causes\":[{\"reason\":\"FieldValueForbidden\",\"m
+essage\":\"Forbidden: top-level and per-version schemas are mutually exclusive\",\"field\":\"spec.validation\"},{\"reason\":\"FieldValueInvalid\",\"message\":\"Invalid value: \\\\
+\"v1alpha1\\\\\": must match the first version in spec.versions\",\"field\":\"spec.version\"}]},\"code\":422}\\n'", "reason": "Unprocessable Entity", "status": 422}
+changed: [127.0.0.1] => (item={'path': 'operator-objects/031-RoleBinding-strimzi-cluster-operator-entity-operator-delegation.yaml', 'mode': '0644', 'isdir': False, 'ischr': False,
+ 'isblk': False, 'isreg': True, 'isfifo': False, 'islnk': False, 'issock': False, 'uid': 501, 'gid': 20, 'size': 357, 'inode': 32308007, 'dev': 16777220, 'nlink': 1, 'atime': 1626
+686266.023678, 'mtime': 1626686265.261966, 'ctime': 1626686265.261966, 'gr_name': 'staff', 'pw_name': 'junwang', 'wusr': True, 'rusr': True, 'xusr': False, 'wgrp': False, 'rgrp': 
+True, 'xgrp': False, 'woth': False, 'roth': True, 'xoth': False, 'isuid': False, 'isgid': False})
+changed: [127.0.0.1] => (item={'path': 'operator-objects/021-ClusterRoleBinding-strimzi-cluster-operator.yaml', 'mode': '0644', 'isdir': False, 'ischr': False, 'isblk': False, 'is
+reg': True, 'isfifo': False, 'islnk': False, 'issock': False, 'uid': 501, 'gid': 20, 'size': 345, 'inode': 32308003, 'dev': 16777220, 'nlink': 1, 'atime': 1626686265.9797187, 'mti
+me': 1626686265.2605686, 'ctime': 1626686265.2605686, 'gr_name': 'staff', 'pw_name': 'junwang', 'wusr': True, 'rusr': True, 'xusr': False, 'wgrp': False, 'rgrp': True, 'xgrp': Fal
+se, 'woth': False, 'roth': True, 'xoth': False, 'isuid': False, 'isgid': False})
+changed: [127.0.0.1] => (item={'path': 'operator-objects/032-RoleBinding-strimzi-cluster-operator-topic-operator-delegation.yaml', 'mode': '0644', 'isdir': False, 'ischr': False, 
+'isblk': False, 'isreg': True, 'isfifo': False, 'islnk': False, 'issock': False, 'uid': 501, 'gid': 20, 'size': 355, 'inode': 32308009, 'dev': 16777220, 'nlink': 1, 'atime': 16266
+86266.0277486, 'mtime': 1626686265.264008, 'ctime': 1626686265.264008, 'gr_name': 'staff', 'pw_name': 'junwang', 'wusr': True, 'rusr': True, 'xusr': False, 'wgrp': False, 'rgrp': 
+True, 'xgrp': False, 'woth': False, 'roth': True, 'xoth': False, 'isuid': False, 'isgid': False})
+TASK [Deploy the ODH objects to Openshift] ****************************************************************************************************************************************
+failed: [127.0.0.1] (item={'path': 'operator-objects/040-Crd-kafka.yaml', 'mode': '0644', 'isdir': False, 'ischr': False, 'isblk': False, 'isreg': True, 'isfifo': False, 'islnk': 
+False, 'issock': False, 'uid': 501, 'gid': 20, 'size': 87561, 'inode': 32308010, 'dev': 16777220, 'nlink': 1, 'atime': 1626773049.2576835, 'mtime': 1626686265.2648702, 'ctime': 16
+26686265.2648702, 'gr_name': 'staff', 'pw_name': 'junwang', 'wusr': True, 'rusr': True, 'xusr': False, 'wgrp': False, 'rgrp': True, 'xgrp': False, 'woth': False, 'roth': True, 'xo
+th': False, 'isuid': False, 'isgid': False}) => {"changed": false, "error": 422, "item": {"atime": 1626773049.2576835, "ctime": 1626686265.2648702, "dev": 16777220, "gid": 20, "gr
+_name": "staff", "inode": 32308010, "isblk": false, "ischr": false, "isdir": false, "isfifo": false, "isgid": false, "islnk": false, "isreg": true, "issock": false, "isuid": false
+, "mode": "0644", "mtime": 1626686265.2648702, "nlink": 1, "path": "operator-objects/040-Crd-kafka.yaml", "pw_name": "junwang", "rgrp": true, "roth": true, "rusr": true, "size": 8
+7561, "uid": 501, "wgrp": false, "woth": false, "wusr": true, "xgrp": false, "xoth": false, "xusr": false}, "msg": "Failed to patch object: b'{\"kind\":\"Status\",\"apiVersion\":\
+"v1\",\"metadata\":{},\"status\":\"Failure\",\"message\":\"CustomResourceDefinition.apiextensions.k8s.io \\\\\"kafkas.kafka.strimzi.io\\\\\" is invalid: [spec.validation: Forbidde
+n: top-level and per-version schemas are mutually exclusive, spec.version: Invalid value: \\\\\"v1alpha1\\\\\": must match the first version in spec.versions]\",\"reason\":\"Inval
+id\",\"details\":{\"name\":\"kafkas.kafka.strimzi.io\",\"group\":\"apiextensions.k8s.io\",\"kind\":\"CustomResourceDefinition\",\"causes\":[{\"reason\":\"FieldValueForbidden\",\"m
+essage\":\"Forbidden: top-level and per-version schemas are mutually exclusive\",\"field\":\"spec.validation\"},{\"reason\":\"FieldValueInvalid\",\"message\":\"Invalid value: \\\\
+\"v1alpha1\\\\\": must match the first version in spec.versions\",\"field\":\"spec.version\"}]},\"code\":422}\\n'", "reason": "Unprocessable Entity", "status": 422}
+changed: [127.0.0.1] => (item={'path': 'operator-objects/031-RoleBinding-strimzi-cluster-operator-entity-operator-delegation.yaml', 'mode': '0644', 'isdir': False, 'ischr': False,
+ 'isblk': False, 'isreg': True, 'isfifo': False, 'islnk': False, 'issock': False, 'uid': 501, 'gid': 20, 'size': 357, 'inode': 32308007, 'dev': 16777220, 'nlink': 1, 'atime': 1626
+686266.023678, 'mtime': 1626686265.261966, 'ctime': 1626686265.261966, 'gr_name': 'staff', 'pw_name': 'junwang', 'wusr': True, 'rusr': True, 'xusr': False, 'wgrp': False, 'rgrp': 
+True, 'xgrp': False, 'woth': False, 'roth': True, 'xoth': False, 'isuid': False, 'isgid': False})
+changed: [127.0.0.1] => (item={'path': 'operator-objects/021-ClusterRoleBinding-strimzi-cluster-operator.yaml', 'mode': '0644', 'isdir': False, 'ischr': False, 'isblk': False, 'is
+reg': True, 'isfifo': False, 'islnk': False, 'issock': False, 'uid': 501, 'gid': 20, 'size': 345, 'inode': 32308003, 'dev': 16777220, 'nlink': 1, 'atime': 1626686265.9797187, 'mti
+me': 1626686265.2605686, 'ctime': 1626686265.2605686, 'gr_name': 'staff', 'pw_name': 'junwang', 'wusr': True, 'rusr': True, 'xusr': False, 'wgrp': False, 'rgrp': True, 'xgrp': Fal
+se, 'woth': False, 'roth': True, 'xoth': False, 'isuid': False, 'isgid': False})
+changed: [127.0.0.1] => (item={'path': 'operator-objects/032-RoleBinding-strimzi-cluster-operator-topic-operator-delegation.yaml', 'mode': '0644', 'isdir': False, 'ischr': False, 
+'isblk': False, 'isreg': True, 'isfifo': False, 'islnk': False, 'issock': False, 'uid': 501, 'gid': 20, 'size': 355, 'inode': 32308009, 'dev': 16777220, 'nlink': 1, 'atime': 16266
+86266.0277486, 'mtime': 1626686265.264008, 'ctime': 1626686265.264008, 'gr_name': 'staff', 'pw_name': 'junwang', 'wusr': True, 'rusr': True, 'xusr': False, 'wgrp': False, 'rgrp': 
+True, 'xgrp': False, 'woth': False, 'roth': True, 'xoth': False, 'isuid': False, 'isgid': False})
+failed: [127.0.0.1] (item={'path': 'operator-objects/044-Crd-kafkauser.yaml', 'mode': '0644', 'isdir': False, 'ischr': False, 'isblk': False, 'isreg': True, 'isfifo': False, 'isln
+k': False, 'issock': False, 'uid': 501, 'gid': 20, 'size': 2658, 'inode': 32308014, 'dev': 16777220, 'nlink': 1, 'atime': 1626686266.0980978, 'mtime': 1626686265.2671494, 'ctime':
+ 1626686265.2671494, 'gr_name': 'staff', 'pw_name': 'junwang', 'wusr': True, 'rusr': True, 'xusr': False, 'wgrp': False, 'rgrp': True, 'xgrp': False, 'woth': False, 'roth': True, 
+'xoth': False, 'isuid': False, 'isgid': False}) => {"changed": false, "error": 422, "item": {"atime": 1626686266.0980978, "ctime": 1626686265.2671494, "dev": 16777220, "gid": 20, 
+"gr_name": "staff", "inode": 32308014, "isblk": false, "ischr": false, "isdir": false, "isfifo": false, "isgid": false, "islnk": false, "isreg": true, "issock": false, "isuid": fa
+lse, "mode": "0644", "mtime": 1626686265.2671494, "nlink": 1, "path": "operator-objects/044-Crd-kafkauser.yaml", "pw_name": "junwang", "rgrp": true, "roth": true, "rusr": true, "s
+ize": 2658, "uid": 501, "wgrp": false, "woth": false, "wusr": true, "xgrp": false, "xoth": false, "xusr": false}, "msg": "Failed to patch object: b'{\"kind\":\"Status\",\"apiVersi
+on\":\"v1\",\"metadata\":{},\"status\":\"Failure\",\"message\":\"CustomResourceDefinition.apiextensions.k8s.io \\\\\"kafkausers.kafka.strimzi.io\\\\\" is invalid: spec.version: In
+valid value: \\\\\"v1alpha1\\\\\": must match the first version in spec.versions\",\"reason\":\"Invalid\",\"details\":{\"name\":\"kafkausers.kafka.strimzi.io\",\"group\":\"apiexte
+nsions.k8s.io\",\"kind\":\"CustomResourceDefinition\",\"causes\":[{\"reason\":\"FieldValueInvalid\",\"message\":\"Invalid value: \\\\\"v1alpha1\\\\\": must match the first version
+ in spec.versions\",\"field\":\"spec.version\"}]},\"code\":422}\\n'", "reason": "Unprocessable Entity", "status": 422}
+changed: [127.0.0.1] => (item={'path': 'operator-objects/031-ClusterRole-strimzi-entity-operator.yaml', 'mode': '0644', 'isdir': False, 'ischr': False, 'isblk': False, 'isreg': Tr
+ue, 'isfifo': False, 'islnk': False, 'issock': False, 'uid': 501, 'gid': 20, 'size': 601, 'inode': 32308006, 'dev': 16777220, 'nlink': 1, 'atime': 1626686266.0126874, 'mtime': 162
+6686265.2616515, 'ctime': 1626686265.2616515, 'gr_name': 'staff', 'pw_name': 'junwang', 'wusr': True, 'rusr': True, 'xusr': False, 'wgrp': False, 'rgrp': True, 'xgrp': False, 'wot
+h': False, 'roth': True, 'xoth': False, 'isuid': False, 'isgid': False})
+changed: [127.0.0.1] => (item={'path': 'operator-objects/021-ClusterRole-strimzi-cluster-operator-role.yaml', 'mode': '0644', 'isdir': False, 'ischr': False, 'isblk': False, 'isre
+g': True, 'isfifo': False, 'islnk': False, 'issock': False, 'uid': 501, 'gid': 20, 'size': 288, 'inode': 32308002, 'dev': 16777220, 'nlink': 1, 'atime': 1626686265.9541924, 'mtime
+': 1626686265.2601798, 'ctime': 1626686265.2601798, 'gr_name': 'staff', 'pw_name': 'junwang', 'wusr': True, 'rusr': True, 'xusr': False, 'wgrp': False, 'rgrp': True, 'xgrp': False
+, 'woth': False, 'roth': True, 'xoth': False, 'isuid': False, 'isgid': False})
+changed: [127.0.0.1] => (item={'path': 'operator-objects/030-ClusterRoleBinding-strimzi-cluster-operator-kafka-broker-delegation.yaml', 'mode': '0644', 'isdir': False, 'ischr': Fa
+lse, 'isblk': False, 'isreg': True, 'isfifo': False, 'islnk': False, 'issock': False, 'uid': 501, 'gid': 20, 'size': 358, 'inode': 32308005, 'dev': 16777220, 'nlink': 1, 'atime': 
+1626686265.9955895, 'mtime': 1626686265.2613554, 'ctime': 1626686265.2613554, 'gr_name': 'staff', 'pw_name': 'junwang', 'wusr': True, 'rusr': True, 'xusr': False, 'wgrp': False, '
+rgrp': True, 'xgrp': False, 'woth': False, 'roth': True, 'xoth': False, 'isuid': False, 'isgid': False})
+changed: [127.0.0.1] => (item={'path': 'operator-objects/020-RoleBinding-strimzi-cluster-operator.yaml', 'mode': '0644', 'isdir': False, 'ischr': False, 'isblk': False, 'isreg': T
+rue, 'isfifo': False, 'islnk': False, 'issock': False, 'uid': 501, 'gid': 20, 'size': 342, 'inode': 32308001, 'dev': 16777220, 'nlink': 1, 'atime': 1626686265.9541385, 'mtime': 16
+26686265.2596133, 'ctime': 1626686265.2596133, 'gr_name': 'staff', 'pw_name': 'junwang', 'wusr': True, 'rusr': True, 'xusr': False, 'wgrp': False, 'rgrp': True, 'xgrp': False, 'wo
+th': False, 'roth': True, 'xoth': False, 'isuid': False, 'isgid': False})
+changed: [127.0.0.1] => (item={'path': 'operator-objects/020-ClusterRole-strimzi-cluster-operator-role.yaml', 'mode': '0644', 'isdir': False, 'ischr': False, 'isblk': False, 'isre
+g': True, 'isfifo': False, 'islnk': False, 'issock': False, 'uid': 501, 'gid': 20, 'size': 3139, 'inode': 32308000, 'dev': 16777220, 'nlink': 1, 'atime': 1626923551.1831284, 'mtim
+e': 1626686265.2586715, 'ctime': 1626686265.2586715, 'gr_name': 'staff', 'pw_name': 'junwang', 'wusr': True, 'rusr': True, 'xusr': False, 'wgrp': False, 'rgrp': True, 'xgrp': Fals
+e, 'woth': False, 'roth': True, 'xoth': False, 'isuid': False, 'isgid': False})
+ok: [127.0.0.1] => (item={'path': 'operator-objects/032-ClusterRole-strimzi-topic-operator.yaml', 'mode': '0644', 'isdir': False, 'ischr': False, 'isblk': False, 'isreg': True, 'i
+sfifo': False, 'islnk': False, 'issock': False, 'uid': 501, 'gid': 20, 'size': 345, 'inode': 32308008, 'dev': 16777220, 'nlink': 1, 'atime': 1626923551.1831553, 'mtime': 162668626
+5.2634163, 'ctime': 1626686265.2634163, 'gr_name': 'staff', 'pw_name': 'junwang', 'wusr': True, 'rusr': True, 'xusr': False, 'wgrp': False, 'rgrp': True, 'xgrp': False, 'woth': Fa
+lse, 'roth': True, 'xoth': False, 'isuid': False, 'isgid': False})
+ok: [127.0.0.1] => (item={'path': 'operator-objects/032-ClusterRole-strimzi-topic-operator.yaml', 'mode': '0644', 'isdir': False, 'ischr': False, 'isblk': False, 'isreg': True, 'i
+sfifo': False, 'islnk': False, 'issock': False, 'uid': 501, 'gid': 20, 'size': 345, 'inode': 32308008, 'dev': 16777220, 'nlink': 1, 'atime': 1626923551.1831553, 'mtime': 162668626
+5.2634163, 'ctime': 1626686265.2634163, 'gr_name': 'staff', 'pw_name': 'junwang', 'wusr': True, 'rusr': True, 'xusr': False, 'wgrp': False, 'rgrp': True, 'xgrp': False, 'woth': Fa
+lse, 'roth': True, 'xoth': False, 'isuid': False, 'isgid': False})
+changed: [127.0.0.1] => (item={'path': 'operator-objects/010-ServiceAccount-strimzi-cluster-operator.yaml', 'mode': '0644', 'isdir': False, 'ischr': False, 'isblk': False, 'isreg'
+: True, 'isfifo': False, 'islnk': False, 'issock': False, 'uid': 501, 'gid': 20, 'size': 106, 'inode': 32307999, 'dev': 16777220, 'nlink': 1, 'atime': 1626921563.9585345, 'mtime':
+ 1626686265.2582366, 'ctime': 1626686265.2582366, 'gr_name': 'staff', 'pw_name': 'junwang', 'wusr': True, 'rusr': True, 'xusr': False, 'wgrp': False, 'rgrp': True, 'xgrp': False, 
+'woth': False, 'roth': True, 'xoth': False, 'isuid': False, 'isgid': False})
+ok: [127.0.0.1] => (item={'path': 'operator-objects/030-ClusterRole-strimzi-kafka-broker.yaml', 'mode': '0644', 'isdir': False, 'ischr': False, 'isblk': False, 'isreg': True, 'isf
+ifo': False, 'islnk': False, 'issock': False, 'uid': 501, 'gid': 20, 'size': 197, 'inode': 32308004, 'dev': 16777220, 'nlink': 1, 'atime': 1626923551.1832347, 'mtime': 1626686265.
+261003, 'ctime': 1626686265.261003, 'gr_name': 'staff', 'pw_name': 'junwang', 'wusr': True, 'rusr': True, 'xusr': False, 'wgrp': False, 'rgrp': True, 'xgrp': False, 'woth': False,
+ 'roth': True, 'xoth': False, 'isuid': False, 'isgid': False})
+failed: [127.0.0.1] (item={'path': 'operator-objects/043-Crd-kafkatopic.yaml', 'mode': '0644', 'isdir': False, 'ischr': False, 'isblk': False, 'isreg': True, 'isfifo': False, 'isl
+nk': False, 'issock': False, 'uid': 501, 'gid': 20, 'size': 805, 'inode': 32308013, 'dev': 16777220, 'nlink': 1, 'atime': 1626686266.0729814, 'mtime': 1626686265.2667785, 'ctime':
+ 1626686265.2667785, 'gr_name': 'staff', 'pw_name': 'junwang', 'wusr': True, 'rusr': True, 'xusr': False, 'wgrp': False, 'rgrp': True, 'xgrp': False, 'woth': False, 'roth': True, 
+'xoth': False, 'isuid': False, 'isgid': False}) => {"changed": false, "error": 422, "item": {"atime": 1626686266.0729814, "ctime": 1626686265.2667785, "dev": 16777220, "gid": 20, 
+"gr_name": "staff", "inode": 32308013, "isblk": false, "ischr": false, "isdir": false, "isfifo": false, "isgid": false, "islnk": false, "isreg": true, "issock": false, "isuid": fa
+lse, "mode": "0644", "mtime": 1626686265.2667785, "nlink": 1, "path": "operator-objects/043-Crd-kafkatopic.yaml", "pw_name": "junwang", "rgrp": true, "roth": true, "rusr": true, "
+size": 805, "uid": 501, "wgrp": false, "woth": false, "wusr": true, "xgrp": false, "xoth": false, "xusr": false}, "msg": "Failed to patch object: b'{\"kind\":\"Status\",\"apiVersi
+on\":\"v1\",\"metadata\":{},\"status\":\"Failure\",\"message\":\"CustomResourceDefinition.apiextensions.k8s.io \\\\\"kafkatopics.kafka.strimzi.io\\\\\" is invalid: spec.version: I
+nvalid value: \\\\\"v1alpha1\\\\\": must match the first version in spec.versions\",\"reason\":\"Invalid\",\"details\":{\"name\":\"kafkatopics.kafka.strimzi.io\",\"group\":\"apiex
+tensions.k8s.io\",\"kind\":\"CustomResourceDefinition\",\"causes\":[{\"reason\":\"FieldValueInvalid\",\"message\":\"Invalid value: \\\\\"v1alpha1\\\\\": must match the first versi
+on in spec.versions\",\"field\":\"spec.version\"}]},\"code\":422}\\n'", "reason": "Unprocessable Entity", "status": 422}     
+failed: [127.0.0.1] (item={'path': 'operator-objects/050-Deployment-strimzi-cluster-operator.yaml', 'mode': '0644', 'isdir': False, 'ischr': False, 'isblk': False, 'isreg': True, 
+'isfifo': False, 'islnk': False, 'issock': False, 'uid': 501, 'gid': 20, 'size': 2991, 'inode': 32308016, 'dev': 16777220, 'nlink': 1, 'atime': 1626686266.1338682, 'mtime': 162668
+6265.2679648, 'ctime': 1626686265.2679648, 'gr_name': 'staff', 'pw_name': 'junwang', 'wusr': True, 'rusr': True, 'xusr': False, 'wgrp': False, 'rgrp': True, 'xgrp': False, 'woth':
+ False, 'roth': True, 'xoth': False, 'isuid': False, 'isgid': False}) => {"changed": false, "item": {"atime": 1626686266.1338682, "ctime": 1626686265.2679648, "dev": 16777220, "gi
+d": 20, "gr_name": "staff", "inode": 32308016, "isblk": false, "ischr": false, "isdir": false, "isfifo": false, "isgid": false, "islnk": false, "isreg": true, "issock": false, "is
+uid": false, "mode": "0644", "mtime": 1626686265.2679648, "nlink": 1, "path": "operator-objects/050-Deployment-strimzi-cluster-operator.yaml", "pw_name": "junwang", "rgrp": true, "roth": true, "rusr": true, "size": 2991, "uid": 501, "wgrp": false, "woth": false, "wusr": true, "xgrp": false, "xoth": false, "xusr": false}, "msg": "Failed to find exact match for extensions/v1beta1.Deployment by [kind, name, singularName, shortNames]"}
+failed: [127.0.0.1] (item={'path': 'operator-objects/042-Crd-kafkaconnects2i.yaml', 'mode': '0644', 'isdir': False, 'ischr': False, 'isblk': False, 'isreg': True, 'isfifo': False, 'islnk': False, 'issock': False, 'uid': 501, 'gid': 20, 'size': 20295, 'inode': 32308012, 'dev': 16777220, 'nlink': 1, 'atime': 1626686266.2022102, 'mtime': 1626686265.266398, 'ctime': 1626686265.266398, 'gr_name': 'staff', 'pw_name': 'junwang', 'wusr': True, 'rusr': True, 'xusr': False, 'wgrp': False, 'rgrp': True, 'xgrp': False, 'woth': False, 'roth': True, 'xoth': False, 'isuid': False, 'isgid': False}) => {"changed": false, "error": 422, "item": {"atime": 1626686266.2022102, "ctime": 1626686265.266398, "dev": 16777220, "gid": 20, "gr_name": "staff", "inode": 32308012, "isblk": false, "ischr": false, "isdir": false, "isfifo": false, "isgid": false, "islnk": false, "isreg": true, "issock": false, "isuid": false, "mode": "0644", "mtime": 1626686265.266398, "nlink": 1, "path": "operator-objects/042-Crd-kafkaconnects2i.yaml", "pw_name": "junwang", "rgrp": true, "roth": true, "rusr": true, "size": 20295, "uid": 501, "wgrp": false, "woth": false, "wusr": true, "xgrp": false, "xoth": false, "xusr": false}, "msg": "Failed to patch object: b'{\"kind\":\"Status\",\"apiVersion\":\"v1\",\"metadata\":{},\"status\":\"Failure\",\"message\":\"CustomResourceDefinition.apiextensions.k8s.io \\\\\"kafkaconnects2is.kafka.strimzi.io\\\\\" is invalid: [spec.validation: Forbidden: top-level and per-version schemas are mutually exclusive, spec.version: Invalid value: \\\\\"v1alpha1\\\\\": must match the first version in spec.versions]\",\"reason\":\"Invalid\",\"details\":{\"name\":\"kafkaconnects2is.kafka.strimzi.io\",\"group\":\"apiextensions.k8s.io\",\"kind\":\"CustomResourceDefinition\",\"causes\":[{\"reason\":\"FieldValueForbidden\",\"message\":\"Forbidden: top-level and per-version schemas are mutually exclusive\",\"field\":\"spec.validation\"},{\"reason\":\"FieldValueInvalid\",\"message\":\"Invalid value: \\\\\"v1alpha1\\\\\": must match the first version in spec.versions\",\"field\":\"spec.version\"}]},\"code\":422}\\n'", "reason": "Unprocessable Entity", "status": 422}
+failed: [127.0.0.1] (item={'path': 'operator-objects/041-Crd-kafkaconnect.yaml', 'mode': '0644', 'isdir': False, 'ischr': False, 'isblk': False, 'isreg': True, 'isfifo': False, 'i
+slnk': False, 'issock': False, 'uid': 501, 'gid': 20, 'size': 20211, 'inode': 32308011, 'dev': 16777220, 'nlink': 1, 'atime': 1626686266.0665195, 'mtime': 1626686265.2655873, 'cti
+me': 1626686265.2655873, 'gr_name': 'staff', 'pw_name': 'junwang', 'wusr': True, 'rusr': True, 'xusr': False, 'wgrp': False, 'rgrp': True, 'xgrp': False, 'woth': False, 'roth': Tr
+ue, 'xoth': False, 'isuid': False, 'isgid': False}) => {"changed": false, "error": 422, "item": {"atime": 1626686266.0665195, "ctime": 1626686265.2655873, "dev": 16777220, "gid": 
+20, "gr_name": "staff", "inode": 32308011, "isblk": false, "ischr": false, "isdir": false, "isfifo": false, "isgid": false, "islnk": false, "isreg": true, "issock": false, "isuid": false, "mode": "0644", "mtime": 1626686265.2655873, "nlink": 1, "path": "operator-objects/041-Crd-kafkaconnect.yaml", "pw_name": "junwang", "rgrp": true, "roth": true, "rusr": true, "size": 20211, "uid": 501, "wgrp": false, "woth": false, "wusr": true, "xgrp": false, "xoth": false, "xusr": false}, "msg": "Failed to patch object: b'{\"kind\":\"Status\",\"
+apiVersion\":\"v1\",\"metadata\":{},\"status\":\"Failure\",\"message\":\"CustomResourceDefinition.apiextensions.k8s.io \\\\\"kafkaconnects.kafka.strimzi.io\\\\\" is invalid: [spec
+.validation: Forbidden: top-level and per-version schemas are mutually exclusive, spec.version: Invalid value: \\\\\"v1alpha1\\\\\": must match the first version in spec.versions]
+\",\"reason\":\"Invalid\",\"details\":{\"name\":\"kafkaconnects.kafka.strimzi.io\",\"group\":\"apiextensions.k8s.io\",\"kind\":\"CustomResourceDefinition\",\"causes\":[{\"reason\"
+:\"FieldValueForbidden\",\"message\":\"Forbidden: top-level and per-version schemas are mutually exclusive\",\"field\":\"spec.validation\"},{\"reason\":\"FieldValueInvalid\",\"mes
+sage\":\"Invalid value: \\\\\"v1alpha1\\\\\": must match the first version in spec.versions\",\"field\":\"spec.version\"}]},\"code\":422}\\n'", "reason": "Unprocessable Entity", "
+status": 422}
+failed: [127.0.0.1] (item={'path': 'operator-objects/045-Crd-kafkamirrormaker.yaml', 'mode': '0644', 'isdir': False, 'ischr': False, 'isblk': False, 'isreg': True, 'isfifo': False
+, 'islnk': False, 'issock': False, 'uid': 501, 'gid': 20, 'size': 18964, 'inode': 32308015, 'dev': 16777220, 'nlink': 1, 'atime': 1626686266.104224, 'mtime': 1626686265.2675343, '
+ctime': 1626686265.2675343, 'gr_name': 'staff', 'pw_name': 'junwang', 'wusr': True, 'rusr': True, 'xusr': False, 'wgrp': False, 'rgrp': True, 'xgrp': False, 'woth': False, 'roth':
+ True, 'xoth': False, 'isuid': False, 'isgid': False}) => {"changed": false, "error": 422, "item": {"atime": 1626686266.104224, "ctime": 1626686265.2675343, "dev": 16777220, "gid"
+: 20, "gr_name": "staff", "inode": 32308015, "isblk": false, "ischr": false, "isdir": false, "isfifo": false, "isgid": false, "islnk": false, "isreg": true, "issock": false, "isui
+d": false, "mode": "0644", "mtime": 1626686265.2675343, "nlink": 1, "path": "operator-objects/045-Crd-kafkamirrormaker.yaml", "pw_name": "junwang", "rgrp": true, "roth": true, "ru
+sr": true, "size": 18964, "uid": 501, "wgrp": false, "woth": false, "wusr": true, "xgrp": false, "xoth": false, "xusr": false}, "msg": "Failed to patch object: b'{\"kind\":\"Statu
+s\",\"apiVersion\":\"v1\",\"metadata\":{},\"status\":\"Failure\",\"message\":\"CustomResourceDefinition.apiextensions.k8s.io \\\\\"kafkamirrormakers.kafka.strimzi.io\\\\\" is inva
+lid: [spec.validation: Forbidden: top-level and per-version schemas are mutually exclusive, spec.version: Invalid value: \\\\\"v1alpha1\\\\\": must match the first version in spec
+.versions]\",\"reason\":\"Invalid\",\"details\":{\"name\":\"kafkamirrormakers.kafka.strimzi.io\",\"group\":\"apiextensions.k8s.io\",\"kind\":\"CustomResourceDefinition\",\"causes\
+":[{\"reason\":\"FieldValueForbidden\",\"message\":\"Forbidden: top-level and per-version schemas are mutually exclusive\",\"field\":\"spec.validation\"},{\"reason\":\"FieldValueI
+nvalid\",\"message\":\"Invalid value: \\\\\"v1alpha1\\\\\": must match the first version in spec.versions\",\"field\":\"spec.version\"}]},\"code\":422}\\n'", "reason": "Unprocessa
+ble Entity", "status": 422}
+        to retry, use: --limit @/Users/junwang/work/opendatahub/opendatahub-operator/deploy/kafka/deploy_kafka_operator.retry
+
+PLAY RECAP ************************************************************************************************************************************************************************
+127.0.0.1                  : ok=4    changed=0    unreachable=0    failed=1 
+
+
 ```

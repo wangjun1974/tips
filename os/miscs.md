@@ -21174,7 +21174,7 @@ PLAY RECAP *********************************************************************
 +++ operator-objects.sav/050-Deployment-strimzi-cluster-operator.yaml   2021-07-22 13:38:30.000000000 +0800
 @@ -1,4 +1,4 @@
 -apiVersion: extensions/v1beta1
-+apiVersion: extensions/v1
++apiVersion: apps/v1
  kind: Deployment
  metadata:
    name: strimzi-cluster-operator
@@ -21191,5 +21191,126 @@ PLAY RECAP *********************************************************************
        labels:
 
 
+以下错误可以用上面的修改消除掉
+
 failed: [127.0.0.1] (item={'path': 'operator-objects/050-Deployment-strimzi-cluster-operator.yaml', 'mode': '0644', 'isdir': False, 'ischr': False, 'isblk': False, 'isreg': True, 'isfifo': False, 'islnk': False, 'issock': False, 'uid': 501, 'gid': 20, 'size': 2980, 'inode': 32504335, 'dev': 16777220, 'nlink': 1, 'atime': 1626931168.0214803, 'mtime': 1626931166.9111478, 'ctime': 1626931166.912944, 'gr_name': 'staff', 'pw_name': 'junwang', 'wusr': True, 'rusr': True, 'xusr': False, 'wgrp': False, 'rgrp': True, 'xgrp': False, 'woth': False, 'roth': True, 'xoth': False, 'isuid': False, 'isgid': False}) => {"changed": false, "error": 422, "item": {"atime": 1626931168.0214803, "ctime": 1626931166.912944, "dev": 16777220, "gid": 20, "gr_name": "staff", "inode": 32504335, "isblk": false, "ischr": false, "isdir": false, "isfifo": false, "isgid": false, "islnk": false, "isreg": true, "issock": false, "isuid": false, "mode": "0644", "mtime": 1626931166.9111478, "nlink": 1, "path": "operator-objects/050-Deployment-strimzi-cluster-operator.yaml", "pw_name": "junwang", "rgrp": true, "roth": true, "rusr": true, "size": 2980, "uid": 501, "wgrp": false, "woth": false, "wusr": true, "xgrp": false, "xoth": false, "xusr": false}, "msg": "Failed to create object: b'{\"kind\":\"Status\",\"apiVersion\":\"v1\",\"metadata\":{},\"status\":\"Failure\",\"message\":\"Deployment.apps \\\\\"strimzi-cluster-operator\\\\\" is invalid: [spec.selector: Required value, spec.template.metadata.labels: Invalid value: map[string]string{\\\\\"name\\\\\":\\\\\"strimzi-cluster-operator\\\\\", \\\\\"strimzi.io/kind\\\\\":\\\\\"cluster-operator\\\\\"}: `selector` does not match template `labels`]\",\"reason\":\"Invalid\",\"details\":{\"name\":\"strimzi-cluster-operator\",\"group\":\"apps\",\"kind\":\"Deployment\",\"causes\":[{\"reason\":\"FieldValueRequired\",\"message\":\"Required value\",\"field\":\"spec.selector\"},{\"reason\":\"FieldValueInvalid\",\"message\":\"Invalid value: map[string]string{\\\\\"name\\\\\":\\\\\"strimzi-cluster-operator\\\\\", \\\\\"strimzi.io/kind\\\\\":\\\\\"cluster-operator\\\\\"}: `selector` does not match template `labels`\",\"field\":\"spec.template.metadata.labels\"}]},\"code\":422}\\n'", "reason": "Unprocessable Entity", "status": 422}
+
+报错 
+oc logs jupyterhub-1-deploy 
+--> Scaling jupyterhub-1 to 1
+error: update acceptor rejected jupyterhub-1: pods for rc 'open-data-hub/jupyterhub-1' took longer than 1200 seconds to become available
+
+oc get deploymentconfig jupyterhub -o yaml
+...
+status:
+  availableReplicas: 0
+  conditions:
+  - lastTransitionTime: "2021-07-22T05:53:38Z"
+    lastUpdateTime: "2021-07-22T05:53:38Z"
+    message: Deployment config does not have minimum availability.
+    status: "False"
+    type: Available
+  - lastTransitionTime: "2021-07-22T06:13:42Z"
+    lastUpdateTime: "2021-07-22T06:13:42Z"
+    message: replication controller "jupyterhub-1" has failed progressing
+    reason: ProgressDeadlineExceeded
+    status: "False"
+    type: Progressing
+  details:
+    causes:
+    - type: ConfigChange
+    message: config change
+  latestVersion: 1
+  observedGeneration: 5
+  replicas: 0
+  unavailableReplicas: 0
+  updatedReplicas: 0
+
+oc get replicationcontroller jupyterhub-1 -o yaml 
+...
+status:
+  observedGeneration: 3
+  replicas: 0
+
+oc rollout latest dc/jupyterhub-db 
+Error from server (BadRequest): cannot trigger a deployment for "jupyterhub-db" because it contains unresolved images
+
+目前 dc/jupyterhub-db 的 triggers 是 postgresql:9.6，需要改为 postgresql:9.6-el8
+        "triggers": [
+            {
+                "imageChangeParams": {
+                    "automatic": true,
+                    "containerNames": [
+                        "postgresql"
+                    ],
+                    "from": {
+                        "kind": "ImageStreamTag",
+                        "name": "postgresql:9.6",
+                        "namespace": "openshift"
+                    }
+                },
+                "type": "ImageChange"
+            },
+            {
+                "type": "ConfigChange"
+            }
+        ]
+    },
+
+oc patch dc/jupyterhub-db --type json -p='[{"op": "replace", "path": "/spec/triggers/0/imageChangeParams/from/name", "value":"postgresql:9.6-el8"}]'
+
+等 jupyterhub-db 运行起来以后，再重新部署 dc/jupyterhub
+oc rollout latest dc/jupyterhub
+
+
+部署 rook-ceph operator.yaml 时报错
+error: unable to recognize "operator.yaml": no matches for kind "Deployment" in version "apps/v1beta1"
+
+报错
+oc get pods rook-ceph-operator-7c9f6f8585-z495m -o yaml 
+...
+  - containerID: cri-o://82182773ec6dcd7cc8741d9cab0ec2dfad145e66f37470f1cc9fd43b9e5ff53c
+    image: docker.io/rook/ceph:v0.9.3
+    imageID: docker.io/rook/ceph@sha256:38ba0ae4e3a0a0c3b5e5a4605f58d47e997f06b2a19ad2a35d4a2bd9268d3b30
+    lastState:
+      terminated:
+        containerID: cri-o://82182773ec6dcd7cc8741d9cab0ec2dfad145e66f37470f1cc9fd43b9e5ff53c
+        exitCode: 1
+        finishedAt: "2021-07-22T07:41:44Z"
+        message: |
+          failed to run operator. Error starting agent daemonset: error starting agent daemonset: failed to create rook-ceph-agent daemon set. the server could not find the requested resource
+        reason: Error
+        startedAt: "2021-07-22T07:41:44Z"
+    name: rook-ceph-operator
+    ready: false
+    restartCount: 5
+    started: false
+    state:
+      waiting:
+        message: back-off 2m40s restarting failed container=rook-ceph-operator pod=rook-ceph-operator-7c9f6f8585-z495m_rook-ceph-system(c9416661-be48-40b6-8b91-615e3efcb692)
+        reason: CrashLoopBackOff
+
+
+查看部署错误
+oc get all
+...
+NAME                                                       READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/csi-cephfsplugin-provisioner               0/2     2            0           3m57s
+deployment.apps/csi-rbdplugin-provisioner                  0/2     2            0           3m57s
+
+NAME                                                                  DESIRED   CURRENT   READY   AGE
+replicaset.apps/csi-cephfsplugin-provisioner-bc5cff84                 2         2         0       3m56s
+replicaset.apps/csi-rbdplugin-provisioner-97957587f                   2         2         0       3m57s
+replicaset.apps/rook-ceph-crashcollector-ip-10-0-170-163-64848dc8cd   0         0         0       4m6s
+
+$ oc describe pods csi-rbdplugin-provisioner-97957587f-wv6sl | grep Failed
+  Warning  Failed          6m52s                  kubelet, ip-10-0-211-132.cn-northwest-1.compute.internal  Failed to pull image "k8s.gcr.io/sig-storage/csi-attacher:v3.0.0": rpc error: code = Unknown desc = error pinging docker registry k8s.gcr.io: Get "https://k8s.gcr.io/v2/": dial tcp 108.177.97.82:443: i/o timeout
+  Warning  Failed          5m52s                  kubelet, ip-10-0-211-132.cn-northwest-1.compute.internal  Failed to pull image "k8s.gcr.io/sig-storage/csi-snapshotter:v3.0.0": rpc error: code = Unknown desc = error pinging docker registry k8s.gcr.io: Get "https://k8s.gcr.io/v2/": dial tcp 108.177.97.82:443: i/o timeout
+  Warning  Failed          5m52s                  kubelet, ip-10-0-211-132.cn-northwest-1.compute.internal  Error: ErrImagePull
+  Warning  Failed          4m51s (x2 over 8m52s)  kubelet, ip-10-0-211-132.cn-northwest-1.compute.internal  Error: ErrImagePull
+  Warning  Failed          4m51s (x2 over 8m52s)  kubelet, ip-10-0-211-132.cn-northwest-1.compute.internal  Failed to pull image "k8s.gcr.io/sig-storage/csi-provisioner:v2.0.0": rpc error: code = Unknown desc = error pinging docker registry k8s.gcr.io: Get "https://k8s.gcr.io/v2/": dial tcp 108.177.97.82:443: i/o timeout
+  Warning  Failed          3m51s (x2 over 7m52s)  kubelet, ip-10-0-211-132.cn-northwest-1.compute.internal  Error: ErrImagePull
+  Warning  Failed          3m51s (x2 over 7m52s)  kubelet, ip-10-0-211-132.cn-northwest-1.compute.internal  Failed to pull image "k8s.gcr.io/sig-storage/csi-resizer:v1.0.0": rpc error: code = Unknown desc = error pinging docker registry k8s.gcr.io: Get "https://k8s.gcr.io/v2/": dial tcp 108.177.97.82:443: i/o timeout
+  Warning  Failed          2m51s (x2 over 6m52s)  kubelet, ip-10-0-211-132.cn-northwest-1.compute.internal  Error: ErrImagePull
+
 ```

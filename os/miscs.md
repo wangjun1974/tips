@@ -21313,4 +21313,386 @@ $ oc describe pods csi-rbdplugin-provisioner-97957587f-wv6sl | grep Failed
   Warning  Failed          3m51s (x2 over 7m52s)  kubelet, ip-10-0-211-132.cn-northwest-1.compute.internal  Failed to pull image "k8s.gcr.io/sig-storage/csi-resizer:v1.0.0": rpc error: code = Unknown desc = error pinging docker registry k8s.gcr.io: Get "https://k8s.gcr.io/v2/": dial tcp 108.177.97.82:443: i/o timeout
   Warning  Failed          2m51s (x2 over 6m52s)  kubelet, ip-10-0-211-132.cn-northwest-1.compute.internal  Error: ErrImagePull
 
+
+podman save --format docker-dir -o csi-node-driver-registrar k8s.gcr.io/sig-storage/csi-node-driver-registrar:v2.0.1
+tar cvf csi-node-driver-registrar-v2.0.1.tar csi-node-driver-registrar
+
+
+修复 aws 环境镜像访问
+
+# deployment/csi-rbdplugin-provisioner
+oc -n rook-ceph patch deployment csi-rbdplugin-provisioner --type json -p '[{"op": "replace", "path": "/spec/template/spec/containers/0/image", "value": "quay.io/k8scsi/csi-provisioner:v2.0.0"}]'
+
+oc -n rook-ceph patch deployment csi-rbdplugin-provisioner --type json -p '[{"op": "replace", "path": "/spec/template/spec/containers/1/image", "value": "quay.io/k8scsi/csi-resizer:v1.0.0"}]'
+
+oc -n rook-ceph patch deployment csi-rbdplugin-provisioner --type json -p '[{"op": "replace", "path": "/spec/template/spec/containers/2/image", "value": "quay.io/k8scsi/csi-attacher:v3.0.0"}]'
+
+oc -n rook-ceph patch deployment csi-rbdplugin-provisioner --type json -p '[{"op": "replace", "path": "/spec/template/spec/containers/3/image", "value": "quay.io/k8scsi/csi-snapshotter:v3.0.0"}]'
+
+# deployment/csi-cephfsplugin-provisioner
+oc -n rook-ceph patch deployment csi-cephfsplugin-provisioner --type json -p '[{"op": "replace", "path": "/spec/template/spec/containers/0/image", "value": "quay.io/k8scsi/csi-attacher:v3.0.0"}]'
+
+oc -n rook-ceph patch deployment csi-cephfsplugin-provisioner --type json -p '[{"op": "replace", "path": "/spec/template/spec/containers/1/image", "value": "quay.io/k8scsi/csi-snapshotter:v3.0.0"}]'
+
+oc -n rook-ceph patch deployment csi-cephfsplugin-provisioner --type json -p '[{"op": "replace", "path": "/spec/template/spec/containers/2/image", "value": "quay.io/k8scsi/csi-resizer:v1.0.0"}]'
+
+oc -n rook-ceph patch deployment csi-cephfsplugin-provisioner --type json -p '[{"op": "replace", "path": "/spec/template/spec/containers/3/image", "value": "quay.io/k8scsi/csi-provisioner:v2.0.0"}]'
+
+oc get daemonset csi-rbdplugin -o json | tee ~/tmp/err2 
+
+# daemonset/csi-rbdplugin 
+oc -n rook-ceph patch daemonset csi-rbdplugin --type json -p '[{"op": "replace", "path": "/spec/template/spec/containers/0/image", "value": "quay.io/k8scsi/csi-node-driver-registrar:v2.0.1"}]'
+
+# daemonset/csi-cephfsplugin 
+oc -n rook-ceph patch daemonset csi-cephfsplugin --type json -p '[{"op": "replace", "path": "/spec/template/spec/containers/0/image", "value": "quay.io/k8scsi/csi-node-driver-registrar:v2.0.1"}]'
+
+sed -i -e 's/# ROOK_CSI_CEPH_IMAGE: "quay.io/cephcsi/cephcsi:v3.2.0"/ROOK_CSI_CEPH_IMAGE: "quay.io/cephcsi/cephcsi:v3.2.0"/' operator-openshift.yaml
+sed -i -e 's/ROOK_CSI_REGISTRAR_IMAGE: "k8s.gcr.io/sig-storage/csi-node-driver-registrar:v2.0.1"/ROOK_CSI_REGISTRAR_IMAGE: "quay.io/k8scsi/csi-node-driver-registrar:v2.0.1"/' operator-openshift.yaml
+sed -i -e 's/# ROOK_CSI_RESIZER_IMAGE: "k8s.gcr.io/sig-storage/csi-resizer:v1.0.0"/ROOK_CSI_RESIZER_IMAGE: "quay.io/k8scsi/csi-resizer:v1.0.0"/' operator-openshift.yaml
+sed -i -e 's/# ROOK_CSI_PROVISIONER_IMAGE: "k8s.gcr.io/sig-storage/csi-provisioner:v2.0.0"/ROOK_CSI_PROVISIONER_IMAGE: "quay.io/k8scsi/csi-provisioner:v2.0.0"/' operator-openshift.yaml
+sed -i -e 's/# ROOK_CSI_SNAPSHOTTER_IMAGE: "k8s.gcr.io/sig-storage/csi-snapshotter:v3.0.0"/ROOK_CSI_SNAPSHOTTER_IMAGE: "quay.io/k8scsi/csi-snapshotter:v3.0.0"/' operator-openshift.yaml
+sed -i -e 's/# ROOK_CSI_ATTACHER_IMAGE: "k8s.gcr.io/sig-storage/csi-attacher:v3.0.0"/ROOK_CSI_ATTACHER_IMAGE: "quay.io/k8scsi/csi-attacher:v3.0.0"/' operator-openshift.yaml
+
+检查 rook-ceph namespace 为什么会一直处于 Terminating 状态
+oc api-resources --verbs=list --namespaced -o name | xargs -n 1 oc get --show-kind --ignore-not-found -n rook-ceph
+...
+cephcluster.ceph.rook.io/rook-ceph   /var/lib/rook     3          17h   Progressing   failed the ceph version check: failed to complete ceph version job: failed to run CmdReporter rook-ceph-detect-version successfully. failed to run job. jobs.batch "rook-ceph-detect-version" is forbidden: unable to create new content in namespace rook-ceph because it is being terminated   HEALTH_WARN
+
+把 cephcluster.ceph.rook.io/rook-ceph 的 finalizer 调整为 []
+oc patch cephcluster.ceph.rook.io rook-ceph -n rook-ceph -p '{"metadata":{"finalizers":[]}}' --type=merge
+
+$ oc get machines -n openshift-machine-api
+NAME                                           PHASE     TYPE        REGION           ZONE              AGE
+ocp1-hfl7x-master-0                            Running   m5.xlarge   cn-northwest-1   cn-northwest-1a   154d
+ocp1-hfl7x-master-1                            Running   m5.xlarge   cn-northwest-1   cn-northwest-1b   154d
+ocp1-hfl7x-master-2                            Running   m5.xlarge   cn-northwest-1   cn-northwest-1c   154d
+ocp1-hfl7x-worker-cn-northwest-1a-fjnl6        Running   m5.xlarge   cn-northwest-1   cn-northwest-1a   43d
+ocp1-hfl7x-worker-cn-northwest-1a-spot-k2gkw   Running   m5.xlarge   cn-northwest-1   cn-northwest-1a   169m
+ocp1-hfl7x-worker-cn-northwest-1b-5k7gk        Running   m5.xlarge   cn-northwest-1   cn-northwest-1b   154d
+ocp1-hfl7x-worker-cn-northwest-1b-spot-tmtwt   Running   m5.xlarge   cn-northwest-1   cn-northwest-1b   6d
+ocp1-hfl7x-worker-cn-northwest-1c-rkbs8        Running   m5.xlarge   cn-northwest-1   cn-northwest-1c   43d
+ocp1-hfl7x-worker-cn-northwest-1c-spot-rvrpm   Running   m5.xlarge   cn-northwest-1   cn-northwest-1c   6d13h
+
+oc get machines -n openshift-machine-api | grep -Ev "master|spot" | grep Running | awk '{print $1}' | while read i ;do  
+oc get machines $i -n openshift-machine-api -o jsonpath='{@.status.addresses[?(@.type=="InternalDNS")].address}{"\n"}'
+done
+ip-10-0-143-130.cn-northwest-1.compute.internal
+ip-10-0-170-163.cn-northwest-1.compute.internal
+ip-10-0-214-100.cn-northwest-1.compute.internal
+
+$ oc get nodes
+NAME                                              STATUS   ROLES    AGE     VERSION
+ip-10-0-137-176.cn-northwest-1.compute.internal   Ready    worker   171m    v1.20.0+df9c838
+ip-10-0-143-130.cn-northwest-1.compute.internal   Ready    worker   43d     v1.20.0+df9c838
+ip-10-0-159-16.cn-northwest-1.compute.internal    Ready    master   154d    v1.20.0+df9c838
+ip-10-0-170-163.cn-northwest-1.compute.internal   Ready    worker   154d    v1.20.0+df9c838
+ip-10-0-185-47.cn-northwest-1.compute.internal    Ready    master   154d    v1.20.0+df9c838
+ip-10-0-185-48.cn-northwest-1.compute.internal    Ready    worker   6d      v1.20.0+df9c838
+ip-10-0-195-16.cn-northwest-1.compute.internal    Ready    master   154d    v1.20.0+df9c838
+ip-10-0-211-132.cn-northwest-1.compute.internal   Ready    worker   6d13h   v1.20.0+df9c838
+ip-10-0-214-100.cn-northwest-1.compute.internal   Ready    worker   43d     v1.20.0+df9c838
+
+oc label node ip-10-0-143-130.cn-northwest-1.compute.internal node-role.kubernetes.io/storage-node=""
+oc label node ip-10-0-170-163.cn-northwest-1.compute.internal node-role.kubernetes.io/storage-node=""
+oc label node ip-10-0-214-100.cn-northwest-1.compute.internal node-role.kubernetes.io/storage-node=""
+
+  placement:
+    all:
+      nodeAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          nodeSelectorTerms:
+          - matchExpressions:
+            - key: node-role.kubernetes.io/storage-node
+              operator: In
+              values:
+              - ""
+      podAffinity:
+      podAntiAffinity:
+      topologySpreadConstraints:
+      tolerations:
+      - key: "node-role.kubernetes.io/storage-node"
+        operator: Exists
+
+
+
+oc apply -f object.yaml
+...
+2021-07-23 05:07:49.583982 E | ceph-object-controller: failed to reconcile failed to create object store deployments: failed to configure multisite for object store: failed create ceph multisite for object-store "my-store": radosgw-admin realm get failed with code -1, for reason "": signal: interrupt
+
+TOOLS_POD=$(oc get pods -n rook-ceph -l app=rook-ceph-tools -o name)
+oc rsh -n rook-ceph $TOOLS_POD
+
+oc debug node/ip-10-0-143-130.cn-northwest-1.compute.internal -- chroot /host rm -rfv /var/lib/rook
+# chroot /host
+# lsblk 
+# rm -rfv /var/lib/rook
+
+oc debug node/ip-10-0-170-163.cn-northwest-1.compute.internal -- chroot /host rm -rfv /var/lib/rook
+# chroot /host
+# lsblk 
+# rm -rfv /var/lib/rook
+
+oc debug node/ip-10-0-214-100.cn-northwest-1.compute.internal -- chroot /host rm -rfv /var/lib/rook
+# chroot /host
+# lsblk 
+# rm -rfv /var/lib/rook
+
+oc get machines -n openshift-machine-api | grep -Ev "master|spot" | grep Running | awk '{print $1}' | while read i ;do  
+oc get machines $i -n openshift-machine-api -o jsonpath='{@.status.addresses[?(@.type=="InternalDNS")].address}{"\n"}'
+done | while read rooknode ; do
+oc debug node/$rooknode -- chroot /host rm -rfv /var/lib/rook
+done
+
+--- cluster.yaml.orig   2021-07-23 11:19:29.000000000 +0800
++++ cluster.yaml        2021-07-23 15:11:24.000000000 +0800
+@@ -125,6 +125,22 @@
+   # To control where various services will be scheduled by kubernetes, use the placement configuration sections below.
+   # The example under 'all' would have all services scheduled on kubernetes nodes labeled with 'role=storage-node' and
+   # tolerate taints with a key of 'storage-node'.
++  placement:
++    all:
++      nodeAffinity:
++        requiredDuringSchedulingIgnoredDuringExecution:
++          nodeSelectorTerms:
++          - matchExpressions:
++            - key: node-role.kubernetes.io/storage-node
++              operator: In
++              values:
++              - ""
++      podAffinity:
++      podAntiAffinity:
++      topologySpreadConstraints:
++      tolerations:
++      - key: "node-role.kubernetes.io/storage-node"
++        operator: Exists
+ #  placement:
+ #    all:
+ #      nodeAffinity:
+@@ -188,11 +204,118 @@
+ #    mon: rook-ceph-mon-priority-class
+ #    osd: rook-ceph-osd-priority-class
+ #    mgr: rook-ceph-mgr-priority-class
+
+-  storage: # cluster level storage configuration and selection
+-    useAllNodes: true
+-    useAllDevices: true
+-    #deviceFilter:
+-    config:
++  storage:
++    storageClassDeviceSets:
++      - name: set1
++        count: 3
++        portable: false
++        encrypted: false
++        placement:
++          nodeAffinity:
++            requiredDuringSchedulingIgnoredDuringExecution:
++              nodeSelectorTerms:
++              - matchExpressions:
++                - key: "failure-domain.beta.kubernetes.io/zone"
++                  operator: In
++                  values:
++                  - cn-northwest-1a
++          podAntiAffinity:
++            preferredDuringSchedulingIgnoredDuringExecution:
++            - weight: 100
++              podAffinityTerm:
++                labelSelector:
++                  matchExpressions:
++                  - key: "kubernetes.io/hostname"
++                    operator: In
++                    values:
++                    - "ip-10-0-143-130"
++        volumeClaimTemplates:
++        - metadata:
++            name: data
++          spec:
++            resources:
++              requests:
++                storage: 17Gi
++            # IMPORTANT: Change the storage class depending on your environment (e.g. local-storage, gp2)
++            storageClassName: gp2
++            volumeMode: Block
++            accessModes:
++              - ReadWriteOnce
++      - name: set2
++        count: 3
++        portable: false
++        encrypted: false
++        placement:
++          nodeAffinity:
++            requiredDuringSchedulingIgnoredDuringExecution:
++              nodeSelectorTerms:
++              - matchExpressions:
++                - key: "failure-domain.beta.kubernetes.io/zone"
++                  operator: In
++                  values:
++                  - cn-northwest-1b
++          podAntiAffinity:
++            preferredDuringSchedulingIgnoredDuringExecution:
++            - weight: 100
++              podAffinityTerm:
++                labelSelector:
++                  matchExpressions:
++                  - key: "kubernetes.io/hostname"
++                    operator: In
++                    values:
++                    - "ip-10-0-170-163"
++        volumeClaimTemplates:
++        - metadata:
++            name: data
++          spec:
++            resources:
++              requests:
++                storage: 17Gi
++            # IMPORTANT: Change the storage class depending on your environment (e.g. local-storage, gp2)
++            storageClassName: gp2
++            volumeMode: Block
++            accessModes:
++              - ReadWriteOnce
++      - name: set3
++        count: 3
++        portable: false
++        encrypted: false
++        placement:
++          nodeAffinity:
++            requiredDuringSchedulingIgnoredDuringExecution:
++              nodeSelectorTerms:
++              - matchExpressions:
++                - key: "failure-domain.beta.kubernetes.io/zone"
++                  operator: In
++                  values:
++                  - cn-northwest-1c
++          podAntiAffinity:
++            preferredDuringSchedulingIgnoredDuringExecution:
++            - weight: 100
++              podAffinityTerm:
++                labelSelector:
++                  matchExpressions:
++                  - key: "kubernetes.io/hostname"
++                    operator: In
++                    values:
++                    - "ip-10-0-214-100"
++        volumeClaimTemplates:
++        - metadata:
++            name: data
++          spec:
++            resources:
++              requests:
++                storage: 17Gi
++            # IMPORTANT: Change the storage class depending on your environment (e.g. local-storage, gp2)
++            storageClassName: gp2
++            volumeMode: Block
++            accessModes:
++              - ReadWriteOnce
++#  storage: # cluster level storage configuration and selection
++#    useAllNodes: true
++#    useAllDevices: true
++#    #deviceFilter:
++#    config:
+       # crushRoot: "custom-root" # specify a non-default root label for the CRUSH map
+       # metadataDevice: "md0" # specify a non-rotational storage so ceph-volume will use it as block db device of bluestore.
+       # databaseSizeMB: "1024" # uncomment if the disks are smaller than 100 GB
+
+failed to create "provision" job for node "set3-data-05tkbl". Job.batch "rook-ceph-osd-prepare-set3-data-05tkbl" is invalid: [spec.template.spec.affinity.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution[0].podAffinityTerm.topologyKey: Required value: can not be empty, spec.template.spec.affinity.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution[0].podAffinityTerm.topologyKey: Invalid value: "": name part must be non-empty, spec.template.spec.affinity.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution[0].podAffinityTerm.topologyKey: Invalid value: "": name part must consist of alphanumeric characters, '-', '_' or '.', and must start and end with an alphanumeric character (e.g. 'MyName',  or 'my.name',  or '123-abc', regex used for validation is '([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9]')]
+Unable to get crushHostname of non portable pvc set1-data-0dqbjq: node selector not found on deployment for osd with pvc "set1-data-0dqbjq"
+Unable to get crushHostname of non portable pvc set1-data-1mwjhc: node selector not found on deploy
+
+
+[junwang@JundeMacBook-Pro ~/work/opendatahub/rook/cluster/examples/kubernetes/ceph]$ TOOLS_POD=$(oc get pods -n rook-ceph -l app=rook-ceph-tools -o name)
+[junwang@JundeMacBook-Pro ~/work/opendatahub/rook/cluster/examples/kubernetes/ceph]$ echo $TOOLS_POD 
+pod/rook-ceph-tools-6f58686b5d-bd2zh
+[junwang@JundeMacBook-Pro ~/work/opendatahub/rook/cluster/examples/kubernetes/ceph]$ oc rsh -n rook-ceph $TOOLS_POD 
+sh-4.4$ ceph -s 
+  cluster:
+    id:     8810d865-7b19-44c4-8c0a-ee0ec0e27aaa
+    health: HEALTH_WARN
+            mon a is low on available space
+ 
+  services:
+    mon: 3 daemons, quorum a,b,c (age 31s)
+    mgr: a(active, since 11m)
+    osd: 9 osds: 9 up (since 9s), 9 in (since 4m)
+ 
+  data:
+    pools:   1 pools, 1 pgs
+    objects: 0 objects, 0 B
+    usage:   9.0 GiB used, 144 GiB / 153 GiB avail
+    pgs:     1 active+clean
+ 
+sh-4.4$ ceph osd tree 
+ID   CLASS  WEIGHT   TYPE NAME                         STATUS  REWEIGHT  PRI-AFF
+ -1         0.14928  root default                                               
+ -5         0.14928      region cn-northwest-1                                  
+ -4         0.04976          zone cn-northwest-1a                               
+ -3         0.04976              host ip-10-0-143-130                           
+  0    ssd  0.01659                  osd.0                 up   1.00000  1.00000
+  1    ssd  0.01659                  osd.1                 up   1.00000  1.00000
+  2    ssd  0.01659                  osd.2                 up   1.00000  1.00000
+-14         0.04976          zone cn-northwest-1b                               
+-13         0.04976              host ip-10-0-170-163                           
+  6    ssd  0.01659                  osd.6                 up   1.00000  1.00000
+  7    ssd  0.01659                  osd.7                 up   1.00000  1.00000
+  8    ssd  0.01659                  osd.8                 up   1.00000  1.00000
+-10         0.04976          zone cn-northwest-1c                               
+ -9         0.04976              host ip-10-0-214-100                           
+  3    ssd  0.01659                  osd.3                 up   1.00000  1.00000
+  4    ssd  0.01659                  osd.4                 up   1.00000  1.00000
+  5    ssd  0.01659                  osd.5                 up   1.00000  1.00000
+
+
+oc debug node/ip-10-0-143-130.cn-northwest-1.compute.internal -- chroot /host date
+
+oc debug node/ip-10-0-170-163.cn-northwest-1.compute.internal -- chroot /host date 
+
+oc debug node/ip-10-0-214-100.cn-northwest-1.compute.internal -- chroot /host date
+
+oc debug node/ip-10-0-143-130.cn-northwest-1.compute.internal -- chroot /host chronyc sources
+oc debug node/ip-10-0-170-163.cn-northwest-1.compute.internal -- chroot /host chronyc sources 
+oc debug node/ip-10-0-214-100.cn-northwest-1.compute.internal -- chroot /host chronyc sources
+
+oc debug node/ip-10-0-143-130.cn-northwest-1.compute.internal
+$ chroot /host
+$ cat /proc/stat 
+sh-4.4# cat /proc/stat 
+cpu  133089 8 23741 42969 33021 3905 2169 57 0 0
+cpu0 34116 1 5610 10393 8114 927 533 14 0 0
+cpu1 33125 3 5837 11171 8103 865 623 41 0 0
+cpu2 32735 1 6057 11029 8410 1037 458 0 0 0
+cpu3 33112 1 6236 10375 8393 1075 554 0 0 0
+intr 7404293 0 10 0 0 5765 0 0 0 0 0 0 0 154 0 0 0 0 0 0 0 0 0 0 0 8 9 9 9 10 10 10 10 4268 10 10 10 1119 1236 10 1009 769 1004 837 1320 1294 618 128889 142374 107150 101592 713 1329 880 597 3150 1119 1064 10 262 200 3562 5861 2681 3140 1189 1100 243626 245770 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+ctxt 10542898
+btime 1627028104
+processes 60096
+procs_running 4
+procs_blocked 10
+softirq 3362744 0 242814 199 1055938 321 0 5937 347457 5 1710073
+
+有一堆进程等待 io
+procs_blocked 10
+
+
+oc get pods --all-namespaces -o wide | grep ip-10-0-143-130.cn-northwest-1.compute.internal 
+
+
+sh-4.4# cat /proc/*/stat  | awk '{print $39,$1,$2,$3}' | sort | grep -Ev " S" | grep "D" 
+cat: /proc/net/stat: Is a directory
+0 176392 (exe) D
+0 176467 (exe) D
+0 176657 (exe) D
+1 176371 (exe) D
+1 176444 (exe) D
+1 176466 (exe) D
+1 176515 (exe) D
+1 176656 (exe) D
+2 176391 (exe) D
+2 176443 (exe) D
+2 176513 (exe) D
+2 176551 (exe) D
+2 629 (kworker/u8:15+flush-253:0) D
+3 176446 (exe) D
+
+查找 D 状态的进程
+cat /proc/*/stat  | awk '{print $39,$1,$2,$3}' | sort | grep -Ev " S" | grep "D" 
+
 ```

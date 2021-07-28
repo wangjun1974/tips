@@ -3604,6 +3604,7 @@ https://www.openshift.com/blog/deploying-openshift-container-storage-using-local
 ### 找到 OpenShift4 namespace openshift-monitoring 下无法删除的资源的命令
 ```
 oc api-resources --verbs=list --namespaced -o name | xargs -n 1 oc get --show-kind --ignore-not-found -n openshift-monitoring
+oc get namespace openshift-monitoring -o json | jq '.spec = {"finalizers":[]}' > /tmp/temp.json
 ```
 
 关于 finalizer 值得详细阅读的博客<br>
@@ -21695,4 +21696,20 @@ cat: /proc/net/stat: Is a directory
 查找 D 状态的进程
 cat /proc/*/stat  | awk '{print $39,$1,$2,$3}' | sort | grep -Ev " S" | grep "D" 
 
+
+2021-07-23 13:02:10.199 ERROR 1 --- [-worker-ELG-3-1] io.grpc.netty.NettyServerTransport       : Transport failed  
+io.netty.handler.codec.http2.Http2Exception: Unexpected HTTP/1.x request: GET /metrics
+
+
 ```
+
+
+### Open Data Hub Notebook
+```
+# Open Data Hub and Object Storage
+The intent of this notebook is to provide examples of how data engineers/scientist can use Open Data Hub and object storage, specifically, Ceph object storage, much in the same way they are accoustomed to interacting with Amazon Simple Storage Service (S3). This is made possible because Ceph's object storage gateway offers excellent fidelity with the modalities of Amazon S3.
+# Working with Boto
+Boto is an integrated interface to current and future infrastructural services offered by Amazon Web Services. Amoung the services it provides interfaces for is Amazon S3. For lightweight analysis of data using python tools like numpy or pandas, it is handy to interact with data stored in object storage using pure python. This is where Boto shines. 
+
+
+``` 

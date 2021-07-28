@@ -3605,6 +3605,9 @@ https://www.openshift.com/blog/deploying-openshift-container-storage-using-local
 ```
 oc api-resources --verbs=list --namespaced -o name | xargs -n 1 oc get --show-kind --ignore-not-found -n openshift-monitoring
 oc get namespace openshift-monitoring -o json | jq '.spec = {"finalizers":[]}' > /tmp/temp.json
+
+不知道为什么 opendatahub 在删除的时候删除不掉，只好设置 finalizers 为 [] 了
+oc patch kfdef opendatahub -n ccfd -p '{"metadata":{"finalizers":[]}}' --type=merge
 ```
 
 关于 finalizer 值得详细阅读的博客<br>

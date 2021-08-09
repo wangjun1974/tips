@@ -21728,3 +21728,50 @@ pp.kubernetes.io/name":"kiali"}, MatchExpressions:[]v1.LabelSelectorRequirement(
 Error: couldn't delete KfApp:  (kubeflow.error): Code 500 with message: kfApp Delete failed for kustomize:  (kubeflow.error): Code 400 with message: cannot find ClusterName within KfDef, this may cause error deletion to clusters.
 
 ``` 
+
+
+```
+qemu-img create -f qcow2 -o preallocation=metadata /data/kvm/jwang-ocp452-bootstrap.qcow2 120G
+qemu-img create -f qcow2 -o preallocation=metadata /data/kvm/jwang-ocp452-master0.qcow2 120G
+qemu-img create -f qcow2 -o preallocation=metadata /data/kvm/jwang-ocp452-worker0.qcow2 120G
+
+# bootstrap vm
+ip=192.168.190.124::192.168.190.1:255.255.255.0:bootstrap.ocp4.example.com:ens3:none
+nameserver=192.168.192.120
+coreos.inst.install_dev=vda
+coreos.live.rootfs_url=http://192.168.190.120:8080/install/rootfs.img
+coreos.inst.ignition_url=http://192.168.190.120:8080/ignition/bootstrap.ign
+
+$ sudo nmcli con mod 'Wired connection 1' connection.autoconnect 'yes' ipv4.method 'manual' ipv4.address '192.168.190.124/24' ipv4.gateway '192.168.190.1' ipv4.dns '192.168.190.120'
+$ sudo nmcli con down 'Wired connection 1'
+$ sudo nmcli con up 'Wired connection 1'
+$ sudo coreos-installer install --copy-network \
+     --ignition-url=http://192.168.190.120:8080/ignition/bootstrap.ign --insecure-ignition /dev/vda
+
+# master1 vm
+ip=192.168.190.121::192.168.190.1:255.255.255.0:master1.ocp4.example.com:ens3:none
+nameserver=192.168.192.120
+coreos.inst.install_dev=vda
+coreos.live.rootfs_url=http://192.168.190.120:8080/install/rootfs.img
+coreos.inst.ignition_url=http://192.168.190.120:8080/ignition/master.ign
+
+$ sudo nmcli con mod 'Wired connection 1' connection.autoconnect 'yes' ipv4.method 'manual' ipv4.address '192.168.190.121/24' ipv4.gateway '192.168.190.1' ipv4.dns '192.168.190.120'
+$ sudo nmcli con down 'Wired connection 1'
+$ sudo nmcli con up 'Wired connection 1'
+$ sudo coreos-installer install --copy-network \
+     --ignition-url=http://192.168.190.120:8080/ignition/master.ign --insecure-ignition /dev/vda
+
+# worker1 vm
+ip=192.168.190.125::192.168.190.1:255.255.255.0:master1.ocp4.example.com:ens3:none
+nameserver=192.168.192.120
+coreos.inst.install_dev=vda
+coreos.live.rootfs_url=http://192.168.190.120:8080/install/rootfs.img
+coreos.inst.ignition_url=http://192.168.190.120:8080/ignition/worker.ign
+
+$ sudo nmcli con mod 'Wired connection 1' connection.autoconnect 'yes' ipv4.method 'manual' ipv4.address '192.168.190.125/24' ipv4.gateway '192.168.190.1' ipv4.dns '192.168.190.120'
+$ sudo nmcli con down 'Wired connection 1'
+$ sudo nmcli con up 'Wired connection 1'
+$ sudo coreos-installer install --copy-network \
+     --ignition-url=http://192.168.190.120:8080/ignition/worker.ign --insecure-ignition /dev/vda
+
+```

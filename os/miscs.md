@@ -21714,5 +21714,17 @@ The intent of this notebook is to provide examples of how data engineers/scienti
 # Working with Boto
 Boto is an integrated interface to current and future infrastructural services offered by Amazon Web Services. Amoung the services it provides interfaces for is Amazon S3. For lightweight analysis of data using python tools like numpy or pandas, it is handy to interact with data stored in object storage using pure python. This is where Boto shines. 
 
+git clone https://github.com/opendatahub-io/manifests.git
+cd manifests
+git branch -a 
+git checkout v1.0-branch-openshift
+
+报错
+failed to build kfApp from URI kfctl_openshift.yaml: couldn't generate KfApp:  (kubeflow.error): Code 500 with message: could not sync cache
+
+pp.kubernetes.io/name":"kiali"}, MatchExpressions:[]v1.LabelSelectorRequirement(nil)}: field is immutable, error when creating "/tmp/kout525499360": handler.config.istio.io "kubernetesenv" is invalid: spec.params: Invalid value: "null": spec.params in body must be of type object: "null", error when creating "/tmp/kout525499360": admission webhook "validation.istio.io" denied the request: unrecognized type kubernetes, error when creating "/tmp/kout525499360": admission webhook "validation.istio.io" denied the request: unrecognized type logentry, error when creating "/tmp/kout525499360": admission webhook "validation.istio.io" denied the request: unrecognized type metric]  filename="kustomize/kustomize.go:202"
+
+
+Error: couldn't delete KfApp:  (kubeflow.error): Code 500 with message: kfApp Delete failed for kustomize:  (kubeflow.error): Code 400 with message: cannot find ClusterName within KfDef, this may cause error deletion to clusters.
 
 ``` 

@@ -21729,7 +21729,7 @@ Error: couldn't delete KfApp:  (kubeflow.error): Code 500 with message: kfApp De
 
 ``` 
 
-
+### install ocp4 by liveiso coreos-installer --copy-network
 ```
 qemu-img create -f qcow2 -o preallocation=metadata /data/kvm/jwang-ocp452-bootstrap.qcow2 120G
 qemu-img create -f qcow2 -o preallocation=metadata /data/kvm/jwang-ocp452-master0.qcow2 120G

@@ -21733,7 +21733,12 @@ Error: couldn't delete KfApp:  (kubeflow.error): Code 500 with message: kfApp De
 ```
 qemu-img create -f qcow2 -o preallocation=metadata /data/kvm/jwang-ocp452-bootstrap.qcow2 120G
 qemu-img create -f qcow2 -o preallocation=metadata /data/kvm/jwang-ocp452-master0.qcow2 120G
+qemu-img create -f qcow2 -o preallocation=metadata /data/kvm/jwang-ocp452-master1.qcow2 120G
+qemu-img create -f qcow2 -o preallocation=metadata /data/kvm/jwang-ocp452-master2.qcow2 120G
 qemu-img create -f qcow2 -o preallocation=metadata /data/kvm/jwang-ocp452-worker0.qcow2 120G
+qemu-img create -f qcow2 -o preallocation=metadata /data/kvm/jwang-ocp452-worker1.qcow2 120G
+qemu-img create -f qcow2 -o preallocation=metadata /data/kvm/jwang-ocp452-worker2.qcow2 120G
+
 
 # bootstrap vm
 ip=192.168.190.124::192.168.190.1:255.255.255.0:bootstrap.ocp4.example.com:ens3:none
@@ -21761,8 +21766,34 @@ $ sudo nmcli con up 'Wired connection 1'
 $ sudo coreos-installer install --copy-network \
      --ignition-url=http://192.168.190.120:8080/ignition/master.ign --insecure-ignition /dev/vda
 
+# master2 vm
+ip=192.168.190.122::192.168.190.1:255.255.255.0:master2.ocp4.example.com:ens3:none
+nameserver=192.168.192.120
+coreos.inst.install_dev=vda
+coreos.live.rootfs_url=http://192.168.190.120:8080/install/rootfs.img
+coreos.inst.ignition_url=http://192.168.190.120:8080/ignition/master.ign
+
+$ sudo nmcli con mod 'Wired connection 1' connection.autoconnect 'yes' ipv4.method 'manual' ipv4.address '192.168.190.122/24' ipv4.gateway '192.168.190.1' ipv4.dns '192.168.190.120'
+$ sudo nmcli con down 'Wired connection 1'
+$ sudo nmcli con up 'Wired connection 1'
+$ sudo coreos-installer install --copy-network \
+     --ignition-url=http://192.168.190.120:8080/ignition/master.ign --insecure-ignition /dev/vda
+
+# master3 vm
+ip=192.168.190.123::192.168.190.1:255.255.255.0:master3.ocp4.example.com:ens3:none
+nameserver=192.168.192.120
+coreos.inst.install_dev=vda
+coreos.live.rootfs_url=http://192.168.190.120:8080/install/rootfs.img
+coreos.inst.ignition_url=http://192.168.190.120:8080/ignition/master.ign
+
+$ sudo nmcli con mod 'Wired connection 1' connection.autoconnect 'yes' ipv4.method 'manual' ipv4.address '192.168.190.123/24' ipv4.gateway '192.168.190.1' ipv4.dns '192.168.190.120'
+$ sudo nmcli con down 'Wired connection 1'
+$ sudo nmcli con up 'Wired connection 1'
+$ sudo coreos-installer install --copy-network \
+     --ignition-url=http://192.168.190.120:8080/ignition/master.ign --insecure-ignition /dev/vda
+
 # worker1 vm
-ip=192.168.190.125::192.168.190.1:255.255.255.0:master1.ocp4.example.com:ens3:none
+ip=192.168.190.125::192.168.190.1:255.255.255.0:worker1.ocp4.example.com:ens3:none
 nameserver=192.168.192.120
 coreos.inst.install_dev=vda
 coreos.live.rootfs_url=http://192.168.190.120:8080/install/rootfs.img
@@ -21773,5 +21804,46 @@ $ sudo nmcli con down 'Wired connection 1'
 $ sudo nmcli con up 'Wired connection 1'
 $ sudo coreos-installer install --copy-network \
      --ignition-url=http://192.168.190.120:8080/ignition/worker.ign --insecure-ignition /dev/vda
+
+# worker2 vm
+ip=192.168.190.126::192.168.190.1:255.255.255.0:worker2.ocp4.example.com:ens3:none
+nameserver=192.168.192.120
+coreos.inst.install_dev=vda
+coreos.live.rootfs_url=http://192.168.190.120:8080/install/rootfs.img
+coreos.inst.ignition_url=http://192.168.190.120:8080/ignition/worker.ign
+
+$ sudo nmcli con mod 'Wired connection 1' connection.autoconnect 'yes' ipv4.method 'manual' ipv4.address '192.168.190.126/24' ipv4.gateway '192.168.190.1' ipv4.dns '192.168.190.120'
+$ sudo nmcli con down 'Wired connection 1'
+$ sudo nmcli con up 'Wired connection 1'
+$ sudo coreos-installer install --copy-network \
+     --ignition-url=http://192.168.190.120:8080/ignition/worker.ign --insecure-ignition /dev/vda
+
+# 问题
+# helper installer
+openshift-install wait-for bootstrap-complete --log-level debug
+W0809 13:34:03.531475    6233 reflector.go:424] k8s.io/client-go/tools/watch/informerwatcher.go:146: watch of *v1.ConfigMap ended with: very short watch: k8s.io/client-go/tools/watch/informerwatcher.go:146: Unexpected watch close - watch lasted less than a second and no items received
+I0809 13:34:14.460413    6233 trace.go:205] Trace[2059285316]: "Reflector ListAndWatch" name:k8s.io/client-go/tools/watch/informerwatcher.go:146 (09-Aug-2021 13:34:04.428) (total time: 10031ms):
+Trace[2059285316]: [10.031779271s] [10.031779271s] END
+E0809 13:34:14.460571    6233 reflector.go:127] k8s.io/client-go/tools/watch/informerwatcher.go:146: Failed to watch *v1.ConfigMap: failed to list *v1.ConfigMap: an error on the server ("") has prevented the request from succeeding (get configmaps)
+
+# bootstrap
+journalctl -u kubelet
+Aug 09 05:50:45 bootstrap.ocp4.example.com hyperkube[2217]: E0809 05:50:45.306295    2217 summary_sys_containers.go:47] Failed to get system container stats for "/system.slice/kubelet.service": failed to get cgroup stats for "/system.slice/kubelet.service": failed to get container info for "/system.slice/kubelet.service": unknown container "/system.slice/kubelet.service"
+
+# bootstrap 问题解决方法参考
+https://cloudblue.freshdesk.com/support/solutions/articles/44001886522-how-to-fix-failed-to-get-system-container-stats-on-k8s-service-node-
+
+Create the cgroups config:
+# mkdir -p /etc/systemd/system/kubelet.service.d
+# cat > /etc/systemd/system/kubelet.service.d/11-cgroups.conf << EOF
+[Service]
+CPUAccounting=true
+MemoryAccounting=true
+EOF
+
+Restart kubelet service:
+# systemctl daemon-reload
+# systemctl restart kubelet
+
 
 ```

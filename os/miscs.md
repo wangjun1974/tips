@@ -21847,6 +21847,13 @@ Restart kubelet service:
 # systemctl daemon-reload
 # systemctl restart kubelet
 
+# helper vm
+ls -lh /var/www/html/install
+total 2.5G
+-rw-r--r--. 1 root root 899M Aug 10 12:54 rhcos-4.7.13-x86_64-metal.x86_64.raw.gz
+-rw-r--r--. 1 root root 813M Aug 10 13:58 rhcos-live-rootfs.x86_64.img
+-r-xr-xr-x. 1 root root 813M Apr 27 20:17 rootfs.img
+
 # 重建 worker0 vm
 cat > /tmp/ks-worker0.cfg <<'EOF'
 lang en_US
@@ -21875,13 +21882,6 @@ EOF
 
 virt-install --debug --name=jwang-ocp452-worker0 --vcpus=4 --ram=32768 --disk path=/data/kvm/jwang-ocp452-worker0.qcow2,bus=virtio --os-variant rhel8.0 --network network=openshift4a,model=virtio --boot menu=on --location /root/jwang/isos/rhel-8.2-x86_64-dvd.iso --initrd-inject /tmp/ks-worker0.cfg --extra-args='ks=file:/ks-worker0.cfg edd=off'
 
-# helper vm
-ls -lh /var/www/html/install
-total 2.5G
--rw-r--r--. 1 root root 899M Aug 10 12:54 rhcos-4.7.13-x86_64-metal.x86_64.raw.gz
--rw-r--r--. 1 root root 813M Aug 10 13:58 rhcos-live-rootfs.x86_64.img
--r-xr-xr-x. 1 root root 813M Apr 27 20:17 rootfs.img
-
 # worker0 vm
 wget -c http://192.168.190.1:8080/install/rhcos-live.x86_64.iso 
 mkdir -p iso
@@ -21908,5 +21908,120 @@ sed -i "5 r /root/add2.txt" /etc/grub.d/40_custom
 grub2-mkconfig -o /boot/grub2/grub.cfg 
 
 reboot
+
+# 重建 worker1 vm
+cat > /tmp/ks-worker1.cfg <<'EOF'
+lang en_US
+keyboard us
+ignoredisk --only-use=vda
+timezone Asia/Shanghai --isUtc
+rootpw $1$/5O3zdx8$/h6dTG0k/W9Pso5SXHSOc/ --iscrypted
+#platform x86, AMD64, or Intel EM64T
+reboot
+text
+cdrom
+bootloader --location=mbr --append="crashkernel=auto"
+zerombr
+clearpart --all --initlabel
+autopart --type=plain --nohome --noboot
+network --device=ens3 --hostname=worker2.ocp4.example.com --bootproto=static --ip=192.168.190.126 --netmask=255.255.255.0 --gateway=192.168.190.1 --nameserver=192.168.190.120
+auth --passalgo=sha512 --useshadow
+selinux --enforcing
+firewall --enabled --ssh
+firstboot --disable
+%packages
+@^minimal-environment
+wget
+%end
+EOF
+
+virt-install --debug --name=jwang-ocp452-worker1 --vcpus=4 --ram=32768 --disk path=/data/kvm/jwang-ocp452-worker1.qcow2,bus=virtio --os-variant rhel8.0 --network network=openshift4a,model=virtio --boot menu=on --location /root/jwang/isos/rhel-8.2-x86_64-dvd.iso --initrd-inject /tmp/ks-worker1.cfg --extra-args='ks=file:/ks-worker1.cfg edd=off'
+
+
+# worker1 vm
+wget -c http://192.168.190.1:8080/install/rhcos-live.x86_64.iso 
+mkdir -p iso
+mount -o loop rhcos-live.x86_64.iso iso/
+cd iso
+cp -r * /boot/
+
+cat << EOF > /root/add1.txt
+
+set default="0"
+set timeout=3
+
+EOF
+
+cat << "EOF" > /root/add2.txt
+menuentry 'Re-Install RHEL CoreOS' --class fedora --class gnu-linux --class gnu --class os {
+        linux16 /boot/images/pxeboot/vmlinuz nomodeset rd.neednet=1 coreos.inst=yes coreos.inst.install_dev=vda coreos.inst.insecure coreos.inst.image_url=http://192.168.190.120:8080/install/rhcos-4.7.13-x86_64-metal.x86_64.raw.gz coreos.live.rootfs_url=http://192.168.190.120:8080/install/rhcos-live-rootfs.x86_64.img coreos.inst.ignition_url=http://192.168.190.120:8080/ignition/worker.ign ip=192.168.190.126::192.168.190.1:255.255.255.0:worker2.ocp4.example.com::none nameserver=192.168.190.120 
+        initrd16 /boot/images/pxeboot/initrd.img
+}
+EOF
+
+sed -i '68 r /root/add1.txt' /boot/grub2/grub.cfg
+sed -i "5 r /root/add2.txt" /etc/grub.d/40_custom
+grub2-mkconfig -o /boot/grub2/grub.cfg 
+
+reboot
+
+# 重建 worker2 vm
+cat > /tmp/ks-worker2.cfg <<'EOF'
+lang en_US
+keyboard us
+ignoredisk --only-use=vda
+timezone Asia/Shanghai --isUtc
+rootpw $1$/5O3zdx8$/h6dTG0k/W9Pso5SXHSOc/ --iscrypted
+#platform x86, AMD64, or Intel EM64T
+reboot
+text
+cdrom
+bootloader --location=mbr --append="crashkernel=auto"
+zerombr
+clearpart --all --initlabel
+autopart --type=plain --nohome --noboot
+network --device=ens3 --hostname=worker3.ocp4.example.com --bootproto=static --ip=192.168.190.127 --netmask=255.255.255.0 --gateway=192.168.190.1 --nameserver=192.168.190.120
+auth --passalgo=sha512 --useshadow
+selinux --enforcing
+firewall --enabled --ssh
+firstboot --disable
+%packages
+@^minimal-environment
+wget
+%end
+EOF
+
+virt-install --debug --name=jwang-ocp452-worker2 --vcpus=4 --ram=32768 --disk path=/data/kvm/jwang-ocp452-worker2.qcow2,bus=virtio --os-variant rhel8.0 --network network=openshift4a,model=virtio --boot menu=on --location /root/jwang/isos/rhel-8.2-x86_64-dvd.iso --initrd-inject /tmp/ks-worker2.cfg --extra-args='ks=file:/ks-worker2.cfg edd=off'
+
+
+# worker2 vm
+wget -c http://192.168.190.1:8080/install/rhcos-live.x86_64.iso 
+mkdir -p iso
+mount -o loop rhcos-live.x86_64.iso iso/
+cd iso
+cp -r * /boot/
+
+cat << EOF > /root/add1.txt
+
+set default="0"
+set timeout=3
+
+EOF
+
+cat << "EOF" > /root/add2.txt
+menuentry 'Re-Install RHEL CoreOS' --class fedora --class gnu-linux --class gnu --class os {
+        linux16 /boot/images/pxeboot/vmlinuz nomodeset rd.neednet=1 coreos.inst=yes coreos.inst.install_dev=vda coreos.inst.insecure coreos.inst.image_url=http://192.168.190.120:8080/install/rhcos-4.7.13-x86_64-metal.x86_64.raw.gz coreos.live.rootfs_url=http://192.168.190.120:8080/install/rhcos-live-rootfs.x86_64.img coreos.inst.ignition_url=http://192.168.190.120:8080/ignition/worker.ign ip=192.168.190.127::192.168.190.1:255.255.255.0:worker3.ocp4.example.com::none nameserver=192.168.190.120 
+        initrd16 /boot/images/pxeboot/initrd.img
+}
+EOF
+
+sed -i '68 r /root/add1.txt' /boot/grub2/grub.cfg
+sed -i "5 r /root/add2.txt" /etc/grub.d/40_custom
+grub2-mkconfig -o /boot/grub2/grub.cfg 
+
+reboot
+
+oc get csr
+/usr/local/bin/oc get csr --no-headers | /usr/bin/awk '{print $1}' | xargs /usr/local/bin/oc adm certificate approve
 
 ```

@@ -21847,7 +21847,7 @@ Restart kubelet service:
 # systemctl daemon-reload
 # systemctl restart kubelet
 
-# 重建 worker 0 
+# 重建 worker0 vm
 cat > /tmp/ks-worker0.cfg <<'EOF'
 lang en_US
 keyboard us
@@ -21862,7 +21862,7 @@ bootloader --location=mbr --append="crashkernel=auto"
 zerombr
 clearpart --all --initlabel
 autopart --type=plain --nohome --noboot
-network --device=ens3 --hostname=worker0.ocp4.example.com --bootproto=static --ip=192.168.190.125 --netmask=255.255.255.0 --gateway=192.168.190.1 --nameserver=192.168.190.120
+network --device=ens3 --hostname=worker1.ocp4.example.com --bootproto=static --ip=192.168.190.125 --netmask=255.255.255.0 --gateway=192.168.190.1 --nameserver=192.168.190.120
 auth --passalgo=sha512 --useshadow
 selinux --enforcing
 firewall --enabled --ssh
@@ -21882,5 +21882,24 @@ mount -o loop rhcos-live.x86_64.iso iso/
 cd iso
 cp -r * /boot/
 
+cat << EOF > /root/add1.txt
+
+set default="0"
+set timeout=3
+
+EOF
+
+cat << "EOF" > /root/add2.txt
+menuentry 'Re-Install RHEL CoreOS' --class fedora --class gnu-linux --class gnu --class os {
+        linux16 /boot/images/pxeboot/vmlinuz nomodeset rd.neednet=1 coreos.inst=yes coreos.inst.install_dev=vda coreos.inst.insecure coreos.inst.image_url=http://192.168.190.120:8080/install/rhcos-4.7.13-x86_64-metal.x86_64.raw.gz coreos.live.rootfs_url=http://192.168.190.120:8080/install/rhcos-live-rootfs.x86_64.img coreos.inst.ignition_url=http://192.168.190.120:8080/ignition/worker.ign ip=192.168.190.125::192.168.190.1:255.255.255.0:worker0.ocp4.example.com::none nameserver=192.168.190.120 
+        initrd16 /boot/images/pxeboot/initrd.img
+}
+EOF
+
+sed -i '68 r /root/add1.txt' /boot/grub2/grub.cfg
+sed -i "5 r /root/add2.txt" /etc/grub.d/40_custom
+grub2-mkconfig -o /boot/grub2/grub.cfg 
+
+reboot
 
 ```

@@ -21875,6 +21875,13 @@ EOF
 
 virt-install --debug --name=jwang-ocp452-worker0 --vcpus=4 --ram=32768 --disk path=/data/kvm/jwang-ocp452-worker0.qcow2,bus=virtio --os-variant rhel8.0 --network network=openshift4a,model=virtio --boot menu=on --location /root/jwang/isos/rhel-8.2-x86_64-dvd.iso --initrd-inject /tmp/ks-worker0.cfg --extra-args='ks=file:/ks-worker0.cfg edd=off'
 
+# helper vm
+ls -lh /var/www/html/install
+total 2.5G
+-rw-r--r--. 1 root root 899M Aug 10 12:54 rhcos-4.7.13-x86_64-metal.x86_64.raw.gz
+-rw-r--r--. 1 root root 813M Aug 10 13:58 rhcos-live-rootfs.x86_64.img
+-r-xr-xr-x. 1 root root 813M Apr 27 20:17 rootfs.img
+
 # worker0 vm
 wget -c http://192.168.190.1:8080/install/rhcos-live.x86_64.iso 
 mkdir -p iso
@@ -21891,7 +21898,7 @@ EOF
 
 cat << "EOF" > /root/add2.txt
 menuentry 'Re-Install RHEL CoreOS' --class fedora --class gnu-linux --class gnu --class os {
-        linux16 /boot/images/pxeboot/vmlinuz nomodeset rd.neednet=1 coreos.inst=yes coreos.inst.install_dev=vda coreos.inst.insecure coreos.inst.image_url=http://192.168.190.120:8080/install/rhcos-4.7.13-x86_64-metal.x86_64.raw.gz coreos.live.rootfs_url=http://192.168.190.120:8080/install/rhcos-live-rootfs.x86_64.img coreos.inst.ignition_url=http://192.168.190.120:8080/ignition/worker.ign ip=192.168.190.125::192.168.190.1:255.255.255.0:worker0.ocp4.example.com::none nameserver=192.168.190.120 
+        linux16 /boot/images/pxeboot/vmlinuz nomodeset rd.neednet=1 coreos.inst=yes coreos.inst.install_dev=vda coreos.inst.insecure coreos.inst.image_url=http://192.168.190.120:8080/install/rhcos-4.7.13-x86_64-metal.x86_64.raw.gz coreos.live.rootfs_url=http://192.168.190.120:8080/install/rhcos-live-rootfs.x86_64.img coreos.inst.ignition_url=http://192.168.190.120:8080/ignition/worker.ign ip=192.168.190.125::192.168.190.1:255.255.255.0:worker1.ocp4.example.com::none nameserver=192.168.190.120 
         initrd16 /boot/images/pxeboot/initrd.img
 }
 EOF

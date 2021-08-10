@@ -21742,7 +21742,6 @@ qemu-img create -f qcow2 -o preallocation=metadata /data/kvm/jwang-ocp452-worker
 qemu-img create -f qcow2 -o preallocation=metadata /data/kvm/jwang-ocp452-worker1.qcow2 120G
 qemu-img create -f qcow2 -o preallocation=metadata /data/kvm/jwang-ocp452-worker2.qcow2 120G
 
-
 # bootstrap vm
 ip=192.168.190.124::192.168.190.1:255.255.255.0:bootstrap.ocp4.example.com:ens3:none
 nameserver=192.168.192.120
@@ -21847,6 +21846,41 @@ EOF
 Restart kubelet service:
 # systemctl daemon-reload
 # systemctl restart kubelet
+
+# 重建 worker 0 
+cat > /tmp/ks-worker0.cfg <<'EOF'
+lang en_US
+keyboard us
+ignoredisk --only-use=vda
+timezone Asia/Shanghai --isUtc
+rootpw $1$/5O3zdx8$/h6dTG0k/W9Pso5SXHSOc/ --iscrypted
+#platform x86, AMD64, or Intel EM64T
+reboot
+text
+cdrom
+bootloader --location=mbr --append="crashkernel=auto"
+zerombr
+clearpart --all --initlabel
+autopart --type=plain --nohome --noboot
+network --device=ens3 --hostname=worker0.ocp4.example.com --bootproto=static --ip=192.168.190.125 --netmask=255.255.255.0 --gateway=192.168.190.1 --nameserver=192.168.190.120
+auth --passalgo=sha512 --useshadow
+selinux --enforcing
+firewall --enabled --ssh
+firstboot --disable
+%packages
+@^minimal-environment
+wget
+%end
+EOF
+
+virt-install --debug --name=jwang-ocp452-worker0 --vcpus=4 --ram=32768 --disk path=/data/kvm/jwang-ocp452-worker0.qcow2,bus=virtio --os-variant rhel8.0 --network network=openshift4a,model=virtio --boot menu=on --location /root/jwang/isos/rhel-8.2-x86_64-dvd.iso --initrd-inject /tmp/ks-worker0.cfg --extra-args='ks=file:/ks-worker0.cfg edd=off'
+
+# worker0 vm
+wget -c http://192.168.190.1:8080/install/rhcos-live.x86_64.iso 
+mkdir -p iso
+mount -o loop rhcos-live.x86_64.iso iso/
+cd iso
+cp -r * /boot/
 
 
 ```

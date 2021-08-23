@@ -22253,3 +22253,8 @@ spec:
             id: cluster-xhzmw-q29kk-worker-profile
 EOF
 ```
+
+### 检查哪个软件包提供了某个命令
+```
+yum whatprovides htpasswd
+```

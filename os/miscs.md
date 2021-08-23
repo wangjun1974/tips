@@ -22415,4 +22415,34 @@ status:
 kubectl delete apiservices.apiregistration.k8s.io v1beta1.custom.metrics.k8s.io
 apiservice.apiregistration.k8s.io "v1beta1.custom.metrics.k8s.io" deleted
 
+报错
+oc get deployment cert-manager -n cert-manager -o yaml
+...
+  - lastTransitionTime: "2021-08-23T07:06:42Z"
+    lastUpdateTime: "2021-08-23T07:06:42Z"
+    message: 'Internal error occurred: failed calling webhook "inferenceservice.kfserving-webhook-server.pod-mutator":
+      Post https://kfserving-webhook-server-service.kubeflow.svc:443/mutate-pods?timeout=30s:
+      service "kfserving-webhook-server-service" not found'
+    reason: FailedCreate
+    status: "True"
+    type: ReplicaFailure
+
+知识库文档：https://access.redhat.com/solutions/4165791
+
+[root@cuc openshift-kfdef]# oc get mutatingwebhookconfiguration 
+NAME                                               WEBHOOKS   AGE
+admission-webhook-mutating-webhook-configuration   1          101m
+cert-manager-webhook                               1          40m
+inferenceservice.serving.kubeflow.org              2          99m
+istio-sidecar-injector                             1          3h38m
+katib-mutating-webhook-config                      2          100m
+mutating-webhook-configuration                     1          91m
+
+oc delete mutatingwebhookconfiguration 
+
+报错
+CustomResourceDefinition.apiextensions.k8s.io \"suggestions.kubeflow.org\" is invalid: spec.version: Invalid value: \"v1beta1\": must match the first version in spec.versions]"
+查找
+Suggestions crd 检查 version，如果 version 不是 v1beta1 则删除 Crds.
+ 
 ```

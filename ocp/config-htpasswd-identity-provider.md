@@ -2,14 +2,15 @@
 参考：https://docs.openshift.com/container-platform/4.1/authentication/identity_providers/configuring-htpasswd-identity-provider.html
 ```
 # 创建 htpasswd 文件，添加用户 admin, user01 和 user02
-htpasswd -c -B -b /root/ocp4/users.htpasswd admin admin
-htpasswd -b /root/ocp4/users.htpasswd user01 redhat
-htpasswd -b /root/ocp4/users.htpasswd user02 redhat
+htpasswd -c -B -b /root/ocp4/htpasswd admin admin
+htpasswd -b /root/ocp4/htpasswd user01 redhat
+htpasswd -b /root/ocp4/htpasswd user02 redhat
 
 # 使用 htpasswd 文件创建 secret htpass-secret
-oc create secret generic htpass-secret --from-file=htpasswd=/root/ocp4/users.htpasswd -n openshift-config
+oc create secret generic htpass-secret --from-file=htpasswd=/root/ocp4/htpasswd -n openshift-config
 
 # 为 oauth.config.openshift.io/cluster 添加 htpasswd identity provider
+# 因为 OAuth 对象使用 htpasswd 作为 key，因此上面的 secret 对应的文件名请注意使用 htpasswd
 cat <<EOF | oc apply -f -
 apiVersion: config.openshift.io/v1
 kind: OAuth

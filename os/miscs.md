@@ -22261,6 +22261,8 @@ yum whatprovides htpasswd
 
 ### 使用 kfctl 命令安装 kubeflow
 https://www.kubeflow.org/docs/distributions/openshift/install-kubeflow/
+https://developers.redhat.com/articles/2021/05/28/how-install-kubeflow-12-red-hat-openshift#creating_the_kubeflow_project
+
 ```
 # 下载 kfctl openshift yaml 文件
 curl https://raw.githubusercontent.com/kubeflow/manifests/v1.3.0/distributions/kfdef/kfctl_openshift_v1.3.0.yaml -o kfctl_openshift_v1.3.0.yaml
@@ -22314,7 +22316,103 @@ $ cat /opt/app-root/src/openshift-kfdef/.cache/manifests/manifests-1.3-branch/di
 # 参考文件 https://github.com/kubeflow/manifests/blob/v1.3-branch/distributions/kfdef/kfctl_openshift.v1.2.0.yaml
 curl https://raw.githubusercontent.com/kubeflow/manifests/v1.3-branch/distributions/kfdef/kfctl_openshift.v1.2.0.yaml -o kfctl_openshift.v1.2.0.yaml
 
-rm -rf .cache 
+rm -rf .cache/ kustomize/
 kfctl build -V --file=./kfctl_openshift.v1.2.0.yaml
 kfctl apply -V --file=./kfctl_openshift.v1.2.0.yaml
+
+报错
+for: "/tmp/kout402876637": Deployment.apps "istio-ingressgateway" is invalid: spec.selector: Invalid value: v1.LabelSelector{MatchLabels:map[string]string{"app":"istio-ingressgateway", "chart":"gateways", "heritage":"Tiller", "istio":"ingressgateway", "release":"istio"}, MatchExpressions:[]v1.LabelSelectorRequirement(nil)}: field is immutable  filename="kustomize/kustomize.go:284"
+
+安装 
+curl https://raw.githubusercontent.com/kubeflow/manifests/v1.3-branch/distributions/kfdef/kfctl_openshift.v1.1.0.yaml -o kfctl_openshift.v1.1.0.yaml
+rm -rf .cache/ kustomize/
+kfctl build -V --file=./kfctl_openshift.v1.1.0.yaml
+
+报错
+time="2021-08-23T13:01:13+08:00" level=warning msg="Encountered error applying application istio-stack:  (kubeflow.error): Code 500 with message: Apply.Run : error when creating \"/tmp/kout248590795\": Internal error occurred: failed calling webhook \"validation.istio.io\": Post https://istiod.istio-system.svc:443/validate?timeout=30s: service \"istiod\" not found" filename="kustomize/kustomize.go:284"
+https://github.com/kubeflow/kubeflow/issues/5677
+
+kfctl_openshift.v1.1.0.yaml 注释 kustomizeConfig/openshift-scc
+kfctl_openshift.v1.1.0.yaml 把 stacks/openshift 替换为 stacks/kubernetes
+time="2021-08-23T13:26:55+08:00" level=warning msg="Encountered error applying application istio-stack:  (kubeflow.error): Code 500 with message: Apply.Run : [error when creating \"/tmp/kout240099445\": Internal error occurred: failed calling webhook \"pilot.validation.istio.io\": Post https://istio-galley.istio-system.svc:443/admitpilot?timeout=30s: no endpoints available for service \"istio-galley\", error when creating \"/tmp/kout240099445\": Internal error occurred: failed calling webhook \"validation.istio.io\": Post https://istiod.istio-system.svc:443/validate?timeout=30s: service \"istiod\" not found, error when creating \"/tmp/kout240099445\": Internal error occurred: failed calling webhook \"mixer.validation.istio.io\": Post https://istio-galley.istio-system.svc:443/admitmixer?timeout=30s: no endpoints available for service \"istio-galley\"]" filename="kustomize/kustomize.go:284"
+
+报错
+time="2021-08-23T13:33:55+08:00" level=warning msg="Encountered error applying application istio-stack:  (kubeflow.error): Code 500 with message: Apply.Run : error when creating \"/tmp/kout489913582\": Internal error occurred: failed calling webhook \"validation.istio.io\": Post https://istiod.istio-system.svc:443/validate?timeout=30s: service \"istiod\" not found" filename="kustomize/kustomize.go:284"
+
+清理
+oc project default
+oc delete project istio-system --wait=true --timeout=5m
+oc delete project kubeflow --wait=true --timeout=5m
+rm -rf .cache kustomize
+
+curl https://raw.githubusercontent.com/kubeflow/manifests/v0.7-branch/kfdef/kfctl_k8s_istio.0.7.0.yaml -o kfctl_k8s_istio.0.7.0.yaml
+
+kfctl build -V --file=./kfctl_k8s_istio.0.7.0.yaml
+kfctl apply -V --file=./kfctl_k8s_istio.0.7.0.yaml
+
+报错 
+time="2021-08-23T13:50:18+08:00" level=warning msg="Encountered error applying application istio-install:  (kubeflow.error): Code 500 with message: Apply.Run : error when creating \"/tmp/kout132628789\": Internal error occurred: failed calling webhook \"validation.istio.io\": Post https://istiod.istio-system.svc:443/validate?timeout=30s: service \"istiod\" not found" filename="kustomize/kustomize.go:284"
+
+考虑删除之前存在的 mutation webhook
+oc get ValidatingWebhookConfiguration -n istio-system
+NAME                       WEBHOOKS   AGE
+autoscaling.openshift.io   2          4h39m
+istio-galley               2          110m
+istiod-istio-system        1          115m
+multus.openshift.io        1          4h47m
+
+oc delete ValidatingWebhookConfiguration istiod-istio-system -n istio-system
+warning: deleting cluster-scoped resources, not scoped to the provided namespace
+validatingwebhookconfiguration.admissionregistration.k8s.io "istiod-istio-system" deleted
+
+报错
+time="2021-08-23T13:54:52+08:00" level=warning msg="Encountered error applying application seldon-core-operator:  (kubeflow.error): Code 500 with message: Apply.Run : error when creating \"/tmp/kout240565320\": CustomResourceDefinition.apiextensions.k8s.io \"seldondeployments.machinelearning.seldon.io\" is invalid: [spec.validation.openAPIV3Schema.properties[spec].properties[predictors].items.properties[componentSpecs].items.properties[spec].properties[containers].items.properties[ports].items.properties[protocol].default: Required value: this property is in x-kubernetes-list-map-keys, so it must have a default or be a required property, spec.validation.openAPIV3Schema.properties[spec].properties[predictors].items.properties[componentSpecs].items.properties[spec].properties[initContainers].items.properties[ports].items.properties[protocol].default: Required value: this property is in x-kubernetes-list-map-keys, so it must have a default or be a required property, spec.validation.openAPIV3Schema.properties[spec].properties[predictors].items.properties[explainer].properties[containerSpec].properties[ports].items.properties[protocol].default: Required value: this property is in x-kubernetes-list-map-keys, so it must have a default or be a required property, spec.validation.openAPIV3Schema.properties[spec].properties[predictors].items.properties[explainer].properties[endpoint].type: Required value: must not be empty for specified object fields, spec.validation.openAPIV3Schema.properties[spec].properties[predictors].items.properties[graph].properties[children].items.properties[children].items.properties[children].items.type: Required value: must not be empty for specified array items, spec.validation.openAPIV3Schema.properties[spec].properties[predictors].items.properties[graph].properties[children].items.properties[children].items.properties[endpoint].type: Required value: must not be empty for specified object fields, spec.validation.openAPIV3Schema.properties[spec].properties[predictors].items.properties[graph].properties[children].items.properties[children].items.type: Required value: must not be empty for specified array items, spec.validation.openAPIV3Schema.properties[spec].properties[predictors].items.properties[graph].properties[children].items.properties[endpoint].type: Required value: must not be empty for specified object fields, spec.validation.openAPIV3Schema.properties[spec].properties[predictors].items.properties[graph].properties[children].items.type: Required value: must not be empty for specified array items, spec.validation.openAPIV3Schema.properties[spec].properties[predictors].items.properties[graph].properties[endpoint].type: Required value: must not be empty for specified object fields, spec.validation.openAPIV3Schema.properties[spec].properties[predictors].items.properties[graph].type: Required value: must not be empty for specified object fields, spec.validation.openAPIV3Schema.properties[spec].properties[predictors].items.properties[svcOrchSpec].properties[env].items.properties[valueFrom].properties[configMapKeyRef].type: Required value: must not be empty for specified object fields, spec.validation.openAPIV3Schema.properties[spec].properties[predictors].items.properties[svcOrchSpec].properties[env].items.properties[valueFrom].properties[fieldRef].type: Required value: must not be empty for specified object fields, spec.validation.openAPIV3Schema.properties[spec].properties[predictors].items.properties[svcOrchSpec].properties[env].items.properties[valueFrom].properties[resourceFieldRef].type: Required value: must not be empty for specified object fields, spec.validation.openAPIV3Schema.properties[spec].properties[predictors].items.properties[svcOrchSpec].properties[env].items.properties[valueFrom].properties[secretKeyRef].type: Required value: must not be empty for specified object fields, spec.validation.openAPIV3Schema.properties[spec].properties[predictors].items.properties[svcOrchSpec].properties[env].items.properties[valueFrom].type: Required value: must not be empty for specified object fields, spec.validation.openAPIV3Schema.properties[spec].properties[predictors].items.properties[svcOrchSpec].properties[env].items.type: Required value: must not be empty for specified array items, spec.validation.openAPIV3Schema.properties[spec].properties[predictors].items.properties[svcOrchSpec].properties[resources].type: Required value: must not be empty for specified object fields, spec.validation.openAPIV3Schema.properties[spec].properties[predictors].items.type: Required value: must not be empty for specified array items, spec.validation.openAPIV3Schema.properties[spec].type: Required value: must not be empty for specified object fields, spec.validation.openAPIV3Schema.type: Required value: must not be empty at the root]" filename="kustomize/kustomize.go:284"
+
+报错
+{"level":"error","ts":1629698614.8900268,"logger":"entrypoint","msg":"unable to register controllers to the manager","error":"no matches for kind \"SeldonDeployment\" in version \"machinelearning.seldon.io/v1alpha2\"","stacktrace":"github.com/seldonio/seldon-operator/vendor/github.com/go-logr/zapr.(*zapLogger).Error\n\t/go/src/github.com/seldonio/seldon-operator/vendor/github.com/go-logr/zapr/zapr.go:128\nmain.main\n\t/go/src/github.com/seldonio/seldon-operator/cmd/manager/main.go:76\nruntime.main\n\t/usr/local/go/src/runtime/proc.go:198"}
+
+解决 minio 部署问题
+oc adm policy add-scc-to-user anyuid -z default -n kubeflow
+
+[root@cuc kustomize]# oc logs katib-ui-66845969b6-2pr8l -n kubeflow
+2021/08/23 06:17:28 Serving the frontend dir /app/build
+2021/08/23 06:17:28 Serving at 0.0.0.0:80
+panic: listen tcp 0.0.0.0:80: bind: permission denied
+
+报错
+  - lastTransitionTime: "2021-08-23T06:24:33Z"
+    message: 'Discovery failed for some groups, 1 failing: unable to retrieve the
+      complete list of server APIs: custom.metrics.k8s.io/v1beta1: the server is currently
+      unable to handle the request'
+    reason: DiscoveryFailed
+    status: "True"
+    type: NamespaceDeletionDiscoveryFailure
+
+oc get apiservice
+...
+v1beta1.custom.metrics.k8s.io               knative-serving/autoscaler                                   False (MissingEndpoints)   30m
+
+oc get project istio-system
+NAME           DISPLAY NAME   STATUS
+istio-system                  Terminating
+
+oc get project istio-system -o yaml
+...
+spec:
+  finalizers:
+  - kubernetes
+status:
+  conditions:
+  - lastTransitionTime: "2021-08-23T06:24:33Z"
+    message: 'Discovery failed for some groups, 1 failing: unable to retrieve the
+      complete list of server APIs: custom.metrics.k8s.io/v1beta1: the server is currently
+      unable to handle the request'
+    reason: DiscoveryFailed
+    status: "True"
+    type: NamespaceDeletionDiscoveryFailure
+
+删除 v1beta1.custom.metrics.k8s.io 这个 api
+kubectl delete apiservices.apiregistration.k8s.io v1beta1.custom.metrics.k8s.io
+apiservice.apiregistration.k8s.io "v1beta1.custom.metrics.k8s.io" deleted
+
 ```

@@ -22025,3 +22025,231 @@ oc get csr
 /usr/local/bin/oc get csr --no-headers | /usr/bin/awk '{print $1}' | xargs /usr/local/bin/oc adm certificate approve
 
 ```
+
+
+### 获取 Machine 对应的节点
+```
+查看所有 machine 对应的节点
+$ oc get machines -n openshift-machine-api -o jsonpath='{range .items[*]}{@.metadata.name}{"\t"}{@.status.nodeRef.name}{"\n"}'
+
+查看哪些 nodes 有 cluster.ocs.openshift.io/openshift-storage label
+$ oc get nodes -l cluster.ocs.openshift.io/openshift-storage
+
+查看哪些 nodes 非 master，非 spot instance
+oc get machines -n openshift-machine-api -o jsonpath='{range .items[*]}{@.metadata.name}{"\t"}{@.status.nodeRef.name}{"\n"}'| grep -Ev "master|spot" 
+
+为这些节点打 cluster.ocs.openshift.io/openshift-storage 标签
+oc get machines -n openshift-machine-api -o jsonpath='{range .items[*]}{@.metadata.name}{"\t"}{@.status.nodeRef.name}{"\n"}'| grep -Ev "master|spot" | awk '{print $2}' | while read i ; do oc label node $i cluster.ocs.openshift.io/openshift-storage=""; done
+
+```
+
+### 查看非可用的 clusteroperators
+```
+oc get clusteroperators | grep -Ev "True        False         False"
+```
+
+### 为节点打 OpenShift Container Storage 所需标签
+```
+为新节点加标签 cluster.ocs.openshift.io/openshift-storage=""
+oc label node ip-10-0-134-96.us-east-2.compute.internal cluster.ocs.openshift.io/openshift-storage=""
+oc label node ip-10-0-185-177.us-east-2.compute.internal cluster.ocs.openshift.io/openshift-storage=""
+oc label node ip-10-0-195-249.us-east-2.compute.internal cluster.ocs.openshift.io/openshift-storage=""
+```
+
+### 为 aws 集群添加 machineset
+```
+cat << EOF | oc apply -f -
+apiVersion: machine.openshift.io/v1beta1
+kind: MachineSet
+metadata:
+  name: cluster-xhzmw-q29kk-workerocs-us-east-2a
+  namespace: openshift-machine-api
+  labels:
+    machine.openshift.io/cluster-api-cluster: cluster-xhzmw-q29kk
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      machine.openshift.io/cluster-api-cluster: cluster-xhzmw-q29kk
+      machine.openshift.io/cluster-api-machineset: cluster-xhzmw-q29kk-workerocs-us-east-2a
+  template:
+    metadata:
+      labels:
+        machine.openshift.io/cluster-api-cluster: cluster-xhzmw-q29kk
+        machine.openshift.io/cluster-api-machine-role: worker
+        machine.openshift.io/cluster-api-machine-type: worker
+        machine.openshift.io/cluster-api-machineset: cluster-xhzmw-q29kk-workerocs-us-east-2a
+    spec:
+      metadata: {}
+      providerSpec:
+        value:
+          userDataSecret:
+            name: worker-user-data
+          placement:
+            availabilityZone: us-east-2a
+            region: us-east-2
+          credentialsSecret:
+            name: aws-cloud-credentials
+          instanceType: m5.4xlarge
+          metadata:
+            creationTimestamp: null
+          blockDevices:
+            - ebs:
+                encrypted: true
+                iops: 0
+                kmsKey:
+                  arn: ''
+                volumeSize: 120
+                volumeType: gp2
+          securityGroups:
+            - filters:
+                - name: 'tag:Name'
+                  values:
+                    - cluster-xhzmw-q29kk-worker-sg
+          kind: AWSMachineProviderConfig
+          tags:
+            - name: kubernetes.io/cluster/cluster-xhzmw-q29kk
+              value: owned
+          deviceIndex: 0
+          ami:
+            id: ami-0ce061fbb35d84fc1
+          subnet:
+            filters:
+              - name: 'tag:Name'
+                values:
+                  - cluster-xhzmw-q29kk-private-us-east-2a
+          apiVersion: awsproviderconfig.openshift.io/v1beta1
+          iamInstanceProfile:
+            id: cluster-xhzmw-q29kk-worker-profile
+EOF
+
+cat << EOF | oc apply -f -
+apiVersion: machine.openshift.io/v1beta1
+kind: MachineSet
+metadata:
+  name: cluster-xhzmw-q29kk-workerocs-us-east-2b
+  namespace: openshift-machine-api
+  labels:
+    machine.openshift.io/cluster-api-cluster: cluster-xhzmw-q29kk
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      machine.openshift.io/cluster-api-cluster: cluster-xhzmw-q29kk
+      machine.openshift.io/cluster-api-machineset: cluster-xhzmw-q29kk-workerocs-us-east-2b
+  template:
+    metadata:
+      labels:
+        machine.openshift.io/cluster-api-cluster: cluster-xhzmw-q29kk
+        machine.openshift.io/cluster-api-machine-role: worker
+        machine.openshift.io/cluster-api-machine-type: worker
+        machine.openshift.io/cluster-api-machineset: cluster-xhzmw-q29kk-workerocs-us-east-2b
+    spec:
+      metadata: {}
+      providerSpec:
+        value:
+          userDataSecret:
+            name: worker-user-data
+          placement:
+            availabilityZone: us-east-2b
+            region: us-east-2
+          credentialsSecret:
+            name: aws-cloud-credentials
+          instanceType: m5.4xlarge
+          metadata:
+            creationTimestamp: null
+          blockDevices:
+            - ebs:
+                encrypted: true
+                iops: 0
+                kmsKey:
+                  arn: ''
+                volumeSize: 120
+                volumeType: gp2
+          securityGroups:
+            - filters:
+                - name: 'tag:Name'
+                  values:
+                    - cluster-xhzmw-q29kk-worker-sg
+          kind: AWSMachineProviderConfig
+          tags:
+            - name: kubernetes.io/cluster/cluster-xhzmw-q29kk
+              value: owned
+          deviceIndex: 0
+          ami:
+            id: ami-0ce061fbb35d84fc1
+          subnet:
+            filters:
+              - name: 'tag:Name'
+                values:
+                  - cluster-xhzmw-q29kk-private-us-east-2b
+          apiVersion: awsproviderconfig.openshift.io/v1beta1
+          iamInstanceProfile:
+            id: cluster-xhzmw-q29kk-worker-profile
+EOF
+
+cat << EOF | oc apply -f -
+apiVersion: machine.openshift.io/v1beta1
+kind: MachineSet
+metadata:
+  name: cluster-xhzmw-q29kk-workerocs-us-east-2c
+  namespace: openshift-machine-api
+  labels:
+    machine.openshift.io/cluster-api-cluster: cluster-xhzmw-q29kk
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      machine.openshift.io/cluster-api-cluster: cluster-xhzmw-q29kk
+      machine.openshift.io/cluster-api-machineset: cluster-xhzmw-q29kk-workerocs-us-east-2c
+  template:
+    metadata:
+      labels:
+        machine.openshift.io/cluster-api-cluster: cluster-xhzmw-q29kk
+        machine.openshift.io/cluster-api-machine-role: worker
+        machine.openshift.io/cluster-api-machine-type: worker
+        machine.openshift.io/cluster-api-machineset: cluster-xhzmw-q29kk-workerocs-us-east-2c
+    spec:
+      metadata: {}
+      providerSpec:
+        value:
+          userDataSecret:
+            name: worker-user-data
+          placement:
+            availabilityZone: us-east-2c
+            region: us-east-2
+          credentialsSecret:
+            name: aws-cloud-credentials
+          instanceType: m5.4xlarge
+          metadata:
+            creationTimestamp: null
+          blockDevices:
+            - ebs:
+                encrypted: true
+                iops: 0
+                kmsKey:
+                  arn: ''
+                volumeSize: 120
+                volumeType: gp2
+          securityGroups:
+            - filters:
+                - name: 'tag:Name'
+                  values:
+                    - cluster-xhzmw-q29kk-worker-sg
+          kind: AWSMachineProviderConfig
+          tags:
+            - name: kubernetes.io/cluster/cluster-xhzmw-q29kk
+              value: owned
+          deviceIndex: 0
+          ami:
+            id: ami-0ce061fbb35d84fc1
+          subnet:
+            filters:
+              - name: 'tag:Name'
+                values:
+                  - cluster-xhzmw-q29kk-private-us-east-2c
+          apiVersion: awsproviderconfig.openshift.io/v1beta1
+          iamInstanceProfile:
+            id: cluster-xhzmw-q29kk-worker-profile
+EOF
+```

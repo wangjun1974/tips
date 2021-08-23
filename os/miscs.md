@@ -22258,3 +22258,63 @@ EOF
 ```
 yum whatprovides htpasswd
 ```
+
+### 使用 kfctl 命令安装 kubeflow
+https://www.kubeflow.org/docs/distributions/openshift/install-kubeflow/
+```
+# 下载 kfctl openshift yaml 文件
+curl https://raw.githubusercontent.com/kubeflow/manifests/v1.3.0/distributions/kfdef/kfctl_openshift_v1.3.0.yaml -o kfctl_openshift_v1.3.0.yaml
+
+# set the Kubeflow application directory for this deployment, for example /opt/openshift-kfdef
+export KF_DIR=/opt/openshift-kfdef
+mkdir -p ${KF_DIR}
+cp kfctl_openshift_v1.3.0.yaml ${KF_DIR}
+
+# build deployment configuration
+cd ${KF_DIR}
+kfctl build -V --file=kfctl_openshift_v1.3.0.yaml
+
+# apply deployment configaration
+kfctl apply -V --file=kfctl_openshift_v1.3.0.yaml
+
+
+```
+
+### OpenShift 4.7 and Kubeflow 1.3.0 kfctl 报错
+```
+报错信息
+kfctl exited with error: failed to apply:  (kubeflow.error): Code 500 with message: kfApp Apply
+ failed for kustomize:  (kubeflow.error): Code 500 with message: error evaluating kustomization
+ manifest for cert-manager: accumulating resources: recursed accumulation of path '../../.cache
+/manifests/manifests-1.3-branch/distributions/stacks/openshift/application/cert-manager': accum
+ulating resources: accumulating resources from '../../../../../common/cert-manager/cert-manager
+-kube-system-resources/base': open /opt/app-root/src/openshift-kfdef/.cache/manifests/manifests
+-1.3-branch/common/cert-manager/cert-manager-kube-system-resources/base: no such file or direct
+ory
+
+$ cat /opt/app-root/src/openshift-kfdef/.cache/manifests/manifests-1.3-bran
+ch/distributions/stacks/openshift/application/cert-manager/kustomization.yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+commonLabels:
+  app.kubernetes.io/component: cert-manager
+  app.kubernetes.io/name: cert-manager
+  kustomize.component: cert-manager
+kind: Kustomization
+#namespace: cert-manager
+resources:
+- ../../../../../common/cert-manager/cert-manager-kube-system-resources/base
+- ../../../../../common/cert-manager/cert-manager-crds/base
+- ../../../../../common/cert-manager/cert-manager/overlays/self-signed
+
+sed -i "s|cert-manager-kube-system-resources/base|cert-manager/base|" /opt/app-root/src/openshift-kfdef/.cache/manifests/manifests-1.3-branch/distributions/stacks/openshift/application/cert-manager/kustomization.yaml
+
+$ cat /opt/app-root/src/openshift-kfdef/.cache/manifests/manifests-1.3-branch/distributions/stacks/openshift/application/cert-manager/kustomization.yaml
+
+安装 kubeflow 1.2.0 on OpenShift 4.7.x
+# 参考文件 https://github.com/kubeflow/manifests/blob/v1.3-branch/distributions/kfdef/kfctl_openshift.v1.2.0.yaml
+curl https://raw.githubusercontent.com/kubeflow/manifests/v1.3-branch/distributions/kfdef/kfctl_openshift.v1.2.0.yaml -o kfctl_openshift.v1.2.0.yaml
+
+rm -rf .cache 
+kfctl build -V --file=./kfctl_openshift.v1.2.0.yaml
+kfctl apply -V --file=./kfctl_openshift.v1.2.0.yaml
+```

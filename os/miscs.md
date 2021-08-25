@@ -22444,5 +22444,11 @@ oc delete mutatingwebhookconfiguration
 CustomResourceDefinition.apiextensions.k8s.io \"suggestions.kubeflow.org\" is invalid: spec.version: Invalid value: \"v1beta1\": must match the first version in spec.versions]"
 查找
 Suggestions crd 检查 version，如果 version 不是 v1beta1 则删除 Crds.
- 
+
+为新添加节点打标签 cluster.ocs.openshift.io/openshift-storage=“”
+ip-10-0-135-117.ap-southeast-1.compute.internal
+ip-10-0-169-199.ap-southeast-1.compute.internal
+ip-10-0-217-62.ap-southeast-1.compute.internal
+
+安装 openshift container storage 
 ```

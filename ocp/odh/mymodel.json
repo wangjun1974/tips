@@ -1,0 +1,53 @@
+{
+    "apiVersion": "machinelearning.seldon.io/v1alpha2",
+    "kind": "SeldonDeployment",
+    "metadata": {
+        "labels": {
+            "app": "seldon"
+        },
+        "name": "mymodel"
+    },
+    "spec": {
+        "annotations": {
+            "project_name": "frauddetection",
+            "deployment_version": "0.1"
+        },
+        "name": "mymodel",
+        "oauth_key": "oauth-key2",
+        "oauth_secret": "oauth-secret2",
+        "predictors": [
+            {
+                "componentSpecs": [{
+                    "spec": {
+                        "containers": [
+                            {
+                                "image": "nakfour/mymodel",
+                                "imagePullPolicy": "Always",
+                                "name": "mymodel",
+                                "resources": {
+                                    "requests": {
+                                        "memory": "10Mi"
+                                    }
+                                }
+                            }
+                        ],
+                        "terminationGracePeriodSeconds": 20
+                    }
+                }],
+                "graph": {
+                    "children": [],
+                    "name": "mymodel",
+                    "endpoint": {
+                        "type" : "REST"
+                    },
+                    "type": "MODEL"
+                },
+                "name": "mymodel",
+                "replicas": 1,
+                "annotations": {
+                "predictor_version" : "0.1"
+                }
+            }
+        ]
+    }
+}

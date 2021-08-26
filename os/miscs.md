@@ -22450,5 +22450,25 @@ ip-10-0-135-117.ap-southeast-1.compute.internal
 ip-10-0-169-199.ap-southeast-1.compute.internal
 ip-10-0-217-62.ap-southeast-1.compute.internal
 
-安装 openshift container storage 
+报错
+oc logs mymodel-mymodel-0-mymodel-648695fb67-fhcld -c mymodel -p
+...
+botocore.exceptions.EndpointConnectionError: Could not connect to the endpoint URL: "http://rook-ceph-rook-ceph.apps.cluster-7bf4.7bf4.openshiftworkshop.com/MODEL/uploaded/model.pkl"
+
+oc patch deployment mymodel-mymodel-0-mymodel -n opendatahub --type json -p '[{ "op": "remove", "path": "/spec/template/spec/containers/0/livenessProbe" }]'
+oc patch deployment mymodel-mymodel-0-mymodel -n opendatahub --type json -p '[{ "op": "remove", "path": "/spec/template/spec/containers/0/readinessProbe" }]'
+
+oc patch deployment mymodel-mymodel-0-mymodel -n opendatahub --type json -p '[{ "op": "remove", "path": "/spec/template/spec/containers/1/livenessProbe" }]'
+oc patch deployment mymodel-mymodel-0-mymodel -n opendatahub --type json -p '[{ "op": "remove", "path": "/spec/template/spec/containers/1/readinessProbe" }]'
+
+参考 mymodel s2i 步骤构建新镜像
+https://gitlab.com/opendatahub/fraud-detection-tutorial/-/tree/master/model/mymodel
+
+
+podman save --format docker-dir -o seldon-core-s2i-python3 docker.io/seldonio/seldon-core-s2i-python3:0.4
+tar zcf seldon-core-s2i-python3.tar.gz seldon-core-s2i-python3/
+scp lab-user@bastion.msfhj.sandbox784.opentlc.com:/tmp/seldon-core-s2i-python3.tar.gz . 
+
+在 proxy 环境下，如何执行 kfctl 
+https://github.com/kubeflow/kfctl/issues/237
 ```

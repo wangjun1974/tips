@@ -22471,4 +22471,248 @@ scp lab-user@bastion.msfhj.sandbox784.opentlc.com:/tmp/seldon-core-s2i-python3.t
 
 在 proxy 环境下，如何执行 kfctl 
 https://github.com/kubeflow/kfctl/issues/237
+
+错误消息
+csv created in namespace with multiple operatorgroups, can't pick one automatically
+
+错误信息，查看 olm-operator 的错误日志
+oc -n openshift-operator-lifecycle-manager logs $(oc -n openshift-operator-lifecycle-manager get pods -l app=olm-operator -o name ) -f 
+...
+E0827 06:00:03.160431       1 queueinformer_operator.go:290] sync {"update" "openshift-operators/opendatahub-operator.v1.1.0"} failed: could not update opera
+torgroups olm.providedAPIs annotation: Operation cannot be fulfilled on operatorgroups.operators.coreos.com "global-operators": the object has been modified;
+ please apply your changes to the latest version and try again
+
+错误信息，查看 opendatahub-operator 的错误日志
+oc -n openshift-operators logs $(oc -n openshift-operators get pods -l name=opendatahub-operator -o name ) -f 
 ```
+
+### ocp kubeflow opendatahub manifests
+https://raw.githubusercontent.com/pmalan-rh/odh-manifests/v1.0-branch/kfdef/kfctl_openshift.yaml
+```
+cat > kfctl-openshift-ocp4.8-web.yaml << 'EOF'
+# https://raw.githubusercontent.com/pmalan-rh/odh-manifests/v1.0-branch/kfdef/kfctl_openshift.yaml
+apiVersion: kfdef.apps.kubeflow.org/v1
+kind: KfDef
+metadata:
+  name: opendatahub
+  namespace: opendatahub
+spec:
+  applications:
+  - kustomizeConfig:
+      repoRef:
+        name: manifests
+        path: odh-common
+    name: odh-common
+  - kustomizeConfig:
+      repoRef:
+        name: manifests
+        path: odhseldon/cluster
+    name: odhseldon
+  - kustomizeConfig:
+      repoRef:
+        name: manifests
+        path: superset
+    name: superset
+  - kustomizeConfig:
+      parameters:
+      - name: namespace
+        value: openshift-operators
+      repoRef:
+        name: manifests
+        path: kafka/cluster
+    name: strimzi-operator
+  - kustomizeConfig:
+      repoRef:
+        name: manifests
+        path: kafka/kafka
+    name: kafka-cluster
+  - kustomizeConfig:
+      repoRef:
+        name: manifests
+        path: grafana/cluster
+    name: grafana-cluster
+  - kustomizeConfig:
+      repoRef:
+        name: manifests
+        path: grafana/grafana
+    name: grafana-instance
+  - kustomizeConfig:
+      repoRef:
+        name: manifests
+        path: radanalyticsio/spark/cluster
+    name: radanalyticsio-spark-cluster
+  - kustomizeConfig:
+      repoRef:
+        name: manifests
+        path: prometheus/cluster
+    name: prometheus-cluster
+  - kustomizeConfig:
+      repoRef:
+        name: manifests
+        path: prometheus/operator
+    name: prometheus-operator
+  - kustomizeConfig:
+      parameters:
+        - name: s3_endpoint_url
+          value: "s3.odh.com"
+      repoRef:
+        name: manifests
+        path: jupyterhub/jupyterhub
+    name: jupyterhub
+  - kustomizeConfig:
+      overlays:
+      #- cuda
+      - additional
+      repoRef:
+        name: manifests
+        path: jupyterhub/notebook-images
+    name: notebook-images
+  - kustomizeConfig:
+      repoRef:
+        name: manifests
+        path: airflow/operator
+    name: airflow-operator
+  - kustomizeConfig:
+      repoRef:
+        name: manifests
+        path: airflow/cluster
+    name: airflow-cluster
+  - kustomizeConfig:
+      repoRef:
+        name: manifests
+        path: odhargo/cluster
+    name: odhargo-cluster
+  - kustomizeConfig:
+      repoRef:
+        name: manifests
+        path: odhargo/odhargo
+    name: odhargo
+  - kustomizeConfig:
+      repoRef:
+        name: manifests
+        path: odh-dashboard
+    name: odh-dashboard
+  repos:
+  - name: kf-manifests
+    uri: https://github.com/kubeflow/manifests/archive/v1.2-branch.tar.gz
+  - name: manifests
+    uri: https://github.com/opendatahub-io/odh-manifests/tarball/v1.0-branch
+  version: v1.0-branch
+EOF
+```
+
+```
+cat > kfctl-openshift-4.8-default.yaml << EOF
+apiVersion: kfdef.apps.kubeflow.org/v1
+kind: KfDef
+metadata:
+  name: opendatahub
+  namespace: opendatahub
+spec:
+  applications:
+    - kustomizeConfig:
+        repoRef:
+          name: manifests
+          path: odh-common
+      name: odh-common
+    - kustomizeConfig:
+        repoRef:
+          name: manifests
+          path: odhseldon/cluster
+      name: odhseldon
+    - kustomizeConfig:
+        parameters:
+          - name: SUPERSET_ADMIN_PASSWORD
+            value: admin
+        repoRef:
+          name: manifests
+          path: superset
+      name: superset
+    - kustomizeConfig:
+        parameters:
+          - name: namespace
+            value: openshift-operators
+        repoRef:
+          name: manifests
+          path: kafka/cluster
+      name: strimzi-operator
+    - kustomizeConfig:
+        repoRef:
+          name: manifests
+          path: kafka/kafka
+      name: kafka-cluster
+    - kustomizeConfig:
+        repoRef:
+          name: manifests
+          path: grafana/cluster
+      name: grafana-cluster
+    - kustomizeConfig:
+        repoRef:
+          name: manifests
+          path: grafana/grafana
+      name: grafana-instance
+    - kustomizeConfig:
+        repoRef:
+          name: manifests
+          path: radanalyticsio/spark/cluster
+      name: radanalyticsio-spark-cluster
+    - kustomizeConfig:
+        repoRef:
+          name: manifests
+          path: prometheus/cluster
+      name: prometheus-cluster
+    - kustomizeConfig:
+        repoRef:
+          name: manifests
+          path: prometheus/operator
+      name: prometheus-operator
+    - kustomizeConfig:
+        parameters:
+          - name: s3_endpoint_url
+            value: s3.odh.com
+        repoRef:
+          name: manifests
+          path: jupyterhub/jupyterhub
+      name: jupyterhub
+    - kustomizeConfig:
+        overlays:
+          - additional
+        repoRef:
+          name: manifests
+          path: jupyterhub/notebook-images
+      name: notebook-images
+    - kustomizeConfig:
+        repoRef:
+          name: manifests
+          path: airflow/operator
+      name: airflow-operator
+    - kustomizeConfig:
+        repoRef:
+          name: manifests
+          path: airflow/cluster
+      name: airflow-cluster
+    - kustomizeConfig:
+        repoRef:
+          name: manifests
+          path: odhargo/cluster
+      name: odhargo-cluster
+    - kustomizeConfig:
+        repoRef:
+          name: manifests
+          path: odhargo/odhargo
+      name: odhargo
+    - kustomizeConfig:
+        repoRef:
+          name: manifests
+          path: odh-dashboard
+      name: odh-dashboard
+  repos:
+    - name: kf-manifests
+      uri: 'https://github.com/kubeflow/manifests/tarball/v1.3-branch'
+    - name: manifests
+      uri: 'https://github.com/opendatahub-io/odh-manifests/tarball/v1.1.0'
+EOF
+```
+
+### OCP 4.8 OpenDataHub 1.1.0 kfdef sample
+https://raw.githubusercontent.com/pmalan-rh/odh-manifests/v1.0-branch/kfdef/kfctl_openshift.yaml

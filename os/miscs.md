@@ -22716,3 +22716,64 @@ EOF
 
 ### OCP 4.8 OpenDataHub 1.1.0 kfdef sample
 https://raw.githubusercontent.com/pmalan-rh/odh-manifests/v1.0-branch/kfdef/kfctl_openshift.yaml
+
+### 使用自定义 image，添加 configmap 让新镜像出现在列表中
+```
+@Chris Kang You can use Landon's image: quay.io/llasmith/s2i-spark-container:spark-3.0_hadoop-3.2.0
+What I do is that I push it as a new tag into the s2i-spark-minimal-notebook ImageStream, for example:
+oc tag quay.io/llasmith/s2i-spark-minimal-notebook:spark-3.0.0_hadoop-3.2.0 s2i-spark-minimal-notebook:sp3.0.0-had3.2.0
+Then I add a new config map to make it appear in the list (that way you don't have to play with manifests, it's picked up by the SingleUser profile process because of the labels, really cool feature from @Václav Pavlín):---
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  annotations:
+    kfctl.kubeflow.io/kfdef-instance: opendatahub.airbus
+  name: jupyter-singleuser-profiles-spark3
+  labels:
+    component.opendatahub.io/name: jupyterhub
+    opendatahub.io/component: 'true'
+    jupyterhub: 'singleuser-profiles'
+data:
+  jupyterhub-singleuser-profiles.yaml: |
+    profiles:
+    - name: spark3-integrated
+      images:
+      - 's2i-spark-minimal-notebook:sp3.0.0-had3.2.0'
+      env:
+        - name: PYSPARK_SUBMIT_ARGS
+          value: '--conf spark.cores.max=2 --conf spark.executor.instances=2 --conf spark.executor.memory=1G --conf spark.executor.cores=1 --conf spark.driver.memory=2G --packages com.amazonaws:aws-java-sdk:1.11.965,org.apache.hadoop:hadoop-aws:3.2.2 pyspark-shell'
+        - name: PYSPARK_DRIVER_PYTHON
+          value: 'jupyter'
+        - name: PYSPARK_DRIVER_PYTHON_OPTS
+          value: 'notebook'
+        - name: SPARK_HOME
+          value: '/opt/app-root/lib/python3.6/site-packages/pyspark/'
+        - name: PYTHONPATH
+          value: '$PYTHONPATH:/opt/app-root/lib/python3.6/site-packages/:/opt/app-root/lib/python3.6/site-packages/pyspark/python/:/opt/app-root/lib/python3.6/site-packages/pyspark/python/lib/py4j-0.8.2.1-src.zip'
+      services:
+        spark:
+          resources:
+          - name: spark-cluster-template
+            path: notebookPodServiceTemplate
+          - name: spark-cluster-template
+            path: sparkClusterTemplate
+          configuration:
+            worker_nodes: '2'
+            master_nodes: '1'
+            master_memory_limit: '2Gi'
+            master_cpu_limit: '1'
+            master_memory_request: '2Gi'
+            master_cpu_request: '1'
+            worker_memory_limit: '2Gi'
+            worker_cpu_limit: '1'
+            worker_memory_request: '2Gi'
+            worker_cpu_request: '1'
+            spark_image: 'quay.io/opendatahub/spark-cluster-image:3.0.0-h3.2'
+          return:
+            SPARK_CLUSTER: 'metadata.name'
+
+You have to use this custom config map in conjunction with image as it will use compatible hadoop and aws packages.
+
+Btw, in my new installs using the Google spark operator, I just bake the packages in the image directly. Maybe less flexible, but less prone to errors, and quicker launch as it the spark instances don't have to retrieve/install the packages.
+
+```

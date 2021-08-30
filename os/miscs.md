@@ -22777,3 +22777,22 @@ You have to use this custom config map in conjunction with image as it will use 
 Btw, in my new installs using the Google spark operator, I just bake the packages in the image directly. Maybe less flexible, but less prone to errors, and quicker launch as it the spark instances don't have to retrieve/install the packages.
 
 ```
+
+### OpenShift 下设置 github webhook 和 openshift app/buildconfig
+
+REPO: Github Repo<br>
+GIT_TOKEN: Github Auth Token<br>
+WEBHOOK_URL: 生成所需 webhook_url，内容来自 bc 的 webhook.*github，用 buildconfig 的 .spec.triggers..github.secret 替换的 "<secret>" <br>
+用 curl 命令设置针对什么 events 启动 hooks<br>
+
+```bash
+APP_NAME=welcome
+REPO=eformat/${APP_NAME}
+GIT_TOKEN=<your github token>
+
+oc new-project ${APP_NAME}
+oc new-app --context-dir=sh --name=${APP_NAME} https://github.com/${REPO} --strategy=docker
+WEBHOOK_URL=$(oc describe bc ${APP_NAME} | grep -E 'webhook.*github' | awk '{print $2}' | sed s/\<secret\>/$(oc get bc ${APP_NAME} -o jsonpath='{.spec.triggers..github.secret}')/)
+curl -v --header "Authorization: token ${GIT_TOKEN}" -X POST -d "{\"active\": true, \"events\": [\"push\",\"pull_request\"], \"config\": {\"url\": \"${WEBHOOK_URL}\", \"content_type\": \"json\", \"insecure_ssl\": "1"}}" https://api.github.com/repos/${REPO}/hooks
+git commit --allow-empty -m "test hook"; git push
+```

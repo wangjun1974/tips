@@ -22796,3 +22796,41 @@ WEBHOOK_URL=$(oc describe bc ${APP_NAME} | grep -E 'webhook.*github' | awk '{pri
 curl -v --header "Authorization: token ${GIT_TOKEN}" -X POST -d "{\"active\": true, \"events\": [\"push\",\"pull_request\"], \"config\": {\"url\": \"${WEBHOOK_URL}\", \"content_type\": \"json\", \"insecure_ssl\": "1"}}" https://api.github.com/repos/${REPO}/hooks
 git commit --allow-empty -m "test hook"; git push
 ```
+
+### 解决 kubeflow 1.2.0 在 OpenShift 4.7 上，cache-deployment-deployer 容器 CrashLoopBack 的问题
+```
+容器 cache-deployment-deployer 报错日志
+$ oc logs cache-deployer-deployment-5f4979f45-rzhxv  
++ echo 'Start deploying cache service to existing cluster:'
++ NAMESPACE=kubeflow
+Start deploying cache service to existing cluster:
++ MUTATING_WEBHOOK_CONFIGURATION_NAME=cache-webhook-kubeflow
++ WEBHOOK_SECRET_NAME=webhook-server-tls
++ mkdir -p //bin
++ export 'PATH=//bin:/google-cloud-sdk/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
++ kubectl version --output json
++ jq --raw-output '(.serverVersion.major + "." + .serverVersion.minor)'
++ tr -d '"+'
++ server_version_major_minor=1.20
++ curl -s https://storage.googleapis.com/kubernetes-release/release/stable-1.20.txt
++ stable_build_version=v1.20.10
++ kubectl_url=https://storage.googleapis.com/kubernetes-release/release/v1.20.10/bin/linux/amd64/kubectl
++ curl -L -o //bin/kubectl https://storage.googleapis.com/kubernetes-release/release/v1.20.10/bin/linux/amd64/kubectl
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0Warning: Failed to create the file //bin/kubectl: Permission denied
+  0 38.3M    0  1387    0     0   8614      0  1:17:49 --:--:--  1:17:49  8561
+curl: (23) Failed writing body (0 != 1387)
++ chmod +x //bin/kubectl
+chmod: //bin/kubectl: No such file or directory
++ true
+/kfp/cache/deployer/deploy-cache-service.sh: line 47: can't create webhooks.txt: Permission denied
++ kubectl get mutatingwebhookconfigurations cache-webhook-kubeflow --namespace kubeflow --ignore-not-found
+ 
+为 kubeflow-pipelines-cache-deployer-sa 增加 anyuid scc
+oc adm policy add-scc-to-user anyuid -z kubeflow-pipelines-cache-deployer-sa -n kubeflow
+
+然后修改 cache-deployer-deployment 的 spec.replicas 为 0，之后 Operator 会自动调整为 1，触发新的部署
+oc patch deployment/cache-deployer-deployment --type json -p='[{"op": "replace", "path": "/spec/replicas", "value":"0"}]'
+
+```

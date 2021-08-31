@@ -22834,3 +22834,54 @@ oc adm policy add-scc-to-user anyuid -z kubeflow-pipelines-cache-deployer-sa -n 
 oc patch deployment/cache-deployer-deployment --type json -p='[{"op": "replace", "path": "/spec/replicas", "value":"0"}]'
 
 ```
+
+### ArgoCD Workflow
+argo-workflow<br>
+https://github.com/argoproj/argo-workflows/tree/master/examples#argo-cli 
+```
+同步 argo-workflow 仓库
+git clone https://github.com/argoproj/argo-workflows
+
+argo submit hello-world.yaml    # submit a workflow spec to Kubernetes
+argo list                       # list current workflows
+argo get hello-world-xxx        # get info about a specific workflow
+argo logs hello-world-xxx       # print the logs from a workflow
+argo delete hello-world-xxx     # delete workflow
+
+使用 kubectl 
+kubectl create -f hello-world.yaml
+kubectl get wf
+kubectl get wf hello-world-xxx
+kubectl get po --selector=workflows.argoproj.io/workflow=hello-world-xxx --show-all  # similar to argo
+kubectl get $(kubectl get pods -l workflows.argoproj.io/workflow=hello-world-xxx -o name)
+kubectl logs hello-world-xxx-yyy -c main
+kubectl logs $(kubectl get pods -l workflows.argoproj.io/workflow=hello-world-xxx -o name) -c main
+kubectl delete wf hello-world-xxx
+```
+
+### Kubeflow Pipeline on OpenShift
+参考链接：https://www.linkedin.com/pulse/running-kubeflow-pipeline-red-hat-open-data-hub-tuan-luong/<br>
+参考链接：https://github.com/vietstacker/Kubeflow-Pipeline-on-RHOCP<br>
+
+### 自定义 JupyterHub Notebook Size - Single User Profile
+需要 namespace admin 权限
+
+```
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: landon-jupyterhub-sizes
+  labels:
+    jupyterhub: singleuser-profiles
+data:
+  jupyterhub-singleuser-profiles.yaml: |
+      sizes:
+      - name: XX-Large
+        resources:
+          requests:
+            memory: 12Gi
+            cpu: 8
+          limits:
+            memory: 24Gi
+            cpu: 16
+```

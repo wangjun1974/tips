@@ -22901,3 +22901,19 @@ data:
             memory: 24Gi
             cpu: 16
 ```
+
+### 在 rhpds 上下载镜像，并且拷贝到本地
+```
+1. 登录 rhpds 服务器
+oc debug node/xxx
+
+2. 下载镜像
+podman pull docker.io/kubeflowkatib/mxnet-mnist:v1beta1-45c5727
+
+3. 保存镜像到文件
+chroot /host
+podman save -o /tmp/mxnet-mnist-v1beta1-45c5727.tar docker.io/kubeflowkatib/mxnet-mnist:v1beta1-45c5727
+
+5. 从另外一个客户端下载镜像文件
+oc cp xxx-debug:/host/tmp/mxnet-mnist-v1beta1-45c5727.tar ./mxnet-mnist-v1beta1-45c5727.tar
+```

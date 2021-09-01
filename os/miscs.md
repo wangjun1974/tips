@@ -22914,6 +22914,15 @@ podman pull docker.io/kubeflowkatib/mxnet-mnist:v1beta1-45c5727
 chroot /host
 podman save -o /tmp/mxnet-mnist-v1beta1-45c5727.tar docker.io/kubeflowkatib/mxnet-mnist:v1beta1-45c5727
 
-5. 从另外一个客户端下载镜像文件
+4. 从另外一个客户端下载镜像文件
 oc cp xxx-debug:/host/tmp/mxnet-mnist-v1beta1-45c5727.tar ./mxnet-mnist-v1beta1-45c5727.tar
+
+5. 加载镜像到本地
+podman load -i mxnet-mnist-v1beta1-45c5727.tar
+
+6. 上传镜像
+podman login quay.io -u <username>
+podman tag docker.io/kubeflowkatib/mxnet-mnist:v1beta1-45c5727 quay.io/<user>/mxnet-mnist:v1beta1-45c5727
+
+7. 在 quay.io 上将镜像 repository 设置为 public
 ```

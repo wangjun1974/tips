@@ -22484,6 +22484,16 @@ torgroups olm.providedAPIs annotation: Operation cannot be fulfilled on operator
 
 错误信息，查看 opendatahub-operator 的错误日志
 oc -n openshift-operators logs $(oc -n openshift-operators get pods -l name=opendatahub-operator -o name ) -f 
+
+删除 Terminating 状态的 pvc superset-data
+$ oc get pvc 
+NAME            STATUS        VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   AGE
+jupyterhub-db   Bound         pvc-dcab79c1-4630-4873-94e1-c0ddbf4eb445   1Gi        RWO            gp2            8m56s
+superset-data   Terminating   pvc-e923625b-683a-443a-9007-a7269f15a25b   1Gi        RWO            gp2            73m
+oc patch pvc superset-data -n opendatahub -p '{"metadata":{"finalizers":[]}}' --type=merge
+
+JupyterHub 报 500 : Internal Server Error, CERTIFICATE_VERIFY_FAILED
+需要
 ```
 
 ### ocp kubeflow opendatahub manifests
@@ -22600,6 +22610,12 @@ spec:
   version: v1.0-branch
 EOF
 ```
+
+这个版本的 JupyterHub 有问题，改用这个版本
+```
+
+```
+
 
 ```
 cat > kfctl-openshift-4.8-default.yaml << EOF

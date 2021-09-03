@@ -22926,3 +22926,22 @@ podman tag docker.io/kubeflowkatib/mxnet-mnist:v1beta1-45c5727 quay.io/<user>/mx
 
 7. 在 quay.io 上将镜像 repository 设置为 public
 ```
+
+### ODH 上查看 kafka 的 topics 
+https://blog.csdn.net/weixin_43902588/article/details/103533479
+```
+查看 topics 
+oc -n opendatahub rsh odh-message-bus-kafka-0 /bin/sh /opt/kafka/bin/kafka-topics.sh --list --bootstrap-server localhost:9092
+
+```
+
+### 将离线 ocp 集群改为在线集群的步骤
+```
+1. 保证 ocp 的 dns 可以正确解析域名
+
+2. 把 pull-secret 按照以下链接更新一下
+https://docs.openshift.com/container-platform/4.7/openshift_images/managing_images/using-image-pull-secrets.html#images-update-global-pull-secret_using-image-pull-secrets
+$ oc set data secret/pull-secret -n openshift-config --from-file=.dockerconfigjson=<pull_secret_location>
+
+更新的 pull-secret 应包含在线仓库和离线仓库
+```

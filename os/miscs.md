@@ -23070,4 +23070,9 @@ E0906 08:06:02.662671       1 webhook.go:205] Failed to make webhook authorizer 
 E0906 08:06:02.663653       1 errors.go:77] Post "https://172.30.0.1:443/apis/authorization.k8s.io/v1/subjectaccessreviews?timeout=10s": context canceled
 E0906 08:07:42.754619       1 webhook.go:205] Failed to make webhook authorizer request: Post "https://172.30.0.1:443/apis/authorization.k8s.io/v1/subjectaccessreviews?timeout=10s": context canceled
 E0906 08:07:42.831351       1 errors.go:77] Post "https://172.30.0.1:443/apis/authorization.k8s.io/v1/subjectaccessreviews?timeout=10s": context canceled
+
+查看 openshift-apiserver 日志
+oc -n openshift-apiserver logs $(oc -n openshift-apiserver get pods -o name | grep apiserver | head -1) openshift-apiserver  -f
+
+
 ```

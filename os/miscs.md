@@ -22945,3 +22945,93 @@ $ oc set data secret/pull-secret -n openshift-config --from-file=.dockerconfigjs
 
 更新的 pull-secret 应包含在线仓库和离线仓库
 ```
+
+### OpenShift 4.8 Single Node OpenShift
+https://www.itix.fr/blog/deploy-openshift-single-node-in-kvm/
+
+### OpenShift 4 启用集群级别代理
+https://docs.openshift.com/container-platform/4.2/networking/enable-cluster-wide-proxy.html
+```
+1. 确认 Proxy 为空
+oc get proxy cluster -o yaml 
+...
+spec:
+  trustedCA:
+    name: ""
+...
+
+2. (可选) 生成 configmaps user-ca-bundle 
+
+cat > configmaps-user-ca-bundle.yaml <<EOF
+apiVersion: v1
+data:
+  ca-bundle.crt: | 
+    <MY_PEM_ENCODED_CERTS> 
+kind: ConfigMap
+metadata:
+  name: user-ca-bundle 
+  namespace: openshift-config
+EOF
+
+e.g.
+cat > configmaps-user-ca-bundle.yaml <<EOF
+apiVersion: v1
+data:
+  ca-bundle.crt: | 
+    -----BEGIN CERTIFICATE-----
+    MIIDnzCCAoegAwIBAgIJAJCnBipXI9CqMA0GCSqGSIb3DQEBCwUAMGYxCzAJBgNV
+    BAYTAkNOMQswCQYDVQQIDAJHRDELMAkGA1UEBwwCR1oxEDAOBgNVBAoMB1JlZCBI
+    YXQxDjAMBgNVBAsMBVNhbGVzMRswGQYDVQQDDBIqLm9jcDQuZXhhbXBsZS5jb20w
+    HhcNMjAwMTA3MTU1MjUyWhcNMzAwMTA0MTU1MjUyWjBmMQswCQYDVQQGEwJDTjEL
+    MAkGA1UECAwCR0QxCzAJBgNVBAcMAkdaMRAwDgYDVQQKDAdSZWQgSGF0MQ4wDAYD
+    VQQLDAVTYWxlczEbMBkGA1UEAwwSKi5vY3A0LmV4YW1wbGUuY29tMIIBIjANBgkq
+    hkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAy4YC34C+1SHusZZ66JHbVYtfTeguIEI4
+    +hnMuoWVleGnXyJCOoNEgwaNoGffceLMBTLGaENi6s16gveRZtBkbpwEvkgKjxzx
+    niMxS552Yh54juGhVNeZtW6eIuKoZHKIBJeAIQfXmzIjnNVpk3H6IeslMOsWLeF8
+    7DT3poISlAt2qZftpoXX6/WvMGo/4TnWr5XabXS9TvuErr7PhP7phCBkIYKGw4O7
+    yiffD1uWv+qhL10uXQI7Hi3Ld9+nfK2QY0DfDHlcV0U14BcOR4BDetxaXhXbIaU8
+    IbM4LvhFJ5uJ2Qd3QYva0oz7pk5i+73Qdy9OcNHws+UgqAaM8Pen8wIDAQABo1Aw
+    TjAdBgNVHQ4EFgQUEv7GFjmoJxkpzREhZw7MNkQzPw8wHwYDVR0jBBgwFoAUEv7G
+    FjmoJxkpzREhZw7MNkQzPw8wDAYDVR0TBAUwAwEB/zANBgkqhkiG9w0BAQsFAAOC
+    AQEAb03hi30KIQRvlBN3LOKr99fRuUaGnTAt24bk0y77nBIHeiOxWPFnt+WLD4qf
+    /8Jgo6FLSzibDhO8RbMw4Zj8jpqdzTqEUKKtmYEzjNUMVvPMwohWGArUI535NRrp
+    3htjmB9BjC8HmS8xVt6rEL3q6AzGEAfG/b75VLj++bZXN9lOZMhiBBUmqum6Ln7w
+    YLfJv5gxJ+ziCMUVr0jcJCalznRCCNVx8OCnk8UU96uhNoiB5FQFWagsFGeyVhvm
+    TYIAkdP8Nt3pu/UZR0MLKRtYBpc5D3RPdkvaN7sRaXNmZJDpZePpO0u9zMArkITz
+    CackTzrvKLmpqOkPzzzRE6KcEg==
+    -----END CERTIFICATE----- 
+kind: ConfigMap
+metadata:
+  name: user-ca-bundle 
+  namespace: openshift-config
+EOF
+
+oc apply -f ./configmaps-user-ca-bundle.yaml
+
+3. 设置 Proxy
+cat <<EOF | oc apply -f -
+apiVersion: config.openshift.io/v1
+kind: Proxy
+metadata:
+  name: cluster
+spec:
+  httpProxy: http://<username>:<pswd>@<ip>:<port>
+  httpsProxy: http://<username>:<pswd>@<ip>:<port> 
+  noProxy: example.com 
+  readinessEndpoints:
+  - http://www.google.com 
+  - https://www.google.com
+  trustedCA:
+    name: user-ca-bundle
+EOF
+```
+
+### 查看 openshift-authentication-operator 的日志
+```
+oc -n openshift-authentication-operator logs $(oc -n openshift-authentication-operator get pods -o name)
+
+查看事件，监控事件
+oc get events -w 
+
+
+```

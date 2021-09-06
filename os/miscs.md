@@ -23030,8 +23030,44 @@ EOF
 ```
 oc -n openshift-authentication-operator logs $(oc -n openshift-authentication-operator get pods -o name)
 
+查看 console operator 日志
+oc -n openshift-console-operator logs $(oc -n openshift-console-operator get pods -o name)
+...
+E0906 06:32:43.388754       1 wrap.go:58] apiserver panic'd on GET /healthz
+
+https://github.com/kubevirt/kubevirt/issues/2728
+
+检查 openshift-kube-apiserver-operator 日志
+oc -n openshift-kube-apiserver-operator logs $(oc -n openshift-kube-apiserver-operator get pods -o name)
+
+检查 openshift-kube-apiserver 日志
+kube-apiserver-master1.ocp4.example.com 
+oc -n openshift-kube-apiserver logs $(oc -n openshift-kube-apiserver get pods -o name | grep apiserver-master1)
+
+kube-apiserver-master2.ocp4.example.com
+oc -n openshift-kube-apiserver logs $(oc -n openshift-kube-apiserver get pods -o name | grep apiserver-master2)
+
+kube-apiserver-master3.ocp4.example.com
+oc -n openshift-kube-apiserver logs $(oc -n openshift-kube-apiserver get pods -o name | grep apiserver-master3)
+
 查看事件，监控事件
 oc get events -w 
 
+console pod 报错
+oc -n openshift-console logs $(oc -n openshift-console get pods -o name | grep console | tail -1) -f 
+W0906 06:21:58.734616       1 main.go:211] Flag inactivity-timeout is set to less then 300 seconds and will be ignored!
+I0906 06:21:58.776341       1 main.go:288] cookies are secure!
+E0906 06:22:00.848774       1 auth.go:235] error contacting auth provider (retrying in 10s): request to OAuth issuer endpoint https://oauth-openshift.apps.ocp4.example.com/oauth/token failed: Head "https://oauth-openshift.apps.ocp4.example.com": EOF
+I0906 06:22:11.237197       1 main.go:670] Binding to [::]:8443...
+I0906 06:22:11.237276       1 main.go:672] using TLS
 
+检查 openshift-authentication oauth-openshift pod 日志
+oc -n openshift-authentication logs $(oc -n openshift-authentication get pods -o name| grep oauth-openshift | head -1 )
+
+
+报错
+E0906 08:06:02.662671       1 webhook.go:205] Failed to make webhook authorizer request: Post "https://172.30.0.1:443/apis/authorization.k8s.io/v1/subjectaccessreviews?timeout=10s": context canceled
+E0906 08:06:02.663653       1 errors.go:77] Post "https://172.30.0.1:443/apis/authorization.k8s.io/v1/subjectaccessreviews?timeout=10s": context canceled
+E0906 08:07:42.754619       1 webhook.go:205] Failed to make webhook authorizer request: Post "https://172.30.0.1:443/apis/authorization.k8s.io/v1/subjectaccessreviews?timeout=10s": context canceled
+E0906 08:07:42.831351       1 errors.go:77] Post "https://172.30.0.1:443/apis/authorization.k8s.io/v1/subjectaccessreviews?timeout=10s": context canceled
 ```

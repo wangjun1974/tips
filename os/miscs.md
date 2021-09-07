@@ -23158,3 +23158,10 @@ oc get pods -n openshift-marketplace
 搜索 ODF 
 安装 OpenShift Data Foundation
 ```
+
+### Quay workshop
+Quay workshop<br>
+https://github.com/afouladi7/quay-workshop<br>
+https://www.youtube.com/watch?v=ZL_WCe7KXXQ&t=1747s
+
+

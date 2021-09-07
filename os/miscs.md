@@ -23363,4 +23363,9 @@ https://examples.openshift.pub/
 ### openshift-install 查看站桩程序参数细节
 ```
 openshift-install explain installconfig.platform.baremetal
+openshift-install explain installconfig.platform
+openshift-isntall explain installconfig.platform.ovirt
 ```
+
+### 
+https://github.com/redhat-cop/openshift-disconnected-operators

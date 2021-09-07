@@ -23053,6 +23053,31 @@ oc -n openshift-kube-apiserver logs $(oc -n openshift-kube-apiserver get pods -o
 检查 kube-controller-manager-operator 日志
 oc -n openshift-kube-controller-manager-operator logs $(oc -n openshift-kube-controller-manager-operator get pods -o name | grep kube-controller-manager-operator)
 
+检查 openshift-apiserver-operator 的日志
+oc -n openshift-apiserver-operator logs $(oc -n openshift-apiserver-operator get pods -o name | grep openshift-apiserver-operator)
+
+检查 openshift-apiserver 容器
+oc get pods -A | grep openshift-apiserver
+
+检查 openshift-controller-manager 
+oc get pods -A | grep openshift-controller-manager
+
+检查 operator-lifecycle-manager-packageserver
+oc get pods -A | grep operator-lifecycle-manager
+
+检查 network 相关 Pod
+oc get pods -A | grep network
+oc get pods -A | grep multus
+
+检查 machine-config-operator 
+oc -n openshift-machine-config-operator logs $(oc -n openshift-machine-config-operator get pods -o name | grep machine-config-operator)
+oc get pods -A | grep machine-config
+
+检查 marketplace-operator 的日志 
+oc get pods -A | grep marketplace
+oc -n openshift-marketplace logs $(oc -n openshift-marketplace get pods -o name | grep marketplace-operator)
+
+
 
 查看事件，监控事件
 oc get events -w 
@@ -23104,6 +23129,10 @@ https://github.com/openshift/origin/issues/6125
 
 报错
 I0907 04:50:53.563124       1 status_controller.go:213] clusteroperator/kube-controller-manager diff {"status":{"conditions":[{"lastTransitionTime":"2021-09-07T01:40:01Z","message":"StaticPodsDegraded: pods \"kube-controller-manager-master1.ocp4.example.com\" not found","reason":"StaticPods_Error","status":"True","type":"Degraded"},{"lastTransitionTime":"2021-09-06T06:12:28Z","message":"NodeInstallerProgressing: 3 nodes are at revision 17","reason":"AsExpected","status":"False","type":"Progressing"},{"lastTransitionTime":"2021-08-09T07:17:44Z","message":"StaticPodsAvailable: 3 nodes are active; 3 nodes are at revision 17","reason":"AsExpected","status":"True","type":"Available"},{"lastTransitionTime":"2021-08-09T07:14:05Z","message":"All is well","reason":"AsExpected","status":"True","type":"Upgradeable"}]}}
+
+这个报错可自动恢复 
+oc -n openshift-kube-controller-manager-operator logs $(oc -n openshift-kube-controller-manager-operator get pods -o name | grep kube-controller-manager-operator) -f 
+
 ```
 
 ### 使用内部 Build 安装 ODF 
@@ -23331,3 +23360,7 @@ oc image mirror -a ${LOCAL_SECRET_JSON} --from-dir=/opt/registry/mirror "file://
 ### 非常好的 OpenShift 例子
 https://examples.openshift.pub/
 
+### openshift-install 查看站桩程序参数细节
+```
+openshift-install explain installconfig.platform.baremetal
+```

@@ -23354,7 +23354,9 @@ oc adm release mirror -a ${REMOTE_SECRET_JSON} --to-dir=${REMOVABLE_MEDIA_PATH}/
 从本地目录同步到本地镜像服务器
 oc image mirror -a ${LOCAL_SECRET_JSON} --from-dir=/opt/registry/mirror "file://openshift/release:${OCP_RELEASE}*" ${LOCAL_REGISTRY}/${LOCAL_REPOSITORY}
 
-
+备注：
+oc adm release mirror --to-mirror=false 
+--to-mirror=false: Output the mirror mappings instead of mirroring.
 ```
 
 ### 非常好的 OpenShift 例子
@@ -23367,5 +23369,8 @@ openshift-install explain installconfig.platform
 openshift-isntall explain installconfig.platform.ovirt
 ```
 
-### 
+### 生成离线 operator 的工具
 https://github.com/redhat-cop/openshift-disconnected-operators
+
+### Namespace Configuration Operator
+https://github.com/redhat-cop/namespace-configuration-operator

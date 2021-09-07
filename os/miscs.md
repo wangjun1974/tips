@@ -23208,3 +23208,7 @@ oc image mirror -a ${LOCAL_SECRET_JSON} --from-dir=/opt/registry/mirror "file://
 
 
 ```
+
+### 非常好的 OpenShift 例子
+https://examples.openshift.pub/
+

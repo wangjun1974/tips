@@ -23050,6 +23050,10 @@ oc -n openshift-kube-apiserver logs $(oc -n openshift-kube-apiserver get pods -o
 kube-apiserver-master3.ocp4.example.com
 oc -n openshift-kube-apiserver logs $(oc -n openshift-kube-apiserver get pods -o name | grep apiserver-master3)
 
+检查 kube-controller-manager-operator 日志
+oc -n openshift-kube-controller-manager-operator logs $(oc -n openshift-kube-controller-manager-operator get pods -o name | grep kube-controller-manager-operator)
+
+
 查看事件，监控事件
 oc get events -w 
 
@@ -23097,6 +23101,9 @@ Firefox cant establish a connection to the server at wss://console-openshift-con
 
 参考：
 https://github.com/openshift/origin/issues/6125
+
+报错
+I0907 04:50:53.563124       1 status_controller.go:213] clusteroperator/kube-controller-manager diff {"status":{"conditions":[{"lastTransitionTime":"2021-09-07T01:40:01Z","message":"StaticPodsDegraded: pods \"kube-controller-manager-master1.ocp4.example.com\" not found","reason":"StaticPods_Error","status":"True","type":"Degraded"},{"lastTransitionTime":"2021-09-06T06:12:28Z","message":"NodeInstallerProgressing: 3 nodes are at revision 17","reason":"AsExpected","status":"False","type":"Progressing"},{"lastTransitionTime":"2021-08-09T07:17:44Z","message":"StaticPodsAvailable: 3 nodes are active; 3 nodes are at revision 17","reason":"AsExpected","status":"True","type":"Available"},{"lastTransitionTime":"2021-08-09T07:14:05Z","message":"All is well","reason":"AsExpected","status":"True","type":"Upgradeable"}]}}
 ```
 
 ### 使用内部 Build 安装 ODF 
@@ -23183,6 +23190,118 @@ oc get csr ; /usr/local/bin/oc get csr --no-headers | /usr/bin/awk '{print $1}' 
 
 替换节点 openshift master 报错
 Sep 07 01:39:28 master1.ocp4.example.com hyperkube[1645]: E0907 01:39:28.125716    1645 pod_workers.go:191] Error syncing pod a930a3fe-eb1f-4da5-abfc-3de350b736b5 ("network-metrics-daemon-mt9hw_openshift-multus(a930a3fe-eb1f-4da5-abfc-3de350b736b5)"), skipping: network is not ready: runtime network not ready: NetworkReady=false reason:NetworkPluginNotReady message:Network plugin returns error: No CNI configuration file in /etc/kubernetes/cni/net.d/. Has your network provider started?
+
+查看 master1 节点报错
+sudo journalctl 
+Sep 07 04:25:48 master1.ocp4.example.com hyperkube[1645]: E0907 04:25:48.129116    1645 pod_workers.go:191] Error syncing pod 722b13f9-e1ea-4a9d-80a0-b2fde56322e3 ("etcd-master1.ocp4.example.com_openshift-etcd(722b13f9-e1ea-4a9d-80a0-b2fde56322e3)"), skipping: failed to "StartContainer" for "etcd" with CrashLoopBackOff: "back-off 5m0s restarting failed container=etcd pod=etcd-master1.ocp4.example.com_openshift-etcd(722b13f9-e1ea-4a9d-80a0-b2fde56322e3)"
+
+sudo crictl ps -a | grep etcd 
+b1f9a83e8376f       4f119c63430bb4244d8d7b94089d6739b1126c107d011c27daae7841a8e7556e                                                         About a minute ago   Exited              etcd                                  18                  db787f8ce3505
+
+sudo crictl logs b1f9a83e8376f 
+4c4318fbbff4f3c9, started, master1.ocp4.example.com, https://192.168.190.121:2380, https://192.168.190.121:2379, false
+5a3c9f661c087cfb, started, master3.ocp4.example.com, https://192.168.190.123:2380, https://192.168.190.123:2379, false
+c50a3be080d2fdcf, started, master2.ocp4.example.com, https://192.168.190.122:2380, https://192.168.190.122:2379, false
+#### attempt 0
+      member={name="master1.ocp4.example.com", peerURLs=[https://192.168.190.121:2380}, clientURLs=[https://192.168.190.121:2379]
+      member={name="master3.ocp4.example.com", peerURLs=[https://192.168.190.123:2380}, clientURLs=[https://192.168.190.123:2379]
+      member={name="master2.ocp4.example.com", peerURLs=[https://192.168.190.122:2380}, clientURLs=[https://192.168.190.122:2379]
+      target={name="master1.ocp4.example.com", peerURLs=[https://192.168.190.121:2380}, clientURLs=[https://192.168.190.121:2379]
+member "https://192.168.190.121:2380" dataDir has been destroyed and must be removed from the cluster
+```
+
+### 替换不健康的 etcd 节点
+https://docs.openshift.com/container-platform/4.5/backup_and_restore/replacing-unhealthy-etcd-member.html
+```
+备份 etcd 
+https://docs.openshift.com/container-platform/4.5/backup_and_restore/backing-up-etcd.html#backing-up-etcd-data_backup-etcd
+
+oc debug node/<node_name>
+sh-4.2# chroot /host
+sh-4.4# /usr/local/bin/cluster-backup.sh /home/core/assets/backup
+
+```
+
+```
+1. 检查可用 etcd 节点
+oc get etcd -o=jsonpath='{range .items[0].status.conditions[?(@.type=="EtcdMembersAvailable")]}{.message}{"\n"}'
+2 of 3 members are available, master1.ocp4.example.com is unhealthy
+
+2. 检查 etcd 容器状态
+oc get pods -n openshift-etcd | grep etcd
+etcd-master1.ocp4.example.com                2/3     CrashLoopBackOff   19         74m
+etcd-master2.ocp4.example.com                3/3     Running            0          28d
+etcd-master3.ocp4.example.com                3/3     Running            0          28d
+etcd-quorum-guard-6c95dcfd98-m879p           1/1     Running            0          22h
+etcd-quorum-guard-6c95dcfd98-rm6rt           1/1     Running            0          22h
+etcd-quorum-guard-6c95dcfd98-rvp6g           0/1     Running            0          22h
+
+3. 登录有问题的节点
+oc debug node/master1.ocp4.example.com  
+sh-4.4# chroot /host
+sh-4.4# mkdir -p /var/lib/etcd-backup/
+sh-4.4# mv /etc/kubernetes/manifests/etcd-pod.yaml /var/lib/etcd-backup/
+sh-4.4# mv /var/lib/etcd/ /tmp
+sh-4.4# exit
+exit
+sh-4.4# exit
+exit
+
+4. 删除不健康的 etcd 成员
+# oc get pods -n openshift-etcd | grep etcd 
+etcd-master2.ocp4.example.com                3/3     Running     0          28d
+etcd-master3.ocp4.example.com                3/3     Running     0          28d
+etcd-quorum-guard-6c95dcfd98-m879p           1/1     Running     0          22h
+etcd-quorum-guard-6c95dcfd98-rm6rt           1/1     Running     0          22h
+etcd-quorum-guard-6c95dcfd98-rvp6g           0/1     Running     0          22h
+
+登录健康的 etcd pod
+# oc rsh -n openshift-etcd etcd-master2.ocp4.example.com
+sh-4.4# etcdctl member list -w table
++------------------+---------+--------------------------+------------------------------+------------------------------+------------+
+|        ID        | STATUS  |           NAME           |          PEER ADDRS          |         CLIENT ADDRS         | IS LEARNER |
++------------------+---------+--------------------------+------------------------------+------------------------------+------------+
+| 4c4318fbbff4f3c9 | started | master1.ocp4.example.com | https://192.168.190.121:2380 | https://192.168.190.121:2379 |      false |
+| 5a3c9f661c087cfb | started | master3.ocp4.example.com | https://192.168.190.123:2380 | https://192.168.190.123:2379 |      false |
+| c50a3be080d2fdcf | started | master2.ocp4.example.com | https://192.168.190.122:2380 | https://192.168.190.122:2379 |      false |
++------------------+---------+--------------------------+------------------------------+------------------------------+------------+
+
+删除 etcd member => 4c4318fbbff4f3c9
+sh-4.4# etcdctl member remove 4c4318fbbff4f3c9
+Member 4c4318fbbff4f3c9 removed from cluster 71b11685714f04ac
+
+sh-4.4# etcdctl member list -w table
++------------------+---------+--------------------------+------------------------------+------------------------------+------------+
+|        ID        | STATUS  |           NAME           |          PEER ADDRS          |         CLIENT ADDRS         | IS LEARNER |
++------------------+---------+--------------------------+------------------------------+------------------------------+------------+
+| 5a3c9f661c087cfb | started | master3.ocp4.example.com | https://192.168.190.123:2380 | https://192.168.190.123:2379 |      false |
+| c50a3be080d2fdcf | started | master2.ocp4.example.com | https://192.168.190.122:2380 | https://192.168.190.122:2379 |      false |
++------------------+---------+--------------------------+------------------------------+------------------------------+------------+
+
+删除 old secret => master1 
+# oc get secrets -n openshift-etcd | grep master1 
+etcd-peer-master1.ocp4.example.com              kubernetes.io/tls                     2      28d
+etcd-serving-master1.ocp4.example.com           kubernetes.io/tls                     2      28d
+etcd-serving-metrics-master1.ocp4.example.com   kubernetes.io/tls                     2      28d
+
+# oc delete secret -n openshift-etcd etcd-peer-master1.ocp4.example.com 
+secret "etcd-peer-master1.ocp4.example.com" deleted
+# oc delete secret -n openshift-etcd etcd-serving-master1.ocp4.example.com 
+secret "etcd-serving-master1.ocp4.example.com" deleted
+# oc delete secret -n openshift-etcd etcd-serving-metrics-master1.ocp4.example.com 
+secret "etcd-serving-metrics-master1.ocp4.example.com" deleted
+
+强制执行 etcd 重新部署
+oc patch etcd cluster -p='{"spec": {"forceRedeploymentReason": "single-master-recovery-'"$( date --rfc-3339=ns )"'"}}' --type=merge
+
+登录健康的 etcd pod
+# oc rsh -n openshift-etcd etcd-master2.ocp4.example.com
+
+检查 etcd endpoint 健康状态
+sh-4.4# etcdctl endpoint health --cluster 
+https://192.168.190.122:2379 is healthy: successfully committed proposal: took = 51.50181ms
+https://192.168.190.121:2379 is healthy: successfully committed proposal: took = 53.900531ms
+https://192.168.190.123:2379 is healthy: successfully committed proposal: took = 99.650061ms
 ```
 
 ### 同步新的 OpenShift Release 内容到本地

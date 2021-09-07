@@ -23193,9 +23193,9 @@ export RELEASE_NAME='ocp-release'
 export ARCHITECTURE="x86_64"
 export REMOTE_SECRET_JSON="${HOME}/pull-secret.json"
 export REMOVABLE_MEDIA_PATH='/opt/registry'
-export LOCAL_REGISTRY='https://registry.ocp4.example.com:5443'
+export LOCAL_REGISTRY='registry.ocp4.example.com:5443'
 export LOCAL_REPOSITORY='openshift-release-dev/ocp-release'
-export LOCAL_SECRET_JSON='${HOME}/local-pull-secret.json'
+export LOCAL_SECRET_JSON="${HOME}/local-pull-secret.json"
 
 检查 release info 
 oc adm release info quay.io/openshift-release-dev/ocp-release:4.7.23-x86_64
@@ -23204,7 +23204,7 @@ oc adm release info quay.io/openshift-release-dev/ocp-release:4.7.23-x86_64
 oc adm release mirror -a ${REMOTE_SECRET_JSON} --to-dir=${REMOVABLE_MEDIA_PATH}/mirror quay.io/${PRODUCT_REPO}/${RELEASE_NAME}:${OCP_RELEASE}-${ARCHITECTURE}
 
 从本地目录同步到本地镜像服务器
-oc image mirror -a ${LOCAL_SECRET_JSON} --from-dir=/opt/registry/mirror 'file://openshift/release:${OCP_RELEASE}*' ${LOCAL_REGISTRY}/${LOCAL_REPOSITORY}
+oc image mirror -a ${LOCAL_SECRET_JSON} --from-dir=/opt/registry/mirror "file://openshift/release:${OCP_RELEASE}*" ${LOCAL_REGISTRY}/${LOCAL_REPOSITORY}
 
 
 ```

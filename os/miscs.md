@@ -23164,4 +23164,23 @@ Quay workshop<br>
 https://github.com/afouladi7/quay-workshop<br>
 https://www.youtube.com/watch?v=ZL_WCe7KXXQ&t=1747s
 
+### 查看 registry 内容
+```
+查看 v2 _catalog
+curl -u dummy:dummy https://registry.ocp4.example.com:5443/v2/_catalog | jq .
 
+查看 v2 repository tags list
+curl -u dummy:dummy https://registry.ocp4.example.com:5443/v2/openshift-release-dev/ocp-release/tags/list
+```
+### OpenShift master 报错
+```
+1. 用 rhcos livecd 启动节点
+2. nmcli 配置网络
+3. 执行命令安装 rhcos rhcos-installer install --copy-network --ignition-url=http://<bastion_host>:<port>/ignition/master.ign /dev/vda 
+4. 重启节点
+5. 签发 csr
+oc get csr ; /usr/local/bin/oc get csr --no-headers | /usr/bin/awk '{print $1}' | xargs /usr/local/bin/oc adm certificate approve
+
+替换节点 openshift master 报错
+Sep 07 01:39:28 master1.ocp4.example.com hyperkube[1645]: E0907 01:39:28.125716    1645 pod_workers.go:191] Error syncing pod a930a3fe-eb1f-4da5-abfc-3de350b736b5 ("network-metrics-daemon-mt9hw_openshift-multus(a930a3fe-eb1f-4da5-abfc-3de350b736b5)"), skipping: network is not ready: runtime network not ready: NetworkReady=false reason:NetworkPluginNotReady message:Network plugin returns error: No CNI configuration file in /etc/kubernetes/cni/net.d/. Has your network provider started?
+```

@@ -23066,13 +23066,95 @@ oc -n openshift-authentication logs $(oc -n openshift-authentication get pods -o
 
 
 报错
+这个报错感觉跟 API Priority and Fairness 有关
+https://access.redhat.com/solutions/5448851
+
 E0906 08:06:02.662671       1 webhook.go:205] Failed to make webhook authorizer request: Post "https://172.30.0.1:443/apis/authorization.k8s.io/v1/subjectaccessreviews?timeout=10s": context canceled
 E0906 08:06:02.663653       1 errors.go:77] Post "https://172.30.0.1:443/apis/authorization.k8s.io/v1/subjectaccessreviews?timeout=10s": context canceled
 E0906 08:07:42.754619       1 webhook.go:205] Failed to make webhook authorizer request: Post "https://172.30.0.1:443/apis/authorization.k8s.io/v1/subjectaccessreviews?timeout=10s": context canceled
 E0906 08:07:42.831351       1 errors.go:77] Post "https://172.30.0.1:443/apis/authorization.k8s.io/v1/subjectaccessreviews?timeout=10s": context canceled
 
+oc -n openshift-oauth-apiserver logs $(oc -n openshift-oauth-apiserver get pods -o name | grep apiserver | head -1) 
+
 查看 openshift-apiserver 日志
 oc -n openshift-apiserver logs $(oc -n openshift-apiserver get pods -o name | grep apiserver | head -1) openshift-apiserver  -f
 
+查看 openshift-console-operator 日志报错
+oc -n openshift-console-operator logs $(oc -n openshift-console-operator get pods -o name) | tee /tmp/err
 
+E0906 06:32:43.388754       1 wrap.go:58] apiserver panic'd on GET /healthz
+E0906 07:27:43.748971       1 runtime.go:76] Observed a panic: runtime error: invalid memory address or nil pointer dereference
+
+参考： https://bugzilla.redhat.com/show_bug.cgi?id=1859230
+
+查看 machine-config-operator 日志
+oc -n openshift-machine-config-operator logs $(oc -n openshift-machine-config-operator get pods -o name | grep  machine-config-controller ) 
+
+oc -n openshift-machine-config-operator logs $(oc -n openshift-machine-config-operator get pods -o name | grep  machine-config-operator | head -1) 
+
+浏览器报错包括如下消息
+Firefox cant establish a connection to the server at wss://console-openshift-console.apps.ocp4.example.com/api/kubernetes/api/v1/namespaces/openshift-console-user-settings/configmaps?watch=true&fieldSelector=metadata.name%3Duser-settings-kubeadmin.
+
+参考：
+https://github.com/openshift/origin/issues/6125
+```
+
+### 使用内部 Build 安装 ODF 
+```
+1. 更新 auth secret
+获取原 pull secret，保存为 secret.json 文件
+oc -n openshift-config get secret/pull-secret -o json | jq -r '.data.".dockerconfigjson"' | base64 --decode | jq > secret.json
+
+编辑 secret.json 文件，添加
+"quay.io/rhceph-dev":{"auth":"<base64_auth_string>","email":"<email_id>"}
+
+使用 secret.json 文件，更新 pull secret
+oc -n openshift-config set data secret/pull-secret --from-file=.dockerconfigjson=secret.json
+
+2. 在 openshift-marketplace namespace 添加 ocs-catalogsource
+查看 deploy-with-olm.yaml
+cat deploy-with-olm.yaml 
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    openshift.io/cluster-monitoring: "true"
+  name: openshift-storage
+spec: {}
+---
+apiVersion: operators.coreos.com/v1
+kind: OperatorGroup
+metadata:
+  name: openshift-storage-operatorgroup
+  namespace: openshift-storage
+spec:
+  serviceAccount:
+    metadata:
+      creationTimestamp: null
+  targetNamespaces:
+  - openshift-storage
+---
+apiVersion: operators.coreos.com/v1alpha1
+kind: CatalogSource
+metadata:
+  name: ocs-catalogsource
+  namespace: openshift-marketplace
+spec:
+  displayName: OpenShift Data Foundation
+  icon:
+    base64data: PHN2ZyBpZD0iTGF5ZXJfMSIgZGF0YS1uYW1lPSJMYXllciAxIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxOTIgMTQ1Ij48ZGVmcz48c3R5bGU+LmNscy0xe2ZpbGw6I2UwMDt9PC9zdHlsZT48L2RlZnM+PHRpdGxlPlJlZEhhdC1Mb2dvLUhhdC1Db2xvcjwvdGl0bGU+PHBhdGggZD0iTTE1Ny43Nyw2Mi42MWExNCwxNCwwLDAsMSwuMzEsMy40MmMwLDE0Ljg4LTE4LjEsMTcuNDYtMzAuNjEsMTcuNDZDNzguODMsODMuNDksNDIuNTMsNTMuMjYsNDIuNTMsNDRhNi40Myw2LjQzLDAsMCwxLC4yMi0xLjk0bC0zLjY2LDkuMDZhMTguNDUsMTguNDUsMCwwLDAtMS41MSw3LjMzYzAsMTguMTEsNDEsNDUuNDgsODcuNzQsNDUuNDgsMjAuNjksMCwzNi40My03Ljc2LDM2LjQzLTIxLjc3LDAtMS4wOCwwLTEuOTQtMS43My0xMC4xM1oiLz48cGF0aCBjbGFzcz0iY2xzLTEiIGQ9Ik0xMjcuNDcsODMuNDljMTIuNTEsMCwzMC42MS0yLjU4LDMwLjYxLTE3LjQ2YTE0LDE0LDAsMCwwLS4zMS0zLjQybC03LjQ1LTMyLjM2Yy0xLjcyLTcuMTItMy4yMy0xMC4zNS0xNS43My0xNi42QzEyNC44OSw4LjY5LDEwMy43Ni41LDk3LjUxLjUsOTEuNjkuNSw5MCw4LDgzLjA2LDhjLTYuNjgsMC0xMS42NC01LjYtMTcuODktNS42LTYsMC05LjkxLDQuMDktMTIuOTMsMTIuNSwwLDAtOC40MSwyMy43Mi05LjQ5LDI3LjE2QTYuNDMsNi40MywwLDAsMCw0Mi41Myw0NGMwLDkuMjIsMzYuMywzOS40NSw4NC45NCwzOS40NU0xNjAsNzIuMDdjMS43Myw4LjE5LDEuNzMsOS4wNSwxLjczLDEwLjEzLDAsMTQtMTUuNzQsMjEuNzctMzYuNDMsMjEuNzdDNzguNTQsMTA0LDM3LjU4LDc2LjYsMzcuNTgsNTguNDlhMTguNDUsMTguNDUsMCwwLDEsMS41MS03LjMzQzIyLjI3LDUyLC41LDU1LC41LDc0LjIyYzAsMzEuNDgsNzQuNTksNzAuMjgsMTMzLjY1LDcwLjI4LDQ1LjI4LDAsNTYuNy0yMC40OCw1Ni43LTM2LjY1LDAtMTIuNzItMTEtMjcuMTYtMzAuODMtMzUuNzgiLz48L3N2Zz4=
+    mediatype: image/svg+xml
+  image: quay.io/rhceph-dev/ocs-registry:4.9.0-125.ci
+  publisher: Red Hat
+  sourceType: grpc
+
+oc create -f deploy-with-olm.yaml
+
+3. 检查 marketplace 包含 ocs-catalogsource
+oc get catalogsource -n openshift-marketplace
+oc get pods -n openshift-marketplace
+
+4. 访问 OCP Dashboard，接着访问 Operator Hub
+搜索 ODF 
+安装 OpenShift Data Foundation
 ```

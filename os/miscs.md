@@ -23184,3 +23184,27 @@ oc get csr ; /usr/local/bin/oc get csr --no-headers | /usr/bin/awk '{print $1}' 
 替换节点 openshift master 报错
 Sep 07 01:39:28 master1.ocp4.example.com hyperkube[1645]: E0907 01:39:28.125716    1645 pod_workers.go:191] Error syncing pod a930a3fe-eb1f-4da5-abfc-3de350b736b5 ("network-metrics-daemon-mt9hw_openshift-multus(a930a3fe-eb1f-4da5-abfc-3de350b736b5)"), skipping: network is not ready: runtime network not ready: NetworkReady=false reason:NetworkPluginNotReady message:Network plugin returns error: No CNI configuration file in /etc/kubernetes/cni/net.d/. Has your network provider started?
 ```
+
+### 同步新的 OpenShift Release 内容到本地
+```
+export OCP_RELEASE="4.7.23"
+export PRODUCT_REPO='openshift-release-dev'
+export RELEASE_NAME='ocp-release'
+export ARCHITECTURE="x86_64"
+export REMOTE_SECRET_JSON="${HOME}/pull-secret.json"
+export REMOVABLE_MEDIA_PATH='/opt/registry'
+export LOCAL_REGISTRY='https://registry.ocp4.example.com:5443'
+export LOCAL_REPOSITORY='openshift-release-dev/ocp-release'
+export LOCAL_SECRET_JSON='${HOME}/local-pull-secret.json'
+
+检查 release info 
+oc adm release info quay.io/openshift-release-dev/ocp-release:4.7.23-x86_64
+
+从远程同步到本地目录
+oc adm release mirror -a ${REMOTE_SECRET_JSON} --to-dir=${REMOVABLE_MEDIA_PATH}/mirror quay.io/${PRODUCT_REPO}/${RELEASE_NAME}:${OCP_RELEASE}-${ARCHITECTURE}
+
+从本地目录同步到本地镜像服务器
+oc image mirror -a ${LOCAL_SECRET_JSON} --from-dir=/opt/registry/mirror 'file://openshift/release:${OCP_RELEASE}*' ${LOCAL_REGISTRY}/${LOCAL_REPOSITORY}
+
+
+```

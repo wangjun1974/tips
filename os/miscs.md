@@ -23501,3 +23501,21 @@ https://two-oes.medium.com/working-with-openssl-and-dns-alternative-names-367f06
 # /var/lib/mistral/overcloud/ceph-ansible/ceph_ansible_command.log 
 cat /var/lib/mistral/overcloud/ceph-ansible/ceph_ansible_command.log 
 ```
+
+### OCS operator 日志 
+```
+查看 ocs-operator 日志
+oc -n openshift-storage logs $(oc -n openshift-storage get pods -o name | grep ocs-operator )
+
+查看 rook-ceph-operator 日志
+oc -n openshift-storage logs $(oc -n openshift-storage get pods -o name | grep rook-ceph-operator )
+
+查看 noobaa-operator 日志
+oc -n openshift-storage logs $(oc -n openshift-storage get pods -o name | grep noobaa-operator )
+
+启用 rook-ceph-tools
+oc patch OCSInitialization ocsinit -n openshift-storage --type json --patch  '[{ "op": "replace", "path": "/spec/enableCephTools", "value": true }]'
+
+TOOLPOD=$(oc get pods -l app=rook-ceph-tools -o name -n openshift-storage)
+oc -n openshift-storage rsh $TOOLPOD ceph status
+```

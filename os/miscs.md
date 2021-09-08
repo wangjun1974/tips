@@ -23490,3 +23490,7 @@ Bye
 
 
 ```
+
+### 非常好的文章，介绍如何定制 OpenShift Console URL
+https://two-oes.medium.com/openshift-4-new-url-for-console-and-monitoring-web-ui-5f9104bb1379<br>
+https://two-oes.medium.com/working-with-openssl-and-dns-alternative-names-367f06a23841<br>

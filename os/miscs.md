@@ -23374,3 +23374,119 @@ https://github.com/redhat-cop/openshift-disconnected-operators
 
 ### Namespace Configuration Operator
 https://github.com/redhat-cop/namespace-configuration-operator
+
+
+### osp 16.1 undercloud 连接 ironic 数据库将 Provision State 从 error 改为 available
+```
+在 undercloud 上执行命令，显示节点 overcloud-compute01 状态是 error
+(undercloud) [stack@undercloud ~]$ openstack baremetal node list 
++--------------------------------------+---------------------+---------------+-------------+--------------------+-------------+
+| UUID                                 | Name                | Instance UUID | Power State | Provisioning State | Maintenance |
++--------------------------------------+---------------------+---------------+-------------+--------------------+-------------+
+| 079257b9-9d02-41b0-a682-8586ff5207fb | overcloud-ctrl01    | None          | None        | available          | True        |
+| fd4ea091-4323-463a-8347-425fd62722a3 | overcloud-ctrl02    | None          | None        | available          | True        |
+| e60d1ea4-df22-4ba4-ba7e-0d0b95265829 | overcloud-ctrl03    | None          | None        | available          | True        |
+| 199e3f4a-5b7d-4cfe-8037-9bd86f5d0cf1 | overcloud-compute01 | None          | None        | error              | True        |
+| 06c0428c-1fd3-4372-8c36-3902f37ec342 | overcloud-compute02 | None          | None        | error              | True        |
+| 8fc73893-5576-455f-be25-7e6363a6763d | overcloud-ceph01    | None          | None        | error              | True        |
+| c307cd4a-6b7c-422e-922d-6d56fcc9a605 | overcloud-ceph02    | None          | None        | available          | True        |
+| 7f832888-0800-4388-98a0-54c2ccee2167 | overcloud-ceph03    | None          | None        | available          | True        |
++--------------------------------------+---------------------+---------------+-------------+--------------------+-------------+
+
+检查 ironic-conductor 日志，有如下报错
+(undercloud) [stack@undercloud ~]$ sudo tail -10 /var/log/containers/ironic/ironic-conductor.log
+2021-09-08 10:49:15.770 7 ERROR ironic.drivers.modules.ipmitool [req-19d3431d-90f3-47d5-93a0-ebfeeb0dd1df - - - - -] IPMI Error while attempting "ipmitool -I lanplus -H 192.168.1.5 -L ADMINISTRATOR -p 623 -U admin -R 1 -N 5 -f /tmp/tmplu8k8cb9 power status" for node 06c0428c-1fd3-4372-8c36-3902f37ec342. Error: Unexpected error while running command.
+Command: ipmitool -I lanplus -H 192.168.1.5 -L ADMINISTRATOR -p 623 -U admin -R 1 -N 5 -f /tmp/tmplu8k8cb9 power status
+Exit code: 1
+Stdout: ''
+Stderr: 'Error: Unable to establish IPMI v2 / RMCP+ session\n': oslo_concurrency.processutils.ProcessExecutionError: Unexpected error while running command.
+2021-09-08 10:49:15.773 7 WARNING ironic.drivers.modules.ipmitool [req-19d3431d-90f3-47d5-93a0-ebfeeb0dd1df - - - - -] IPMI power status failed for node 06c0428c-1fd3-4372-8c36-3902f37ec342 with error: Unexpected error while running command.
+Command: ipmitool -I lanplus -H 192.168.1.5 -L ADMINISTRATOR -p 623 -U admin -R 1 -N 5 -f /tmp/tmplu8k8cb9 power status
+Exit code: 1
+Stdout: ''
+Stderr: 'Error: Unable to establish IPMI v2 / RMCP+ session\n'.: oslo_concurrency.processutils.ProcessExecutionError: Unexpected error while running command.
+
+在 Hypervisor 上检查 virtualbmc 服务状态，发现服务状态处于 loaded failed failed 状态
+# systemctl -l | grep virtualbmc
+  virtualbmc@jwang-overcloud-ceph01.service                                                             loaded active running   VirtualBMC jwang-overcloud-ceph01 service
+* virtualbmc@jwang-overcloud-ceph02.service                                                             loaded failed failed    VirtualBMC jwang-overcloud-ceph02 service
+* virtualbmc@jwang-overcloud-ceph03.service                                                             loaded failed failed    VirtualBMC jwang-overcloud-ceph03 service
+* virtualbmc@jwang-overcloud-compute01.service                                                          loaded failed failed    VirtualBMC jwang-overcloud-compute01 service
+* virtualbmc@jwang-overcloud-compute02.service                                                          loaded failed failed    VirtualBMC jwang-overcloud-compute02 service
+* virtualbmc@jwang-overcloud-ctrl01.service                                                             loaded failed failed    VirtualBMC jwang-overcloud-ctrl01 service
+* virtualbmc@jwang-overcloud-ctrl02.service                                                             loaded failed failed    VirtualBMC jwang-overcloud-ctrl02 service
+* virtualbmc@jwang-overcloud-ctrl03.service                                                             loaded failed failed    VirtualBMC jwang-overcloud-ctrl03 service
+  system-virtualbmc.slice                                                                               loaded active active    system-virtualbmc.slice
+
+重启服务
+# systemctl -l | grep virtualbmc | grep failed  | awk '{print $2}'  | while read i ; do systemctl restart $i ; done
+
+检查服务状态
+
+获取 ironic 数据库连接串
+(undercloud) [stack@undercloud ~]$ sudo podman exec -it ironic_conductor cat /etc/ironic/ironic.conf | grep mysql | grep connection
+connection=mysql+pymysql://ironic:u1B2pqqU8Di3FSWaQJBbO0KuS@192.0.2.3/ironic?read_default_file=/etc/my.cnf.d/tripleo.cnf&read_default_group=tripleo
+
+使用获取的数据库连接信息连接数据库
+(undercloud) [stack@undercloud ~]$ sudo podman exec -it mysql mysql -u ironic -p 
+Enter password: 
+Welcome to the MariaDB monitor.  Commands end with ; or \g.
+Your MariaDB connection id is 294
+Server version: 10.3.27-MariaDB MariaDB Server
+
+Copyright (c) 2000, 2018, Oracle, MariaDB Corporation Ab and others.
+
+Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+
+MariaDB [(none)]> use ironic
+Reading table information for completion of table and column names
+You can turn off this feature to get a quicker startup with -A
+
+Database changed
+
+查看 provision_state 为 error 的节点信息
+MariaDB [ironic]> select * from nodes where uuid='199e3f4a-5b7d-4cfe-8037-9bd86f5d0cf1'\G;
+*************************** 1. row ***************************
+            created_at: 2021-01-18 08:31:28
+            updated_at: 2021-09-08 03:00:52
+                    id: 4
+                  uuid: 199e3f4a-5b7d-4cfe-8037-9bd86f5d0cf1
+         instance_uuid: NULL
+            chassis_id: NULL
+           power_state: power off
+    target_power_state: NULL
+       provision_state: error
+target_provision_state: NULL
+            last_error: Failed to change power state to 'power off'. Error: IPMI call failed: power status.
+            properties: {"local_gb": "99", "cpus": "4", "cpu_arch": "x86_64", "memory_mb": "6144", "capabilities": "node:compute-0,boot_opt
+ion:local"}
+...
+
+检查 provision_state 为 error 的记录数量
+MariaDB [ironic]> select * from nodes where provision_state!='error'\G
+
+更新 provision_state 从 error 改为 available 
+MariaDB [ironic]> update nodes set provision_state='available' where provision_state='error';
+Query OK, 3 rows affected (0.004 sec)
+Rows matched: 3  Changed: 3  Warnings: 0
+
+MariaDB [ironic]> exit
+Bye
+
+节点状态 provision_state 恢复为 available
+(undercloud) [stack@undercloud ~]$ openstack baremetal node list 
++--------------------------------------+---------------------+---------------+-------------+--------------------+-------------+
+| UUID                                 | Name                | Instance UUID | Power State | Provisioning State | Maintenance |
++--------------------------------------+---------------------+---------------+-------------+--------------------+-------------+
+| 079257b9-9d02-41b0-a682-8586ff5207fb | overcloud-ctrl01    | None          | power off   | available          | False       |
+| fd4ea091-4323-463a-8347-425fd62722a3 | overcloud-ctrl02    | None          | power off   | available          | False       |
+| e60d1ea4-df22-4ba4-ba7e-0d0b95265829 | overcloud-ctrl03    | None          | power off   | available          | False       |
+| 199e3f4a-5b7d-4cfe-8037-9bd86f5d0cf1 | overcloud-compute01 | None          | power off   | available          | False       |
+| 06c0428c-1fd3-4372-8c36-3902f37ec342 | overcloud-compute02 | None          | power off   | available          | False       |
+| 8fc73893-5576-455f-be25-7e6363a6763d | overcloud-ceph01    | None          | power off   | available          | False       |
+| c307cd4a-6b7c-422e-922d-6d56fcc9a605 | overcloud-ceph02    | None          | power off   | available          | False       |
+| 7f832888-0800-4388-98a0-54c2ccee2167 | overcloud-ceph03    | None          | power off   | available          | False       |
++--------------------------------------+---------------------+---------------+-------------+--------------------+-------------+
+
+
+```

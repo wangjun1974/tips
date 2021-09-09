@@ -23548,6 +23548,23 @@ spec:
   sourceNamespace: openshift-marketplace
   startingCSV: grafana-operator.v3.10.3
 EOF
+
+遇到了报错
+oc get csv elastic-cloud-eck.v1.7.1 -o yaml 
+...
+  requirementStatus:
+  - group: operators.coreos.com
+    kind: ClusterServiceVersion
+    message: CSV minKubeVersion (1.11.0) less than server version (v1.16.2)
+    name: elastic-cloud-eck.v1.7.1
+    status: Present
+    version: v1alpha1
+  - group: apiextensions.k8s.io
+    kind: CustomResourceDefinition
+    message: CRD is not present
+    name: agents.agent.k8s.elastic.co
+    status: NotPresent
+    version: v1beta1
 ```
 
 ### 安装 STF 的步骤

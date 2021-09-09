@@ -23519,3 +23519,20 @@ oc patch OCSInitialization ocsinit -n openshift-storage --type json --patch  '[{
 TOOLPOD=$(oc get pods -l app=rook-ceph-tools -o name -n openshift-storage)
 oc -n openshift-storage rsh $TOOLPOD ceph status
 ```
+
+### 安装 STF 的步骤
+```
+安装 Code Ready Container
+
+```
+
+### osp baremetal 节点信息查询
+```
+(undercloud) [stack@undercloud ~]$ openstack baremetal node show overcloud-compute01 -f json | jq -r '.properties.capabilities' 
+node:compute-0,boot_option:local
+(undercloud) [stack@undercloud ~]$ openstack baremetal node show overcloud-ctrl01 -f json | jq -r '.properties.capabilities' 
+node:controller-0,boot_option:local
+(undercloud) [stack@undercloud ~]$ openstack baremetal node show overcloud-ceph01 -f json | jq -r '.properties.capabilities' 
+node:computehci-0,boot_option:local
+
+```

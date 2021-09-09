@@ -23742,3 +23742,8 @@ spec:
       storageclass: ocs-storagecluster-ceph-rbd
       storagesize: 6G
 ```
+
+```
+为 alertmanager pods 的 serviceAccount 添加 anyuid 的 scc
+oc adm policy add-scc-to-user anyuid -z $(oc get $(oc get pods -o name | grep alertmanager ) -o jsonpath='{.spec.serviceAccountName}') -n service-telemetry
+```

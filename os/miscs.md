@@ -23526,6 +23526,26 @@ oc logs $(oc get pods -o name | grep grafana-deployment)
 t=2021-09-09T05:06:27+0000 lvl=eror msg="Failed to read plugin provisioning files from directory" logger=provisioning.plugins path=/etc/grafana/provisioning/plugins error="open /etc/grafana/provisioning/plugins: no such file or directory"
 t=2021-09-09T05:06:27+0000 lvl=eror msg="Can't read alert notification provisioning files from directory" logger=provisioning.notifiers path=/etc/grafana/provisioning/notifiers error="open /etc/grafana/provisioning/notifiers: no such file or directory"
 t=2021-09-09T05:06:27+0000 lvl=eror msg="can't read dashboard provisioning files from directory" logger=provisioning.dashboard path=/etc/grafana/provisioning/dashboards error="open /etc/grafana/provisioning/dashboards: no such file or directory"
+
+oc logs $(oc get pods -l name=grafana-operator -o name)
+...
+panic: runtime error: invalid memory address or nil pointer dereference [recovered]
+        panic: runtime error: invalid memory address or nil pointer dereference
+[signal SIGSEGV: segmentation violation code=0x1 addr=0x0 pc=0x12edae9]
+
+看起来需要把 startingCSV 设置为 v3.9.0 => 
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: grafana-operator
+  namespace: service-telemetry
+spec:
+  channel: alpha
+  installPlanApproval: Automatic
+  name: grafana-operator
+  source: operatorhubio-operators
+  sourceNamespace: openshift-marketplace
+  startingCSV: grafana-operator.v3.2.0
 ```
 
 ### 安装 STF 的步骤

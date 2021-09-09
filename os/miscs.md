@@ -23534,6 +23534,7 @@ panic: runtime error: invalid memory address or nil pointer dereference [recover
 [signal SIGSEGV: segmentation violation code=0x1 addr=0x0 pc=0x12edae9]
 
 看起来需要把 startingCSV 设置为 v3.9.0 => 
+cat <<EOF | oc apply -f -
 apiVersion: operators.coreos.com/v1alpha1
 kind: Subscription
 metadata:
@@ -23545,7 +23546,8 @@ spec:
   name: grafana-operator
   source: operatorhubio-operators
   sourceNamespace: openshift-marketplace
-  startingCSV: grafana-operator.v3.2.0
+  startingCSV: grafana-operator.v3.10.3
+EOF
 ```
 
 ### 安装 STF 的步骤
@@ -23666,6 +23668,14 @@ oc get csv | grep grafana-operator
 检查 grafana-operator 日志
 oc logs $(oc get pods -l name=grafana-operator -o name)
 oc logs $(oc get pods -o name | grep grafana-deployment)
+
+3.4 导入 grafana rhos dashboard
+oc apply -f ./deploy/
+oc apply -f ./deploy/rhos-dashboard.yaml
+
+3.5 查看 grafanadashboards 和 grafanadatasources
+oc get grafanadashboards
+oc get grafanadatasources
 ```
 
 ### osp baremetal 节点信息查询

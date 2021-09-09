@@ -23523,7 +23523,82 @@ oc -n openshift-storage rsh $TOOLPOD ceph status
 ### 安装 STF 的步骤
 ```
 安装 Code Ready Container
+1.1 切换到普通用户
+su - jwang
 
+1.2 下载 Code Ready Container 1.9.0
+curl -O -L https://mirror.openshift.com/pub/openshift-v4/clients/crc/1.9.0/crc-linux-amd64.tar.xz
+
+1.3 解压缩
+tar xvfJ crc-linux-amd64.tar.xz
+
+1.4 设置 crc
+cd crc-linux-1.9.0-amd64
+./crc setup
+
+1.5 启动 crc 并设置使用的 cpu 和内存
+./crc start -m 16000 -c 12
+输入 pull-secret
+
+1.6 设置环境变量
+$ eval $(./crc oc-env)
+
+1.7 登录 crc
+oc login -u kubeadmin -p https://api.crc.testing:6443
+
+2. 安装 STF 核心组件
+2.1 创建 project service-telemetry
+oc new-project service-telemetry
+
+2.2 创建 OperatorGroup service-telemetry-operator-group
+oc apply -f - <<EOF
+apiVersion: operators.coreos.com/v1
+kind: OperatorGroup
+metadata:
+  name: service-telemetry-operator-group
+  namespace: service-telemetry
+spec:
+  targetNamespaces:
+  - service-telemetry
+EOF
+
+2.3 创建 CatalogSource operatorhubio-operators
+oc apply -f - <<EOF
+apiVersion: operators.coreos.com/v1alpha1
+kind: CatalogSource
+metadata:
+  name: operatorhubio-operators
+  namespace: openshift-marketplace
+spec:
+  sourceType: grpc
+  image: quay.io/operator-framework/upstream-community-operators:latest
+  displayName: OperatorHub.io Operators
+  publisher: OperatorHub.io
+EOF
+
+2.4 创建 OperatorSource 可提供 Service Telemetry Operator 和 Smart Gateway Operator
+oc apply -f - <<EOF
+apiVersion: operators.coreos.com/v1
+kind: OperatorSource
+metadata:
+  labels:
+    opsrc-provider: redhat-operators-stf
+  name: redhat-operators-stf
+  namespace: openshift-marketplace
+spec:
+  authorizationToken: {}
+  displayName: Red Hat STF Operators
+  endpoint: https://quay.io/cnr
+  publisher: Red Hat
+  registryNamespace: redhat-operators-stf
+  type: appregistry
+EOF
+
+查看创建的 OperatorSource
+oc get -n openshift-marketplace operatorsource redhat-operators-stf
+
+2.5 检查 packagemanifests 包含 Red Hat STF operator
+oc get packagemanifests | grep "Red Hat STF"
 ```
 
 ### osp baremetal 节点信息查询
@@ -23535,4 +23610,39 @@ node:controller-0,boot_option:local
 (undercloud) [stack@undercloud ~]$ openstack baremetal node show overcloud-ceph01 -f json | jq -r '.properties.capabilities' 
 node:computehci-0,boot_option:local
 
+```
+
+### smallfile benchmark operator 可用于测试 ODF
+https://github.com/distributed-system-analysis/smallfile/blob/master/README.md
+```
+cat smf-tiny.yaml 
+apiVersion: ripsaw.cloudbulldozer.io/v1alpha1
+kind: Benchmark
+metadata:
+  name: bene-smf-rbd-tiny
+  namespace: benchmark-operator
+spec:
+  test_user: bene-smf-rbd-tiny
+  clustername: bene-aws-uswest2-2021-09-08
+  elasticsearch:
+    url: https://search-perfscale-dev-chmf5l4sh66lvxbnadi4bznl3a.us-west-2.es.amazonaws.com:443
+  metadata:
+    collection: true
+  system_metrics:
+    collection: false
+  workload:
+    name: smallfile
+    args:
+      clients: 2
+      samples: 3
+        #drop_cache_kernel: true
+        #drop_cache_rook_ceph: true
+      operation: ["create", "read", "delete", "cleanup"]
+      cleanup_delay_usec_per_file: 500
+      threads: 1
+      file_size: 4
+      files: 10000
+      debug: false
+      storageclass: ocs-storagecluster-ceph-rbd
+      storagesize: 6G
 ```

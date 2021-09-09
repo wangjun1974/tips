@@ -23520,6 +23520,14 @@ TOOLPOD=$(oc get pods -l app=rook-ceph-tools -o name -n openshift-storage)
 oc -n openshift-storage rsh $TOOLPOD ceph status
 ```
 
+### STF 报错信息
+```
+oc logs $(oc get pods -o name | grep grafana-deployment)
+t=2021-09-09T05:06:27+0000 lvl=eror msg="Failed to read plugin provisioning files from directory" logger=provisioning.plugins path=/etc/grafana/provisioning/plugins error="open /etc/grafana/provisioning/plugins: no such file or directory"
+t=2021-09-09T05:06:27+0000 lvl=eror msg="Can't read alert notification provisioning files from directory" logger=provisioning.notifiers path=/etc/grafana/provisioning/notifiers error="open /etc/grafana/provisioning/notifiers: no such file or directory"
+t=2021-09-09T05:06:27+0000 lvl=eror msg="can't read dashboard provisioning files from directory" logger=provisioning.dashboard path=/etc/grafana/provisioning/dashboards error="open /etc/grafana/provisioning/dashboards: no such file or directory"
+```
+
 ### 安装 STF 的步骤
 ```
 安装 Code Ready Container
@@ -23599,6 +23607,45 @@ oc get -n openshift-marketplace operatorsource redhat-operators-stf
 
 2.5 检查 packagemanifests 包含 Red Hat STF operator
 oc get packagemanifests | grep "Red Hat STF"
+或者
+oc get packagemanifests | grep -E "service-telemetry|smart-gateway" 
+service-telemetry-operator                           Red Hat Operators          3h1m
+smart-gateway-operator                               Red Hat Operators          3h1m
+
+oc get csv --namespace service-telemetry
+
+创建 ServiceTelemetry 实例 stf-default
+oc apply -f - <<EOF
+apiVersion: infra.watch/v1alpha1
+kind: ServiceTelemetry
+metadata:
+  name: stf-default
+  namespace: service-telemetry
+spec:
+  eventsEnabled: true
+  metricsEnabled: true
+EOF
+
+检查 Pod 日志
+oc -n service-telemetry logs $(oc -n service-telemetry get pod --selector='name=service-telemetry-operator' -oname) -c ansible -f
+
+oc get pods -n service-telemetry
+oc get route -n service-telemetry
+
+3. 部署 Grafana Dashboard
+3.1 克隆 dashboard 仓库
+git clone https://github.com/infrawatch/dashboards
+cd dashboards
+
+3.2 创建 subscription grafana-operator
+oc create -f deploy/subscription.yaml
+
+3.3 检查 csv grafana-operator 
+oc get csv | grep grafana-operator
+
+检查 grafana-operator 日志
+oc logs $(oc get pods -l name=grafana-operator -o name)
+oc logs $(oc get pods -o name | grep grafana-deployment)
 ```
 
 ### osp baremetal 节点信息查询

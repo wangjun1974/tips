@@ -126,7 +126,37 @@ baremetal node1 - nic2 - oc-provisioning
 
 ```
 
+### 修改 templates/environment/network-environments.yaml 文件
+```
+添加以下内容
 
+  ############################
+  #  Neutron configuration   #
+  ############################
+  NeutronNetworkType: 'geneve, vlan, flat'
+  NeutronBridgeMappings: "datacentre:br-ex,baremetal:br-baremetal"
+  NeutronFlatNetworks: datacentre,baremetal
+
+  ############################
+  #  Scheduler configuration #
+  ############################
+  NovaSchedulerDefaultFilters:
+    - "RetryFilter"
+    - "AvailabilityZoneFilter"
+    - "ComputeFilter"
+    - "ComputeCapabilitiesFilter"
+    - "ImagePropertiesFilter"
+    - "ServerGroupAntiAffinityFilter"
+    - "ServerGroupAffinityFilter"
+    - "PciPassthroughFilter"
+    - "NUMATopologyFilter"
+    - "AggregateInstanceExtraSpecsFilter"
+
+  ############################
+  #  Ironic Cleaning Method  #
+  ############################
+  IronicCleaningDiskErase: metadata
+```
 
 ### 参考文档
 https://docs.openstack.org/project-deploy-guide/tripleo-docs/latest/features/baremetal_overcloud.html

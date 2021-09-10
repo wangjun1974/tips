@@ -188,16 +188,15 @@ openstack overcloud deploy --debug --templates $THT \
 EOF
 ```
 
-### 安装报错
+### 安装完成后检查 overcloud controller 的 /var/lib/ironic 目录
 ```
-{'ttl': 3600, 'body': {'type': 'tripleo.deployment.v1.deploy_plan', 'payload': {'status': 'FAILED', 'message': 'Error during stack creation: ERROR: Internal Error\nNone', 'root_execution_id': None, 'execution_id': 'effde6b2-9856-4104-bb3d-e819bf0fac96', 'plan_name': 'overcloud', 'deployment_status': 'DEPLOY_FAILED'}}, 'Message_Type': 'Notification', 'queue_name': 'tripleo'}
-{'deployment_status': 'DEPLOY_FAILED',
- 'execution_id': 'effde6b2-9856-4104-bb3d-e819bf0fac96',
- 'message': 'Error during stack creation: ERROR: Internal Error\nNone',
- 'plan_name': 'overcloud',
- 'root_execution_id': None,
- 'status': 'FAILED'}
-Exception occured while running the command
+
+overcloud 
+
+[heat-admin@overcloud-controller-0 ~]$ sudo ls /var/lib/ironic/
+httpboot  tftpboot
+[heat-admin@overcloud-controller-0 ~]$ sudo ls /var/lib/ironic/httpboot/
+boot.ipxe
 
 ```
 

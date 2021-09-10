@@ -49,8 +49,8 @@ baremetal node1 - nic2 - oc-provisioning
                 - type: interface
                   name: ens5
 
-参考以下 diff 结果
---- controller.yaml     2021-09-10 13:52:08.379474221 +0800
+参考以下 diff 结果，注意：ovs bond 不支持 slave，因此取消了 bond1
+--- controller.yaml     2021-09-10 15:45:29.026938030 +0800
 +++ controller.yaml.sav 2021-09-08 09:22:42.575230348 +0800
 @@ -197,7 +197,7 @@
              $network_config:
@@ -61,7 +61,7 @@ baremetal node1 - nic2 - oc-provisioning
                  mtu:
                    get_param: ControlPlaneMtu
                  use_dhcp: false
-@@ -216,17 +216,6 @@
+@@ -216,22 +216,23 @@
                    get_param: DnsServers
                  domain:
                    get_param: DnsSearchDomains
@@ -77,17 +77,20 @@ baremetal node1 - nic2 - oc-provisioning
 -                        next_hop:
 -                          get_param: ExternalInterfaceDefaultRoute
                  members:
-                 - type: ovs_bond
-                   name: bond1
-@@ -236,10 +225,14 @@
-                     get_param: BondInterfaceOvsOptions
-                   members:
-                   - type: interface
--                    name: ens4
+-                - type: interface
+-                  name: ens4
++                - type: ovs_bond
++                  name: bond1
+                   mtu:
+                     get_attr: [MinViableMtu, value]
++                  ovs_options:
++                    get_param: BondInterfaceOvsOptions
++                  members:
++                  - type: interface
 +                    name: nic2
-                     mtu:
-                       get_attr: [MinViableMtu, value]
-                     primary: true
++                    mtu:
++                      get_attr: [MinViableMtu, value]
++                    primary: true
 +                  - type: interface
 +                    name: nic3
 +                    mtu:
@@ -95,7 +98,7 @@ baremetal node1 - nic2 - oc-provisioning
                  - type: vlan
                    mtu:
                      get_param: StorageMtu
-@@ -284,12 +277,20 @@
+@@ -276,12 +277,20 @@
                    routes:
                      list_concat_unique:
                        - get_param: TenantInterfaceRoutes
@@ -122,7 +125,6 @@ baremetal node1 - nic2 - oc-provisioning
  outputs:
    OS::stack_id:
      description: The OsNetConfigImpl resource.
-
 
 ```
 

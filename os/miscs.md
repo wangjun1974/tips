@@ -23792,3 +23792,9 @@ Traceback (most recent call last):
     raise os_net_config.ConfigurationError(message)
 os_net_config.ConfigurationError: Failure(s) occurred when applying configuration
 ```
+
+### overcloud 网络配置检查
+如果存在网络配置错误，但是部署网络可达，可以先 ssh 到节点操作系统里。看 /etc/os-net-config/config.json 文件是否已生成，如果已生成可执行命令检查配置出错的地方
+```
+os-net-config -d -c /etc/os-net-config/config.json 
+```

@@ -133,10 +133,14 @@ baremetal node1 - nic2 - oc-provisioning
   ############################
   #  Neutron configuration   #
   ############################
-  NeutronNetworkType: 'geneve, vlan, flat'
   NeutronBridgeMappings: "datacentre:br-ex,baremetal:br-baremetal"
   NeutronFlatNetworks: datacentre,baremetal
+```
 
+### 生成 templates/ironic.yaml 文件
+```
+cat > templates/ironic.yaml <<EOF
+parameter_defaults:
   ############################
   #  Scheduler configuration #
   ############################
@@ -156,6 +160,43 @@ baremetal node1 - nic2 - oc-provisioning
   #  Ironic Cleaning Method  #
   ############################
   IronicCleaningDiskErase: metadata
+EOF
+```
+
+### 生成部署脚本
+```
+cat > deploy-ironic-overcloud.sh <<'EOF'
+#!/bin/bash
+THT=/usr/share/openstack-tripleo-heat-templates/
+CNF=~/templates/
+
+source ~/stackrc
+openstack overcloud deploy --debug --templates $THT \
+-r $CNF/roles_data.yaml \
+-n $CNF/network_data.yaml \
+-e $THT/environments/network-isolation.yaml \
+-e $CNF/environments/network-environment.yaml \
+-e $CNF/environments/net-bond-with-vlans.yaml \
+-e $THT/environments/services/ironic-overcloud.yaml \
+-e ~/containers-prepare-parameter.yaml \
+-e $CNF/node-info.yaml \
+-e $CNF/ironic.yaml \
+-e $CNF/fix-nova-reserved-host-memory.yaml \
+--ntp-server 192.0.2.1
+EOF
+```
+
+### 安装报错
+```
+{'ttl': 3600, 'body': {'type': 'tripleo.deployment.v1.deploy_plan', 'payload': {'status': 'FAILED', 'message': 'Error during stack creation: ERROR: Internal Error\nNone', 'root_execution_id': None, 'execution_id': 'effde6b2-9856-4104-bb3d-e819bf0fac96', 'plan_name': 'overcloud', 'deployment_status': 'DEPLOY_FAILED'}}, 'Message_Type': 'Notification', 'queue_name': 'tripleo'}
+{'deployment_status': 'DEPLOY_FAILED',
+ 'execution_id': 'effde6b2-9856-4104-bb3d-e819bf0fac96',
+ 'message': 'Error during stack creation: ERROR: Internal Error\nNone',
+ 'plan_name': 'overcloud',
+ 'root_execution_id': None,
+ 'status': 'FAILED'}
+Exception occured while running the command
+
 ```
 
 ### 参考文档

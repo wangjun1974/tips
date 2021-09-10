@@ -23747,3 +23747,15 @@ spec:
 为 alertmanager pods 的 serviceAccount 添加 anyuid 的 scc
 oc adm policy add-scc-to-user anyuid -z $(oc get $(oc get pods -o name | grep alertmanager ) -o jsonpath='{.spec.serviceAccountName}') -n service-telemetry
 ```
+
+### OpenStack Overcloud Baremetal as a Service
+https://access.redhat.com/documentation/en-us/red_hat_openstack_platform/16.1/html-single/bare_metal_provisioning/index#cleaning-nodes-manually_bare-metal-post-deployment
+```
+清理 baremetal 节点：删除分区表
+openstack baremetal node clean _UUID_ \
+    --clean-steps '[{"interface": "deploy", "step": "erase_devices_metadata"}]'
+
+清理 baremetal 节点：删除分区表及数据
+$ openstack baremetal node clean _UUID_ \
+    --clean-steps '[{"interface": "deploy", "step": "erase_devices"}]'
+```

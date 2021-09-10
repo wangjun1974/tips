@@ -23759,3 +23759,36 @@ openstack baremetal node clean _UUID_ \
 $ openstack baremetal node clean _UUID_ \
     --clean-steps '[{"interface": "deploy", "step": "erase_devices"}]'
 ```
+
+### 只有一个节点时不要使用 ovs bond
+这是我遇到的错误
+```
+os-net-config -d -c /etc/os-net-config/config.json 
+...
+[2021/09/10 03:33:56 AM] [DEBUG] CMD "/bin/ovs-appctl bond/set-active-slave bond1 ens4" returned: 2 in 0.023s
+[2021/09/10 03:33:56 AM] [DEBUG] '/bin/ovs-appctl bond/set-active-slave bond1 ens4' failed. Not Retrying.
+[2021/09/10 03:33:56 AM] [INFO] running ifup on interface: vlan30
+[2021/09/10 03:33:56 AM] [DEBUG] Running cmd (subprocess): /sbin/ifup vlan30
+[2021/09/10 03:33:57 AM] [DEBUG] CMD "/sbin/ifup vlan30" returned: 0 in 0.415s
+[2021/09/10 03:33:57 AM] [INFO] running ifup on interface: vlan40
+[2021/09/10 03:33:57 AM] [DEBUG] Running cmd (subprocess): /sbin/ifup vlan40
+[2021/09/10 03:33:57 AM] [DEBUG] CMD "/sbin/ifup vlan40" returned: 0 in 0.362s
+[2021/09/10 03:33:57 AM] [INFO] running ifup on interface: vlan20
+[2021/09/10 03:33:57 AM] [DEBUG] Running cmd (subprocess): /sbin/ifup vlan20
+[2021/09/10 03:33:58 AM] [DEBUG] CMD "/sbin/ifup vlan20" returned: 0 in 0.522s
+[2021/09/10 03:33:58 AM] [INFO] running ifup on interface: vlan50
+[2021/09/10 03:33:58 AM] [DEBUG] Running cmd (subprocess): /sbin/ifup vlan50
+[2021/09/10 03:33:58 AM] [DEBUG] CMD "/sbin/ifup vlan50" returned: 0 in 0.436s
+[2021/09/10 03:33:58 AM] [ERROR] Failure(s) occurred when applying configuration
+[2021/09/10 03:33:58 AM] [ERROR] stdout: , stderr: no such bond
+ovs-appctl: ovs-vswitchd: server returned an error
+
+Traceback (most recent call last): 
+  File "/bin/os-net-config", line 10, in <module>
+    sys.exit(main())
+  File "/usr/lib/python3.6/site-packages/os_net_config/cli.py", line 349, in main
+    activate=not opts.no_activate) 
+  File "/usr/lib/python3.6/site-packages/os_net_config/impl_ifcfg.py", line 1806, in apply
+    raise os_net_config.ConfigurationError(message)
+os_net_config.ConfigurationError: Failure(s) occurred when applying configuration
+```

@@ -23798,3 +23798,33 @@ os_net_config.ConfigurationError: Failure(s) occurred when applying configuratio
 ```
 os-net-config -d -c /etc/os-net-config/config.json 
 ```
+
+### 日志收集位置
+```
+    [FFU]
+    - Director
+        - # sosreports –all-logs
+        - /home/stack/undercloud.conf
+        - Stack template files
+        - /var/lib/mistral/*
+    - Controller
+        - # sosreports –all-logs
+        - /var/log/cluster/*
+        - /var/log/pacemaker.log*
+    - Compute
+        - # sosreports –all-logs
+
+    [Leapp]
+    - All nodes
+        - # sosreports –all-logs
+        - /var/log/leapp/*
+        - /etc/leapp/*
+        - Console messages during booting
+
+    [ReaR]
+    - Director and Controller
+        - # sosreports –all-logs
+        - <backup directory>/<hostname>/backup.log
+        - /var/log/rear/*
+        - Console messages
+```

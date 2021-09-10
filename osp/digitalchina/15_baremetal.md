@@ -200,5 +200,82 @@ boot.ipxe
 
 ```
 
+### 配置 overcloud 部署网络
+```
+source overcloudrc
+
+创建部署网络
+openstack network create \
+  --provider-network-type flat \
+  --provider-physical-network baremetal \
+  --share provisioning
+
+openstack subnet create \
+  --network provisioning \
+  --subnet-range 192.0.3.0/24 \
+  --ip-version 4 \
+  --gateway 192.0.3.254 \
+  --allocation-pool start=192.0.3.10,end=192.0.3.20 \
+  --dhcp subnet-provisioning
+
+创建 router
+openstack router create router-provisioning
+
+附加 subnet 到 router 
+openstack router add subnet router-provisioning subnet-provisioning
+```
+
+### 配置 Overcloud Baremetal Node Cleaning 
+```
+添加如下内容到 templates/ironic.yaml
+(overcloud) [stack@undercloud ~]$ cat >> templates/ironic.yaml <<EOF
+
+  ############################
+  #  Ironic Cleaning Network #
+  ############################
+  IronicCleaningNetwork: $(openstack network show provisioning -f value -c id)
+EOF
+
+重新执行 overcloud deploy 脚本 (未执行)
+```
+
+### 创建 baremetal flavor
+```
+source ~/overcloudrc
+openstack flavor list
+openstack flavor create \
+  --id auto --ram 4096 \
+  --vcpus 1 --disk 40 \
+  --property baremetal=true \
+  --public baremetal
+```
+
+### 创建 baremetal image
+```
+上传 deploy image
+
+$ source overcloudrc
+
+$ openstack image create \
+  --container-format aki \
+  --disk-format aki \
+  --public \
+  --file /var/lib/ironic/httpboot/agent.kernel bm-deploy-kernel
+
+$ openstack image create \
+  --container-format ari \
+  --disk-format ari \
+  --public \
+  --file /var/lib/ironic/httpboot/agent.ramdisk bm-deploy-ramdisk
+
+上传 user image
+(overcloud) [stack@undercloud ~]$ cd images/
+(overcloud) [stack@undercloud images]$ export DIB_LOCAL_IMAGE=rhel-8.4-x86_64-kvm.qcow2 
+disk-image-create rhel8 baremetal -o rhel-image
+
+参考链接
+https://www.ibm.com/docs/zh-tw/urbancode-deploy/6.2.1?topic=coobc-using-dedicated-environment-create-chef-compatible-images-openstack-based-clouds
+```
+
 ### 参考文档
 https://docs.openstack.org/project-deploy-guide/tripleo-docs/latest/features/baremetal_overcloud.html

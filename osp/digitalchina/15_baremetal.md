@@ -271,7 +271,26 @@ $ openstack image create \
 上传 user image
 (overcloud) [stack@undercloud ~]$ cd images/
 (overcloud) [stack@undercloud images]$ export DIB_LOCAL_IMAGE=rhel-8.4-x86_64-kvm.qcow2 
-disk-image-create rhel8 baremetal -o rhel-image
+
+export DIB_YUM_REPO_CONF=/etc/yum.repos.d/backup/osp.repo
+
+cat > local.repo <<EOF
+[rhel-8-for-x86_64-baseos-eus-rpms]
+name=rhel-8-for-x86_64-baseos-eus-rpms
+baseurl=http://192.168.8.21:8787/repos/osp16.1/rhel-8-for-x86_64-baseos-eus-rpms/
+enabled=1
+gpgcheck=0
+
+[rhel-8-for-x86_64-appstream-eus-rpms]
+name=rhel-8-for-x86_64-appstream-eus-rpms
+baseurl=http://192.168.8.21:8787/repos/osp16.1/rhel-8-for-x86_64-appstream-eus-rpms/
+enabled=1
+gpgcheck=0
+EOF
+
+export DIB_YUM_REPO_CONF=/home/stack/images/local.repo
+
+disk-image-create baremetal rhel -o rhel-image
 
 参考链接
 https://www.ibm.com/docs/zh-tw/urbancode-deploy/6.2.1?topic=coobc-using-dedicated-environment-create-chef-compatible-images-openstack-based-clouds
@@ -279,3 +298,4 @@ https://www.ibm.com/docs/zh-tw/urbancode-deploy/6.2.1?topic=coobc-using-dedicate
 
 ### 参考文档
 https://docs.openstack.org/project-deploy-guide/tripleo-docs/latest/features/baremetal_overcloud.html
+

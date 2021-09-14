@@ -23828,3 +23828,11 @@ os-net-config -d -c /etc/os-net-config/config.json
         - /var/log/rear/*
         - Console messages
 ```
+
+### Openstack API 开发快速入门
+参见：https://www.cnblogs.com/biangbiang/archive/2013/02/01/2888800.html
+
+用 curl 调用 OpenStack Rest API 的例子
+```
+```
+

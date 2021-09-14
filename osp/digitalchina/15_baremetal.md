@@ -349,6 +349,71 @@ declare -x DIB_YUM_REPO_CONF="/home/stack/images/local.repo"
 文档里的 5.5 部分可以省略
 https://access.redhat.com/documentation/en-us/red_hat_openstack_platform/16.2-beta/html/bare_metal_provisioning/configuring-the-bare-metal-provisioning-service-after-deployment#configuring-deploy-interfaces_bare-metal-post-deployment
 
+生成节点的注册文件，这个节点对应 undercloud 的 overcloud-compute02
+(overcloud) [stack@undercloud ~]$ cat instackenv-compute.json 
+{
+  "nodes": [
+    {
+      "mac": [
+        "52:54:00:10:84:ab"
+      ],
+      "name": "overcloud-compute01",
+      "pm_addr": "192.168.1.4",
+      "pm_port": "623",
+      "pm_password": "redhat",
+      "pm_type": "pxe_ipmitool",
+      "pm_user": "admin"
+    },
+    {
+      "mac": [
+        "52:54:00:ca:d7:a3"
+      ],
+      "name": "overcloud-compute02",
+      "pm_addr": "192.168.1.5",
+      "pm_port": "623",
+      "pm_password": "redhat",
+      "pm_type": "pxe_ipmitool",
+      "pm_user": "admin"
+    }
+  ]
+}
+
+注意，在 overcloud 里注册节点时用的部署网卡和 undercloud 不同
+
+cat > overcloud-nodes.yaml << EOF
+nodes:
+    - name: baremetal-node0
+      driver: ipmi
+      driver_info:
+        ipmi_address: 192.168.1.5
+        ipmi_port: "623"
+        ipmi_username: admin
+        ipmi_password: redhat
+      properties:
+        cpus: 4
+        memory_mb: 12288
+        local_gb: 40
+      ports:
+        - address: "52:54:00:a1:b7:7a"
+EOF
+
+生成 baremetal 节点
+(overcloud) [stack@undercloud ~]$ openstack baremetal node list
++--------------------------------------+-----------------+---------------+-------------+--------------------+-------------+
+| UUID                                 | Name            | Instance UUID | Power State | Provisioning State | Maintenance |
++--------------------------------------+-----------------+---------------+-------------+--------------------+-------------+
+| cd01b1c5-d63b-4967-921f-f9fcc0322652 | baremetal-node0 | None          | None        | enroll             | False       |
++--------------------------------------+-----------------+---------------+-------------+--------------------+-------------+
+
+5.6.4 设定 baremetal 节点对应的 deploy kernel 和 deploy initrd
+(overcloud) [stack@undercloud ~]$ openstack baremetal node set $(openstack baremetal node show baremetal-node0 -f value -c uuid) \
+  --driver-info deploy_kernel=$(openstack image show bm-deploy-kernel -f value -c id) \
+  --driver-info deploy_ramdisk=$(openstack image show bm-deploy-ramdisk -f value -c id)
+
+5.6.5 设定 baremetal 节点的 Provisioning State 为 available
+(overcloud) [stack@undercloud ~]$ openstack baremetal node manage $(openstack baremetal node show baremetal-node0 -f value -c uuid)
+(overcloud) [stack@undercloud ~]$ openstack baremetal node provide $(openstack baremetal node show baremetal-node0 -f value -c uuid)
+
 参考链接
 https://www.ibm.com/docs/zh-tw/urbancode-deploy/6.2.1?topic=coobc-using-dedicated-environment-create-chef-compatible-images-openstack-based-clouds
 ```

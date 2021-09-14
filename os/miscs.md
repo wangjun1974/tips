@@ -23846,7 +23846,8 @@ https://fedoraproject.org/wiki/Windows_Virtio_Drivers<br>
 1. 安装 Windows 操作系统
 2. 安装 Virtio 驱动
 ```
-https://docs.openstack.org/image-guide/windows-image.html
+https://docs.openstack.org/image-guide/windows-image.html<br>
+https://github.com/virtio-win/virtio-win-pkg-scripts/blob/master/README.md<br>
 ```
 非常详尽的例子
 ```

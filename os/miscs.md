@@ -23837,3 +23837,16 @@ os-net-config -d -c /etc/os-net-config/config.json
 获取 token，然后创建实例
 openstack --debug 的输出里有对应的调用例子
 ```
+
+### 如何制作 Windows OpenStack image
+https://www.xiexianbin.cn/openstack/images/2016-10-30-how-to-make-openstack-images-for-windows/index.html<br>
+https://fedoraproject.org/wiki/Windows_Virtio_Drivers<br>
+```
+制作思路
+1. 安装 Windows 操作系统
+2. 安装 Virtio 驱动
+```
+https://docs.openstack.org/image-guide/windows-image.html
+```
+非常详尽的例子
+```

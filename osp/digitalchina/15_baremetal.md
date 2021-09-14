@@ -270,9 +270,11 @@ $ openstack image create \
 
 上传 user image
 (overcloud) [stack@undercloud ~]$ cd images/
-(overcloud) [stack@undercloud images]$ export DIB_LOCAL_IMAGE=rhel-8.4-x86_64-kvm.qcow2 
+(overcloud) [stack@undercloud images]$ export DIB_LOCAL_IMAGE="rhel-8.2-x86_64-kvm.qcow2"
 
-export DIB_YUM_REPO_CONF=/etc/yum.repos.d/backup/osp.repo
+我的使用的环境是 osp 16.1 undercloud，操作系统是 rhel 8.2，软件仓库是 rhel 8.2 eus
+因此使用的镜像是 rhel-8.2-x86_64-kvm.qcow2。
+注意：软件仓库和镜像需要版本一致，才能避免依赖关系冲突问题
 
 cat > local.repo <<EOF
 [rhel-8-for-x86_64-baseos-eus-rpms]
@@ -289,8 +291,8 @@ gpgcheck=0
 EOF
 
 export DIB_YUM_REPO_CONF=/home/stack/images/local.repo
-
-disk-image-create baremetal rhel -o rhel-image
+export 
+disk-image-create rhel baremetal -o rhel-image
 
 参考链接
 https://www.ibm.com/docs/zh-tw/urbancode-deploy/6.2.1?topic=coobc-using-dedicated-environment-create-chef-compatible-images-openstack-based-clouds

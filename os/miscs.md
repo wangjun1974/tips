@@ -23851,3 +23851,6 @@ https://github.com/virtio-win/virtio-win-pkg-scripts/blob/master/README.md<br>
 ```
 非常详尽的例子
 ```
+
+### 自动汇报错误工具 ABRT
+https://wiki.centos.org/zh/TipsAndTricks/ABRT

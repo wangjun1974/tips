@@ -290,9 +290,43 @@ enabled=1
 gpgcheck=0
 EOF
 
-export DIB_YUM_REPO_CONF=/home/stack/images/local.repo
-export 
-disk-image-create rhel baremetal -o rhel-image
+export DIB_YUM_REPO_CONF="/home/stack/images/local.repo"
+export DIB_LOCAL_IMAGE="rhel-8.2-x86_64-kvm.qcow2"
+export DIB_RELEASE="8"
+(overcloud) [stack@undercloud images]$ disk-image-create rhel baremetal -o rhel-image
+...
+2021-09-14 07:18:17.612 | INFO diskimage_builder.block_device.blockdevice [-] Getting value for [image-path]
+2021-09-14 07:18:18.762 | INFO diskimage_builder.block_device.level3.mount [-] Called for [mount_mkfs_root]
+2021-09-14 07:18:18.762 | INFO diskimage_builder.block_device.utils [-] Calling [sudo sync]
+2021-09-14 07:18:18.854 | INFO diskimage_builder.block_device.utils [-] Calling [sudo fstrim --verbose /tmp/dib_build.AemYdmS5/mnt
+/]
+2021-09-14 07:18:18.980 | INFO diskimage_builder.block_device.utils [-] Calling [sudo umount /tmp/dib_build.AemYdmS5/mnt/]
+2021-09-14 07:18:19.907 | INFO diskimage_builder.block_device.level0.localloop [-] loopdev detach
+2021-09-14 07:18:19.907 | INFO diskimage_builder.block_device.utils [-] Calling [sudo losetup -d /dev/loop0]
+2021-09-14 07:18:21.374 | INFO diskimage_builder.block_device.blockdevice [-] Removing temporary state dir [/tmp/dib_build.AemYdmS5/states/block-device]
+2021-09-14 07:18:21.778 | Converting image using qemu-img convert
+2021-09-14 07:21:12.524 | Image file rhel-image.qcow2 created...
+2021-09-14 07:21:13.150 | Build completed successfully
+
+(overcloud) [stack@undercloud images]$ ls -ltr
+...
+-rw-rw-r--. 1 stack stack        366 Sep 10 21:34 local.repo
+-rw-r--r--. 1 root  root  1159135232 Sep 14 14:51 rhel-8.2-x86_64-kvm.qcow2
+drwxrwxr-x. 3 stack stack         27 Sep 14 15:17 rhel-image.d
+-rwxr-xr-x. 1 root  root     8924528 Sep 14 15:17 rhel-image.vmlinuz          <== baremetal image kernel
+-rw-r--r--. 1 root  root    53965501 Sep 14 15:17 rhel-image.initrd           <== baremetal image initrd
+-rw-r--r--. 1 stack stack  801494528 Sep 14 15:21 rhel-image.qcow2            <== baremetal image whole disk image
+
+
+(overcloud) [stack@undercloud images]$ cat rhel-image.d/dib-manifests/dib_arguments 
+rhel baremetal -o rhel-image
+
+(overcloud) [stack@undercloud images]$ cat rhel-image.d/dib-manifests/dib_environment 
+declare -x DIB_ARGS="rhel baremetal -o rhel-image"
+declare -x DIB_LOCAL_IMAGE="rhel-8.2-x86_64-kvm.qcow2"
+declare -x DIB_PYTHON_EXEC="/usr/libexec/platform-python"
+declare -x DIB_RELEASE="8"
+declare -x DIB_YUM_REPO_CONF="/home/stack/images/local.repo"
 
 参考链接
 https://www.ibm.com/docs/zh-tw/urbancode-deploy/6.2.1?topic=coobc-using-dedicated-environment-create-chef-compatible-images-openstack-based-clouds

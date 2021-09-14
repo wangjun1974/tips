@@ -328,6 +328,27 @@ declare -x DIB_PYTHON_EXEC="/usr/libexec/platform-python"
 declare -x DIB_RELEASE="8"
 declare -x DIB_YUM_REPO_CONF="/home/stack/images/local.repo"
 
+
+上传镜像
+(overcloud) [stack@undercloud images]$ KERNEL_ID=$(openstack image create \
+  --file rhel-image.vmlinuz --public \
+  --container-format aki --disk-format aki \
+  -f value -c id rhel-image.vmlinuz)
+(overcloud) [stack@undercloud images]$ RAMDISK_ID=$(openstack image create \
+  --file rhel-image.initrd --public \
+  --container-format ari --disk-format ari \
+  -f value -c id rhel-image.initrd)
+(overcloud) [stack@undercloud images]$ openstack image create \
+  --file rhel-image.qcow2   --public \
+  --container-format bare \
+  --disk-format qcow2 \
+  --property kernel_id=$KERNEL_ID \
+  --property ramdisk_id=$RAMDISK_ID \
+  rhel-image
+
+文档里的 5.5 部分可以省略
+https://access.redhat.com/documentation/en-us/red_hat_openstack_platform/16.2-beta/html/bare_metal_provisioning/configuring-the-bare-metal-provisioning-service-after-deployment#configuring-deploy-interfaces_bare-metal-post-deployment
+
 参考链接
 https://www.ibm.com/docs/zh-tw/urbancode-deploy/6.2.1?topic=coobc-using-dedicated-environment-create-chef-compatible-images-openstack-based-clouds
 ```

@@ -23834,5 +23834,6 @@ os-net-config -d -c /etc/os-net-config/config.json
 
 用 curl 调用 OpenStack Rest API 的例子
 ```
+获取 token，然后创建实例
+openstack --debug 的输出里有对应的调用例子
 ```
-

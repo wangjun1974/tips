@@ -299,3 +299,7 @@ https://www.ibm.com/docs/zh-tw/urbancode-deploy/6.2.1?topic=coobc-using-dedicate
 ### 参考文档
 https://docs.openstack.org/project-deploy-guide/tripleo-docs/latest/features/baremetal_overcloud.html
 
+```
+获取 token，然后创建实例
+openstack --debug 的输出里有对应的调用例子
+```

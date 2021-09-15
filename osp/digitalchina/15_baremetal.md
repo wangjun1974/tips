@@ -179,6 +179,7 @@ openstack overcloud deploy --debug --templates $THT \
 -e $CNF/environments/network-environment.yaml \
 -e $CNF/environments/net-bond-with-vlans.yaml \
 -e $THT/environments/services/ironic-overcloud.yaml \
+-e $THT/environments/services/ironic-inspector.yaml \
 -e ~/containers-prepare-parameter.yaml \
 -e $CNF/node-info.yaml \
 -e $CNF/ironic.yaml \
@@ -191,7 +192,6 @@ EOF
 ```
 
 overcloud 
-
 [heat-admin@overcloud-controller-0 ~]$ sudo ls /var/lib/ironic/
 httpboot  tftpboot
 [heat-admin@overcloud-controller-0 ~]$ sudo ls /var/lib/ironic/httpboot/
@@ -314,7 +314,7 @@ export DIB_RELEASE="8"
 drwxrwxr-x. 3 stack stack         27 Sep 14 15:17 rhel-image.d
 -rwxr-xr-x. 1 root  root     8924528 Sep 14 15:17 rhel-image.vmlinuz          <== baremetal image kernel
 -rw-r--r--. 1 root  root    53965501 Sep 14 15:17 rhel-image.initrd           <== baremetal image initrd
--rw-r--r--. 1 stack stack  801494528 Sep 14 15:21 rhel-image.qcow2            <== baremetal image whole disk image
+-rw-r--r--. 1 stack stack  801494528 Sep 14 15:21 rhel-image.qcow2            <== baremetal whole user disk image
 
 
 (overcloud) [stack@undercloud images]$ cat rhel-image.d/dib-manifests/dib_arguments 
@@ -397,6 +397,7 @@ nodes:
 EOF
 
 生成 baremetal 节点
+(overcloud) [stack@undercloud ~]$ openstack baremetal create overcloud-nodes.yaml
 (overcloud) [stack@undercloud ~]$ openstack baremetal node list
 +--------------------------------------+-----------------+---------------+-------------+--------------------+-------------+
 | UUID                                 | Name            | Instance UUID | Power State | Provisioning State | Maintenance |

@@ -23863,7 +23863,7 @@ https://bugzilla.redhat.com/show_bug.cgi?id=1869583<br>
 https://blog.csdn.net/qq_42882717/article/details/112093227<br>
 
 ```
-假设
+假设以下的步骤在我的环境里不工作
 
 sudo iptables -t nat -A POSTROUTING -o ens33 -j MASQUERADE
 sudo iptables -A FORWARD -i ens33:37 -o ens33 -m state --state RELATED,ESTABLISHED -j ACCEPT
@@ -23879,6 +23879,12 @@ sudo ip route add 192.0.3.0/24 gw 192.0.2.254
 
 A1 (Windows - 192.0.3.0/24)
 route -p add 192.0.2.0 mask 255.255.255.0 192.0.3.254
+
+查看详细的规则
+iptables -t nat -v -L POSTROUTING -n --line-number
+
+删除规则
+iptables -t nat -D POSTROUTING {number-here}
 
 ```
 undercloud add static route 的例子
@@ -23928,6 +23934,9 @@ https://blog.csdn.net/kkknd007/article/details/80431668<br>
 https://blog.csdn.net/suki570/article/details/106928614<br>
 https://blog.csdn.net/qq_39642794/article/details/102523670<br>
 https://www.bluestep.cc/8-3-%e5%8a%a8%e6%80%81%e8%b7%af%e7%94%b1%e5%99%a8%e6%9e%b6%e8%ae%be%ef%bc%9aquagga-zebra-ripd/<br>
+http://shouce.jb51.net/vbird-linux-server-3/52.html<br>
+https://docs.frrouting.org/en/latest/ripd.html<br>
+https://www.techrepublic.com/article/use-zebra-to-set-up-a-linux-bgp-ospf-router/<br>
 ```
 安装路由软件
 yum install -y quagga telnet
@@ -23936,26 +23945,44 @@ cat > /etc/quagga/zebra.conf <<EOF
 hostname base-pvg.redhat.ren
 password zebra
 enable password zebra
+!
 interface virbr1
+  ip address virbr1 192.0.2.254/24
+!
 interface virbr2
+  ip address virbr1 192.0.3.254/24
+!
 log file /var/log/quagga/zebra.log
-ip route 192.0.2.0/24 virbr1
-ip route 192.0.3.0/24 virbr2
 EOF
 
 cat > /etc/quagga/ripd.conf <<EOF
-hostname base-pvg.redhat.ren
+hostname ripd
 password zebra
+enable password zebra
 router rip
-  network 192.0.2.0/24
-  network 192.0.3.0/24
+network virbr1
+network virbr2
 log file /var/log/quagga/ripd.log
+EOF
+
+cat > /etc/quagga/ospfd.conf <<EOF
+hostname ospfd
+password zebra
+enable password zebra
+router ospf
+ospf router-id 192.0.2.254
+network 192.0.2.0/24 area 0.0.0.0
+network 192.0.3.0/24 area 0.0.0.1
+log file /var/log/quagga/ospfd.log
 EOF
 
 systemctl enable zebra
 systemctl enable ripd
+systemctl enable ospfd
 systemctl start zebra
 systemctl start ripd
+systemctl start ospfd
+
 
 检查 ripd 服务监听的端口
 telnet 127.0.0.1 2602

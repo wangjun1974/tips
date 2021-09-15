@@ -172,3 +172,9 @@ https://github.com/infrawatch/dashboards/blob/master/deploy/stf-1.3/sg-tracker-d
 ### Service Telemetry Framework Performance and Scaling
 https://access.redhat.com/articles/4907241
 
+WIP: 
+1. 根据 GChat 里的信息，STF 的 ceilometer notification agent 会监听其他组件发送的 metrics 和 events，然后发送给 ceilometer central，ceilometer central 再把信息通过 QDR 发送给 Smart Gateway
+
+2. ceilometer notification agent 还会从 rabbitmq/oslo-message 上拉取数据 (polling agent: polls data)
+
+3. 因此 ceilometer 采集数据的时间间隔不要设置得太小，避免给 rabbitmq/oslo-message 带来过高的压力

@@ -165,3 +165,10 @@ EOF
 
 ### setup ceilometer notification driver in tripleo for STF
 https://github.com/openstack/tripleo-heat-templates/blob/stable/train/environments/metrics/ceilometer-write-qdr.yaml#L15
+
+### smartgateway tracker dashboard
+https://github.com/infrawatch/dashboards/blob/master/deploy/stf-1.3/sg-tracker-dashboard.yaml
+
+### Service Telemetry Framework Performance and Scaling
+https://access.redhat.com/articles/4907241
+

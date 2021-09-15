@@ -23927,6 +23927,7 @@ https://bbs.huaweicloud.com/blogs/245939
 https://blog.csdn.net/kkknd007/article/details/80431668<br>
 https://blog.csdn.net/suki570/article/details/106928614<br>
 https://blog.csdn.net/qq_39642794/article/details/102523670<br>
+https://www.bluestep.cc/8-3-%e5%8a%a8%e6%80%81%e8%b7%af%e7%94%b1%e5%99%a8%e6%9e%b6%e8%ae%be%ef%bc%9aquagga-zebra-ripd/<br>
 ```
 安装路由软件
 yum install -y quagga telnet
@@ -23938,6 +23939,8 @@ enable password zebra
 interface virbr1
 interface virbr2
 log file /var/log/quagga/zebra.log
+ip route 192.0.2.0/24 virbr1
+ip route 192.0.3.0/24 virbr2
 EOF
 
 cat > /etc/quagga/ripd.conf <<EOF

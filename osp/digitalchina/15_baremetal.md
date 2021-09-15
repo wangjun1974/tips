@@ -18,10 +18,9 @@ overcloud controller 需要有网卡连接这个网络
 overcloud baremetal node 也需要有网卡连接这个网络
 
 
-下面的步骤未执行 - 待验证
-添加静态路由
-ip -4 route add 192.0.2.0/24 via 192.0.2.254
-ip -4 route add 192.0.3.0/24 via 192.0.3.254
+需要配置 provisioning 网络和 oc-provisioning 网络间的路由
+目前采取的方式是用 zebra 实现
+参考：https://github.com/wangjun1974/tips/blob/master/os/miscs.md#%E5%AE%89%E8%A3%85%E9%85%8D%E7%BD%AE%E8%B7%AF%E7%94%B1%E8%BD%AF%E4%BB%B6-zebra
 
 
 ```

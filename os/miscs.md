@@ -23854,3 +23854,69 @@ https://github.com/virtio-win/virtio-win-pkg-scripts/blob/master/README.md<br>
 
 ### 自动汇报错误工具 ABRT
 https://wiki.centos.org/zh/TipsAndTricks/ABRT
+
+### osp 16.x 的离线仓库如何制作
+https://access.redhat.com/solutions/5752401<br>
+https://bugzilla.redhat.com/show_bug.cgi?id=1869583<br>
+
+### 将 linux 主机设置为路由器在两个接口两个网段间实现路由转发
+https://blog.csdn.net/qq_42882717/article/details/112093227<br>
+
+```
+假设
+
+sudo iptables -t nat -A POSTROUTING -o ens33 -j MASQUERADE
+sudo iptables -A FORWARD -i ens33:37 -o ens33 -m state --state RELATED,ESTABLISHED -j ACCEPT
+sudo iptables -A FORWARD -i ens33 -o ens33:37 -j ACCEPT
+
+sudo iptables -t nat -A POSTROURTING -o ens37 -j MASQUERADE
+sudo iptables -A FORWARD -i ens37:33 -o ens37 -m state --state RELATED,ESTABLISHED -j ACCEPT
+sudo iptables -A FORWARD -i ens37 -o ens37:33 -j ACCEPT
+
+添加路由
+B1 (linux - 192.0.2.0/24) 
+sudo ip route add 192.0.3.0/24 gw 192.0.2.254
+
+A1 (Windows - 192.0.3.0/24)
+route -p add 192.0.2.0 mask 255.255.255.0 192.0.3.254
+
+```
+undercloud add static route 的例子
+https://bugs.launchpad.net/tripleo/+bug/1819464<br>
+
+### 排查 undercloud delete baremetal node 的问题
+
+在删除 overcloud 节点时，baremetal node 需经历 cleaning -> clean wait -> available 的过程
+
+在 overcloud 节点重启时，overcloud 节点将通过在 provisioning 网络的网卡通过 ipxe 启动
+```
+sudo tcpdump -n -nn -i br-ctlplane
+
+检查 br-ctlplane 的接口是否正常
+sudo ovs-vsctl show
+
+最终原因是 br-ctlplane 因为某种原因掉了
+
+ifdown br-ctlplane
+ifup br-ctlplane
+ifdown ens10
+ifup ens10
+
+(undercloud) [stack@undercloud ~]$ sudo ovs-vsctl show 
+...
+    Bridge br-ctlplane
+        Controller "tcp:127.0.0.1:6633"
+            is_connected: true
+        fail_mode: secure
+        datapath_type: system
+        Port phy-br-ctlplane
+            Interface phy-br-ctlplane
+                type: patch
+                options: {peer=int-br-ctlplane}
+        Port br-ctlplane
+            Interface br-ctlplane
+                type: internal
+        Port ens10
+            Interface ens10
+
+```

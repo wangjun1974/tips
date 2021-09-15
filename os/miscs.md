@@ -23924,4 +23924,81 @@ dhcp 抓包参考以下网址<br>
 https://bbs.huaweicloud.com/blogs/245939
 
 ### 安装配置路由软件 zebra
-https://blog.csdn.net/kkknd007/article/details/80431668
+https://blog.csdn.net/kkknd007/article/details/80431668<br>
+https://blog.csdn.net/suki570/article/details/106928614<br>
+https://blog.csdn.net/qq_39642794/article/details/102523670<br>
+```
+安装路由软件
+yum install -y quagga telnet
+
+cat > /etc/quagga/zebra.conf <<EOF
+hostname base-pvg.redhat.ren
+password zebra
+enable password zebra
+interface virbr1
+interface virbr2
+log file /var/log/quagga/zebra.log
+EOF
+
+cat > /etc/quagga/ripd.conf <<EOF
+hostname base-pvg.redhat.ren
+password zebra
+router rip
+  network 192.0.2.0/24
+  network 192.0.3.0/24
+log file /var/log/quagga/ripd.log
+EOF
+
+systemctl enable zebra
+systemctl enable ripd
+systemctl start zebra
+systemctl start ripd
+
+检查 ripd 服务监听的端口
+telnet 127.0.0.1 2602
+Hello, this is Quagga (version 0.99.22.4).
+Copyright 1996-2005 Kunihiro Ishiguro, et al.
+
+
+User Access Verification
+
+Password:
+> show ip rip
+Codes: R - RIP, C - connected, S - Static, O - OSPF, B - BGP
+Sub-codes:
+      (n) - normal, (s) - static, (d) - default, (r) - redistribute,
+      (i) - interface
+
+     Network            Next Hop         Metric From            Tag Time
+C(i) 192.0.2.0/24       0.0.0.0               1 self              0
+C(i) 192.0.3.0/24       0.0.0.0               1 self              0
+
+这个时候 192.0.2.0 网段的服务器已经可以 ping 通 192.0.3.254 了
+
+可供测试的服务器是 overcloud-controller-0，获取它的 ip 地址
+(undercloud) [stack@undercloud ~]$ openstack server show overcloud-controller-0 -f json -c addresses
+{
+  "addresses": "ctlplane=192.0.2.20"
+}
+
+(undercloud) [stack@undercloud ~]$ ssh heat-admin@192.0.2.20 ping -c1 192.0.3.254 
+PING 192.0.3.254 (192.0.3.254) 56(84) bytes of data.
+64 bytes from 192.0.3.254: icmp_seq=1 ttl=64 time=0.779 ms
+
+--- 192.0.3.254 ping statistics ---
+1 packets transmitted, 1 received, 0% packet loss, time 0ms
+rtt min/avg/max/mdev = 0.779/0.779/0.779/0.000 ms
+
+WIP: 检查 192.0.2.20 的路由，发现缺省路由设置在 192.168.122.1 这个地址上，因此能 ping 通 192.0.3.254 与 192.0.2.0/24 <--> 192.0.3.0/24 这两个网络互通没有关系
+(undercloud) [stack@undercloud ~]$ ssh heat-admin@192.0.2.20 ip r s 
+Warning: Permanently added '192.0.2.20' (ECDSA) to the list of known hosts.
+default via 192.168.122.1 dev br-ex 
+172.16.0.0/24 dev vlan50 proto kernel scope link src 172.16.0.221 
+172.16.1.0/24 dev vlan30 proto kernel scope link src 172.16.1.167 
+172.16.2.0/24 dev vlan20 proto kernel scope link src 172.16.2.73 
+172.16.3.0/24 dev vlan40 proto kernel scope link src 172.16.3.81 
+192.0.2.0/24 dev ens3 proto kernel scope link src 192.0.2.20 
+192.168.122.0/24 dev br-ex proto kernel scope link src 192.168.122.17 
+
+
+```

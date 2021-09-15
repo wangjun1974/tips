@@ -23890,7 +23890,7 @@ https://bugs.launchpad.net/tripleo/+bug/1819464<br>
 
 在 overcloud 节点重启时，overcloud 节点将通过在 provisioning 网络的网卡通过 ipxe 启动
 ```
-sudo tcpdump -n -nn -i br-ctlplane
+sudo tcpdump -n -nn -i br-ctlplane udp port 67 or port 68 -vvv
 
 检查 br-ctlplane 的接口是否正常
 sudo ovs-vsctl show
@@ -23920,3 +23920,5 @@ ifup ens10
             Interface ens10
 
 ```
+dhcp 抓包参考以下网址<br>
+https://bbs.huaweicloud.com/blogs/245939

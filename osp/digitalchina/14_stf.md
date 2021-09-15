@@ -162,3 +162,6 @@ openstack overcloud deploy --debug --templates $THT \
 --ntp-server 192.0.2.1
 EOF
 ```
+
+### setup ceilometer notification driver in tripleo for STF
+https://github.com/openstack/tripleo-heat-templates/blob/stable/train/environments/metrics/ceilometer-write-qdr.yaml#L15

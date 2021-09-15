@@ -23922,3 +23922,6 @@ ifup ens10
 ```
 dhcp 抓包参考以下网址<br>
 https://bbs.huaweicloud.com/blogs/245939
+
+### 安装配置路由软件 zebra
+https://blog.csdn.net/kkknd007/article/details/80431668

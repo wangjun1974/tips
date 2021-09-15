@@ -24003,5 +24003,34 @@ default via 192.168.122.1 dev br-ex
 192.0.2.0/24 dev ens3 proto kernel scope link src 192.0.2.20 
 192.168.122.0/24 dev br-ex proto kernel scope link src 192.168.122.17 
 
+删除缺省路由
+ip route delete 0.0.0.0/32 
+
+设置新的缺省路由 
+ip route add default via 192.0.2.254
+
+目前的路由设置是
+[heat-admin@overcloud-controller-0 ~]$ ip r s 
+default via 192.0.2.254 dev ens3                                       <== 缺省路由在这儿
+172.16.0.0/24 dev vlan50 proto kernel scope link src 172.16.0.221 
+172.16.1.0/24 dev vlan30 proto kernel scope link src 172.16.1.167 
+172.16.2.0/24 dev vlan20 proto kernel scope link src 172.16.2.73 
+172.16.3.0/24 dev vlan40 proto kernel scope link src 172.16.3.81 
+192.0.2.0/24 dev ens3 proto kernel scope link src 192.0.2.20 
+192.168.122.0/24 dev br-ex proto kernel scope link src 192.168.122.17 
+
+从 ip 地址 192.0.2.20 ping 192.0.3.254 可以 ping 通，这个时候是通过 192.0.2.254 过去的
+[heat-admin@overcloud-controller-0 ~]$ ping 192.0.3.254 -c1 -I 192.0.2.20 
+PING 192.0.3.254 (192.0.3.254) from 192.0.2.20 : 56(84) bytes of data.
+64 bytes from 192.0.3.254: icmp_seq=1 ttl=64 time=0.283 ms
+
+--- 192.0.3.254 ping statistics ---
+1 packets transmitted, 1 received, 0% packet loss, time 0ms
+rtt min/avg/max/mdev = 0.283/0.283/0.283/0.000 ms
+
+恢复节点缺省路由
+sudo ip route delete default
+sudo ip route add default via 192.168.122.1
+
 
 ```

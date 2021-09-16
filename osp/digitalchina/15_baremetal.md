@@ -209,19 +209,17 @@ openstack network create \
   --provider-physical-network baremetal \
   --share provisioning
 
+根据当前的实现，overcloud baremetal provisioning network/subnet 需要路由可达 overcloud ironic 的 api，overcloud ironic api 默认在 undercloud provisioning network 上，也就是 overcloud 的部署网络上。
+
+在实验环境里，手工在 overcloud-controler-0 的 br-baremetal 上配置 192.0.3.250 这个 ip 地址，然后设置这个 ip 作为 subnet-provisioning 的网关，这样做的目的是让 overcloud baremetal 节点路由可达 overcloud ironic api。
+
 openstack subnet create \
   --network provisioning \
   --subnet-range 192.0.3.0/24 \
   --ip-version 4 \
-  --gateway 192.0.3.254 \
+  --gateway 192.0.3.250 \
   --allocation-pool start=192.0.3.10,end=192.0.3.20 \
   --dhcp subnet-provisioning
-
-根据当前的实现，overcloud baremetal provisioning network/subnet 需要路由可达 overcloud ironic 的 api，overcloud ironic api 默认在 undercloud provisioning network 上，也就是 overcloud 的部署网络上。
-
-在实验环境里，手工在 overcloud-controler-0 的 br-baremetal 上配置 192.0.3.250 这个 ip 地址，然后更新静态路由，这样做的目的是让 overcloud baremetal 节点路由可达 overcloud ironic api。
-
-neutron subnet-update $(openstack subnet show subnet-provisioning -f value -c id) --host-route destination=0.0.0.0/0,nexthop=192.0.3.250
 
 创建 router
 openstack router create router-provisioning

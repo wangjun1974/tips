@@ -24071,5 +24071,34 @@ https://medium.com/@george.shuklin/how-to-set-gateway-address-for-subnet-to-inst
 更新 subnet，为 subnet 添加静态路由
 
 neutron subnet-update 22fff543–5132–482a-5136–4f14a6749207 --host-route destination=0.0.0.0/0,nexthop=192.168.0.88
+```
 
+ironic node cleaning 出错的问题定位
+```
+执行 node cleaning 时
+1. ironic 将为 baremetal 节点生成启动配置文件
+
+在 overcloud 控制节点上的启动配置文件
+sudo podman exec -it ironic_pxe_httpboot /bin/bash
+()[root@overcloud-controller-0 ~ ]$ cd /var/lib/ironic/httpboot
+()[root@overcloud-controller-0 /var/lib/ironic/httpboot]$ ls -l
+total 8
+drwxr-xr-x. 2 ironic ironic  63 Sep 16 02:34 3db639fb-8d7a-44e6-b012-6d1cc26b10f5
+drwxr-xr-x. 2 ironic ironic  63 Sep 16 02:38 4419465d-63c2-41b8-a4bb-b70f8388c42b
+lrwxrwxrwx. 1 ironic ironic  43 Sep 16 02:37 52:54:00:a1:b7:7a.conf -> 4419465d-63c2-41b8-a4bb-b70f8388c42b/config
+-rw-r--r--. 1 ironic ironic 758 Sep 15 06:27 boot.ipxe
+-rw-r--r--. 1 ironic ironic 480 Sep 16 02:05 inspector.ipxe
+drwxr-xr-x. 2 ironic ironic  31 Sep 16 02:37 pxelinux.cfg
+
+文件 ‘4419465d-63c2-41b8-a4bb-b70f8388c42b/config’ 就是节点对应的 ipxe 配置文件
+
+2. 查看 4419465d-63c2-41b8-a4bb-b70f8388c42b/config 内容
+()[root@overcloud-controller-0 /var/lib/ironic/httpboot]$ cat 4419465d-63c2-41b8-a4bb-b70f8388c42b/config
+...
+:deploy
+imgfree
+kernel --timeout 60000 http://192.0.2.20:8088/4419465d-63c2-41b8-a4bb-b70f8388c42b/deploy_kernel selinux=0 troubleshoot=0 text nofb nomodeset vga=normal ipa-api-url=http://192.0.2.12:6385 BOOTIF=${mac} initrd=deploy_ramdisk || goto retry
+
+为了让用户可以登录进系统，检查 clean 时的系统日志，为 kernel 添加 rootpwd 启动参数
+kernel --timeout 60000 http://192.0.2.20:8088/4419465d-63c2-41b8-a4bb-b70f8388c42b/deploy_kernel selinux=0 troubleshoot=0 text nofb nomodeset vga=normal ipa-api-url=http://192.0.2.12:6385 BOOTIF=${mac} rootpwd="$1$J5QN13Eg$fg1DdFcfDAEROPnMnkrgK1" initrd=deploy_ramdisk || goto retry
 ```

@@ -19,8 +19,12 @@ overcloud baremetal node 也需要有网卡连接这个网络
 
 
 需要配置 provisioning 网络和 oc-provisioning 网络间的路由
-目前采取的方式是用 zebra 实现
+WIP: 一个可以考虑的方向是用 zebra 实现
 参考：https://github.com/wangjun1974/tips/blob/master/os/miscs.md#%E5%AE%89%E8%A3%85%E9%85%8D%E7%BD%AE%E8%B7%AF%E7%94%B1%E8%BD%AF%E4%BB%B6-zebra
+
+另外一个可以考虑的实现方式是定义 oc_provisioning 网络
+参考文档：3.2.1. Configuring a custom IPv4 provisioning network
+https://access.redhat.com/documentation/en-us/red_hat_openstack_platform/16.1/html-single/bare_metal_provisioning/index
 
 
 ```
@@ -36,6 +40,69 @@ Baremetal 节点
 baremetal node1 - nic2 - oc-provisioning
 ```
 
+### 定制 network_data.yaml 
+```
+
+拷贝 network_data.yaml 文件并且备份
+cd templates
+cp /usr/share/openstack-tripleo-heat-templates/network_data.yaml .
+cp network_data.yaml network_data.yaml.sav
+
+编辑 network_data.yaml 文件，添加以下内容
+- name: OcProvisioning
+  # custom network for overcloud provisioning
+  enabled: true
+  vip: true
+  name_lower: oc_provisioning
+  vlan: 70
+  ip_subnet: '172.16.4.0/24'
+  allocation_pools: [{'start': '172.16.4.10', 'end': '172.16.4.20'}]
+  gateway_ipv6: 'fd00:fd00:fd00:7000::1'
+  ipv6_subnet: 'fd00:fd00:fd00:7000::/64'
+  ipv6_allocation_pools: [{'start': 'fd00:fd00:fd00:7000::10', 'end': 'fd00:fd00:fd00:7000:ffff:ffff:ffff:fffe'}]
+
+修改前后的文件内容对比
+(undercloud) [stack@undercloud templates]$ diff -urN network_data.yaml.sav network_data.yaml
+--- network_data.yaml.sav       2021-09-16 11:15:05.237873642 +0800
++++ network_data.yaml   2021-09-16 11:20:19.916059817 +0800
+@@ -146,3 +146,15 @@
+   ipv6_subnet: 'fd00:fd00:fd00:6000::/64'
+   ipv6_allocation_pools: [{'start': 'fd00:fd00:fd00:6000::10', 'end': 'fd00:fd00:fd00:6000:ffff:ffff:ffff:fffe'}]
+   mtu: 1500
++- name: OcProvisioning
++  # custom network for overcloud provisioning
++  enabled: true
++  vip: true
++  name_lower: oc_provisioning
++  ip_subnet: '172.16.4.0/24'
++  allocation_pools: [{'start': '172.16.4.10', 'end': '172.16.4.20'}]
++  gateway_ipv6: 'fd00:fd00:fd00:7000::1'
++  ipv6_subnet: 'fd00:fd00:fd00:7000::/64'
++  ipv6_allocation_pools: [{'start': 'fd00:fd00:fd00:7000::10', 'end': 'fd00:fd00:fd00:7000:ffff:ffff:ffff:fffe'}]
++  mtu: 1500
+```
+
+### 编辑 roles_data.yaml 
+```
+拷贝并且编辑 roles_data.yaml 文件
+在 Controller 的 Network 里添加
+    OcProvisioning:
+      subnet: oc_provisioning_subnet
+
+(undercloud) [stack@undercloud templates]$ diff -urN roles_data.yaml.sav roles_data.yaml 
+--- roles_data.yaml.sav 2021-09-16 12:12:57.138927699 +0800
++++ roles_data.yaml     2021-09-16 12:13:33.817949400 +0800
+@@ -23,6 +23,8 @@
+       subnet: storage_mgmt_subnet
+     Tenant:
+       subnet: tenant_subnet
++    OcProvisioning:
++      subnet: oc_provisioning_subnet
+   # For systems with both IPv4 and IPv6, you may specify a gateway network for
+   # each, such as ['ControlPlane', 'External']
+   default_route_networks: ['External']
+```
+
 ### 配置 controller 的 nic-config
 ```
 修改 templates/network/config/bond-with-vlans/controller 文件
@@ -44,14 +111,20 @@ baremetal node1 - nic2 - oc-provisioning
               - type: ovs_bridge
                 name: br-baremetal
                 use_dhcp: false
+                mtu:
+                  get_param: OcProvisioningMtu
+                addresses:
+                - ip_netmask:
+                    get_param: OcProvisioningIpSubnet
                 members:
                 - type: interface
                   name: ens5
 
+
 参考以下 diff 结果，注意：ovs bond 不支持 slave，因此取消了 bond1
---- controller.yaml     2021-09-10 15:45:29.026938030 +0800
-+++ controller.yaml.sav 2021-09-08 09:22:42.575230348 +0800
-@@ -197,7 +197,7 @@
+--- controller.yaml     2021-09-16 12:26:53.192422325 +0800
++++ controller.yaml.sav 2021-09-16 12:21:31.236231851 +0800
+@@ -220,7 +220,7 @@
              $network_config:
                network_config:
                - type: interface
@@ -60,7 +133,7 @@ baremetal node1 - nic2 - oc-provisioning
                  mtu:
                    get_param: ControlPlaneMtu
                  use_dhcp: false
-@@ -216,22 +216,23 @@
+@@ -239,22 +239,23 @@
                    get_param: DnsServers
                  domain:
                    get_param: DnsSearchDomains
@@ -97,13 +170,18 @@ baremetal node1 - nic2 - oc-provisioning
                  - type: vlan
                    mtu:
                      get_param: StorageMtu
-@@ -276,12 +277,20 @@
+@@ -299,17 +300,31 @@
                    routes:
                      list_concat_unique:
                        - get_param: TenantInterfaceRoutes
 -              - type: ovs_bridge
 -                name: br-baremetal
 -                use_dhcp: false
+-                mtu:
+-                  get_param: OcProvisioningMtu
+-                addresses:
+-                - ip_netmask:
+-                    get_param: OcProvisioningIpSubnet
 -                members:
 -                - type: interface
 -                  name: ens5
@@ -121,6 +199,17 @@ baremetal node1 - nic2 - oc-provisioning
 +                      - - default: true
 +                          next_hop:
 +                            get_param: ExternalInterfaceDefaultRoute
++                - type: vlan
++                  mtu:
++                    get_param: OcProvisioningMtu
++                  vlan_id:
++                    get_param: OcProvisioningNetworkVlanID
++                  addresses:
++                  - ip_netmask:
++                      get_param: OcProvisioningIpSubnet
++                  routes:
++                    list_concat_unique:
++                      - get_param: OcProvisioningInterfaceRoutes
  outputs:
    OS::stack_id:
      description: The OsNetConfigImpl resource.
@@ -136,6 +225,10 @@ baremetal node1 - nic2 - oc-provisioning
   ############################
   NeutronBridgeMappings: "datacentre:br-ex,baremetal:br-baremetal"
   NeutronFlatNetworks: datacentre,baremetal
+
+  ServiceNetMap:
+    IronicApiNetwork: oc_provisioning
+    IronicNetwork: oc_provisioning
 ```
 
 ### 生成 templates/ironic.yaml 文件
@@ -211,14 +304,12 @@ openstack network create \
 
 根据当前的实现，overcloud baremetal provisioning network/subnet 需要路由可达 overcloud ironic 的 api，overcloud ironic api 默认在 undercloud provisioning network 上，也就是 overcloud 的部署网络上。
 
-在实验环境里，手工在 overcloud-controler-0 的 br-baremetal 上配置 192.0.3.250 这个 ip 地址，然后设置这个 ip 作为 subnet-provisioning 的网关，这样做的目的是让 overcloud baremetal 节点路由可达 overcloud ironic api。
-
 openstack subnet create \
   --network provisioning \
-  --subnet-range 192.0.3.0/24 \
+  --subnet-range 172.16.4.0/24 \
   --ip-version 4 \
-  --gateway 192.0.3.250 \
-  --allocation-pool start=192.0.3.10,end=192.0.3.20 \
+  --gateway 172.16.4.250 \
+  --allocation-pool start=172.16.4.30,end=172.16.4.40 \
   --dhcp subnet-provisioning
 
 创建 router

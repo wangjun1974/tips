@@ -509,65 +509,7 @@ EOF
 (overcloud) [stack@undercloud ~]$ openstack baremetal node manage $(openstack baremetal node show baremetal-node0 -f value -c uuid)
 (overcloud) [stack@undercloud ~]$ openstack baremetal node provide $(openstack baremetal node show baremetal-node0 -f value -c uuid)
 
-注意：libvirt 下需手工配置网卡支持 PXE 启动
 
-出错后执行
-(overcloud) [stack@undercloud ~]$ openstack baremetal node maintenance unset $(openstack baremetal node show baremetal-node0 -f value -c uuid)
-(overcloud) [stack@undercloud ~]$ openstack baremetal node manage $(openstack baremetal node show baremetal-node0 -f value -c uuid)
-(overcloud) [stack@undercloud ~]$ openstack baremetal node provide $(openstack baremetal node show baremetal-node0 -f value -c uuid)
-
-overcloud baremeatl 的 provisioning 网络需要能路由到 undercloud provisioning 网路
-# virsh net-list
- Name                 State      Autostart     Persistent
-----------------------------------------------------------
- crc                  active     yes           yes
- default              active     yes           yes
- oc-provisioning      active     yes           yes         <== 这个网络需要路由到 provisioning
- openshift4           active     yes           yes
- openshift4a          active     no            no
- openshift4v6         active     yes           yes
- provisioning         active     yes           yes         <== 这个网络需要路由到 oc-provisioning
-
-定义可路由的虚拟网络
-https://jamielinux.com/docs/libvirt-networking-handbook/routed-network.html
-# virsh net-dumpxml provisioning 
-<network>
-  <name>provisioning</name>
-  <uuid>79803491-ce42-47c1-ad53-638927b9fc04</uuid>
-  <forward mode='route'/>                                  <== 注意这行
-  <bridge name='virbr1' stp='on' delay='0'/>
-  <mac address='52:54:00:f1:fb:a3'/>
-  <ip address='192.0.2.254' netmask='255.255.255.0'>
-  </ip>
-</network>
-
-# virsh net-dumpxml oc-provisioning 
-<network>
-  <name>oc-provisioning</name>
-  <uuid>052217fa-5085-476f-b2f7-8aca84952d29</uuid>
-  <forward mode='route'/>                                  <== 注意这行
-  <bridge name='virbr2' stp='on' delay='0'/>
-  <mac address='52:54:00:f0:2a:5f'/>
-  <ip address='192.0.3.254' netmask='255.255.255.0'>
-  </ip>
-</network>
-
-重启虚拟网络
-virsh net-destroy provisioning
-virsh net-start provisioning
-
-virsh net-destroy oc-provisioning
-virsh net-start oc-provisioning
-
-在系统里设置路由
-ip route delete 192.0.2.0/24                                <== 删除 libvirt 创建的默认路由
-ip route add 192.0.2.0/24 via 192.0.2.254
-ip route delete 192.0.3.0/24                                <== 删除 libvirt 创建的默认路由
-ip route add 192.0.3.0/24 via 192.0.3.254
-
-
-参考链接
-https://www.ibm.com/docs/zh-tw/urbancode-deploy/6.2.1?topic=coobc-using-dedicated-environment-create-chef-compatible-images-openstack-based-clouds
 ```
 
 ### 参考文档

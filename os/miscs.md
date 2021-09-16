@@ -23937,6 +23937,7 @@ https://www.bluestep.cc/8-3-%e5%8a%a8%e6%80%81%e8%b7%af%e7%94%b1%e5%99%a8%e6%9e%
 http://shouce.jb51.net/vbird-linux-server-3/52.html<br>
 https://docs.frrouting.org/en/latest/ripd.html<br>
 https://www.techrepublic.com/article/use-zebra-to-set-up-a-linux-bgp-ospf-router/<br>
+https://www.brianlinkletter.com/2016/06/how-to-build-a-network-of-linux-routers-using-quagga/<br>
 ```
 安装路由软件
 yum install -y quagga telnet
@@ -23947,11 +23948,13 @@ password zebra
 enable password zebra
 !
 interface virbr1
-  ip address virbr1 192.0.2.254/24
+  ip address 192.0.2.254/24
 !
 interface virbr2
-  ip address virbr1 192.0.3.254/24
+  ip address 192.0.3.254/24
 !
+ip route 192.0.2.0/24 192.0.2.254
+ip route 192.0.3.0/24 192.0.3.254
 log file /var/log/quagga/zebra.log
 EOF
 
@@ -24059,5 +24062,14 @@ rtt min/avg/max/mdev = 0.283/0.283/0.283/0.000 ms
 sudo ip route delete default
 sudo ip route add default via 192.168.122.1
 
+
+```
+
+### 更新 openstack neutron subnet，为 subnet 添加静态路由
+https://medium.com/@george.shuklin/how-to-set-gateway-address-for-subnet-to-instance-ip-ebcb6f78ad14
+```
+更新 subnet，为 subnet 添加静态路由
+
+neutron subnet-update 22fff543–5132–482a-5136–4f14a6749207 --host-route destination=0.0.0.0/0,nexthop=192.168.0.88
 
 ```

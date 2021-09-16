@@ -24165,4 +24165,47 @@ ip route add 192.0.3.0/24 via 192.0.3.254
 参考链接
 https://www.ibm.com/docs/zh-tw/urbancode-deploy/6.2.1?topic=coobc-using-dedicated-environment-create-chef-compatible-images-openstack-based-clouds
 
+
+
+```
+
+placement 的问题定位
+https://access.redhat.com/solutions/3537351
+```
+sudo yum install python3-osc-placement -y
+
+检查 resource provider 
+source overcloudrc
+openstack resource provider list | awk '{print $2}' | egrep -v 'uuid|^$' | while read rp; do echo "=== $rp ==="; openstack resource provider show $rp ; openstack resource provider usage show $rp ; openstack resource provider inventory list --os-placement-api-version 1.2 $rp ;done
+
+
+资源供应商
+(overcloud) [stack@undercloud ~]$ openstack resource provider list
++--------------------------------------+--------------------------------------+------------+
+| uuid                                 | name                                 | generation |
++--------------------------------------+--------------------------------------+------------+
+| 70e90b26-afa6-4274-b52d-26ee9c199d29 | 70e90b26-afa6-4274-b52d-26ee9c199d29 |          0 |
++--------------------------------------+--------------------------------------+------------+
+
+显示资源供应商详情
+(overcloud) [stack@undercloud ~]$ openstack resource provider show 70e90b26-afa6-4274-b52d-26ee9c199d29 
++------------+--------------------------------------+
+| Field      | Value                                |
++------------+--------------------------------------+
+| uuid       | 70e90b26-afa6-4274-b52d-26ee9c199d29 |
+| name       | 70e90b26-afa6-4274-b52d-26ee9c199d29 |
+| generation | 0                                    |
++------------+--------------------------------------+
+
+baremetal 服务器情况
+(overcloud) [stack@undercloud ~]$ openstack baremetal node list
++--------------------------------------+-----------------+---------------+-------------+--------------------+-------------+
+| UUID                                 | Name            | Instance UUID | Power State | Provisioning State | Maintenance |
++--------------------------------------+-----------------+---------------+-------------+--------------------+-------------+
+| 70e90b26-afa6-4274-b52d-26ee9c199d29 | baremetal-node0 | None          | power off   | available          | False       |
++--------------------------------------+-----------------+---------------+-------------+--------------------+-------------+
+
+openstack resource provider inventory list 70e90b26-afa6-4274-b52d-26ee9c199d29
+
+https://www.cnblogs.com/jmilkfan-fanguiju/p/10589759.html
 ```

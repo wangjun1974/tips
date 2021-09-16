@@ -509,6 +509,36 @@ EOF
 (overcloud) [stack@undercloud ~]$ openstack baremetal node manage $(openstack baremetal node show baremetal-node0 -f value -c uuid)
 (overcloud) [stack@undercloud ~]$ openstack baremetal node provide $(openstack baremetal node show baremetal-node0 -f value -c uuid)
 
+5.6.6 设置 baremetal 节点的 property capabilities boot_option 为 local
+(overcloud) [stack@undercloud ~]$ openstack baremetal node set $(openstack baremetal node show baremetal-node0 -f value -c uuid) --property capabilities="boot_option:local"
+
+5.7.3 创建主机组 baremetal-hosts
+(overcloud) [stack@undercloud ~]$ openstack aggregate create --property baremetal=true baremetal-hosts
+
+5.7.4 添加控制节点到主机组 baremetal-hosts
+(overcloud) [stack@undercloud ~]$ openstack aggregate add host baremetal-hosts overcloud-controller-0.localdomain
+
+5.7.5 创建主机组 virtual-hosts
+
+5.7.6 添加计算节点到主机组 virtual-hosts
+
+6.1.1 启动裸金属实例
+openstack server create \
+  --nic net-id=$(openstack network show provisioning -f value -c id) \
+  --flavor baremetal \
+  --image $(openstack image show rhel-image -f value -c id) \
+  baremetal-instance-1
+
+当前时间
+Thu Sep 16 07:11:42 UTC 2021
+
+Thu Sep 16 07:25:27 UTC 2021
+2021-09-16 07:26:13.481 23 DEBUG placement.requestlog [req-5edaaccf-b65d-48b2-abb4-7e40cdbe1da4 - - - - -] Starting request: 172.16.2.35 "GET /placement/allocation_candidates?limit=1000&required=COMPUTE_IMAGE_TYPE_QCOW2%2C%21COMPUTE_STATUS_DISABLED&resources=DISK_GB%3A40%2CMEMORY_MB%3A4096%2CVCPU%3A1" __call__ /usr/lib/python3.6/site-packages/placement/requestlog.py:61
+2021-09-16 07:26:13.988 23 DEBUG placement.objects.research_context [req-5edaaccf-b65d-48b2-abb4-7e40cdbe1da4 1b45e8bd46fc45168c3fcd5bc580eb7c 030bb4d6d1044e7697871632579a08c8 - default default] getting providers with 40 DISK_GB __init__ /usr/lib/python3.6/site-packages/placement/objects/research_context.py:126
+2021-09-16 07:26:14.001 23 DEBUG placement.objects.research_context [req-5edaaccf-b65d-48b2-abb4-7e40cdbe1da4 1b45e8bd46fc45168c3fcd5bc580eb7c 030bb4d6d1044e7697871632579a08c8 - default default] found no providers with 40 DISK_GB __init__ /usr/lib/python3.6/site-packages/placement/objects/research_context.py:130
+
+https://access.redhat.com/solutions/3537351
+
 
 ```
 

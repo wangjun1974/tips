@@ -24230,6 +24230,14 @@ imgfree
 kernel --timeout 60000 http://172.16.4.18:8088/agent.kernel ipa-inspection-callback-url=http://172.16.4.18:5050/v1/continue ipa-inspection-collectors=default,logs systemd.journald.forward_to_console=yes BOOTIF=${mac} ipa-inspection-dhcp-all-interfaces=1 ipa-collect-lldp=1 ipa-debug=1 initrd=agent.ramdisk || goto retry_boot
 initrd --timeout 60000 http://172.16.4.18:8088/agent.ramdisk || goto retry_boot
 boot
+
+(overcloud) [stack@undercloud ~]$ openstack baremetal introspection start --wait $(openstack baremetal node show baremetal-node0 -f value -c uuid)
+Waiting for introspection to finish...
++--------------------------------------+-----------------------+
+| UUID                                 | Error                 |
++--------------------------------------+-----------------------+
+| 70e90b26-afa6-4274-b52d-26ee9c199d29 | Introspection timeout |
++--------------------------------------+-----------------------+
 ```
 
 ### AICoE OpenDataHub Document Portal

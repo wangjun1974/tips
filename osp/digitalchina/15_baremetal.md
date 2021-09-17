@@ -229,6 +229,7 @@ cp network_data.yaml network_data.yaml.sav
   ServiceNetMap:
     IronicApiNetwork: oc_provisioning
     IronicNetwork: oc_provisioning
+    IronicInspectorNetwork: oc_provisioning
 ```
 
 ### 生成 templates/ironic.yaml 文件
@@ -319,8 +320,25 @@ openstack router create router-provisioning
 openstack router add subnet router-provisioning subnet-provisioning
 ```
 
+### 拷贝 agent.kernel 和 agent.ramdisk 到 overcloud controller /var/lib/ironic/httpboot/ 目录
+```
+(overcloud) [stack@undercloud ~]$ scp /var/lib/ironic/httpboot/agent.* heat-admin@192.0.2.13:/tmp
+(overcloud) [stack@undercloud ~]$ ssh heat-admin@192.0.2.13 'sudo mv /tmp/agent.* /var/lib/ironic/httpboot'
+```
+
 ### 配置 Overcloud Baremetal Node Cleaning 
 ```
+查看控制节点 inspector.ipxe 文件内容
+[heat-admin@overcloud-controller-0 ~]$ cat /var/lib/ironic/httpboot/inspector.ipxe 
+#!ipxe
+
+:retry_boot
+imgfree
+kernel --timeout 60000 http://172.16.4.18:8088/agent.kernel ipa-inspection-callback-url=http://172.16.4.18:5050/v1/continue ipa-inspection-collectors=default,logs systemd.journald.forward_to_console=yes BOOTIF=${mac} ipa-inspection-dhcp-all-interfaces=1 ipa-collect-lldp=1 ipa-debug=1 initrd=agent.ramdisk || goto retry_boot
+initrd --timeout 60000 http://172.16.4.18:8088/agent.ramdisk || goto retry_boot
+boot
+
+
 添加如下内容到 templates/ironic.yaml
 (overcloud) [stack@undercloud ~]$ cat >> templates/ironic.yaml <<EOF
 
@@ -328,6 +346,14 @@ openstack router add subnet router-provisioning subnet-provisioning
   #  Ironic Cleaning Network #
   ############################
   IronicCleaningNetwork: $(openstack network show provisioning -f value -c id)
+
+  ############################
+  #  Ironic Inspector Subnet #
+  ############################  
+  IronicInspectorSubnets:
+    - ip_range: 172.16.4.110,172.16.4.120
+  IPAImageURLs: '["http://172.16.4.18:8088/agent.kernel", "http://172.16.4.18:8088/agent.ramdisk"]'
+  IronicInspectorInterface: 'br-baremetal'  
 EOF
 
 重新执行 overcloud deploy 脚本 (未执行)

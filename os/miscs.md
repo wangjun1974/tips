@@ -24238,6 +24238,20 @@ Waiting for introspection to finish...
 +--------------------------------------+-----------------------+
 | 70e90b26-afa6-4274-b52d-26ee9c199d29 | Introspection timeout |
 +--------------------------------------+-----------------------+
+
+placement介绍资料
+https://blog.csdn.net/zhujisoft/article/details/103443694
+注册 Ironic 裸金属节点并部署裸金属实例
+https://www.cnblogs.com/jmilkfan-fanguiju/p/11825059.html
+
+删除 flavor 的 property resources:CUSTOM_BAREMETAL_TEST
+openstack flavor unset --property resources:CUSTOM_BAREMETAL_TEST baremetal 
+openstack flavor unset --property baremetal baremetal 
+
+
+openstack resource provider inventory list $(openstack baremetal node show baremetal-node0 -f value -c uuid)
+
+openstack baremetal node show $(openstack baremetal node show baremetal-node0 -f value -c uuid) -f json | jq -r '.driver_info'
 ```
 
 ### AICoE OpenDataHub Document Portal

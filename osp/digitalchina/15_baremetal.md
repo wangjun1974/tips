@@ -372,6 +372,12 @@ openstack flavor create \
   --vcpus 1 --disk 40 \
   --property baremetal=true \
   --public baremetal
+
+https://www.cnblogs.com/jmilkfan-fanguiju/p/11825059.html
+openstack flavor set --property resources:CUSTOM_BAREMETAL=1 baremetal
+openstack flavor set --property resources:VCPU=0 baremetal
+openstack flavor set --property resources:MEMORY_MB=0 baremetal
+openstack flavor set --property resources:DISK_GB=0 baremetal  
 ```
 
 ### 创建 baremetal image
@@ -535,6 +541,12 @@ EOF
   --driver-info deploy_kernel=$(openstack image show bm-deploy-kernel -f value -c id) \
   --driver-info deploy_ramdisk=$(openstack image show bm-deploy-ramdisk -f value -c id)
 
+设定 baremetal 节点对应的 cleaning_network 和 provisioning_network
+(overcloud) [stack@undercloud ~]$ openstack baremetal node set $(openstack baremetal node show baremetal-node0 -f value -c uuid) \
+    --driver-info cleaning_network=$(openstack network show provisioning -f value -c id) \
+    --driver-info provisioning_network=$(openstack network show provisioning -f value -c id)
+(overcloud) [stack@undercloud ~]$ openstack baremetal node show $(openstack baremetal node show baremetal-node0 -f value -c uuid) -f json | jq -r '.driver_info'
+
 5.6.5 设定 baremetal 节点的 Provisioning State 为 available
 
 5.6.5 设定 baremetal 节点的 Provisioning State 为 managable
@@ -545,6 +557,25 @@ EOF
 
 5.6.5 设定 baremetal 节点的 Provisioning State 为 available
 (overcloud) [stack@undercloud ~]$ openstack baremetal node provide $(openstack baremetal node show baremetal-node0 -f value -c uuid)
+
+手工设置 resource provider inventory
+(overcloud) [stack@undercloud ~]$ openstack resource provider inventory set --resource VCPU=4 --resource MEMORY_MB=6144 --resource DISK_GB=99 $(openstack baremetal node show baremetal-node0 -f value -c uuid)
+
+手工设置 
+openstack baremetal node set $(openstack baremetal node show baremetal-node0 -f value -c uuid) --resource-class baremetal
+
+查看 resource provider inventory，单独设置这个之后，其他的 resource 会被冲掉
+openstack resource provider inventory list $(openstack baremetal node show baremetal-node0 -f value -c uuid)
+
+执行这个命令重新设置 resource 
+(overcloud) [stack@undercloud ~]$ openstack resource provider inventory set --resource VCPU=4 --resource MEMORY_MB=6144 --resource DISK_GB=99 --resource CUSTOM_BAREMETAL=1 $(openstack baremetal node show baremetal-node0 -f value -c uuid)
+
+获取 baremetal-node0 的 introspection 信息
+(overcloud) [stack@undercloud ~]$ mkdir -p overcloud-introspection
+(overcloud) [stack@undercloud ~]$ cd overcloud-introspection
+(overcloud) [stack@undercloud overcloud-introspection]$ openstack baremetal introspection data save $(openstack baremetal node show baremetal-node0 -f value -c uuid) > $(openstack baremetal node show baremetal-node0 -f value -c uuid).json
+(overcloud) [stack@undercloud overcloud-introspection]$ cd ~
+(overcloud) [stack@undercloud ~]$ 
 
 5.6.6 设置 baremetal 节点的 property capabilities boot_option 为 local
 (overcloud) [stack@undercloud ~]$ openstack baremetal node set $(openstack baremetal node show baremetal-node0 -f value -c uuid) --property capabilities="boot_option:local"
@@ -559,23 +590,156 @@ EOF
 
 5.7.6 添加计算节点到主机组 virtual-hosts
 
+检查 resource provider
+https://access.redhat.com/solutions/3537351
+
+(overcloud) [stack@undercloud ~]$ source overcloudrc
+(overcloud) [stack@undercloud ~]$ openstack resource provider list | awk '{print $2}' | egrep -v 'uuid|^$' | while read rp; do echo "=== $rp ==="; openstack resource provider show $rp ; openstack resource provider usage show $rp ; openstack resource provider inventory list --os-placement-api-version 1.2 $rp ;done
+
+
+
 6.1.1 启动裸金属实例
-openstack server create \
+date -u ; openstack server create \
   --nic net-id=$(openstack network show provisioning -f value -c id) \
   --flavor baremetal \
   --image $(openstack image show rhel-image -f value -c id) \
   baremetal-instance-1
 
 当前时间
+Fri Sep 17 04:26:40 UTC 2021
+
+
+
 Thu Sep 16 07:11:42 UTC 2021
 
 Thu Sep 16 07:25:27 UTC 2021
+
+
+
 2021-09-16 07:26:13.481 23 DEBUG placement.requestlog [req-5edaaccf-b65d-48b2-abb4-7e40cdbe1da4 - - - - -] Starting request: 172.16.2.35 "GET /placement/allocation_candidates?limit=1000&required=COMPUTE_IMAGE_TYPE_QCOW2%2C%21COMPUTE_STATUS_DISABLED&resources=DISK_GB%3A40%2CMEMORY_MB%3A4096%2CVCPU%3A1" __call__ /usr/lib/python3.6/site-packages/placement/requestlog.py:61
 2021-09-16 07:26:13.988 23 DEBUG placement.objects.research_context [req-5edaaccf-b65d-48b2-abb4-7e40cdbe1da4 1b45e8bd46fc45168c3fcd5bc580eb7c 030bb4d6d1044e7697871632579a08c8 - default default] getting providers with 40 DISK_GB __init__ /usr/lib/python3.6/site-packages/placement/objects/research_context.py:126
 2021-09-16 07:26:14.001 23 DEBUG placement.objects.research_context [req-5edaaccf-b65d-48b2-abb4-7e40cdbe1da4 1b45e8bd46fc45168c3fcd5bc580eb7c 030bb4d6d1044e7697871632579a08c8 - default default] found no providers with 40 DISK_GB __init__ /usr/lib/python3.6/site-packages/placement/objects/research_context.py:130
 
 https://access.redhat.com/solutions/3537351
 
+
+(overcloud) [stack@undercloud ~]$ openstack baremetal node show baremetal-node0 -f json | jq . 
+{
+  "allocation_uuid": null,
+  "automated_clean": null,
+  "bios_interface": "no-bios",
+  "boot_interface": "ipxe",
+  "chassis_uuid": null,
+  "clean_step": {},
+  "conductor": "overcloud-controller-0.localdomain",
+  "conductor_group": "",
+  "console_enabled": false,
+  "console_interface": "ipmitool-socat",
+  "created_at": "2021-09-16T06:07:10+00:00",
+  "deploy_interface": "iscsi",
+  "deploy_step": {},
+  "description": null,
+  "driver": "ipmi",
+  "driver_info": {
+    "ipmi_address": "192.168.1.5",
+    "ipmi_port": "623",
+    "ipmi_username": "admin",
+    "ipmi_password": "******",
+    "deploy_kernel": "486599e1-c0b0-4e06-b3a5-7bfbae426089",
+    "deploy_ramdisk": "a0f71886-4edb-4a79-9d5d-fd72df06ea1c"
+  },
+  "driver_internal_info": {
+    "agent_erase_devices_iterations": 1,
+    "agent_erase_devices_zeroize": true,
+    "agent_continue_if_ata_erase_failed": false,
+    "agent_enable_ata_secure_erase": true,
+    "disk_erasure_concurrency": 1,
+    "last_power_state_change": "2021-09-17T02:54:08.479314",
+    "agent_version": "5.0.4.dev8",
+    "agent_last_heartbeat": "2021-09-17T02:54:02.884983",
+    "hardware_manager_version": {
+      "generic_hardware_manager": "1.1"
+    },
+    "agent_cached_clean_steps": {
+      "deploy": [
+        {
+          "step": "erase_devices",
+          "priority": 10,
+          "interface": "deploy",
+          "reboot_requested": false,
+          "abortable": true
+        },
+        {
+          "step": "erase_devices_metadata",
+          "priority": 99,
+          "interface": "deploy",
+          "reboot_requested": false,
+          "abortable": true
+        }
+      ],
+      "raid": [
+        {
+          "step": "delete_configuration",
+          "priority": 0,
+          "interface": "raid",
+          "reboot_requested": false,
+          "abortable": true
+        },
+        {
+          "step": "create_configuration",
+          "priority": 0,
+          "interface": "raid",
+          "reboot_requested": false,
+          "abortable": true
+        }
+      ]
+    },
+    "agent_cached_clean_steps_refreshed": "2021-09-17 02:54:01.108246",
+    "clean_steps": null
+  },
+  "extra": {},
+  "fault": null,
+  "inspect_interface": "inspector",
+  "inspection_finished_at": null,
+  "inspection_started_at": null,
+  "instance_info": {},
+  "instance_uuid": null,
+  "last_error": null,
+  "maintenance": false,
+  "maintenance_reason": null,
+  "management_interface": "ipmitool",
+  "name": "baremetal-node0",
+  "network_interface": "flat",
+  "owner": null,
+  "power_interface": "ipmitool",
+  "power_state": "power off",
+  "properties": {
+    "cpus": "4",
+    "memory_mb": "6144",
+    "local_gb": "99",
+    "capabilities": "boot_option:local,cpu_vt:true,cpu_aes:true,cpu_hugepages:true",
+    "cpu_arch": "x86_64"
+  },
+  "protected": false,
+  "protected_reason": null,
+  "provision_state": "available",
+  "provision_updated_at": "2021-09-17T02:54:33+00:00",
+  "raid_config": {},
+  "raid_interface": "no-raid",
+  "rescue_interface": "agent",
+  "reservation": null,
+  "resource_class": null,
+  "storage_interface": "noop",
+  "target_power_state": null,
+  "target_provision_state": null,
+  "target_raid_config": {},
+  "traits": [],
+  "updated_at": "2021-09-17T02:54:33+00:00",
+  "uuid": "70e90b26-afa6-4274-b52d-26ee9c199d29",
+  "vendor_interface": "ipmitool"
+}
+
+是不是   "traits": [], 应该设置成别的东西啊
 
 ```
 

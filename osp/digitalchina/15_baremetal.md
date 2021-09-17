@@ -596,8 +596,6 @@ https://access.redhat.com/solutions/3537351
 (overcloud) [stack@undercloud ~]$ source overcloudrc
 (overcloud) [stack@undercloud ~]$ openstack resource provider list | awk '{print $2}' | egrep -v 'uuid|^$' | while read rp; do echo "=== $rp ==="; openstack resource provider show $rp ; openstack resource provider usage show $rp ; openstack resource provider inventory list --os-placement-api-version 1.2 $rp ;done
 
-
-
 6.1.1 启动裸金属实例
 date -u ; openstack server create \
   --nic net-id=$(openstack network show provisioning -f value -c id) \
@@ -607,10 +605,10 @@ date -u ; openstack server create \
 
 查看实例和 baremetal 
 watch -n10 'openstack server list ; openstack baremetal node list'
+```
 
-https://access.redhat.com/solutions/3537351
-
-
+查看 baremetal node 详细信息
+```
 (overcloud) [stack@undercloud ~]$ openstack baremetal node show baremetal-node0 -f json | jq . 
 {
   "allocation_uuid": null,
@@ -734,3 +732,4 @@ https://access.redhat.com/solutions/3537351
 ### 参考文档
 https://docs.openstack.org/project-deploy-guide/tripleo-docs/latest/features/baremetal_overcloud.html<br>
 https://www.cnblogs.com/jmilkfan-fanguiju/p/11825059.html<br>
+https://access.redhat.com/solutions/3537351<br>

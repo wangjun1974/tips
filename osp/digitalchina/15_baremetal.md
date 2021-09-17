@@ -544,8 +544,6 @@ EOF
     --driver-info provisioning_network=$(openstack network show provisioning -f value -c id)
 (overcloud) [stack@undercloud ~]$ openstack baremetal node show $(openstack baremetal node show baremetal-node0 -f value -c uuid) -f json | jq -r '.driver_info'
 
-5.6.5 设定 baremetal 节点的 Provisioning State 为 available
-
 5.6.5 设定 baremetal 节点的 Provisioning State 为 managable
 (overcloud) [stack@undercloud ~]$ openstack baremetal node manage $(openstack baremetal node show baremetal-node0 -f value -c uuid)
 
@@ -556,16 +554,10 @@ EOF
 (overcloud) [stack@undercloud ~]$ openstack baremetal node provide $(openstack baremetal node show baremetal-node0 -f value -c uuid)
 
 手工设置 resource provider inventory
-(overcloud) [stack@undercloud ~]$ openstack resource provider inventory set --resource VCPU=4 --resource MEMORY_MB=6144 --resource DISK_GB=99 $(openstack baremetal node show baremetal-node0 -f value -c uuid)
-
-手工设置 
-openstack baremetal node set $(openstack baremetal node show baremetal-node0 -f value -c uuid) --resource-class baremetal
-
-查看 resource provider inventory，单独设置这个之后，其他的 resource 会被冲掉
-openstack resource provider inventory list $(openstack baremetal node show baremetal-node0 -f value -c uuid)
-
-执行这个命令重新设置 resource 
 (overcloud) [stack@undercloud ~]$ openstack resource provider inventory set --resource VCPU=4 --resource MEMORY_MB=6144 --resource DISK_GB=99 --resource CUSTOM_BAREMETAL=1 $(openstack baremetal node show baremetal-node0 -f value -c uuid)
+
+查看 resource provider inventory
+openstack resource provider inventory list $(openstack baremetal node show baremetal-node0 -f value -c uuid)
 
 获取 baremetal-node0 的 introspection 信息
 (overcloud) [stack@undercloud ~]$ mkdir -p overcloud-introspection
@@ -589,7 +581,6 @@ openstack resource provider inventory list $(openstack baremetal node show barem
 
 检查 resource provider
 https://access.redhat.com/solutions/3537351
-
 (overcloud) [stack@undercloud ~]$ source overcloudrc
 (overcloud) [stack@undercloud ~]$ openstack resource provider list | awk '{print $2}' | egrep -v 'uuid|^$' | while read rp; do echo "=== $rp ==="; openstack resource provider show $rp ; openstack resource provider usage show $rp ; openstack resource provider inventory list --os-placement-api-version 1.2 $rp ;done
 

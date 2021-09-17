@@ -17,7 +17,6 @@ virsh net-start oc-provisioning
 overcloud controller 需要有网卡连接这个网络
 overcloud baremetal node 也需要有网卡连接这个网络
 
-
 需要配置 provisioning 网络和 oc-provisioning 网络间的路由
 WIP: 一个可以考虑的方向是用 zebra 实现
 参考：https://github.com/wangjun1974/tips/blob/master/os/miscs.md#%E5%AE%89%E8%A3%85%E9%85%8D%E7%BD%AE%E8%B7%AF%E7%94%B1%E8%BD%AF%E4%BB%B6-zebra

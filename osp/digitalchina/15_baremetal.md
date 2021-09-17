@@ -24,8 +24,6 @@ WIP: 一个可以考虑的方向是用 zebra 实现
 另外一个可以考虑的实现方式是定义 oc_provisioning 网络
 参考文档：3.2.1. Configuring a custom IPv4 provisioning network
 https://access.redhat.com/documentation/en-us/red_hat_openstack_platform/16.1/html-single/bare_metal_provisioning/index
-
-
 ```
 
 ### 检查 overcloud 节点连接 overcloud baremetal provisioning 网络

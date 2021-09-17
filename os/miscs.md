@@ -24252,6 +24252,9 @@ openstack flavor unset --property baremetal baremetal
 openstack resource provider inventory list $(openstack baremetal node show baremetal-node0 -f value -c uuid)
 
 openstack baremetal node show $(openstack baremetal node show baremetal-node0 -f value -c uuid) -f json | jq -r '.driver_info'
+
+关于 ironic 裸机管理的内容可以参考 
+https://www.cnblogs.com/jmilkfan-fanguiju/p/11825059.html
 ```
 
 ### AICoE OpenDataHub Document Portal

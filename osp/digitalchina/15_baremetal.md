@@ -605,20 +605,8 @@ date -u ; openstack server create \
   --image $(openstack image show rhel-image -f value -c id) \
   baremetal-instance-1
 
-当前时间
-Fri Sep 17 04:26:40 UTC 2021
-
-
-
-Thu Sep 16 07:11:42 UTC 2021
-
-Thu Sep 16 07:25:27 UTC 2021
-
-
-
-2021-09-16 07:26:13.481 23 DEBUG placement.requestlog [req-5edaaccf-b65d-48b2-abb4-7e40cdbe1da4 - - - - -] Starting request: 172.16.2.35 "GET /placement/allocation_candidates?limit=1000&required=COMPUTE_IMAGE_TYPE_QCOW2%2C%21COMPUTE_STATUS_DISABLED&resources=DISK_GB%3A40%2CMEMORY_MB%3A4096%2CVCPU%3A1" __call__ /usr/lib/python3.6/site-packages/placement/requestlog.py:61
-2021-09-16 07:26:13.988 23 DEBUG placement.objects.research_context [req-5edaaccf-b65d-48b2-abb4-7e40cdbe1da4 1b45e8bd46fc45168c3fcd5bc580eb7c 030bb4d6d1044e7697871632579a08c8 - default default] getting providers with 40 DISK_GB __init__ /usr/lib/python3.6/site-packages/placement/objects/research_context.py:126
-2021-09-16 07:26:14.001 23 DEBUG placement.objects.research_context [req-5edaaccf-b65d-48b2-abb4-7e40cdbe1da4 1b45e8bd46fc45168c3fcd5bc580eb7c 030bb4d6d1044e7697871632579a08c8 - default default] found no providers with 40 DISK_GB __init__ /usr/lib/python3.6/site-packages/placement/objects/research_context.py:130
+查看实例和 baremetal 
+watch -n10 'openstack server list ; openstack baremetal node list'
 
 https://access.redhat.com/solutions/3537351
 
@@ -744,4 +732,5 @@ https://access.redhat.com/solutions/3537351
 ```
 
 ### 参考文档
-https://docs.openstack.org/project-deploy-guide/tripleo-docs/latest/features/baremetal_overcloud.html
+https://docs.openstack.org/project-deploy-guide/tripleo-docs/latest/features/baremetal_overcloud.html<br>
+https://www.cnblogs.com/jmilkfan-fanguiju/p/11825059.html<br>

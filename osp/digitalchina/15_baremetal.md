@@ -324,6 +324,10 @@ openstack router add subnet router-provisioning subnet-provisioning
 ```
 (overcloud) [stack@undercloud ~]$ scp /var/lib/ironic/httpboot/agent.* heat-admin@192.0.2.13:/tmp
 (overcloud) [stack@undercloud ~]$ ssh heat-admin@192.0.2.13 'sudo mv /tmp/agent.* /var/lib/ironic/httpboot'
+
+拷贝完后注意检查 agent.kernel 和 agent.ramdisk 文件的大小和属主，与 undercloud 下的文件进行对比
+
+
 ```
 
 ### 配置 Overcloud Baremetal Node Cleaning 
@@ -532,7 +536,14 @@ EOF
   --driver-info deploy_ramdisk=$(openstack image show bm-deploy-ramdisk -f value -c id)
 
 5.6.5 设定 baremetal 节点的 Provisioning State 为 available
+
+5.6.5 设定 baremetal 节点的 Provisioning State 为 managable
 (overcloud) [stack@undercloud ~]$ openstack baremetal node manage $(openstack baremetal node show baremetal-node0 -f value -c uuid)
+
+6.7.2 introspecting baremetal 节点
+(overcloud) [stack@undercloud ~]$ openstack baremetal introspection start --wait $(openstack baremetal node show baremetal-node0 -f value -c uuid)
+
+5.6.5 设定 baremetal 节点的 Provisioning State 为 available
 (overcloud) [stack@undercloud ~]$ openstack baremetal node provide $(openstack baremetal node show baremetal-node0 -f value -c uuid)
 
 5.6.6 设置 baremetal 节点的 property capabilities boot_option 为 local

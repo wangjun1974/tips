@@ -24208,6 +24208,28 @@ baremetal 服务器情况
 openstack resource provider inventory list 70e90b26-afa6-4274-b52d-26ee9c199d29
 
 https://www.cnblogs.com/jmilkfan-fanguiju/p/10589759.html
+
+
+undercloud 的 inspector.ipxe 文件内容
+(undercloud) [stack@undercloud ~]$ cat /var/lib/ironic/httpboot/inspector.ipxe 
+#!ipxe
+
+:retry_boot
+imgfree
+kernel --timeout 60000 http://192.0.2.1:8088/agent.kernel ipa-inspection-callback-url=http://192.0.2.1:5050/v1/continue ipa-inspection-collectors=default,extra-hardware,numa-topology,logs systemd.journald.forward_to_console=yes BOOTIF=${mac} ipa-inspection-dhcp-all-interfaces=1 ipa-collect-lldp=1 rootpwd="$1$J5QN13Eg$fg1DdFcfDAEROPnMnkrgK1" initrd=agent.ramdisk || goto retry_boot
+initrd --timeout 60000 http://192.0.2.1:8088/agent.ramdisk || goto retry_boot
+boot
+
+overcloud 的 inspector.ipxe 文件内容
+(overcloud) [stack@undercloud ~]$ ssh heat-admin@192.0.2.13 sudo podman exec -it ironic_pxe_http cat /var/lib/ironic/httpboot/inspector.ipxe 
+Warning: Permanently added '192.0.2.13' (ECDSA) to the list of known hosts.
+#!ipxe
+
+:retry_boot
+imgfree
+kernel --timeout 60000 http://172.16.4.18:8088/agent.kernel ipa-inspection-callback-url=http://172.16.4.18:5050/v1/continue ipa-inspection-collectors=default,logs systemd.journald.forward_to_console=yes BOOTIF=${mac} ipa-inspection-dhcp-all-interfaces=1 ipa-collect-lldp=1 ipa-debug=1 initrd=agent.ramdisk || goto retry_boot
+initrd --timeout 60000 http://172.16.4.18:8088/agent.ramdisk || goto retry_boot
+boot
 ```
 
 ### AICoE OpenDataHub Document Portal

@@ -353,6 +353,58 @@ Connections
 5. 来自 infrawatch-in 的对内连接
 6. 查询命令产生的对内连接
 
+查看 Apache Qpid Dispatch Router 的连接详情，查看 _edge 行 deliv 列向外传递的消息
+sudo podman exec -it metrics_qdr qdstat --bus=172.16.2.35:5666 --links
+Router Links
+  type      dir  conn id  id  peer  class   addr                                phs  cap  pri  undel  unsett  deliv  presett  psdrop  acc   rej  rel  mod  delay  rate
+  ======================================================================================================================================================================
+  endpoint  out  1        6         local   _edge                                    250  0    0      0       9093   0        0       9093  0    0    0    6996   0
+
+在 OpenShift 侧查看 Apache Qpid Dispatch Router 容器
+$ oc get pods -l application=default-interconnect
+NAME                                    READY   STATUS    RESTARTS   AGE
+default-interconnect-5657954949-xmxgt   1/1     Running   0          5h58m
+
+在 OpenShift 侧查看 Apache Qpid Dispatch Router 容器内的连接
+$ oc exec -it $(oc get pods -l application=default-interconnect -o name) -- qdstat --connections
+default-interconnect-5657954949-xmxgt
+
+Connections
+  id  host                container                                                     role    dir  security                                authentication  tenant  last dlv      uptime
+  ===============================================================================================================================================================================================
+  1   10.128.6.138:52182  bridge-95                                                     edge    in   no-security                             anonymous-user          000:00:00:42  000:05:58:30
+  8   10.130.2.20:55732   Router.overcloud-controller-0.localdomain                     edge    in   TLSv1/SSLv3(DHE-RSA-AES256-GCM-SHA384)  anonymous-user          000:00:00:02  000:01:01:21
+  9   10.130.4.53:60872   rcv[default-cloud1-ceil-meter-smartgateway-5ff6cd4bbb-x62jt]  edge    in   no-security                             anonymous-user          000:00:00:02  000:00:42:07
+  10  127.0.0.1:45534     3bf01cf4-caed-4464-8f75-e3e9a2f59496                          normal  in   no-security                             no-auth                 000:00:00:00  000:00:00:00
+
+其中 Router.overcloud-controller-0.localdomain 是来自 OpenStack 节点的连接
+
+在 OpenShift 侧查看 Apache Qpid Dispatch Router 容器内连接的消息发送接受情况
+$ oc exec -it $(oc get pods -l application=default-interconnect -o name) -- qdstat --address
+default-interconnect-5657954949-xmxgt
+
+Router Addresses
+  class   addr                                       phs  distrib    pri  local  remote  in      out     thru  fallback
+  =======================================================================================================================
+  local   $_management_internal                           closest    -    0      0       0       0       0     0
+  mobile  $management                                0    closest    -    0      0       8       0       0     0
+  local   $management                                     closest    -    0      0       0       0       0     0
+  edge    Router.overcloud-controller-0.localdomain       balanced   -    1      0       0       0       0     0
+  mobile  _$qd.addr_lookup                           0    balanced   -    0      0       0       0       0     0
+  mobile  _$qd.edge_addr_tracking                    0    balanced   -    0      0       0       0       0     0
+  mobile  anycast/ceilometer/metering.sample         0    balanced   -    1      0       51      51      0     0
+  mobile  collectd/telemetry                         0    multicast  -    1      0       12,034  12,034  0     0
+  local   qdhello                                         flood      -    0      0       0       0       0     0
+  local   qdrouter                                        flood      -    0      0       0       0       0     0
+  topo    qdrouter                                        flood      -    0      0       0       0       0     0
+  local   qdrouter.ma                                     multicast  -    0      0       0       0       0     0
+  topo    qdrouter.ma                                     multicast  -    0      0       0       0       0     0
+  mobile  sensubility/telemetry                      0    balanced   -    0      0       0       0       0     0
+  local   temp.68EMpW72xeFehjf                            balanced   -    1      0       0       1       0     0
+  local   temp.8qUymdqdQa3B68j                            balanced   -    1      0       0       49      0     0
+  local   temp.UXhkRDXXqomk_in                            balanced   -    1      0       0       0       0     0
+
+
 ```
 
 ### setup ceilometer notification driver in tripleo for STF

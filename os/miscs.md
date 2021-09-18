@@ -24295,3 +24295,9 @@ Close Session command failed
 podman generate systemd poc-registry >> /etc/systemd/system/podman.poc-registry.service
 systemctl enable podman.poc-registry.service
 ```
+
+### 设置全局 IPA DNS Forwarder
+https://docs.fedoraproject.org/en-US/Fedora/17/html/FreeIPA_Guide/config-forwarders.html
+```
+ipa dnsconfig-mod --forwarder=10.64.63.6
+```

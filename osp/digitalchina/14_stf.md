@@ -205,9 +205,92 @@ parameter_defaults:
     role: edge
     sslProfile: sslProfile
     verifyHostname: false
+
+  MetricsQdrSSLProfiles:
+  - name: sslProfile
 EOF
 
-cat > deploy-enable-tls-octavia-stf-noceph.sh <<'EOF'
+生成 templates/enable-stf.yaml 文件
+因为是虚拟化环境，调高了 CollectdAmqpInterval，CollectdDefaultPollingInterval 和 ceilometer::agent::polling::polling_interval
+
+根据在以下路径已经存在了 $THT/environments/enable-stf.yaml 文件，考虑这个模版文件是否可以不用生成
+cat > ~/templates/enable-stf.yaml <<'EOF'
+parameter_defaults:
+    # only send to STF, not other publishers
+    EventPipelinePublishers: []
+    PipelinePublishers: []
+
+    # manage the polling and pipeline configuration files for Ceilometer agents
+    ManagePolling: true
+    ManagePipeline: true
+
+    # enable Ceilometer metrics and events
+    CeilometerQdrPublishMetrics: true
+    CeilometerQdrPublishEvents: true
+
+    # enable collection of API status
+    CollectdEnableSensubility: true
+    CollectdSensubilityTransport: amqp1
+    CollectdSensubilityResultsChannel: sensubility/telemetry
+
+    # enable collection of containerized service metrics
+    CollectdEnableLibpodstats: true
+
+    # set collectd overrides for higher telemetry resolution and extra plugins
+    # to load
+    CollectdConnectionType: amqp1
+    CollectdAmqpInterval: 60
+    CollectdDefaultPollingInterval: 60
+    CollectdExtraPlugins:
+    - vmem
+
+    # set standard prefixes for where metrics and events are published to QDR
+    MetricsQdrAddresses:
+    - prefix: 'collectd'
+      distribution: multicast
+    - prefix: 'anycast/ceilometer'
+      distribution: multicast
+
+    ExtraConfig:
+        ceilometer::agent::polling::polling_interval: 60
+        ceilometer::agent::polling::polling_meters:
+        - cpu
+        - disk.*
+        - ip.*
+        - image.*
+        - memory
+        - memory.*
+        - network.*
+        - perf.*
+        - port
+        - port.*
+        - switch
+        - switch.*
+        - storage.*
+        - volume.*
+
+        # to avoid filling the memory buffers if disconnected from the message bus
+        collectd::plugin::amqp1::send_queue_limit: 50
+
+        # receive extra information about virtual memory
+        collectd::plugin::vmem::verbose: true
+
+        # provide name and uuid in addition to hostname for better correlation
+        # to ceilometer data
+        collectd::plugin::virt::hostname_format: "name uuid hostname"
+
+        # provide the human-friendly name of the virtual instance
+        collectd::plugin::virt::plugin_instance_format: metadata
+
+        # set memcached collectd plugin to report its metrics by hostname
+        # rather than host IP, ensuring metrics in the dashboard remain uniform
+        collectd::plugin::memcached::instances:
+          local:
+            host: "%{hiera('fqdn_canonical')}"
+            port: 11211
+EOF
+
+cat > deploy-ironic-overcloud-stf.sh <<'EOF'
 #!/bin/bash
 THT=/usr/share/openstack-tripleo-heat-templates/
 CNF=~/templates/
@@ -216,25 +299,60 @@ source ~/stackrc
 openstack overcloud deploy --debug --templates $THT \
 -r $CNF/roles_data.yaml \
 -n $CNF/network_data.yaml \
--e $THT/environments/ssl/enable-internal-tls.yaml \
--e $THT/environments/ssl/tls-everywhere-endpoints-dns.yaml \
 -e $THT/environments/network-isolation.yaml \
 -e $CNF/environments/network-environment.yaml \
--e $CNF/environments/fixed-ips.yaml \
 -e $CNF/environments/net-bond-with-vlans.yaml \
--e $THT/environments/services/octavia.yaml \
+-e $THT/environments/services/ironic-overcloud.yaml \
+-e $THT/environments/services/ironic-inspector.yaml \
 -e $THT/environments/metrics/ceilometer-write-qdr.yaml \
--e $THT/environments/enable-stf.yaml \
+-e $THT/environments/metrics/collectd-write-qdr.yaml \
+-e $THT/environments/metrics/qdr-edge-only.yaml \
 -e ~/containers-prepare-parameter.yaml \
--e $CNF/custom-domain.yaml \
 -e $CNF/node-info.yaml \
--e $CNF/enable-tls.yaml \
--e $CNF/inject-trust-anchor.yaml \
--e $CNF/keystone_domain_specific_ldap_backend.yaml \
--e $CNF/stf-connectors.yaml \
 -e $CNF/fix-nova-reserved-host-memory.yaml \
+-e $CNF/ironic.yaml \
+-e $CNF/enable-stf.yaml \
+-e $CNF/stf-connectors.yaml \
 --ntp-server 192.0.2.1
 EOF
+
+执行部署 
+$ /usr/bin/nohup /bin/bash -x deploy-ironic-overcloud-stf.sh &
+
+安装后检查
+检查 overcloud 节点 metric_qdr 的状态
+$ sudo podman container inspect --format '{{.State.Status}}' metrics_qdr
+running
+
+检查 qdr 本地地址和端口
+$ sudo podman exec -it metrics_qdr cat /etc/qpid-dispatch/qdrouterd.conf | grep listener -A6
+listener {
+    host: 172.16.2.35
+    port: 5666
+    authenticatePeer: no
+    saslMechanisms: ANONYMOUS
+}
+
+返回本地 Apache Qpid Dispatch Router 的连接
+$ sudo podman exec -it metrics_qdr qdstat --bus=172.16.2.35:5666 --connections
+Connections
+  id  host                                                                  container                                                                                                            role    dir  security                            authentication  tenant
+  ========================================================================================================================================================================================================================================================================
+  1   default-interconnect-5671-service-telemetry.apps.ocp1.rhcnsa.com:443  default-interconnect-5657954949-xmxgt                                                                                edge    out  TLSv1.2(DHE-RSA-AES256-GCM-SHA384)  anonymous-user  
+  13  172.16.2.35:43916                                                     openstack.org/om/container/overcloud-controller-0/ceilometer-agent-notification/26/a52c76ab9d7f4e2f90679e4de0d66f2c  normal  in   no-security                         no-auth         
+  17  172.16.2.35:48078                                                     metrics                                                                                                              normal  in   no-security                         anonymous-user  
+  19  172.16.2.35:48110                                                     overcloud-controller-0.internalapi.localdomain-infrawatch-out-1631952331                                             normal  in   no-security                         no-auth         
+  18  172.16.2.35:48108                                                     overcloud-controller-0.internalapi.localdomain-infrawatch-in-1631952331                                              normal  in   no-security                         anonymous-user  
+  32  172.16.2.35:43056                                                     4de2bdca-8393-41b6-9b38-cb533846db59                                                                                 normal  in   no-security                         no-auth   
+
+上面例子的输出里共有 6 个连接
+1. 对外连接连接到 STF
+2. 来自 ceilometer 的对内连接
+3. 来自 collectd 的对内连接
+4. 来自 infrawatch-out 的对内连接
+5. 来自 infrawatch-in 的对内连接
+6. 查询命令产生的对内连接
+
 ```
 
 ### setup ceilometer notification driver in tripleo for STF

@@ -24259,3 +24259,14 @@ https://www.cnblogs.com/jmilkfan-fanguiju/p/11825059.html
 
 ### AICoE OpenDataHub Document Portal
 https://help.datahub.redhat.com/
+
+### 报错 dbus[19617]: [system] Failed to activate service 'org.freedesktop.login1': timed out 的处理 
+https://access.redhat.com/discussions/3536621<br>
+https://qastack.cn/unix/239489/dbus-system-failed-to-activate-service-org-freedesktop-login1-timed-out
+
+```
+1. 关掉所有会话
+2. 重启服务
+systemctl restart dbus
+systemctl restart systemd-logind
+```

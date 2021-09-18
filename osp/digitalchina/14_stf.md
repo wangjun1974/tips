@@ -1,10 +1,12 @@
 ### 集成 Service Telemetry Framework 
+https://infrawatch.github.io/documentation/#assembly-introduction-to-stf_assembly
 ```
 1.1 切换到普通用户
 su - jwang
 
 1.2 下载 Code Ready Container 1.9.0
 curl -O -L https://mirror.openshift.com/pub/openshift-v4/clients/crc/1.9.0/crc-linux-amd64.tar.xz
+curl -O -L https://mirror.openshift.com/pub/openshift-v4/clients/crc/1.32.1/crc-linux-amd64.tar.xz
 
 1.3 解压缩
 tar xvfJ crc-linux-amd64.tar.xz
@@ -54,29 +56,37 @@ spec:
   displayName: OperatorHub.io Operators
   publisher: OperatorHub.io
 EOF
-oc get catalogsource -n openshift-marketplace
 
-2.4 创建 OperatorSource 可提供 Service Telemetry Operator 和 Smart Gateway Operator
-oc apply -f - <<EOF
-apiVersion: operators.coreos.com/v1
-kind: OperatorSource
+$ oc get catalogsource operatorhubio-operators -n openshift-marketplace
+NAME                      DISPLAY                    TYPE   PUBLISHER        AGE
+operatorhubio-operators   OperatorHub.io Operators   grpc   OperatorHub.io   5m28s      <== 这个是新添加的
+
+2.4 创建 CatalogSource InfraWatch - 这个 CatalogSource 包含 Service Telemetry Operator 和 Smart Gateway Operator
+oc create -f - <<EOF
+apiVersion: operators.coreos.com/v1alpha1
+kind: CatalogSource
 metadata:
-  labels:
-    opsrc-provider: redhat-operators-stf
-  name: redhat-operators-stf
+  name: infrawatch-operators
   namespace: openshift-marketplace
 spec:
-  authorizationToken: {}
-  displayName: Red Hat STF Operators
-  endpoint: https://quay.io/cnr
-  publisher: Red Hat
-  registryNamespace: redhat-operators-stf
-  type: appregistry
+  displayName: InfraWatch Operators
+  image: quay.io/infrawatch-operators/infrawatch-catalog:nightly
+  publisher: InfraWatch
+  sourceType: grpc
+  updateStrategy:
+    registryPoll:
+      interval: 30m
 EOF
-oc get operatorsource -n openshift-marketplace
 
-2.5 检查 
-oc get packagemanifests | grep "Red Hat STF"
+检查 catalogsource infrawatch-operator
+$ oc get -nopenshift-marketplace catalogsource infrawatch-operators
+NAME                      DISPLAY                    TYPE   PUBLISHER        AGE
+infrawatch-operators      InfraWatch Operators       grpc   InfraWatch       21s        <== 这个是新添加的
+
+检查 InfraWatch 所提供的 packagemanifests 
+$ oc get packagemanifests | grep InfraWatch
+smart-gateway-operator                               InfraWatch Operators       18m
+service-telemetry-operator                           InfraWatch Operators       18m
 
 2.6 订阅 AMQ Cert Manager Operator
 oc apply -f - <<EOF
@@ -94,8 +104,7 @@ spec:
 EOF
 
 检查 csv 
-oc get --namespace openshift-operators csv
-$ oc -n openshift-operators get csv 
+$ oc -n openshift-operators get csv amq7-cert-manager.v1.0.1
 NAME                       DISPLAY                                         VERSION   REPLACES   PHASE
 amq7-cert-manager.v1.0.1   Red Hat Integration - AMQ Certificate Manager   1.0.1                Succeeded
 
@@ -112,47 +121,78 @@ spec:
   name: elastic-cloud-eck
   source: operatorhubio-operators
   sourceNamespace: openshift-marketplace
-  startingCSV: elastic-cloud-eck.v1.2.1
+  startingCSV: elastic-cloud-eck.v1.7.1
 EOF
+
+如果 installPlanApproval 设置为 Manual，可以人工更改 installplan 批准状态
 oc -n service-telemetry get installplan
 oc -n service-telemetry patch $(oc -n service-telemetry get installplan -o name) --type json -p='[{"op": "replace", "path": "/spec/approved", "value":true}]'
 
-查看 csv
-oc -n service-telemetry get csv 
-
-订阅 Prometheus Operator
-oc apply -f - <<EOF
-apiVersion: operators.coreos.com/v1alpha1
-kind: Subscription
-metadata:
-  name: prometheus-operator
-  namespace: service-telemetry
-spec:
-  channel: beta
-  installPlanApproval: Manual
-  name: prometheus
-  source: community-operators
-  sourceNamespace: openshift-marketplace
-  startingCSV: prometheusoperator.0.37.0
-EOF
+查看 csv elastic-cloud-eck.v1.7.1
+$ oc -n service-telemetry get csv elastic-cloud-eck.v1.7.1 
+NAME                       DISPLAY                        VERSION   REPLACES                   PHASE
+elastic-cloud-eck.v1.7.1   Elasticsearch (ECK) Operator   1.7.1     elastic-cloud-eck.v1.7.0   Succeeded
 
 订阅 service telemetry operator
-oc apply -f - <<EOF
+oc create -f - <<EOF
 apiVersion: operators.coreos.com/v1alpha1
 kind: Subscription
 metadata:
-  name: servicetelemetry-operator
+  name: service-telemetry-operator
   namespace: service-telemetry
 spec:
-  channel: stable
-  installPlanApproval: Manual
-  name: servicetelemetry-operator
-  source: redhat-operators-stf
+  channel: stable-1.2
+  installPlanApproval: Automatic
+  name: service-telemetry-operator
+  source: infrawatch-operators
   sourceNamespace: openshift-marketplace
-  startingCSV: service-telemetry-operator.v1.0.3
+EOF
+注意：
+1. 在界面下可以看到两个 Service Telemetry Operator 
+2. 1 个频道为 stable-1.2，另外 1 个频道为 unstable
+3. 选择安装 stable-1.2 channel
+
+安装完后，在 service-telemetry namespace 下以下这些 csv：amq7-cert-manager, elastic-cloud-eck, service-telemetry-operator, amq7-interconnect-operator, prometheusoperator, smart-gateway-operator
+
+$ oc -n service-telemetry get csv 
+NAME                                 DISPLAY                                         VERSION    REPLACES                            PHASE
+amq7-cert-manager.v1.0.1             Red Hat Integration - AMQ Certificate Manager   1.0.1                                          Succeeded
+amq7-interconnect-operator.v1.10.1   Red Hat Integration - AMQ Interconnect          1.10.1     amq7-interconnect-operator.v1.2.4   Succeeded
+elastic-cloud-eck.v1.7.1             Elasticsearch (ECK) Operator                    1.7.1      elastic-cloud-eck.v1.7.0            Succeeded
+prometheusoperator.0.47.0            Prometheus Operator                             0.47.0     prometheusoperator.0.37.0           Succeeded
+service-telemetry-operator.v1.2.0    Service Telemetry Operator                      1.2.0                                          Succeeded
+smart-gateway-operator.v2.2.0        Smart Gateway Operator                          2.2.0                                          Succeeded
+
+创建默认 Service Telemetry 
+oc apply -f - <<EOF
+apiVersion: infra.watch/v1beta1
+kind: ServiceTelemetry
+metadata:
+  name: default
+  namespace: service-telemetry
+spec: {}
 EOF
 
-目前 ElasticSearch Cloud 的 CSV 安装遇到了障碍
+查看 pod service-telemetry-operator 的日志
+$ oc logs --selector name=service-telemetry-operator -c ansible
+PLAY RECAP *********************************************************************
+localhost                  : ok=54   changed=0    unreachable=0    failed=0    skipped=20   rescued=0    ignored=0  
+
+看看有哪些 pods 
+$ oc get pods 
+NAME                                                      READY   STATUS    RESTARTS   AGE
+alertmanager-default-0                                    2/2     Running   0          22m
+default-cloud1-ceil-meter-smartgateway-5ff6cd4bbb-x62jt   1/1     Running   0          21m
+default-cloud1-coll-meter-smartgateway-8446fc88d9-f7kkb   2/2     Running   0          21m
+default-interconnect-5657954949-xmxgt                     1/1     Running   0          22m
+elastic-operator-79d6d677c5-sdts9                         1/1     Running   0          79m
+interconnect-operator-74cc45cdb9-lcwzk                    1/1     Running   0          44m
+prometheus-default-0                                      2/2     Running   1          22m
+prometheus-operator-7f6948966b-xgvnq                      1/1     Running   0          44m
+service-telemetry-operator-bd5584ccb-pd7jh                2/2     Running   0          44m
+smart-gateway-operator-7fbffcbd69-xtwvg                   2/2     Running   0          44m
+
+配置 
 
 先尝试集成到 rhpds 环境
 生成 templates/stf-connectors.yaml 文件

@@ -112,11 +112,45 @@ spec:
   name: elastic-cloud-eck
   source: operatorhubio-operators
   sourceNamespace: openshift-marketplace
+  startingCSV: elastic-cloud-eck.v1.2.1
 EOF
 oc -n service-telemetry get installplan
-oc -n service-telemetry patch installplan/install-bb8kn --type json -p='[{"op": "replace", "path": "/spec/approved", "value":true}]'
+oc -n service-telemetry patch $(oc -n service-telemetry get installplan -o name) --type json -p='[{"op": "replace", "path": "/spec/approved", "value":true}]'
 
+查看 csv
+oc -n service-telemetry get csv 
 
+订阅 Prometheus Operator
+oc apply -f - <<EOF
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: prometheus-operator
+  namespace: service-telemetry
+spec:
+  channel: beta
+  installPlanApproval: Manual
+  name: prometheus
+  source: community-operators
+  sourceNamespace: openshift-marketplace
+  startingCSV: prometheusoperator.0.37.0
+EOF
+
+订阅 service telemetry operator
+oc apply -f - <<EOF
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: servicetelemetry-operator
+  namespace: service-telemetry
+spec:
+  channel: stable
+  installPlanApproval: Manual
+  name: servicetelemetry-operator
+  source: redhat-operators-stf
+  sourceNamespace: openshift-marketplace
+  startingCSV: service-telemetry-operator.v1.0.3
+EOF
 
 目前 ElasticSearch Cloud 的 CSV 安装遇到了障碍
 

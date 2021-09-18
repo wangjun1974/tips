@@ -712,9 +712,6 @@ watch -n10 'openstack server list ; openstack baremetal node list'
   "uuid": "70e90b26-afa6-4274-b52d-26ee9c199d29",
   "vendor_interface": "ipmitool"
 }
-
-是不是   "traits": [], 应该设置成别的东西啊
-
 ```
 
 ### 参考文档

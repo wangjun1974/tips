@@ -24270,3 +24270,28 @@ https://qastack.cn/unix/239489/dbus-system-failed-to-activate-service-org-freede
 systemctl restart dbus
 systemctl restart systemd-logind
 ```
+
+### virtual BMC 的问题定位
+```
+在 overcloud 里执行以下命令会调用 ipmi 进行 cleaning/clean wait
+openstack baremetal node manage xxx 
+openstack baremetal node provide xxx 
+
+但是在执行时 Provisioning State 为 clean failed， clean 失败
+
+ironic-conductor.log 里有如下报错
+Command: ipmitool -I lanplus -H 192.168.1.5 -L ADMINISTRATOR -p 623 -U admin -R 1 -N 5 -f /tmp/tmpa14jm8_e power on
+2021-09-18 05:08:39.067 7 WARNING ironic.drivers.modules.ipmitool [req-7943fc81-29db-4c1a-8b9b-57bcc9245267 c896a7b7a6a744efb68fb1df09363b33 8385a44faee34aa393f691a6272f1ac0 - default default] IPMI power action power on failed for node 70e90b26-afa6-4274-b52d-26ee9c199d29 with error: Unexpected error while running command.
+
+[root@overcloud-controller-0 ironic]# ipmitool -I lanplus -H 192.168.1.5 -L ADMINISTRATOR -p 623 -U admin power on
+Password: 
+Unable to Get Channel Cipher Suites
+Unable to set Chassis Power Control to Up/On
+Close Session command failed
+```
+
+### 生成 podman systemd service
+```
+podman generate systemd poc-registry >> /etc/systemd/system/podman.poc-registry.service
+systemctl enable podman.poc-registry.service
+```

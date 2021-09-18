@@ -194,13 +194,13 @@ smart-gateway-operator-7fbffcbd69-xtwvg                   2/2     Running   0   
 
 配置 
 
-先尝试集成到 rhpds 环境
+先尝试集成到 ocp1.rhcnsa.com 环境
 生成 templates/stf-connectors.yaml 文件
 cat > templates/stf-connectors.yaml <<EOF
 parameter_defaults:
   CeilometerQdrPublishEvents: true
   MetricsQdrConnectors:
-  - host: default-interconnect-5671-service-telemetry.apps.cluster-3e07.3e07.sandbox1882.opentlc.com
+  - host: default-interconnect-5671-service-telemetry.apps.ocp1.rhcnsa.com
     port: 443
     role: edge
     sslProfile: sslProfile

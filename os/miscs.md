@@ -24301,3 +24301,13 @@ https://docs.fedoraproject.org/en-US/Fedora/17/html/FreeIPA_Guide/config-forward
 ```
 ipa dnsconfig-mod --forwarder=10.64.63.6
 ```
+
+### Prometheus Alert Rules
+https://zhuanlan.zhihu.com/p/179295676<br>
+
+Sending email with the Alertmanager via Gmail<br>
+https://www.robustperception.io/sending-email-with-the-alertmanager-via-gmail<br>
+
+
+自定义Prometheus告警规则<br>
+https://yunlzheng.gitbook.io/prometheus-book/parti-prometheus-ji-chu/alert/prometheus-alert-rule<br>

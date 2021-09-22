@@ -24314,6 +24314,9 @@ https://yunlzheng.gitbook.io/prometheus-book/parti-prometheus-ji-chu/alert/prome
 PromQL 快速入门<br>
 https://www.cnblogs.com/chanshuyi/p/04_quick_start_of_promql.html<br>
 
+Prometheus 中文文档<br>
+https://www.prometheus.wang/<br>
+
 ### Grafana Dashboard
 grafana增加dashboard图形<br>
 https://blog.csdn.net/weixin_44953658/article/details/114585357<br>

@@ -509,6 +509,59 @@ oc exec -it curl /bin/sh
 [ root@curl:/ ]$ curl alertmanager-operated:9093/api/v1/status
 {"status":"success","data":{"configYAML":"global:\n  resolve_timeout: 10m\n  http_config: {}\n  smtp_hello: localhost\n  smtp_require_tls: true\n  pagerduty_url: https://events.pagerduty.com/v2/enqueue\n  opsgenie_api_url: https://api.opsgenie.com/\n  wechat_api_url: https://qyapi.weixin.qq.com/cgi-bin/\n  victorops_api_url: https://alert.victorops.com/integrations/generic/20131114/alert/\nroute:\n  receiver: email-me\n  group_by:\n  - job\n  group_wait: 30s\n  group_interval: 5m\n  repeat_interval: 12h\nreceivers:\n- name: email-me\n  email_configs:\n  - send_resolved: false\n    to: wjqhd@hotmail.com\n    from: wjqhd@hotmail.com\n    hello: localhost\n    smarthost: smtp-mail.outlook.com:587\n    auth_username: wjqhd@hotmail.com\n    auth_password: \u003csecret\u003e\n    auth_identity: wjqhd@hotmail.com\n    headers:\n      From: wjqhd@hotmail.com\n      Subject: '{{ template \"email.default.subject\" . }}'\n      To: wjqhd@hotmail.com\n    html: '{{ template \"email.default.html\" . }}'\n    require_tls: true\ntemplates: []\n","configJSON":{"global":{"resolve_timeout":600000000000,"http_config":{"BasicAuth":null,"BearerToken":"","BearerTokenFile":"","ProxyURL":{},"TLSConfig":{"CAFile":"","CertFile":"","KeyFile":"","ServerName":"","InsecureSkipVerify":false}},"smtp_hello":"localhost","smtp_smarthost":"","smtp_require_tls":true,"pagerduty_url":"https://events.pagerduty.com/v2/enqueue","opsgenie_api_url":"https://api.opsgenie.com/","wechat_api_url":"https://qyapi.weixin.qq.com/cgi-bin/","victorops_api_url":"https://alert.victorops.com/integrations/generic/20131114/alert/"},"route":{"receiver":"email-me","group_by":["job"],"group_wait":30000000000,"group_interval":300000000000,"repeat_interval":43200000000000},"receivers":[{"name":"email-me","email_configs":[{"send_resolved":false,"to":"wjqhd@hotmail.com","from":"wjqhd@hotmail.com","hello":"localhost","smarthost":"smtp-mail.outlook.com:587","auth_username":"wjqhd@hotmail.com","auth_password":"\u003csecret\u003e","auth_identity":"wjqhd@hotmail.com","headers":{"From":"wjqhd@hotmail.com","Subject":"{{ template \"email.default.subject\" . }}","To":"wjqhd@hotmail.com"},"html":"{{ template \"email.default.html\" . }}","require_tls":true,"tls_config":{"CAFile":"","CertFile":"","KeyFile":"","ServerName":"","InsecureSkipVerify":false}}]}],"templates":null},"versionInfo":{"branch":"HEAD","buildDate":"20200617-08:54:02","buildUser":"root@dee35927357f","goVersion":"go1.14.4","revision":"4c6c03ebfe21009c546e4d1e9b92c371d67c021d","version":"0.21.0"},"uptime":"2021-09-18T23:19:40.606887467Z","clusterStatus":null}}
 
+检查邮箱，应该收到了告警邮件
+
+接下来设置在 ServiceTelemetry 对象里启用 Grafana
+首先创建 Graphana Subscription
+$ oc apply -f - <<EOF
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: grafana-operator
+  namespace: service-telemetry
+spec:
+  channel: alpha
+  installPlanApproval: Automatic
+  name: grafana-operator
+  source: operatorhubio-operators
+  sourceNamespace: openshift-marketplace
+  startingCSV: grafana-operator.v3.10.3
+EOF
+
+编辑 ServiceTelemetry 对象 default
+oc edit ServiceTelemetry default
+...
+spec
+...
+  graphing:
+    enabled: true
+    grafana:
+      ingressEnabled: true
+
+检查 Grafana 已部署
+$ oc get pod -l app=grafana
+grafana-deployment-6c4797d494-l9nr8   1/1     Running   0          17m
+
+检查 Grafana 的 datasources
+$ oc get grafanadatasources
+NAME                    AGE
+default-ds-prometheus   19m
+
+获取 Grafana Route
+oc get route grafana-route -o jsonpath='{"https://"}{.spec.host}{"\n"}'
+
+检查镜像版本，要求镜像版本大于 8.1.0
+$ oc get pod -l "app=grafana" -ojsonpath='{.items[0].spec.containers[0].image}'
+如果版本低于 8.1.0 则更新镜像版本
+$ oc patch grafana/default --type merge -p '{"spec":{"baseImage":"docker.io/grafana/grafana:8.1.0"}}'
+再次检查检查镜像版本
+$ oc get pod -l "app=grafana" -ojsonpath='{.items[0].spec.containers[0].image}'
+docker.io/grafana/grafana:8.1.0
+
+导入 STF Dashboard
+$ oc apply -f https://raw.githubusercontent.com/infrawatch/dashboards/master/deploy/stf-1.3/rhos-dashboard.yaml
+
+在执行完这一步之后，可以看到 STF Grafana 的 Dashboard 了
 ```
 
 ### setup ceilometer notification driver in tripleo for STF

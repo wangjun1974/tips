@@ -446,14 +446,16 @@ $ oc delete pod curl
 
 有了这条规则后，考虑用停止 collectd qpid 容器模拟触发告警 
 
-在控制节点上，执行 
+在控制节点上，执行以下命令停止 metrics_qdr 服务，这样 prometheus 就无法收集到 collectd_cpu_percent 指标了
+满足了告警 ‘Collectd Instance down’ 触发的条件 
 [heat-admin@overcloud-controller-0 ~]$ sudo systemctl stop tripleo_metrics_qdr.service  
 
-编辑 ServiceTelemetry default
+编辑 ServiceTelemetry default 对象，添加 alertmanagerConfigManifest
 oc edit ServiceTelemetry default
 
-GMAIL_ACCOUNT=yaoyao2000@gmail.com
-GMAIL_AUTH_TOKEN=xxxxxx
+设置告警发送到邮箱 wjqhd@hotmail.com
+MAIL_ACCOUNT=wjqhd@hotmail.com
+HOTMAIL_AUTH_TOKEN=xxxxxx
 在 spec 里添加 alertmanagerConfigManifest
 spec:
   alertmanagerConfigManifest: |
@@ -476,12 +478,38 @@ spec:
         receivers:
         - name: 'email-me'
           email_configs:
-          - to: yaoyao2000@gmail.com
-            from: yaoyao2000@gmail.com
-            smarthost: smtp.gmail.com:587
-            auth_username: "yaoyao2000@gmail.com"
-            auth_identity: "yaoyao2000@gmail.com"
-            auth_password: "$GMAIL_AUTH_TOKEN"        
+          - to: wjqhd@hotmail.com
+            from: wjqhd@hotmail.com
+            smarthost: smtp-mail.outlook.com:587
+            auth_username: "wjqhd@hotmail.com"
+            auth_identity: "wjqhd@hotmail.com"
+            auth_password: "$HOTMAIL_AUTH_TOKEN"        
+
+
+检查配置
+$ oc get secret alertmanager-default -o jsonpath='{.data.alertmanager\.yaml}' | base64 --decode
+global:
+  resolve_timeout: 10m
+route:
+  group_by: ['job']
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 12h
+  receiver: 'email-me'
+receivers:
+- name: 'email-me'
+  email_configs:
+  - to: wjqhd@hotmail.com
+    from: wjqhd@hotmail.com
+    smarthost: smtp-mail.outlook.com:587
+    auth_username: "wjqhd@hotmail.com"
+    auth_identity: "wjqhd@hotmail.com"
+    auth_password: "$GMAIL_AUTH_TOKEN"
+
+查看告警服务状态
+oc exec -it curl /bin/sh
+[ root@curl:/ ]$ curl alertmanager-operated:9093/api/v1/status
+{"status":"success","data":{"configYAML":"global:\n  resolve_timeout: 10m\n  http_config: {}\n  smtp_hello: localhost\n  smtp_require_tls: true\n  pagerduty_url: https://events.pagerduty.com/v2/enqueue\n  opsgenie_api_url: https://api.opsgenie.com/\n  wechat_api_url: https://qyapi.weixin.qq.com/cgi-bin/\n  victorops_api_url: https://alert.victorops.com/integrations/generic/20131114/alert/\nroute:\n  receiver: email-me\n  group_by:\n  - job\n  group_wait: 30s\n  group_interval: 5m\n  repeat_interval: 12h\nreceivers:\n- name: email-me\n  email_configs:\n  - send_resolved: false\n    to: wjqhd@hotmail.com\n    from: wjqhd@hotmail.com\n    hello: localhost\n    smarthost: smtp-mail.outlook.com:587\n    auth_username: wjqhd@hotmail.com\n    auth_password: \u003csecret\u003e\n    auth_identity: wjqhd@hotmail.com\n    headers:\n      From: wjqhd@hotmail.com\n      Subject: '{{ template \"email.default.subject\" . }}'\n      To: wjqhd@hotmail.com\n    html: '{{ template \"email.default.html\" . }}'\n    require_tls: true\ntemplates: []\n","configJSON":{"global":{"resolve_timeout":600000000000,"http_config":{"BasicAuth":null,"BearerToken":"","BearerTokenFile":"","ProxyURL":{},"TLSConfig":{"CAFile":"","CertFile":"","KeyFile":"","ServerName":"","InsecureSkipVerify":false}},"smtp_hello":"localhost","smtp_smarthost":"","smtp_require_tls":true,"pagerduty_url":"https://events.pagerduty.com/v2/enqueue","opsgenie_api_url":"https://api.opsgenie.com/","wechat_api_url":"https://qyapi.weixin.qq.com/cgi-bin/","victorops_api_url":"https://alert.victorops.com/integrations/generic/20131114/alert/"},"route":{"receiver":"email-me","group_by":["job"],"group_wait":30000000000,"group_interval":300000000000,"repeat_interval":43200000000000},"receivers":[{"name":"email-me","email_configs":[{"send_resolved":false,"to":"wjqhd@hotmail.com","from":"wjqhd@hotmail.com","hello":"localhost","smarthost":"smtp-mail.outlook.com:587","auth_username":"wjqhd@hotmail.com","auth_password":"\u003csecret\u003e","auth_identity":"wjqhd@hotmail.com","headers":{"From":"wjqhd@hotmail.com","Subject":"{{ template \"email.default.subject\" . }}","To":"wjqhd@hotmail.com"},"html":"{{ template \"email.default.html\" . }}","require_tls":true,"tls_config":{"CAFile":"","CertFile":"","KeyFile":"","ServerName":"","InsecureSkipVerify":false}}]}],"templates":null},"versionInfo":{"branch":"HEAD","buildDate":"20200617-08:54:02","buildUser":"root@dee35927357f","goVersion":"go1.14.4","revision":"4c6c03ebfe21009c546e4d1e9b92c371d67c021d","version":"0.21.0"},"uptime":"2021-09-18T23:19:40.606887467Z","clusterStatus":null}}
 
 ```
 

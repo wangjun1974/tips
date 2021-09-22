@@ -407,8 +407,10 @@ Router Addresses
 定义一条 Prometheus 告警规则
 告警对象名: name: prometheus-alarm-rules
 告警规则组名: name: ./openstack.rules
-告警名称: alert: Metric Listener down
-告警条件: expr: collectd_qpid_router_status < 1
+告警1名称: alert: Metric Listener down
+告警1条件: expr: collectd_qpid_router_status < 1
+告警2名称: alert: Collectd Instance down
+告警2条件: expr: absent(collectd_cpu_percent{plugin_instance="0",type_instance="idle"}) == 1
 $ oc apply -f - <<EOF
 apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
@@ -425,12 +427,61 @@ spec:
       rules:
         - alert: Metric Listener down
           expr: collectd_qpid_router_status < 1 
+        - alert: Collectd Instance down
+          expr: absent(collectd_cpu_percent{plugin_instance="0",type_instance="idle"}) == 1
 EOF
 
 有了这条规则后，考虑用停止 collectd qpid 容器模拟触发告警 
 
 在控制节点上，执行 
 [heat-admin@overcloud-controller-0 ~]$ sudo systemctl stop tripleo_metrics_qdr.service  
+
+验证规则已加载，从以下输出可以了解规则已加载
+$ oc run curl --generator=run-pod/v1 --image=radial/busyboxplus:curl -i --tty
+If you don't see a command prompt, try pressing enter.
+[ root@curl:/ ]$ curl prometheus-operated:9090/api/v1/rules
+{"status":"success","data":{"groups":[{"name":"./openstack.rules","file":"/etc/prometheus/rules/prometheus-default-rulefiles-0/service-telemetry-prometheus-alarm-rules.yaml","rules":[{"state":"inactive","name":"Metric Listener down","query":"collectd_qpid_router_status \u003c 1","duration":0,"labels":{},"annotations":{},"alerts":[],"health":"ok","evaluationTime":0.000235127,"lastEvaluation":"2021-09-22T04:49:22.160875378Z","type":"alerting"},{"state":"firing","name":"Collectd Instance down","query":"absent(collectd_cpu_percent{plugin_instance=\"0\",type_instance=\"idle\"}) == 1","duration":0,"labels":{},"annotations":{},"alerts":[{"labels":{"alertname":"Collectd Instance down","plugin_instance":"0","type_instance":"idle"},"annotations":{},"state":"firing","activeAt":"2021-09-22T04:35:22.159707604Z","value":"1e+00"}],"health":"ok","evaluationTime":0.000171787,"lastEvaluation":"2021-09-22T04:49:22.16111235Z","type":"alerting"}],"interval":30,"evaluationTime":0.00041704,"lastEvaluation":"2021-09-22T04:49:22.160870003Z"}]}}
+[ root@curl:/ ]$ exit
+$ oc delete pod curl
+
+有了这条规则后，考虑用停止 collectd qpid 容器模拟触发告警 
+
+在控制节点上，执行 
+[heat-admin@overcloud-controller-0 ~]$ sudo systemctl stop tripleo_metrics_qdr.service  
+
+编辑 ServiceTelemetry default
+oc edit ServiceTelemetry default
+
+GMAIL_ACCOUNT=yaoyao2000@gmail.com
+GMAIL_AUTH_TOKEN=xxxxxx
+在 spec 里添加 alertmanagerConfigManifest
+spec:
+  alertmanagerConfigManifest: |
+    apiVersion: v1
+    kind: Secret
+    metadata:
+      name: 'alertmanager-default'
+      namespace: 'service-telemetry'
+    type: Opaque
+    stringData:
+      alertmanager.yaml: |-
+        global:
+          resolve_timeout: 10m
+        route:
+          group_by: ['job']
+          group_wait: 30s
+          group_interval: 5m
+          repeat_interval: 12h
+          receiver: 'email-me'
+        receivers:
+        - name: 'email-me'
+          email_configs:
+          - to: yaoyao2000@gmail.com
+            from: yaoyao2000@gmail.com
+            smarthost: smtp.gmail.com:587
+            auth_username: "yaoyao2000@gmail.com"
+            auth_identity: "yaoyao2000@gmail.com"
+            auth_password: "$GMAIL_AUTH_TOKEN"        
 
 ```
 

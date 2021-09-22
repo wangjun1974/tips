@@ -5,8 +5,8 @@ https://infrawatch.github.io/documentation/#assembly-introduction-to-stf_assembl
 su - jwang
 
 1.2 下载 Code Ready Container 1.9.0
+注意：在实验环境下，没有选择在 CRC 下安装 STF，而是选择在 ocp1 下安装 STF，然后把 osp 集成到 ocp1 的 STF 上去
 curl -O -L https://mirror.openshift.com/pub/openshift-v4/clients/crc/1.9.0/crc-linux-amd64.tar.xz
-curl -O -L https://mirror.openshift.com/pub/openshift-v4/clients/crc/1.32.1/crc-linux-amd64.tar.xz
 
 1.3 解压缩
 tar xvfJ crc-linux-amd64.tar.xz
@@ -41,7 +41,6 @@ spec:
   - service-telemetry
 EOF
 oc get operatorgroup
-
 
 2.3 创建 CatalogSource operatorhubio-operators
 oc apply -f - <<EOF
@@ -88,7 +87,9 @@ $ oc get packagemanifests | grep InfraWatch
 smart-gateway-operator                               InfraWatch Operators       18m
 service-telemetry-operator                           InfraWatch Operators       18m
 
-2.6 订阅 AMQ Cert Manager Operator
+2.5 订阅 AMQ Cert Manager Operator
+AMQ Cert Manager 不支持安装在单独 namespace 下，因此 namespace 需选择 openshift-operators
+
 oc apply -f - <<EOF
 apiVersion: operators.coreos.com/v1alpha1
 kind: Subscription
@@ -103,12 +104,12 @@ spec:
   sourceNamespace: openshift-marketplace
 EOF
 
-检查 csv 
+检查 amq7-cert-manager csv 
 $ oc -n openshift-operators get csv amq7-cert-manager.v1.0.1
 NAME                       DISPLAY                                         VERSION   REPLACES   PHASE
 amq7-cert-manager.v1.0.1   Red Hat Integration - AMQ Certificate Manager   1.0.1                Succeeded
 
-2.7 订阅 Elastic Cloud on Kubernetes Operator
+2.6 订阅 Elastic Cloud on Kubernetes Operator
 oc apply -f - <<EOF
 apiVersion: operators.coreos.com/v1alpha1
 kind: Subscription
@@ -117,7 +118,7 @@ metadata:
   namespace: service-telemetry
 spec:
   channel: stable
-  installPlanApproval: Manual
+  installPlanApproval: Automatic
   name: elastic-cloud-eck
   source: operatorhubio-operators
   sourceNamespace: openshift-marketplace
@@ -133,7 +134,7 @@ $ oc -n service-telemetry get csv elastic-cloud-eck.v1.7.1
 NAME                       DISPLAY                        VERSION   REPLACES                   PHASE
 elastic-cloud-eck.v1.7.1   Elasticsearch (ECK) Operator   1.7.1     elastic-cloud-eck.v1.7.0   Succeeded
 
-订阅 service telemetry operator
+2.7 订阅 service telemetry operator
 oc create -f - <<EOF
 apiVersion: operators.coreos.com/v1alpha1
 kind: Subscription
@@ -148,11 +149,11 @@ spec:
   sourceNamespace: openshift-marketplace
 EOF
 注意：
-1. 在界面下可以看到两个 Service Telemetry Operator 
+1. 在 OCP 4.8 console 界面下可以看到两个 Service Telemetry Operator 
 2. 1 个频道为 stable-1.2，另外 1 个频道为 unstable
 3. 选择安装 stable-1.2 channel
 
-安装完后，在 service-telemetry namespace 下以下这些 csv：amq7-cert-manager, elastic-cloud-eck, service-telemetry-operator, amq7-interconnect-operator, prometheusoperator, smart-gateway-operator
+2.8 安装完后，在 service-telemetry namespace 下以下这些 csv：amq7-cert-manager, elastic-cloud-eck, service-telemetry-operator, amq7-interconnect-operator, prometheusoperator, smart-gateway-operator
 
 $ oc -n service-telemetry get csv 
 NAME                                 DISPLAY                                         VERSION    REPLACES                            PHASE
@@ -163,7 +164,7 @@ prometheusoperator.0.47.0            Prometheus Operator                        
 service-telemetry-operator.v1.2.0    Service Telemetry Operator                      1.2.0                                          Succeeded
 smart-gateway-operator.v2.2.0        Smart Gateway Operator                          2.2.0                                          Succeeded
 
-创建默认 Service Telemetry 
+3.1 创建默认 Service Telemetry 
 oc apply -f - <<EOF
 apiVersion: infra.watch/v1beta1
 kind: ServiceTelemetry
@@ -192,8 +193,10 @@ prometheus-operator-7f6948966b-xgvnq                      1/1     Running   0   
 service-telemetry-operator-bd5584ccb-pd7jh                2/2     Running   0          44m
 smart-gateway-operator-7fbffcbd69-xtwvg                   2/2     Running   0          44m
 
-先尝试集成到 ocp1.rhcnsa.com 环境
-生成 templates/stf-connectors.yaml 文件
+3.2 先尝试集成到 ocp1.rhcnsa.com 环境
+生成 templates/stf-connectors.yaml 文件，其中 host 对应以下命令的输出
+oc get route default-interconnect-5671 -o jsonpath='{.spec.host}{"\n"}'
+
 cat > templates/stf-connectors.yaml <<EOF
 parameter_defaults:
   CeilometerQdrPublishEvents: true
@@ -208,7 +211,7 @@ parameter_defaults:
   - name: sslProfile
 EOF
 
-生成 templates/enable-stf.yaml 文件
+3.3 生成 templates/enable-stf.yaml 文件
 因为是虚拟化环境，调高了 CollectdAmqpInterval，CollectdDefaultPollingInterval 和 ceilometer::agent::polling::polling_interval
 
 根据在以下路径已经存在了 $THT/environments/enable-stf.yaml 文件，考虑这个模版文件是否可以不用生成
@@ -288,6 +291,7 @@ parameter_defaults:
             port: 11211
 EOF
 
+3.4 生成部署脚本
 cat > deploy-ironic-overcloud-stf.sh <<'EOF'
 #!/bin/bash
 THT=/usr/share/openstack-tripleo-heat-templates/
@@ -314,10 +318,10 @@ openstack overcloud deploy --debug --templates $THT \
 --ntp-server 192.0.2.1
 EOF
 
-执行部署 
+3.5 执行部署 
 $ /usr/bin/nohup /bin/bash -x deploy-ironic-overcloud-stf.sh &
 
-安装后检查
+4.1 安装后检查
 检查 overcloud 节点 metric_qdr 的状态
 $ sudo podman container inspect --format '{{.State.Status}}' metrics_qdr
 running
@@ -358,7 +362,7 @@ Router Links
   ======================================================================================================================================================================
   endpoint  out  1        6         local   _edge                                    250  0    0      0       9093   0        0       9093  0    0    0    6996   0
 
-在 OpenShift 侧查看 Apache Qpid Dispatch Router 容器
+4.2 在 OpenShift 侧查看 Apache Qpid Dispatch Router 容器
 $ oc get pods -l application=default-interconnect
 NAME                                    READY   STATUS    RESTARTS   AGE
 default-interconnect-5657954949-xmxgt   1/1     Running   0          5h58m
@@ -402,7 +406,7 @@ Router Addresses
   local   temp.8qUymdqdQa3B68j                            balanced   -    1      0       0       49      0     0
   local   temp.UXhkRDXXqomk_in                            balanced   -    1      0       0       0       0     0
 
-定义一条 Prometheus 告警规则
+5.1 定义一条 Prometheus 告警规则
 告警对象名: name: prometheus-alarm-rules
 告警规则组名: name: ./openstack.rules
 告警1名称: alert: Metric Listener down
@@ -429,12 +433,9 @@ spec:
           expr: absent(collectd_cpu_percent{plugin_instance="0",type_instance="idle"}) == 1
 EOF
 
-有了这条规则后，考虑用停止 collectd qpid 容器模拟触发告警 
+有了这 2 条规则后，考虑用停止 collectd qpid 容器模拟触发 Collectd Instance down 告警 
 
-在控制节点上，执行 
-[heat-admin@overcloud-controller-0 ~]$ sudo systemctl stop tripleo_metrics_qdr.service  
-
-验证规则已加载，从以下输出可以了解规则已加载
+5.2 验证规则已加载，从以下输出可以了解规则已加载
 $ oc run curl --generator=run-pod/v1 --image=radial/busyboxplus:curl -i --tty
 If you don't see a command prompt, try pressing enter.
 [ root@curl:/ ]$ curl prometheus-operated:9090/api/v1/rules
@@ -442,13 +443,11 @@ If you don't see a command prompt, try pressing enter.
 [ root@curl:/ ]$ exit
 $ oc delete pod curl
 
-有了这条规则后，考虑用停止 collectd qpid 容器模拟触发告警 
-
-在控制节点上，执行以下命令停止 metrics_qdr 服务，这样 prometheus 就无法收集到 collectd_cpu_percent 指标了
+5.3 在控制节点上，执行以下命令停止 metrics_qdr 服务，这样 prometheus 就无法收集到 collectd_cpu_percent 指标了
 满足了告警 ‘Collectd Instance down’ 触发的条件 
 [heat-admin@overcloud-controller-0 ~]$ sudo systemctl stop tripleo_metrics_qdr.service  
 
-编辑 ServiceTelemetry default 对象，添加 alertmanagerConfigManifest
+5.4 编辑 ServiceTelemetry default 对象，添加 alertmanagerConfigManifest
 oc edit ServiceTelemetry default
 
 设置告警发送到邮箱 wjqhd@hotmail.com
@@ -484,7 +483,7 @@ spec:
             auth_password: "$HOTMAIL_AUTH_TOKEN"        
 
 
-检查配置
+5.5 检查配置
 $ oc get secret alertmanager-default -o jsonpath='{.data.alertmanager\.yaml}' | base64 --decode
 global:
   resolve_timeout: 10m
@@ -504,14 +503,14 @@ receivers:
     auth_identity: "wjqhd@hotmail.com"
     auth_password: "$GMAIL_AUTH_TOKEN"
 
-查看告警服务状态
+5.6 查看告警服务状态
 oc exec -it curl /bin/sh
 [ root@curl:/ ]$ curl alertmanager-operated:9093/api/v1/status
 {"status":"success","data":{"configYAML":"global:\n  resolve_timeout: 10m\n  http_config: {}\n  smtp_hello: localhost\n  smtp_require_tls: true\n  pagerduty_url: https://events.pagerduty.com/v2/enqueue\n  opsgenie_api_url: https://api.opsgenie.com/\n  wechat_api_url: https://qyapi.weixin.qq.com/cgi-bin/\n  victorops_api_url: https://alert.victorops.com/integrations/generic/20131114/alert/\nroute:\n  receiver: email-me\n  group_by:\n  - job\n  group_wait: 30s\n  group_interval: 5m\n  repeat_interval: 12h\nreceivers:\n- name: email-me\n  email_configs:\n  - send_resolved: false\n    to: wjqhd@hotmail.com\n    from: wjqhd@hotmail.com\n    hello: localhost\n    smarthost: smtp-mail.outlook.com:587\n    auth_username: wjqhd@hotmail.com\n    auth_password: \u003csecret\u003e\n    auth_identity: wjqhd@hotmail.com\n    headers:\n      From: wjqhd@hotmail.com\n      Subject: '{{ template \"email.default.subject\" . }}'\n      To: wjqhd@hotmail.com\n    html: '{{ template \"email.default.html\" . }}'\n    require_tls: true\ntemplates: []\n","configJSON":{"global":{"resolve_timeout":600000000000,"http_config":{"BasicAuth":null,"BearerToken":"","BearerTokenFile":"","ProxyURL":{},"TLSConfig":{"CAFile":"","CertFile":"","KeyFile":"","ServerName":"","InsecureSkipVerify":false}},"smtp_hello":"localhost","smtp_smarthost":"","smtp_require_tls":true,"pagerduty_url":"https://events.pagerduty.com/v2/enqueue","opsgenie_api_url":"https://api.opsgenie.com/","wechat_api_url":"https://qyapi.weixin.qq.com/cgi-bin/","victorops_api_url":"https://alert.victorops.com/integrations/generic/20131114/alert/"},"route":{"receiver":"email-me","group_by":["job"],"group_wait":30000000000,"group_interval":300000000000,"repeat_interval":43200000000000},"receivers":[{"name":"email-me","email_configs":[{"send_resolved":false,"to":"wjqhd@hotmail.com","from":"wjqhd@hotmail.com","hello":"localhost","smarthost":"smtp-mail.outlook.com:587","auth_username":"wjqhd@hotmail.com","auth_password":"\u003csecret\u003e","auth_identity":"wjqhd@hotmail.com","headers":{"From":"wjqhd@hotmail.com","Subject":"{{ template \"email.default.subject\" . }}","To":"wjqhd@hotmail.com"},"html":"{{ template \"email.default.html\" . }}","require_tls":true,"tls_config":{"CAFile":"","CertFile":"","KeyFile":"","ServerName":"","InsecureSkipVerify":false}}]}],"templates":null},"versionInfo":{"branch":"HEAD","buildDate":"20200617-08:54:02","buildUser":"root@dee35927357f","goVersion":"go1.14.4","revision":"4c6c03ebfe21009c546e4d1e9b92c371d67c021d","version":"0.21.0"},"uptime":"2021-09-18T23:19:40.606887467Z","clusterStatus":null}}
 
-检查邮箱，应该收到了告警邮件
+5.7 检查邮箱，应该收到了告警邮件
 
-接下来设置在 ServiceTelemetry 对象里启用 Grafana
+6.1 接下来设置在 ServiceTelemetry 对象里启用 Grafana
 首先创建 Graphana Subscription
 $ oc apply -f - <<EOF
 apiVersion: operators.coreos.com/v1alpha1
@@ -528,7 +527,7 @@ spec:
   startingCSV: grafana-operator.v3.10.3
 EOF
 
-编辑 ServiceTelemetry 对象 default
+6.2 编辑 ServiceTelemetry 对象 default
 oc edit ServiceTelemetry default
 ...
 spec
@@ -538,7 +537,7 @@ spec
     grafana:
       ingressEnabled: true
 
-检查 Grafana 已部署
+6.3 检查 Grafana 已部署
 $ oc get pod -l app=grafana
 grafana-deployment-6c4797d494-l9nr8   1/1     Running   0          17m
 
@@ -558,7 +557,7 @@ $ oc patch grafana/default --type merge -p '{"spec":{"baseImage":"docker.io/graf
 $ oc get pod -l "app=grafana" -ojsonpath='{.items[0].spec.containers[0].image}'
 docker.io/grafana/grafana:8.1.0
 
-导入 STF Dashboard
+6.4 导入 STF Dashboard
 $ oc apply -f https://raw.githubusercontent.com/infrawatch/dashboards/master/deploy/stf-1.3/rhos-dashboard.yaml
 $ oc apply -f https://raw.githubusercontent.com/infrawatch/dashboards/master/deploy/stf-1.3/rhos-cloud-dashboard.yaml
 $ oc apply -f https://raw.githubusercontent.com/infrawatch/dashboards/master/deploy/stf-1.3/rhos-cloudevents-dashboard.yaml

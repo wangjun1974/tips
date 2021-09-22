@@ -192,8 +192,6 @@ prometheus-operator-7f6948966b-xgvnq                      1/1     Running   0   
 service-telemetry-operator-bd5584ccb-pd7jh                2/2     Running   0          44m
 smart-gateway-operator-7fbffcbd69-xtwvg                   2/2     Running   0          44m
 
-配置 
-
 先尝试集成到 ocp1.rhcnsa.com 环境
 生成 templates/stf-connectors.yaml 文件
 cat > templates/stf-connectors.yaml <<EOF

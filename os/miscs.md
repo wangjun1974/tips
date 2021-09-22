@@ -24302,7 +24302,7 @@ https://docs.fedoraproject.org/en-US/Fedora/17/html/FreeIPA_Guide/config-forward
 ipa dnsconfig-mod --forwarder=10.64.63.6
 ```
 
-### Prometheus Alert Rules
+### Prometheus Alert Rules and AlertManager Alert Route
 https://zhuanlan.zhihu.com/p/179295676<br>
 
 Sending email with the Alertmanager via Gmail<br>
@@ -24313,3 +24313,7 @@ https://yunlzheng.gitbook.io/prometheus-book/parti-prometheus-ji-chu/alert/prome
 
 PromQL 快速入门<br>
 https://www.cnblogs.com/chanshuyi/p/04_quick_start_of_promql.html<br>
+
+### Grafana Dashboard
+grafana增加dashboard图形<br>
+https://blog.csdn.net/weixin_44953658/article/details/114585357<br>

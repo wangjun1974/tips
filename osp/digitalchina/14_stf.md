@@ -560,6 +560,9 @@ docker.io/grafana/grafana:8.1.0
 
 导入 STF Dashboard
 $ oc apply -f https://raw.githubusercontent.com/infrawatch/dashboards/master/deploy/stf-1.3/rhos-dashboard.yaml
+$ oc apply -f https://raw.githubusercontent.com/infrawatch/dashboards/master/deploy/stf-1.3/rhos-cloud-dashboard.yaml
+$ oc apply -f https://raw.githubusercontent.com/infrawatch/dashboards/master/deploy/stf-1.3/rhos-cloudevents-dashboard.yaml
+
 
 在执行完这一步之后，可以看到 STF Grafana 的 Dashboard 了
 ```

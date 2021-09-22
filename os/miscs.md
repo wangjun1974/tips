@@ -24311,3 +24311,6 @@ https://www.robustperception.io/sending-email-with-the-alertmanager-via-gmail<br
 
 自定义Prometheus告警规则<br>
 https://yunlzheng.gitbook.io/prometheus-book/parti-prometheus-ji-chu/alert/prometheus-alert-rule<br>
+
+PromQL 快速入门<br>
+https://www.cnblogs.com/chanshuyi/p/04_quick_start_of_promql.html<br>

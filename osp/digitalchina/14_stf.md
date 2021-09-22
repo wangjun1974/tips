@@ -404,6 +404,33 @@ Router Addresses
   local   temp.8qUymdqdQa3B68j                            balanced   -    1      0       0       49      0     0
   local   temp.UXhkRDXXqomk_in                            balanced   -    1      0       0       0       0     0
 
+定义一条 Prometheus 告警规则
+告警对象名: name: prometheus-alarm-rules
+告警规则组名: name: ./openstack.rules
+告警名称: alert: Metric Listener down
+告警条件: expr: collectd_qpid_router_status < 1
+$ oc apply -f - <<EOF
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  creationTimestamp: null
+  labels:
+    prometheus: default
+    role: alert-rules
+  name: prometheus-alarm-rules
+  namespace: service-telemetry
+spec:
+  groups:
+    - name: ./openstack.rules
+      rules:
+        - alert: Metric Listener down
+          expr: collectd_qpid_router_status < 1 
+EOF
+
+有了这条规则后，考虑用停止 collectd qpid 容器模拟触发告警 
+
+在控制节点上，执行 
+[heat-admin@overcloud-controller-0 ~]$ sudo systemctl stop tripleo_metrics_qdr.service  
 
 ```
 

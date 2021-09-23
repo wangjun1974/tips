@@ -79,3 +79,20 @@ https://access.redhat.com/solutions/2213711
 
 经过检查，在已经配置好 ovs bond 的计算节点上，上面的配置是没有办法把 ovs_bridge 下的 ovs_bond 拆掉变成不使用 ovs_bond 的配置
 ```
+
+### RHV 上传镜像
+```
+# RHV 上传镜像
+prog=/usr/bin/engine-iso-uploader
+mypass="xxxxxx"
+
+args="-i ISO11 upload rhel-8.4-x86_64-dvd.iso --force"
+/usr/bin/expect <<EOF
+set timeout -1
+spawn "$prog" $args
+expect "Please provide the REST API password for the admin@internal oVirt Engine user (CTRL+D to abort): "
+send "$mypass\r"
+expect eof
+exit
+EOF
+```

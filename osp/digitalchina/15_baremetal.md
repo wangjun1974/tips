@@ -344,7 +344,9 @@ boot
 
 根据实际情况配置以下参数
 IronicInspectorSubnets
-IPAImageURLs: agent.kernel 和 agent.ramdisk 的获取地址，可填写 undercloud ControlPlane 的地址
+
+IPAImageURLs: agent.kernel 和 agent.ramdisk 的获取地址，可填写 undercloud ControlPlane 的地址，部署过程中，在 step_3 会执行命令 'curl -g -o file-xxx1 url-yyy1 -o file-xxx2 url-yyy2 ' 从这个 URLs 获取 agent.kernel 和 agent.ramdisk 
+
 IronicInspectorInterface
 
 (overcloud) [stack@undercloud ~]$ cat >> templates/ironic.yaml <<EOF

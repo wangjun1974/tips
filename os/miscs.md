@@ -24339,4 +24339,34 @@ curl: (18) transfer closed with 6152549 bytes remaining to rea
 curl: (18) transfer closed with 562895056 bytes rema
 curl (http://172.16.4.14:8088/agent.kernel): response: 200, time: 0.009665, size: 2771979
 curl (http://172.16.4.14:8088/agent.ramdisk): response: 200, time: 0.087707, size: 327680
+
+出错的步骤在以下文件里
+(overcloud) [stack@undercloud tmp]$ cat /usr/share/openstack-tripleo-heat-templates/deployment/ironic/ironic-inspector-container-puppet.yaml
+...
+              ironic_inspector_get_ipa:
+                start_order: 3
+                image: *ironic_inspector_image
+                net: host
+                user: root
+                privileged: false
+                detach: false
+                volumes:
+                  list_concat:
+                    - {get_attr: [ContainersCommon, volumes]}
+                    -
+                      - /var/lib/kolla/config_files/ironic_inspector.json:/var/lib/kolla/config_files/config.json:ro
+                      - /var/lib/ironic:/var/lib/ironic:shared,z
+                environment:
+                  KOLLA_CONFIG_STRATEGY: COPY_ALWAYS
+                command:
+                  if:
+                   - ipa_images
+                   - list_join:
+                       - " "
+                       - - "curl -g -o /var/lib/ironic/httpboot/agent.kernel"
+                         - {get_param: [IPAImageURLs, 0]}
+                         - "-o /var/lib/ironic/httpboot/agent.ramdisk"
+                         - {get_param: [IPAImageURLs, 1]}
+                   - 'true'
+
 ```

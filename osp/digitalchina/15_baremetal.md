@@ -363,10 +363,6 @@ IronicInspectorInterface
   IronicInspectorInterface: 'br-baremetal'  
 EOF
 
-需要从 undercloud 到 172.16.4.18 地址间建立 host 路由，下面的例子添加一条到 172.16.4.18 的主机路由，这条路由的 gw 设置为 192.0.2.7，这是 172.16.4.18 这个 ip 所在的控制节点的 ControlPlane 的地址
-e.g.
-(undercloud) [stack@undercloud ~]$  sudo ip route add 172.16.4.18/32 via 192.0.2.7
-
 重新执行 overcloud deploy 脚本，这个步骤需执行
 ```
 

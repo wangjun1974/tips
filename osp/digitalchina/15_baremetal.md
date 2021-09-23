@@ -6,7 +6,7 @@
 cat > /tmp/oc-provisioning.xml <<EOF
 <network>
   <name>oc-provisioning</name>
-  <ip address="192.0.3.254" netmask="255.255.255.0"/>
+  <ip address="172.16.4.254" netmask="255.255.255.0"/>
 </network>
 EOF
 
@@ -320,7 +320,10 @@ openstack router add subnet router-provisioning subnet-provisioning
 ### 拷贝 agent.kernel 和 agent.ramdisk 到 overcloud controller /var/lib/ironic/httpboot/ 目录
 ```
 (overcloud) [stack@undercloud ~]$ scp /var/lib/ironic/httpboot/agent.* heat-admin@192.0.2.13:/tmp
-(overcloud) [stack@undercloud ~]$ ssh heat-admin@192.0.2.13 'sudo mv /tmp/agent.* /var/lib/ironic/httpboot'
+(overcloud) [stack@undercloud ~]$ ssh heat-admin@192.0.2.13
+[heat-admin@overcloud-controller-0 ~]$ sudo mv /tmp/agent.* /var/lib/ironic/httpboot
+[heat-admin@overcloud-controller-0 ~]$ sudo chown --reference /var/lib/ironic/httpboot/boot.ipxe /var/lib/ironic/httpboot/agent.*
+[heat-admin@overcloud-controller-0 ~]$ sudo podman exec -it ironic_pxe_http ls -l /var/lib/ironic/httpboot
 
 拷贝完后注意检查 agent.kernel 和 agent.ramdisk 文件的大小和属主，与 undercloud 下的文件进行对比
 
@@ -339,8 +342,11 @@ kernel --timeout 60000 http://172.16.4.18:8088/agent.kernel ipa-inspection-callb
 initrd --timeout 60000 http://172.16.4.18:8088/agent.ramdisk || goto retry_boot
 boot
 
+根据实际情况配置以下参数
+IronicInspectorSubnets
+IPAImageURLs: agent.kernel 和 agent.ramdisk 的获取地址，可填写 undercloud ControlPlane 的地址
+IronicInspectorInterface
 
-添加如下内容到 templates/ironic.yaml
 (overcloud) [stack@undercloud ~]$ cat >> templates/ironic.yaml <<EOF
 
   ############################
@@ -353,11 +359,15 @@ boot
   ############################  
   IronicInspectorSubnets:
     - ip_range: 172.16.4.110,172.16.4.120
-  IPAImageURLs: '["http://172.16.4.18:8088/agent.kernel", "http://172.16.4.18:8088/agent.ramdisk"]'
+  IPAImageURLs: '["http://192.0.2.1:8088/agent.kernel", "http://192.0.2.1:8088/agent.ramdisk"]'
   IronicInspectorInterface: 'br-baremetal'  
 EOF
 
-重新执行 overcloud deploy 脚本 (未执行)
+需要从 undercloud 到 172.16.4.18 地址间建立 host 路由，下面的例子添加一条到 172.16.4.18 的主机路由，这条路由的 gw 设置为 192.0.2.7，这是 172.16.4.18 这个 ip 所在的控制节点的 ControlPlane 的地址
+e.g.
+(undercloud) [stack@undercloud ~]$  sudo ip route add 172.16.4.18/32 via 192.0.2.7
+
+重新执行 overcloud deploy 脚本，这个步骤需执行
 ```
 
 ### 创建 baremetal flavor

@@ -24378,4 +24378,6 @@ Unable to establish connection to http://192.168.122.16:5050/v1/introspection/a6
 
 希望部署或者更新时都可以调整 overcloud 节点网卡配置，可以在 templates/environments/network-environments.yaml 文件里添加 NetworkDeploymentActions 的设置
   NetworkDeploymentActions: ['CREATE','UPDATE']
+
+经过检查，在已经配置好 ovs bond 的计算节点上，上面的配置是没有办法把 ovs_bridge 下的 ovs_bond 拆掉变成不使用 ovs_bond 的配置的
 ```

@@ -24369,4 +24369,13 @@ curl (http://172.16.4.14:8088/agent.ramdisk): response: 200, time: 0.087707, siz
                          - {get_param: [IPAImageURLs, 1]}
                    - 'true'
 
+
+另外的报错
+(overcloud) [stack@undercloud ~]$ openstack baremetal introspection start --wait $(openstack baremetal node show baremetal-node0 -f value -c uuid)
+Waiting for introspection to finish...
+Unable to establish connection to http://192.168.122.16:5050/v1/introspection/a6d00ee7-cb32-4db5-be20-de7f4bdeb9c9: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response',))
+
+
+希望部署或者更新时都可以调整 overcloud 节点网卡配置，可以在 templates/environments/network-environments.yaml 文件里添加 NetworkDeploymentActions 的设置
+  NetworkDeploymentActions: ['CREATE','UPDATE']
 ```

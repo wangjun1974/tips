@@ -366,10 +366,27 @@ openstack flavor create \
   --public baremetal
 
 https://www.cnblogs.com/jmilkfan-fanguiju/p/11825059.html
-openstack flavor set --property resources:CUSTOM_BAREMETAL=1 baremetal （待检查）
+注意：以下设置是必须的
+openstack flavor set --property resources:CUSTOM_BAREMETAL=1 baremetal
 openstack flavor set --property resources:VCPU=0 baremetal
 openstack flavor set --property resources:MEMORY_MB=0 baremetal
 openstack flavor set --property resources:DISK_GB=0 baremetal  
+```
+
+### 创建 virtual flavor 和 image
+```
+source ~/overcloudrc
+openstack flavor create \
+  --id auto --ram 64 \
+  --vcpus 1 --disk 1 \
+  --property baremetal=false \
+  --public m1.nano
+
+curl -L -O http://download.cirros-cloud.net/0.4.0/cirros-0.4.0-x86_64-disk.img
+
+openstack image create cirros --file cirros-0.4.0-x86_64-disk.img --disk-format qcow2 --container-format bare
+
+openstack keypair create --public-key ~/.ssh/id_rsa.pub key1
 ```
 
 ### 创建 baremetal image
@@ -467,7 +484,9 @@ declare -x DIB_YUM_REPO_CONF="/home/stack/images/local.repo"
   --property kernel_id=$KERNEL_ID \
   --property ramdisk_id=$RAMDISK_ID \
   rhel-image
+```
 
+### 注册 baremetal 节点
 文档里的 5.5 部分可以省略
 https://access.redhat.com/documentation/en-us/red_hat_openstack_platform/16.2-beta/html/bare_metal_provisioning/configuring-the-bare-metal-provisioning-service-after-deployment#configuring-deploy-interfaces_bare-metal-post-deployment
 
@@ -518,8 +537,10 @@ nodes:
       ports:
         - address: "52:54:00:a1:b7:7a"
 EOF
+```
 
-生成 baremetal 节点
+### 生成 baremetal 节点
+```
 (overcloud) [stack@undercloud ~]$ openstack baremetal create overcloud-nodes.yaml
 (overcloud) [stack@undercloud ~]$ openstack baremetal node list
 +--------------------------------------+-----------------+---------------+-------------+--------------------+-------------+
@@ -533,10 +554,6 @@ EOF
   --driver-info deploy_kernel=$(openstack image show bm-deploy-kernel -f value -c id) \
   --driver-info deploy_ramdisk=$(openstack image show bm-deploy-ramdisk -f value -c id)
 
-设定 baremetal 节点对应的 cleaning_network 和 provisioning_network
-(overcloud) [stack@undercloud ~]$ openstack baremetal node set $(openstack baremetal node show baremetal-node0 -f value -c uuid) \
-    --driver-info cleaning_network=$(openstack network show provisioning -f value -c id) \
-    --driver-info provisioning_network=$(openstack network show provisioning -f value -c id)
 (overcloud) [stack@undercloud ~]$ openstack baremetal node show $(openstack baremetal node show baremetal-node0 -f value -c uuid) -f json | jq -r '.driver_info'
 
 5.6.5 设定 baremetal 节点的 Provisioning State 为 managable
@@ -547,12 +564,6 @@ EOF
 
 5.6.5 设定 baremetal 节点的 Provisioning State 为 available
 (overcloud) [stack@undercloud ~]$ openstack baremetal node provide $(openstack baremetal node show baremetal-node0 -f value -c uuid)
-
-手工设置 resource provider inventory
-(overcloud) [stack@undercloud ~]$ openstack resource provider inventory set --resource VCPU=4 --resource MEMORY_MB=6144 --resource DISK_GB=99 --resource CUSTOM_BAREMETAL=1 $(openstack baremetal node show baremetal-node0 -f value -c uuid)
-
-查看 resource provider inventory
-openstack resource provider inventory list $(openstack baremetal node show baremetal-node0 -f value -c uuid)
 
 获取 baremetal-node0 的 introspection 信息
 (overcloud) [stack@undercloud ~]$ mkdir -p overcloud-introspection
@@ -571,14 +582,26 @@ openstack resource provider inventory list $(openstack baremetal node show barem
 (overcloud) [stack@undercloud ~]$ openstack aggregate add host baremetal-hosts overcloud-controller-0.localdomain
 
 5.7.5 创建主机组 virtual-hosts
+(overcloud) [stack@undercloud ~]$ openstack aggregate create --property baremetal=false virtual-hosts
 
 5.7.6 添加计算节点到主机组 virtual-hosts
+(overcloud) [stack@undercloud ~]$ openstack aggregate add host virtual-hosts overcloud-novacompute-0.localdomain
+
+手工设置 baremetal 节点的 resource-class 并且设置 resource provider inventory
+(overcloud) [stack@undercloud ~]$ openstack baremetal node set $(openstack baremetal node show baremetal-node0 -f value -c uuid) --resource-class baremetal
+(overcloud) [stack@undercloud ~]$ openstack resource provider inventory set --resource VCPU=4 --resource MEMORY_MB=6144 --resource DISK_GB=99 --resource CUSTOM_BAREMETAL=1 $(openstack baremetal node show baremetal-node0 -f value -c uuid)
+
+查看 resource provider inventory
+openstack resource provider inventory list $(openstack baremetal node show baremetal-node0 -f value -c uuid)
 
 检查 resource provider
 https://access.redhat.com/solutions/3537351
 (overcloud) [stack@undercloud ~]$ source overcloudrc
 (overcloud) [stack@undercloud ~]$ openstack resource provider list | awk '{print $2}' | egrep -v 'uuid|^$' | while read rp; do echo "=== $rp ==="; openstack resource provider show $rp ; openstack resource provider usage show $rp ; openstack resource provider inventory list --os-placement-api-version 1.2 $rp ;done
+```
 
+### 启动实例
+```
 6.1.1 启动裸金属实例
 date -u ; openstack server create \
   --nic net-id=$(openstack network show provisioning -f value -c id) \
@@ -588,6 +611,14 @@ date -u ; openstack server create \
 
 查看实例和 baremetal 
 watch -n10 'openstack server list ; openstack baremetal node list'
+
+启动虚拟机实例，如果希望 virtual-instance-1 能与 baremetal-instance-1 能通信，需要为 Compute 角色添加网络 oc_provisioning，并且配置 配置 compute 的 nic-config，详情参考: 配置 controller 的 nic-config
+date -u ; openstack server create \
+  --key-name key1 \
+  --nic net-id=$(openstack network show provisioning -f value -c id) \
+  --flavor m1.nano \
+  --image $(openstack image show cirros -f value -c id) \
+  virtual-instance-1
 ```
 
 查看 baremetal node 详细信息

@@ -98,11 +98,38 @@ cp network_data.yaml network_data.yaml.sav
    # For systems with both IPv4 and IPv6, you may specify a gateway network for
    # each, such as ['ControlPlane', 'External']
    default_route_networks: ['External']
+
+在 Compute 的 Network 里添加
+    OcProvisioning:
+      subnet: oc_provisioning_subnet
+
+(undercloud) [stack@undercloud templates]$ diff -urN roles_data.yaml.sav roles_data.yaml
+--- roles_data.yaml.sav 2021-09-16 12:12:57.138927699 +0800
++++ roles_data.yaml     2021-09-23 15:01:05.886750010 +0800
+@@ -23,6 +23,8 @@
+       subnet: storage_mgmt_subnet
+     Tenant:
+       subnet: tenant_subnet
++    OcProvisioning:
++      subnet: oc_provisioning_subnet
+   # For systems with both IPv4 and IPv6, you may specify a gateway network for
+   # each, such as ['ControlPlane', 'External']
+   default_route_networks: ['External']
+@@ -208,6 +210,8 @@
+       subnet: tenant_subnet
+     Storage:
+       subnet: storage_subnet
++    OcProvisioning:
++      subnet: oc_provisioning_subnet
+   HostnameFormatDefault: '%stackname%-novacompute-%index%'
+   RoleParametersDefault:
+     TunedProfileName: "virtual-host"
+
 ```
 
-### 配置 controller 的 nic-config
+### 配置 controller 和 compute 的 nic-config
 ```
-修改 templates/network/config/bond-with-vlans/controller 文件
+修改 templates/network/config/bond-with-vlans/controller.yaml 文件
 
 添加 br-baremetal 部分
               - type: ovs_bridge
@@ -116,7 +143,6 @@ cp network_data.yaml network_data.yaml.sav
                 members:
                 - type: interface
                   name: ens5
-
 
 参考以下 diff 结果，注意：ovs bond 不支持 slave，因此取消了 bond1
 --- controller.yaml     2021-09-16 12:26:53.192422325 +0800
@@ -211,6 +237,89 @@ cp network_data.yaml network_data.yaml.sav
    OS::stack_id:
      description: The OsNetConfigImpl resource.
 
+
+修改 templates/network/config/bond-with-vlans/compute.yaml 文件
+
+添加 br-baremetal 部分
+              - type: ovs_bridge
+                name: br-baremetal
+                use_dhcp: false
+                mtu:
+                  get_param: OcProvisioningMtu
+                addresses:
+                - ip_netmask:
+                    get_param: OcProvisioningIpSubnet
+                members:
+                - type: interface
+                  name: ens5
+
+参考以下 diff 结果，注意：ovs bond 不支持 slave，因此取消了 bond1
+(undercloud) [stack@undercloud bond-with-vlans]$ diff -urN compute.yaml compute.yaml.sav
+--- compute.yaml        2021-09-23 15:07:41.775243431 +0800
++++ compute.yaml.sav    2021-09-23 15:04:46.323024754 +0800
+@@ -170,7 +170,7 @@
+             $network_config:
+               network_config:
+               - type: interface
+-                name: ens3
++                name: nic1
+                 mtu:
+                   get_param: ControlPlaneMtu
+                 use_dhcp: false
+@@ -193,10 +193,22 @@
+                 domain:
+                   get_param: DnsSearchDomains
+                 members:
+-                - type: interface
+-                  name: ens4
++                - type: ovs_bond
++                  name: bond1
+                   mtu:
+                     get_attr: [MinViableMtu, value]
++                  ovs_options:
++                    get_param: BondInterfaceOvsOptions
++                  members:
++                  - type: interface
++                    name: nic2
++                    mtu:
++                      get_attr: [MinViableMtu, value]
++                    primary: true
++                  - type: interface
++                    name: nic3
++                    mtu:
++                      get_attr: [MinViableMtu, value]
+                 - type: vlan
+                   mtu:
+                     get_param: StorageMtu
+@@ -230,17 +242,17 @@
+                   routes:
+                     list_concat_unique:
+                       - get_param: TenantInterfaceRoutes
+-              - type: ovs_bridge
+-                name: br-baremetal
+-                use_dhcp: false
+-                mtu:
+-                  get_param: OcProvisioningMtu
+-                addresses:
+-                - ip_netmask:
+-                    get_param: OcProvisioningIpSubnet
+-                members:
+-                - type: interface
+-                  name: ens5
++                - type: vlan
++                  mtu:
++                    get_param: OcProvisioningMtu
++                  vlan_id:
++                    get_param: OcProvisioningNetworkVlanID
++                  addresses:
++                  - ip_netmask:
++                      get_param: OcProvisioningIpSubnet
++                  routes:
++                    list_concat_unique:
++                      - get_param: OcProvisioningInterfaceRoutes
+ outputs:
+   OS::stack_id:
+     description: The OsNetConfigImpl resource.
 ```
 
 ### 修改 templates/environment/network-environments.yaml 文件

@@ -317,20 +317,7 @@ openstack router create router-provisioning
 openstack router add subnet router-provisioning subnet-provisioning
 ```
 
-### 拷贝 agent.kernel 和 agent.ramdisk 到 overcloud controller /var/lib/ironic/httpboot/ 目录
-```
-(overcloud) [stack@undercloud ~]$ scp /var/lib/ironic/httpboot/agent.* heat-admin@192.0.2.13:/tmp
-(overcloud) [stack@undercloud ~]$ ssh heat-admin@192.0.2.13
-[heat-admin@overcloud-controller-0 ~]$ sudo mv /tmp/agent.* /var/lib/ironic/httpboot
-[heat-admin@overcloud-controller-0 ~]$ sudo chown --reference /var/lib/ironic/httpboot/boot.ipxe /var/lib/ironic/httpboot/agent.*
-[heat-admin@overcloud-controller-0 ~]$ sudo podman exec -it ironic_pxe_http ls -l /var/lib/ironic/httpboot
-
-拷贝完后注意检查 agent.kernel 和 agent.ramdisk 文件的大小和属主，与 undercloud 下的文件进行对比
-
-
-```
-
-### 配置 Overcloud Baremetal Node Cleaning 
+### 配置 Overcloud Baremetal Node Cleaning 和 Ironic Inspector Subnet 
 ```
 查看控制节点 inspector.ipxe 文件内容
 [heat-admin@overcloud-controller-0 ~]$ cat /var/lib/ironic/httpboot/inspector.ipxe 
@@ -365,7 +352,7 @@ IronicInspectorInterface
   IronicInspectorInterface: 'br-baremetal'  
 EOF
 
-重新执行 overcloud deploy 脚本，这个步骤需执行
+重新执行 overcloud deploy 脚本，这个步骤必须执行
 ```
 
 ### 创建 baremetal flavor
@@ -379,7 +366,7 @@ openstack flavor create \
   --public baremetal
 
 https://www.cnblogs.com/jmilkfan-fanguiju/p/11825059.html
-openstack flavor set --property resources:CUSTOM_BAREMETAL=1 baremetal
+openstack flavor set --property resources:CUSTOM_BAREMETAL=1 baremetal （待检查）
 openstack flavor set --property resources:VCPU=0 baremetal
 openstack flavor set --property resources:MEMORY_MB=0 baremetal
 openstack flavor set --property resources:DISK_GB=0 baremetal  

@@ -16,6 +16,9 @@ virt-install --name=jwang-rhel82-undercloud --vcpus=4 --ram=32768 \
 --console pty,target_type=serial \
 --initrd-inject /tmp/ks.cfg \
 --extra-args='ks=file:/ks.cfg console=ttyS0'
+
+RHEL 8.4 的 kickstart 文件语法有改变，
+注意：ks 变为了 inst.ks , ksdevice 变为了 inst.ksdevice, dns 变为了 nameserver
 ```
 
 在下载服务器上执行，订阅所需软件频道
@@ -26,8 +29,8 @@ subscription-manager repos --enable=rhel-8-for-x86_64-baseos-eus-rpms --enable=r
 
 在下载服务器上，生成同步软件频道的脚本
 ```
-mkdir -p /repos/rhel8osp
-pushd /repos/rhel8osp
+mkdir -p /var/www/html/repos/osp16.2
+pushd /var/www/html/repos/osp16.2
 
 # 安装 createrepo
 yum install -y createrepo
@@ -35,7 +38,7 @@ yum install -y createrepo
 cat > ./OSP16_2_repo_sync_up.sh <<'EOF'
 #!/bin/bash
 
-localPath="/repos/rhel8osp/"
+localPath="/var/www/html/repos/osp16.2/"
 fileConn="/getPackage/"
 
 ## sync following yum repos 
@@ -67,7 +70,7 @@ EOF
 # 同步软件仓库
 /usr/bin/nohup /bin/bash OSP16_2_repo_sync_up.sh &
 
-# 同步完之后把 /repos/rhel8osp 目录打包，下载作为离线时使用的软件仓库
+# 同步完之后把 /var/www/html/repos/osp16.2 目录打包，下载作为离线时使用的软件仓库
 
 ```
 

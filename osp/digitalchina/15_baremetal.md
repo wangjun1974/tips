@@ -597,6 +597,7 @@ declare -x DIB_YUM_REPO_CONF="/home/stack/images/local.repo"
 ```
 
 ### 注册 baremetal 节点
+```
 文档里的 5.5 部分可以省略
 https://access.redhat.com/documentation/en-us/red_hat_openstack_platform/16.2-beta/html/bare_metal_provisioning/configuring-the-bare-metal-provisioning-service-after-deployment#configuring-deploy-interfaces_bare-metal-post-deployment
 

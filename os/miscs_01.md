@@ -155,3 +155,76 @@ https://github.com/openstack/tripleo-heat-templates/blob/stable/train/environmen
 
 设置 glance 使用 cinder 作为 backend 时，如果 cinder 自身也有多个 backend，可通过设置 cinder_volume_type 指定使用某个 cinder backend。tripleo 的设置参见以下模版<br>
 https://github.com/openstack/tripleo-heat-templates/blob/master/deployment/glance/glance-api-container-puppet.yaml#L588
+
+
+### systemctl status <pid>
+如何查询某个 pid 进程属于哪个 systemd 服务，可以用命令 'systemctl status <pid>' 来检查
+https://trstringer.com/pid-find-owning-systemd-unit/<br>
+```
+# systemctl status 1550 
+* NetworkManager.service - Network Manager
+   Loaded: loaded (/usr/lib/systemd/system/NetworkManager.service; enabled; vendor preset: enabled)
+   Active: active (running) since Sat 2021-09-18 13:37:03 CST; 5 days ago
+     Docs: man:NetworkManager(8)
+ Main PID: 1480 (NetworkManager)
+    Tasks: 4
+   CGroup: /system.slice/NetworkManager.service
+           |-1480 /usr/sbin/NetworkManager --no-daemon
+           `-1550 /usr/sbin/dnsmasq --no-resolv --keep-in-foreground --no-hosts --bind-interfaces --pid-file=/var/run/NetworkManager/dnsmas...
+
+Sep 24 11:22:41 base-pvg.redhat.ren NetworkManager[1480]: <info>  [1632453761.9975] dhcp4 (br1): canceled DHCP transaction, DHCP clie... 19958
+Sep 24 11:22:41 base-pvg.redhat.ren NetworkManager[1480]: <info>  [1632453761.9975] dhcp4 (br1): state changed timeout -> done
+Sep 24 11:22:41 base-pvg.redhat.ren NetworkManager[1480]: <info>  [1632453761.9979] device (br1): state change: ip-config -> failed (...aged')
+Sep 24 11:22:41 base-pvg.redhat.ren NetworkManager[1480]: <warn>  [1632453761.9991] device (br1): Activation: failed for connection 'br1'
+Sep 24 11:22:42 base-pvg.redhat.ren NetworkManager[1480]: <info>  [1632453762.0135] device (br1): detached bridge port em1.20
+Sep 24 11:22:42 base-pvg.redhat.ren NetworkManager[1480]: <info>  [1632453762.0157] device (em1.20): state change: activated -> deact...aged')
+Sep 24 11:22:42 base-pvg.redhat.ren NetworkManager[1480]: <info>  [1632453762.0183] device (br1): state change: failed -> disconnecte...aged')
+Sep 24 11:22:42 base-pvg.redhat.ren NetworkManager[1480]: <info>  [1632453762.0581] device (br1): state change: disconnected -> unman...aged')
+Sep 24 11:22:42 base-pvg.redhat.ren NetworkManager[1480]: <info>  [1632453762.0604] device (em1.20): state change: deactivating -> di...aged')
+Sep 24 11:22:42 base-pvg.redhat.ren NetworkManager[1480]: <info>  [1632453762.0851] device (em1.20): state change: disconnected -> un...ag
+
+安装 CodeReady Container 之后，crc 会设置 NetworkManager 做本地域名解析，会与其他 DNS 设置冲突
+
+cat > /etc/yum.repos.d/local.repo <<EOF
+[rhel-server-8.4-baseos]
+name=rhel-server-8.4-baseos
+baseurl=file:///mnt/BaseOS
+enable=1
+gpgcheck=0
+
+[rhel-server-8.4-appstream]
+name=rhel-server-8.4-appstream
+baseurl=file:///mnt/AppStream
+enable=1
+gpgcheck=0
+
+EOF
+
+yum makecache
+```
+
+### 使用 rhsm-cli 下载文件
+访问 https://access.redhat.com/management/api 生成用于通过 API 访问 CDN 的 Token.
+
+运行 rhsm-cli 容器，获得文件的 checksum，然后用 checksum 下载文件
+```
+podman run -it -v `pwd`:/Downloads brezhnev/rhsm-cli images -t $TOKEN --cheksum $CHECKSUM
+```
+
+### 从 Red Hat Access CDN 下载文件
+```
+Download boot ISO from command line
+https://access.redhat.com/solutions/2083653 
+
+cat > download.sh <<EOF
+wget \
+  --no-check-certificate \
+  --certificate=/etc/pki/entitlement/12345.pem \
+  --private-key=/etc/pki/entitlement/12345-key.pem \
+  --ca-certificate=/etc/rhsm/ca/redhat-entitlement-authority.pem \
+  https://cdn.redhat.com/content/dist/rhel/server/7/7Server/x86_64/iso/rhel-server-7.9-x86_64-dvd.iso
+EOF
+```
+
+### OpenShift Virtualization 下自动化安装 Windows 虚拟机
+https://cloud.redhat.com/blog/automatic-installation-of-a-windows-vm-using-openshift-virtualization

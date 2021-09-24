@@ -231,3 +231,8 @@ EOF
 
 ### OpenShift Virtualization 下自动化安装 Windows 虚拟机
 https://cloud.redhat.com/blog/automatic-installation-of-a-windows-vm-using-openshift-virtualization
+
+### AMQ Interconnect
+```
+
+```

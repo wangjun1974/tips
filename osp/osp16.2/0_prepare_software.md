@@ -23,6 +23,7 @@ RHEL 8.4 的 kickstart 文件语法有改变，
 
 在下载服务器上执行，订阅所需软件频道
 ```
+subscription-manager release --set=8.4
 subscription-manager repos --disable=*
 subscription-manager repos --enable=rhel-8-for-x86_64-baseos-eus-rpms --enable=rhel-8-for-x86_64-appstream-eus-rpms --enable=rhel-8-for-x86_64-highavailability-eus-rpms --enable=ansible-2.9-for-rhel-8-x86_64-rpms --enable=openstack-16.2-for-rhel-8-x86_64-rpms --enable=fast-datapath-for-rhel-8-x86_64-rpms --enable=advanced-virt-for-rhel-8-x86_64-rpms --enable=rhceph-4-tools-for-rhel-8-x86_64-rpms --enable=rhel-8-for-x86_64-nfv-rpms
 ```
@@ -145,10 +146,10 @@ EOF
 
 # 5.5 安装 createrepo，生成 repos 同步脚本
 [root@undercloud repos]# yum install -y createrepo yum-utils
-[root@undercloud repos]# cat > ./OSP16_1_repo_sync_up.sh <<'EOF'
+[root@undercloud repos]# cat > ./OSP16_2_repo_sync_up.sh <<'EOF'
 #!/bin/bash
 
-localPath="/var/www/html/repos/osp16.1/"
+localPath="/var/www/html/repos/osp16.2/"
 fileConn="/getPackage/"
 
 ## sync following yum repos 
@@ -156,12 +157,13 @@ fileConn="/getPackage/"
 # rhel-8-for-x86_64-appstream-eus-rpms
 # rhel-8-for-x86_64-highavailability-eus-rpms
 # ansible-2.9-for-rhel-8-x86_64-rpms
-# openstack-16.1-for-rhel-8-x86_64-rpms
+# openstack-16.2-for-rhel-8-x86_64-rpms
 # fast-datapath-for-rhel-8-x86_64-rpms
 # rhceph-4-tools-for-rhel-8-x86_64-rpms
 # advanced-virt-for-rhel-8-x86_64-rpms
+# rhel-8-for-x86_64-nfv-rpms
 
-for i in rhel-8-for-x86_64-baseos-eus-rpms rhel-8-for-x86_64-appstream-eus-rpms rhel-8-for-x86_64-highavailability-eus-rpms ansible-2.9-for-rhel-8-x86_64-rpms openstack-16.1-for-rhel-8-x86_64-rpms fast-datapath-for-rhel-8-x86_64-rpms rhceph-4-tools-for-rhel-8-x86_64-rpms advanced-virt-for-rhel-8-x86_64-rpms
+for i in rhel-8-for-x86_64-baseos-eus-rpms rhel-8-for-x86_64-appstream-eus-rpms rhel-8-for-x86_64-highavailability-eus-rpms ansible-2.9-for-rhel-8-x86_64-rpms openstack-16.2-for-rhel-8-x86_64-rpms fast-datapath-for-rhel-8-x86_64-rpms rhceph-4-tools-for-rhel-8-x86_64-rpms advanced-virt-for-rhel-8-x86_64-rpms rhel-8-for-x86_64-nfv-rpms
 do
 
   rm -rf "$localPath"$i/repodata

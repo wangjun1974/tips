@@ -119,9 +119,14 @@ EOF
 # 在 RHV 环境下使用 kickstart 安装虚拟机
 # https://access.redhat.com/solutions/300713
 
+对于 RHEL 8.4 来说，一些启动参数改变了，需要注意修改一下
+ks= 变成了 inst.ks=
+ksdevice= 变成了 inst.ksdevice=
+dns= 变成了 nameserver=
+
 kernel path ISO11://vmlinuz-rhel-8.4
 initrd path ISO11://initrd.img-rhel-8.4
-kernel parameters  ks=http://10.66.208.115/ks-undercloud.cfg ksdevice=ens3 ip=10.66.208.121 netmask=255.255.255.0 dns=10.64.63.6 gateway=10.66.208.254
+kernel parameters  inst.ks=http://10.66.208.115/ks-undercloud.cfg inst.ksdevice=ens3 ip=10.66.208.121 netmask=255.255.255.0 nameserver=10.64.63.6 gateway=10.66.208.254
 
 ```
 

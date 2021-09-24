@@ -773,7 +773,7 @@ PING 172.16.4.37 (172.16.4.37) 56(84) bytes of data.
 [cloud-user@baremetal-instance-1 ~]$ cat /etc/redhat-release 
 Red Hat Enterprise Linux release 8.2 (Ootpa)
 
-通过 virtual-instance-1 ping baremetal-instance-1，通过这个测试可知这两个实例是可以互相访问的
+通过 virtual-instance-1 ping baremetal-instance-1，验证两个实例是可以互相访问的
 [heat-admin@overcloud-controller-0 ~]$ ssh -i key1 cirros@172.16.4.37 ping -c1 172.16.4.32
 PING 172.16.4.32 (172.16.4.32): 56 data bytes
 64 bytes from 172.16.4.32: seq=0 ttl=64 time=14.743 ms

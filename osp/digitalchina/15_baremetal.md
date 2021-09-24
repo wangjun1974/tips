@@ -14,8 +14,9 @@ virsh net-define /tmp/oc-provisioning.xml
 virsh net-autostart oc-provisioning
 virsh net-start oc-provisioning
 
-overcloud controller 需要有网卡连接这个网络
+overcloud controller node 需要有网卡连接这个网络
 overcloud baremetal node 也需要有网卡连接这个网络
+如果希望 overcloud virtual instance 与 overcloud baremetal instance 能通信，overcloud compute node 也需要有网卡连接这个网络
 
 需要配置 provisioning 网络和 oc-provisioning 网络间的路由
 WIP: 一个可以考虑的方向是用 zebra 实现
@@ -712,22 +713,26 @@ https://access.redhat.com/solutions/3537351
 ### 启动实例
 ```
 6.1.1 启动裸金属实例
-date -u ; openstack server create \
+$ date -u ; openstack server create \
+  --key-name key1 \
   --nic net-id=$(openstack network show provisioning -f value -c id) \
   --flavor baremetal \
   --image $(openstack image show rhel-image -f value -c id) \
   baremetal-instance-1
 
 查看实例和 baremetal 
-watch -n10 'openstack server list ; openstack baremetal node list'
+$ watch -n10 'openstack server list ; openstack baremetal node list'
 
-启动虚拟机实例，如果希望 virtual-instance-1 能与 baremetal-instance-1 能通信，需要为 Compute 角色添加网络 oc_provisioning，并且配置 配置 compute 的 nic-config，详情参考: 配置 controller 的 nic-config
+启动虚拟机实例，如果希望 virtual-instance-1 能与 baremetal-instance-1 能通信，需要为 Compute 角色添加网络
+$ oc_provisioning，并且配置 配置 compute 的 nic-config，详情参考: 配置 controller 的 nic-config
 date -u ; openstack server create \
   --key-name key1 \
   --nic net-id=$(openstack network show provisioning -f value -c id) \
   --flavor m1.nano \
   --image $(openstack image show cirros -f value -c id) \
   virtual-instance-1
+$ openstack server list
+$ openstack console log show virtual-instance-1
 ```
 
 查看 baremetal node 详细信息

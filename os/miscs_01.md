@@ -95,4 +95,51 @@ send "$mypass\r"
 expect eof
 exit
 EOF
+
+args="-i ISO11 upload /tmp/vmlinuz-rhel-8.4 --force"
+/usr/bin/expect <<EOF
+set timeout -1
+spawn "$prog" $args
+expect "Please provide the REST API password for the admin@internal oVirt Engine user (CTRL+D to abort): "
+send "$mypass\r"
+expect eof
+exit
+EOF
+
+args="-i ISO11 upload /tmp/initrd.img-rhel-8.4 --force"
+/usr/bin/expect <<EOF
+set timeout -1
+spawn "$prog" $args
+expect "Please provide the REST API password for the admin@internal oVirt Engine user (CTRL+D to abort): "
+send "$mypass\r"
+expect eof
+exit
+EOF
+
+# 在 RHV 环境下使用 kickstart 安装虚拟机
+# https://access.redhat.com/solutions/300713
+
+kernel path ISO11://vmlinuz-rhel-8.4
+initrd path ISO11://initrd.img-rhel-8.4
+kernel parameters  ks=http://10.66.208.115/ks-undercloud.cfg ksdevice=ens3 ip=10.66.208.121 netmask=255.255.255.0 dns=10.64.63.6 gateway=10.66.208.254
+
+```
+
+### rhosp 16.2 同步软件
+```
+使用 subscription-manager 注册节点
+$ sudo subscription-manager register
+
+查找 Red Hat OpenStack Platform 16.2 的 entitlement pool
+$ sudo subscription-manager list --available --all --matches="Red Hat OpenStack"
+
+使用 subscription-manager 为节点添加包含 Red Hat OpenStack Platform 16.2 entitlement pool 
+$ sudo subscription-manager attach --pool=pool_id
+
+为节点禁用所有 repos
+$ sudo subscription-manager repos --disable=*
+
+为节点启用如下 repos
+$ sudo subscription-manager repos --enable=rhel-8-for-x86_64-baseos-eus-rpms --enable=rhel-8-for-x86_64-appstream-eus-rpms --enable=rhel-8-for-x86_64-highavailability-eus-rpms --enable=ansible-2.9-for-rhel-8-x86_64-rpms --enable=openstack-16.2-for-rhel-8-x86_64-rpms --enable=advanced-virt-for-rhel-8-x86_64-rpms --enable=fast-datapath-for-rhel-8-x86_64-rpms --enable=rhceph-4-tools-for-rhel-8-x86_64-rpms --enable=rhel-8-for-x86_64-nfv-rpms
+
 ```

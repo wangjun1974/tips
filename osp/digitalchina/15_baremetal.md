@@ -733,6 +733,51 @@ date -u ; openstack server create \
   virtual-instance-1
 $ openstack server list
 $ openstack console log show virtual-instance-1
+
+确认控制节点的 ctlplane 地址
+(undercloud) [stack@undercloud ~]$ openstack server list
++--------------------------------------+-------------------------+--------+--------------------+----------------+-----------+
+| ID                                   | Name                    | Status | Networks           | Image          | Flavor    |
++--------------------------------------+-------------------------+--------+--------------------+----------------+-----------+
+| cb6584ee-37fd-4c00-8cc7-7ab2eb9f02e6 | overcloud-novacompute-0 | ACTIVE | ctlplane=192.0.2.6 | overcloud-full | baremetal |
+| 53bd1f02-12a3-413a-9732-a15a900035a9 | overcloud-controller-0  | ACTIVE | ctlplane=192.0.2.7 | overcloud-full | baremetal |
++--------------------------------------+-------------------------+--------+--------------------+----------------+-----------+
+
+拷贝 ssh private key 到控制节点，因为控制节点有 overcloud provisioning 网络的地址，可以直达这个网络上的 baremetal instance 或者 virtual instance
+(undercloud) [stack@undercloud ~]$ scp ~/.ssh/id_rsa heat-admin@192.0.2.7 
+
+设置 key1 的权限为 0400
+[heat-admin@overcloud-controller-0 ~]$ chmod 0400 key1
+
+获取 baremetal-instance-1 和 virtual-instance-1 的 ip 地址
+(overcloud) [stack@undercloud ~]$ openstack server list
++--------------------------------------+----------------------+--------+--------------------------+------------+--------+
+| ID                                   | Name                 | Status | Networks                 | Image      | Flavor |
++--------------------------------------+----------------------+--------+--------------------------+------------+--------+
+| 46f15511-a455-49b6-bfd1-8588620f45a8 | baremetal-instance-1 | ACTIVE | provisioning=172.16.4.32 | rhel-image |        |
+| a2486222-4d36-4b21-9d15-c8d089efa529 | virtual-instance-1   | ACTIVE | provisioning=172.16.4.37 | cirros     |        |
++--------------------------------------+----------------------+--------+--------------------------+------------+--------+
+
+ping baremetal-instance-1 的 ip 地址
+[heat-admin@overcloud-controller-0 ~]$ ping -c1 172.16.4.32 
+PING 172.16.4.32 (172.16.4.32) 56(84) bytes of data.
+64 bytes from 172.16.4.32: icmp_seq=1 ttl=64 time=1.89 ms
+
+ping virtual-instance-1 的 ip 地址
+[heat-admin@overcloud-controller-0 ~]$ ping -c1 172.16.4.37 
+PING 172.16.4.37 (172.16.4.37) 56(84) bytes of data.
+64 bytes from 172.16.4.37: icmp_seq=1 ttl=64 time=11.0 ms
+
+登录 baremetal-instance-1
+[heat-admin@overcloud-controller-0 ~]$ ssh -i key1 cloud-user@172.16.4.32 
+[cloud-user@baremetal-instance-1 ~]$ cat /etc/redhat-release 
+Red Hat Enterprise Linux release 8.2 (Ootpa)
+
+通过 virtual-instance-1 ping baremetal-instance-1，通过这个测试可知这两个实例是可以互相访问的
+[heat-admin@overcloud-controller-0 ~]$ ssh -i key1 cirros@172.16.4.37 ping -c1 172.16.4.32
+PING 172.16.4.32 (172.16.4.32): 56 data bytes
+64 bytes from 172.16.4.32: seq=0 ttl=64 time=14.743 ms
+
 ```
 
 查看 baremetal node 详细信息

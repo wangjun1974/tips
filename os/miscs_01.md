@@ -128,6 +128,9 @@ kernel path ISO11://vmlinuz-rhel-8.4
 initrd path ISO11://initrd.img-rhel-8.4
 kernel parameters  inst.ks=http://10.66.208.115/ks-undercloud.cfg inst.ksdevice=ens3 ip=10.66.208.121 netmask=255.255.255.0 nameserver=10.64.63.6 gateway=10.66.208.254
 
+kernel path ISO11://vmlinuz-rhel-8.4
+initrd path ISO11://initrd.img-rhel-8.4
+kernel parameters  inst.ks=http://10.66.208.115/ks-helper.cfg inst.ksdevice=ens3 ip=10.66.208.125 netmask=255.255.255.0 nameserver=10.64.63.6 gateway=10.66.208.254
 ```
 
 ### rhosp 16.2 同步软件

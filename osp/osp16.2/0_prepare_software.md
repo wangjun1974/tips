@@ -46,13 +46,13 @@ virt-install --name=jwang-rhel84-undercloud --vcpus=4 --ram=32768 \
 --boot menu=on --location /root/jwang/isos/rhel-8.4-x86_64-dvd.iso \
 --console pty,target_type=serial \
 --initrd-inject /tmp/ks.cfg \
---extra-args='ks=file:/ks.cfg console=ttyS0'
+--extra-args='inst.ks=file:/ks.cfg'
 
 RHEL 8.4 的 kickstart 文件语法有改变，
 注意：ks 变为了 inst.ks , ksdevice 变为了 inst.ksdevice, dns 变为了 nameserver
 ```
 
-在下载服务器上执行，订阅所需软件频道
+注意：在下载服务器上执行，订阅所需软件频道，如果已经有下载好的 repo 压缩包，可以直接使用下载好的 repo 压缩包
 ```
 subscription-manager release --set=8.4
 subscription-manager repos --disable=*

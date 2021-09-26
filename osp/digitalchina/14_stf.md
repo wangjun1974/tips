@@ -429,8 +429,10 @@ spec:
       rules:
         - alert: Metric Listener down
           expr: collectd_qpid_router_status < 1 
-        - alert: Collectd Instance down
-          expr: absent(collectd_cpu_percent{plugin_instance="0",type_instance="idle"}) == 1
+        - alert: Collectd Instance on host overcloud-controller-0.localdomain down
+          expr: absent(collectd_cpu_percent{host="overcloud-controller-0.localdomain",plugin_instance="0",type_instance="idle"}) == 1
+        - alert: Collectd Instance on host overcloud-novacompute-0.localdomain down
+          expr: absent(collectd_cpu_percent{host="overcloud-novacompute-0.localdomain",plugin_instance="0",type_instance="idle"}) == 1        
 EOF
 
 有了这 2 条规则后，考虑用停止 collectd qpid 容器模拟触发 Collectd Instance down 告警 

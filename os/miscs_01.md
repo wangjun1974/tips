@@ -234,5 +234,190 @@ https://cloud.redhat.com/blog/automatic-installation-of-a-windows-vm-using-opens
 
 ### AMQ Interconnect
 ```
+AMQ Interconnect 梳理
+
+openstack controller 节点的 metrics_qdr 的配置文件
+[heat-admin@overcloud-controller-0 ~]$ sudo podman exec -it metrics_qdr /bin/sh
+()[qdrouterd@overcloud-controller-0 /]$ cat /etc/qpid-dispatch/qdrouterd.conf
+##
+## Licensed to the Apache Software Foundation (ASF) under one
+## or more contributor license agreements.  See the NOTICE file
+## distributed with this work for additional information
+## regarding copyright ownership.  The ASF licenses this file
+## to you under the Apache License, Version 2.0 (the
+## "License"); you may not use this file except in compliance
+## with the License.  You may obtain a copy of the License at
+##
+##   http://www.apache.org/licenses/LICENSE-2.0
+##
+## Unless required by applicable law or agreed to in writing,
+## software distributed under the License is distributed on an
+## "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+## KIND, either express or implied.  See the License for the
+## specific language governing permissions and limitations
+## under the License
+##
+
+# See the qdrouterd.conf (5) manual page for information about this
+# file's format and options.
+
+router {
+    mode: edge
+    id: Router.overcloud-controller-0.localdomain
+    workerThreads: 2
+    debugDump: /var/log/qdrouterd
+    saslConfigPath: /etc/sasl2
+    saslConfigName: qdrouterd
+}
+
+sslProfile {
+    name: sslProfile
+}
+
+
+listener {
+    host: 172.16.2.168
+    port: 5666
+    authenticatePeer: no
+    saslMechanisms: ANONYMOUS
+}
+
+
+connector {
+    host: default-interconnect-5671-service-telemetry.apps.ocp1.rhcnsa.com
+    port: 443
+    role: edge
+    sslProfile: sslProfile
+    verifyHostname: false
+}
+
+
+address {
+    prefix: unicast
+    distribution: closest
+}
+
+address {
+    prefix: exclusive
+    distribution: closest
+}
+
+address {
+    prefix: broadcast
+    distribution: multicast
+}
+
+address {
+    distribution: multicast
+    prefix: collectd
+}
+
+address {
+    distribution: multicast
+    prefix: anycast/ceilometer
+}
+
+
+
+log {
+   module: DEFAULT
+   enable: info+
+   timestamp: true
+   output: /var/log/qdrouterd/metrics_qdr.log
+}
+
+
+openstack compute 节点的 metrics_qdr 的配置文件
+[heat-admin@overcloud-novacompute-0 ~]$ sudo podman exec -it metrics_qdr /bin/sh
+##
+## Licensed to the Apache Software Foundation (ASF) under one
+## or more contributor license agreements.  See the NOTICE file
+## distributed with this work for additional information
+## regarding copyright ownership.  The ASF licenses this file
+## to you under the Apache License, Version 2.0 (the
+## "License"); you may not use this file except in compliance
+## with the License.  You may obtain a copy of the License at
+##
+##   http://www.apache.org/licenses/LICENSE-2.0
+##
+## Unless required by applicable law or agreed to in writing,
+## software distributed under the License is distributed on an
+## "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+## KIND, either express or implied.  See the License for the
+## specific language governing permissions and limitations
+## under the License
+##
+
+# See the qdrouterd.conf (5) manual page for information about this
+# file's format and options.
+
+router {
+    mode: edge
+    id: Router.overcloud-novacompute-0.localdomain
+    workerThreads: 2
+    debugDump: /var/log/qdrouterd
+    saslConfigPath: /etc/sasl2
+    saslConfigName: qdrouterd
+}
+
+
+sslProfile {
+    name: sslProfile
+}
+
+
+listener {
+    host: 172.16.2.158
+    port: 5666
+    authenticatePeer: no
+    saslMechanisms: ANONYMOUS
+}
+
+
+connector {
+    host: default-interconnect-5671-service-telemetry.apps.ocp1.rhcnsa.com
+    port: 443
+    role: edge
+    sslProfile: sslProfile
+    verifyHostname: false
+}
+
+
+address {
+    prefix: unicast
+    distribution: closest
+}
+
+address {
+    prefix: exclusive
+    distribution: closest
+}
+
+address {
+    prefix: broadcast
+    distribution: multicast
+}
+
+address {
+    distribution: multicast
+    prefix: collectd
+}
+
+address {
+    distribution: multicast
+    prefix: anycast/ceilometer
+}
+
+
+
+log {
+   module: DEFAULT
+   enable: info+
+   timestamp: true
+   output: /var/log/qdrouterd/metrics_qdr.log
+}
+
+
+
 
 ```

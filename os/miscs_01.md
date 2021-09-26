@@ -677,3 +677,17 @@ compute 的 etc/collectd.d/10-virt.conf 的内容
 将这行注释后执行 podman restart collectd，计算节点 collectd 容器就启动起来了
 
 ```
+
+### 改变 IPA admin password
+https://manastri.blogspot.com/2020/04/how-to-reset-freeipa-admin-admin.html<br>
+https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/8/html/configuring_and_managing_identity_management/managing-dns-forwarding-in-idm_configuring-and-managing-idm<br>
+```
+export LDAPTLS_CACERT=/etc/ipa/ca.crt
+ldappasswd -ZZ -D 'cn=directory manager' -W -S uid=admin,cn=users,cn=accounts,dc=example,dc=com -H ldap://ipa.example.com
+
+# 设置全局 dns forwarder
+ipa dnsconfig-mod --forwarder=114.114.114.114
+
+# 查询 dns 配置
+ipa dnsconfig-show
+```

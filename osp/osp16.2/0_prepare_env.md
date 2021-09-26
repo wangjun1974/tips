@@ -263,11 +263,37 @@ Y
 
 ### 安装 Helper
 ```
+cat > /tmp/ks-helper.cfg <<'EOF'
+lang en_US
+keyboard us
+timezone Asia/Shanghai --isUtc
+rootpw $1$PTAR1+6M$DIYrE6zTEo5dWWzAp9as61 --iscrypted
+#platform x86, AMD64, or Intel EM64T
+reboot
+text
+cdrom
+bootloader --location=mbr --append="rhgb quiet crashkernel=auto"
+zerombr
+clearpart --all --initlabel
+autopart
+network --device=ens3 --hostname=helper.example.com --bootproto=static --ip=192.168.122.3 --netmask=255.255.255.0 --gateway=192.168.122.1 --nameserver=192.168.122.1
+auth --passalgo=sha512 --useshadow
+selinux --enforcing
+firewall --enabled --ssh
+skipx
+firstboot --disable
+%packages
+@^minimal-environment
+kexec-tools
+%end
+EOF
+
+
 # 安装 helper 服务器
-virt-install --name=jwang-helper-undercloud --vcpus=4 --ram=32768 \
---disk path=/data/kvm/jwang-helper-undercloud.qcow2,bus=virtio,size=100 \
+virt-install --name=jwang-rhel84-helper-undercloud --vcpus=4 --ram=32768 \
+--disk path=/data/kvm/jwang-rhel84-helper-undercloud.qcow2,bus=virtio,size=100 \
 --os-variant rhel8.0 --network network=openshift4v6,model=virtio \
---boot menu=on --location /root/jwang/isos/rhel-8.2-x86_64-dvd.iso \
+--boot menu=on --location /root/jwang/isos/rhel-8.4-x86_64-dvd.iso \
 --graphics none \
 --initrd-inject /tmp/ks-helper.cfg \
 --extra-args='ks=file:/ks-helper.cfg console=ttyS0'
@@ -279,13 +305,13 @@ virt-install --name=jwang-helper-undercloud --vcpus=4 --ram=32768 \
 cat > /etc/yum.repos.d/w.repo << EOF
 [rhel-8-for-x86_64-baseos-eus-rpms]
 name=rhel-8-for-x86_64-baseos-eus-rpms
-baseurl=http://192.168.8.21:8787/repos/osp16.1/rhel-8-for-x86_64-baseos-eus-rpms/
+baseurl=http://192.168.8.21:8787/repos/osp16.2/rhel-8-for-x86_64-baseos-eus-rpms/
 enabled=1
 gpgcheck=0
 
 [rhel-8-for-x86_64-appstream-eus-rpms]
 name=rhel-8-for-x86_64-appstream-eus-rpms
-baseurl=http://192.168.8.21:8787/repos/osp16.1/rhel-8-for-x86_64-appstream-eus-rpms/
+baseurl=http://192.168.8.21:8787/repos/osp16.2/rhel-8-for-x86_64-appstream-eus-rpms/
 enabled=1
 gpgcheck=0
 EOF

@@ -292,7 +292,7 @@ EOF
 # 安装 helper 服务器
 virt-install --name=jwang-rhel84-helper-undercloud --vcpus=4 --ram=32768 \
 --disk path=/data/kvm/jwang-rhel84-helper-undercloud.qcow2,bus=virtio,size=100 \
---os-variant rhel8.0 --network network=openshift4v6,model=virtio \
+--os-variant rhel8.0 --network network=default,model=virtio \
 --boot menu=on --location /root/jwang/isos/rhel-8.4-x86_64-dvd.iso \
 --graphics none \
 --initrd-inject /tmp/ks-helper.cfg \

@@ -9,9 +9,40 @@ https://access.redhat.com/documentation/en/red_hat_openstack_platform/16.2/html/
 安装虚拟机
 ```
 # kickstart 文件参考 https://github.com/wangjun1974/tips/blob/master/os/miscs.md#rhel8-minimal-kickstart-file
+
+生成 undercloud 所使用的 ks.cfg 文件
+cat > /tmp/ks.cfg <<'EOF'
+lang en_US
+keyboard us
+timezone Asia/Shanghai --isUtc
+rootpw $1$PTAR1+6M$DIYrE6zTEo5dWWzAp9as61 --iscrypted
+#platform x86, AMD64, or Intel EM64T
+reboot
+text
+cdrom
+bootloader --location=mbr --append="rhgb quiet crashkernel=auto"
+zerombr
+clearpart --all --initlabel
+autopart
+network --device=ens3 --hostname=undercloud.example.com --bootproto=static --ip=192.168.8.21 --netmask=255.255.255.0 --gateway=192.168.8.1 --nameserver=192.168.8.1
+auth --passalgo=sha512 --useshadow
+selinux --enforcing
+firewall --enabled --ssh
+skipx
+firstboot --disable
+%packages
+@^minimal-environment
+kexec-tools
+tar
+createrepo
+vim
+%end
+EOF
+
 virt-install --name=jwang-rhel84-undercloud --vcpus=4 --ram=32768 \
 --disk path=/data/kvm/jwang-rhel84-undercloud.qcow2,bus=virtio,size=120 \
 --os-variant rhel8.0 --network network=openshift4v6,model=virtio \
+--network network=provisioning,model=virtio --network network=default,model=virtio \
 --boot menu=on --location /root/jwang/isos/rhel-8.4-x86_64-dvd.iso \
 --console pty,target_type=serial \
 --initrd-inject /tmp/ks.cfg \

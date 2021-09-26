@@ -36,6 +36,7 @@ kexec-tools
 tar
 createrepo
 vim
+httpd
 %end
 EOF
 
@@ -64,9 +65,8 @@ subscription-manager repos --enable=rhel-8-for-x86_64-baseos-eus-rpms --enable=r
 mkdir -p /var/www/html/repos/osp16.2
 pushd /var/www/html/repos/osp16.2
 
-# 安装 createrepo
-yum install -y createrepo
-
+# RHEL 8 不需要 createrepo
+# https://access.redhat.com/solutions/23016#rhel8
 cat > ./OSP16_2_repo_sync_up.sh <<'EOF'
 #!/bin/bash
 
@@ -89,10 +89,7 @@ do
 
   rm -rf "$localPath"$i/repodata
   echo "sync channel $i..."
-  reposync -n --delete --download-path="$localPath" --repoid $i --downloadcomps --download-metadata
-
-  echo "create repo $i..."
-  time createrepo -g $(ls "$localPath"$i/repodata/*comps.xml) --update --skip-stat --cachedir /tmp/empty-cache-dir "$localPath"$i
+  reposync -n --delete --download-path="$localPath" --repoid $i --download-metadata
 
 done
 
@@ -165,13 +162,13 @@ EOF
 [stack@undercloud ~]$ sudo subscription-manager repos --disable=*
 
 # 5.2 启用对应软件频道
-[stack@undercloud ~]$ sudo subscription-manager repos --enable=rhel-8-for-x86_64-baseos-eus-rpms --enable=rhel-8-for-x86_64-appstream-eus-rpms --enable=rhel-8-for-x86_64-highavailability-eus-rpms --enable=ansible-2.9-for-rhel-8-x86_64-rpms --enable=openstack-16.1-for-rhel-8-x86_64-rpms --enable=fast-datapath-for-rhel-8-x86_64-rpms --enable=advanced-virt-for-rhel-8-x86_64-rpms --enable=rhceph-4-tools-for-rhel-8-x86_64-rpms
+[stack@undercloud ~]$ sudo subscription-manager repos --enable=rhel-8-for-x86_64-baseos-eus-rpms --enable=rhel-8-for-x86_64-appstream-eus-rpms --enable=rhel-8-for-x86_64-highavailability-eus-rpms --enable=ansible-2.9-for-rhel-8-x86_64-rpms --enable=openstack-16.2-for-rhel-8-x86_64-rpms --enable=fast-datapath-for-rhel-8-x86_64-rpms --enable=advanced-virt-for-rhel-8-x86_64-rpms --enable=rhceph-4-tools-for-rhel-8-x86_64-rpms
 
 # 5.3 安装 httpd
 [stack@undercloud ~]$ sudo yum install -y httpd
 
 # 5.4 创建本地 repos 目录
-[stack@undercloud ~]$ sudo mkdir -p /var/www/html/repos/osp16.1
+[stack@undercloud ~]$ sudo mkdir -p /var/www/html/repos/osp16.2
 [stack@undercloud ~]$ sudo -i
 [root@undercloud ~]# pushd /var/www/html/repos
 
@@ -233,18 +230,18 @@ EOF
 
 [root@undercloud repos]# UNDERCLOUD_IP=$( ip a s dev ens3 | grep -E "inet " | awk '{print $2}' | awk -F'/' '{print $1}' )
 [root@undercloud repos]# > /etc/yum.repos.d/osp.repo 
-[root@undercloud repos]# for i in rhel-8-for-x86_64-baseos-eus-rpms rhel-8-for-x86_64-appstream-eus-rpms rhel-8-for-x86_64-highavailability-eus-rpms ansible-2.9-for-rhel-8-x86_64-rpms openstack-16.1-for-rhel-8-x86_64-rpms fast-datapath-for-rhel-8-x86_64-rpms rhceph-4-tools-for-rhel-8-x86_64-rpms advanced-virt-for-rhel-8-x86_64-rpms
+[root@undercloud repos]# for i in rhel-8-for-x86_64-baseos-eus-rpms rhel-8-for-x86_64-appstream-eus-rpms rhel-8-for-x86_64-highavailability-eus-rpms ansible-2.9-for-rhel-8-x86_64-rpms openstack-16.2-for-rhel-8-x86_64-rpms fast-datapath-for-rhel-8-x86_64-rpms rhceph-4-tools-for-rhel-8-x86_64-rpms advanced-virt-for-rhel-8-x86_64-rpms rhel-8-for-x86_64-nfv-rpms
 do
 cat >> /etc/yum.repos.d/osp.repo << EOF
 [$i]
 name=$i
-baseurl=http://${UNDERCLOUD_IP}/repos/osp16.1/$i/
+baseurl=file:///var/www/html/repos/osp16.2/$i/
 enabled=1
 gpgcheck=0
 
 EOF
 done
-
+[root@undercloud repos]# yum install -y httpd httpd-tools
 [root@undercloud repos]# exit
 
 

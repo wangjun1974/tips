@@ -18,6 +18,9 @@ https://www.prometheus.wang/<br>
 grafana增加dashboard图形<br>
 https://blog.csdn.net/weixin_44953658/article/details/114585357<br>
 
+Grafana 中文入门教程 | 构建你的第一个仪表盘<br>
+https://cloud.tencent.com/developer/article/1807679<br>
+
 ### tripleo error 
 ```
 podman ps -a --filter label=container_name=heat_engine_db_sync --filter label=config_id=tripleo_step3 --format '{{.Names}}'

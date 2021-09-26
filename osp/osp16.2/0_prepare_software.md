@@ -9,8 +9,8 @@ https://access.redhat.com/documentation/en/red_hat_openstack_platform/16.2/html/
 安装虚拟机
 ```
 # kickstart 文件参考 https://github.com/wangjun1974/tips/blob/master/os/miscs.md#rhel8-minimal-kickstart-file
-virt-install --name=jwang-rhel82-undercloud --vcpus=4 --ram=32768 \
---disk path=/data/kvm/jwang-rhel82-undercloud.qcow2,bus=virtio,size=120 \
+virt-install --name=jwang-rhel84-undercloud --vcpus=4 --ram=32768 \
+--disk path=/data/kvm/jwang-rhel84-undercloud.qcow2,bus=virtio,size=120 \
 --os-variant rhel8.0 --network network=openshift4v6,model=virtio \
 --boot menu=on --location /root/jwang/isos/rhel-8.4-x86_64-dvd.iso \
 --console pty,target_type=serial \

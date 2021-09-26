@@ -418,6 +418,11 @@ log {
 }
 
 
-
-
+16.1 下 metrics_qdr 的 qpid-dispatch-router 的版本为 1.8.0
+[heat-admin@overcloud-controller-0 ~]$ sudo podman exec -it metrics_qdr /bin/sh
+()[qdrouterd@overcloud-controller-0 /]$ rpm -qa | grep qpid
+python3-qpid-proton-0.32.0-2.el8.x86_64
+qpid-dispatch-router-1.8.0-2.el8.x86_64
+qpid-proton-c-0.32.0-2.el8.x86_64
+qpid-dispatch-tools-1.8.0-2.el8.noarch
 ```

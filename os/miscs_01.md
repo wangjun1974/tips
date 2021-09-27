@@ -1664,4 +1664,177 @@ done
 [lab-user@bastion openstack-upi]$ watch oc get clusterversion
 
 [lab-user@bastion openstack-upi]$ oc -n openshift-kube-apiserver-operator logs $(oc -n openshift-kube-apiserver-operator get pods -l app=kube-apiserver-operator -o name) -f 
+
+[lab-user@bastion openstack-upi]$ oc get clusterversion 
+NAME      VERSION   AVAILABLE   PROGRESSING   SINCE   STATUS
+version   4.6.15    True        False         7s      Cluster version is 4.6.15
+
+[lab-user@bastion openstack-upi]$ openshift-install wait-for install-complete --dir=$HOME/openstack-upi
+INFO Waiting up to 40m0s for the cluster at https://api.cluster-wg9lh.dynamic.opentlc.com:6443 to initialize... 
+INFO Waiting up to 10m0s for the openshift-console route to be created... 
+INFO Install complete!                            
+INFO To access the cluster as the system:admin user when using 'oc', run 'export KUBECONFIG=/home/lab-user/openstack-upi/auth/kubeconfig' 
+INFO Access the OpenShift web-console here: https://console-openshift-console.apps.cluster-wg9lh.dynamic.opentlc.com 
+INFO Login to the console with user: "kubeadmin", and password: "BBBBB-kphko-yLTDm-AAAAA" 
+INFO Time elapsed: 0s  
+
+[lab-user@bastion openstack-upi]$ oc project openshift-image-registry
+Now using project "openshift-image-registry" on server "https://api.cluster-wg9lh.dynamic.opentlc.com:6443".
+[lab-user@bastion openstack-upi]$ oc get configs.imageregistry.operator.openshift.io cluster -o yaml
+apiVersion: imageregistry.operator.openshift.io/v1
+kind: Config
+metadata:
+  creationTimestamp: "2021-09-27T06:12:18Z"
+  finalizers:
+  - imageregistry.operator.openshift.io/finalizer
+  generation: 2
+  managedFields:  
+...
+  name: cluster
+  resourceVersion: "27164"
+  selfLink: /apis/imageregistry.operator.openshift.io/v1/configs/cluster
+  uid: 5435a092-0c6f-4f23-8c4b-858cc8c99ab6
+spec:
+  httpSecret: f12e452ef4a270ef4941a86caa1a16ff93b6e0d80b63e449263c6ad57f3b99e743263930f2ee92f0505cd4bc8358c1571c8c11df5f8e31df0704d891f125ca91
+  logLevel: Normal
+  managementState: Managed
+  observedConfig: null
+  operatorLogLevel: Normal
+  proxy: {}
+  replicas: 2
+  requests:
+    read:
+      maxWaitInQueue: 0s
+    write:
+      maxWaitInQueue: 0s
+  rolloutStrategy: RollingUpdate  
+  storage:
+    managementState: Managed
+    swift:
+      authURL: https://api.orange.sc01.infra.opentlc.com:13000/v3
+      authVersion: "3"
+      container: cluster-wg9lh-zwlg9-image-registry-gdlywnhyddjpebrudpkaltcwyyv
+      domain: Default
+      regionName: regionOne
+      tenant: wg9lh-project
+      tenantID: 2af53bc6cb934a4096041ae9e18562d6
+  unsupportedConfigOverrides: null
+status:
+  conditions:
+  - lastTransitionTime: "2021-09-27T06:12:21Z"
+    reason: Swift container Exists
+    status: "True"
+    type: StorageExists
+  - lastTransitionTime: "2021-09-27T06:34:11Z"
+    message: The registry is ready
+    reason: Ready
+    status: "True"
+    type: Available
+  - lastTransitionTime: "2021-09-27T06:34:37Z"
+    message: The registry is ready
+    reason: Ready
+    status: "False"
+    type: Progressing
+  - lastTransitionTime: "2021-09-27T06:12:20Z"
+    status: "False"
+    type: Degraded
+  - lastTransitionTime: "2021-09-27T06:12:20Z"
+    status: "False"
+    type: Removed
+  - lastTransitionTime: "2021-09-27T06:12:24Z"
+    reason: AsExpected
+    status: "False"
+    type: NodeCADaemonControllerDegraded
+  - lastTransitionTime: "2021-09-27T06:12:25Z"
+    reason: AsExpected
+    status: "False"
+    type: ImageRegistryCertificatesControllerDegraded
+  - lastTransitionTime: "2021-09-27T06:12:25Z"
+    reason: AsExpected
+    status: "False"
+    type: ImageConfigControllerDegraded
+  generations:
+  - group: apps
+    hash: ""
+    lastGeneration: 2
+    name: image-registry
+    namespace: openshift-image-registry
+    resource: deployments
+  - group: apps
+    hash: ""
+    lastGeneration: 0
+    name: node-ca
+    namespace: openshift-image-registry
+    resource: daemonsets
+  observedGeneration: 2
+  readyReplicas: 0
+  storage:
+    managementState: Managed
+    swift:
+      authURL: https://api.orange.sc01.infra.opentlc.com:13000/v3
+      authVersion: "3"
+      container: cluster-wg9lh-zwlg9-image-registry-gdlywnhyddjpebrudpkaltcwyyv
+      domain: Default
+      regionName: regionOne
+      tenant: wg9lh-project
+      tenantID: 2af53bc6cb934a4096041ae9e18562d6
+  storageManaged: true
+
+[lab-user@bastion openstack-upi]$ oc get clusterversion 
+NAME      VERSION   AVAILABLE   PROGRESSING   SINCE   STATUS
+version   4.6.15    True        False         7s      Cluster version is 4.6.15
+
+[lab-user@bastion openstack-upi]$ oc get clusteroperators
+NAME                                       VERSION   AVAILABLE   PROGRESSING   DEGRADED   SINCE
+authentication                             4.6.15    True        False         False      16m
+cloud-credential                           4.6.15    True        False         False      59m
+cluster-autoscaler                         4.6.15    True        False         False      52m
+config-operator                            4.6.15    True        False         False      53m
+console                                    4.6.15    True        False         False      22m
+csi-snapshot-controller                    4.6.15    True        False         False      53m
+dns                                        4.6.15    True        False         False      52m
+etcd                                       4.6.15    True        False         False      52m
+image-registry                             4.6.15    True        False         False      26m
+ingress                                    4.6.15    True        False         False      25m
+insights                                   4.6.15    True        False         False      53m
+kube-apiserver                             4.6.15    True        False         False      51m
+kube-controller-manager                    4.6.15    True        False         False      50m
+kube-scheduler                             4.6.15    True        False         False      50m
+kube-storage-version-migrator              4.6.15    True        False         False      26m
+machine-api                                4.6.15    True        False         False      44m
+machine-approver                           4.6.15    True        False         False      53m
+machine-config                             4.6.15    True        False         False      52m
+marketplace                                4.6.15    True        False         False      52m
+monitoring                                 4.6.15    True        False         False      25m
+network                                    4.6.15    True        False         False      53m
+node-tuning                                4.6.15    True        False         False      53m
+openshift-apiserver                        4.6.15    True        False         False      43m
+openshift-controller-manager               4.6.15    True        False         False      51m
+openshift-samples                          4.6.15    True        False         False      42m
+operator-lifecycle-manager                 4.6.15    True        False         False      52m
+operator-lifecycle-manager-catalog         4.6.15    True        False         False      52m
+operator-lifecycle-manager-packageserver   4.6.15    True        False         False      32m
+service-ca                                 4.6.15    True        False         False      53m
+storage                                    4.6.15    True        False         False      52m
+
+[lab-user@bastion openstack-upi]$ openshift-install wait-for install-complete --dir=$HOME/openstack-upi
+INFO Waiting up to 40m0s for the cluster at https://api.cluster-wg9lh.dynamic.opentlc.com:6443 to initialize... 
+INFO Waiting up to 10m0s for the openshift-console route to be created... 
+INFO Install complete!                            
+INFO To access the cluster as the system:admin user when using 'oc', run 'export KUBECONFIG=/home/lab-user/openstack-upi/auth/kubeconfig' 
+INFO Access the OpenShift web-console here: https://console-openshift-console.apps.cluster-wg9lh.dynamic.opentlc.com 
+INFO Login to the console with user: "kubeadmin", and password: "BBBBB-kphko-yLTDm-AAAAA" 
+INFO Time elapsed: 0s  
+
+```
+
+### 下载课程教材的脚本
+```
+cat > download.sh <<'EOF'
+#!/bin/bash
+
+wget --referer="http://www.baidu.com" --user-agent="Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.6) Gecko/20070725 Firefox/2.0.0.6" --header="Accept: text/xml,application/xml,application/xhtml+xml,text/html;q=0.9,text/plain;q=0.8,image/png,*/*;q=0.5" --header="Accept-Language: en-us,en;q=0.5" --header="Accept-Encoding: gzip,deflate" --header="Accept-Charset: ISO-8859-1,utf-8;q=0.7,*;q=0.7" --header="Keep-Alive: 300" --random-wait --no-parent -e robots=off -r -l1 ${1} 
+EOF
+
+sh -x download.sh <someurl>
 ```

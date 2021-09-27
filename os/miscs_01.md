@@ -1826,6 +1826,46 @@ INFO Access the OpenShift web-console here: https://console-openshift-console.ap
 INFO Login to the console with user: "kubeadmin", and password: "BBBBB-kphko-yLTDm-AAAAA" 
 INFO Time elapsed: 0s  
 
+
+You must execute oc create -f $HOME/resources/99-scsi-device-detection-machineconfig.yml or all furthere labs will fail. This fixes a bug in how OpenShift detects new storage devices. Cinder devices have very long names. OpenShift 4.6 only supports name of up to 20 characters. This udev rule truncates the device names, so your pods can mount them properly. All worker nodes that are created as a machine will receive these udev rules, thanks to it being delivered by a machineconfig. More in upcoming modules.
+
+
+[lab-user@bastion openstack-upi]$ cat $HOME/resources/99-scsi-device-detection-machineconfig.yml
+---
+apiVersion: machineconfiguration.openshift.io/v1
+kind: MachineConfig
+metadata:
+  labels:
+    machineconfiguration.openshift.io/role: worker
+  name: 02-worker-udev-scsi-symlink
+  namespace: openshift-machine-api
+spec:
+  config:
+    ignition:
+      config: {}
+      security:
+        tls: {}
+      timeouts: {}
+      version: 3.1.0
+    networkd: {}
+    passwd: {}
+    storage:
+      files:
+      - contents:
+          source: data:text/plain;charset=utf-8;base64,IyBDcmVhdGUgc3ltbGlua3MgZm9yIHNjc2kgZGV2aWNlcyB0cnVuY2F0ZWQgYXQgMjAgY2hhcmFjdGVycyB0byBtYXRjaCBPcGVuU2hpZnQgb3BlbnN0YWNrIHZvbHVtZSBzZWFyY2g6CiMgaHR0cHM6Ly9naXRodWIuY29tL29wZW5zaGlmdC9vcmlnaW4vYmxvYi9tYXN0ZXIvdmVuZG9yL2s4cy5pby9sZWdhY3ktY2xvdWQtcHJvdmlkZXJzL29wZW5zdGFjay9vcGVuc3RhY2tfdm9sdW1lcy5nbyNMNDk4CkFDVElPTj09ImFkZCIsIEVOVntTQ1NJX0lERU5UX0xVTl9WRU5ET1J9PT0iPyoiLCBFTlZ7REVWVFlQRX09PSJkaXNrIiwgUlVOKz0iL2Jpbi9zaCAtYyAnSUQ9JGVudntTQ1NJX0lERU5UX0xVTl9WRU5ET1J9OyBsbiAtcyAuLi8uLi8kbmFtZSAvZGV2L2Rpc2svYnktaWQvc2NzaS0wJGVudntTQ1NJX1ZFTkRPUn1fJGVudntTQ1NJX01PREVMfV8ke0lEOjA6MjB9JyIKQUNUSU9OPT0icmVtb3ZlIiwgRU5We1NDU0lfSURFTlRfTFVOX1ZFTkRPUn09PSI/KiIsIEVOVntERVZUWVBFfT09ImRpc2siLCBSVU4rPSIvYmluL3NoIC1jICdJRD0kZW52e1NDU0lfSURFTlRfTFVOX1ZFTkRPUn07IHJtIC1mIC9kZXYvZGlzay9ieS1pZC9zY3NpLTAkZW52e1NDU0lfVkVORE9SfV8kZW52e1NDU0lfTU9ERUx9XyR7SUQ6MDoyMH0nIgo=
+          verification: {}
+        filesystem: root
+        mode: 0644
+        path: /etc/udev/rules.d/99-scsi-symlink.rules
+  osImageURL: ""
+
+[lab-user@bastion openstack-upi]$ echo 'IyBDcmVhdGUgc3ltbGlua3MgZm9yIHNjc2kgZGV2aWNlcyB0cnVuY2F0ZWQgYXQgMjAgY2hhcmFjdGVycyB0byBtYXRjaCBPcGVuU2hpZnQgb3BlbnN0YWNrIHZvbHVtZSBzZWFyY2g6CiMgaHR0cHM6Ly9naXRodWIuY29tL29wZW5zaGlmdC9vcmlnaW4vYmxvYi9tYXN0ZXIvdmVuZG9yL2s4cy5pby9sZWdhY3ktY2xvdWQtcHJvdmlkZXJzL29wZW5zdGFjay9vcGVuc3RhY2tfdm9sdW1lcy5nbyNMNDk4CkFDVElPTj09ImFkZCIsIEVOVntTQ1NJX0lERU5UX0xVTl9WRU5ET1J9PT0iPyoiLCBFTlZ7REVWVFlQRX09PSJkaXNrIiwgUlVOKz0iL2Jpbi9zaCAtYyAnSUQ9JGVudntTQ1NJX0lERU5UX0xVTl9WRU5ET1J9OyBsbiAtcyAuLi8uLi8kbmFtZSAvZGV2L2Rpc2svYnktaWQvc2NzaS0wJGVudntTQ1NJX1ZFTkRPUn1fJGVudntTQ1NJX01PREVMfV8ke0lEOjA6MjB9JyIKQUNUSU9OPT0icmVtb3ZlIiwgRU5We1NDU0lfSURFTlRfTFVOX1ZFTkRPUn09PSI/KiIsIEVOVntERVZUWVBFfT09ImRpc2siLCBSVU4rPSIvYmluL3NoIC1jICdJRD0kZW52e1NDU0lfSURFTlRfTFVOX1ZFTkRPUn07IHJtIC1mIC9kZXYvZGlzay9ieS1pZC9zY3NpLTAkZW52e1NDU0lfVkVORE9SfV8kZW52e1NDU0lfTU9ERUx9XyR7SUQ6MDoyMH0nIgo=' | base64 --decode
+# Create symlinks for scsi devices truncated at 20 characters to match OpenShift openstack volume search:
+# https://github.com/openshift/origin/blob/master/vendor/k8s.io/legacy-cloud-providers/openstack/openstack_volumes.go#L498
+ACTION=="add", ENV{SCSI_IDENT_LUN_VENDOR}=="?*", ENV{DEVTYPE}=="disk", RUN+="/bin/sh -c 'ID=$env{SCSI_IDENT_LUN_VENDOR}; ln -s ../../$name /dev/disk/by-id/scsi-0$env{SCSI_VENDOR}_$env{SCSI_MODEL}_${ID:0:20}'"
+ACTION=="remove", ENV{SCSI_IDENT_LUN_VENDOR}=="?*", ENV{DEVTYPE}=="disk", RUN+="/bin/sh -c 'ID=$env{SCSI_IDENT_LUN_VENDOR}; rm -f /dev/disk/by-id/scsi-0$env{SCSI_VENDOR}_$env{SCSI_MODEL}_${ID:0:20}'"
+
+[lab-user@bastion openstack-upi]$ oc create -f $HOME/resources/99-scsi-device-detection-machineconfig.yml
 ```
 
 ### 下载课程教材的脚本

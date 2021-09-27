@@ -285,6 +285,7 @@ firstboot --disable
 %packages
 @^minimal-environment
 kexec-tools
+tar
 %end
 EOF
 
@@ -294,9 +295,8 @@ virt-install --name=jwang-rhel84-helper-undercloud --vcpus=4 --ram=32768 \
 --disk path=/data/kvm/jwang-rhel84-helper-undercloud.qcow2,bus=virtio,size=100 \
 --os-variant rhel8.0 --network network=default,model=virtio \
 --boot menu=on --location /root/jwang/isos/rhel-8.4-x86_64-dvd.iso \
---graphics none \
 --initrd-inject /tmp/ks-helper.cfg \
---extra-args='ks=file:/ks-helper.cfg console=ttyS0'
+--extra-args='ks=file:/ks-helper.cfg'
 
 # 配置 yum 源
 # 根据现场实际情况配置

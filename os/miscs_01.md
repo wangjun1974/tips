@@ -694,3 +694,974 @@ ipa dnsconfig-mod --forwarder=114.114.114.114
 # 查询 dns 配置
 ipa dnsconfig-show
 ```
+
+Training url
+https://etherpad-gpte-etherpad.apps.shared-na4.na4.openshift.xxxxxxx.com/p/oc-27sep-prakhar
+
+```
+echo 'openshift:redhat' | base64
+
+cat > pullsecret_config.json <<EOF
+{"auths": {"utilityvm.example.com:5000": {"auth": "b3BlbnNoaWZ0OnJlZGhhdA==","email": "noemail@localhost"}}}
+EOF
+
+jq '.auths += {"utilityvm.example.com:5000": {"auth": "b3BlbnNoaWZ0OnJlZGhhdAo=","email": "noemail@localhost"}}' < ocp_pullsecret.json > merged_pullsecret.json
+
+[lab-user@bastion ~]$ jq -s '.[0] * .[1]' ocp_pullsecret.json pullsecret_config.json > merged_pullsecret.json 
+
+[lab-user@bastion ~]$ echo -n 'openshift:redhat' | base64 -w0
+b3BlbnNoaWZ0OnJlZGhhdAo=
+cat > pullsecret_config.json <<EOF
+{
+  "auths": {
+    "utilityvm.example.com:5000": {
+      "auth": "b3BlbnNoaWZ0OnJlZGhhdA==",
+      "email": "noemail@localhost"
+    }
+  }  
+}
+EOF
+
+podman login --authfile ./pullsecret_config.json utilityvm.example.com:5000 
+Authenticating with existing credentials...
+Existing credentials are invalid, please enter valid username and password
+
+
+export LOCAL_REGISTRY='utilityvm.example.com:5000'
+export LOCAL_REPOSITORY='ocp4/openshift4'
+export PRODUCT_REPO='openshift-release-dev'
+export RELEASE_NAME='ocp-release'
+export ARCHITECTURE="x86_64"
+export LOCAL_SECRET_JSON="${HOME}/merged_pullsecret.json"
+
+oc adm release info quay.io/openshift-release-dev/ocp-release:${OCP_RELEASE}-x86_64
+
+oc adm -a ${LOCAL_SECRET_JSON} release mirror \
+--from=quay.io/${PRODUCT_REPO}/${RELEASE_NAME}:${OCP_RELEASE}-${ARCHITECTURE} \
+--to=${LOCAL_REGISTRY}/${LOCAL_REPOSITORY} \
+--to-release-image=${LOCAL_REGISTRY}/${LOCAL_REPOSITORY}:${OCP_RELEASE}-${ARCHITECTURE}
+
+sha256:08acf7a2d1bd9a021ebf5138822c5816ee3bb9d8ba179b7d8144b92260ed5239 utilityvm.example.com:5000/ocp4/openshift4:4.6.15-csi-external-provisioner
+info: Mirroring completed in 57.06s (120.1MB/s)
+
+Success
+Update image:  utilityvm.example.com:5000/ocp4/openshift4:4.6.15-x86_64
+Mirror prefix: utilityvm.example.com:5000/ocp4/openshift4
+
+To use the new mirrored repository to install, add the following section to the install-config.yaml:
+
+imageContentSources:
+- mirrors:
+  - utilityvm.example.com:5000/ocp4/openshift4
+  source: quay.io/openshift-release-dev/ocp-release
+- mirrors:
+  - utilityvm.example.com:5000/ocp4/openshift4
+  source: quay.io/openshift-release-dev/ocp-v4.0-art-dev
+
+
+To use the new mirrored repository for upgrades, use the following to create an ImageContentSourcePolicy:
+
+apiVersion: operator.openshift.io/v1alpha1
+kind: ImageContentSourcePolicy
+metadata:
+  name: example
+spec:
+  repositoryDigestMirrors:
+  - mirrors:
+    - utilityvm.example.com:5000/ocp4/openshift4
+    source: quay.io/openshift-release-dev/ocp-release
+  - mirrors:
+    - utilityvm.example.com:5000/ocp4/openshift4
+    source: quay.io/openshift-release-dev/ocp-v4.0-art-dev
+
+podman pull --authfile $HOME/pullsecret_config.json utilityvm.example.com:5000/ocp4/openshift4:$OCP_RELEASE-operator-lifecycle-manager
+
+oc adm release info -a ${LOCAL_SECRET_JSON} "${LOCAL_REGISTRY}/${LOCAL_REPOSITORY}:${OCP_RELEASE}-${ARCHITECTURE}" | head -n 18
+
+oc adm release info -a ${LOCAL_SECRET_JSON} "quay.io/${PRODUCT_REPO}/${RELEASE_NAME}:${OCP_RELEASE}-${ARCHITECTURE}" | head -n 18
+
+oc adm release extract -a ${LOCAL_SECRET_JSON} --command=openshift-install "${LOCAL_REGISTRY}/${LOCAL_REPOSITORY}:${OCP_RELEASE}-${ARCHITECTURE}"
+
+ls -l
+
+
+
+setup network
+nmcli con mod 'eth0' ipv4.method 'manual' ipv4.address '10.66.xxx.xxx/24' ipv4.gateway '10.66.xxx.xxx' ipv4.dns '127.0.0.1 10.xx.xx.xx' ipv4.dns-search 'cluster-0001.rhsacn.org'
+nmcli con down 'eth0' && nmcli con up 'eth0'
+
+hostnamectl set-hostname helper.cluster-0001.rhsacn.org
+
+sed -i '/^10.66.xxx.xxx helper.cluster-0001.rhsacn.org*/d' /etc/hosts
+
+cat >> /etc/hosts << 'EOF'
+10.66.xxx.xxx helper.cluster-0001.rhsacn.org
+EOF
+setup repo
+mkdir -p /etc/yum.repos.d/backup
+mv /etc/yum.repos.d/*.repo /etc/yum.repos.d/backup
+
+cat > /etc/yum.repos.d/w.repo << 'EOF'
+[rhel-7-server-rpms]
+name=rhel-7-server-rpms
+baseurl=http://10.66.xxx.xxx/rhel7osp/rhel-7-server-rpms/
+enabled=1
+gpgcheck=0
+
+[rhel-7-server-extras-rpms]
+name=rhel-7-server-extras-rpms
+baseurl=http://10.66.xxx.xxx/rhel7osp/rhel-7-server-extras-rpms/
+enabled=1
+gpgcheck=0
+
+
+[rhel-7-server-ansible-2.9-rpms]
+name=rhel-7-server-ansible-2.9-rpms
+baseurl=http://10.66.xxx.xxx/rhel9osp/rhel-7-server-ansible-2.9-rpms/
+enabled=1
+gpgcheck=0
+
+EOF
+update system and reboot
+yum -y update 
+reboot
+setup time service
+cat > /etc/chrony.conf << 'EOF'
+server $(ip a s dev eth0 | grep "inet " | awk '{print $2}' | sed -e 's|/24||' ) iburst
+bindaddress $(ip a s dev eth0 | grep "inet " | awk '{print $2}' | sed -e 's|/24||' )
+allow all
+local stratum 4
+EOF
+
+systemctl enable chronyd && systemctl start chronyd 
+
+chronyc -n sources
+chronyc -n tracking
+
+systemctl enable firewalld && systemctl start firewalld
+
+firewall-cmd --permanent --add-service ntp
+firewall-cmd --reload
+setup helper node
+yum -y install ansible git
+git clone https://github.com/RedHatOfficial/ocp4-helpernode
+cd ocp4-helpernode
+generate vars.yml
+cat > vars.yml << EOF
+---
+staticips: true
+helper:
+  name: "helper"
+  ipaddr: "10.66.208.138"
+  networkifacename: "eth0"
+dns:
+  domain: "rhsacn.org"
+  clusterid: "cluster-0001"
+  forwarder1: "10.64.63.6"
+bootstrap:
+  name: "bootstrap"
+  ipaddr: "10.66.208.139"
+masters:
+  - name: "master0"
+    ipaddr: "10.66.208.140"
+  - name: "master1"
+    ipaddr: "10.66.208.141"  
+  - name: "master2"
+    ipaddr: "10.66.208.142"  
+workers:
+  - name: "worker0"
+    ipaddr: "10.66.208.143"
+  - name: "worker1"
+    ipaddr: "10.66.208.144"
+  - name: "worker2"
+    ipaddr: "10.66.208.145"    
+EOF
+
+ansible-playbook -e @vars.yml tasks/main.yml
+disconnected env change ignore_errors to yes (optional)
+cat tasks/main.yml | sed '/^- hosts: all/, /vars_files/ {/^- hosts: all/!{/vars_files/!d;};}' | sed '/^- hosts: all/a  \ \ ignore_errors: yes' | tee tasks/mail.yml.new
+
+mv -f tasks/mail.yml.new tasks/main.yml
+check status
+helpernodecheck dns-masters
+helpernodecheck dns-workers
+helpernodecheck dns-etcd
+helpernodecheck install-info
+helpernodecheck haproxy
+helpernodecheck services
+helpernodecheck nfs-info
+create helper node registry
+证书部分请参考：https://github.com/wangjun1974/tips/blob/master/ocp/4.6/disconnect_registry_self_signed_certificate_4.6.md
+
+yum -y install podman httpd httpd-tools wget jq
+
+mkdir -p /opt/registry/{auth,certs,data}
+
+cd /opt/registry/certs
+
+openssl req -newkey rsa:4096 -nodes -sha256 -keyout domain.key -x509 -days 3650 -out domain.crt  -subj "/C=CN/ST=GD/L=SZ/O=Global Security/OU=IT Department/CN=*.cluster-0001.rhsacn.org"
+
+cp /opt/registry/certs/domain.crt /etc/pki/ca-trust/source/anchors/
+update-ca-trust extract
+
+htpasswd -bBc /opt/registry/auth/htpasswd dummy dummy
+
+firewall-cmd --add-port=5000/tcp --zone=internal --permanent
+firewall-cmd --add-port=5000/tcp --zone=public   --permanent
+firewall-cmd --add-service=http  --permanent
+firewall-cmd --reload
+
+cat > /usr/local/bin/localregistry.sh << 'EOF'
+#!/bin/bash
+podman run --name poc-registry -d -p 5000:5000 \
+-v /opt/registry/data:/var/lib/registry:z \
+-v /opt/registry/auth:/auth:z \
+-e "REGISTRY_AUTH=htpasswd" \
+-e "REGISTRY_AUTH_HTPASSWD_REALM=Registry" \
+-e "REGISTRY_HTTP_SECRET=ALongRandomSecretForRegistry" \
+-e REGISTRY_AUTH_HTPASSWD_PATH=/auth/htpasswd \
+-v /opt/registry/certs:/certs:z \
+-e REGISTRY_HTTP_TLS_CERTIFICATE=/certs/domain.crt \
+-e REGISTRY_HTTP_TLS_KEY=/certs/domain.key \
+docker.io/library/registry:2 
+EOF
+
+chmod +x /usr/local/bin/localregistry.sh
+
+/usr/local/bin/localregistry.sh
+
+curl -u dummy:dummy -k https://helper.cluster-0001.rhsacn.org:5000/v2/_catalog
+
+REPO_URL=helper.cluster-0001.rhsacn.org:5000
+curl -u dummy:dummy -s -X GET https://$REPO_URL/v2/_catalog \
+ | jq '.repositories[]' \
+ | sort \
+ | xargs -I _ curl -u dummy:dummy -s -X GET https://$REPO_URL/v2/_/tags/list
+prepare artifacts
+MAJORBUILDNUMBER=4.6
+EXTRABUILDNUMBER=4.6.5
+
+wget https://mirror.openshift.com/pub/openshift-v4/clients/ocp/${EXTRABUILDNUMBER}/openshift-client-linux-${EXTRABUILDNUMBER}.tar.gz -P /var/www/html/
+wget https://mirror.openshift.com/pub/openshift-v4/clients/ocp/${EXTRABUILDNUMBER}/openshift-install-linux-${EXTRABUILDNUMBER}.tar.gz -P /var/www/html/
+
+tar -xzf /var/www/html/openshift-client-linux-${EXTRABUILDNUMBER}.tar.gz -C /usr/local/bin/
+tar -xzf /var/www/html/openshift-install-linux-${EXTRABUILDNUMBER}.tar.gz -C /usr/local/bin/
+
+# download bios and iso
+MAJORBUILDNUMBER=4.6
+EXTRABUILDNUMBER=4.6.1
+wget https://mirror.openshift.com/pub/openshift-v4/dependencies/rhcos/${MAJORBUILDNUMBER}/${EXTRABUILDNUMBER}/rhcos-${EXTRABUILDNUMBER}-x86_64-live.x86_64.iso -P /var/www/html/
+wget https://mirror.openshift.com/pub/openshift-v4/dependencies/rhcos/${MAJORBUILDNUMBER}/${EXTRABUILDNUMBER}/rhcos-${EXTRABUILDNUMBER}-x86_64-metal.x86_64.raw.gz -P /var/www/html/
+
+# Get pull secret
+wget http://10.66.208.115/rhel9osp/pull-secret.json -P /root
+jq '.auths += {"helper.cluster-0001.rhsacn.org:5000": {"auth": "ZHVtbXk6ZHVtbXk=","email": "noemail@localhost"}}' < /root/pull-secret.json > /root/pull-secret-2.json
+
+# login registries
+podman login --authfile /root/pull-secret-2.json registry.redhat.io
+podman login -u wang.jun.1974 registry.access.redhat.com
+podman login --authfile /root/pull-secret-2.json registry.connect.redhat.com
+
+# setup env and record imageContentSources section from output
+# see: https://docs.openshift.com/container-platform/4.5/installing/install_config/installing-restricted-networks-preparations.html
+# 这里面的 OCP_RELEASE 需要与 openshift-install 的版本保持一致
+export OCP_RELEASE="4.6.5"
+export LOCAL_REGISTRY='helper.cluster-0001.rhsacn.org:5000'
+export LOCAL_REPOSITORY='ocp4/openshift4'
+export PRODUCT_REPO='openshift-release-dev'
+export LOCAL_SECRET_JSON="${HOME}/pull-secret-2.json"
+export RELEASE_NAME='ocp-release'
+export ARCHITECTURE="x86_64"
+export REMOVABLE_MEDIA_PATH='/opt/registry'
+
+# 检查 release info
+oc adm release info quay.io/openshift-release-dev/ocp-release:4.6.5-x86_64
+
+oc adm -a ${LOCAL_SECRET_JSON} release mirror \
+--from=quay.io/${PRODUCT_REPO}/${RELEASE_NAME}:${OCP_RELEASE}-${ARCHITECTURE} \
+--to=${LOCAL_REGISTRY}/${LOCAL_REPOSITORY} \
+--to-release-image=${LOCAL_REGISTRY}/${LOCAL_REPOSITORY}:${OCP_RELEASE}-${ARCHITECTURE} --dry-run
+
+# mirror to local registry
+oc adm -a ${LOCAL_SECRET_JSON} release mirror \
+--from=quay.io/${PRODUCT_REPO}/${RELEASE_NAME}:${OCP_RELEASE}-${ARCHITECTURE} \
+--to=${LOCAL_REGISTRY}/${LOCAL_REPOSITORY} \
+--to-release-image=${LOCAL_REGISTRY}/${LOCAL_REPOSITORY}:${OCP_RELEASE}-${ARCHITECTURE} 
+
+# mirror to local directory (optional)
+# 这个是本次测试采用的方式
+oc adm release mirror -a ${LOCAL_SECRET_JSON} --to-dir=${REMOVABLE_MEDIA_PATH}/mirror quay.io/${PRODUCT_REPO}/${RELEASE_NAME}:${OCP_RELEASE}-${ARCHITECTURE}
+
+# mirror from local directory to local registry
+# 这个是本次测试采用的方式
+oc image mirror -a ${LOCAL_SECRET_JSON} --from-dir=/opt/registry/mirror 'file://openshift/release:4.6.5*' ${LOCAL_REGISTRY}/${LOCAL_REPOSITORY}
+
+...
+sha256:3e9704e62bb8ebaba3e9cda8176fa53de7b4e7e63b067eb94522bf6e5e93d4ea file://openshift/release:4.5.13-cluster-network-operator
+info: Mirroring completed in 20ms (0B/s)
+
+Success
+Update image:  openshift/release:4.5.13
+
+To upload local images to a registry, run:
+
+    oc image mirror --from-dir=/opt/registry/mirror 'file://openshift/release:4.5.13*' REGISTRY/REPOSITORY
+
+Configmap signature file /opt/registry/mirror/config/signature-sha256-8d104847fc2371a9.yaml created
+
+# get content works with install-iso - i guess 4.5.0 iso only works with 4.5.0 OCP_RELEASE
+export OCP_RELEASE="4.6.1"
+export LOCAL_REGISTRY='helper.cluster-0001.rhsacn.org:5000'
+export LOCAL_REPOSITORY='ocp4/openshift4'
+export PRODUCT_REPO='openshift-release-dev'
+export LOCAL_SECRET_JSON="${HOME}/pull-secret-2.json"
+export RELEASE_NAME='ocp-release'
+export ARCHITECTURE="x86_64"
+export REMOVABLE_MEDIA_PATH='/opt/registry'
+
+# mirror to local registry
+oc adm -a ${LOCAL_SECRET_JSON} release mirror \
+--from=quay.io/${PRODUCT_REPO}/${RELEASE_NAME}:${OCP_RELEASE}-${ARCHITECTURE} \
+--to=${LOCAL_REGISTRY}/${LOCAL_REPOSITORY} \
+--to-release-image=${LOCAL_REGISTRY}/${LOCAL_REPOSITORY}:${OCP_RELEASE}-${ARCHITECTURE}
+
+# Take the media to the restricted network environment and upload the images to the local container registry.
+oc image mirror -a ${LOCAL_SECRET_JSON} --from-dir=${REMOVABLE_MEDIA_PATH}/mirror "file://openshift/release:${OCP_RELEASE}*" ${LOCAL_REGISTRY}/${LOCAL_REPOSITORY}
+
+# catalog build need use 
+# targetfile='./redhat-operators-manifests/mapping.tag.txt'
+# cat $targetfile | while read line ;do echo ${line%=*};skopeo copy --format v2s2 --all docker://${line%=*} docker://${line#*=}; done
+
+
+# ToDo: I could not go through this process ... (optional)
+# copy catalog relate content into disconnect env
+# 1. $oc adm catalog build --appregistry-org redhat-operators --from=registry.redhat.io/openshift4/ose-operator-registry:vXX  --dir=<YOUR_DIR> --to=file://offline/redhat-operators:vXX
+# 2. $oc adm catalog mirror --manifests-only=true --from-dir=<YOUR_DIR> file://offline/redhat-operators:vXX localhost
+# 3. $sed 's/=/=file:\/\//g' redhat-operators-manifests/mapping.txt > mapping-new.txt
+# 4. $oc image mirror  -f mappings-new.txt --dir=<YOUR_DIR>
+# 本次采用同步到本地的方法，再从本地上传到 local registry 的方法
+# 保存到本地
+export OPERATOR_OCP_RELEASE="4.6"
+skopeo copy --format v2s2 --authfile ${LOCAL_SECRET_JSON} --all docker://registry.redhat.io/redhat/redhat-operator-index:v${OPERATOR_OCP_RELEASE} dir://offline
+
+# 从本地目录上传到 local registry
+skopeo copy --format v2s2 --authfile ${LOCAL_SECRET_JSON} --all dir://offline docker://${LOCAL_REGISTRY}/redhat/redhat-operator-index:v${OPERATOR_OCP_RELEASE}
+
+
+# install install directory
+rm -rf /root/ocp4
+mkdir -p /root/ocp4
+cd /root/ocp4
+
+ssh-keygen -t rsa -f ~/.ssh/id_rsa -N '' 
+
+openshift-install create install-config --dir $HOME/openstack-upi
+
+single line pull-secret json file
+[lab-user@bastion ~]$ jq -c . merged_pullsecret.json 
+{"auths":{"cloud.openshift.com":{"auth":"b3BlbnNoaWZ0LXJlbGVhc2UtZGV2K3dhbmdqdW4xOTc0MWV5cmtoYTJvMzNpd3dncnV2eThub3d0M2lhOjBISTQxTUpISDAyS0tGQjhJSjhQOThPS0pDU1ZSODdaMjYwWDRWWFVTTlBaNjVFVTVFUUFITExIUzhKVzVEQ0s=","email":"jwang@redhat.com"},"quay.io":{"auth":"b3BlbnNoaWZ0LXJlbGVhc2UtZGV2K3dhbmdqdW4xOTc0MWV5cmtoYTJvMzNpd3dncnV2eThub3d0M2lhOjBISTQxTUpISDAyS0tGQjhJSjhQOThPS0pDU1ZSODdaMjYwWDRWWFVTTlBaNjVFVTVFUUFITExIUzhKVzVEQ0s=","email":"jwang@redhat.com"},"registry.connect.redhat.com":{"auth":"NjM0MjU0OXx1aGMtMUV5UktoQTJPMzNJd3dHUnV2WThOT3dUM0lBOmV5SmhiR2NpT2lKU1V6VXhNaUo5LmV5SnpkV0lpT2lJMFltRm1NV0V6Tm1Sa05qQTBOakV4WWpFMFpHRmpaRFZpWW1ZMU1EUmtPQ0o5Lm1tdG5qRnhaNHVRZGNpM3pJWGJJTEc5UVZVWTV5WVkwem56TXBtZzRNWHhQcWdWMy1XSTJEZkJjaGpEaldWMC1xYkVYQTBDTEE1Z2F3ZHlPWllOSUFVUjAyek44Q3ZSamNQbHowdWJnLWdwZTZsVWxzZE5ydEh0cnFPVXhZTGgxdjg5WFFTX0RpY2gtR3ZkLTZNdFZsVWx0NFExVER0LW5YU0dEQURMVklQYl9LcENtb1lUVmNWaXljVFJ1bFMwSnhMSUxCQ0JlQm5ueXdyblc2Y0ZiSjRhMnkyVmlsa0F3enpLeFB6dHpPQnhJTk80RkpqU3QxRlBSLW1ubjJsZVZIU0NCYTlyN2lhUXNYUHNhSUw2cE12ZmVPcXhidEM2UUZmcVhnT0NpNkhYYXFOX3dUZVdNemZXTV9LY2lwOTM5QlNjblNFcGVmRUFldWRvRTZwZUFkbGRGbEpUNUxsdThTZVg4bmY5NXc3U1JkdTNPeWw0VW1JSGRIbWx4b2d1N3JBQXhiNnlkZXVqcndLOFBKbjdJTU0xajc4TVBrTWpnN256ZllUdHQ0MnN6RHF2QnJMS0ZrTnV3OEFBVV92TDk4WjUwZG5tUUNuOWlKNlNIcmtFYnhWUURSUno5dS1nelQ3a05pV0ZZWTJUM0tjelhidXhrdm9iUmNhalAzN0lIdG1qdTh4NGhaQVhjWnhNS0NhcWdjT2dJbzlTTXI3VXNLQkxSalFQOUpvLUlzbW9ZZHBXX25aeE1Ib0NPbUppT19MclJaRnVUS0FMOFQ1QXJEZnY3ZWZnNTBfTkItRkp1MEtVVXZfeUVvZF83VlgzNlFMVTc3UFBTQkR2RnpFUkRLdlJ6V25nTy0zSjJManZ0YkF6NW9SdFhheGtEVFZqVThxTzJhU0lRZ1ZV","email":"jwang@redhat.com"},"registry.redhat.io":{"auth":"NjM0MjU0OXx1aGMtMUV5UktoQTJPMzNJd3dHUnV2WThOT3dUM0lBOmV5SmhiR2NpT2lKU1V6VXhNaUo5LmV5SnpkV0lpT2lJMFltRm1NV0V6Tm1Sa05qQTBOakV4WWpFMFpHRmpaRFZpWW1ZMU1EUmtPQ0o5Lm1tdG5qRnhaNHVRZGNpM3pJWGJJTEc5UVZVWTV5WVkwem56TXBtZzRNWHhQcWdWMy1XSTJEZkJjaGpEaldWMC1xYkVYQTBDTEE1Z2F3ZHlPWllOSUFVUjAyek44Q3ZSamNQbHowdWJnLWdwZTZsVWxzZE5ydEh0cnFPVXhZTGgxdjg5WFFTX0RpY2gtR3ZkLTZNdFZsVWx0NFExVER0LW5YU0dEQURMVklQYl9LcENtb1lUVmNWaXljVFJ1bFMwSnhMSUxCQ0JlQm5ueXdyblc2Y0ZiSjRhMnkyVmlsa0F3enpLeFB6dHpPQnhJTk80RkpqU3QxRlBSLW1ubjJsZVZIU0NCYTlyN2lhUXNYUHNhSUw2cE12ZmVPcXhidEM2UUZmcVhnT0NpNkhYYXFOX3dUZVdNemZXTV9LY2lwOTM5QlNjblNFcGVmRUFldWRvRTZwZUFkbGRGbEpUNUxsdThTZVg4bmY5NXc3U1JkdTNPeWw0VW1JSGRIbWx4b2d1N3JBQXhiNnlkZXVqcndLOFBKbjdJTU0xajc4TVBrTWpnN256ZllUdHQ0MnN6RHF2QnJMS0ZrTnV3OEFBVV92TDk4WjUwZG5tUUNuOWlKNlNIcmtFYnhWUURSUno5dS1nelQ3a05pV0ZZWTJUM0tjelhidXhrdm9iUmNhalAzN0lIdG1qdTh4NGhaQVhjWnhNS0NhcWdjT2dJbzlTTXI3VXNLQkxSalFQOUpvLUlzbW9ZZHBXX25aeE1Ib0NPbUppT19MclJaRnVUS0FMOFQ1QXJEZnY3ZWZnNTBfTkItRkp1MEtVVXZfeUVvZF83VlgzNlFMVTc3UFBTQkR2RnpFUkRLdlJ6V25nTy0zSjJManZ0YkF6NW9SdFhheGtEVFZqVThxTzJhU0lRZ1ZV","email":"jwang@redhat.com"},"utilityvm.example.com:5000":{"auth":"b3BlbnNoaWZ0OnJlZGhhdA==","email":"noemail@localhost"}}}
+
+
+cat > install-config.yaml << EOF
+apiVersion: v1
+baseDomain: dynamic.opentlc.com
+compute:
+- architecture: amd64
+  hyperthreading: Enabled
+  name: worker
+  platform: {}
+  replicas: 0
+controlPlane:
+  architecture: amd64
+  hyperthreading: Enabled
+  name: master
+  replicas: 3
+metadata:
+  creationTimestamp: null
+  name: cluster-wg9lh
+networking:
+  clusterNetwork:
+  - cidr: 10.128.0.0/14
+    hostPrefix: 23
+  machineNetwork:
+  - cidr: 192.168.47.0/24
+  networkType: OpenShiftSDN
+  serviceNetwork:
+  - 172.30.0.0/16
+platform:
+  openstack:
+    apiVIP: 192.168.47.5
+    cloud: "wg9lh-project"
+    computeFlavor: 4c16g30d
+    externalDNS: null
+    externalNetwork: external
+    ingressVIP: 192.168.47.7
+    lbFloatingIP: 52.116.164.174
+    octaviaSupport: "1"
+    region: ""
+    trunkSupport: "0"
+publish: External
+pullSecret: $(echo "'")$( jq -c . ${HOME}/merged_pullsecret.json )$(echo "'")
+sshKey: |
+$( cat ${HOME}/.ssh/wg9lhkey.pub | sed 's/^/  /g' )
+additionalTrustBundle: |
+$( cat /etc/pki/ca-trust/source/anchors/ca.pem | sed 's/^/  /g' )
+imageContentSources:
+- mirrors:
+  - utilityvm.example.com:5000/ocp4/openshift4
+  source: quay.io/openshift-release-dev/ocp-release
+- mirrors:
+  - utilityvm.example.com:5000/ocp4/openshift4
+  source: quay.io/openshift-release-dev/ocp-v4.0-art-dev
+EOF
+
+openshift-install create manifests --dir $HOME/openstack-upi
+
+[lab-user@bastion openstack-upi]$ tree
+.
+|-- manifests
+|   |-- 04-openshift-machine-config-operator.yaml
+|   |-- cloud-provider-config.yaml
+|   |-- cluster-config.yaml
+|   |-- cluster-dns-02-config.yml
+|   |-- cluster-infrastructure-02-config.yml
+|   |-- cluster-ingress-02-config.yml
+|   |-- cluster-network-01-crd.yml
+|   |-- cluster-network-02-config.yml
+|   |-- cluster-proxy-01-config.yaml
+|   |-- cluster-scheduler-02-config.yml
+|   |-- cvo-overrides.yaml
+|   |-- etcd-ca-bundle-configmap.yaml
+|   |-- etcd-client-secret.yaml   
+|   |-- etcd-metric-client-secret.yaml
+|   |-- etcd-metric-serving-ca-configmap.yaml
+|   |-- etcd-metric-signer-secret.yaml
+|   |-- etcd-namespace.yaml
+|   |-- etcd-service.yaml
+|   |-- etcd-serving-ca-configmap.yaml
+|   |-- etcd-signer-secret.yaml   
+|   |-- image-content-source-policy-0.yaml
+|   |-- image-content-source-policy-1.yaml
+|   |-- kube-cloud-config.yaml
+|   |-- kube-system-configmap-root-ca.yaml
+|   |-- machine-config-server-tls-secret.yaml
+|   |-- openshift-config-secret-pull-secret.yaml
+|   `-- user-ca-bundle-config.yaml
+`-- openshift
+    |-- 99_cloud-creds-secret.yaml
+    |-- 99_kubeadmin-password-secret.yaml
+    |-- 99_openshift-cluster-api_master-machines-0.yaml
+    |-- 99_openshift-cluster-api_master-machines-1.yaml
+    |-- 99_openshift-cluster-api_master-machines-2.yaml
+    |-- 99_openshift-cluster-api_master-user-data-secret.yaml
+    |-- 99_openshift-cluster-api_worker-machineset-0.yaml
+    |-- 99_openshift-cluster-api_worker-user-data-secret.yaml
+    |-- 99_openshift-machineconfig_99-master-ssh.yaml
+    |-- 99_openshift-machineconfig_99-worker-ssh.yaml
+    |-- 99_role-cloud-creds-secret-reader.yaml
+    `-- openshift-install-manifests.yaml
+
+2 directories, 39 files
+
+cat $HOME/openstack-upi/manifests/cluster-scheduler-02-config.yml
+[lab-user@bastion openstack-upi]$ cat $HOME/openstack-upi/manifests/cluster-scheduler-02-config.yml
+apiVersion: config.openshift.io/v1
+kind: Scheduler
+metadata:
+  creationTimestamp: null
+  name: cluster
+spec:
+  mastersSchedulable: true
+  policy:
+    name: ""
+status: {}
+
+[lab-user@bastion openstack-upi]$ ansible localhost -m lineinfile -a 'path="$HOME/openstack-upi/manifests/cluster-scheduler-02-config.yml" regexp="^  mastersSchedulable" line="  mastersSchedulable: false"'
+localhost | CHANGED => {
+    "backup": "",
+    "changed": true,
+    "msg": "line replaced"
+}
+[lab-user@bastion openstack-upi]$ cat $HOME/openstack-upi/manifests/cluster-scheduler-02-config.yml
+apiVersion: config.openshift.io/v1
+kind: Scheduler
+metadata:
+  creationTimestamp: null
+  name: cluster
+spec:
+  mastersSchedulable: false
+  policy:
+    name: ""
+status: {}
+
+rm -f openshift/99_openshift-cluster-api_master-machines-*.yaml
+
+[lab-user@bastion openstack-upi]$ openshift-install create ignition-configs --dir $HOME/openstack-upi
+INFO Consuming Master Machines from target directory 
+INFO Consuming Openshift Manifests from target directory 
+INFO Consuming Common Manifests from target directory 
+INFO Consuming Worker Machines from target directory 
+INFO Consuming OpenShift Install (Manifests) from target directory 
+INFO Ignition-Configs created in: /home/lab-user/openstack-upi and /home/lab-user/openstack-upi/auth 
+[lab-user@bastion openstack-upi]$ ls -ltr
+total 312
+drwxr-x---. 2 lab-user users     50 Sep 27 01:30 auth
+-rw-r-----. 1 lab-user users   1706 Sep 27 01:30 master.ign
+-rw-r-----. 1 lab-user users   1706 Sep 27 01:30 worker.ign
+-rw-r-----. 1 lab-user users 305565 Sep 27 01:30 bootstrap.ign
+-rw-r-----. 1 lab-user users    210 Sep 27 01:30 metadata.json
+
+[lab-user@bastion openstack-upi]$ tree
+.
+|-- auth
+|   |-- kubeadmin-password
+|   `-- kubeconfig
+|-- bootstrap.ign
+|-- master.ign
+|-- metadata.json
+`-- worker.ign
+
+1 directory, 6 files
+
+[lab-user@bastion openstack-upi]$ ansible localhost -m lineinfile -a 'path=$HOME/.bashrc regexp="^export INFRA_ID" line="export INFRA_ID=$(jq -r .infraID $HOME/openstack-upi/metadata.json)"'
+localhost | CHANGED => {
+    "backup": "",
+    "changed": true,
+    "msg": "line added"
+}
+[lab-user@bastion openstack-upi]$ source $HOME/.bashrc
+[lab-user@bastion openstack-upi]$ echo $INFRA_ID
+cluster-wg9lh-zwlg9
+
+[lab-user@bastion openstack-upi]$ cat $HOME/resources/update_ignition.py
+import base64
+import json
+import os
+
+with open('bootstrap.ign', 'r') as f:
+    ignition = json.load(f)
+
+files = ignition['storage'].get('files', [])
+
+infra_id = os.environ.get('INFRA_ID', 'openshift').encode()
+hostname_b64 = base64.standard_b64encode(infra_id + b'-bootstrap\n').decode().strip()
+files.append(
+{
+    'path': '/etc/hostname',
+    'mode': 420,
+    'contents': {
+        'source': 'data:text/plain;charset=utf-8;base64,' + hostname_b64,
+        'verification': {}
+    },
+    'filesystem': 'root',
+})
+
+dhcp_client_conf_b64 = base64.standard_b64encode(b'[main]\ndhcp=dhclient\n').decode().strip()
+files.append(
+{
+    'path': '/etc/NetworkManager/conf.d/dhcp-client.conf',
+    'mode': 420,
+    'contents': {
+        'source': 'data:text/plain;charset=utf-8;base64,' + dhcp_client_conf_b64,
+        'verification': {}
+        },
+    'filesystem': 'root',
+})
+
+
+dhclient_cont_b64 = base64.standard_b64encode(b'send dhcp-client-identifier = hardware;\nprepend domain-name-servers 127.0.0.1;\n').decode().s
+trip()
+files.append(
+{
+    'path': '/etc/dhcp/dhclient.conf',
+    'mode': 420,
+    'contents': {
+        'source': 'data:text/plain;charset=utf-8;base64,' + dhclient_cont_b64,
+        'verification': {}
+        },
+    'filesystem': 'root'
+})
+
+ignition['storage']['files'] = files;
+
+with open('bootstrap.ign', 'w') as f:
+    json.dump(ignition, f)
+[lab-user@bastion openstack-upi]$ 
+
+[lab-user@bastion openstack-upi]$ cd $HOME/openstack-upi
+[lab-user@bastion openstack-upi]$ python3 $HOME/resources/update_ignition.py
+
+[lab-user@bastion openstack-upi]$ jq '.storage.files | map(select(.path=="/etc/dhcp/dhclient.conf", .path=="/etc/NetworkManager/conf.d/dhcp-client.conf", .path=="/etc/hostname"))' bootstrap.ign
+[
+  {
+    "path": "/etc/hostname",
+    "mode": 420,
+    "contents": {
+      "source": "data:text/plain;charset=utf-8;base64,Y2x1c3Rlci13ZzlsaC16d2xnOS1ib290c3RyYXAK",
+      "verification": {}
+    },
+    "filesystem": "root"
+  },
+  {
+    "path": "/etc/NetworkManager/conf.d/dhcp-client.conf",
+    "mode": 420,
+    "contents": {
+      "source": "data:text/plain;charset=utf-8;base64,W21haW5dCmRoY3A9ZGhjbGllbnQK",
+      "verification": {}
+    },
+    "filesystem": "root"
+  },
+  {
+    "path": "/etc/dhcp/dhclient.conf",
+    "mode": 420,
+    "contents": {
+      "source": "data:text/plain;charset=utf-8;base64,c2VuZCBkaGNwLWNsaWVudC1pZGVudGlmaWVyID0gaGFyZHdhcmU7CnByZXBlbmQgZG9tYWluLW5hbWUtc2VydmVycyAxMjcuMC4wLjE7Cg==",
+      "verification": {}
+    },
+    "filesystem": "root"
+  }
+]
+
+for index in $(seq 0 2); do
+    MASTER_HOSTNAME="$INFRA_ID-master-$index\n"
+    python -c "import base64, json, sys;
+ignition = json.load(sys.stdin);
+storage = ignition.get('storage', {});
+files = storage.get('files', []);
+files.append({'path': '/etc/hostname', 'mode': 420, 'contents': {'source': 'data:text/plain;charset=utf-8;base64,' + base64.standard_b64encode(b'$MASTER_HOSTNAME').decode().strip(), 'verification': {}}, 'filesystem': 'root'});
+storage['files'] = files;
+ignition['storage'] = storage
+json.dump(ignition, sys.stdout)" <master.ign >"$INFRA_ID-master-$index-ignition.json"
+done
+
+[lab-user@bastion openstack-upi]$ scp bootstrap.ign utilityvm.example.com:
+bootstrap.ign                                                                                               100%  301KB 113.9MB/s   00:00    
+[lab-user@bastion openstack-upi]$ ssh utilityvm.example.com chmod 644 bootstrap.ign
+[lab-user@bastion openstack-upi]$ 
+[lab-user@bastion openstack-upi]$ ssh utilityvm.example.com sudo mv bootstrap.ign /var/www/html
+[lab-user@bastion openstack-upi]$ ssh utilityvm.example.com sudo restorecon /var/www/html/bootstrap.ign
+
+[lab-user@bastion openstack-upi]$ wget -O $HOME/mybootstrap.ign http://utilityvm.example.com/bootstrap.ign
+--2021-09-27 01:40:28--  http://utilityvm.example.com/bootstrap.ign
+Resolving utilityvm.example.com (utilityvm.example.com)... 192.168.47.103
+Connecting to utilityvm.example.com (utilityvm.example.com)|192.168.47.103|:80... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 307728 (301K) [application/vnd.coreos.ignition+json]
+Saving to: '/home/lab-user/mybootstrap.ign'
+
+/home/lab-user/mybootstrap.ign      100%[=================================================================>] 300.52K  --.-KB/s    in 0.001s  
+
+2021-09-27 01:40:28 (463 MB/s) - '/home/lab-user/mybootstrap.ign' saved [307728/307728]
+
+
+[lab-user@bastion openstack-upi]$ openstack port create --network "$GUID-ocp-network" --security-group "$GUID-master_sg" --fixed-ip "subnet=$GUID-ocp-subnet,ip-address=192.168.47.5" --tag openshiftClusterID="$INFRA_ID" "$INFRA_ID-api-port" -f json
+{
+  "admin_state_up": true,
+  "allowed_address_pairs": [],
+  "binding_host_id": null,
+  "binding_profile": null,
+  "binding_vif_details": null,
+  "binding_vif_type": null,
+  "binding_vnic_type": "normal",
+  "created_at": "2021-09-27T05:43:05Z",
+  "data_plane_status": null,
+  "description": "",
+  "device_id": "",
+  "device_owner": "",
+  "dns_assignment": [
+    {
+      "ip_address": "192.168.47.5",
+      "hostname": "host-192-168-47-5",
+      "fqdn": "host-192-168-47-5.example.com."
+    }
+  ],
+  "dns_domain": null,
+  "dns_name": "",
+  "extra_dhcp_opts": [],
+  "fixed_ips": [
+    {
+      "subnet_id": "3c780686-74cd-4800-b833-365ae671e891",
+      "ip_address": "192.168.47.5"
+    }
+  ],
+  "id": "4cc8ad77-f25a-4018-a0ae-88e8ef2b5b8c",
+  "location": {
+    "cloud": "wg9lh-project",
+    "region_name": "regionOne",
+    "zone": null,
+    "project": {
+      "id": "2af53bc6cb934a4096041ae9e18562d6",
+      "name": "wg9lh-project",
+      "domain_id": "default",
+      "domain_name": null
+    }
+  },
+  "mac_address": "fa:16:3e:9e:a7:0d",
+  "name": "cluster-wg9lh-zwlg9-api-port",
+  "network_id": "e59852c0-474f-4dcf-99d6-7b30bdd24a13",
+  "port_security_enabled": true,
+  "project_id": "2af53bc6cb934a4096041ae9e18562d6",
+  "propagate_uplink_status": null,
+  "qos_policy_id": null,
+  "resource_request": null,
+  "revision_number": 1,
+  "security_group_ids": [
+    "e16313c3-8f66-4065-bd58-1588a4dda51c"
+  ],
+  "status": "DOWN",
+  "tags": [
+    "openshiftClusterID=cluster-wg9lh-zwlg9"
+  ],
+  "trunk_details": null,
+  "updated_at": "2021-09-27T05:43:05Z"
+}
+
+[lab-user@bastion openstack-upi]$ openstack port create --network "$GUID-ocp-network" --security-group "$GUID-worker_sg" --fixed-ip "subnet=$GUID-ocp-subnet,ip-address=192.168.47.7" --tag openshiftClusterID="$INFRA_ID" "$INFRA_ID-ingress-port" -f json
+{
+  "admin_state_up": true,
+  "allowed_address_pairs": [],
+  "binding_host_id": null,
+  "binding_profile": null,
+  "binding_vif_details": null,
+  "binding_vif_type": null,
+  "binding_vnic_type": "normal",  
+  "created_at": "2021-09-27T05:46:01Z",
+  "data_plane_status": null,
+  "description": "",
+  "device_id": "",
+  "device_owner": "",
+  "dns_assignment": [
+    {
+      "ip_address": "192.168.47.7",
+      "hostname": "host-192-168-47-7",
+      "fqdn": "host-192-168-47-7.example.com."
+    }
+  ],
+  "dns_domain": null,
+
+  "dns_name": "",
+  "extra_dhcp_opts": [],
+  "fixed_ips": [
+    {
+      "subnet_id": "3c780686-74cd-4800-b833-365ae671e891",
+      "ip_address": "192.168.47.7"
+    }
+  ],
+  "id": "7b513ae5-80ea-4f53-b550-120703312aa4",
+  "location": {
+    "cloud": "wg9lh-project",
+    "region_name": "regionOne",
+    "zone": null,
+    "project": {
+      "id": "2af53bc6cb934a4096041ae9e18562d6",
+      "name": "wg9lh-project",
+      "domain_id": "default",
+      "domain_name": null
+    }
+  },
+  "mac_address": "fa:16:3e:01:7f:df",
+  "name": "cluster-wg9lh-zwlg9-ingress-port",
+  "network_id": "e59852c0-474f-4dcf-99d6-7b30bdd24a13",
+  "port_security_enabled": true,
+  "project_id": "2af53bc6cb934a4096041ae9e18562d6",
+  "propagate_uplink_status": null,
+  "qos_policy_id": null,
+  "resource_request": null,
+  "revision_number": 1,
+  "security_group_ids": [
+    "63248770-9ed2-4a48-9ec4-03c893e5781b"
+  ],
+  "status": "DOWN",
+  "tags": [
+    "openshiftClusterID=cluster-wg9lh-zwlg9"
+  ],
+  "trunk_details": null,
+  "updated_at": "2021-09-27T05:46:01Z"
+}
+
+openstack floating ip set --port "$INFRA_ID-api-port" $API_FIP
+
+[lab-user@bastion openstack-upi]$ openstack floating ip set --port "$INFRA_ID-api-port" $API_FIP
+[lab-user@bastion openstack-upi]$ env | grep API_FIP
+API_FIP=52.116.164.174
+
+[lab-user@bastion openstack-upi]$ openstack floating ip set --port "$INFRA_ID-ingress-port" $INGRESS_FIP
+[lab-user@bastion openstack-upi]$ env | grep INGRESS_FIP
+INGRESS_FIP=52.116.164.97
+
+[lab-user@bastion openstack-upi]$ openstack floating ip list -c ID -c "Floating IP Address" -c "Fixed IP Address"
++--------------------------------------+---------------------+------------------+
+| ID                                   | Floating IP Address | Fixed IP Address |
++--------------------------------------+---------------------+------------------+
+| 2d985b97-0fd3-43de-8279-7c66d68fdc9b | 52.116.164.58       | 192.168.47.100   |
+| 45ac13a5-0ba4-48c6-bebb-900e8236bc28 | 52.116.164.174      | 192.168.47.5     |
+| 92f621d8-5226-4cef-b820-ea9706a622b2 | 52.116.164.97       | 192.168.47.7     |
++--------------------------------------+---------------------+------------------+
+
+openstack port create \
+  --network "$GUID-ocp-network" \
+  --security-group "$GUID-master_sg" \
+  --allowed-address ip-address=192.168.47.5 \
+  --allowed-address ip-address=192.168.47.6 \
+  --allowed-address ip-address=192.168.47.7 \
+  --tag openshiftClusterID="$INFRA_ID" \
+  "$INFRA_ID-bootstrap-port"
+
+[lab-user@bastion openstack-upi]$ openstack port create   --network "$GUID-ocp-network"   --security-group "$GUID-master_sg"   --allowed-address ip-address=192.168.47.5   --allowed-address ip-address=192.168.47.6   --allowed-address ip-address=192.168.47.7   --tag openshiftClusterID="$INFRA_ID"   "$INFRA_ID-bootstrap-port"
+
+openstack server create --image rhcos-ocp46 --flavor 4c16g30d --user-data "$HOME/openstack-upi/$INFRA_ID-bootstrap-ignition.json" --port "$INFRA_ID-bootstrap-port" --wait --property openshiftClusterID="$INFRA_ID" "$INFRA_ID-bootstrap"
+
+ssh -i $HOME/.ssh/${GUID}key.pem core@$INFRA_ID-bootstrap.example.com
+
+
+[lab-user@bastion openstack-upi]$ for index in $(seq 0 2); do
+  openstack port create \
+  --network "$GUID-ocp-network" \
+  --security-group "$GUID-master_sg" \
+  --allowed-address ip-address=192.168.47.5 \
+  --allowed-address ip-address=192.168.47.6 \
+  --allowed-address ip-address=192.168.47.7 \
+  --tag openshiftClusterID="$INFRA_ID" \
+  "$INFRA_ID-master-port-$index"
+done
+
+[lab-user@bastion openstack-upi]$ openstack port list | grep master 
+| 87375f9c-8b3e-46b4-9282-43227a81379d | cluster-wg9lh-zwlg9-master-port-2            | fa:16:3e:e4:38:00 | ip_address='192.168.47.55', subnet_id='3c780686-74cd-4800-b833-365ae671e891'  | DOWN   |
+| b0aa45e2-e182-44c8-8270-2221d8174b4c | cluster-wg9lh-zwlg9-master-port-0            | fa:16:3e:62:c7:16 | ip_address='192.168.47.24', subnet_id='3c780686-74cd-4800-b833-365ae671e891'  | DOWN   |
+| ced76781-e5be-4dd5-8861-eb4a1cc9a820 | cluster-wg9lh-zwlg9-master-port-1            | fa:16:3e:d9:8e:f3 | ip_address='192.168.47.97', subnet_id='3c780686-74cd-4800-b833-365ae671e891'  | DOWN   |
+
+[lab-user@bastion openstack-upi]$ for index in $(seq 0 2); do
+  openstack server create \
+  --boot-from-volume 30 \
+  --image rhcos-ocp46 \
+  --flavor 4c16g30d \
+  --user-data "$HOME/openstack-upi/$INFRA_ID-master-$index-ignition.json" \
+  --port "$INFRA_ID-master-port-$index" \
+  --property openshiftClusterID="$INFRA_ID" \
+  "$INFRA_ID-master-$index"
+done
+
+[lab-user@bastion openstack-upi]$ jq .ignition.config $HOME/openstack-upi/$INFRA_ID-master-0-ignition.json
+{
+  "merge": [
+    {
+      "source": "https://192.168.47.5:22623/config/master"
+    }
+  ]
+}
+
+[lab-user@bastion openstack-upi]$ openstack console log show "$INFRA_ID-bootstrap"
+[lab-user@bastion openstack-upi]$ openstack console log show "$INFRA_ID-master-0"
+[lab-user@bastion openstack-upi]$ openstack console log show "$INFRA_ID-master-1"
+[lab-user@bastion openstack-upi]$ openstack console log show "$INFRA_ID-master-2"
+
+[lab-user@bastion openstack-upi]$ ssh -i $HOME/.ssh/${GUID}key.pem core@$INFRA_ID-bootstrap.example.com
+[core@cluster-wg9lh-zwlg9-bootstrap ~]$ sudo podman images
+REPOSITORY                                       TAG      IMAGE ID       CREATED        SIZE
+utilityvm.example.com:5000/ocp4/openshift4       <none>   1b715f0ef131   8 months ago   320 MB
+quay.io/openshift-release-dev/ocp-v4.0-art-dev   <none>   d822eadbccb0   8 months ago   504 MB
+quay.io/openshift-release-dev/ocp-v4.0-art-dev   <none>   8da8e111148f   8 months ago   325 MB
+quay.io/openshift-release-dev/ocp-v4.0-art-dev   <none>   9ef3b30032ac   8 months ago   318 MB
+quay.io/openshift-release-dev/ocp-v4.0-art-dev   <none>   d7d8f7b3a0e4   8 months ago   319 MB
+quay.io/openshift-release-dev/ocp-v4.0-art-dev   <none>   d72c05e8b59b   8 months ago   303 MB
+quay.io/openshift-release-dev/ocp-v4.0-art-dev   <none>   dbd617d0296b   8 months ago   686 MB
+quay.io/openshift-release-dev/ocp-v4.0-art-dev   <none>   12b0d7eb4b40   8 months ago   298 MB
+quay.io/openshift-release-dev/ocp-v4.0-art-dev   <none>   89073d4591f9   8 months ago   316 MB
+quay.io/openshift-release-dev/ocp-v4.0-art-dev   <none>   b7ba39fb2456   8 months ago   341 MB
+quay.io/openshift-release-dev/ocp-v4.0-art-dev   <none>   09faf63b51e8   8 months ago   337 MB
+quay.io/openshift-release-dev/ocp-v4.0-art-dev   <none>   b165af37a38a   8 months ago   315 MB
+quay.io/openshift-release-dev/ocp-v4.0-art-dev   <none>   2ec31cc23897   8 months ago   320 MB
+quay.io/openshift-release-dev/ocp-v4.0-art-dev   <none>   8ff6eb047e7d   8 months ago   322 MB
+quay.io/openshift-release-dev/ocp-v4.0-art-dev   <none>   1508976cc9d1   8 months ago   316 MB
+quay.io/openshift-release-dev/ocp-v4.0-art-dev   <none>   6d6df86acee3   8 months ago   416 MB
+quay.io/openshift-release-dev/ocp-v4.0-art-dev   <none>   bde3177e06af   8 months ago   268 MB
+
+[core@cluster-wg9lh-zwlg9-bootstrap ~]$ sudo cat /etc/containers/registries.conf
+[[registry]]
+location = "quay.io/openshift-release-dev/ocp-release"
+insecure = false
+mirror-by-digest-only = true
+
+[[registry.mirror]]
+location = "utilityvm.example.com:5000/ocp4/openshift4"
+insecure = false
+
+
+[[registry]]
+location = "quay.io/openshift-release-dev/ocp-v4.0-art-dev"
+insecure = false
+mirror-by-digest-only = true
+
+[[registry.mirror]]
+location = "utilityvm.example.com:5000/ocp4/openshift4"
+insecure = false
+
+
+[core@cluster-wg9lh-zwlg9-bootstrap ~]$ journalctl -b -f -u release-image.service -u bootkube.service
+...
+Sep 27 06:10:17 cluster-wg9lh-zwlg9-bootstrap bootkube.sh[2333]: Waiting for CEO to finish...
+Sep 27 06:10:18 cluster-wg9lh-zwlg9-bootstrap bootkube.sh[2333]: I0927 06:10:18.115683       1 waitforceo.go:64] Cluster etcd operator bootstrapped successfully
+Sep 27 06:10:18 cluster-wg9lh-zwlg9-bootstrap bootkube.sh[2333]: I0927 06:10:18.119462       1 waitforceo.go:58] cluster-etcd-operator bootstrap etcd
+Sep 27 06:10:18 cluster-wg9lh-zwlg9-bootstrap bootkube.sh[2333]: bootkube.service complete
+
+
+[lab-user@bastion openstack-upi]$ openshift-install wait-for bootstrap-complete --dir $HOME/openstack-upi
+INFO Waiting up to 20m0s for the Kubernetes API at https://api.cluster-wg9lh.dynamic.opentlc.com:6443... 
+INFO API v1.19.0+1833054 up                       
+INFO Waiting up to 30m0s for bootstrapping to complete... 
+INFO It is now safe to remove the bootstrap resources 
+INFO Time elapsed: 0s
+
+[lab-user@bastion openstack-upi]$ openstack server delete "$INFRA_ID-bootstrap"
+[lab-user@bastion openstack-upi]$ openstack port delete "$INFRA_ID-bootstrap-port"
+
+[lab-user@bastion openstack-upi]$ ansible localhost -m lineinfile -a 'path=$HOME/.bashrc regexp="^export KUBECONFIG" line="export KUBECONFIG=$HOME/openstack-upi/auth/kubeconfig"'
+localhost | CHANGED => {
+    "backup": "",
+    "changed": true,
+    "msg": "line added"
+}
+[lab-user@bastion openstack-upi]$ source $HOME/.bashrc
+
+watch oc get clusterversion
+
+[lab-user@bastion openstack-upi]$ for index in $(seq 0 1); do
+  openstack port create \
+  --network "$GUID-ocp-network" \
+  --security-group "$GUID-worker_sg" \
+  --allowed-address ip-address=192.168.47.5 \
+  --allowed-address ip-address=192.168.47.6 \
+  --allowed-address ip-address=192.168.47.7 \
+  --tag openshiftClusterID="$INFRA_ID" \
+  "$INFRA_ID-worker-port-$index"
+done
+
+[lab-user@bastion openstack-upi]$ for index in $(seq 0 1); do
+  openstack server create \
+  --image rhcos-ocp46 \
+  --flavor 4c16g30d \
+  --user-data "$HOME/openstack-upi/worker.ign" \
+  --port "$INFRA_ID-worker-port-$index" \
+  --property openshiftClusterID="$INFRA_ID" \
+  "$INFRA_ID-worker-$index"
+done
+
+[lab-user@bastion openstack-upi]$ jq .ignition.config $HOME/openstack-upi/worker.ign
+{
+  "merge": [
+    {
+      "source": "https://192.168.47.5:22623/config/worker"
+    }
+  ]
+}
+
+[lab-user@bastion openstack-upi]$ openstack console log show "$INFRA_ID-worker-0"
+[lab-user@bastion openstack-upi]$ openstack console log show "$INFRA_ID-worker-1"
+[lab-user@bastion openstack-upi]$ watch oc get csr 
+[lab-user@bastion openstack-upi]$ oc get csr --no-headers | /usr/bin/awk '{print $1}' | xargs oc adm certificate approve
+
+[lab-user@bastion openstack-upi]$ watch oc get nodes
+[lab-user@bastion openstack-upi]$ watch oc get clusterversion
+
+[lab-user@bastion openstack-upi]$ oc -n openshift-kube-apiserver-operator logs $(oc -n openshift-kube-apiserver-operator get pods -l app=kube-apiserver-operator -o name) -f 
+```

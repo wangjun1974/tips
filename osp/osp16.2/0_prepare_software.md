@@ -370,6 +370,20 @@ EOF
 ### 离线镜像仓库准备 (新)
 ```
 安装 registry 基础软件
+cat > /etc/yum.repos.d/w.repo << EOF
+[rhel-8-for-x86_64-baseos-eus-rpms]
+name=rhel-8-for-x86_64-baseos-eus-rpms
+baseurl=http://192.168.122.2/repos/osp16.2/rhel-8-for-x86_64-baseos-eus-rpms/
+enabled=1
+gpgcheck=0
+
+[rhel-8-for-x86_64-appstream-eus-rpms]
+name=rhel-8-for-x86_64-appstream-eus-rpms
+baseurl=http://192.168.122.2/repos/osp16.2/rhel-8-for-x86_64-appstream-eus-rpms/
+enabled=1
+gpgcheck=0
+EOF
+
 yum install -y podman httpd httpd-tools wget jq
 
 创建目录

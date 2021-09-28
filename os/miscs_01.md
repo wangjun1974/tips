@@ -1878,3 +1878,1116 @@ EOF
 
 sh -x download.sh <someurl>
 ```
+
+### Day2 Training
+```
+[lab-user@bastion openstack-upi]$ oc explain MachineSet.spec --recursive=true
+KIND:     MachineSet
+VERSION:  machine.openshift.io/v1beta1
+
+RESOURCE: spec <Object>
+
+DESCRIPTION:
+     / [MachineSetSpec] MachineSetSpec defines the desired state of MachineSet
+
+FIELDS:
+   deletePolicy <string>
+   minReadySeconds      <integer>
+   replicas     <integer>
+   selector     <Object>
+      matchExpressions  <[]Object>
+         key    <string>
+         operator       <string>
+         values <[]string>
+      matchLabels       <map[string]string>
+   template     <Object>
+      metadata  <Object>
+         annotations    <map[string]string>
+         generateName   <string>
+         labels <map[string]string>
+         name   <string>
+         namespace      <string>
+         ownerReferences        <[]Object>
+            apiVersion  <string>
+            blockOwnerDeletion  <boolean>
+            controller  <boolean>
+            kind        <string>
+            name        <string>
+            uid <string>
+      spec      <Object>
+         metadata       <Object>
+            annotations <map[string]string>
+            generateName        <string>
+            labels      <map[string]string>
+            name        <string>
+            namespace   <string>
+            ownerReferences     <[]Object>
+               apiVersion       <string>
+               blockOwnerDeletion       <boolean>
+               controller       <boolean>
+               kind     <string>
+               name     <string>
+               uid      <string>
+         providerID     <string>
+         providerSpec   <Object>
+            value       <map[string]>
+         taints <[]Object>
+            effect      <string>
+            key <string>
+            timeAdded   <string>
+            value       <string>
+
+[lab-user@bastion openstack-upi]$ oc get nodes
+NAME                           STATUS   ROLES    AGE   VERSION
+cluster-wg9lh-zwlg9-master-0   Ready    master   21h   v1.19.0+1833054
+cluster-wg9lh-zwlg9-master-1   Ready    master   21h   v1.19.0+1833054
+cluster-wg9lh-zwlg9-master-2   Ready    master   21h   v1.19.0+1833054
+cluster-wg9lh-zwlg9-worker-0   Ready    worker   20h   v1.19.0+1833054
+cluster-wg9lh-zwlg9-worker-1   Ready    worker   20h   v1.19.0+1833054
+
+[lab-user@bastion openstack-upi]$ oc describe node cluster-wg9lh-zwlg9-worker-0
+...
+Roles:              worker
+...
+Labels:
+...
+                    node-role.kubernetes.io/worker=
+...
+Taints:             <none>
+
+[lab-user@bastion openstack-upi]$ oc get machines -n openshift-machine-api
+No resources found in openshift-machine-api namespace.
+
+[lab-user@bastion openstack-upi]$ oc get machineset -n openshift-machine-api 
+NAME                           DESIRED   CURRENT   READY   AVAILABLE   AGE
+cluster-wg9lh-zwlg9-worker-0   0         0                             21h
+
+[lab-user@bastion openstack-upi]$ oc get machineset cluster-wg9lh-zwlg9-worker-0 -n openshift-machine-api -o yaml 
+apiVersion: machine.openshift.io/v1beta1
+kind: MachineSet
+metadata:
+...
+  labels:
+    machine.openshift.io/cluster-api-cluster: cluster-wg9lh-zwlg9
+    machine.openshift.io/cluster-api-machine-role: worker
+    machine.openshift.io/cluster-api-machine-type: worker
+...
+  name: cluster-wg9lh-zwlg9-worker-0
+  namespace: openshift-machine-api
+...
+spec:
+  replicas: 0
+  selector:
+    matchLabels:
+      machine.openshift.io/cluster-api-cluster: cluster-wg9lh-zwlg9
+      machine.openshift.io/cluster-api-machineset: cluster-wg9lh-zwlg9-worker-0
+  template:
+    metadata:
+      labels:
+        machine.openshift.io/cluster-api-cluster: cluster-wg9lh-zwlg9
+        machine.openshift.io/cluster-api-machine-role: worker
+        machine.openshift.io/cluster-api-machine-type: worker
+        machine.openshift.io/cluster-api-machineset: cluster-wg9lh-zwlg9-worker-0
+    spec:
+      metadata: {}
+      providerSpec:
+        value:
+          apiVersion: openstackproviderconfig.openshift.io/v1alpha1
+          cloudName: openstack
+          cloudsSecret:
+            name: openstack-cloud-credentials
+            namespace: openshift-machine-api
+          flavor: 4c16g30d
+          image: cluster-wg9lh-zwlg9-rhcos
+          kind: OpenstackProviderSpec
+          metadata:
+            creationTimestamp: null
+          networks:
+          - filter: {}
+            subnets:
+            - filter:
+                name: cluster-wg9lh-zwlg9-nodes
+                tags: openshiftClusterID=cluster-wg9lh-zwlg9
+          securityGroups:
+          - filter: {}
+            name: cluster-wg9lh-zwlg9-worker
+          serverMetadata:
+            Name: cluster-wg9lh-zwlg9-worker
+            openshiftClusterID: cluster-wg9lh-zwlg9
+          tags:
+          - openshiftClusterID=cluster-wg9lh-zwlg9
+          trunk: true
+          userDataSecret:
+            name: worker-user-data
+
+oc scale machineset cluster-wg9lh-zwlg9-worker-0 --replicas=1 -n openshift-machine-api
+
+[lab-user@bastion openstack-upi]$ oc get machine -n openshift-machine-api
+NAME                                 PHASE          TYPE   REGION   ZONE   AGE
+cluster-wg9lh-zwlg9-worker-0-pmhp4   Provisioning                          13m
+
+[lab-user@bastion openstack-upi]$ oc describe machine cluster-wg9lh-zwlg9-worker-0-pmhp4 -n openshift-machine-api 
+...
+Events:
+  Type     Reason        Age                 From                  Message
+  ----     ------        ----                ----                  -------
+  Warning  FailedCreate  3m (x175 over 13m)  openstack_controller  CreateError
+
+[lab-user@bastion openstack-upi]$ openstack server list ^C
+[lab-user@bastion openstack-upi]$ oc get pods -n openshift-machine-api
+NAME                                           READY   STATUS    RESTARTS   AGE
+cluster-autoscaler-operator-5ffb8966c8-kbjrr   2/2     Running   1          21h
+machine-api-controllers-85864d65b7-xld7n       7/7     Running   16         21h
+machine-api-operator-5bf564d556-mvxql          2/2     Running   1          21h
+[lab-user@bastion openstack-upi]$ 
+
+[lab-user@bastion openstack-upi]$ oc logs machine-api-controllers-85864d65b7-xld7n -n openshift-machine-api machine-controller 
+...
+E0928 03:43:19.843036       1 actuator.go:550] Machine error cluster-wg9lh-zwlg9-worker-0-pmhp4: no image with the name cluster-wg9lh-zwlg9-rhcos could be found
+W0928 03:43:19.843976       1 controller.go:316] cluster-wg9lh-zwlg9-worker-0-pmhp4: failed to create machine: no image with the name cluster-wg9lh-zwlg9-rhcos could be found
+
+[lab-user@bastion openstack-upi]$ oc get pods machine-api-controllers-85864d65b7-xld7n -o json -n openshift-machine-api | jq -r .spec.containers[].name
+machineset-controller
+machine-controller
+nodelink-controller
+machine-healthcheck-controller
+kube-rbac-proxy-machineset-mtrc
+kube-rbac-proxy-machine-mtrc
+kube-rbac-proxy-mhc-mtrc
+
+[lab-user@bastion openstack-upi]$ oc get machineset -n openshift-machine-api 
+NAME                           DESIRED   CURRENT   READY   AVAILABLE   AGE
+cluster-wg9lh-zwlg9-worker-0   1         1                             21h
+
+[lab-user@bastion openstack-upi]$ oc get machineset -n openshift-machine-api 
+NAME                           DESIRED   CURRENT   READY   AVAILABLE   AGE
+cluster-wg9lh-zwlg9-worker-0   1         1                             21h
+[lab-user@bastion openstack-upi]$ oc scale machineset cluster-wg9lh-zwlg9-worker-0 --replicas=0 -n openshift-machine-api
+machineset.machine.openshift.io/cluster-wg9lh-zwlg9-worker-0 scaled
+[lab-user@bastion openstack-upi]$ oc get machineset -n openshift-machine-api
+NAME                           DESIRED   CURRENT   READY   AVAILABLE   AGE
+cluster-wg9lh-zwlg9-worker-0   0         0                             21h
+[lab-user@bastion openstack-upi]$ oc get machines -n openshift-machine-api
+No resources found in openshift-machine-api namespace.
+
+[lab-user@bastion openstack-upi]$ oc get -n openshift-machine-api $(oc get machineset -n openshift-machine-api -o name) -o jsonpath='{.spec.template.spec.providerSpec}{"\n"}'
+{"value":{"apiVersion":"openstackproviderconfig.openshift.io/v1alpha1","cloudName":"openstack","cloudsSecret":{"name":"openstack-cloud-credentials","namespace":"openshift-machine-api"},"flavor":"4c16g30d","image":"cluster-wg9lh-zwlg9-rhcos","kind":"OpenstackProviderSpec","metadata":{"creationTimestamp":null},"networks":[{"filter":{},"subnets":[{"filter":{"name":"cluster-wg9lh-zwlg9-nodes","tags":"openshiftClusterID=cluster-wg9lh-zwlg9"}}]}],"securityGroups":[{"filter":{},"name":"cluster-wg9lh-zwlg9-worker"}],"serverMetadata":{"Name":"cluster-wg9lh-zwlg9-worker","openshiftClusterID":"cluster-wg9lh-zwlg9"},"tags":["openshiftClusterID=cluster-wg9lh-zwlg9"],"trunk":true,"userDataSecret":{"name":"worker-user-data"}}}
+
+[lab-user@bastion openstack-upi]$ oc patch machineset cluster-wg9lh-zwlg9-worker-0  -n openshift-machine-api --type merge -p '{"spec":{"template":{"spec":{"providerSpec":{"value":{"image":"rhcos-ocp46"}}}}}}'
+machineset.machine.openshift.io/cluster-wg9lh-zwlg9-worker-0 patched
+
+[lab-user@bastion openstack-upi]$ oc get -n openshift-machine-api $(oc get machineset -n openshift-machine-api -o name) -o jsonpath='{.spec.template.spec.providerSpec}{"\n"}'
+{"value":{"apiVersion":"openstackproviderconfig.openshift.io/v1alpha1","cloudName":"openstack","cloudsSecret":{"name":"openstack-cloud-credentials","namespace":"openshift-machine-api"},"flavor":"4c16g30d","image":"rhcos-ocp46","kind":"OpenstackProviderSpec","metadata":{"creationTimestamp":null},"networks":[{"filter":{},"subnets":[{"filter":{"name":"cluster-wg9lh-zwlg9-nodes","tags":"openshiftClusterID=cluster-wg9lh-zwlg9"}}]}],"securityGroups":[{"filter":{},"name":"cluster-wg9lh-zwlg9-worker"}],"serverMetadata":{"Name":"cluster-wg9lh-zwlg9-worker","openshiftClusterID":"cluster-wg9lh-zwlg9"},"tags":["openshiftClusterID=cluster-wg9lh-zwlg9"],"trunk":true,"userDataSecret":{"name":"worker-user-data"}}}
+
+oc scale machineset cluster-wg9lh-zwlg9-worker-0 --replicas=1 -n openshift-machine-api
+
+E0928 03:58:48.170926       1 actuator.go:550] Machine error cluster-wg9lh-zwlg9-worker-0-8q4r7: error creating Openstack instance: No network was found or provided. Please check your machine configuration and try again
+
+E0928 04:06:38.901543       1 actuator.go:550] Machine error cluster-wg9lh-zwlg9-worker-0-kgrv2: error creating Openstack instance: No network was found or provided. Please check your machine configuration and try again
+
+https://docs.okd.io/latest/machine_management/creating_machinesets/creating-machineset-osp.html
+
+
+
+cat > general-purpose-1a.yaml <<EOF
+apiVersion: machine.openshift.io/v1beta1
+kind: MachineSet
+metadata:
+  labels:
+    machine.openshift.io/cluster-api-cluster: cluster-wg9lh-zwlg9
+    machine.openshift.io/cluster-api-machine-role: worker
+    machine.openshift.io/cluster-api-machine-type: worker
+  name: general-purpose-1a
+  namespace: openshift-machine-api
+spec:
+  replicas: 0
+  selector:
+    matchLabels:
+      machine.openshift.io/cluster-api-cluster: cluster-wg9lh-zwlg9
+      machine.openshift.io/cluster-api-machineset: general-purpose-1a
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        machine.openshift.io/cluster-api-cluster: cluster-wg9lh-zwlg9
+        machine.openshift.io/cluster-api-machine-role: worker
+        machine.openshift.io/cluster-api-machine-type: worker
+        machine.openshift.io/cluster-api-machineset: general-purpose-1a
+    spec:
+      metadata:
+        labels:
+          failure-domain.beta.kubernetes.io/region: "regionOne"
+          failure-domain.beta.kubernetes.io/zone: "nova"
+          node-role.kubernetes.io/general-use: ""
+      providerSpec:
+        value:
+          apiVersion: openstackproviderconfig.openshift.io/v1alpha1
+          cloudName: openstack
+          cloudsSecret:
+            name: openstack-cloud-credentials
+            namespace: openshift-machine-api
+          flavor: 4c16g30d
+          image: rhcos-ocp46
+          kind: OpenstackProviderSpec
+          networks:
+          - filter: {}
+            subnets:
+            - filter:
+                name: wg9lh-ocp-subnet
+          securityGroups:
+          - filter: {}
+            name: wg9lh-worker_sg
+          serverMetadata:
+            Name: cluster-wg9lh-zwlg9-worker
+            openshiftClusterID: cluster-wg9lh-zwlg9
+          tags:
+          - openshiftClusterID=cluster-wg9lh-zwlg9
+          trunk: false
+          userDataSecret:
+            name: worker-user-data
+EOF
+
+cat > general-purpose-1b.yaml <<EOF
+apiVersion: machine.openshift.io/v1beta1
+kind: MachineSet
+metadata:
+  labels:
+    machine.openshift.io/cluster-api-cluster: cluster-wg9lh-zwlg9
+    machine.openshift.io/cluster-api-machine-role: worker
+    machine.openshift.io/cluster-api-machine-type: worker
+  name: general-purpose-1b
+  namespace: openshift-machine-api
+spec:
+  replicas: 0
+  selector:
+    matchLabels:
+      machine.openshift.io/cluster-api-cluster: cluster-wg9lh-zwlg9
+      machine.openshift.io/cluster-api-machineset: general-purpose-1b
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        machine.openshift.io/cluster-api-cluster: cluster-wg9lh-zwlg9
+        machine.openshift.io/cluster-api-machine-role: worker
+        machine.openshift.io/cluster-api-machine-type: worker
+        machine.openshift.io/cluster-api-machineset: general-purpose-1b
+    spec:
+      metadata:
+        labels:
+          failure-domain.beta.kubernetes.io/region: "regionOne"
+          failure-domain.beta.kubernetes.io/zone: "nova"
+          node-role.kubernetes.io/general-use: ""
+      providerSpec:
+        value:
+          apiVersion: openstackproviderconfig.openshift.io/v1alpha1
+          cloudName: openstack
+          cloudsSecret:
+            name: openstack-cloud-credentials
+            namespace: openshift-machine-api
+          flavor: 4c16g30d
+          image: rhcos-ocp46
+          kind: OpenstackProviderSpec
+          networks:
+          - filter: {}
+            subnets:
+            - filter:
+                name: wg9lh-ocp-subnet
+          securityGroups:
+          - filter: {}
+            name: wg9lh-worker_sg
+          serverMetadata:
+            Name: cluster-wg9lh-zwlg9-worker
+            openshiftClusterID: cluster-wg9lh-zwlg9
+          tags:
+          - openshiftClusterID=cluster-wg9lh-zwlg9
+          trunk: false
+          userDataSecret:
+            name: worker-user-data
+EOF
+
+[lab-user@bastion openstack-upi]$ oc create -f general-purpose-1a.yaml -n openshift-machine-api
+machineset.machine.openshift.io/general-purpose-1a created
+[lab-user@bastion openstack-upi]$ oc create -f general-purpose-1b.yaml -n openshift-machine-api
+machineset.machine.openshift.io/general-purpose-1b created
+
+oc get machineset -n openshift-machine-api
+oc scale machineset general-purpose-1a --replicas=1 -n openshift-machine-api
+oc scale machineset general-purpose-1b --replicas=1 -n openshift-machine-api
+
+
+
+machine set cluster-wg9lh-zwlg9-worker-0 的错误内容可以参考 general-purpose-1b 
+
+除了对象错误外，metadata: {} 也是错误的
+      metadata:
+        labels:
+          failure-domain.beta.kubernetes.io/region: "regionOne"
+          failure-domain.beta.kubernetes.io/zone: "nova"
+
+把 yaml 文件内容修改完后
+[lab-user@bastion openstack-upi]$ oc get machines -n openshift-machine-api 
+NAME                                 PHASE     TYPE       REGION      ZONE   AGE
+cluster-wg9lh-zwlg9-worker-0-zsvcb   Running   4c16g30d   regionOne   nova   8m49s
+general-purpose-1a-2dc2l             Running   4c16g30d   regionOne   nova   17m
+general-purpose-1b-5f48k             Running   4c16g30d   regionOne   nova   17m
+
+[lab-user@bastion openstack-upi]$ oc get nodes
+NAME                                 STATUS   ROLES                AGE    VERSION
+cluster-wg9lh-zwlg9-master-0         Ready    master               23h    v1.19.0+1833054
+cluster-wg9lh-zwlg9-master-1         Ready    master               23h    v1.19.0+1833054
+cluster-wg9lh-zwlg9-master-2         Ready    master               23h    v1.19.0+1833054
+cluster-wg9lh-zwlg9-worker-0         Ready    worker               22h    v1.19.0+1833054
+cluster-wg9lh-zwlg9-worker-0-zsvcb   Ready    worker               55s    v1.19.0+1833054
+cluster-wg9lh-zwlg9-worker-1         Ready    worker               22h    v1.19.0+1833054
+general-purpose-1a-2dc2l             Ready    general-use,worker   9m4s   v1.19.0+1833054
+general-purpose-1b-5f48k             Ready    general-use,worker   8m4s   v1.19.0+1833054
+
+[lab-user@bastion openstack-upi]$ oc adm cordon cluster-wg9lh-zwlg9-worker-0-zsvcb 
+node/cluster-wg9lh-zwlg9-worker-0-zsvcb cordoned
+[lab-user@bastion openstack-upi]$ oc adm cordon general-purpose-1a-2dc2l 
+node/general-purpose-1a-2dc2l cordoned
+[lab-user@bastion openstack-upi]$ oc adm cordon general-purpose-1b-5f48k 
+node/general-purpose-1b-5f48k cordoned 
+
+[lab-user@bastion openstack-upi]$ oc adm drain node/cluster-wg9lh-zwlg9-worker-0-zsvcb --ignore-daemonsets --delete-local-data --force
+node/cluster-wg9lh-zwlg9-worker-0-zsvcb already cordoned
+WARNING: ignoring DaemonSet-managed Pods: openshift-cluster-node-tuning-operator/tuned-lph74, openshift-dns/dns-default-xcxs7, openshift-image-registry/node-ca-n6sz8, openshift-machine-config-operator/machine-config-daemon-zgjhc, openshift-monitoring/node-exporter-6z22d, openshift-multus/multus-8nf9v, openshift-multus/network-metrics-daemon-ft4s9, openshift-sdn/ovs-fbbsl, openshift-sdn/sdn-c8h9n
+node/cluster-wg9lh-zwlg9-worker-0-zsvcb drained
+
+[lab-user@bastion openstack-upi]$ oc adm drain node/general-purpose-1a-2dc2l --ignore-daemonsets --delete-local-data --force
+node/general-purpose-1a-2dc2l already cordoned
+WARNING: ignoring DaemonSet-managed Pods: openshift-cluster-node-tuning-operator/tuned-ntk84, openshift-dns/dns-default-rlr5m, openshift-image-registry/node-ca-ghwxx, openshift-machine-config-operator/machine-config-daemon-bvcd9, openshift-monitoring/node-exporter-g9th4, openshift-multus/multus-wsgl8, openshift-multus/network-metrics-daemon-wjqwf, openshift-sdn/ovs-dbwhn, openshift-sdn/sdn-jq9wj
+node/general-purpose-1a-2dc2l drained
+
+[lab-user@bastion openstack-upi]$ oc adm drain node/general-purpose-1b-5f48k --ignore-daemonsets --delete-local-data --force
+node/general-purpose-1b-5f48k already cordoned
+WARNING: ignoring DaemonSet-managed Pods: openshift-cluster-node-tuning-operator/tuned-6jxnb, openshift-dns/dns-default-f8p5k, openshift-image-registry/node-ca-kxsmv, openshift-machine-config-operator/machine-config-daemon-mmzd4, openshift-monitoring/node-exporter-5mwtf, openshift-multus/multus-6qjt2, openshift-multus/network-metrics-daemon-hmz99, openshift-sdn/ovs-5qt74, openshift-sdn/sdn-4x6tj
+node/general-purpose-1b-5f48k drained
+
+[lab-user@bastion openstack-upi]$ oc get nodes
+NAME                                 STATUS                     ROLES                AGE   VERSION
+cluster-wg9lh-zwlg9-master-0         Ready                      master               23h   v1.19.0+1833054
+cluster-wg9lh-zwlg9-master-1         Ready                      master               23h   v1.19.0+1833054
+cluster-wg9lh-zwlg9-master-2         Ready                      master               23h   v1.19.0+1833054
+cluster-wg9lh-zwlg9-worker-0         Ready                      worker               22h   v1.19.0+1833054
+cluster-wg9lh-zwlg9-worker-0-zsvcb   Ready,SchedulingDisabled   worker               6m    v1.19.0+1833054
+cluster-wg9lh-zwlg9-worker-1         Ready                      worker               22h   v1.19.0+1833054
+general-purpose-1a-2dc2l             Ready,SchedulingDisabled   general-use,worker   14m   v1.19.0+1833054
+general-purpose-1b-5f48k             Ready,SchedulingDisabled   general-use,worker   13m   v1.19.0+1833054
+
+[lab-user@bastion openstack-upi]$ oc get machines -n openshift-machine-api 
+NAME                       PHASE     TYPE       REGION      ZONE   AGE
+general-purpose-1a-bs6cs   Running   4c16g30d   regionOne   nova   11m
+general-purpose-1b-gwczt   Running   4c16g30d   regionOne   nova   11m
+
+[lab-user@bastion openstack-upi]$ oc get nodes
+NAME                           STATUS   ROLES                AGE     VERSION
+cluster-wg9lh-zwlg9-master-0   Ready    master               23h     v1.19.0+1833054
+cluster-wg9lh-zwlg9-master-1   Ready    master               23h     v1.19.0+1833054
+cluster-wg9lh-zwlg9-master-2   Ready    master               23h     v1.19.0+1833054
+cluster-wg9lh-zwlg9-worker-0   Ready    worker               23h     v1.19.0+1833054
+cluster-wg9lh-zwlg9-worker-1   Ready    worker               23h     v1.19.0+1833054
+general-purpose-1a-bs6cs       Ready    general-use,worker   3m15s   v1.19.0+1833054
+general-purpose-1b-gwczt       Ready    general-use,worker   3m21s   v1.19.0+1833054
+
+[lab-user@bastion openstack-upi]$ oc adm cordon cluster-wg9lh-zwlg9-worker-0
+node/cluster-wg9lh-zwlg9-worker-0 cordoned
+[lab-user@bastion openstack-upi]$ oc adm cordon cluster-wg9lh-zwlg9-worker-1
+node/cluster-wg9lh-zwlg9-worker-1 cordoned
+
+[lab-user@bastion openstack-upi]$ oc adm drain node/cluster-wg9lh-zwlg9-worker-0 --ignore-daemonsets --delete-local-data --force
+[lab-user@bastion openstack-upi]$ oc adm drain node/cluster-wg9lh-zwlg9-worker-1 --ignore-daemonsets --delete-local-data --force
+
+[lab-user@bastion openstack-upi]$ oc get nodes
+NAME                           STATUS                     ROLES                AGE     VERSION
+cluster-wg9lh-zwlg9-master-0   Ready                      master               23h     v1.19.0+1833054
+cluster-wg9lh-zwlg9-master-1   Ready                      master               23h     v1.19.0+1833054
+cluster-wg9lh-zwlg9-master-2   Ready                      master               23h     v1.19.0+1833054
+cluster-wg9lh-zwlg9-worker-0   Ready,SchedulingDisabled   worker               23h     v1.19.0+1833054
+cluster-wg9lh-zwlg9-worker-1   Ready,SchedulingDisabled   worker               23h     v1.19.0+1833054
+general-purpose-1a-bs6cs       Ready                      general-use,worker   7m59s   v1.19.0+1833054
+general-purpose-1b-gwczt       Ready                      general-use,worker   8m5s    v1.19.0+1833054
+
+[lab-user@bastion openstack-upi]$ oc delete node cluster-wg9lh-zwlg9-worker-0 cluster-wg9lh-zwlg9-worker-1
+node "cluster-wg9lh-zwlg9-worker-0" deleted
+node "cluster-wg9lh-zwlg9-worker-1" deleted
+
+[lab-user@bastion openstack-upi]$ oc get nodes
+NAME                           STATUS   ROLES                AGE     VERSION
+cluster-wg9lh-zwlg9-master-0   Ready    master               23h     v1.19.0+1833054
+cluster-wg9lh-zwlg9-master-1   Ready    master               23h     v1.19.0+1833054
+cluster-wg9lh-zwlg9-master-2   Ready    master               23h     v1.19.0+1833054
+general-purpose-1a-bs6cs       Ready    general-use,worker   8m59s   v1.19.0+1833054
+general-purpose-1b-gwczt       Ready    general-use,worker   9m5s    v1.19.0+1833054
+
+3.5. Delete VMs from OpenStack
+[lab-user@bastion openstack-upi]$ openstack server list --name $INFRA_ID-worker -f value -c ID | xargs openstack server delete
+
+[lab-user@bastion openstack-upi]$ openstack server list -c ID -c Name -c Status
++--------------------------------------+------------------------------+--------+
+| ID                                   | Name                         | Status |
++--------------------------------------+------------------------------+--------+
+| 6f12dc68-049b-42fd-91cf-9352fe81dbed | general-purpose-1b-gwczt     | ACTIVE |
+| 43e54581-c3e2-4ac5-99c1-280697909f79 | general-purpose-1a-bs6cs     | ACTIVE |
+| 1747c318-9cdd-4650-ab74-c9bfd803e802 | cluster-wg9lh-zwlg9-master-2 | ACTIVE |
+| e610454c-4503-417c-99e5-5f24b51d8cb2 | cluster-wg9lh-zwlg9-master-1 | ACTIVE |
+| 1ce1100a-770b-4f3a-8eb8-97bd1786f1bf | cluster-wg9lh-zwlg9-master-0 | ACTIVE |
+| c95fa0e4-0f24-4996-a44f-6fafd0ab80b4 | bastion                      | ACTIVE |
+| f3e6f3be-012a-4e9f-b37c-ffc85073f775 | utilityvm                    | ACTIVE |
++--------------------------------------+------------------------------+--------+
+
+cat > $HOME/infra-1a.yaml <<EOF
+apiVersion: machine.openshift.io/v1beta1
+kind: MachineSet
+metadata:
+  labels:
+    machine.openshift.io/cluster-api-cluster: cluster-wg9lh-zwlg9
+    machine.openshift.io/cluster-api-machine-role: worker
+    machine.openshift.io/cluster-api-machine-type: worker
+  name: infra-1a
+  namespace: openshift-machine-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      machine.openshift.io/cluster-api-cluster: cluster-wg9lh-zwlg9
+      machine.openshift.io/cluster-api-machineset: infra-1a
+  template:
+    metadata:
+      labels:
+        machine.openshift.io/cluster-api-cluster: cluster-wg9lh-zwlg9
+        machine.openshift.io/cluster-api-machine-role: worker
+        machine.openshift.io/cluster-api-machine-type: worker
+        machine.openshift.io/cluster-api-machineset: infra-1a
+    spec:
+      metadata:
+        labels:
+          failure-domain.beta.kubernetes.io/region: "regionOne"
+          failure-domain.beta.kubernetes.io/zone: "nova"
+          node-role.kubernetes.io/infra: ""
+      providerSpec:
+        value:
+          apiVersion: openstackproviderconfig.openshift.io/v1alpha1
+          cloudName: openstack
+          cloudsSecret:
+            name: openstack-cloud-credentials
+            namespace: openshift-machine-api
+          flavor: 4c16g30d
+          image: rhcos-ocp46
+          kind: OpenstackProviderSpec
+          metadata:
+            creationTimestamp: null
+          networks:
+          - filter: {}
+            subnets:
+            - filter:
+                name: wg9lh-ocp-subnet
+          securityGroups:
+          - filter: {}
+            name: wg9lh-worker_sg
+          serverMetadata:
+            Name: cluster-wg9lh-zwlg9-worker
+            openshiftClusterID: cluster-wg9lh-zwlg9
+          tags:
+          - openshiftClusterID=cluster-wg9lh-zwlg9
+          trunk: false
+          userDataSecret:
+            name: worker-user-data
+EOF
+
+[lab-user@bastion openstack-upi]$ oc create -f $HOME/infra-1a.yaml 
+machineset.machine.openshift.io/infra-1a created
+
+[lab-user@bastion openstack-upi]$ oc get machines -n openshift-machine-api 
+NAME                       PHASE     TYPE       REGION      ZONE   AGE
+general-purpose-1a-bs6cs   Running   4c16g30d   regionOne   nova   36m
+general-purpose-1b-gwczt   Running   4c16g30d   regionOne   nova   36m
+infra-1a-kbf7z             Running   4c16g30d   regionOne   nova   11m
+
+[lab-user@bastion openstack-upi]$ oc get nodes
+NAME                           STATUS   ROLES                AGE     VERSION
+cluster-wg9lh-zwlg9-master-0   Ready    master               23h     v1.19.0+1833054
+cluster-wg9lh-zwlg9-master-1   Ready    master               23h     v1.19.0+1833054
+cluster-wg9lh-zwlg9-master-2   Ready    master               23h     v1.19.0+1833054
+general-purpose-1a-bs6cs       Ready    general-use,worker   28m     v1.19.0+1833054
+general-purpose-1b-gwczt       Ready    general-use,worker   28m     v1.19.0+1833054
+infra-1a-kbf7z                 Ready    infra,worker         3m31s   v1.19.0+1833054s
+
+[lab-user@bastion openstack-upi]$ oc explain clusterautoscaler.spec --recursive=true
+KIND:     ClusterAutoscaler
+VERSION:  autoscaling.openshift.io/v1
+
+RESOURCE: spec <Object>
+
+DESCRIPTION:
+     Desired state of ClusterAutoscaler resource
+
+FIELDS:
+   balanceSimilarNodeGroups     <boolean>
+   ignoreDaemonsetsUtilization  <boolean>
+   maxNodeProvisionTime <string>
+   maxPodGracePeriod    <integer>
+   podPriorityThreshold <integer>
+   resourceLimits       <Object>
+      cores     <Object>
+         max    <integer>
+         min    <integer>
+      gpus      <[]Object>
+         max    <integer>
+         min    <integer>
+         type   <string>
+      maxNodesTotal     <integer>
+      memory    <Object>
+         max    <integer>
+         min    <integer>
+   scaleDown    <Object>
+      delayAfterAdd     <string>
+      delayAfterDelete  <string>
+      delayAfterFailure <string>
+      enabled   <boolean>
+      unneededTime      <string>
+   skipNodesWithLocalStorage    <boolean>
+
+oc explain clusterautoscaler.spec.balanceSimilarNodeGroups
+[lab-user@bastion openstack-upi]$ oc explain clusterautoscaler.spec.balanceSimilarNodeGroups
+
+[lab-user@bastion openstack-upi]$ oc project openshift-machine-api
+Now using project "openshift-machine-api" on server "https://api.cluster-wg9lh.dynamic.opentlc.com:6443".
+
+[lab-user@bastion openstack-upi]$ oc get machineset
+NAME                           DESIRED   CURRENT   READY   AVAILABLE   AGE
+cluster-wg9lh-zwlg9-worker-0   0         0                             24h
+general-purpose-1a             1         1         1       1           72m
+general-purpose-1b             1         1         1       1           72m
+infra-1a                       1         1         1       1           17m
+
+
+[lab-user@bastion openstack-upi]$ echo "apiVersion: autoscaling.openshift.io/v1beta1
+> kind: MachineAutoscaler
+> metadata:
+>   name: ma-general-purpose-1a
+>   namespace: openshift-machine-api
+> spec:
+>   minReplicas: 1
+>   maxReplicas: 4
+>   scaleTargetRef:
+>     apiVersion: machine.openshift.io/v1beta1
+>     kind: MachineSet
+>     name: general-purpose-1a" | oc create -f - -n openshift-machine-api
+machineautoscaler.autoscaling.openshift.io/ma-general-purpose-1a created
+
+echo "apiVersion: autoscaling.openshift.io/v1beta1
+kind: MachineAutoscaler
+metadata:
+  name: ma-general-purpose-1b
+  namespace: openshift-machine-api
+spec:
+  minReplicas: 1
+  maxReplicas: 4
+  scaleTargetRef:
+    apiVersion: machine.openshift.io/v1beta1
+    kind: MachineSet
+    name: general-purpose-1b" | oc create -f - -n openshift-machine-api
+
+[lab-user@bastion openstack-upi]$ echo "apiVersion: autoscaling.openshift.io/v1beta1
+> kind: MachineAutoscaler
+> metadata:
+>   name: ma-general-purpose-1b
+>   namespace: openshift-machine-api
+> spec:
+>   minReplicas: 1
+>   maxReplicas: 4
+>   scaleTargetRef:
+>     apiVersion: machine.openshift.io/v1beta1
+>     kind: MachineSet
+>     name: general-purpose-1b" | oc create -f - -n openshift-machine-api
+machineautoscaler.autoscaling.openshift.io/ma-general-purpose-1b created
+
+[lab-user@bastion openstack-upi]$ oc get machineautoscaler
+NAME                    REF KIND     REF NAME             MIN   MAX   AGE
+ma-general-purpose-1a   MachineSet   general-purpose-1a   1     4     30s
+ma-general-purpose-1b   MachineSet   general-purpose-1b   1     4     14s
+
+echo "
+apiVersion: autoscaling.openshift.io/v1
+kind: ClusterAutoscaler
+metadata:
+  name: default
+spec:
+  balanceSimilarNodeGroups: true
+  podPriorityThreshold: -10
+  resourceLimits:
+    maxNodesTotal: 12
+    cores:
+      min: 4
+      max: 48
+    memory:
+      min: 16
+      max: 156
+  scaleDown:
+    enabled: true
+    delayAfterAdd: 5m
+    delayAfterDelete: 5m
+    delayAfterFailure: 5m
+    unneededTime: 60s" | oc create -f -
+
+[lab-user@bastion openstack-upi]$ echo "
+> apiVersion: autoscaling.openshift.io/v1
+> kind: ClusterAutoscaler
+> metadata:
+>   name: default
+> spec:
+>   balanceSimilarNodeGroups: true
+>   podPriorityThreshold: -10
+>   resourceLimits:
+>     maxNodesTotal: 12
+>     cores:
+>       min: 4
+>       max: 48
+>     memory:
+>       min: 16
+>       max: 156
+>   scaleDown:
+>     enabled: true
+>     delayAfterAdd: 5m
+>     delayAfterDelete: 5m
+>     delayAfterFailure: 5m
+>     unneededTime: 60s" | oc create -f -
+clusterautoscaler.autoscaling.openshift.io/default created
+
+[lab-user@bastion openstack-upi]$ oc describe clusterautoscaler default
+...
+  UID:               1adb743c-270d-47e4-af31-adccd4232ce1
+Spec:
+  Balance Similar Node Groups:  true
+  Pod Priority Threshold:       -10
+  Resource Limits:
+    Cores:
+      Max:            48
+      Min:            4
+    Max Nodes Total:  12
+    Memory:
+      Max:  156
+      Min:  16
+  Scale Down:
+    Delay After Add:      5m
+    Delay After Delete:   5m
+    Delay After Failure:  5m
+    Enabled:              true
+    Unneeded Time:        60s
+Events:                   <none>
+
+oc get machineset general-purpose-1a -o json | jq '.metadata.annotations'
+oc get machineset general-purpose-1b -o json | jq '.metadata.annotations'
+
+[lab-user@bastion openstack-upi]$ oc get machineset general-purpose-1a -o json | jq '.metadata.annotations'
+{
+  "autoscaling.openshift.io/machineautoscaler": "openshift-machine-api/ma-general-purpose-1a",
+  "machine.openshift.io/cluster-api-autoscaler-node-group-max-size": "4",
+  "machine.openshift.io/cluster-api-autoscaler-node-group-min-size": "1"
+}
+[lab-user@bastion openstack-upi]$ oc get machineset general-purpose-1b -o json | jq '.metadata.annotations'
+{
+  "autoscaling.openshift.io/machineautoscaler": "openshift-machine-api/ma-general-purpose-1b",
+  "machine.openshift.io/cluster-api-autoscaler-node-group-max-size": "4",
+  "machine.openshift.io/cluster-api-autoscaler-node-group-min-size": "1"
+}
+
+[lab-user@bastion openstack-upi]$ oc get pods
+NAME                                           READY   STATUS    RESTARTS   AGE
+cluster-autoscaler-default-54957d4cf5-29ssf    1/1     Running   0          2m31s
+cluster-autoscaler-operator-5ffb8966c8-kbjrr   2/2     Running   1          24h
+machine-api-controllers-85864d65b7-xld7n       7/7     Running   17         24h
+machine-api-operator-5bf564d556-mvxql          2/2     Running   1          24h
+
+oc logs cluster-autoscaler-default-54957d4cf5-29ssf -n openshift-machine-api 
+
+oc new-project work-queue
+
+echo 'apiVersion: batch/v1
+kind: Job
+metadata:
+  generateName: work-queue-
+spec:
+  template:
+    spec:
+      containers:
+      - name: work
+        image: busybox
+        command: ["sleep",  "300"]
+        resources:
+          requests:
+            memory: 500Mi
+            cpu: 300m
+      restartPolicy: Never
+      nodeSelector:
+        node-role.kubernetes.io/general-use: ""
+  parallelism: 50
+  completions: 50' | oc create -f - -n work-queue
+
+oc logs cluster-autoscaler-default-54957d4cf5-29ssf -n openshift-machine-api -f 
+
+watch -n 10 "oc get machines -n openshift-machine-api"
+
+watch -n 10 "oc get nodes"
+
+[lab-user@bastion ~]$ oc logs cluster-autoscaler-default-54957d4cf5-29ssf -n openshift-machine-api | grep -E "Scale-up: setting group openshift-machine-api/general-purpose"
+I0928 06:18:13.074461       1 scale_up.go:663] Scale-up: setting group openshift-machine-api/general-purpose-1b size to 3
+I0928 06:18:13.785987       1 scale_up.go:663] Scale-up: setting group openshift-machine-api/general-purpose-1a size to 2
+
+
+
+CleanUp
+oc delete project work-queue
+
+oc delete machineautoscaler ma-general-purpose-1a ma-general-purpose-1b -n openshift-machine-api
+oc delete clusterautoscaler default
+
+for i in $(oc get machineset -n openshift-machine-api -o name);do oc patch $i --type=merge -p '{"spec": {"template": {"spec": {"metadata": {"labels": {"failure-domain.beta.kubernetes.io/zone": "nova"}}}}}}';done
+
+for i in $(oc get machineset -n openshift-machine-api -o name);do oc patch $i --type=merge -p '{"spec": {"template": {"spec": {"metadata": {"labels": {"failure-domain.beta.kubernetes.io/region": "regionOne"}}}}}}';done
+
+
+1.1. Configure API Certificate
+ansible localhost -m lineinfile -a 'path=~/.bashrc regexp="^export API_HOSTNAME" line="export API_HOSTNAME='$(oc whoami --show-server | sed -r 's|.*//(.*):.*|\1|')'"'
+
+ansible localhost -m lineinfile -a 'path=~/.bashrc regexp="^export INGRESS_DOMAIN" line="export INGRESS_DOMAIN='$(oc get ingresses.config.openshift.io cluster -o jsonpath='{.spec.domain}')'"'
+
+source ~/.bashrc
+
+oc create secret tls cluster-apiserver-tls --cert=$HOME/certificates/cert.pem --key=$HOME/certificates/privkey.pem -n openshift-config
+
+echo oc patch apiservers.config.openshift.io cluster --type=merge -p '{"spec":{"servingCerts": {"namedCertificates": [{"names": ["'$API_HOSTNAME'"], "servingCertificate": {"name": "cluster-apiserver-tls"}}]}}}'
+
+oc patch apiservers.config.openshift.io cluster --type=merge -p '{"spec":{"servingCerts": {"namedCertificates": [{"names": ["'$API_HOSTNAME'"], "servingCertificate": {"name": "cluster-apiserver-tls"}}]}}}'
+
+watch oc get co
+
+curl https://$API_HOSTNAME:6443/healthz -v
+
+oc login -u system:admin $API_HOSTNAME:6443 
+
+[lab-user@bastion openstack-upi]$ oc config set-cluster cluster-$GUID --certificate-authority=$HOME/certificates/chain.pem
+Cluster "cluster-wg9lh" set.
+
+If the oc config command above does not work you can just delete every line starting with certificate-authority-data: from your kube config files.
+
+oc login -u system:admin
+
+sudo cp ~/certificates/fullchain.pem /etc/pki/ca-trust/source/anchors
+sudo update-ca-trust
+
+[lab-user@bastion openstack-upi]$ oc debug node/cluster-wg9lh-zwlg9-master-0 
+Creating debug namespace/openshift-debug-node-28zvn ...
+Removing debug namespace/openshift-debug-node-28zvn ...
+Delete "https://api.cluster-wg9lh.dynamic.opentlc.com:6443/api/v1/namespaces/openshift-debug-node-28zvnsvt8w": read tcp 192.168.47.100:39138->52.116.164.174:6443: read: connection reset by peer
+Error from server (Forbidden): pods "cluster-wg9lh-zwlg9-master-0-debug" is forbidden: error looking up service account openshift-debug-node-28zvnsvt8w/default: serviceaccount "default" not found
+
+
+1.2. Configure Ingress Default Certificate
+
+[lab-user@bastion openstack-upi]$ oc project default
+Now using project "default" on server "https://api.cluster-wg9lh.dynamic.opentlc.com:6443".
+
+[lab-user@bastion openstack-upi]$ oc create secret tls default-ingress-tls --cert=$HOME/certificates/fullchain.pem --key=$HOME/certificates/privkey.pem -n openshift-ingress
+secret/default-ingress-tls created
+
+[lab-user@bastion openstack-upi]$ oc patch ingresscontroller.operator default --type=merge -p '{"spec":{"defaultCertificate": {"name": "default-ingress-tls"}}}' -n openshift-ingress-operator
+ingresscontroller.operator.openshift.io/default patched
+
+[lab-user@bastion openstack-upi]$ watch oc get pod -n openshift-ingress
+
+watch oc get co
+
+curl $(oc whoami --show-console) -v | head -1
+
+2. Delegating Cluster Admin Rights
+cd $HOME
+touch $HOME/htpasswd
+htpasswd -Bb $HOME/htpasswd andrew openshift
+htpasswd -Bb $HOME/htpasswd david openshift
+htpasswd -Bb $HOME/htpasswd karla openshift
+
+oc create secret generic htpasswd --from-file=$HOME/htpasswd -n openshift-config
+
+oc apply -f - <<EOF
+apiVersion: config.openshift.io/v1
+kind: OAuth
+metadata:
+  name: cluster
+spec:
+  identityProviders:
+  - name: Local Password
+    mappingMethod: claim
+    type: HTPasswd
+    htpasswd:
+      fileData:
+        name: htpasswd
+EOF
+
+watch oc get pod -n openshift-authentication
+
+oc login -u andrew -p openshift $(oc whoami --show-server)
+
+oc login -u system:admin
+
+2.2. Delegate cluster-admin privileges
+oc adm groups new lab-cluster-admins david karla
+
+oc adm policy add-cluster-role-to-group cluster-admin lab-cluster-admins --rolebinding-name=lab-cluster-admins
+
+oc login -u karla -p openshift $(oc whoami --show-server)
+oc auth can-i delete node
+
+2.3. Disable the kubeadmin user
+oc delete secret kubeadmin -n kube-system
+
+
+
+3. Configure the Container Image Registry
+[lab-user@bastion ~]$ oc patch configs.imageregistry.operator.openshift.io/cluster --type=merge --patch '{"spec":{"defaultRoute":true}}'
+config.imageregistry.operator.openshift.io/cluster patched
+
+[lab-user@bastion ~]$ oc get configs.imageregistry.operator.openshift.io/cluster -o jsonpath='{.spec.defaultRoute}{"\n"}'
+true
+
+[lab-user@bastion ~]$ oc get route -n openshift-image-registry
+NAME            HOST/PORT                                                                       PATH   SERVICES         PORT    TERMINATION   WILDCARD
+default-route   default-route-openshift-image-registry.apps.cluster-wg9lh.dynamic.opentlc.com          image-registry   <all>   reencrypt     None
+
+oc patch configs.imageregistry.operator.openshift.io/cluster --type=merge --patch '{"spec":{"routes":[{"name":"image-registry", "hostname":"image-registry.'$INGRESS_DOMAIN'"}]}}'
+
+oc get route -n openshift-image-registry
+[lab-user@bastion openstack-upi]$ oc get route -n openshift-image-registry
+NAME             HOST/PORT                                                                       PATH   SERVICES         PORT    TERMINATION   WILDCARD
+default-route    default-route-openshift-image-registry.apps.cluster-wg9lh.dynamic.opentlc.com          image-registry   <all>   reencrypt     None
+image-registry   image-registry.apps.cluster-wg9lh.dynamic.opentlc.com                                  image-registry   <all>   reencrypt     None
+
+curl https://$(oc get route -n openshift-image-registry image-registry -o jsonpath='{.spec.host}')/healthz -v
+
+3.2. Configure a service account to push images to the registry
+oc create serviceaccount registry-admin -n openshift-config
+
+oc adm policy add-cluster-role-to-user registry-admin system:serviceaccount:openshift-config:registry-admin
+
+oc create imagestream ubi8 -n openshift
+
+REGISTRY_ADMIN_TOKEN=$(oc sa get-token -n openshift-config registry-admin)
+UBI8_IMAGE_REPO="image-registry.$INGRESS_DOMAIN/openshift/ubi8"
+skopeo copy docker://registry.access.redhat.com/ubi8:latest docker://$UBI8_IMAGE_REPO:latest --dest-creds -:$REGISTRY_ADMIN_TOKEN
+
+podman pull $UBI8_IMAGE_REPO:latest --creds -:$REGISTRY_ADMIN_TOKEN
+podman images
+
+4. Configure SSH access to nodes
+oc login -u system:admin
+oc get machineconfigs.machineconfiguration.openshift.io
+oc get machineconfig 99-worker-ssh -o yaml
+
+oc new-project node-ssh
+
+oc new-build openshift/ubi8:latest --name=node-ssh --dockerfile - <<EOF
+FROM unused
+RUN dnf install -y openssh-clients
+CMD ["sleep", "infinity"]
+EOF
+
+oc logs -f node-ssh-1-build
+
+oc create secret generic node-ssh --from-file=id_rsa=$HOME/.ssh/${GUID}key.pem -n node-ssh
+
+NODE_SSH_IMAGE=$(oc get imagestream node-ssh -o jsonpath='{.status.dockerImageRepository}' -n node-ssh)
+oc create deployment node-ssh --image=$NODE_SSH_IMAGE:latest --dry-run=client -o yaml -n node-ssh > $HOME/node-ssh.deployment.yaml
+
+[lab-user@bastion openstack-upi]$ cat ~/node-ssh.deployment.yaml 
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    app: node-ssh
+  name: node-ssh
+  namespace: node-ssh
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: node-ssh
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: node-ssh
+    spec:
+      containers:
+      - image: image-registry.openshift-image-registry.svc:5000/node-ssh/node-ssh:latest
+        name: node-ssh
+        resources: {}
+        volumeMounts:
+        - name: node-ssh
+          mountPath: /.ssh
+      volumes:
+      - name: node-ssh
+        secret:
+          secretName: node-ssh
+          defaultMode: 0600        
+status: {}
+
+oc apply -f $HOME/node-ssh.deployment.yaml
+
+[lab-user@bastion openstack-upi]$ oc get node -l node-role.kubernetes.io/worker -o wide
+NAME                       STATUS   ROLES                AGE    VERSION           INTERNAL-IP      EXTERNAL-IP   OS-IMAGE                                                       KERNEL-VERSION                 CONTAINER-RUNTIME
+general-purpose-1a-bs6cs   Ready    general-use,worker   166m   v1.19.0+1833054   192.168.47.174   <none>        Red Hat Enterprise Linux CoreOS 46.82.202101262043-0 (Ootpa)   4.18.0-193.41.1.el8_2.x86_64   cri-o://1.19.1-6.rhaos4.6.git6de578b.el8
+general-purpose-1b-gwczt   Ready    general-use,worker   166m   v1.19.0+1833054   192.168.47.46    <none>        Red Hat Enterprise Linux CoreOS 46.82.202101262043-0 (Ootpa)   4.18.0-193.41.1.el8_2.x86_64   cri-o://1.19.1-6.rhaos4.6.git6de578b.el8
+infra-1a-kbf7z             Ready    infra,worker         142m   v1.19.0+1833054   192.168.47.104   <none>        Red Hat Enterprise Linux CoreOS 46.82.202101262043-0 (Ootpa)   4.18.0-193.41.1.el8_2.x86_64   cri-o://1.19.1-6.rhaos4.6.git6de578b.el8
+
+NODE_SSH_POD=$(oc get pod -l app=node-ssh -o jsonpath='{.items[0].metadata.name}')
+
+oc exec -it $NODE_SSH_POD -- ssh core@192.168.47.104
+
+4.2. Add an SSH key for worker machine access
+ssh-keygen -t rsa -f $HOME/.ssh/node.id_rsa -N ''
+cat $HOME/.ssh/node.id_rsa.pub
+
+
+oc patch machineconfig 99-worker-ssh --type=json --patch="[{\"op\":\"add\", \"path\":\"/spec/config/passwd/users/0/sshAuthorizedKeys/-\", \"value\":\"$(cat $HOME/.ssh/node.id_rsa.pub)\"}]"
+
+oc patch machineconfig 99-master-ssh --type=json --patch="[{\"op\":\"add\", \"path\":\"/spec/config/passwd/users/0/sshAuthorizedKeys/-\", \"value\":\"$(cat $HOME/.ssh/node.id_rsa.pub)\"}]"
+
+watch oc get nodes
+watch oc get nodes
+
+oc delete secret node-ssh -n node-ssh
+oc create secret generic node-ssh --from-file=id_rsa=$HOME/.ssh/node.id_rsa -n node-ssh
+oc delete pod -l app=node-ssh -n node-ssh
+NODE_SSH_POD=$(oc get pod -l app=node-ssh -o jsonpath='{.items[0].metadata.name}' -n node-ssh)
+
+oc -n node-ssh exec -it $NODE_SSH_POD -- ssh core@192.168.47.24
+
+2. Explore the Operator from Command Line
+[lab-user@bastion openstack-upi]$ oc get all -n openshift-operators 
+NAME                                READY   STATUS    RESTARTS   AGE
+pod/nfd-operator-76d979cdc5-fxn52   1/1     Running   0          118m
+
+NAME                           READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/nfd-operator   1/1     1            1           118m
+
+NAME                                      DESIRED   CURRENT   READY   AGE
+replicaset.apps/nfd-operator-76d979cdc5   1         1         1       118m
+oc get events -n openshift-operators
+
+[lab-user@bastion openstack-upi]$ oc get all -n openshift-nfd
+NAME                   READY   STATUS    RESTARTS   AGE
+pod/nfd-master-7cxh7   1/1     Running   0          3m56s
+pod/nfd-master-gz8vn   1/1     Running   0          3m56s
+pod/nfd-master-hm2w7   1/1     Running   0          3m56s
+pod/nfd-worker-l2dbg   1/1     Running   0          3m55s
+pod/nfd-worker-l2lmd   1/1     Running   0          3m55s
+pod/nfd-worker-xt4k4   1/1     Running   0          3m55s
+
+NAME                 TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)     AGE
+service/nfd-master   ClusterIP   172.30.98.135   <none>        12000/TCP   3m56s
+
+NAME                        DESIRED   CURRENT   READY   UP-TO-DATE   AVAILABLE   NODE SELECTOR                     AGE
+daemonset.apps/nfd-master   3         3         3       3            3           node-role.kubernetes.io/master=   3m56s
+daemonset.apps/nfd-worker   3         3         3       3            3           <none>                            3m55s
+
+```
+
+```
+oc -n openshift-apiserver-operator logs $(oc -n openshift-apiserver-operator get pods -o name)
+...
+I0928 09:33:59.711161       1 event.go:282] Event(v1.ObjectReference{Kind:"Deployment", Namespace:"openshift-apiserver-operator", Name:"openshift-apiserver-operator", UID:"cb5541d6-063b-4770-9795-8736765da582", APIVersion:"apps/v1", ResourceVersion:"", FieldPath:""}): type: 'Normal' reason: 'OperatorStatusChanged' Status for clusteroperator/openshift-apiserver changed: Degraded message changed from "APIServerDeploymentDegraded: 1 of 3 requested instances are unavailable for apiserver.openshift-apiserver (container is crashlooping in apiserver-5ccbc9f676-lms8j pod)" to "APIServerDeploymentDegraded: 1 of 3 requested instances are unavailable for apiserver.openshift-apiserver (crashlooping container is waiting in apiserver-5ccbc9f676-lms8j pod)"
+1. Install Operator using Web Console
+
+
+[lab-user@bastion openstack-upi]$ oc logs -p apiserver-5ccbc9f676-lms8j openshift-apiserver -n openshift-apiserver | grep -i fail
+I0928 09:36:40.151498       1 healthz.go:243] healthz check failed: poststarthook/authorization.openshift.io-bootstrapclusterroles,poststarthook/authorization.openshift.io-ensureopenshift-infra
+[-]poststarthook/authorization.openshift.io-bootstrapclusterroles failed: not finished
+[-]poststarthook/authorization.openshift.io-ensureopenshift-infra failed: not finished
+I0928 09:36:48.581142       1 healthz.go:243] healthz check failed: poststarthook/authorization.openshift.io-bootstrapclusterroles
+[-]poststarthook/authorization.openshift.io-bootstrapclusterroles failed: not finished
+I0928 09:36:51.012461       1 healthz.go:243] healthz check failed: poststarthook/authorization.openshift.io-bootstrapclusterroles
+[-]poststarthook/authorization.openshift.io-bootstrapclusterroles failed: not finished
+
+
+[lab-user@bastion openstack-upi]$ oc get subscription -n openshift-operators
+NAME   PACKAGE   SOURCE             CHANNEL
+nfd    nfd       redhat-operators   4.6
+
+4. Install Operator Using CLI
+oc get packagemanifests -n openshift-marketplace
+
+oc describe packagemanifests nfd -n openshift-marketplace
+
+echo "apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: nfd
+  namespace: openshift-operators
+spec:
+  channel: '4.6'
+  installPlanApproval: Automatic
+  name: nfd
+  source: redhat-operators
+  sourceNamespace: openshift-marketplace" >$HOME/nfd-sub.yaml
+
+oc apply -f $HOME/nfd-sub.yaml
+
+oc get installplan -n openshift-operators
+
+oc get csv -n openshift-operators
+
+oc get pods -n openshift-operators
+
+echo "apiVersion: nfd.openshift.io/v1alpha1
+kind: NodeFeatureDiscovery
+metadata:
+  name: nfd-master-server
+  namespace: openshift-nfd
+spec:
+  namespace: openshift-nfd" >$HOME/nfd-resource.yaml
+
+oc apply -f $HOME/nfd-resource.yaml
+
+oc get all -n openshift-nfd
+
+oc get nodes
+[lab-user@bastion openstack-upi]$ oc get nodes
+NAME                           STATUS   ROLES                AGE     VERSION
+cluster-wg9lh-zwlg9-master-0   Ready    master               29h     v1.19.0+1833054
+cluster-wg9lh-zwlg9-master-1   Ready    master               29h     v1.19.0+1833054
+cluster-wg9lh-zwlg9-master-2   Ready    master               29h     v1.19.0+1833054
+general-purpose-1a-bs6cs       Ready    general-use,worker   6h4m    v1.19.0+1833054
+general-purpose-1b-gwczt       Ready    general-use,worker   6h4m    v1.19.0+1833054
+infra-1a-kbf7z                 Ready    infra,worker         5h39m   v1.19.0+1833054
+
+oc get node general-purpose-1a-bs6cs -o json | jq '.metadata.labels'
+
+4.1. Explore ClusterServiceVersions
+oc get csv -n openshift-operators
+
+oc get csv -A
+
+[lab-user@bastion openstack-upi]$ oc get csv nfd.4.6.0-202109030220 -n openshift-operators -o yaml 
+
+oc get csv nfd.4.6.0-202109030220 -n openshift-operators -o json | jq '.metadata.name'
+oc get csv nfd.4.6.0-202109030220 -n openshift-operators -o json | jq '.metadata.version'
+oc get csv nfd.4.6.0-202109030220 -n openshift-operators -o json | jq '.spec.customresourcedefinitions.owned[].kind'
+
+5. Disable and Enable Operator Sources
+oc get catalogsource -n openshift-marketplace
+[lab-user@bastion openstack-upi]$ oc get catalogsource -n openshift-marketplace
+NAME                  DISPLAY               TYPE   PUBLISHER   AGE
+certified-operators   Certified Operators   grpc   Red Hat     29h
+community-operators   Community Operators   grpc   Red Hat     29h
+redhat-marketplace    Red Hat Marketplace   grpc   Red Hat     29h
+redhat-operators      Red Hat Operators     grpc   Red Hat     29h
+
+oc get catalogsource certified-operators -n openshift-marketplace -o yaml
+oc get operatorhubs
+oc get operatorhubs cluster -o yaml
+
+oc get catalogsources -n openshift-marketplace
+```

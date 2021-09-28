@@ -268,13 +268,13 @@ EOF
 [stack@undercloud ~]$ chronyc -n sources
 [stack@undercloud ~]$ chronyc -n tracking
 
-# 5.12 设置 container-tools 模块为版本 2.0
+# 5.12 设置 container-tools 模块为版本 3.0
 [stack@undercloud ~]$ sudo dnf module disable -y container-tools:rhel8
-[stack@undercloud ~]$ sudo dnf module enable -y container-tools:2.0
+[stack@undercloud ~]$ sudo dnf module enable -y container-tools:3.0
 
-# 5.13 设置 virt 模块版本为 8.2
+# 5.13 设置 virt 模块版本为 av
 [stack@undercloud ~]$ sudo dnf module disable -y virt:rhel
-[stack@undercloud ~]$ sudo dnf module enable -y virt:8.2
+[stack@undercloud ~]$ sudo dnf module enable -y virt:av
 
 # 5.14 更新并且重启
 [stack@undercloud ~]$ sudo dnf update -y
@@ -335,6 +335,37 @@ cat >> containers-prepare-parameter.yaml <<'EOF'
       6747835|jwang: eyJhbGciOiJSUzUxMi...
 EOF
 
+# 假设在离线环境中配置了 container registry helper.example.com:5000
+# 这个 regsitry 没有配置认证
+cat > containers-prepare-parameter.yaml <<EOF
+parameter_defaults:
+  ContainerImagePrepare:
+  - push_destination: true
+    set:
+      ceph_alertmanager_image: ose-prometheus-alertmanager
+      ceph_alertmanager_namespace: helper.example.com:5000/openshift4
+      ceph_alertmanager_tag: v4.6
+      ceph_grafana_image: rhceph-4-dashboard-rhel8
+      ceph_grafana_namespace: helper.example.com:5000/rhceph
+      ceph_grafana_tag: 4
+      ceph_image: rhceph-4-rhel8
+      ceph_namespace: helper.example.com:5000/rhceph
+      ceph_node_exporter_image: ose-prometheus-node-exporter
+      ceph_node_exporter_namespace: helper.example.com:5000/openshift4
+      ceph_node_exporter_tag: v4.6
+      ceph_prometheus_image: ose-prometheus
+      ceph_prometheus_namespace: helper.example.com:5000/openshift4
+      ceph_prometheus_tag: v4.6
+      ceph_tag: latest
+      name_prefix: openstack-
+      name_suffix: ''
+      namespace: helper.example.com:5000/rhosp-rhel8
+      neutron_driver: ovn
+      rhel_containers: false
+      tag: '16.2'
+    tag_from_label: '{version}-{release}'
+EOF
+
 # 10. 安装 undercloud
 [stack@undercloud ~]$ time openstack undercloud install
 
@@ -369,6 +400,10 @@ EOF
 
 ### 离线镜像仓库准备 (新)
 ```
+cat >> /etc/hosts <<EOF
+192.168.122.3 helper.example.com
+EOF
+
 安装 registry 基础软件
 cat > /etc/yum.repos.d/w.repo << EOF
 [rhel-8-for-x86_64-baseos-eus-rpms]
@@ -389,7 +424,10 @@ yum install -y podman httpd httpd-tools wget jq
 创建目录
 mkdir -p /opt/registry/{certs,data}
 
-生成 registry 证书
+将在其他服务器上准备好的 registry 压缩包解压缩
+tar zxf /tmp/osp16.2-poc-registry-2021-09-27.tar.gz -C /
+
+生成 registry 证书，如果是解压缩 registry 压缩包，这个步骤可以跳过
 cd /opt/registry/certs
 openssl req -newkey rsa:4096 -nodes -sha256 -keyout domain.key -x509 -days 3650 -out domain.crt     -addext "subjectAltName = DNS:helper.example.com" -subj "/C=CN/ST=BJ/L=BJ/O=Global Security/OU=IT Department/CN=helper.example.com"
 
@@ -413,6 +451,17 @@ podman run --name poc-registry -d -p 5000:5000 \
 docker.io/library/registry:latest
 EOF
 
+如果是离线导入时，脚本为 
+cat > /usr/local/bin/localregistry.sh << 'EOF'
+#!/bin/bash
+podman run --name poc-registry -d -p 5000:5000 \
+-v /opt/registry/data:/var/lib/registry:z \
+-v /opt/registry/certs:/certs:z \
+-e REGISTRY_HTTP_TLS_CERTIFICATE=/certs/domain.crt \
+-e REGISTRY_HTTP_TLS_KEY=/certs/domain.key \
+localhost/docker-registry:latest
+EOF
+
 设置脚本可执行
 chmod +x /usr/local/bin/localregistry.sh
 
@@ -422,6 +471,31 @@ chmod +x /usr/local/bin/localregistry.sh
 验证镜像服务可访问
 curl https://helper.example.com:5000/v2/_catalog
 cd /root
+
+生成容器对应的 systemd 服务
+podman generate systemd poc-registry >> /etc/systemd/system/podman.poc-registry.service
+systemctl enable podman.poc-registry.service
+systemctl restart podman.poc-registry.service
+curl https://helper.example.com:5000/v2/_catalog
+
+拷贝 helper 的证书到 undercloud
+cat >> /etc/hosts <<EOF
+192.168.122.2 undercloud.example.com
+EOF
+
+生成 ssh key pair
+ssh-keygen -t rsa -f /root/.ssh/id_rsa -N ''
+ssh-copy-id undercloud.example.com
+
+拷贝证书到 undercloud
+scp /opt/registry/certs/domain.crt undercloud.example.com:/etc/pki/ca-trust/source/anchors/
+ssh undercloud.example.com update-ca-trust
+
+ssh undercloud.example.com 
+[root@undercloud ~]# cat >> /etc/hosts <<EOF
+192.168.122.3 helper.example.com
+EOF
+
 
 生成同步镜像脚本 syncimgs
 cat > /root/syncimgs <<'EOF'

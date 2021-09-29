@@ -3483,7 +3483,7 @@ spec:
       cpu: "10"
       memory: 8Gi
     default:
-      cpu: 200m
+      cpu: 500m
       memory: 300Mi
     defaultRequest:
       cpu: 50m
@@ -3492,6 +3492,7 @@ spec:
       cpu: "200"
 EOF
 oc login -u system:admin
+oc project 3scale
 oc apply -f $HOME/limits.yaml
 
 oc login -u andrew -p openshift
@@ -3534,12 +3535,7 @@ oc describe rc system-mysql-1
 
 oc patch dc system-mysql -n 3scale --type json -p='[{"op": "replace", "path": "/spec/template/spec/containers/0/resources/requests/cpu", "value":"50m"}]'
 
-oc set resources dc/system-app --requests=cpu=50m,memory=100Mi --limits=cpu=500m,memory=300Mi
-oc set resources dc/system-resque --requests=cpu=50m,memory=100Mi --limits=cpu=500m,memory=300Mi
-oc set resources dc/system-sidekiq --requests=cpu=50m,memory=100Mi --limits=cpu=500m,memory=300Mi
-oc set resources dc/system-sphinx --requests=cpu=50m,memory=100Mi --limits=cpu=500m,memory=300Mi
-oc set resources dc/apicast-production --requests=cpu=50m,memory=100Mi --limits=cpu=500m,memory=300Mi
-
+oc set resources dc/system-app --requests=cpu=50m,memory=100Mi --limits=cpu=500m,memory=500Mi
 
 ```
 

@@ -3449,7 +3449,6 @@ oc new-app --template=system --param WILDCARD_DOMAIN=apps.cluster-$GUID.$GUID.oc
 
 oc get pods -n 3scale
 
-oc login -u system:admin 
 oc get events -A | grep quota
 ...
 3scale                               0s          Warning   FailedCreate                   deploymentconfig/zync                          Error creating deployer pod: pods "zync-1-deploy" is forbidden: failed quota: for-user-andrew: must specify limits.cpu,limits.memory,requests.cpu,requests.memory
@@ -3461,12 +3460,12 @@ oc delete project 3scale
 oc new-project 3scale
 
 https://docs.openshift.com/container-platform/4.8/nodes/clusters/nodes-cluster-limit-ranges.html
-oc login -u system:admin
-cat >> $HOME/limits.yaml << EOF
+cat > $HOME/limits.yaml << EOF
 apiVersion: v1
 kind: LimitRange
 metadata:
   name: 3scale-resource-limits
+  namespace: 3scale
 spec:
   limits:
   - type: Pod
@@ -3484,15 +3483,15 @@ spec:
       cpu: "10"
       memory: 8Gi
     default:
-      cpu: 50m
-      memory: 100Mi
+      cpu: 200m
+      memory: 300Mi
     defaultRequest:
       cpu: 50m
       memory: 100Mi
     maxLimitRequestRatio:
       cpu: "200"
 EOF
-
+oc login -u system:admin
 oc apply -f $HOME/limits.yaml
 
 oc login -u andrew -p openshift
@@ -3501,15 +3500,18 @@ oc create -f amp.yml
 
 oc new-app --template=system --param WILDCARD_DOMAIN=apps.cluster-$GUID.$GUID.ocp4.opentlc.com
 
-
-3scale                               1s          Warning   FailedCreate                   deploymentconfig/system-sphinx                 Error creating deployer pod: pods "system-sphinx-1-deploy" is forbidden: failed quota: for-user-andrew: must specify limits.cpu,limits.memory,requests.cpu,requests.memory
+oc get events 
+...
+8m26s       Warning   FailedCreate                     deploymentconfig/zync                             Error creating: pods "zync-1-p7jbf" is forbidden: exceeded quota: for-user-andrew, requested: pods=1, used: pods=25, limited: pods=25
+8m26s       Warning   FailedCreate                     deploymentconfig/zync                             (combined from similar events): Error creating: pods "zync-1-6h5q7" is forbidden: exceeded quota: for-user-andrew, requested: pods=1, used: pods=25, limited: pods=25
 
 oc login -u system:admin
 oc patch clusterresourcequota for-user-andrew --type json \
     -p '[{"op": "replace", "path": "/spec/quota/hard/pods", "value": "35"}]'
+oc describe clusterresourcequota for-user-andrew
 
-oc rollout latest dc/system-app 
-
+oc login -u andrew -p openshift
+oc get pvc system-storage -o yaml
 
 oc delete pvc system-storage -n 3scale 
 echo "---
@@ -3527,20 +3529,17 @@ spec:
   storageClassName: standard
   volumeMode: Filesystem" | oc apply -f -
 
-oc rollout latest dc/system-sidekiq 
-oc rollout latest dc/system-resque
-oc rollout latest dc/system-mysql
-oc rollout latest dc/system-app
-
-oc describe rc system-mysql-1
+oc describe rc system-mysql-1 
   Warning  FailedCreate  5m7s (x12 over 25m)  replication-controller  (combined from similar events): Error creating: Pod "system-mysql-1-nqskt" is invalid: spec.containers[0].resources.requests: Invalid value: "1": must be less than or equal to cpu limit
 
-oc patch 
 oc patch dc system-mysql -n 3scale --type json -p='[{"op": "replace", "path": "/spec/template/spec/containers/0/resources/requests/cpu", "value":"50m"}]'
 
-oc get pods
-...
-system-sidekiq-3-lrgkh             0/1     OOMKilled          3          8m14s
+oc set resources dc/system-app --requests=cpu=50m,memory=100Mi --limits=cpu=500m,memory=300Mi
+oc set resources dc/system-resque --requests=cpu=50m,memory=100Mi --limits=cpu=500m,memory=300Mi
+oc set resources dc/system-sidekiq --requests=cpu=50m,memory=100Mi --limits=cpu=500m,memory=300Mi
+oc set resources dc/system-sphinx --requests=cpu=50m,memory=100Mi --limits=cpu=500m,memory=300Mi
+oc set resources dc/apicast-production --requests=cpu=50m,memory=100Mi --limits=cpu=500m,memory=300Mi
+
 
 ```
 
@@ -3787,7 +3786,7 @@ oc describe $(oc get node -l node-role.kubernetes.io/infra='' -o name)
 Taints:             infra=reserved:NoExecute
                     infra=reserved:NoSchedule
 
-                    
+
 ```
 
 ```

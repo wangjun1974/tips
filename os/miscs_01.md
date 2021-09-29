@@ -2991,3 +2991,818 @@ oc get operatorhubs cluster -o yaml
 
 oc get catalogsources -n openshift-marketplace
 ```
+
+### Day 3 Training
+```
+oc new-project my-hpa
+
+oc new-app quay.io/gpte-devops-automation/pod-autoscale-lab:rc0 --name=pod-autoscale -n my-hpa
+
+oc expose svc pod-autoscale
+
+1.2. Create a Limit Range
+oc explain LimitRange
+
+cat > $HOME/my-limit-range.yaml <<EOF
+apiVersion: "v1"
+kind: "LimitRange"
+metadata:
+  name: "my-resource-limits"
+spec:
+  limits:
+    - type: "Pod"
+      max:
+        cpu: "100m"
+        memory: "750Mi"
+      min:
+        cpu: "10m"
+        memory: "5Mi"
+    - type: "Container"
+      max:
+        cpu: "100m"
+        memory: "750Mi"
+      min:
+        cpu: "10m"
+        memory: "5Mi"
+      default:
+        cpu: "50m"
+        memory: "100Mi"
+EOF
+
+https://www.ibm.com/docs/en/configurepricequote/10.0?topic=images-creating-horizontal-pod-autoscaler
+oc autoscale deployment pod-autoscale --min=1 --max=5 --cpu-percent=60 -n my-hpa
+
+echo "
+apiVersion: autoscaling/v2beta2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: pod-autoscale
+  namespace: my-hpa
+spec:
+  maxReplicas: 5
+  minReplicas: 1
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: pod-autoscale
+  metrics: 
+  - type: Resource
+    resource:
+      name: cpu 
+      target:
+        type: Utilization
+        averageUtilization: 60
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 30
+      policies:
+      - type: Percent
+        value: 100
+        periodSeconds: 15
+    scaleUp:
+      stabilizationWindowSeconds: 0
+      policies:
+      - type: Percent
+        value: 100
+        periodSeconds: 15
+      - type: Pods
+        value: 4
+        periodSeconds: 15
+      selectPolicy: Max" | oc apply -f -
+
+oc set resources deployment.apps/pod-autoscale --requests=cpu=50m --requests=memory=5Mi --limits=cpu=100m --limits=memory=750Mi
+
+oc patch deployment.apps/pod-autoscale --patch \
+   "{\"spec\":{\"template\":{\"metadata\":{\"annotations\":{\"last-restart\":\"`date +'%s'`\"}}}}}"
+
+oc describe hpa pod-autoscale -n my-hpa
+[lab-user@bastion openstack-upi]$ oc describe hpa pod-autoscale
+Name:                                                  pod-autoscale
+Namespace:                                             my-hpa
+Labels:                                                <none>
+Annotations:                                           <none>
+CreationTimestamp:                                     Tue, 28 Sep 2021 23:15:52 -0400
+Reference:                                             Deployment/pod-autoscale
+Metrics:                                               ( current / target )
+  resource cpu on pods  (as a percentage of request):  0% (0) / 60%
+Min replicas:                                          1
+Max replicas:                                          5
+Deployment pods:                                       1 current / 1 desired
+Conditions:
+  Type            Status  Reason            Message
+  ----            ------  ------            -------
+  AbleToScale     True    ReadyForNewScale  recommended size matches current size
+  ScalingActive   True    ValidMetricFound  the HPA was able to successfully calculate a replica count from cpu resource utilization (percentage of request)
+  ScalingLimited  True    TooFewReplicas    the desired replica count is less than the minimum replica count
+  Normal   SuccessfulRescale             56s                   horizontal-pod-autoscaler  New size: 2; reason: cpu resource utilization (percentage of request) above target
+
+oc rsh -n my-hpa $(oc get pod -n my-hpa -o name)
+while true; do true ; done
+
+oc delete hpa pod-autoscale -n my-hpa
+
+3. Monitoring Custom Application Workloads Using the OpenShift Monitoring Stack
+echo '---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cluster-monitoring-config
+  namespace: openshift-monitoring
+data:
+  config.yaml: |
+    enableUserWorkload: true' | oc apply -f -
+
+[lab-user@bastion ~]$ oc projects | grep monitor
+    openshift-monitoring
+    openshift-user-workload-monitoring
+
+oc get pods -n openshift-user-workload-monitoring
+
+3.2. Application Overview
+
+curl http://$(oc get route pod-autoscale -n my-hpa --template='{{ .spec.host }}')/metrics
+[lab-user@bastion ~]$ curl http://$(oc get route pod-autoscale -n my-hpa --template='{{ .spec.host }}')/metrics
+# HELP http_requests_total The amount of requests served by the server in total
+# TYPE http_requests_total counter
+http_requests_total 1
+
+3.3. Create ServiceMonitor
+echo "---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: pod-autoscale-monitor
+  namespace: my-hpa
+spec:
+  endpoints:
+  - interval: 30s
+    port: 8080-tcp
+  selector:
+    matchLabels:
+      app: pod-autoscale" | oc apply -f -
+
+oc explain ServiceMonitor.spec.endpoints.port
+
+3.4. Using Custom Metrics to Autoscale an Application
+cat <<EOF | oc apply -f -
+kind: ServiceAccount
+apiVersion: v1
+metadata:
+  name: custom-metrics-apiserver
+  namespace: my-hpa
+EOF
+
+cat <<EOF | oc apply -f -
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: custom-metrics-server-resources
+rules:
+- apiGroups:
+  - custom.metrics.k8s.io
+  resources: ["*"]
+  verbs: ["*"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: custom-metrics-resource-reader
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - namespaces
+  - pods
+  - services
+  verbs:
+  - get
+  - list
+EOF
+
+cat <<EOF | oc apply -f -
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: custom-metrics:system:auth-delegator
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: system:auth-delegator
+subjects:
+- kind: ServiceAccount
+  name: custom-metrics-apiserver
+  namespace: my-hpa
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: custom-metrics-auth-reader
+  namespace: kube-system
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: extension-apiserver-authentication-reader
+subjects:
+- kind: ServiceAccount
+  name: custom-metrics-apiserver
+  namespace: my-hpa
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: custom-metrics-resource-reader
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: custom-metrics-resource-reader
+subjects:
+- kind: ServiceAccount
+  name: custom-metrics-apiserver
+  namespace: my-hpa
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: hpa-controller-custom-metrics
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: custom-metrics-server-resources
+subjects:
+- kind: ServiceAccount
+  name: horizontal-pod-autoscaler
+  namespace: kube-system
+EOF
+
+cat <<EOF | oc apply -f -
+apiVersion: apiregistration.k8s.io/v1beta1
+kind: APIService
+metadata:
+  name: v1beta1.custom.metrics.k8s.io
+spec:
+  service:
+    name: prometheus-adapter
+    namespace: my-hpa
+  group: custom.metrics.k8s.io
+  version: v1beta1
+  insecureSkipTLSVerify: true
+  groupPriorityMinimum: 100
+  versionPriority: 100
+EOF
+
+cat <<EOF | oc apply -f -
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: adapter-config
+  namespace: my-hpa
+data:
+  config.yaml: |
+    rules:
+    - seriesQuery: 'http_requests_total {namespace!="",pod!=""}' 
+      resources:
+        overrides:
+          namespace: {resource: "namespace"}
+          pod: {resource: "pod"}
+          service: {resource: "service"}
+      name:
+        matches: "^(.*)_total"
+        as: "my_http_requests" 
+      metricsQuery: 'sum(rate(<<.Series>>{<<.LabelMatchers>>}[2m])) by (<<.GroupBy>>)' 
+EOF
+
+cat <<EOF | oc apply -f -
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    service.alpha.openshift.io/serving-cert-secret-name: prometheus-adapter-tls
+  labels:
+    name: prometheus-adapter
+  name: prometheus-adapter
+  namespace: my-hpa
+spec:
+  ports:
+  - name: https
+    port: 443
+    targetPort: 6443
+  selector:
+    app: prometheus-adapter
+  type: ClusterIP
+EOF
+
+cat <<EOF | oc apply -f -
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: prometheus-adapter-prometheus-config
+  namespace: my-hpa
+data:
+  prometheus-config.yaml: |
+    apiVersion: v1
+    clusters:
+    - cluster:
+        server: https://prometheus-user-workload.openshift-user-workload-monitoring:9091
+        insecure-skip-tls-verify: true
+      name: prometheus-k8s
+    contexts:
+    - context:
+        cluster: prometheus-k8s
+        user: prometheus-k8s
+      name: prometheus-k8s
+    current-context: prometheus-k8s
+    kind: Config
+    preferences: {}
+    users:
+    - name: prometheus-k8s
+      user:
+        tokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
+EOF
+
+PROM_IMAGE="$(oc get -n openshift-monitoring deploy/prometheus-adapter -o jsonpath='{..image}')"
+echo $PROM_IMAGE
+
+cat <<EOF | oc apply -f -
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: prometheus-adapter
+  name: prometheus-adapter
+  namespace: my-hpa
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: prometheus-adapter
+  template:
+    metadata:
+      labels:
+        app: prometheus-adapter
+      name: prometheus-adapter
+    spec:
+      serviceAccountName: custom-metrics-apiserver
+      containers:
+      - name: prometheus-adapter
+        image: ${PROM_IMAGE} 
+        args:
+        - --prometheus-auth-config=/etc/prometheus-config/prometheus-config.yaml
+        - --secure-port=6443
+        - --tls-cert-file=/var/run/serving-cert/tls.crt
+        - --tls-private-key-file=/var/run/serving-cert/tls.key
+        - --logtostderr=true
+        - --prometheus-url=https://prometheus-user-workload.openshift-user-workload-monitoring:9091
+        - --metrics-relist-interval=1m
+        - --v=4
+        - --config=/etc/adapter/config.yaml
+        ports:
+        - containerPort: 6443
+        volumeMounts:
+        - name: volume-serving-cert
+          mountPath: /var/run/serving-cert
+          readOnly: true
+        - name: config
+          mountPath: /etc/adapter/
+          readOnly: true
+        - name: prometheus-adapter-prometheus-config
+          mountPath: /etc/prometheus-config
+        - name: tmp-vol
+          mountPath: /tmp
+      volumes:
+      - name: volume-serving-cert
+        secret:
+          secretName: prometheus-adapter-tls
+      - name: config
+        configMap:
+          name: adapter-config
+      - name: prometheus-adapter-prometheus-config
+        configMap:
+          name: prometheus-adapter-prometheus-config
+          defaultMode: 420
+      - name: tmp-vol
+        emptyDir: {}
+EOF
+
+oc logs -f deploy/prometheus-adapter
+
+AUTOSCALE_POD="$(oc get pods -o name | awk -F/ '/autoscale/ { print $2;exit }')"
+
+echo $AUTOSCALE_POD
+
+oc get --raw /apis/custom.metrics.k8s.io/v1beta1/namespaces/my-hpa/pods/$AUTOSCALE_POD/my_http_requests |jq
+
+3.5. Create Custom HPA
+echo "---
+kind: HorizontalPodAutoscaler
+apiVersion: autoscaling/v2beta1
+metadata:
+  name: pod-autoscale-custom
+  namespace: my-hpa
+spec:
+  scaleTargetRef:
+    kind: Deployment
+    name: pod-autoscale
+    apiVersion: apps/v1
+  minReplicas: 1
+  maxReplicas: 5
+  metrics:
+    - type: Pods
+      pods:
+        metricName: my_http_requests 
+        targetAverageValue: 500m" | oc create -f -
+
+AUTOSCALE_ROUTE=$(oc get route pod-autoscale -n my-hpa -o jsonpath='{ .spec.host}')
+
+while true;do curl http://$AUTOSCALE_ROUTE;sleep .5;done
+
+oc describe hpa pod-autoscale-custom -n my-hpa
+
+
+1. Create Quotas for Cluster
+
+oc login -u system:admin
+
+https://www.opentlc.com/download/ocp4_advanced_deployment/tempMultiSCOFiles/08_Monitoring_Scaling_Applications/08_2_Quotas_LimitRanges_Templates_Lab.html
+
+oc create clusterquota for-user-andrew \
+     --project-annotation-selector openshift.io/requester=andrew \
+     --hard pods=25 \
+     --hard requests.cpu=5 \
+     --hard requests.memory=6Gi \
+     --hard limits.cpu=25 \
+     --hard limits.memory=40Gi \
+     --hard configmaps=25 \
+     --hard persistentvolumeclaims=25 \
+     --hard services=25
+
+wget https://raw.githubusercontent.com/3scale/3scale-amp-openshift-templates/2.1.0-GA/amp/amp.yml
+
+oc login -u andrew -p openshift
+
+oc new-project 3scale
+
+oc create -f amp.yml
+
+oc get template
+
+oc new-app --template=system --param WILDCARD_DOMAIN=apps.cluster-$GUID.$GUID.ocp4.opentlc.com
+
+oc get pods -n 3scale
+
+oc login -u system:admin 
+oc get events -A | grep quota
+...
+3scale                               0s          Warning   FailedCreate                   deploymentconfig/zync                          Error creating deployer pod: pods "zync-1-deploy" is forbidden: failed quota: for-user-andrew: must specify limits.cpu,limits.memory,requests.cpu,requests.memory
+3scale                               0s          Warning   FailedRetry                    deploymentconfig/zync                          Stop retrying: couldn't create deployer pod for "3scale/zync-1": pods "zync-1-deploy" is forbidden: failed quota: for-user-andrew: must specify limits.cpu,limits.memory,requests.cpu,requests.memory
+
+oc login -u andrew -p openshift
+oc project default
+oc delete project 3scale
+oc new-project 3scale
+
+https://docs.openshift.com/container-platform/4.8/nodes/clusters/nodes-cluster-limit-ranges.html
+oc login -u system:admin
+cat >> $HOME/limits.yaml << EOF
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: 3scale-resource-limits
+spec:
+  limits:
+  - type: Pod
+    max:
+      cpu: "10"
+      memory: 8Gi
+    min:
+      cpu: 50m
+      memory: 100Mi
+  - type: Container
+    min:
+      cpu: 50m
+      memory: 100Mi
+    max:
+      cpu: "10"
+      memory: 8Gi
+    default:
+      cpu: 50m
+      memory: 100Mi
+    defaultRequest:
+      cpu: 50m
+      memory: 100Mi
+    maxLimitRequestRatio:
+      cpu: "200"
+EOF
+
+oc apply -f $HOME/limits.yaml
+
+oc login -u andrew -p openshift
+oc project 3scale
+oc create -f amp.yml
+
+oc new-app --template=system --param WILDCARD_DOMAIN=apps.cluster-$GUID.$GUID.ocp4.opentlc.com
+
+
+3scale                               1s          Warning   FailedCreate                   deploymentconfig/system-sphinx                 Error creating deployer pod: pods "system-sphinx-1-deploy" is forbidden: failed quota: for-user-andrew: must specify limits.cpu,limits.memory,requests.cpu,requests.memory
+
+oc login -u system:admin
+oc patch clusterresourcequota for-user-andrew --type json \
+    -p '[{"op": "replace", "path": "/spec/quota/hard/pods", "value": "35"}]'
+
+oc rollout latest dc/system-app 
+
+
+oc delete pvc system-storage -n 3scale 
+echo "---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: system-storage
+  namespace: 3scale
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 100Mi
+  storageClassName: standard
+  volumeMode: Filesystem" | oc apply -f -
+
+oc rollout latest dc/system-sidekiq 
+oc rollout latest dc/system-resque
+oc rollout latest dc/system-mysql
+oc rollout latest dc/system-app
+
+oc describe rc system-mysql-1
+  Warning  FailedCreate  5m7s (x12 over 25m)  replication-controller  (combined from similar events): Error creating: Pod "system-mysql-1-nqskt" is invalid: spec.containers[0].resources.requests: Invalid value: "1": must be less than or equal to cpu limit
+
+oc patch 
+oc patch dc system-mysql -n 3scale --type json -p='[{"op": "replace", "path": "/spec/template/spec/containers/0/resources/requests/cpu", "value":"50m"}]'
+
+oc get pods
+...
+system-sidekiq-3-lrgkh             0/1     OOMKilled          3          8m14s
+
+```
+
+```
+Scheduler Lab
+oc login -u system:admin
+oc get nodes --show-labels|grep infra
+
+oc get nodes --show-labels|grep infra
+
+oc get nodes --show-labels|grep infra
+2. Move Ingress Controllers, Registry and Monitoring to the Infra Node
+
+oc get pod -n openshift-ingress-operator
+oc get pod -n openshift-ingress -o wide
+
+oc get ingresscontroller default -n openshift-ingress-operator -o yaml
+
+oc patch ingresscontroller default -n openshift-ingress-operator --type=merge --patch='{"spec":{"nodePlacement":{"nodeSelector": {"matchLabels":{"node-role.kubernetes.io/infra":""}}}}}'
+
+oc patch ingresscontroller default -n openshift-ingress-operator --type=merge --patch='{"spec":{"replicas": 1}}'
+
+oc get pod -n openshift-ingress -o wide
+
+2.2. Move Registry and Monitoring
+
+oc patch configs.imageregistry.operator.openshift.io/cluster -n openshift-image-registry --type=merge --patch '{"spec":{"nodeSelector":{"node-role.kubernetes.io/infra":""}}}'
+
+oc patch configs.imageregistry.operator.openshift.io/cluster -n openshift-image-registry --type=merge --patch='{"spec":{"replicas": 1}}'
+
+oc get pods -n openshift-image-registry -o wide 
+
+2.2.2. Solution for Monitoring
+cat <<EOF > $HOME/monitoring-cm.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cluster-monitoring-config
+  namespace: openshift-monitoring
+data:
+  config.yaml: |+
+    prometheusOperator:
+      nodeSelector:
+        node-role.kubernetes.io/infra: ""
+    prometheusK8s:
+      nodeSelector:
+        node-role.kubernetes.io/infra: ""
+    alertmanagerMain:
+      nodeSelector:
+        node-role.kubernetes.io/infra: ""
+    kubeStateMetrics:
+      nodeSelector:
+        node-role.kubernetes.io/infra: ""
+    grafana:
+      nodeSelector:
+        node-role.kubernetes.io/infra: ""
+    telemeterClient:
+      nodeSelector:
+        node-role.kubernetes.io/infra: ""
+    k8sPrometheusAdapter:
+      nodeSelector:
+        node-role.kubernetes.io/infra: ""
+    openshiftStateMetrics:
+      nodeSelector:
+        node-role.kubernetes.io/infra: ""
+    thanosQuerier:
+      nodeSelector:
+        node-role.kubernetes.io/infra: ""
+EOF
+
+oc apply -f $HOME/monitoring-cm.yaml -n openshift-monitoring
+
+oc get pods -n openshift-monitoring -o wide
+
+3. Taints and Tolerations
+oc new-project taints
+oc new-app openshift/hello-openshift:v3.10 --name=nottainted -n taints
+oc scale deployment nottainted --replicas=40
+
+oc adm taint node infra-1a-kbf7z infra=reserved:NoSchedule
+oc adm taint node infra-1a-kbf7z infra=reserved:NoExecute
+
+oc get pod -n taints -o wide --sort-by=".spec.nodeName"
+
+oc delete project taints
+oc get pod -n openshift-ingress
+oc get pod -n openshift-image-registry
+oc get pod -n openshift-monitoring
+
+oc patch ingresscontroller default -n openshift-ingress-operator --type=merge --patch='{"spec":{"nodePlacement": {"nodeSelector": {"matchLabels": {"node-role.kubernetes.io/infra": ""}},"tolerations": [{"effect":"NoSchedule","key": "infra","value": "reserved"},{"effect":"NoExecute","key": "infra","value": "reserved"}]}}}'
+oc get pod -n openshift-ingress -o wide
+
+oc patch configs.imageregistry.operator.openshift.io cluster -n openshift-image-registry --type=merge --patch='{"spec":{"nodeSelector": {"node-role.kubernetes.io/infra": ""},"tolerations": [{"effect":"NoSchedule","key": "infra","value": "reserved"},{"effect":"NoExecute","key": "infra","value": "reserved"}]}}'
+
+oc get pod -n openshift-image-registry -o wide
+
+cat <<EOF > $HOME/monitoring-cm.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cluster-monitoring-config
+  namespace: openshift-monitoring
+data:
+  config.yaml: |
+    prometheusOperator:
+      nodeSelector:
+        node-role.kubernetes.io/infra: ""
+      tolerations:
+      - key: infra
+        value: reserved
+        effect: NoSchedule
+      - key: infra
+        value: reserved
+        effect: NoExecute
+    prometheusK8s:
+      nodeSelector:
+        node-role.kubernetes.io/infra: ""
+      tolerations:
+      - key: infra
+        value: reserved
+        effect: NoSchedule
+      - key: infra
+        value: reserved
+        effect: NoExecute
+    alertmanagerMain:
+      nodeSelector:
+        node-role.kubernetes.io/infra: ""
+      tolerations:
+      - key: infra
+        value: reserved
+        effect: NoSchedule
+      - key: infra
+        value: reserved
+        effect: NoExecute
+    kubeStateMetrics:
+      nodeSelector:
+        node-role.kubernetes.io/infra: ""
+      tolerations:
+      - key: infra
+        value: reserved
+        effect: NoSchedule
+      - key: infra
+        value: reserved
+        effect: NoExecute
+    grafana:
+      nodeSelector:
+        node-role.kubernetes.io/infra: ""
+      tolerations:
+      - key: infra
+        value: reserved
+        effect: NoSchedule
+      - key: infra
+        value: reserved
+        effect: NoExecute
+    telemeterClient:
+      nodeSelector:
+        node-role.kubernetes.io/infra: ""
+      tolerations:
+      - key: infra
+        value: reserved
+        effect: NoSchedule
+      - key: infra
+        value: reserved
+        effect: NoExecute
+    k8sPrometheusAdapter:
+      nodeSelector:
+        node-role.kubernetes.io/infra: ""
+      tolerations:
+      - key: infra
+        value: reserved
+        effect: NoSchedule
+      - key: infra
+        value: reserved
+        effect: NoExecute
+    openshiftStateMetrics:
+      nodeSelector:
+        node-role.kubernetes.io/infra: ""
+      tolerations:
+      - key: infra
+        value: reserved
+        effect: NoSchedule
+      - key: infra
+        value: reserved
+        effect: NoExecute
+    thanosQuerier:
+      nodeSelector:
+        node-role.kubernetes.io/infra: ""
+      tolerations:
+      - key: infra
+        value: reserved
+        effect: NoSchedule
+      - key: infra
+        value: reserved
+        effect: NoExecute
+EOF
+
+oc apply -f $HOME/monitoring-cm.yaml
+
+watch oc get pod -n openshift-monitoring -o wide --sort-by=".spec.nodeName"
+
+
+4. Pod Affinity and Anti-affinity
+oc scale machineset general-purpose-1a --replicas=2 -n openshift-machine-api
+oc scale machineset general-purpose-1b --replicas=2 -n openshift-machine-api
+
+oc get nodes
+
+oc new-project scheduler
+oc new-app openshift/hello-openshift:v3.10 --name=cache     -n scheduler -lapp=cache
+oc new-app openshift/hello-openshift:v3.10 --name=webserver -n scheduler -lapp=webserver
+
+oc edit deployment cache
+
+oc scale deploy cache --replicas=2
+
+oc get pod -o wide|grep Running
+
+oc edit deployment webserver
+
+oc scale deploy webserver --replicas=2
+
+oc get pod -o wide|grep Running
+
+oc delete all -lapp=cache
+oc delete all -lapp=webserver
+oc delete project scheduler
+
+oc scale machineset general-purpose-1a --replicas=1 -n openshift-machine-api
+oc scale machineset general-purpose-1b --replicas=1 -n openshift-machine-api
+
+5. Update the Infra Node MachineSet (Optional)
+oc patch machineset infra-1a -n openshift-machine-api --type='merge' --patch='{"spec": {"template": {"spec": {"taints": [{"key": "infra","value": "reserved","effect": "NoSchedule"},{"key": "infra","value": "reserved","effect": "NoExecute"}]}}}}'
+
+oc patch machineset infra-1a -n openshift-machine-api --type='merge' --patch='{"spec": {"deletePolicy": "Oldest"}}'
+
+oc scale machineset infra-1a --replicas=2 -n openshift-machine-api
+oc scale machineset infra-1a --replicas=1 -n openshift-machine-api
+
+oc get node -l node-role.kubernetes.io/infra=''
+
+oc describe $(oc get node -l node-role.kubernetes.io/infra='' -o name)
+
+[lab-user@bastion ~]$ oc describe $(oc get node -l node-role.kubernetes.io/infra='' -o name) | grep Taints -A1
+Taints:             infra=reserved:NoExecute
+                    infra=reserved:NoSchedule
+
+                    
+```
+
+```
+---> 07:34:51     Waiting for MySQL to start ...
+2021-09-29 07:34:51 29 [Note] Plugin 'FEDERATED' is disabled.
+2021-09-29 07:34:51 29 [Note] InnoDB: Using atomics to ref count buffer pool pages
+2021-09-29 07:34:51 29 [Note] InnoDB: The InnoDB memory heap is disabled
+2021-09-29 07:34:51 29 [Note] InnoDB: Mutexes and rw_locks use GCC atomic builtins
+2021-09-29 07:34:51 29 [Note] InnoDB: Memory barrier is not used
+2021-09-29 07:34:51 29 [Note] InnoDB: Compressed tables use zlib 1.2.7
+2021-09-29 07:34:51 29 [Note] InnoDB: Using Linux native AIO
+2021-09-29 07:34:51 29 [Note] InnoDB: Using CPU crc32 instructions
+/usr/share/container-scripts/mysql/common.sh: line 63:    29 Killed                  ${MYSQL_PREFIX}/libexec/mysqld --defaults-file=$MYSQL_DEFAULTS_FILE --skip-networking --socket=/tmp/mysql.sock "$@"
+
+
+error: pre hook failed: the pre hook failed: couldn't create lifecycle pod for system-app-1: pods "system-app-1-hook-pre" is forbidden: exceeded quota: for-user-andrew, requested: requests.memory=300Mi, used: requests.memory=6000Mi, limited: requests.memory=6Gi, aborting rollout of 3scale/system-app-1
+```
+

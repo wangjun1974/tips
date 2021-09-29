@@ -3484,7 +3484,7 @@ spec:
       memory: 8Gi
     default:
       cpu: 500m
-      memory: 300Mi
+      memory: 500Mi
     defaultRequest:
       cpu: 50m
       memory: 100Mi
@@ -3497,7 +3497,66 @@ oc apply -f $HOME/limits.yaml
 
 oc login -u andrew -p openshift
 oc project 3scale
-oc create -f amp.yml
+
+[lab-user@bastion ~]$ diff -urN amp.yml 2_amp.yml
+--- amp.yml     2021-09-29 01:33:41.736018397 -0400
++++ 2_amp.yml   2021-09-29 10:05:19.193554379 -0400
+@@ -1,4 +1,4 @@
+-base_env: &base_env
++ase_env: &base_env
+ - name: RAILS_ENV
+   value: "production"
+ - name: DATABASE_URL
+@@ -206,7 +206,7 @@
+     name: "system-storage"
+   spec:
+     accessModes:
+-      - "ReadWriteMany"
++      - "ReadWriteOnce"
+     resources:
+       requests:
+         storage: "100Mi"
+@@ -1170,6 +1170,13 @@
+           imagePullPolicy: Always
+           command: [ 'env', 'TENANT_MODE=provider', 'PORT=3000', 'container-entrypoint', 'bundle', 'exec', 'unicorn', '-c', 'conf
+ig/unicorn.rb' ]
+           name: system-provider
++          resources:
++            requests:
++              cpu: 50m
++              memory: 100Mi
++            limits:
++              cpu: 500m
++              memory: 500Mi
+           livenessProbe:
+             timeoutSeconds: 10
+             initialDelaySeconds: 20
+@@ -1206,6 +1213,13 @@
+           command: [ 'env', 'TENANT_MODE=developer', 'PORT=3001', 'container-entrypoint', 'bundle', 'exec', 'unicorn', '-c', 'con
+fig/unicorn.rb' ]
+           imagePullPolicy: Always
+           name: system-developer
++          resources:
++            requests:
++              cpu: 50m
++              memory: 100Mi
++            limits:
++              cpu: 500m
++              memory: 500Mi          
+           livenessProbe:
+             timeoutSeconds: 10
+             initialDelaySeconds: 20
+@@ -1406,7 +1420,7 @@
+               limits:
+                 memory: 2Gi
+               requests:
+-                cpu: '1'
++                cpu: '50m'
+                 memory: 1Gi
+             readinessProbe:
+               timeoutSeconds: 5
+
+oc create -f 2_amp.yml
 
 oc new-app --template=system --param WILDCARD_DOMAIN=apps.cluster-$GUID.$GUID.ocp4.opentlc.com
 
@@ -3535,6 +3594,7 @@ oc describe rc system-mysql-1
 
 oc patch dc system-mysql -n 3scale --type json -p='[{"op": "replace", "path": "/spec/template/spec/containers/0/resources/requests/cpu", "value":"50m"}]'
 
+oc rollout latest dc/system-app
 oc set resources dc/system-app --requests=cpu=50m,memory=100Mi --limits=cpu=500m,memory=500Mi
 
 ```

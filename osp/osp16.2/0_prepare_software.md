@@ -244,31 +244,6 @@ done
 [root@undercloud repos]# yum install -y httpd httpd-tools
 [root@undercloud repos]# exit
 
-
-# 5.11 安装并设置 chrony 服务
-[stack@undercloud ~]$ sudo dnf install -y chrony
-
-# 生成以 undercloud 本地时间为时间源的时间服务器配置
-[stack@undercloud ~]$ sudo -i 
-[stack@undercloud ~]# cat > /etc/chrony.conf << EOF
-server 192.0.2.1 iburst
-bindaddress 192.0.2.1
-allow all
-local stratum 4
-EOF
-[stack@undercloud ~]# exit
-
-# 在 firewallD 规则里开放 ntp 服务
-[stack@undercloud ~]$ sudo yum install -y firewalld
-[stack@undercloud ~]$ sudo firewall-cmd --add-service=ntp
-[stack@undercloud ~]$ sudo firewall-cmd --add-service=ntp --permanent
-[stack@undercloud ~]$ sudo firewall-cmd --reload
-[stack@undercloud ~]$ sudo systemctl enable chronyd && sudo systemctl start chronyd
-
-# 查看时间源
-[stack@undercloud ~]$ chronyc -n sources
-[stack@undercloud ~]$ chronyc -n tracking
-
 # 5.12 设置 container-tools 模块为版本 3.0
 [stack@undercloud ~]$ sudo dnf module disable -y container-tools:rhel8
 [stack@undercloud ~]$ sudo dnf module enable -y container-tools:3.0
@@ -369,6 +344,24 @@ EOF
 
 # 10. 安装 undercloud
 [stack@undercloud ~]$ time openstack undercloud install
+
+# 在安装完 undercloud 之后，设置 chronyd 服务
+# 生成以 undercloud 本地时间为时间源的时间服务器配置
+[stack@undercloud ~]$ sudo -i 
+[stack@undercloud ~]# cat > /etc/chrony.conf << EOF
+server 192.0.2.1 iburst
+bindaddress 192.0.2.1
+allow all
+local stratum 4
+EOF
+[stack@undercloud ~]# exit
+
+# 启用并启动 chronyd 服务
+[stack@undercloud ~]$ sudo systemctl enable chronyd && sudo systemctl restart chronyd
+
+# 查看时间源
+[stack@undercloud ~]$ chronyc -n sources
+[stack@undercloud ~]$ chronyc -n tracking
 
 # 11. 修改 yum repo 
 # 安装 undercloud 时把 http 服务从端口 80 改为了 8787

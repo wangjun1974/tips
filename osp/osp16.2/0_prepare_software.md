@@ -259,6 +259,7 @@ EOF
 [stack@undercloud ~]# exit
 
 # 在 firewallD 规则里开放 ntp 服务
+[stack@undercloud ~]$ sudo yum install -y firewalld
 [stack@undercloud ~]$ sudo firewall-cmd --add-service=ntp
 [stack@undercloud ~]$ sudo firewall-cmd --add-service=ntp --permanent
 [stack@undercloud ~]$ sudo firewall-cmd --reload

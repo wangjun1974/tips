@@ -3861,3 +3861,706 @@ Taints:             infra=reserved:NoExecute
 error: pre hook failed: the pre hook failed: couldn't create lifecycle pod for system-app-1: pods "system-app-1-hook-pre" is forbidden: exceeded quota: for-user-andrew, requested: requests.memory=300Mi, used: requests.memory=6000Mi, limited: requests.memory=6Gi, aborting rollout of 3scale/system-app-1
 ```
 
+
+### Day4 OCP Tranining 
+```
+Network Policy Lab
+1. Isolate a project from other projects. Allow access from ingress controllers.
+oc new-project dancer
+oc new-app dancer-mysql-example
+watch oc get pods
+oc get routes
+
+mkdir $HOME/netpol
+
+cat <<EOF >$HOME/netpol/allow-same-namespace.yml
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-all
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+  ingress: []
+EOF
+
+oc -n dancer apply -f $HOME/netpol/allow-same-namespace.yml
+
+cat <<EOF >$HOME/netpol/allow-same-namespace.yml
+---
+kind: NetworkPolicy
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: allow-same-namespace
+spec:
+  podSelector:
+  ingress:
+  - from:
+    - podSelector: {}
+EOF
+
+oc apply -n dancer -f $HOME/netpol/allow-same-namespace.yml
+
+cat <<EOF >$HOME/netpol/allow-openshift-ingress.yml
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-openshift-ingress
+spec:
+  podSelector: {}
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          network.openshift.io/policy-group: ingress
+EOF
+
+oc apply -n dancer -f $HOME/netpol/allow-openshift-ingress.yml
+
+On OpenStack there is currently a bug that will prevent this from working if your ingress controller is using hostnetwork, which most non-cloud platforms currently use. On OpenStack run oc patch namespace default --type=merge -p '{"metadata": {"labels": {"network.openshift.io/policy-group": "ingress"}}}' or your environment will not work. Read the BZ for more details.
+
+
+oc patch namespace default --type=merge -p '{"metadata": {"labels": {"network.openshift.io/policy-group": "ingress"}}}'
+
+2. Allow Access Between Related Projects
+oc login -u karla -p openshift
+oc whoami
+oc auth can-i update namespaces
+oc auth can-i create egressnetworkpolicy
+
+cd $HOME
+git clone https://github.com/redhat-gpte-devopsautomation/cakephp-ex.git
+cd $HOME/cakephp-ex
+
+cat openshift/multi-project-templates/parameters.yml
+oc process --local \
+   --param-file=openshift/multi-project-templates/parameters.yml \
+   --ignore-unknown-parameters \
+   -f openshift/multi-project-templates/cakephp-namespaces.yml \
+| oc apply -f -
+
+oc process --local \
+   --param-file=openshift/multi-project-templates/parameters.yml \
+   --ignore-unknown-parameters \
+   -f openshift/multi-project-templates/cakephp-namespace-init.yml \
+| oc create -f -
+
+oc process --local \
+   --param-file=openshift/multi-project-templates/parameters.yml \
+   --ignore-unknown-parameters \
+   -f openshift/multi-project-templates/cakephp-mysql-persistent.yml \
+| oc apply -f -
+
+oc process --local \
+   --param=VERSION=0.1 \
+   --param-file=openshift/multi-project-templates/parameters.yml \
+   --ignore-unknown-parameters \
+   -f openshift/multi-project-templates/cakephp-build.yml \
+| oc apply -f -
+
+oc process --local \
+   --param=VERSION=0.1 \
+   --param-file=openshift/multi-project-templates/parameters.yml \
+   --ignore-unknown-parameters \
+   -f openshift/multi-project-templates/cakephp-mysql-frontend.yml \
+| oc apply -f -
+
+2.3. Configure NetworkPolicy to Restrict Access
+vi openshift/multi-project-templates/cakephp-namespaces.yml
+
+--- openshift/multi-project-templates/cakephp-namespaces.yml.orig       2021-09-29 20:42:29.209361395 -0400
++++ openshift/multi-project-templates/cakephp-namespaces.yml    2021-09-29 20:43:37.779588195 -0400
+@@ -51,11 +51,17 @@
+   apiVersion: v1
+   metadata:
+     name: ${BUILD_NAMESPACE}
++    labels:
++      name: ${BUILD_NAMESPACE}
+ - kind: Namespace
+   apiVersion: v1
+   metadata:
+     name: ${FRONTEND_NAMESPACE}
++    lables:
++      name: ${FRONTEND_NAMESPACE}
+ - kind: Namespace
+   apiVersion: v1
+   metadata:
+     name: ${DATABASE_NAMESPACE}
++    labels:
++      name: ${DATABASE_NAMESPACE}
+
+oc process --local \
+   --param-file=openshift/multi-project-templates/parameters.yml \
+   --ignore-unknown-parameters \
+   -f openshift/multi-project-templates/cakephp-namespaces.yml \
+| oc apply -f -
+
+vi openshift/multi-project-templates/cakephp-mysql-frontend.yml
+git diff openshift/multi-project-templates/cakephp-mysql-frontend.yml
+
+- kind: NetworkPolicy
+  apiVersion: networking.k8s.io/v1
+  metadata:
+    name: deny-by-default
+    namespace: ${FRONTEND_NAMESPACE}
+  spec:
+    podSelector: {}
+    policyTypes:
+    - Ingress
+- kind: NetworkPolicy
+  apiVersion: networking.k8s.io/v1
+  metadata:
+    name: allow-same-namespace
+    namespace: ${FRONTEND_NAMESPACE}
+  spec:
+    podSelector:
+    policyTypes:
+    - Ingress
+    ingress:
+    - from:
+      - podSelector: {}
+- kind: NetworkPolicy
+  apiVersion: networking.k8s.io/v1
+  metadata:
+    name: allow-openshift-ingress
+    namespace: ${FRONTEND_NAMESPACE}
+  spec:
+    podSelector: {}
+    ingress:
+    - from:
+      - namespaceSelector:
+          matchLabels:
+            network.openshift.io/policy-group: ingress
+
+oc process --local \
+   --param=VERSION=0.1 \
+   --param-file=openshift/multi-project-templates/parameters.yml \
+   --ignore-unknown-parameters \
+   -f openshift/multi-project-templates/cakephp-mysql-frontend.yml \
+| oc apply -f -
+
+vi openshift/multi-project-templates/cakephp-mysql-persistent.yml
+
++- name: FRONTEND_NAMESPACE
++  displayName: Frontend Namespace
++  description: >-
++    The OpenShift Namespace where the Frontend application deployment, route,
++    and service reside.
++  required: true
++  value: cakephp-example-frontend
+
++- kind: NetworkPolicy
++  apiVersion: networking.k8s.io/v1
++  metadata:
++    name: deny-by-default
++    namespace: ${DATABASE_NAMESPACE}
++  spec:
++    podSelector: {}
++    policyTypes:
++    - Ingress
++- kind: NetworkPolicy
++  apiVersion: networking.k8s.io/v1
++  metadata:
++    name: allow-same-namespace
++    namespace: ${DATABASE_NAMESPACE}
++  spec:
++    podSelector:
++    policyTypes:
++    - Ingress
++    ingress:
++    - from:
++      - podSelector: {}
++- kind: NetworkPolicy
++  apiVersion: networking.k8s.io/v1
++  metadata:
++    name: allow-frontend-to-database
++    namespace: ${DATABASE_NAMESPACE}
++  spec:
++    podSelector:
++      matchLabels:
++        name: ${DATABASE_SERVICE_NAME}
++    ingress:
++    - from:
++      - namespaceSelector:
++          matchLabels:
++            name: ${FRONTEND_NAMESPACE}
++      ports:
++      - protocol: TCP
++        port: 3306
+
+git diff openshift/multi-project-templates/cakephp-mysql-persistent.yml
+
+oc process --local \
+   --param-file=openshift/multi-project-templates/parameters.yml \
+   --ignore-unknown-parameters \
+   -f openshift/multi-project-templates/cakephp-mysql-persistent.yml \
+| oc apply -f -
+
+oc get networkpolicy -n cakephp-example-database
+oc get networkpolicy -n cakephp-example-frontend
+
+2.4. Configure EgressNetworkPolicy
+cat <<EOF >>$HOME/cakephp-ex/openshift/multi-project-templates/cakephp-namespaces.yml
+- kind: EgressNetworkPolicy
+  apiVersion: network.openshift.io/v1
+  metadata:
+    name: default
+    namespace: \${FRONTEND_NAMESPACE}
+  spec:
+    egress:
+    - type: Deny
+      to:
+        cidrSelector: 0.0.0.0/0
+- kind: EgressNetworkPolicy
+  apiVersion: network.openshift.io/v1
+  metadata:
+    name: default
+    namespace: \${DATABASE_NAMESPACE}
+  spec:
+    egress:
+    - type: Deny
+      to:
+        cidrSelector: 0.0.0.0/0
+EOF
+
+oc process --local \
+   --param-file=openshift/multi-project-templates/parameters.yml \
+   --ignore-unknown-parameters \
+   -f openshift/multi-project-templates/cakephp-namespaces.yml \
+| oc apply -f -
+
+oc process --local \
+   --param=VERSION=0.2 \
+   --param-file=openshift/multi-project-templates/parameters.yml \
+   --ignore-unknown-parameters \
+   -f openshift/multi-project-templates/cakephp-build.yml \
+| oc apply -f -
+
+oc process --local \
+   --param=VERSION=0.2 \
+   --param-file=openshift/multi-project-templates/parameters.yml \
+   --ignore-unknown-parameters \
+   -f openshift/multi-project-templates/cakephp-mysql-frontend.yml \
+| oc apply -f -
+
+oc get networkpolicy allow-same-namespace -n cakephp-example-frontend -o yaml 
+oc -n cakephp-example-frontend rsh $(oc get pods -l name=cakephp -n cakephp-example-frontend  )
+
+
+
+
+Cluster Logging Solution Lab
+
+oc get machineset general-purpose-1a -o yaml -n openshift-machine-api > logging-1a.yaml
+
+oc apply -f logging-1a.yaml
+oc scale machineset logging-1a --replicas=1 -n openshift-machine-api
+
+mkdir $HOME/cluster-logging
+
+cat << EOF >$HOME/cluster-logging/es_namespace.yaml
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: openshift-operators-redhat
+  annotations:
+    openshift.io/node-selector: ""
+  labels:
+    openshift.io/cluster-monitoring: "true"
+EOF
+
+oc create -f $HOME/cluster-logging/es_namespace.yaml
+
+cat << EOF >$HOME/cluster-logging/cl_namespace.yaml
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: openshift-logging
+  annotations:
+    openshift.io/node-selector: ""
+  labels:
+    openshift.io/cluster-monitoring: "true"
+EOF
+
+oc create -f $HOME/cluster-logging/cl_namespace.yaml
+
+cat << EOF >$HOME/cluster-logging/operator_group.yaml
+apiVersion: operators.coreos.com/v1
+kind: OperatorGroup
+metadata:
+  name: openshift-operators-redhat
+  namespace: openshift-operators-redhat
+spec: {}
+EOF
+
+oc create -f $HOME/cluster-logging/operator_group.yaml
+
+cat << EOF >$HOME/cluster-logging/subscription.yaml
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  generateName: "elasticsearch-"
+  namespace: "openshift-operators-redhat"
+spec:
+  channel: "4.6"
+  installPlanApproval: "Automatic"
+  source: "redhat-operators"
+  sourceNamespace: "openshift-marketplace"
+  name: "elasticsearch-operator"
+EOF
+
+oc create -f $HOME/cluster-logging/subscription.yaml
+
+oc get pod -n openshift-operators-redhat -o wide
+oc logs $(oc get pod -n openshift-operators-redhat -l name=elasticsearch-operator -o name) -n openshift-operators-redhat
+
+3. Deploy the Cluster Logging Operator
+
+oc whoami --show-console
+
+oc get pod -n openshift-logging -o wide
+oc logs $(oc get pod -n openshift-logging -l name=cluster-logging-operator -o name) -n openshift-logging
+
+4. Deploy the Cluster Logging Stack
+
+apiVersion: logging.openshift.io/v1
+kind: ClusterLogging
+metadata:
+  name: instance
+  namespace: openshift-logging
+spec:
+  managementState: Managed
+  logStore:
+    type: elasticsearch
+    retentionPolicy:
+      application:
+        maxAge: 2d
+      infra:
+        maxAge: 3d
+      audit:
+        maxAge: 5d
+    elasticsearch:
+      resources:
+        limits:
+          memory: 6Gi
+        requests:
+          memory: 6Gi
+      nodeCount: 1
+      nodeSelector:
+        node-role.kubernetes.io/logging: ""
+      redundancyPolicy: ZeroRedundancy
+      storage:
+        storageClassName: standard 
+        size: 50Gi
+      tolerations:
+      - key: logging
+        value: reserved
+        effect: NoSchedule
+      - key: logging
+        value: reserved
+        effect: NoExecute
+  visualization:
+    type: kibana
+    kibana:
+      replicas: 1
+      nodeSelector:
+        node-role.kubernetes.io/logging: ""
+      tolerations:
+      - key: logging
+        value: reserved
+        effect: NoSchedule
+      - key: logging
+        value: reserved
+        effect: NoExecute
+  curation:
+    type: curator
+    curator:
+      schedule: 30 3 * * *
+      nodeSelector:
+        node-role.kubernetes.io/logging: ""
+      tolerations:
+      - key: logging
+        value: reserved
+        effect: NoSchedule
+      - key: logging
+        value: reserved
+        effect: NoExecute
+  collection:
+    logs:
+      type: fluentd
+      fluentd:
+        tolerations:
+        - operator: Exists
+
+
+
+```
+
+
+### Day5 Labs
+```
+
+ansible localhost -m lineinfile -a 'path=$HOME/.bashrc regexp="^export OCP_RELEASE" line="export OCP_RELEASE=4.8.10"'
+
+source ~/.bashrc
+
+wget https://mirror.openshift.com/pub/openshift-v4/clients/ocp/$OCP_RELEASE/openshift-client-linux-$OCP_RELEASE.tar.gz
+
+sudo tar xzf openshift-client-linux-$OCP_RELEASE.tar.gz -C /usr/local/sbin/ oc kubectl
+
+oc completion bash | sudo tee /etc/bash_completion.d/openshift > /dev/null
+. /usr/share/bash-completion/bash_completion
+
+wget https://mirror.openshift.com/pub/openshift-v4/clients/ocp/$OCP_RELEASE/openshift-install-linux-$OCP_RELEASE.tar.gz
+
+sudo tar xzf openshift-install-linux-$OCP_RELEASE.tar.gz -C /usr/local/sbin/
+
+openshift-install create install-config --dir $HOME/ocp4-install
+
+master
+  platform:
+    aws:
+      type: m5.xlarge
+
+worker
+  platform:
+    aws:
+      type: m5.large
+
+https://developers.redhat.com/blog/2020/02/05/customizing-openshift-project-creation?ts=1632969031943#customize_the_template
+
+
+openshift-install create ignition-configs --dir $HOME/ocp4-install
+
+ansible localhost -m lineinfile -a 'path=$HOME/.bashrc regexp="^export INFRA_ID" line="export INFRA_ID=$(jq -r .infraID $HOME/ocp4-install/metadata.json)"'
+
+source $HOME/.bashrc
+echo $INFRA_ID
+
+openshift-install create cluster --dir=$HOME/ocp4-install --log-level=debug
+
+ansible localhost -m lineinfile -a 'path=$HOME/.bashrc regexp="^export OCP_RELEASE" line="export KUBECONFIG=$HOME/ocp4-install/auth/kubeconfig"'
+
+source ~/.bashrc 
+
+oc whoami
+
+Five users have access to the cluster: john, paul, ringo, george, and pete. The password for each user should be set to openshift4
+cd $HOME
+touch $HOME/htpasswd
+htpasswd -Bb $HOME/htpasswd john openshift4
+htpasswd -Bb $HOME/htpasswd paul openshift4
+htpasswd -Bb $HOME/htpasswd ringo openshift4
+htpasswd -Bb $HOME/htpasswd george openshift4
+htpasswd -Bb $HOME/htpasswd pete openshift4
+
+oc create secret generic htpasswd --from-file=$HOME/htpasswd -n openshift-config
+
+oc apply -f - <<EOF
+apiVersion: config.openshift.io/v1
+kind: OAuth
+metadata:
+  name: cluster
+spec:
+  identityProviders:
+  - name: Local Password
+    mappingMethod: claim
+    type: HTPasswd
+    htpasswd:
+      fileData:
+        name: htpasswd
+EOF
+
+oc adm groups new lab-cluster-admins john
+oc adm policy add-cluster-role-to-group cluster-admin lab-cluster-admins --rolebinding-name=lab-cluster-admins
+
+oc login -u john -p openshift4
+oc whoami 
+
+oc login -u pual -p openshift4
+oc whoami
+
+oc login -u ringo -p openshift4
+oc whoami
+
+oc login -u george -p openshift4
+oc whoami
+
+oc login -u pete -p openshift4
+oc whoami
+
+
+oc patch ingresscontroller default -n openshift-ingress-operator --type=merge --patch='{"spec":{"nodePlacement":{"nodeSelector": {"matchLabels":{"node-role.kubernetes.io/infra":""}}}}}'
+
+oc get pod -n openshift-ingress -o wide
+
+
+oc patch configs.imageregistry.operator.openshift.io/cluster -n openshift-image-registry --type=merge --patch '{"spec":{"nodeSelector":{"node-role.kubernetes.io/infra":""}}}'
+
+oc patch configs.imageregistry.operator.openshift.io/cluster -n openshift-image-registry --type=merge --patch='{"spec":{"replicas": 1}}'
+
+oc get pods -n openshift-image-registry -o wide 
+
+
+cat <<EOF > $HOME/monitoring-cm.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cluster-monitoring-config
+  namespace: openshift-monitoring
+data:
+  config.yaml: |+
+    prometheusOperator:
+      nodeSelector:
+        node-role.kubernetes.io/infra: ""
+    prometheusK8s:
+      nodeSelector:
+        node-role.kubernetes.io/infra: ""
+    alertmanagerMain:
+      nodeSelector:
+        node-role.kubernetes.io/infra: ""
+    kubeStateMetrics:
+      nodeSelector:
+        node-role.kubernetes.io/infra: ""
+    grafana:
+      nodeSelector:
+        node-role.kubernetes.io/infra: ""
+    telemeterClient:
+      nodeSelector:
+        node-role.kubernetes.io/infra: ""
+    k8sPrometheusAdapter:
+      nodeSelector:
+        node-role.kubernetes.io/infra: ""
+    openshiftStateMetrics:
+      nodeSelector:
+        node-role.kubernetes.io/infra: ""
+    thanosQuerier:
+      nodeSelector:
+        node-role.kubernetes.io/infra: ""
+EOF
+
+oc apply -f $HOME/monitoring-cm.yaml -n openshift-monitoring
+
+oc get pods -n openshift-monitoring -o wide
+
+oc get pod -n openshift-operators-redhat -o wide
+oc get pod -n openshift-logging -o wide
+
+
+
+apiVersion: logging.openshift.io/v1
+kind: ClusterLogging
+metadata:
+  name: instance
+  namespace: openshift-logging
+spec:
+  managementState: Managed
+  logStore:
+    type: elasticsearch
+    retentionPolicy:
+      application:
+        maxAge: 2d
+      infra:
+        maxAge: 3d
+      audit:
+        maxAge: 5d
+    elasticsearch:
+      resources:
+        limits:
+          memory: 6Gi
+        requests:
+          cpu: 500m
+          memory: 4Gi
+      nodeCount: 2
+      nodeSelector:
+        node-role.kubernetes.io/infra: ""
+      redundancyPolicy: SingleRedundancy
+      storage:
+        storageClassName: gp2 
+        size: 20G
+  visualization:
+    type: kibana
+    kibana:
+      replicas: 1
+      nodeSelector:
+        node-role.kubernetes.io/infra: ""
+  curation:
+    type: curator
+    curator:
+      schedule: 30 3 * * *
+      nodeSelector:
+        node-role.kubernetes.io/infra: ""
+  collection:
+    logs:
+      type: fluentd
+      fluentd:
+        tolerations:
+        - operator: Exists
+
+https://developers.redhat.com/blog/2020/02/05/customizing-openshift-project-creation?ts=1632969031943#customize_the_template
+
+oc adm create-bootstrap-project-template -o yaml > template.yaml
+
+- apiVersion: v1
+  kind: "LimitRange"
+  metadata:
+    name: project-limits
+    namespace: ${PROJECT_NAME}
+  spec:
+    limits:
+      - type: "Container"
+        default:
+          cpu: "1" 
+          memory: "1Gi" 
+        defaultRequest:
+          cpu: "500m" 
+          memory: "500Mi"
+- apiVersion: v1
+  kind: ResourceQuota
+  metadata:
+    name: project-quota
+    namespace: ${PROJECT_NAME}
+  spec:
+    hard:
+      pods: "10" 
+      requests.cpu: "4" 
+      requests.memory: 8Gi 
+      limits.cpu: "6" 
+      limits.memory: 16Gi
+      requests.storage: "20G"
+
+oc create -f template.yaml -n openshift-config
+
+oc edit project.config.openshift.io/cluster
+
+
+- apiVersion: networking.k8s.io/v1
+  kind: NetworkPolicy
+  metadata:
+    name: allow-same-namespace
+    namespace: ${PROJECT_NAME}
+  spec:
+    podSelector:
+    ingress:
+    - from:
+      - podSelector: {}
+- apiVersion: networking.k8s.io/v1
+  kind: NetworkPolicy
+  metadata:
+    name: allow-from-openshift-ingress
+    namespace: ${PROJECT_NAME}    
+  spec:
+    podSelector: {}
+    ingress:
+    - from:
+      - namespaceSelector:
+          matchLabels:
+            network.openshift.io/policy-group: ingress   
+
+oc apply -f template.yaml -n openshift-config
+
+oc get template project-request -n openshift-config -o yaml
+```

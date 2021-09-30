@@ -4225,7 +4225,7 @@ oc get pod -n openshift-logging -o wide
 oc logs $(oc get pod -n openshift-logging -l name=cluster-logging-operator -o name) -n openshift-logging
 
 4. Deploy the Cluster Logging Stack
-
+cat > $HOME/cluster-logging/cluster-logging-instance.yaml <<EOF
 apiVersion: logging.openshift.io/v1
 kind: ClusterLogging
 metadata:
@@ -4294,9 +4294,11 @@ spec:
       fluentd:
         tolerations:
         - operator: Exists
+EOF
 
+oc apply -f $HOME/cluster-logging/cluster-logging-instance.yaml
 
-
+oc get pods -n openshift-logging -o wide
 ```
 
 

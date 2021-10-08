@@ -33,6 +33,9 @@ sed -ie '/helper.example.com/d ' /etc/hosts
 echo "192.168.122.3 helper.example.com" >> /etc/hosts
 ipa-server-install -a redhat123 --hostname=helper.example.com -r EXAMPLE.COM -p redhat123 -n example.com -U --setup-dns  --allow-zone-overlap --no-forwarders
 
+# 或者使用 dns forwarder 
+ipa-server-install -a redhat123 --hostname=helper.example.com -r EXAMPLE.COM -p redhat123 -n example.com -U --setup-dns  --allow-zone-overlap --forwarder=192.168.122.1
+
 # 配置防火墙开放服务
 firewall-cmd --add-service={http,https,dns,ntp,freeipa-ldap,freeipa-ldaps} --permanent
 firewall-cmd --reload

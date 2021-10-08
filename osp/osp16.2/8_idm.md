@@ -127,8 +127,8 @@ EOF
 (undercloud) [stack@undercloud ~]$ sudo nmcli con down ens3 && sudo nmcli con up ens3
 (undercloud) [stack@undercloud ~]$ sudo nmcli con down ens12 && sudo nmcli con up ens12
 (undercloud) [stack@undercloud ~]$ sudo -i 
-[root@undercloud ~]# sed -ie '/undercloud.example.com/d '/etc/hosts
-[root@undercloud ~]# sed -ie '/helper.example.com/d '/etc/hosts
+[root@undercloud ~]# sed -ie '/undercloud.example.com/d' /etc/hosts
+[root@undercloud ~]# sed -ie '/helper.example.com/d' /etc/hosts
 [root@undercloud ~]# echo '192.168.122.2 undercloud.example.com' >> /etc/hosts
 [root@undercloud ~]# echo '192.168.122.3 helper.example.com' >> /etc/hosts
 [root@undercloud ~]# exit

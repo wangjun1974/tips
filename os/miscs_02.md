@@ -25,4 +25,10 @@ quay.io. 42 IN A 3.233.133.41
 ```
 清理 overcloud 节点
 (overcloud) [stack@undercloud ~]$ for i in overcloud-ctrl01 overcloud-ctrl02 overcloud-ctrl03 overcloud-ceph01 overcloud-ceph02 overcloud-ceph03 overcloud-compute01 overcloud-compute02; do openstack baremetal node maintenance unset $i ; openstack baremetal node manage $i ; openstack baremetal node provide $i ; done
+
+显示 osp 16.2 安装日志
+(undercloud) [stack@undercloud ~]$ sudo cat /var/lib/mistral/overcloud/ansible.log | grep -E 'TASK:' | cut -d '|' -f 2- | awk '!x[$0]++' | tail -10
+
+(undercloud) [stack@undercloud ~]$ watch -n10 "sudo cat /var/lib/mistral/overcloud/ansible.log | grep -E 'TASK:' | cut -d '|' -f 2- | uniq | tail -10"
+https://stackoverflow.com/questions/11532157/remove-duplicate-lines-without-sorting
 ```

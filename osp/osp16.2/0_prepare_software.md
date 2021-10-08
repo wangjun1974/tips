@@ -146,69 +146,9 @@ EOF
 [root@undercloud ~]# exit
 [stack@undercloud ~]$
 
-# 4.1 注册系统
-[stack@undercloud ~]$ sudo subscription-manager register
-
-# 4.2 列出包含 Red Hat OpenStack 的订阅，记录下订阅的 Pool ID
-[stack@undercloud ~]$ sudo subscription-manager list --available --all --matches="Red Hat OpenStack"
-
-# 4.3 为系统附加 Pool
-[stack@undercloud ~]$ sudo subscription-manager attach --pool=8a85f99c727637ad0172c517131a1e6d
-
-# 4.4 设置系统 release 为 8.4
-[stack@undercloud ~]$ sudo subscription-manager release --set=8.4
-
-# 5.1 禁用所有软件频道
-[stack@undercloud ~]$ sudo subscription-manager repos --disable=*
-
-# 5.2 启用对应软件频道
-[stack@undercloud ~]$ sudo subscription-manager repos --enable=rhel-8-for-x86_64-baseos-eus-rpms --enable=rhel-8-for-x86_64-appstream-eus-rpms --enable=rhel-8-for-x86_64-highavailability-eus-rpms --enable=ansible-2.9-for-rhel-8-x86_64-rpms --enable=openstack-16.2-for-rhel-8-x86_64-rpms --enable=fast-datapath-for-rhel-8-x86_64-rpms --enable=advanced-virt-for-rhel-8-x86_64-rpms --enable=rhceph-4-tools-for-rhel-8-x86_64-rpms
-
-# 5.3 安装 httpd
-[stack@undercloud ~]$ sudo yum install -y httpd
-
-# 5.4 创建本地 repos 目录
-[stack@undercloud ~]$ sudo mkdir -p /var/www/html/repos/osp16.2
-[stack@undercloud ~]$ sudo -i
-[root@undercloud ~]# pushd /var/www/html/repos
-
-# 5.5 安装 createrepo，生成 repos 同步脚本
-[root@undercloud repos]# yum install -y createrepo yum-utils
-[root@undercloud repos]# cat > ./OSP16_2_repo_sync_up.sh <<'EOF'
-#!/bin/bash
-
-localPath="/var/www/html/repos/osp16.2/"
-fileConn="/getPackage/"
-
-## sync following yum repos 
-# rhel-8-for-x86_64-baseos-eus-rpms
-# rhel-8-for-x86_64-appstream-eus-rpms
-# rhel-8-for-x86_64-highavailability-eus-rpms
-# ansible-2.9-for-rhel-8-x86_64-rpms
-# openstack-16.2-for-rhel-8-x86_64-rpms
-# fast-datapath-for-rhel-8-x86_64-rpms
-# rhceph-4-tools-for-rhel-8-x86_64-rpms
-# advanced-virt-for-rhel-8-x86_64-rpms
-# rhel-8-for-x86_64-nfv-rpms
-
-for i in rhel-8-for-x86_64-baseos-eus-rpms rhel-8-for-x86_64-appstream-eus-rpms rhel-8-for-x86_64-highavailability-eus-rpms ansible-2.9-for-rhel-8-x86_64-rpms openstack-16.2-for-rhel-8-x86_64-rpms fast-datapath-for-rhel-8-x86_64-rpms rhceph-4-tools-for-rhel-8-x86_64-rpms advanced-virt-for-rhel-8-x86_64-rpms rhel-8-for-x86_64-nfv-rpms
-do
-
-  rm -rf "$localPath"$i/repodata
-  echo "sync channel $i..."
-  reposync -n --delete --download-path="$localPath" --repoid $i --downloadcomps --download-metadata
-
-  # rhel8 no need to run createrepo
-  #echo "create repo $i..."
-  #time createrepo -g $(ls "$localPath"$i/repodata/*comps.xml) --update --skip-stat --cachedir /tmp/#empty-cache-dir "$localPath"$i
-
-done
-
-exit 0
-EOF
-
-# 5.6 同步 repos
-[root@undercloud repos]# /usr/bin/nohup /bin/bash ./OSP16_2_repo_sync_up.sh &
+# 4.1 拷贝 yum repos 到 undercloud
+# 4.2 在 undercloud 上解压缩 yum repos
+[root@undercloud ~]# tar zxvf /tmp/osp16.2-yum-repos-2021-09-26.tar.gz -C /
 
 # 5.7 重设 selinux context
 [root@undercloud repos]# chcon --recursive --reference=/var/www/html /var/www/html/repos
@@ -221,14 +161,11 @@ EOF
 # 5.9 启动 httpd 服务
 [root@undercloud repos]# systemctl enable httpd && systemctl start httpd
 
-# 5.10 禁用远程 yum 源，设置本地 http yum 源
-# baseurl 的 UNDERCLOUD_IP 地址
-# 用本地接口名称替换 ens3
+# 5.10 禁用远程 yum 源，设置本地 yum 源
 [root@undercloud repos]# subscription-manager repos --disable=*
 [root@undercloud repos]# echo y | mv /etc/yum.repos.d/redhat.repo /etc/yum.repos.d/backup
 [root@undercloud repos]# sed -ie 's|enabled=1|enabled=0|' /etc/yum/pluginconf.d/subscription-manager.conf
 
-[root@undercloud repos]# UNDERCLOUD_IP=$( ip a s dev ens3 | grep -E "inet " | awk '{print $2}' | awk -F'/' '{print $1}' )
 [root@undercloud repos]# > /etc/yum.repos.d/osp.repo 
 [root@undercloud repos]# for i in rhel-8-for-x86_64-baseos-eus-rpms rhel-8-for-x86_64-appstream-eus-rpms rhel-8-for-x86_64-highavailability-eus-rpms ansible-2.9-for-rhel-8-x86_64-rpms openstack-16.2-for-rhel-8-x86_64-rpms fast-datapath-for-rhel-8-x86_64-rpms rhceph-4-tools-for-rhel-8-x86_64-rpms advanced-virt-for-rhel-8-x86_64-rpms rhel-8-for-x86_64-nfv-rpms
 do
@@ -363,14 +300,6 @@ EOF
 [stack@undercloud ~]$ chronyc -n sources
 [stack@undercloud ~]$ chronyc -n tracking
 
-# 11. 修改 yum repo 
-# 安装 undercloud 时把 http 服务从端口 80 改为了 8787
-[stack@undercloud ~]$ sudo sed -ie 's|192.168.8.21|192.168.8.21:8787|g' /etc/yum.repos.d/osp.repo
-[stack@undercloud ~]$ echo y | sudo mv /etc/yum.repos.d/osp.repoe /etc/yum.repos.d/backup
-
-# 12. 安装 undercloud
-[stack@undercloud ~]$ time openstack undercloud install
-
 # 13. 检查 undercloud 状态
 [stack@undercloud ~]$ source ~/stackrc
 # 13.1 查看 undercloud catalog
@@ -489,7 +418,11 @@ ssh undercloud.example.com
 [root@undercloud ~]# cat >> /etc/hosts <<EOF
 192.168.122.3 helper.example.com
 EOF
+```
 
+准备离线镜像
+```
+在镜像下载服务器上执行以下命令
 
 生成同步镜像脚本 syncimgs
 cat > /root/syncimgs <<'EOF'

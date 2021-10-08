@@ -56,7 +56,8 @@ firewall-cmd --add-service=ntp
 firewall-cmd --add-service=ntp --permanent
 firewall-cmd --reload
 
-systemctl enable chronyd && systemctl start chronyd
+systemctl enable chronyd
+systemctl restart chronyd
 chronyc -n sources
 chronyc -n tracking
 
@@ -119,7 +120,7 @@ EOF
 # undercloud 安装 python3-novajoin
 (undercloud) [stack@undercloud ~]$ sudo dnf install python3-novajoin -y
 
-# 
+# 设置 DNS 
 (undercloud) [stack@undercloud ~]$ sudo sed -i 's/192.168.122.1/192.168.122.3/' /etc/resolv.conf
 (undercloud) [stack@undercloud ~]$ sudo nmcli con mod ens12 ipv4.dns '192.168.122.3'
 (undercloud) [stack@undercloud ~]$ sudo nmcli con mod ens3 ipv4.dns '' ipv6.ignore-auto-dns 'yes'

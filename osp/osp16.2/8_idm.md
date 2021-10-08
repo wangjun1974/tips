@@ -29,6 +29,37 @@ dnf distro-sync -y
 dnf module enable idm:DL1 -y
 dnf module install idm:DL1/dns -y
 
+# 配置 chrony
+NTPSERVER="clock.corp.redhat.com"
+LOCALSUBNET=$(ip r s | grep ens3 | grep -v default | awk '{print $1}')
+
+yum install -y chrony
+cat > /etc/chrony.conf << EOF
+server ${NTPSERVER} iburst
+stratumweight 0
+driftfile /var/lib/chrony/drift
+rtcsync
+makestep 10 3
+bindcmdaddress 127.0.0.1
+bindcmdaddress ::1
+cmdallow 127.0.0.1
+allow ${LOCALSUBNET}
+keyfile /etc/chrony.keys
+commandkey 1
+generatecommandkey
+noclientlog
+logchange 0.5
+logdir /var/log/chrony
+EOF
+
+firewall-cmd --add-service=ntp
+firewall-cmd --add-service=ntp --permanent
+firewall-cmd --reload
+
+systemctl enable chronyd && systemctl start chronyd
+chronyc -n sources
+chronyc -n tracking
+
 # 执行 ipa server 的安装
 sed -ie '/helper.example.com/d ' /etc/hosts
 echo "192.168.122.3 helper.example.com" >> /etc/hosts

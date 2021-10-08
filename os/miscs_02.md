@@ -21,3 +21,8 @@ quay.io. 42 IN A 50.16.140.223
 quay.io. 42 IN A 3.213.173.170
 quay.io. 42 IN A 3.233.133.41
 ```
+
+```
+清理 overcloud 节点
+(overcloud) [stack@undercloud ~]$ for i in overcloud-ctrl01 overcloud-ctrl02 overcloud-ctrl03 overcloud-ceph01 overcloud-ceph02 overcloud-ceph03 overcloud-compute01 overcloud-compute02; do openstack baremetal node maintenance unset $i ; openstack baremetal node manage $i ; openstack baremetal node provide $i ; done
+```

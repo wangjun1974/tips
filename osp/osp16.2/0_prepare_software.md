@@ -418,6 +418,9 @@ ssh undercloud.example.com
 [root@undercloud ~]# cat >> /etc/hosts <<EOF
 192.168.122.3 helper.example.com
 EOF
+
+等待 undercloud 执行完 openstack undercloud install 之后，更新 yum repo 指向 8787 端口
+sed -i 's|192.168.122.2|192.168.122.2:8787|g' /etc/yum.repos.d/w.repo
 ```
 
 准备离线镜像

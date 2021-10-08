@@ -146,6 +146,21 @@ EOF
 [stack@undercloud ~]$ crudini --set ~/undercloud.conf DEFAULT undercloud_nameservers 192.168.122.3
 [stack@undercloud ~]$ crudini --set ~/undercloud.conf DEFAULT ipa_otp $otp
 
+# 设置 undercloud 与 helper 时间同步
+[stack@undercloud ~]$ sudo cat > /etc/chrony.conf <<EOF
+server 192.168.122.3 iburst
+bindaddress 192.0.2.1
+allow all
+local stratum 4
+EOF
+[stack@undercloud ~]$ sudo systemctl restart chronyd
+[stack@undercloud ~]$ sudo chronyc -n sources
+[stack@undercloud ~]$ sudo chronyc -n tracking
+
+# 如果 undercloud 与 helper 时间有比较大的差距
+[stack@undercloud ~]$ sudo chrnoyc -a makestep 10 -1
+[stack@undercloud ~]$ sudo chronyc -n tracking
+
 # 更新 undercloud
 [stack@undercloud ~]$ openstack undercloud install
 

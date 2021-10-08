@@ -26,6 +26,7 @@ nmcli con delete virbr0
 dnf distro-sync -y
 
 # 安装模块 profile idm:DL1/dns
+dnf module enable idm:DL1 -y
 dnf module install idm:DL1/dns -y
 
 # 执行 ipa server 的安装
@@ -56,7 +57,7 @@ EOF
 # 添加 student 用户
 [root@helper ~]# echo 'redhat123' | ipa user-add --first=Student --last=OpenStack student --password
 
-# 
+# 更新 httpd/conf.d/ipa-pki-proxy.conf 的 RewriteRule
 [root@helper ~]# cd /etc/httpd/conf.d
 [root@helper ~]# sed -ie 's|^#RewriteRule|RewriteRule|' ipa-pki-proxy.conf
 [root@helper ~]# systemctl reload httpd

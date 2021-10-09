@@ -63,6 +63,12 @@ EOF
 # 开始部署
 (undercloud) [stack@undercloud ~]$ time ./deploy.sh
 
+# 查看 osp 16.2 安装日志
+(undercloud) [stack@undercloud ~]$ watch -n10 'sudo cat -n /var/lib/mistral/overcloud/ansible.log | grep -E "TASK:" | cut -d "|" -f 2- | cat -n | sort -uk2 | sort -n | cut -f2- | tail -10' 
+
+# 查看 osp16.2 ceph-ansible 安装日志
+(undercloud) [stack@undercloud ~]$ watch -n10 'sudo cat -n /var/lib/mistral/overcloud/ceph-ansible/ceph_ansible_command.log | grep -E "TASK" | cut -d "|" -f 2- | cat -n | sort -uk2 | sort -n | cut -f2- | tail -10'
+
 # 部署成功后，执行 
 (undercloud) [stack@undercloud ~]$ source ~/overcloudrc
 

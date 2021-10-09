@@ -177,7 +177,7 @@ EOF
 # 检查 undercloud ctlplane-subnet 的 dns_nameservers
 (undercloud) [stack@undercloud ~]$ openstack subnet show ctlplane-subnet -c dns_nameservers -f value
 
-# 更新 ~/templates/environments/network-environment.yaml 的 dns 配置
+# 更新 ~/templates/environments/network-environment.yaml 的 dns 配置
 (undercloud) [stack@undercloud ~]$ sed -i 's/  DnsServers: \[\]/  DnsServers: ["192.168.122.3"]/' ~/templates/environments/network-environment.yaml
 (undercloud) [stack@undercloud ~]$ grep DnsServers ~/templates/environments/network-environment.yaml
 

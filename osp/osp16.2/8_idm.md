@@ -133,9 +133,16 @@ EOF
 [root@undercloud ~]# echo '192.168.122.3 helper.example.com' >> /etc/hosts
 [root@undercloud ~]# exit
 
-# novajoin 出错时参考 Solutions。
+# novajoin 出错时参考 Solutions
 # 注意：命令 ipa-genkeytab 在 RHEL 8.4 上没有，可替换为 ipa-getkeytab
-https://access.redhat.com/solutions/5564111
+# https://access.redhat.com/solutions/5564111
+# ipa-client-install --uninstall -U
+# ipa-client-install
+# kinit admin
+# ipa host-find
+# ipa-getkeytab -p nova/undercloud.example.com@EXAMPLE.COM -k /etc/novajoin/krb5.keytab
+# klist -kt /etc/novajoin/krb5.keytab
+
 # 生成 OTP 
 [stack@undercloud ~]$ otp=$(sudo /usr/libexec/novajoin-ipa-setup --principal admin --password redhat123 --server helper.example.com --realm EXAMPLE.COM --domain example.com --hostname undercloud.example.com --precreate)
 

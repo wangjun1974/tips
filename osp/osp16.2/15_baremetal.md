@@ -746,5 +746,6 @@ https://docs.openstack.org/project-deploy-guide/tripleo-docs/latest/features/bar
 https://www.cnblogs.com/jmilkfan-fanguiju/p/11825059.html<br>
 https://access.redhat.com/solutions/3537351<br>
 https://docs.openstack.org/ironic/pike/install/configure-tenant-networks.html#configure-tenant-networks<br>
+https://docs.openshift.com/container-platform/4.8/installing/installing_openstack/installing-openstack-installer-custom.html#installation-osp-deploying-bare-metal-machines_installing-openstack-installer-custom<br>
 
 

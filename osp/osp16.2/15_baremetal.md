@@ -744,3 +744,6 @@ date -u ; openstack server create \
 https://docs.openstack.org/project-deploy-guide/tripleo-docs/latest/features/baremetal_overcloud.html<br>
 https://www.cnblogs.com/jmilkfan-fanguiju/p/11825059.html<br>
 https://access.redhat.com/solutions/3537351<br>
+https://docs.openstack.org/ironic/pike/install/configure-tenant-networks.html#configure-tenant-networks<br>
+
+

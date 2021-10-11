@@ -36,3 +36,12 @@ https://stackoverflow.com/questions/11532157/remove-duplicate-lines-without-sort
 (undercloud) [stack@undercloud ~]$ watch -n10 'sudo cat -n /var/lib/mistral/overcloud/ceph-ansible/ceph_ansible_command.log | grep -E "TASK" | cut -d "|" -f 2- | cat -n | sort -uk2 | sort -n | cut -f2- | tail -10'
 
 ```
+
+### 问题解决：更新 Mac OS 之后，git 命令报错
+```
+[junwang@JundeMacBook-Pro ~]$ git status
+xcrun: error: invalid active developer path (/Library/Developer/CommandLineTools), missing xcrun at: /Library/Developer/CommandLineTools/usr/bin/xcrun
+
+解决方法是重新安装开发工具 xcode-select
+xcode-select --install
+```

@@ -258,4 +258,6 @@ openstack overcloud deploy --debug --templates $THT \
 -e $CNF/fix-nova-reserved-host-memory.yaml \
 --ntp-server 192.0.2.1
 EOF
+
+# 备注：osp 16.2 下使用 novajoin 的方法，不支持把非 tls everywhere 的 overcloud 转换为 tls everywhere 的 overcloud
 ```

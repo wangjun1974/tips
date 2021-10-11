@@ -51,3 +51,7 @@ xcode-select --install
 
 ### Huawei CCE PV/PVC/StorageClass
 https://support.huaweicloud.com/basics-cce/kubernetes_0030.html
+
+### openstack vxlan 层次化端口绑定 ML2: Hierarchical Port Binding¶
+https://bbs.huaweicloud.com/blogs/detail/148362<br>
+https://specs.openstack.org/openstack/neutron-specs/specs/kilo/ml2-hierarchical-port-binding.html<br>

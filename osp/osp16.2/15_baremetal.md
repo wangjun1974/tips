@@ -748,4 +748,5 @@ https://access.redhat.com/solutions/3537351<br>
 https://docs.openstack.org/ironic/pike/install/configure-tenant-networks.html#configure-tenant-networks<br>
 https://docs.openshift.com/container-platform/4.8/installing/installing_openstack/installing-openstack-installer-custom.html#installation-osp-deploying-bare-metal-machines_installing-openstack-installer-custom<br>
 https://www.cnblogs.com/zhangyufei/p/8473306.html<br>
+https://zhuanlan.zhihu.com/p/59639444<br>
 

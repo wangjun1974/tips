@@ -48,3 +48,6 @@ xcrun: error: invalid active developer path (/Library/Developer/CommandLineTools
 解决方法是重新安装开发工具 xcode-select
 xcode-select --install
 ```
+
+### Huawei CCE PV/PVC/StorageClass
+https://support.huaweicloud.com/basics-cce/kubernetes_0030.html

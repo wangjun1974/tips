@@ -72,5 +72,7 @@ pcs resource show rabbitmq-bundle
                stop interval=0s timeout=200s (rabbitmq-stop-interval-0s)
 
 更新 resource rabbitmq 的 op start timeout
-pcs resource update rabbitmq op start interval=0s timeout=300s
+pcs resource update rabbitmq op start interval=0s timeout=400s
+pcs resource update rabbitmq op monitor interval=10s timeout=120s
+
 ```

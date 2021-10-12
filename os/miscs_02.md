@@ -55,3 +55,22 @@ https://support.huaweicloud.com/basics-cce/kubernetes_0030.html
 ### openstack vxlan 层次化端口绑定 ML2: Hierarchical Port Binding¶
 https://bbs.huaweicloud.com/blogs/detail/148362<br>
 https://specs.openstack.org/openstack/neutron-specs/specs/kilo/ml2-hierarchical-port-binding.html<br>
+
+### osp 16.2 deployment failed.
+```
+pcs status
+...
+  * rabbitmq_start_0 on rabbitmq-bundle-1 'error' (1): call=2853, status='Timed Out', exitreason='', last-rc-change='2021-10-12 00:43:33Z', queued=0ms, exec=200033ms
+
+pcs resource show rabbitmq-bundle
+...
+  Resource: rabbitmq (class=ocf provider=heartbeat type=rabbitmq-cluster)
+   Attributes: set_policy="ha-all ^(?!amq\.).* {"ha-mode":"exactly","ha-params":2,"ha-promote-on-shutdown":"always"}"
+   Meta Attrs: container-attribute-target=host notify=true
+   Operations: monitor interval=10s timeout=40s (rabbitmq-monitor-interval-10s)
+               start interval=0s timeout=200s (rabbitmq-start-interval-0s)
+               stop interval=0s timeout=200s (rabbitmq-stop-interval-0s)
+
+更新 resource rabbitmq 的 op start timeout
+pcs resource update rabbitmq op start interval=0s timeout=300s
+```

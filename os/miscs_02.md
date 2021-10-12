@@ -76,3 +76,6 @@ pcs resource update rabbitmq op start interval=0s timeout=400s
 pcs resource update rabbitmq op monitor interval=10s timeout=120s
 
 ```
+
+### osp 16.1 keystone oidc 的例子
+https://gitlab.cee.redhat.com/sputhenp/lab/-/tree/master/templates/osp-16-1/oidc-federation

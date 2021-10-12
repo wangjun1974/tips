@@ -401,4 +401,7 @@ Warning: Permanently added 'overcloud-controller-0.ctlplane' (ECDSA) to the list
 | 8cc5ddec-6585-4d03-a42f-91993a1adb3d | overcloud-controller-1.example.com | QEMU            | 172.16.2.52 | up    |
 | 10f5fc09-3e76-4541-b627-5dc52ddbffcd | overcloud-controller-0.example.com | QEMU            | 172.16.2.51 | up    |
 +--------------------------------------+------------------------------------+-----------------+-------------+-------+
+
+# 参考 osp 16.2 tripleo 部署完的 ceph 有警告 Ceph HEALTH_WARN with 'mons are allowing insecure global_id reclaim'
+https://access.redhat.com/articles/6136242
 ```

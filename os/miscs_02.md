@@ -81,25 +81,17 @@ pcs resource update rabbitmq op monitor interval=10s timeout=120s
 https://gitlab.cee.redhat.com/sputhenp/lab/-/tree/master/templates/osp-16-1/oidc-federation
 
 ```
-openstack baremetal node set --property capabilities='boot_option:local' overcloud-ctrl01
-openstack baremetal node set --property capabilities='boot_option:local' overcloud-ctrl02
-openstack baremetal node set --property capabilities='boot_option:local' overcloud-ctrl03
-
-openstack baremetal node set --property capabilities='node:controller-0,boot_option:local' overcloud-ceph01
-openstack baremetal node set --property capabilities='node:controller-1,boot_option:local' overcloud-ceph02
-openstack baremetal node set --property capabilities='node:controller-2,boot_option:local' overcloud-ceph03
-
-
-scp /etc/puppet/modules/tripleo/manifests/certmonger/libvirt_vnc.pp heat-admin@overcloud-controller-0.ctlplane:/tmp
-ssh heat-admin@overcloud-controller-0.ctlplane 'sudo cp /tmp/libvirt_vnc.pp /etc/puppet/modules/tripleo/manifests/certmonger/libvirt_vnc.pp'
-
-scp /etc/puppet/modules/tripleo/manifests/certmonger/libvirt_vnc.pp heat-admin@overcloud-controller-1.ctlplane:/tmp
-ssh heat-admin@overcloud-controller-1.ctlplane 'sudo cp /tmp/libvirt_vnc.pp /etc/puppet/modules/tripleo/manifests/certmonger/libvirt_vnc.pp'
-
-scp /etc/puppet/modules/tripleo/manifests/certmonger/libvirt_vnc.pp heat-admin@overcloud-controller-2.ctlplane:/tmp
-ssh heat-admin@overcloud-controller-2.ctlplane 'sudo cp /tmp/libvirt_vnc.pp /etc/puppet/modules/tripleo/manifests/certmonger/libvirt_vnc.pp'
+(overcloud) [stack@undercloud ~]$ ssh heat-admin@overcloud-controller-0.ctlplane sudo podman exec -it ceph-mon-overcloud-controller-0 ceph -s 
+Warning: Permanently added 'overcloud-controller-0.ctlplane' (ECDSA) to the list of known hosts.
+  cluster:
+    id:     ea9612e6-e9fd-4897-891f-77df9acd94e8
+    health: HEALTH_WARN
+            mons are allowing insecure global_id reclaim
 ```
 
 ### osp 16.2 tripleo ipa 
 在 osp 16.2 里，推荐的 ipa 集成方式不再是 novajoin 而是 tls-e ansible<br>
 https://access.redhat.com/documentation/en-us/red_hat_openstack_platform/16.2/html/advanced_overcloud_customization/sect-tripleo-ipa<br>
+
+### OpenShift Container Storage Planning
+https://access.redhat.com/documentation/en-us/red_hat_openshift_container_storage/4.7/pdf/planning_your_deployment/red_hat_openshift_container_storage-4.7-planning_your_deployment-en-us.pdf<br>

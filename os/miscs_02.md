@@ -87,6 +87,20 @@ Warning: Permanently added 'overcloud-controller-0.ctlplane' (ECDSA) to the list
     id:     ea9612e6-e9fd-4897-891f-77df9acd94e8
     health: HEALTH_WARN
             mons are allowing insecure global_id reclaim
+cat > ~/templates/node-info.yaml << 'EOF'
+parameter_defaults:
+  ControllerCount: 3
+  ComputeCount: 0
+  ComputeHCICount: 3
+
+  # SchedulerHints
+  ControllerSchedulerHints:
+    'capabilities:node': 'controller-%index%'
+  ComputeSchedulerHints:
+    'capabilities:node': 'compute-%index%'
+  ComputeHCISchedulerHints:
+    'capabilities:node': 'computehci-%index%'
+EOF
 ```
 
 ### osp 16.2 tripleo ipa 

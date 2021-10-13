@@ -565,6 +565,8 @@ $ oc apply -f https://raw.githubusercontent.com/infrawatch/dashboards/master/dep
 
 在执行完这一步之后，可以看到 STF Grafana 的 Dashboard 了
 ```
+### STF Grafana Dashboard 对于 multicloud 在 STF 1.3.2 已经开始支持 
+https://bugzilla.redhat.com/show_bug.cgi?id=1979642
 
 ### setup ceilometer notification driver in tripleo for STF
 https://github.com/openstack/tripleo-heat-templates/blob/stable/train/environments/metrics/ceilometer-write-qdr.yaml#L15

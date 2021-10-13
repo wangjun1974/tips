@@ -109,3 +109,10 @@ https://access.redhat.com/documentation/en-us/red_hat_openstack_platform/16.2/ht
 
 ### OpenShift Container Storage Planning
 https://access.redhat.com/documentation/en-us/red_hat_openshift_container_storage/4.7/pdf/planning_your_deployment/red_hat_openshift_container_storage-4.7-planning_your_deployment-en-us.pdf<br>
+
+### OSP 16.2 DCN templates
+central stack<br>
+https://gitlab.cee.redhat.com/sputhenp/lab/-/blob/master/templates/osp-16-2/overcloud-deploy-tls-everywhere-ansible.sh<br>
+
+edge stack<br>
+https://gitlab.cee.redhat.com/sputhenp/lab/-/blob/master/templates/osp-16-2/hci-edge-1/overcloud-deploy-tls-everywhere-ansible.sh<br>

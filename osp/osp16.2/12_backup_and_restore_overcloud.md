@@ -1,7 +1,7 @@
 ```
 # 备份及恢复控制节点
-# OSP 16.1 文档参见
-# https://access.redhat.com/documentation/en-us/red_hat_openstack_platform/16.1/html/undercloud_and_control_plane_back_up_and_restore/creating-a-backup-of-the-undercloud-and-control-plane-nodes_osp-ctlplane-br
+# OSP 16.2 文档参见
+# https://access.redhat.com/documentation/en-us/red_hat_openstack_platform/16.2/html/undercloud_and_control_plane_back_up_and_restore/creating-a-backup-of-the-undercloud-and-control-plane-nodes_osp-ctlplane-br
 
 # 生成 playbook, playbook 可在 overcloud controller 节点上安装 ReaR
 (undercloud) [stack@undercloud ~]$ cat <<'EOF' > ~/overcloud_bar_rear_setup.yaml
@@ -25,17 +25,37 @@
   - role: backup-and-restore
 EOF
 
+# 添加 /etc/httpd/conf.d/repos.conf 
+(undercloud) [stack@undercloud ~]$ sudo -i
+(undercloud) [stack@undercloud ~]# cat > /etc/httpd/conf.d/repos.conf <<EOF
+IndexOptions FancyIndexing HTMLTable VersionSort
+Alias /repos/ "/var/www/html/repos/"
+<Directory "/var/www/html/repos">
+    Options Indexes MultiViews FollowSymlinks
+    AllowOverride None
+    Require all granted
+</Directory>
+EOF
+(undercloud) [stack@undercloud ~]# systemctl restart httpd
+
+# 检查 undercloud yum repo，确认 undercloud yum repo 采用 http 方式
+(undercloud) [stack@undercloud ~]$ sudo sed -i 's|file:///var/www/html|http://192.0.2.1:8787|g' /etc/yum.repos.d/osp.repo
+
 # 为 overcloud controller 配置 yum repo
 (undercloud) [stack@undercloud ~]$ ansible -i ~/tripleo-inventory.yaml --become --become-user root -m copy -a "src=/etc/yum.repos.d/osp.repo dest=/etc/yum.repos.d/osp.repo" Controller
 
+# 测试 overcloud controller 安装 tmux 软件包
+(undercloud) [stack@undercloud ~]$ ansible -i ~/tripleo-inventory.yaml --become --become-user root -m yum -a "name=tmux state=present" Controller
+
 # 为 overcloud controller 安装 ReaR，并且设置备份目标
+# 备注：注意 nfs server 的防火墙设置，确认可以 nfs mount ripleo_backup_and_restore_nfs_server 
 (undercloud) [stack@undercloud ~]$ ansible-playbook \
 	-v -i ~/tripleo-inventory.yaml \
 	--extra="ansible_ssh_common_args='-o StrictHostKeyChecking=no'" \
 	--become \
 	--become-user root \
 	--tags bar_setup_rear \
-	--extra="tripleo_backup_and_restore_nfs_server=192.0.2.254" \
+	--extra="tripleo_backup_and_restore_nfs_server=192.168.122.1" \
 	~/overcloud_bar_rear_setup.yaml
 ...
 PLAY RECAP ************************************************************************************************************************************************

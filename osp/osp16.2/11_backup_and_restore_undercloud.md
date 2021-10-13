@@ -47,21 +47,19 @@ EOF
 	~/undercloud_bar_rear_setup.yaml
 
 # 使用备份恢复 undercloud 
-[root@base-pvg ~]# virsh destroy jwang-rhel82-undercloud
-[root@base-pvg ~]# mv /data/kvm/jwang-rhel82-undercloud.qcow2 /data/kvm/jwang-rhel82-undercloud.qcow2.original
-[root@base-pvg ~]# mv /data/kvm/jwang-rhel82-undercloud-2.qcow2 /data/kvm/jwang-rhel82-undercloud-2.qcow2.original 
+[root@base-pvg ~]# virsh destroy jwang-rhel84-undercloud
+[root@base-pvg ~]# mv /data/kvm/jwang-rhel84-undercloud.qcow2 /data/kvm/jwang-rhel84-undercloud.qcow2.original
 
 # 创建空白硬盘
-[root@base-pvg ~]# qemu-img create -f qcow2 /data/kvm/jwang-rhel82-undercloud.qcow2 120G
-[root@base-pvg ~]# qemu-img create -f qcow2 /data/kvm/jwang-rhel82-undercloud-2.qcow2 50G
+[root@base-pvg ~]# qemu-img create -f qcow2 /data/kvm/jwang-rhel84-undercloud.qcow2 120G
 
 # 设置文件权限
 [root@base-pvg ~]# chmod 775 /ctl_plane_backups/undercloud/
 [root@base-pvg ~]# chmod 664 /ctl_plane_backups/undercloud/undercloud.example.com.iso
 
 # detach-disk 然后 attach-disk
-[root@base-pvg ~]# virsh detach-disk jwang-rhel82-undercloud /root/jwang/isos/rhel-8.2-x86_64-dvd.iso --persistent --config
-[root@base-pvg ~]# virsh attach-disk jwang-rhel82-undercloud /ctl_plane_backups/undercloud/undercloud.example.com.iso hda --type cdrom --mode readonly --config
+[root@base-pvg ~]# virsh detach-disk jwang-rhel84-undercloud /root/jwang/isos/rhel-8.4-x86_64-dvd.iso --persistent --config
+[root@base-pvg ~]# virsh attach-disk jwang-rhel84-undercloud /ctl_plane_backups/undercloud/undercloud.example.com.iso hda --type cdrom --mode readonly --config
 
 # 启动 undercloud 虚拟机，选择通过 DVD 启动，使用 ReaR 恢复虚拟机
 ```

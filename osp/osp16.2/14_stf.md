@@ -586,7 +586,86 @@ https://github.com/infrawatch/dashboards/blob/master/deploy/stf-1.3/sg-tracker-d
 https://access.redhat.com/articles/4907241
 
 ### STF PrometheusRules example
-https://github.com/infrawatch/service-telemetry-operator/pull/189/commits/582c07c9b520275af8133fb460c5d89d16822b42
+https://github.com/infrawatch/service-telemetry-operator/pull/189/commits/582c07c9b520275af8133fb460c5d89d16822b42<br>
+https://github.com/redhat-service-assurance/telemetry-framework/blob/saf-ocp3/deploy/service-assurance/prometheusrules/prometheusrules.yaml<br> 
+
+### STF Grafana Dashboard
+Cloud View Dashboard 1.1.0
+https://raw.githubusercontent.com/infrawatch/dashboards/v1.1.0/deploy/rhos-cloud-dashboard.yaml<br>
+```
+oc apply -f https://raw.githubusercontent.com/infrawatch/dashboards/v1.1.0/deploy/rhos-cloud-dashboard.yaml
+```
+
+### 设置 STF 的 events 和 metrics backends 的例子
+```
+apiVersion: infra.watch/v1beta1
+kind: ServiceTelemetry
+metadata:
+  name: default
+spec:
+...
+  backends:
+    events:
+      elasticsearch:
+        enabled: true
+        storage:
+          persistent:
+            pvcStorageRequest: 20Gi
+            storageSelector: {}
+          strategy: persistent
+      metrics:
+        prometheus:
+          enabled: true
+          scrapeInterval: 10s
+          storage:
+            persistent:
+              pvcStorageRequest: 20G
+              storageSelector: {}
+            retention: 24h
+            strategy: persistent
+...
+
+设置 ServiceTelemetry 对 multi cloud 的支持
+apiVersion: infra.watch/v1beta1
+kind: ServiceTelemetry
+metadata:
+  name: default
+spec:
+...
+  clouds:
+    - name: cloud1
+      metrics:
+        collectors:
+          - collectorType: collectd
+            subscriptionAddress: collectd/telemetry
+            debugEnabled: false
+          - collectorType: ceilometer
+            subscriptionAddress: anycast/ceilometer/metering.sample
+            debugEnabled: false
+          - collectorType: sensubility
+            subscriptionAddress: sensubility/telemetry
+            debugEnabled: false
+      events:
+        collectors:
+          - collectorType: collectd
+            subscriptionAddress: collectd/notify
+            debugEnabled: false
+          - collectorType: ceilometer
+            subscriptionAddress: anycast/ceilometer/event.sample
+            debugEnabled: false
+
+oc get po -l app=smart-gateway
+
+oc run curl --image=radial/busyboxplus:curl -i --tty
+curl -k --user elastic:n11LaTK7223WjPH589efFYv4 -H 'Content-Type: application/json' -XPOST "https://elasticsearch-es-http:9200/_search" -d'
+  {
+     "query": {
+       "match_all": {}
+     }
+  }'
+curl -k --user elastic:n11LaTK7223WjPH589efFYv4 -H 'Content-Type: application/json'  'https://elasticsearch-es-http:9200/_cat/indices?v&pretty=true'
+oc delete pod curl
+```
 
 ### WIP
 WIP: 

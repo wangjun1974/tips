@@ -125,3 +125,40 @@ https://gitlab.cee.redhat.com/sputhenp/lab/-/blob/master/templates/osp-16-1/over
 edge stack<br>
 https://gitlab.cee.redhat.com/sputhenp/lab/-/blob/master/templates/osp-16-1/edge-1/overcloud-deploy-tls-everywhere-ansible.sh<br>
 https://gitlab.cee.redhat.com/sputhenp/lab/-/blob/master/templates/osp-16-1/edge-2/overcloud-deploy-tls-everywhere-ansible.sh<br>
+
+### stf 清空告警 
+```
+清空 STF 告警规则
+oc apply -f - <<EOF
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  creationTimestamp: null
+  labels:
+    prometheus: default
+    role: alert-rules
+  name: prometheus-alarm-rules
+  namespace: service-telemetry
+spec: {}
+EOF
+
+重新设置 STF 告警规则
+oc apply -f - <<EOF
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  creationTimestamp: null
+  labels:
+    prometheus: default
+    role: alert-rules
+  name: prometheus-alarm-rules
+  namespace: service-telemetry
+spec: {}
+  groups:
+    - name: ./openstack.rules
+      rules:
+        - alert: Collectd Instance down
+          expr: absent(collectd_cpu_percent{plugin_instance="0",type_instance="idle"}) == 1
+          for: 1m
+EOF
+```

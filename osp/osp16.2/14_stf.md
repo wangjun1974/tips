@@ -585,6 +585,10 @@ https://github.com/infrawatch/dashboards/blob/master/deploy/stf-1.3/sg-tracker-d
 ### Service Telemetry Framework Performance and Scaling
 https://access.redhat.com/articles/4907241
 
+### STF PrometheusRules example
+https://github.com/infrawatch/service-telemetry-operator/pull/189/commits/582c07c9b520275af8133fb460c5d89d16822b42
+
+### WIP
 WIP: 
 1. 根据 GChat 里的信息，STF 的 ceilometer notification agent 会监听其他组件发送的 metrics 和 events，然后发送给 ceilometer central，ceilometer central 再把信息通过 QDR 发送给 Smart Gateway
 

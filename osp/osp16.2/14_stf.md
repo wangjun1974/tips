@@ -667,6 +667,40 @@ curl -k --user elastic:n11LaTK7223WjPH589efFYv4 -H 'Content-Type: application/js
 oc delete pod curl
 ```
 
+### ocp 4.8 上安装 STF 1.3
+```
+oc apply -f - <<EOF
+apiVersion: operators.coreos.com/v1alpha1
+kind: CatalogSource
+metadata:
+  name: my-infrawatch-operators
+  namespace: openshift-marketplace
+spec:
+  displayName: InfraWatch Operators for STF 1.3
+  image: quay.io/jwang1/redhat-operator-stf-index:v4.6
+  publisher: MyInfraWatch
+  sourceType: grpc
+EOF
+
+oc get -nopenshift-marketplace catalogsource my-infrawatch-operators
+
+oc get packagemanifests | grep InfraWatch
+
+oc create -f - <<EOF
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: service-telemetry-operator
+  namespace: service-telemetry
+spec:
+  channel: stable-1.3
+  installPlanApproval: Automatic
+  name: service-telemetry-operator
+  source: my-infrawatch-operators
+  sourceNamespace: openshift-marketplace
+EOF
+```
+
 ### WIP
 WIP: 
 1. 根据 GChat 里的信息，STF 的 ceilometer notification agent 会监听其他组件发送的 metrics 和 events，然后发送给 ceilometer central，ceilometer central 再把信息通过 QDR 发送给 Smart Gateway

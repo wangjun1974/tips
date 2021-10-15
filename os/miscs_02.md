@@ -320,4 +320,21 @@ api_requirer       dependencies       package            schema_migrations
 
 # 查询 index.db 的 table channel 的内容
 echo "select * from channel;" | sqlite3 -line ./database/index.db
+
+# 使用 quay.io 的个人用户加密口令，登录 quay.io
+podman login -u="jwang1" -p="xxxxxx" quay.io
+
+oc apply -f - <<EOF
+apiVersion: operators.coreos.com/v1alpha1
+kind: CatalogSource
+metadata:
+  name: my-infrawatch-operators
+  namespace: openshift-marketplace
+spec:
+  displayName: InfraWatch Operators for STF 1.3
+  image: quay.io/jwang1/redhat-operator-stf-index:v4.6
+  publisher: MyInfraWatch
+  sourceType: grpc
+EOF
+
 ```

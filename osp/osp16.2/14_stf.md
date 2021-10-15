@@ -699,7 +699,7 @@ spec:
   source: my-infrawatch-operators
   sourceNamespace: openshift-marketplace
 EOF
-```
+``` 
 
 ### WIP
 WIP: 

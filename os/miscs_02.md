@@ -390,6 +390,15 @@ spec:
   publisher: MyInfraWatch
   sourceType: grpc
 EOF
+```
 
+### STF Grafana Dashboard 报错 Panel plugin not found: grafana-polystat-panel 的处理
+```
+比较奇怪的地方是，登陆进 grafana pods，查看确实有这个 plugins
+oc rsh $(oc get pods -l app=grafana -o name)  
+/usr/share/grafana $ ls /var/lib/grafana/plugins/
+grafana-polystat-panel
+
+在查看完并且退出后，这个报错就自然消失了
 
 ```

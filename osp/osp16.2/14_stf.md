@@ -701,6 +701,13 @@ spec:
 EOF
 ```
 
+### 如何为 OCP 4.8 准备 STF 1.3 CatalogSource
+```
+# STF 1.3 支持 OCP 4.6，因此所需的 catalogsource 包含在 OCP 4.6 的 redhat-operator 里
+
+
+```
+
 ### WIP
 WIP: 
 1. 根据 GChat 里的信息，STF 的 ceilometer notification agent 会监听其他组件发送的 metrics 和 events，然后发送给 ceilometer central，ceilometer central 再把信息通过 QDR 发送给 Smart Gateway

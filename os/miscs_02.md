@@ -336,5 +336,60 @@ spec:
   publisher: MyInfraWatch
   sourceType: grpc
 EOF
+```
+
+
+### 如何为 OCP 4.8 准备 STF 1.3 CatalogSource
+```
+# STF 1.3 支持 OCP 4.6，因此所需的 catalogsource 包含在 OCP 4.6 的 redhat-operator 里
+# 如果使用 OCP 4.7/4.8 等版本，需要自己准备 STF 1.3 的 catalogsource
+# catalog 修剪及准备所使用的工具是 opm
+# 以下是 STF 1.3 catalogsource 在 RHEL 8.4 上准备的过程
+# 准备过程参考
+# https://docs.openshift.com/container-platform/4.6/operators/admin/olm-restricted-networks.html#olm-pruning-index-image_olm-restricted-networks
+
+# 安装下载 openshift-client
+wget https://mirror.openshift.com/pub/openshift-v4/clients/ocp/4.6.4/openshift-client-linux.tar.gz
+tar zxf openshift-client-linux.tar.gz -C /usr/local/bin
+
+# 安装下载 opm
+wget https://mirror.openshift.com/pub/openshift-v4/clients/opm/4.6.1/opm-linux-4.6.1.tar.gz
+tar zxf opm-linux-4.6.1.tar.gz -C /usr/local/bin
+
+# 登陆 registry.redhat.io 和 目标 registry
+podman login registry.redhat.io
+podman login -u="jwang1" -p="xxxxxx" quay.io
+
+# 修剪 redhat-operator-index:v4.6 image，只保留 service-telemetry-operator 和 smart-gateway-operator
+# 把结果保存为 tag quay.io/jwang1/redhat-operator-stf-index:v4.6
+opm index prune \
+    -f registry.redhat.io/redhat/redhat-operator-index:v4.6 \
+    -p service-telemetry-operator,smart-gateway-operator \
+    -t quay.io/jwang1/redhat-operator-stf-index:v4.6
+
+# 检查本地 images
+podman images
+REPOSITORY                                       TAG         IMAGE ID      CREATED        SIZE
+quay.io/jwang1/redhat-operator-stf-index         v4.6        77fbb80f1d16  3 minutes ago  129 MB
+registry.redhat.io/redhat/redhat-operator-index  v4.6        90817f50b29b  9 hours ago    685 MB
+quay.io/operator-framework/upstream-opm-builder  latest      9b70e0f2b505  3 days ago     71.4 MB
+
+# 推送 images 到目标 registry server
+podman push quay.io/jwang1/redhat-operator-stf-index:v4.6
+
+# 在 ocp 4.8 下定义 catalogsource
+oc apply -f - <<EOF
+apiVersion: operators.coreos.com/v1alpha1
+kind: CatalogSource
+metadata:
+  name: my-infrawatch-operators
+  namespace: openshift-marketplace
+spec:
+  displayName: InfraWatch Operators for STF 1.3
+  image: quay.io/jwang1/redhat-operator-stf-index:v4.6
+  publisher: MyInfraWatch
+  sourceType: grpc
+EOF
+
 
 ```

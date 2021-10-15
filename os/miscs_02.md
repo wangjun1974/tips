@@ -162,3 +162,83 @@ spec: {}
           for: 1m
 EOF
 ```
+
+### STF 实例例子
+```
+apiVersion: infra.watch/v1beta1
+kind: ServiceTelemetry
+metadata:
+  name: default
+  namespace: service-telemetry
+spec:
+  alertmanagerConfigManifest: |
+    apiVersion: v1
+    kind: Secret
+    metadata:
+      name: 'alertmanager-default'
+      namespace: 'service-telemetry'
+    type: Opaque
+    stringData:
+      alertmanager.yaml: |-
+        global:
+          resolve_timeout: 10m
+        route:
+          group_by: ['job']
+          group_wait: 30s
+          group_interval: 5m
+          repeat_interval: 12h
+          receiver: 'email-me'
+        receivers:
+        - name: 'email-me'
+          email_configs:
+          - to: wjqhd@hotmail.com
+            from: wjqhd@hotmail.com
+            smarthost: smtp-mail.outlook.com:587
+            auth_username: "wjqhd@hotmail.com"
+            auth_identity: "wjqhd@hotmail.com"
+            auth_password: "xxxxxxxxx"
+  backends:
+    events:
+      elasticsearch:
+        enabled: true
+        storage:
+          persistent:
+            pvcStorageRequest: 20Gi
+            storageSelector: {}
+          strategy: persistent
+      metrics:
+        prometheus:
+          enabled: true
+          scrapeInterval: 10s
+          storage:
+            persistent:
+              pvcStorageRequest: 20G
+              storageSelector: {}
+            retention: 24h
+            strategy: persistent
+  clouds:
+    - events:
+        collectors:
+          - collectorType: collectd
+            debugEnabled: false
+            subscriptionAddress: collectd/notify
+          - collectorType: ceilometer
+            debugEnabled: false
+            subscriptionAddress: anycast/ceilometer/event.sample
+      metrics:
+        collectors:
+          - collectorType: collectd
+            debugEnabled: false
+            subscriptionAddress: collectd/telemetry
+          - collectorType: ceilometer
+            debugEnabled: false
+            subscriptionAddress: anycast/ceilometer/metering.sample
+          - collectorType: sensubility
+            debugEnabled: false
+            subscriptionAddress: sensubility/telemetry
+      name: cloud1
+  graphing:
+    enabled: true
+    grafana:
+      ingressEnabled: true
+```

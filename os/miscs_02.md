@@ -241,4 +241,83 @@ spec:
     enabled: true
     grafana:
       ingressEnabled: true
+
+
+# 安装 Service Telemetry Operator 时 csv smart-gateway-operator.v4.0.1634178588 处于 Pending 状态
+# smart-gateway-operator ServiceAccount does not exist
+oc get csv smart-gateway-operator.v4.0.1634178588 -o yaml
+...
+  phase: Pending
+  reason: RequirementsNotMet
+  requirementStatus:
+  - group: operators.coreos.com
+    kind: ClusterServiceVersion
+    message: CSV minKubeVersion (1.20.0) less than server version (v1.21.1+d8043e1)
+    name: smart-gateway-operator.v4.0.1634178588
+    status: Present
+    version: v1alpha1
+  - group: apiextensions.k8s.io
+    kind: CustomResourceDefinition
+    message: CRD version not served
+    name: smartgateways.smartgateway.infra.watch
+    status: NotPresent
+    version: v1
+  - group: ""
+    kind: ServiceAccount
+    message: Service account does not exist
+    name: smart-gateway-operator
+    status: NotPresent
+    version: v1
+
+
+# 选择手工安装 Subscription service-telemetry-operator 
+# 从 v1.3.2 开始装起
+#   installPlanApproval: Manual
+#   startingCSV: service-telemetry-operator.v1.3.2
+# oc -n service-telemetry get installplan
+# oc -n service-telemetry patch $(oc -n service-telemetry get installplan -o name) --type json -p='[{"op": "replace", "path": "/spec/approved", "value":true}]'
+
+oc create -f - <<EOF
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: service-telemetry-operator
+  namespace: service-telemetry
+spec:
+  channel: unstable
+  installPlanApproval: Automatic
+  name: service-telemetry-operator
+  source: infrawatch-operators
+  sourceNamespace: openshift-marketplace
+EOF
+
+
+
+$ oc -n openshift-marketplace logs $(oc -n openshift-marketplace get pods -l olm.catalogSource=infrawatch-operators -o name) 
+time="2021-10-15T02:50:21Z" level=warning msg="\x1b[1;33mDEPRECATION NOTICE:\nSqlite-based catalogs and their related subcommands are deprecated. Support for\nthem will be removed in a future release. Please migrate your catalog workflows\nto the new file-based catalog format.\x1b[0m"
+time="2021-10-15T02:50:21Z" level=info msg="Keeping server open for infinite seconds" database=/database/index.db port=50051
+time="2021-10-15T02:50:21Z" level=info msg="serving registry" database=/database/index.db port=50051
+
+# rsh 到 catalog registry server 容器里查看一下里面运行的程序
+# /bin/opm registry server 使用的数据库是 /database/index.db
+oc -n openshift-marketplace rsh $(oc -n openshift-marketplace get pods -l olm.catalogSource=infrawatch-operators -o name) 
+/ # ps ax 
+PID   USER     TIME  COMMAND
+    1 root      0:00 /bin/opm registry serve --database /database/index.db
+ 2252 root      0:00 /bin/sh
+ 2376 root      0:00 ps ax
+
+
+# 从 catalog registry server 拷贝 /database/index.db 到本地
+mkdir database
+oc -n openshift-marketplace rsync $(oc -n openshift-marketplace get pods -l olm.catalogSource=infrawatch-operators -o name):/database/index.db database
+
+# 查询 index.db 有哪些 tables 
+echo ".tables" | sqlite3 -line ./database/index.db 
+api                channel            deprecated         properties       
+api_provider       channel_entry      operatorbundle     related_image    
+api_requirer       dependencies       package            schema_migrations
+
+# 查询 index.db 的 table channel 的内容
+echo "select * from channel;" | sqlite3 -line ./database/index.db
 ```

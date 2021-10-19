@@ -526,4 +526,19 @@ EOF
     ipv4.address '10.25.149.21/24' \
     ipv4.gateway '10.25.149.1' 
 
+
+cat << EOF > /root/host-bridge.xml
+<network>
+  <name>br0</name>
+  <forward mode="bridge"/>
+  <bridge name="br0"/>
+</network>
+EOF
+
+virsh net-define /root/host-bridge.xml
+virsh net-start br0
+virsh net-autostart --network br0
+virsh net-autostart --network default --disable
+virsh net-destroy default
+
 ```

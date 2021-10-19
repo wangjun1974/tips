@@ -764,4 +764,48 @@ cat > instackenv-ctrl.json <<EOF
   ]
 }
 EOF
+
+(undercloud) [stack@undercloud ~]$ mkdir -p introspection
+(undercloud) [stack@undercloud ~]$ pushd introspection
+(undercloud) [stack@undercloud ~]$ for i in $(openstack baremetal node list -f value -c Name); do openstack baremetal introspection data save $i > $i.json ; done
+
+openstack baremetal introspection data save overcloud-ctrl01 > overcloud-ctrl01.json
+(undercloud) [stack@undercloud ~]$ pushd
+
+cat > instackenv-ceph.json << EOF
+{
+  "nodes": [
+    {
+      "mac": [
+        "52:54:00:78:2f:e3"
+      ],
+      "name": "overcloud-ceph01",
+      "pm_addr": "192.0.2.15",
+      "pm_password": "rehat#poc#6xtp",
+      "pm_type": "pxe_ipmitool",
+      "pm_user": "root"
+    },
+    {
+      "mac": [
+        "52:54:00:e9:9f:4b"
+      ],
+      "name": "overcloud-ceph02",
+      "pm_addr": "192.0.2.16",
+      "pm_password": "rehat#poc#6xtp",
+      "pm_type": "pxe_ipmitool",
+      "pm_user": "root"
+    },
+        {
+      "mac": [
+        "52:54:00:29:18:c9"
+      ],
+      "name": "overcloud-ceph03",
+      "pm_addr": "192.0.2.17",
+      "pm_password": "rehat#poc#6xtp",
+      "pm_type": "pxe_ipmitool",
+      "pm_user": "root"
+    }
+  ]
+}
+EOF
 ```

@@ -541,4 +541,34 @@ virsh net-autostart --network br0
 virsh net-autostart --network default --disable
 virsh net-destroy default
 
+
+virt-install --name=helper-undercloud --vcpus=2 --ram=4096 --disk path=/var/lib/libvirt/images/helper-undercloud.qcow2,bus=virtio,size=100 --os-variant rhel8.0 --network network=br0,model=virtio --boot menu=on --graphics none --location  /osp16.1/redhat/isos/rhel-8.2-x86_64-dvd.iso --initrd-inject /tmp/ks.cfg --extra-args='ks=file:/ks.cfg console=ttyS0 ip=10.25.149.22::10.25.149.1:255.255.255.0:helper.example.com:enp1s0:none'
+
+cat > /tmp/ks.cfg <<'EOF'
+lang en_US
+keyboard us
+timezone Asia/Shanghai --isUtc
+rootpw $1$PTAR1+6M$DIYrE6zTEo5dWWzAp9as61 --iscrypted
+#platform x86, AMD64, or Intel EM64T
+reboot
+text
+cdrom
+bootloader --location=mbr --append="rhgb quiet crashkernel=auto"
+zerombr
+clearpart --all --initlabel
+autopart
+network --device=enp1s0 --hostname=helper.example.com --bootproto=static --ip=10.25.149.22 --netmask=255.255.255.0 --gateway=10.25.149.1
+auth --passalgo=sha512 --useshadow
+selinux --enforcing
+firewall --enabled --ssh
+skipx
+firstboot --disable
+%packages
+@^minimal-environment
+tar
+kexec-tools
+%end
+EOF
+
+
 ```

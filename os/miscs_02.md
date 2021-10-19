@@ -595,4 +595,22 @@ EOF
 
 chmod +x /usr/local/bin/localregistry.sh
 /usr/local/bin/localregistry.sh
+
+helper
+cat >> /etc/hosts << EOF
+10.25.149.21 undercloud.example.com
+EOF
+
+scp /opt/registry/certs/domain.crt stack@undercloud.example.com:~
+ssh stack@undercloud.example.com sudo cp /home/stack/domain.crt /etc/pki/ca-trust/source/anchors/
+ssh stack@undercloud.example.com sudo update-ca-trust extract
+
+undercloud
+cat >> /etc/hosts << EOF
+10.25.149.22 helper.example.com
+EOF
+
+curl https://helper.example.com:5000/v2/_catalog
+
+
 ```

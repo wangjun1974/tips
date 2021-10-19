@@ -714,4 +714,54 @@ iptables -I INPUT 1 -m state --state NEW -m tcp -p tcp --dport 5901 -j ACCEPT
 iptables -I INPUT 1 -m state --state NEW -m tcp -p tcp --dport 5902 -j ACCEPT
 iptables -I INPUT 1 -m state --state NEW -m tcp -p tcp --dport 5903 -j ACCEPT
 
+mkdir ~/images
+mkdir -p ~/templates/environments
+sudo yum -y install rhosp-director-images
+
+
+tar -C ~/images -xvf /usr/share/rhosp-director-images/overcloud-full-latest.tar
+tar -C ~/images -xvf /usr/share/rhosp-director-images/ironic-python-agent-latest.tar
+
+openstack overcloud image upload --image-path ~/images
+openstack image list
+ls -al /var/lib/ironic/httpboot/
+
+curl -s -H "Accept: application/json" http://192.0.2.1:8787/v2/_catalog | jq .
+
+cat > instackenv-ctrl.json <<EOF
+{
+  "nodes": [
+    {
+      "mac": [
+        "e4:3d:1a:52:d3:12"
+      ],
+      "name": "overcloud-ctrl01",
+      "pm_addr": "192.0.2.12",
+      "pm_password": "rehat#poc#6xtp",
+      "pm_type": "pxe_ipmitool",
+      "pm_user": "root"
+    },
+    {
+      "mac": [
+        "e4:3d:1a:52:14:76"
+      ],
+      "name": "overcloud-ctrl02",
+      "pm_addr": "192.0.2.13",
+      "pm_password": "rehat#poc#6xtp",
+      "pm_type": "pxe_ipmitool",
+      "pm_user": "root"
+    },    
+    {
+      "mac": [
+        "e4:3d:1a:52:14:0a"
+      ],
+      "name": "overcloud-ctrl03",
+      "pm_addr": "192.0.2.14",
+      "pm_password": "rehat#poc#6xtp",
+      "pm_type": "pxe_ipmitool",
+      "pm_user": "root"
+    }
+  ]
+}
+EOF
 ```

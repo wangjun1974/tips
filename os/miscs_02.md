@@ -628,4 +628,13 @@ gpgcheck=0
 EOF
 done
 
+sudo dnf module disable -y container-tools:rhel8
+sudo dnf module enable -y container-tools:2.0
+
+sudo dnf module disable -y virt:rhel
+sudo dnf module enable -y virt:8.2
+
+sudo dnf update -y
+sudo reboot
+
 ```

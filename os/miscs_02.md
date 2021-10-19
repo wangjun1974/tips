@@ -705,4 +705,13 @@ allow all
 local stratum 4
 EOF
 
+vncserver :1
+firewall-cmd --permanent --add-port=5901/tcp
+firewall-cmd --permanent --add-port=5902/tcp
+firewall-cmd --permanent --add-port=5903/tcp
+
+iptables -I INPUT 1 -m state --state NEW -m tcp -p tcp --dport 5901 -j ACCEPT
+iptables -I INPUT 1 -m state --state NEW -m tcp -p tcp --dport 5902 -j ACCEPT
+iptables -I INPUT 1 -m state --state NEW -m tcp -p tcp --dport 5903 -j ACCEPT
+
 ```

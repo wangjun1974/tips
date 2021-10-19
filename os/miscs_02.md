@@ -695,7 +695,7 @@ parameter_defaults:
       neutron_driver: ovn
       rhel_containers: false
       tag: '16.1'
-tag_from_label: '{version}-{release}'
+    tag_from_label: '{version}-{release}'
 EOF
 
 ```

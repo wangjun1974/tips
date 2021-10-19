@@ -698,4 +698,11 @@ parameter_defaults:
     tag_from_label: '{version}-{release}'
 EOF
 
+cat > /etc/chrony.conf << EOF
+server 192.0.2.1 iburst
+bindaddress 192.0.2.1
+allow all
+local stratum 4
+EOF
+
 ```

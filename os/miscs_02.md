@@ -612,5 +612,20 @@ EOF
 
 curl https://helper.example.com:5000/v2/_catalog
 
+tar zxvf /osp16.1/redhat/repos/osp16.1-yum-repos-2021-01-15.tar.gz -C /
+mkdir -p /etc/yum.repos.d/backup
+mv /etc/yum.repos.d/*.repo /etc/yum.repos.d/backup
+
+> /etc/yum.repos.d/osp.repo
+for i in rhel-8-for-x86_64-baseos-eus-rpms rhel-8-for-x86_64-appstream-eus-rpms rhel-8-for-x86_64-highavailability-eus-rpms ansible-2.9-for-rhel-8-x86_64-rpms openstack-16.1-for-rhel-8-x86_64-rpms fast-datapath-for-rhel-8-x86_64-rpms rhceph-4-tools-for-rhel-8-x86_64-rpms advanced-virt-for-rhel-8-x86_64-rpms
+do
+cat >> /etc/yum.repos.d/osp.repo << EOF
+[$i]
+name=$i
+baseurl=file:///var/www/html/repos/osp16.1/$i/
+enabled=1
+gpgcheck=0
+EOF
+done
 
 ```

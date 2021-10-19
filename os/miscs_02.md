@@ -808,4 +808,6 @@ cat > instackenv-ceph.json << EOF
   ]
 }
 EOF
+
+for i in $(openstack baremetal node list -f value -c Name); do openstack baremetal introspection data save $i > $i.json ; done
 ```

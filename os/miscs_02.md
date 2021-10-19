@@ -668,4 +668,34 @@ inspection_iprange = 192.0.2.100,192.0.2.120
 gateway = 192.0.2.1
 masquerade = true
 EOF
+
+cat > containers-prepare-parameter.yaml  <<EOF
+parameter_defaults:
+  ContainerImagePrepare:
+  - push_destination: true
+    set:
+      ceph_alertmanager_image: ose-prometheus-alertmanager
+      ceph_alertmanager_namespace: helper.example.com:5000/openshift4
+      ceph_alertmanager_tag: 4.1
+      ceph_grafana_image: rhceph-4-dashboard-rhel8
+      ceph_grafana_namespace: helper.example.com:5000/rhceph
+      ceph_grafana_tag: 4
+      ceph_image: rhceph-4-rhel8
+      ceph_namespace: helper.example.com:5000/rhceph
+      ceph_node_exporter_image: ose-prometheus-node-exporter
+      ceph_node_exporter_namespace: helper.example.com:5000/openshift4
+      ceph_node_exporter_tag: v4.1
+      ceph_prometheus_image: ose-prometheus
+      ceph_prometheus_namespace: helper.example.com:5000/openshift4
+      ceph_prometheus_tag: 4.1
+      ceph_tag: latest
+      name_prefix: openstack-
+      name_suffix: ''
+      namespace: helper.example.com:5000/rhosp-rhel8
+      neutron_driver: ovn
+      rhel_containers: false
+      tag: '16.1'
+tag_from_label: '{version}-{release}'
+EOF
+
 ```

@@ -777,7 +777,7 @@ cat > instackenv-ceph.json << EOF
   "nodes": [
     {
       "mac": [
-        "52:54:00:78:2f:e3"
+        "34:73:5a:9f:f1:be"
       ],
       "name": "overcloud-ceph01",
       "pm_addr": "192.0.2.15",
@@ -787,7 +787,7 @@ cat > instackenv-ceph.json << EOF
     },
     {
       "mac": [
-        "52:54:00:e9:9f:4b"
+        "34:73:5a:9f:ea:62"
       ],
       "name": "overcloud-ceph02",
       "pm_addr": "192.0.2.16",
@@ -797,7 +797,7 @@ cat > instackenv-ceph.json << EOF
     },
         {
       "mac": [
-        "52:54:00:29:18:c9"
+        "34:73:5a:a0:0a:02"
       ],
       "name": "overcloud-ceph03",
       "pm_addr": "192.0.2.17",

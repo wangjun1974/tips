@@ -571,4 +571,28 @@ kexec-tools
 EOF
 
 
+yum -y install podman httpd httpd-tools wget jq
+mkdir -p /opt/registry/{auth,certs,data}
+tar zxvf osp16.1-poc-registry-2021-01-15.tar.gz -C /
+cp /opt/registry/certs/domain.crt /etc/pki/ca-trust/source/anchors/
+update-ca-trust extract
+firewall-cmd --add-port=5000/tcp --zone=internal --permanent
+firewall-cmd --add-port=5000/tcp --zone=public   --permanent
+firewall-cmd --reload
+
+tar zxvf podman-docker-registry-v2.image.tgz 
+podman load -i docker-registry
+
+cat > /usr/local/bin/localregistry.sh << 'EOF'
+#!/bin/bash
+podman run --name poc-registry -d -p 5000:5000 \
+-v /opt/registry/data:/var/lib/registry:z \
+-v /opt/registry/certs:/certs:z \
+-e REGISTRY_HTTP_TLS_CERTIFICATE=/certs/domain.crt \
+-e REGISTRY_HTTP_TLS_KEY=/certs/domain.key \
+localhost/docker-registry:latest 
+EOF
+
+chmod +x /usr/local/bin/localregistry.sh
+/usr/local/bin/localregistry.sh
 ```

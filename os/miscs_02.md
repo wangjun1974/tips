@@ -906,4 +906,9 @@ openstack overcloud deploy --templates $THT \
 -e ~/containers-prepare-parameter.yaml \
 --ntp-server 192.0.2.1
 EOF
+
+ipxe_enabled = True
+inspection_enable_uefi = True
+
+
 ```

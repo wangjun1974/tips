@@ -910,5 +910,13 @@ EOF
 ipxe_enabled = True
 inspection_enable_uefi = True
 
+openstack flavor set --property capabilities:boot_mode='uefi' control
 
+openstack baremetal node set --property capabilities='node:controller-0,boot_option:uefi' overcloud-ctrl01
+openstack baremetal node set --property capabilities='node:controller-1,boot_option:uefi' overcloud-ctrl02
+openstack baremetal node set --property capabilities='node:controller-2,boot_option:uefi' overcloud-ctrl03
+
+openstack baremetal node set --property capabilities='node:computehci-0,boot_option:uefi' overcloud-ceph01
+openstack baremetal node set --property capabilities='node:computehci-1,boot_option:uefi' overcloud-ceph02
+openstack baremetal node set --property capabilities='node:computehci-2,boot_option:uefi' overcloud-ceph03
 ```

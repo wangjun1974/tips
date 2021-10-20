@@ -874,5 +874,16 @@ cp -rp network ~/templates
 
 cp environments/net-bond-with-vlans.yaml ~/templates/environments/
 
-
+cat > ~/templates/cephstorage.yaml << EOF
+parameter_defaults:
+  CephConfigOverrides:
+    mon_max_pg_per_osd: 600
+  CephAnsibleDisksConfig:
+    devices:
+      - /dev/disk/by-path/pci-0000:00:09.0
+      - /dev/disk/by-path/pci-0000:00:0a.0
+      - /dev/disk/by-path/pci-0000:00:0b.0
+    osd_scenario: lvm
+    osd_objectstore: bluestore
+EOF
 ```

@@ -921,4 +921,28 @@ openstack baremetal node set --property capabilities='node:controller-2,boot_opt
 openstack baremetal node set --property capabilities='node:computehci-0,boot_option:uefi' overcloud-ceph01
 openstack baremetal node set --property capabilities='node:computehci-1,boot_option:uefi' overcloud-ceph02
 openstack baremetal node set --property capabilities='node:computehci-2,boot_option:uefi' overcloud-ceph03
+
+cd introspection
+for i in $(openstack baremetal node list -f value -c Name); do openstack baremetal introspection data save $i > $i.json ; done
+
+cd ~
+
+
+二、今天主要完成了如下技术事项：
+1. 收集硬件信息
+2. 为节点设定root_device
+3. 生成 overcloud 包含 ceph 在内的部署模版
+4. 配置 overcloud 不同角色网卡与部署网络和数据网络的映射关系
+5. 执行 overcloud 部署
+6. 排错
+
+目前所遇到的问题:
+1. overcloud 在部署初期会通过网络启动向被部署节点磁盘写入系统，然后会重启然后从本地硬盘启动。目前部署在重启后，无法从本地硬盘启动，这个问题正在排查中
+
+systemctl status <pid> 
+查看 pid 对应的服务及 systemd 相关信息
+
+openstack baremetal port create --node  
+
+sudo podman exec -it ironic_conductor cat /etc/ironic/ironic.conf | grep mysql | grep connection
 ```

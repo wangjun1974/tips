@@ -809,8 +809,9 @@ cat > instackenv-ceph.json << EOF
 }
 EOF
 
+cd introspection
 for i in $(openstack baremetal node list -f value -c Name); do openstack baremetal introspection data save $i > $i.json ; done
 
-cd 
+cd ~
 for i in $(openstack baremetal node list -f value -c Name); do openstack baremetal node manage $i ; openstack baremetal introspection start --wait $i; openstack baremetal node provide $i ; done
 ```

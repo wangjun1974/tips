@@ -944,5 +944,7 @@ systemctl status <pid>
 
 openstack baremetal port create --node  
 
-sudo podman exec -it ironic_conductor cat /etc/ironic/ironic.conf | grep mysql | grep connection
+sudo podman exec -it neutron_conductor cat /etc/neutron/neutron.conf | grep mysql | grep connection
+sudo podman exec -it mysql mysql -u neutron -p 
+
 ```

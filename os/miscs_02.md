@@ -814,4 +814,46 @@ for i in $(openstack baremetal node list -f value -c Name); do openstack baremet
 
 cd ~
 for i in $(openstack baremetal node list -f value -c Name); do openstack baremetal node manage $i ; openstack baremetal introspection start --wait $i; openstack baremetal node provide $i ; done
+
+
+export THT=/usr/share/openstack-tripleo-heat-templates/
+
+
+openstack baremetal node set --property capabilities='node:controller-0,boot_option:local' overcloud-ctrl01
+openstack baremetal node set --property capabilities='node:controller-1,boot_option:local' overcloud-ctrl02
+openstack baremetal node set --property capabilities='node:controller-2,boot_option:local' overcloud-ctrl03
+
+openstack baremetal node set --property capabilities='node:computehci-0,boot_option:local' overcloud-ceph01
+openstack baremetal node set --property capabilities='node:computehci-1,boot_option:local' overcloud-ceph02
+openstack baremetal node set --property capabilities='node:computehci-2,boot_option:local' overcloud-ceph03
+
+
+
+cat > ~/templates/node-info.yaml << 'EOF'
+parameter_defaults:
+  ControllerCount: 3
+  ComputeCount: 0
+  ComputeHCICount: 3
+
+  # SchedulerHints
+  ControllerSchedulerHints:
+    'capabilities:node': 'controller-%index%'
+  ComputeSchedulerHints:
+    'capabilities:node': 'compute-%index%'
+  ComputeHCISchedulerHints:
+    'capabilities:node': 'computehci-%index%'
+EOF
+
+
+
+cat overcloud-ctrl01.json | jq .inventory.disks
+openstack baremetal node set --property root_device='{"serial": "Z92UKHHOF69D"}' overcloud-ctrl01
+
+
+cat overcloud-ceph01.json | jq .inventory.disks
+openstack baremetal node set --property root_device='{"serial": "Z92UKHHOF69D"}' overcloud-ceph01
+
+export THT=/usr/share/openstack-tripleo-heat-templates/
+openstack overcloud roles generate -o ~/templates/roles_data.yaml Controller Compute ComputeHCI
+
 ```

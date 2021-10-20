@@ -910,6 +910,8 @@ EOF
 ipxe_enabled = True
 inspection_enable_uefi = True
 
+openstack undercloud install
+
 openstack flavor set --property capabilities:boot_mode='uefi' control
 
 openstack baremetal node set --property capabilities='node:controller-0,boot_option:uefi' overcloud-ctrl01

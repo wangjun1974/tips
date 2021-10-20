@@ -856,4 +856,23 @@ openstack baremetal node set --property root_device='{"serial": "Z92UKHHOF69D"}'
 export THT=/usr/share/openstack-tripleo-heat-templates/
 openstack overcloud roles generate -o ~/templates/roles_data.yaml Controller Compute ComputeHCI
 
+cp $THT/network_data.yaml ~/templates
+
+rm -rf ~/rendered
+mkdir ~/rendered
+
+cd $THT
+tools/process-templates.py -r ~/templates/roles_data.yaml -n ~/templates/network_data.yaml -o ~/rendered
+
+cd ~/rendered
+rm -rf ~/templates/environments
+mkdir -p ~/templates/environments
+cp environments/network-environment.yaml ~/templates/environments
+
+rm -rf ~/templates/network
+cp -rp network ~/templates
+
+cp environments/net-bond-with-vlans.yaml ~/templates/environments/
+
+
 ```

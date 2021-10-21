@@ -947,4 +947,30 @@ openstack baremetal port create --node
 sudo podman exec -it neutron_conductor cat /etc/neutron/neutron.conf | grep mysql | grep connection
 sudo podman exec -it mysql mysql -u neutron -p 
 
+
+
+delete instance 
+REQ: curl -g -i -X GET https://overcloud.example.com:13774/v2.1/servers/test-instance -H "Accept: application/json" -H "OpenStack-API-Version: compute 2.79" -H "User-Agent: python-novaclient" -H "X-Auth-Token: {SHA256}b82d934d1eb0742d8e98c3a948af29111b8385205fa166714501d3e4b282baa1" -H "X-OpenStack-Nova-API-Version: 2.79"
+Starting new HTTPS connection (1): overcloud.example.com:13774
+--
+REQ: curl -g -i -X GET https://overcloud.example.com:13774/v2.1/servers?name=test-instance -H "Accept: application/json" -H "OpenStack-API-Version: compute 2.79" -H "User-Agent: python-novaclient" -H "X-Auth-Token: {SHA256}b82d934d1eb0742d8e98c3a948af29111b8385205fa166714501d3e4b282baa1" -H "X-OpenStack-Nova-API-Version: 2.79"
+https://overcloud.example.com:13774 "GET /v2.1/servers?name=test-instance HTTP/1.1" 200 None
+--
+REQ: curl -g -i -X GET https://overcloud.example.com:13774/v2.1/servers/6b88476d-2d0a-492d-887e-6d99a7f9f7b4 -H "Accept: application/json" -H "OpenStack-API-Version: compute 2.79" -H "User-Agent: python-novaclient" -H "X-Auth-Token: {SHA256}b82d934d1eb0742d8e98c3a948af29111b8385205fa166714501d3e4b282baa1" -H "X-OpenStack-Nova-API-Version: 2.79"
+https://overcloud.example.com:13774 "GET /v2.1/servers/6b88476d-2d0a-492d-887e-6d99a7f9f7b4 HTTP/1.1" 200 None
+--
+REQ: curl -g -i -X DELETE https://overcloud.example.com:13774/v2.1/servers/6b88476d-2d0a-492d-887e-6d99a7f9f7b4 -H "Accept: application/json" -H "OpenStack-API-Version: compute 2.79" -H "User-Agent: python-novaclient" -H "X-Auth-Token: {SHA256}b82d934d1eb0742d8e98c3a948af29111b8385205fa166714501d3e4b282baa1" -H "X-OpenStack-Nova-API-Version: 2.79"
+https://overcloud.example.com:13774 "DELETE /v2.1/servers/6b88476d-2d0a-492d-887e-6d99a7f9f7b4 HTTP/1.1" 204 0
+
+openstack server remove floating ip <instance-name> <floating-ip>
+
+
+# osp 16.2 rabbitmq 日志报错
+/var/log/containers/rabbitmq/rabbit\@overcloud-controller-0.log
+
+2021-10-21 07:33:14.281 [error] <0.1159.0> Node 'rabbit@overcloud-controller-1' thinks it's clustered with node 'rabbit@overcloud-controller-0', but 'rabbit@overcloud-controller-0' disagrees
+https://cloud.tencent.com/developer/article/1158754
+
+
+
 ```

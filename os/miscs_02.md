@@ -972,5 +972,149 @@ openstack server remove floating ip <instance-name> <floating-ip>
 https://cloud.tencent.com/developer/article/1158754
 
 
+尝试恢复 rabbitmq 资源
+pcs resource disable rabbitmq-bundle
+pcs resource enable rabbitmq-bundle
+pcs resource cleanup rabbitmq-bundle
+https://access.redhat.com/solutions/3182721
+
+Using Curl to Interact with a RESTful API
+https://blog.scottlowe.org/2014/02/19/using-curl-to-interact-with-a-restful-api/
+
+将 json 转换为单行的网址
+https://tools.knowledgewalls.com/online-multiline-to-single-line-converter
+
+https://docs.openstack.org/keystone/pike/api_curl_examples.html
+
+https://lrainsun.github.io/2020/07/21/keystone-scope/
+
+curl -sd '{"auth":{"passwordCredentials":{"username": "project1admin", "password": "redhat"}}}' -H "Content-type: application/json" https://overcloud.example.com:13000/v3/auth/tokens
+
+{
+  "auth": {
+    "identity": {
+      "methods": [
+        "password"
+      ],
+      "password": {
+        "user": {
+          "name": "project1admin",
+          "domain": {
+            "name": "Default"
+          },
+          "project": {
+            "domain": {
+              "name": "Default"
+            }
+            "name": "project1"
+          },
+          "password": "redhat"
+        }
+      }
+    },
+        "scope": {
+            "system": {
+                "all": true
+            }
+        }    
+  }
+}
+
+    "user": {
+      "domain": {
+        "id": "default",
+        "name": "Default"
+      },
+      "id": "56cf80765d744bc49f23b6e79e66ac47",
+      "name": "project1admin",
+      "password_expires_at": null
+    },
+
+{
+    "auth": {
+        "identity": {
+            "methods": [
+                "password"
+            ],
+            "password": {
+                "user": {
+                    "name": "project1admin",
+                    "password": "redhat"
+                }
+            }
+        },
+        "scope": {
+            "system": {
+                "all": true
+            }
+        }
+    }
+}
+
+curl -i \
+  -H "Content-Type: application/json" \
+  -d '
+{ "auth": {
+    "identity": {
+      "methods": ["password"],
+      "password": {
+        "user": {
+          "name": "admin",
+          "domain": { "id": "default" },
+          "password": "EUbg242vwZtuVBzDZlg0C0TKt"
+        }
+      }
+    }
+  }
+}' \
+https://overcloud.example.com:13000/v3/auth/tokens 2>&1 | tee /tmp/tempfile
+
+token=$(cat /tmp/tempfile | awk '/X-Subject-Token: /{print $NF}' | tr -d '\r' )
+echo $token
+export mytoken=$token
+
+
+
+curl -sD - \
+-H "Content-Type: application/json" \
+-d '{"auth":{"identity":{"methods":["password"],"password":{"user":{"name":"project1admin","domain":{"name":"Default"},"project":{"name":"project1"},"password":"redhat"}}}}}' \
+https://overcloud.example.com:13000/v3/auth/tokens
+
+
+{"auth":{"identity":{"methods":["password"],"password":{"user":{"name":"project1admin","password":"redhat"}}},"scope":{"system":{"all":true}}}}
+
+res=$( curl -sD - -o /dev/null \
+-H "Content-Type: application/json" \
+-d '{"auth":{"identity":{"methods":["password"],"password":{"user":{"name":"project1admin","password":"redhat"}}}}' \
+https://overcloud.example.com:13000/v3/auth/tokens)
+
+echo "GETTING TOKEN"
+res=$( curl -sD - -o /dev/null \
+-H "Content-Type: application/json" \
+-d '{"auth":{"identity":{"methods":["password"],"password":{"user":{"name":"project1admin","domain":{"name":"Default"},"project":{"name":"project1"},"password":"redhat"}}}}}' \
+https://overcloud.example.com:13000/v3/auth/tokens)
+
+token=$(echo "$res" | awk '/X-Subject-Token: /{print $NF}' | tr -d '\r' )
+
+echo $token
+export mytoken=$token
+
+echo "GETTING IMAGES"
+imageid=$(curl -s \
+--header "X-Auth-Token: $mytoken" \
+ https://overcloud.example.com:13292/v2/images | jq '.images[] | select(.name=="cirros")' | jq -r '.id' )
+
+echo "GETTING FLAVOR"
+flavorid=$(curl -s \
+--header "X-Auth-Token: $mytoken" \
+https://overcloud.example.com:13774/v2.1/flavors | jq '.flavors[] | select(.name=="m1.nano")' | jq -r '.id' )
+
+echo "GET NETWORK"
+networkid=$(curl -s \
+-H "Accept: application/json" \
+-H "User-Agent: openstacksdk/0.36.5 keystoneauth1/3.17.4 python-requests/2.20.0 CPython/3.6.8" \
+--header "X-Auth-Token: $mytoken" \
+https://overcloud.example.com:13696/v2.0/networks | jq '.flavors[] | select(.name=="m1.nano")' | jq -r '.id' )
+
 
 ```

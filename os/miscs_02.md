@@ -1044,8 +1044,8 @@ curl -sd '{"auth":{"passwordCredentials":{"username": "project1admin", "password
             }
         },
         "scope": {
-            "system": {
-                "all": true
+            "domain": {
+                "id": "default"
             }
         }
     }
@@ -1060,10 +1060,45 @@ curl -i \
       "password": {
         "user": {
           "name": "admin",
+          "password": "EUbg242vwZtuVBzDZlg0C0TKt"
+        }
+      },
+      "scope": {
+        "project": {
+          "name": "admin"
+        }
+      }     
+    }
+  }
+}' \
+https://overcloud.example.com:13000/v3/auth/tokens 2>&1 | tee /tmp/tempfile
+
+token=$(cat /tmp/tempfile | awk '/X-Subject-Token: /{print $NF}' | tr -d '\r' )
+echo $token
+export mytoken=$token
+
+
+curl -i \
+  -H "Content-Type: application/json" \
+  -d '
+{ "auth": {
+    "identity": {
+      "methods": ["password"],
+      "password": {
+        "user": {
+          "name": "admin",
           "domain": { "id": "default" },
           "password": "EUbg242vwZtuVBzDZlg0C0TKt"
         }
-      }
+      },
+      "scope": {
+        "project": {
+          "domain": {
+            "id": "default"
+          },
+          "name": "admin"
+        }
+      }     
     }
   }
 }' \
@@ -1075,10 +1110,10 @@ export mytoken=$token
 
 
 
-curl -sD - \
+res=$(curl -sD - \
 -H "Content-Type: application/json" \
--d '{"auth":{"identity":{"methods":["password"],"password":{"user":{"name":"project1admin","domain":{"name":"Default"},"project":{"name":"project1"},"password":"redhat"}}}}}' \
-https://overcloud.example.com:13000/v3/auth/tokens
+-d '{"auth":{"identity":{"methods":["password"],"password":{"user":{"name":"project1admin","password":"redhat"}}},"scope":{"domain":{"id":"default"}}}}' \
+https://overcloud.example.com:13000/v3/auth/tokens)
 
 
 {"auth":{"identity":{"methods":["password"],"password":{"user":{"name":"project1admin","password":"redhat"}}},"scope":{"system":{"all":true}}}}
@@ -1114,7 +1149,127 @@ networkid=$(curl -s \
 -H "Accept: application/json" \
 -H "User-Agent: openstacksdk/0.36.5 keystoneauth1/3.17.4 python-requests/2.20.0 CPython/3.6.8" \
 --header "X-Auth-Token: $mytoken" \
-https://overcloud.example.com:13696/v2.0/networks | jq '.flavors[] | select(.name=="m1.nano")' | jq -r '.id' )
+https://overcloud.example.com:13696/v2.0/networks | jq '.networks[] | select(.name=="project1-private")' | jq -r '.id' )
+
+echo "CREATESERVER"
+echo curl -g -i -X POST https://overcloud.example.com:13774/v2.1/servers \
+-H "Accept: application/json" \
+-H "Content-Type: application/json" \
+-H "X-Auth-Token: $mytoken" -d "{\"server\": {\"name\": \"test-instance\", \"imageRef\": \"$imageid\", \"flavorRef\": \"$flavorid\", \"min_count\": 1, \"max_count\": 1, \"networks\": [{\"uuid\": \"$networkid\"}]}}"
+
+OS_TOKEN=$(curl -isX POST $OS_AUTH_URL/v3/auth/tokens?nocatalog -H "Content-Type: application/json" -d '{ "auth": { "identity": { "methods": ["password"],"password": {"user": {"domain": {"name": "'"$OS_USER_DOMAIN_NAME"'"},"name": "'"$OS_USERNAME"'", "password": "'"$OS_PASSWORD"'"} } }, "scope": { "project": { "domain": { "name": "'"$OS_PROJECT_DOMAIN_NAME"'" }, "name": "'"$OS_PROJECT_NAME"'" } } }}' | grep X-Subject-Token | awk '{print $2}')
+
+alias oscurl='curl -s -H "X-Auth-Token: $OS_TOKEN"'
+oscurl https://overcloud.example.com:13696/v2.0/networks
+출처: https://www.jacobbaek.com/1190 [Jacob Baek's home]
+https://www.jacobbaek.com/1190
 
 
+curl -i \
+  -H "Content-Type: application/json" \
+  -d '
+{ "auth": {
+    "identity": {
+      "methods": ["password"],
+      "password": {
+        "user": {
+          "name": "admin",
+          "domain": { "id": "default" },
+          "password": "RedHat1!"
+        }
+      }
+    },
+    "scope": {
+      "project": {
+        "name": "admin",
+        "domain": { "id": "default" }
+      }
+    }
+  }
+}' \
+  "https://overcloud.example.com:5000/v3/auth/tokens" ; echo
+ 
+ 
+ 
+ 
+HTTP/1.1 201 CREATED
+Date: Fri, 22 Oct 2021 03:38:45 GMT
+Server: Apache
+Content-Length: 6709
+X-Subject-Token: gAAAAABhcjJGwHeDJ72fZZTM15HFH3puMi8GFrmS4KX0VJ8kl4HhC35bYDXDymZ1AFzcPT_XBlamjlwtrzUpT0wvu0bt5nafFqzLxd8DIvrPB1T4flE5P0hV4PIm3yuJ5ge9tCv3TD9GhBXCC7UxtWeeFoPedGfvQ-hGacmBbwh-ZgOQ5KOlDpQ
+Vary: X-Auth-Token
+x-openstack-request-id: req-22a74d5e-2cc8-4ec2-922b-4847e5a36d53
+Content-Type: application/json
+ 
+{"token": {"methods": ["password"], "user": {"domain": {"id": "default", "name": "Default"}, "id": "02abbb9cd04b427287b7931ff7a7fbc6", "name": "admin", "password_expires_at": null}, "audit_ids": ["93GFg9ykRhmjvTlsmI2Lzg"], "expires_at": "2021-10-22T04:38:46.000000Z", "issued_at": "2021-10-22T03:38:46.000000Z", "project": {"domain": {"id": "default", "name": "Default"}, "id": "2e74c13e0f744f88849bbbf905a12fc7", "name": "admin"}, "is_domain": false, "roles": [{"id": "3607f335fdbc419aabcb86d9fe0fd5e8", "name": "member"}, {"id": "e0cecfa4accd47488a61b657bb152676", "name": "admin"}, {"id": "160363fcb7eb439c8687e423f92ddcd3", "name": "reader"}], "catalog": [{"endpoints": [{"id": "68cfd07a3a59433c9d0c0e7a1b554126", "interface": "public", "region_id": "regionOne", "url": "http://10.72.51.135:5000", "region": "regionOne"}, {"id": "92bef904faa944238c3819094d57c8de", "interface": "internal", "region_id": "regionOne", "url": "http://10.72.51.230:5000", "region": "regionOne"}, {"id": "c2b9051dec214eb0889451e141a1e35e", "interface": "admin", "region_id": "regionOne", "url": "http://192.168.24.8:35357", "region": "regionOne"}], "id": "05599436f4ea4ad8967dad43faee2b5d", "type": "identity", "name": "keystone"}, {"endpoints": [{"id": "32b7ee48690a43e1b9369243ba5c40b6", "interface": "internal", "region_id": "regionOne", "url": "http://10.72.51.230:8774/v2.1", "region": "regionOne"}, {"id": "d181c9bda35c4ba1af596471dbb0f6f2", "interface": "public", "region_id": "regionOne", "url": "http://10.72.51.135:8774/v2.1", "region": "regionOne"}, {"id": "d3b84f5fd32545a19e710848b7b44246", "interface": "admin", "region_id": "regionOne", "url": "http://10.72.51.230:8774/v2.1", "region": "regionOne"}], "id": "2c683ecacfda4606908395b82da75aee", "type": "compute", "name": "nova"}, {"endpoints": [{"id": "54361762ca854c519ab73f6826bc49e8", "interface": "public", "region_id": "regionOne", "url": "http://10.72.51.135:8004/v1/2e74c13e0f744f88849bbbf905a12fc7", "region": "regionOne"}, {"id": "68c7d5d877a94351a3a175604d6eb608", "interface": "admin", "region_id": "regionOne", "url": "http://10.72.51.230:8004/v1/2e74c13e0f744f88849bbbf905a12fc7", "region": "regionOne"}, {"id": "cfa68dae084c4471ba324d3b4d9cdb4e", "interface": "internal", "region_id": "regionOne", "url": "http://10.72.51.230:8004/v1/2e74c13e0f744f88849bbbf905a12fc7", "region": "regionOne"}], "id": "3c9363fd0bb5469da087ae97b8d99847", "type": "orchestration", "name": "heat"}, {"endpoints": [{"id": "14f096c2a7b44e36ac66f6bc20b8be3a", "interface": "internal", "region_id": "regionOne", "url": "http://10.72.51.230:9696", "region": "regionOne"}, {"id": "717f4fcf6c0b42a78c2d9e7af4360916", "interface": "admin", "region_id": "regionOne", "url": "http://10.72.51.230:9696", "region": "regionOne"}, {"id": "89f5d7d7c29b404b8bfd121144870084", "interface": "public", "region_id": "regionOne", "url": "http://10.72.51.135:9696", "region": "regionOne"}], "id": "559838b6b42641908ad8a2c662336873", "type": "network", "name": "neutron"}, {"endpoints": [{"id": "1030a03817724d1a96885e065c86b1ec", "interface": "public", "region_id": "regionOne", "url": "http://10.72.51.135:9292", "region": "regionOne"}, {"id": "7602062e6a2a4eae8c941963965fbf63", "interface": "admin", "region_id": "regionOne", "url": "http://10.72.51.230:9292", "region": "regionOne"}, {"id": "7dd42e479cbf4318a0f6fdd45ac9ad59", "interface": "internal", "region_id": "regionOne", "url": "http://10.72.51.230:9292", "region": "regionOne"}], "id": "5ac1de8357754403910b33b69cab46fa", "type": "image", "name": "glance"}, {"endpoints": [{"id": "0af858c9a40944e1b5ff6c121bfd4cd9", "interface": "public", "region_id": "regionOne", "url": "http://10.72.51.135:8000/v1", "region": "regionOne"}, {"id": "5c55d70871dd43d5a831788636ba025d", "interface": "admin", "region_id": "regionOne", "url": "http://10.72.51.230:8000/v1", "region": "regionOne"}, {"id": "a2da1473aa0c4a1d821c41ce20122b50", "interface": "internal", "region_id": "regionOne", "url": "http://10.72.51.230:8000/v1", "region": "regionOne"}], "id": "5c5abbe554054bdd8643a70f55ab90a9", "type": "cloudformation", "name": "heat-cfn"}, {"endpoints": [{"id": "453ad0f494734a4bad572ef99b336ff8", "interface": "internal", "region_id": "regionOne", "url": "http://10.72.51.230:8776/v2/2e74c13e0f744f88849bbbf905a12fc7", "region": "regionOne"}, {"id": "9000071da5c24d539642e5c02d6e563c", "interface": "public", "region_id": "regionOne", "url": "http://10.72.51.135:8776/v2/2e74c13e0f744f88849bbbf905a12fc7", "region": "regionOne"}, {"id": "92c682ca6b0a4d539bca3c788480a9fd", "interface": "admin", "region_id": "regionOne", "url": "http://10.72.51.230:8776/v2/2e74c13e0f744f88849bbbf905a12fc7", "region": "regionOne"}], "id": "68edb1f0ea064c7aad55386ba0003474", "type": "volumev2", "name": "cinderv2"}, {"endpoints": [{"id": "42f02d0ce93847f28ac3141cdd268a4d", "interface": "public", "region_id": "regionOne", "url": "http://10.72.51.135:8080/swift/v1/AUTH_2e74c13e0f744f88849bbbf905a12fc7", "region": "regionOne"}, {"id": "987c5e29efb24e98989a48ea87315be4", "interface": "admin", "region_id": "regionOne", "url": "http://10.72.51.210:8080/swift/v1/AUTH_2e74c13e0f744f88849bbbf905a12fc7", "region": "regionOne"}, {"id": "e82ade12f29b474991eb1eeb722a776f", "interface": "internal", "region_id": "regionOne", "url": "http://10.72.51.210:8080/swift/v1/AUTH_2e74c13e0f744f88849bbbf905a12fc7", "region": "regionOne"}], "id": "7e25ce55e1bd4a2199aa417016e11f2a", "type": "object-store", "name": "swift"}, {"endpoints": [{"id": "2b52e74c3e894e42bb270117efa0ac03", "interface": "public", "region_id": "regionOne", "url": "http://10.72.51.135:8776/v3/2e74c13e0f744f88849bbbf905a12fc7", "region": "regionOne"}, {"id": "5a170a018781455ebded6b0a96204e2f", "interface": "internal", "region_id": "regionOne", "url": "http://10.72.51.230:8776/v3/2e74c13e0f744f88849bbbf905a12fc7", "region": "regionOne"}, {"id": "9bf81d6a1ffc469184a49b98ac308036", "interface": "admin", "region_id": "regionOne", "url": "http://10.72.51.230:8776/v3/2e74c13e0f744f88849bbbf905a12fc7", "region": "regionOne"}], "id": "843506b3575e4b2c952fb00c0459b7b6", "type": "volumev3", "name": "cinderv3"}, {"endpoints": [{"id": "2f355aa1910f480d8284ebe8d63419e1", "interface": "internal", "region_id": "regionOne", "url": "http://10.72.51.230:8778/placement", "region": "regionOne"}, {"id": "d5e32f5987794e78bb3a2c068a892f45", "interface": "admin", "region_id": "regionOne", "url": "http://10.72.51.230:8778/placement", "region": "regionOne"}, {"id": "f2266539cd194c11b31a5cf247f8c3ef", "interface": "public", "region_id": "regionOne", "url": "http://10.72.51.135:8778/placement", "region": "regionOne"}], "id": "dae0f0b66f0e4afbbd432341111d678d", "type": "placement", "name": "placement"}]}}
+ 
+ 
+ 
+ 
+ 
+$ curl -g -i -X GET http://10.72.51.135:9696/v2.0/networks.json?limit=100 -H "Accept: application/json"  -H "X-Auth-Token: gAAAAABhcjJGwHeDJ72fZZTM15HFH3puMi8GFrmS4KX0VJ8kl4HhC35bYDXDymZ1AFzcPT_XBlamjlwtrzUpT0wvu0bt5nafFqzLxd8DIvrPB1T4flE5P0hV4PIm3yuJ5ge9tCv3TD9GhBXCC7UxtWeeFoPedGfvQ-hGacmBbwh-ZgOQ5KOlDpQ"
+HTTP/1.1 200 OK
+Content-Type: application/json
+Content-Length: 2881
+X-Openstack-Request-Id: req-2568faf0-6754-4fbd-a0db-700d5904bb76
+Date: Fri, 22 Oct 2021 03:39:14 GMT
+ 
+{"networks":[{"id":"13cd06d5-230e-4c7e-aac7-e21826282f10","name":"adminpriv","tenant_id":"2e74c13e0f744f88849bbbf905a12fc7","admin_state_up":true,"mtu":1450,"status":"ACTIVE","subnets":["bb68eb22-e25b-4bc2-a2ae-96a0262a6b47"],"shared":false,"availability_zone_hints":[],"availability_zones":["nova"],"ipv4_address_scope":null,"ipv6_address_scope":null,"router:external":false,"description":"","port_security_enabled":true,"qos_policy_id":null,"tags":[],"created_at":"2021-09-10T11:01:19Z","updated_at":"2021-09-10T11:01:19Z","revision_number":2,"project_id":"2e74c13e0f744f88849bbbf905a12fc7","provider:network_type":"vxlan","provider:physical_network":null,"provider:segmentation_id":1},{"id":"32bfe08d-d4d1-4375-bdaa-2446c4fbece9","name":"sriov184","tenant_id":"2e74c13e0f744f88849bbbf905a12fc7","admin_state_up":true,"mtu":1500,"status":"ACTIVE","subnets":["9fd52cdc-0fae-446c-8bb2-eda865a8ce78"],"shared":true,"availability_zone_hints":[],"availability_zones":["nova"],"ipv4_address_scope":null,"ipv6_address_scope":null,"router:external":false,"description":"","port_security_enabled":true,"qos_policy_id":null,"tags":[],"created_at":"2021-09-10T11:04:00Z","updated_at":"2021-09-26T08:06:49Z","revision_number":3,"project_id":"2e74c13e0f744f88849bbbf905a12fc7","provider:network_type":"vlan","provider:physical_network":"sriov-1","provider:segmentation_id":184},{"id":"3e59cd2c-6a66-4034-b423-3ec61933f5bc","name":"HA network tenant 2e74c13e0f744f88849bbbf905a12fc7","tenant_id":"","admin_state_up":true,"mtu":1450,"status":"ACTIVE","subnets":["d3427f35-553e-4da4-8596-b283b156f550"],"shared":false,"availability_zone_hints":[],"availability_zones":["nova"],"ipv4_address_scope":null,"ipv6_address_scope":null,"router:external":false,"description":"","port_security_enabled":true,"qos_policy_id":null,"tags":[],"created_at":"2021-10-14T07:54:08Z","updated_at":"2021-10-14T07:54:08Z","revision_number":2,"project_id":"","provider:network_type":"vxlan","provider:physical_network":null,"provider:segmentation_id":2},{"id":"acb2c2ae-adcd-409d-9c54-ddcd3c5dedbc","name":"ext183","tenant_id":"2e74c13e0f744f88849bbbf905a12fc7","admin_state_up":true,"mtu":1500,"status":"ACTIVE","subnets":["c16c2c0d-bebb-49fb-914f-9f611ff22295"],"shared":true,"availability_zone_hints":[],"availability_zones":["nova"],"ipv4_address_scope":null,"ipv6_address_scope":null,"router:external":true,"description":"","port_security_enabled":true,"qos_policy_id":null,"is_default":false,"tags":[],"created_at":"2021-09-26T02:45:37Z","updated_at":"2021-09-26T07:29:55Z","revision_number":5,"project_id":"2e74c13e0f744f88849bbbf905a12fc7","provider:network_type":"vlan","provider:physical_network":"datacentre","provider:segmentation_id":183}],"networks_links":[{"rel":"previous","href":"http://10.72.51.135:9696/v2.0/networks.json?limit=100&marker=13cd06d5-230e-4c7e-aac7-e21826282f10&page_reverse=True"}]}
+
+
+curl -i \
+  -H "Content-Type: application/json" \
+  -d '
+{ "auth": {
+    "identity": {
+      "methods": ["password"],
+      "password": {
+        "user": {
+          "name": "admin",
+          "domain": { "id": "default" },
+          "password": "EUbg242vwZtuVBzDZlg0C0TKt"
+        }
+      }
+    },
+    "scope": {
+      "project": {
+        "name": "admin",
+        "domain": { "id": "default" }
+      }
+    }
+  }
+}' \
+https://overcloud.example.com:13000/v3/auth/tokens 2>&1 | tee /tmp/tempfile
+
+token=$(cat /tmp/tempfile | awk '/X-Subject-Token: /{print $NF}' | tr -d '\r' )
+echo $token
+export mytoken=$token
+
+  curl -i \
+    -H "Content-Type: application/json" \
+    -d '
+  { "auth": {
+      "identity": {
+        "methods": ["password"],
+        "password": {
+          "user": {
+            "name": "project1admin",
+            "domain": { "id": "default" },
+            "password": "redhat"
+          }
+        }
+      },
+      "scope": {
+        "project": {
+          "name": "project1",
+          "domain": { "id": "default" }
+        }
+      }
+    }
+  }' \
+  https://overcloud.example.com:13000/v3/auth/tokens 2>&1 | tee /tmp/tempfile
+
+  token=$(cat /tmp/tempfile | awk '/X-Subject-Token: /{print $NF}' | tr -d '\r' )
+  echo $token
+  export mytoken=$token
 ```

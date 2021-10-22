@@ -1245,31 +1245,31 @@ token=$(cat /tmp/tempfile | awk '/X-Subject-Token: /{print $NF}' | tr -d '\r' )
 echo $token
 export mytoken=$token
 
-  curl -i \
-    -H "Content-Type: application/json" \
-    -d '
-  { "auth": {
-      "identity": {
-        "methods": ["password"],
-        "password": {
-          "user": {
-            "name": "project1admin",
-            "domain": { "id": "default" },
-            "password": "redhat"
-          }
-        }
-      },
-      "scope": {
-        "project": {
-          "name": "project1",
-          "domain": { "id": "default" }
+curl -i \
+  -H "Content-Type: application/json" \
+  -d '
+{ "auth": {
+    "identity": {
+      "methods": ["password"],
+      "password": {
+        "user": {
+          "name": "project1admin",
+          "domain": { "id": "default" },
+          "password": "redhat"
         }
       }
+    },
+    "scope": {
+      "project": {
+        "name": "project1",
+        "domain": { "id": "default" }
+      }
     }
-  }' \
-  https://overcloud.example.com:13000/v3/auth/tokens 2>&1 | tee /tmp/tempfile
+  }
+}' \
+https://overcloud.example.com:13000/v3/auth/tokens 2>&1 | tee /tmp/tempfile
 
-  token=$(cat /tmp/tempfile | awk '/X-Subject-Token: /{print $NF}' | tr -d '\r' )
-  echo $token
-  export mytoken=$token
+token=$(cat /tmp/tempfile | awk '/X-Subject-Token: /{print $NF}' | tr -d '\r' )
+echo $token
+export mytoken=$token
 ```

@@ -1281,3 +1281,7 @@ set -o pipefail; puppet apply  --modulepath=/etc/puppet/modules:/opt/stack/puppe
 
 ### 如何设置来影响 page cache 的内存占用
 https://access.redhat.com/solutions/32769
+
+### TripleO config-download User’s Guide: Deploying with Ansible
+https://slagle.fedorapeople.org/tripleo-docs/install/advanced_deployment/ansible_config_download.html
+

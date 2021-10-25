@@ -1285,3 +1285,5 @@ https://access.redhat.com/solutions/32769
 ### TripleO config-download User’s Guide: Deploying with Ansible
 https://slagle.fedorapeople.org/tripleo-docs/install/advanced_deployment/ansible_config_download.html
 
+### 如何避免 osp 节点消耗不必要的订阅
+https://access.redhat.com/documentation/en-us/red_hat_openstack_platform/13/html-single/deploying_an_overcloud_with_containerized_red_hat_ceph/index#using-the-overcloud-minimal-image-to-avoid-to-avoid-using-a-Red-Hat-subscription-entitlement

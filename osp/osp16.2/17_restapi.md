@@ -57,12 +57,17 @@ curl -g -i -X POST https://overcloud.example.com:13774/v2.1/servers \
 -H "X-Auth-Token: $mytoken" -d "{\"server\": {\"name\": \"test-instance\", \"imageRef\": \"$imageid\", \"flavorRef\": \"$flavorid\", \"min_count\": 1, \"max_count\": 1, \"networks\": [{\"uuid\": \"$networkid\"}]}}"
 
 # 获取 instanceid
-echo "Get instanceid"
+echo "GET INSTANCEID"
 instanceid=$(curl -s \
 -H "Accept: application/json" \
 --header "X-Auth-Token: $mytoken" \
 -X GET https://overcloud.example.com:13774/v2.1/servers | jq '.servers[] | select(.name=="test-instance")' | jq -r '.id' )
 
-# 删除 instance  
+# 删除 instance 
+echo "DELETE INSTANCE"
+curl -s \
+-H "Accept: application/json" \
+--header "X-Auth-Token: $mytoken" \
+-X DELETE https://overcloud.example.com:13774/v2.1/servers/${instanceid}
 
 ```

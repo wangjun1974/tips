@@ -1279,6 +1279,68 @@ set -o pipefail; puppet apply  --modulepath=/etc/puppet/modules:/opt/stack/puppe
 
 + openstack overcloud deploy --debug --templates /usr/share/openstack-tripleo-heat-templates/ -r /home/stack/templates//roles_data.yaml -n /home/stack/templates//network_data.yaml -e /usr/share/openstack-tripleo-heat-templates//environments/network-isolation.yaml -e /home/stack/templates//environments/network-environment.yaml -e /home/stack/templates//environments/net-bond-with-vlans.yaml -e /usr/share/openstack-tripleo-heat-templates//environments/services/ironic-overcloud.yaml -e /usr/share/openstack-tripleo-heat-templates//environments/services/ironic-inspector.yaml -e /usr/share/openstack-tripleo-heat-templates//environments/metrics/ceilometer-write-qdr.yaml -e /usr/share/openstack-tripleo-heat-templates//environments/metrics/collectd-write-qdr.yaml -e /usr/share/openstack-tripleo-heat-templates//environments/metrics/qdr-edge-only.yaml -e /home/stack/containers-prepare-parameter.yaml -e /home/stack/templates//node-info.yaml -e /home/stack/templates//fix-nova-reserved-host-memory.yaml -e /home/stack/templates//ironic.yaml -e /home/stack/templates//enable-stf.yaml -e /home/stack/templates//stf-connectors.yaml --ntp-server 192.0.2.1
 
+
+curl -i \
+  -H "Content-Type: application/json" \
+  -d '
+{ "auth": {
+    "identity": {
+      "methods": ["password"],
+      "password": {
+        "user": {
+          "name": "admin",
+          "domain": { "id": "default" },
+          "password": "JVB3JSoTM24jqrervIJ707NQ0"
+        }
+      }
+    },
+    "scope": {
+      "project": {
+        "name": "admin",
+        "domain": { "id": "default" }
+      }
+    }
+  }
+}' \
+http://192.168.122.18:5000/v3/auth/tokens 2>&1 | tee /tmp/tempfile
+
+token=$(cat /tmp/tempfile | awk '/X-Subject-Token: /{print $NF}' | tr -d '\r' )
+echo $token
+export mytoken=$token
+
+echo "GETTING IMAGES"
+imageid=$(curl -s \
+--header "X-Auth-Token: $mytoken" \
+ http://192.168.122.18:9292/v2/images | jq '.images[] | select(.name=="cirros")' | jq -r '.id' )
+
+echo "GETTING FLAVOR"
+flavorid=$(curl -s \
+--header "X-Auth-Token: $mytoken" \
+http://192.168.122.18:8774/v2.1/flavors | jq '.flavors[] | select(.name=="m1.nano")' | jq -r '.id' ) 
+
+echo "GET NETWORK"
+networkid=$(curl -s \
+-H "Accept: application/json" \
+-H "X-Auth-Token: $mytoken" \
+http://192.168.122.18:9696/v2.0/networks | jq '.networks[] | select(.name=="private")' | jq -r '.id' )
+
+echo "CREATE SERVER"
+curl -g -i -X POST http://192.168.122.18:8774/v2.1/servers \
+-H "Accept: application/json" \
+-H "Content-Type: application/json" \
+-H "X-Auth-Token: $mytoken" -d "{\"server\": {\"name\": \"test-instance\", \"imageRef\": \"$imageid\", \"flavorRef\": \"$flavorid\", \"min_count\": 1, \"max_count\": 1, \"networks\": [{\"uuid\": \"$networkid\"}]}}"
+
+echo "GET INSTANCEID"
+instanceid=$(curl -s \
+-H "Accept: application/json" \
+--header "X-Auth-Token: $mytoken" \
+-X GET http://192.168.122.18:8774/v2.1/servers | jq '.servers[] | select(.name=="test-instance")' | jq -r '.id' )
+
+echo "DELETE INSTANCE"
+curl -g -i -X DELETE http://192.168.122.18:8774/v2.1/servers/$instanceid \
+-H "Accept: application/json" \
+-H "Content-Type: application/json" \
+-H "X-Auth-Token: $mytoken" 
 ```
 
 ### 如何设置来影响 page cache 的内存占用
@@ -1289,3 +1351,9 @@ https://slagle.fedorapeople.org/tripleo-docs/install/advanced_deployment/ansible
 
 ### 如何避免 osp 节点消耗不必要的订阅
 https://access.redhat.com/documentation/en-us/red_hat_openstack_platform/13/html-single/deploying_an_overcloud_with_containerized_red_hat_ceph/index#using-the-overcloud-minimal-image-to-avoid-to-avoid-using-a-Red-Hat-subscription-entitlement
+
+### How to improve disk performance on OpenStack
+https://access.redhat.com/solutions/4369161
+
+### Configure OpenStack Compute Storage
+https://access.redhat.com/articles/1351883

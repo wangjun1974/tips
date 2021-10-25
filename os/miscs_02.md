@@ -1272,4 +1272,12 @@ https://overcloud.example.com:13000/v3/auth/tokens 2>&1 | tee /tmp/tempfile
 token=$(cat /tmp/tempfile | awk '/X-Subject-Token: /{print $NF}' | tr -d '\r' )
 echo $token
 export mytoken=$token
+
+set -o pipefail; puppet apply  --modulepath=/etc/puppet/modules:/opt/stack/puppet-modules:/usr/share/openstack-puppet/modules --detailed-exitcodes --summarize --color=false   /var/lib/tripleo-config/puppet_step_config.pp 2>&1 | logger -s -t puppet-user
+
+<13>Oct 25 01:53:29 puppet-user: Error: /Stage[main]/Tripleo::Profile::Base::Certmonger_user/Tripleo::Certmonger::Haproxy[haproxy-oc_provisioning]/Concat[/etc/pki/tls/certs/haproxy/overcloud-haproxy-oc_provisioning.pem]/Concat_file[/etc/pki/tls/certs/haproxy/overcloud-haproxy-oc_provisioning.pem]: Failed to generate additional resources using 'eval_generate': Could not retrieve source(s) /etc/pki/tls/certs/haproxy/overcloud-haproxy-oc_provisioning.crt
+
 ```
+
+### 如何设置来影响 page cache 的内存占用
+https://access.redhat.com/solutions/32769

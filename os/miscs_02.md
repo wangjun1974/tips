@@ -1277,6 +1277,8 @@ set -o pipefail; puppet apply  --modulepath=/etc/puppet/modules:/opt/stack/puppe
 
 <13>Oct 25 01:53:29 puppet-user: Error: /Stage[main]/Tripleo::Profile::Base::Certmonger_user/Tripleo::Certmonger::Haproxy[haproxy-oc_provisioning]/Concat[/etc/pki/tls/certs/haproxy/overcloud-haproxy-oc_provisioning.pem]/Concat_file[/etc/pki/tls/certs/haproxy/overcloud-haproxy-oc_provisioning.pem]: Failed to generate additional resources using 'eval_generate': Could not retrieve source(s) /etc/pki/tls/certs/haproxy/overcloud-haproxy-oc_provisioning.crt
 
++ openstack overcloud deploy --debug --templates /usr/share/openstack-tripleo-heat-templates/ -r /home/stack/templates//roles_data.yaml -n /home/stack/templates//network_data.yaml -e /usr/share/openstack-tripleo-heat-templates//environments/network-isolation.yaml -e /home/stack/templates//environments/network-environment.yaml -e /home/stack/templates//environments/net-bond-with-vlans.yaml -e /usr/share/openstack-tripleo-heat-templates//environments/services/ironic-overcloud.yaml -e /usr/share/openstack-tripleo-heat-templates//environments/services/ironic-inspector.yaml -e /usr/share/openstack-tripleo-heat-templates//environments/metrics/ceilometer-write-qdr.yaml -e /usr/share/openstack-tripleo-heat-templates//environments/metrics/collectd-write-qdr.yaml -e /usr/share/openstack-tripleo-heat-templates//environments/metrics/qdr-edge-only.yaml -e /home/stack/containers-prepare-parameter.yaml -e /home/stack/templates//node-info.yaml -e /home/stack/templates//fix-nova-reserved-host-memory.yaml -e /home/stack/templates//ironic.yaml -e /home/stack/templates//enable-stf.yaml -e /home/stack/templates//stf-connectors.yaml --ntp-server 192.0.2.1
+
 ```
 
 ### 如何设置来影响 page cache 的内存占用

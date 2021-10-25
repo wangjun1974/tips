@@ -51,8 +51,11 @@
 # 下载 cirros image
 (overcloud) [stack@undercloud ~]$ curl -L -O http://download.cirros-cloud.net/0.4.0/cirros-0.4.0-x86_64-disk.img
 
+# 转换镜像格式为 raw 
+(overcloud) [stack@undercloud ~]$ qemu-img convert -f qcow2 -O raw cirros-0.4.0-x86_64-disk.img cirros-0.4.0-x86_64-disk.img.raw 
+
 # 创建 cirros glance image
-(overcloud) [stack@undercloud ~]$ openstack image create cirros   --file cirros-0.4.0-x86_64-disk.img   --disk-format qcow2 --container-format bare --public
+(overcloud) [stack@undercloud ~]$ openstack image create cirros --file cirros-0.4.0-x86_64-disk.img.raw   --disk-format raw --container-format bare --public
 
 # 创建 instance test-instance
 (overcloud) [stack@undercloud ~]$ openstack server create test-instance --network private --flavor m1.nano --image cirros

@@ -1357,3 +1357,6 @@ https://access.redhat.com/solutions/4369161
 
 ### Configure OpenStack Compute Storage
 https://access.redhat.com/articles/1351883
+
+### [RFE] Implement VersionDiscovery API
+https://bugzilla.redhat.com/show_bug.cgi?id=1557336

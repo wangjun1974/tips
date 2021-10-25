@@ -23,7 +23,7 @@ curl -i \
       }
     }
   }
-}' \
+}" \
 https://overcloud.example.com:13000/v3/auth/tokens 2>&1 | tee /tmp/tempfile
 
 token=$(cat /tmp/tempfile | awk '/X-Subject-Token: /{print $NF}' | tr -d '\r' )

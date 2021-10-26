@@ -1360,3 +1360,24 @@ https://access.redhat.com/articles/1351883
 
 ### [RFE] Implement VersionDiscovery API
 https://bugzilla.redhat.com/show_bug.cgi?id=1557336
+
+### create port, create instance, config drive 
+```
+private_network_id=$(openstack network show private -f value -c id)
+openstack port create --network ${private_network_id} private-port-1 --fixed-ip ip-address=172.16.1.51
+
+cat <<EOF > mydata.file
+#cloud-config
+password: redhat
+chpasswd: { expire: False }
+ssh_pwauth: True
+ethernets:
+  eth0:
+    addresses:
+      - 172.16.1.51/24
+EOF
+
+private_port_id=$(openstack port show private-port-1 -f value -c id)
+openstack server create --flavor m1.small --image rhel-8.2 --nic port-id=$test_port_id --config-drive True --user-data mydata.file test-instance-1
+
+```

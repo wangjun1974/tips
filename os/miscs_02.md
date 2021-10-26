@@ -737,7 +737,7 @@ cat > instackenv-ctrl.json <<EOF
       ],
       "name": "overcloud-ctrl01",
       "pm_addr": "192.0.2.12",
-      "pm_password": "rehat#poc#6xtp",
+      "pm_password": "xxx",
       "pm_type": "pxe_ipmitool",
       "pm_user": "root"
     },
@@ -747,7 +747,7 @@ cat > instackenv-ctrl.json <<EOF
       ],
       "name": "overcloud-ctrl02",
       "pm_addr": "192.0.2.13",
-      "pm_password": "rehat#poc#6xtp",
+      "pm_password": "xxx",
       "pm_type": "pxe_ipmitool",
       "pm_user": "root"
     },    
@@ -757,7 +757,7 @@ cat > instackenv-ctrl.json <<EOF
       ],
       "name": "overcloud-ctrl03",
       "pm_addr": "192.0.2.14",
-      "pm_password": "rehat#poc#6xtp",
+      "pm_password": "xxx",
       "pm_type": "pxe_ipmitool",
       "pm_user": "root"
     }
@@ -781,7 +781,7 @@ cat > instackenv-ceph.json << EOF
       ],
       "name": "overcloud-ceph01",
       "pm_addr": "192.0.2.15",
-      "pm_password": "rehat#poc#6xtp",
+      "pm_password": "xxx",
       "pm_type": "pxe_ipmitool",
       "pm_user": "root"
     },
@@ -791,7 +791,7 @@ cat > instackenv-ceph.json << EOF
       ],
       "name": "overcloud-ceph02",
       "pm_addr": "192.0.2.16",
-      "pm_password": "rehat#poc#6xtp",
+      "pm_password": "xxx",
       "pm_type": "pxe_ipmitool",
       "pm_user": "root"
     },
@@ -801,7 +801,7 @@ cat > instackenv-ceph.json << EOF
       ],
       "name": "overcloud-ceph03",
       "pm_addr": "192.0.2.17",
-      "pm_password": "rehat#poc#6xtp",
+      "pm_password": "xxx",
       "pm_type": "pxe_ipmitool",
       "pm_user": "root"
     }
@@ -1379,5 +1379,11 @@ EOF
 
 private_port_id=$(openstack port show private-port-1 -f value -c id)
 openstack server create --flavor m1.small --image rhel-8.2 --nic port-id=$test_port_id --config-drive True --user-data mydata.file test-instance-1
+
+```
+
+### DCN and IPA 
+https://bugzilla.redhat.com/show_bug.cgi?id=2014107
+```
 
 ```

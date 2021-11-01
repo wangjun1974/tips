@@ -344,9 +344,9 @@ openstack overcloud deploy --debug \
 --disable-validations \
 --overcloud-ssh-user stack \
 --templates $THT \
--e /usr/share/openstack-tripleo-heat-templates/environments/deployed-server-environment.yaml \
 -r $CNF/roles_data.yaml \
 -n $CNF/network_data.yaml \
+-e $THT/environments/deployed-server-environment.yaml \
 -e $THT/environments/ceph-ansible/ceph-ansible.yaml \
 -e $THT/environments/ceph-ansible/ceph-rgw.yaml \
 -e $THT/environments/ssl/enable-internal-tls.yaml \

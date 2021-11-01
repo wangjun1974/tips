@@ -238,12 +238,34 @@ done
 # 生成 inventory
 cat > /tmp/inventory <<EOF
 [controller]
+192.0.2.5[1:3] ansible_user=root
+
+[computehci]
+192.0.2.7[1:3] ansible_user=root
+
+EOF
+
+# 设置 public key auth
+ansible -i /tmp/inventory all -m authorized_key -a 'user=root state=present key="{{ lookup(\"file\",\"/home/stack/.ssh/id_rsa.pub\") }}"' -k
+
+# 添加 stack 用户
+ansible -i /tmp/inventory all -m user -a 'name=stack state=present'
+ansible -i /tmp/inventory all -m shell -a 'echo "redhat" | passwd stack --stdin'
+ansible -i /tmp/inventory all -m shell -a 'echo "stack ALL=(root) NOPASSWD:ALL" | tee -a /etc/sudoers.d/stack'
+ansible -i /tmp/inventory all -m shell -a 'chmod 400 /etc/sudoers.d/stack'
+
+# 重新生成 inventory
+cat > /tmp/inventory <<EOF
+[controller]
 192.0.2.5[1:3] ansible_user=stack ansible_become=yes ansible_become_method=sudo
 
 [computehci]
 192.0.2.7[1:3] ansible_user=stack ansible_become=yes ansible_become_method=sudo
 
 EOF
+
+# 设置 public key auth
+ansible -i /tmp/inventory all -m authorized_key -a 'user=stack state=present key="{{ lookup(\"file\",\"/home/stack/.ssh/id_rsa.pub\") }}"' -k
 
 # bind mount /var/www/html/repos 到 /var/lib/ironic/httpboot/repos 
 # 这里 yum 服务器用 director 的 8088 端口提供服务
@@ -259,6 +281,9 @@ exit
 
 # 拷贝 osp.repo 
 (undercloud) [stack@undercloud ~]$ ansible -i /tmp/inventory all -m copy -a 'src=/tmp/osp.repo dest=/etc/yum.repos.d'
+
+# 检查 yum repo 可用 
+(undercloud) [stack@undercloud ~]$ ansible -i /tmp/inventory all -m shell -a 'yum install -y chrony'
 
 # 设置 container-tools repository module 为版本 2.0
 (undercloud) [stack@undercloud ~]$ ansible -i /tmp/inventory all -m shell -a 'cmd="dnf module disable -y container-tools:rhel8"'

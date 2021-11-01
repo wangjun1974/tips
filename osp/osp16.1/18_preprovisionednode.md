@@ -4,7 +4,7 @@
 https://gitlab.cee.redhat.com/sputhenp/lab/-/blob/master/templates/osp-16-1/pre-provisioned/overcloud-deploy-tls-everywhere.sh
 
 # 安装 overcloud-controller-0
-virsh attach-disk jwang-overcloud-ceph01 /root/jwang/isos/rhel-8.2-x86_64-dvd.iso hda --type cdrom --mode readonly --config
+virsh attach-disk jwang-overcloud-ctrl01 /root/jwang/isos/rhel-8.2-x86_64-dvd.iso hda --type cdrom --mode readonly --config
 # 重启 
 # ks=http://10.66.208.115/overcloud-controller-0-ks.cfg nameserver=192.168.122.3 ip=192.0.2.51::192.0.2.1:255.255.255.0:overcloud-controller-0.example.com:ens3:none
 
@@ -36,14 +36,225 @@ tar
 EOF
 
 # 安装 overcloud-controller-1
+virsh attach-disk jwang-overcloud-ctrl02 /root/jwang/isos/rhel-8.2-x86_64-dvd.iso hda --type cdrom --mode readonly --config
+# 重启 
+# ks=http://10.66.208.115/overcloud-controller-1-ks.cfg nameserver=192.168.122.3 ip=192.0.2.52::192.0.2.1:255.255.255.0:overcloud-controller-1.example.com:ens3:none
+
+# 生成 ks.cfg - overcloud-controller-1
+cat > overcloud-controller-1-ks.cfg <<'EOF'
+lang en_US
+keyboard us
+timezone Asia/Shanghai --isUtc
+rootpw $1$PTAR1+6M$DIYrE6zTEo5dWWzAp9as61 --iscrypted
+#platform x86, AMD64, or Intel EM64T
+reboot
+text
+cdrom
+bootloader --location=mbr --append="rhgb quiet crashkernel=auto"
+zerombr
+clearpart --all --initlabel
+autopart
+network --device=ens3 --hostname=overcloud-controller-1.example.com --bootproto=static --ip=192.0.2.52 --netmask=255.255.255.0 --gateway=192.0.2.1 --nameserver=192.168.122.3
+auth --passalgo=sha512 --useshadow
+selinux --enforcing
+firewall --enabled --ssh
+skipx
+firstboot --disable
+%packages
+@^minimal-environment
+kexec-tools
+tar
+%end
+EOF
 
 # 安装 overcloud-controller-2
+virsh attach-disk jwang-overcloud-ctrl03 /root/jwang/isos/rhel-8.2-x86_64-dvd.iso hda --type cdrom --mode readonly --config
+# 重启 
+# ks=http://10.66.208.115/overcloud-controller-2-ks.cfg nameserver=192.168.122.3 ip=192.0.2.53::192.0.2.1:255.255.255.0:overcloud-controller-2.example.com:ens3:none
+
+# 生成 ks.cfg - overcloud-controller-2
+cat > overcloud-controller-2-ks.cfg <<'EOF'
+lang en_US
+keyboard us
+timezone Asia/Shanghai --isUtc
+rootpw $1$PTAR1+6M$DIYrE6zTEo5dWWzAp9as61 --iscrypted
+#platform x86, AMD64, or Intel EM64T
+reboot
+text
+cdrom
+bootloader --location=mbr --append="rhgb quiet crashkernel=auto"
+zerombr
+clearpart --all --initlabel
+autopart
+network --device=ens3 --hostname=overcloud-controller-2.example.com --bootproto=static --ip=192.0.2.53 --netmask=255.255.255.0 --gateway=192.0.2.1 --nameserver=192.168.122.3
+auth --passalgo=sha512 --useshadow
+selinux --enforcing
+firewall --enabled --ssh
+skipx
+firstboot --disable
+%packages
+@^minimal-environment
+kexec-tools
+tar
+%end
+EOF
 
 # 安装 overcloud-computehci-0
+# 如果之前未清理磁盘可以执行
+# sgdisk --delete /dev/vda
+# sgdisk --delete /dev/vdb
+# sgdisk --delete /dev/vdc
+# sgdisk --delete /dev/vdd
+virsh attach-disk jwang-overcloud-ceph01 /root/jwang/isos/rhel-8.2-x86_64-dvd.iso hda --type cdrom --mode readonly --config
+# 重启 
+# ks=http://10.66.208.115/overcloud-computehci-0-ks.cfg nameserver=192.168.122.3 ip=192.0.2.71::192.0.2.1:255.255.255.0:overcloud-computehci-0.example.com:ens3:none
+
+# 生成 ks.cfg - overcloud-computehci-0
+cat > overcloud-computehci-0-ks.cfg <<'EOF'
+lang en_US
+keyboard us
+timezone Asia/Shanghai --isUtc
+rootpw $1$PTAR1+6M$DIYrE6zTEo5dWWzAp9as61 --iscrypted
+#platform x86, AMD64, or Intel EM64T
+reboot
+text
+cdrom
+bootloader --location=mbr --append="rhgb quiet crashkernel=auto"
+zerombr
+clearpart --all --initlabel
+ignoredisk --only-use=vda
+autopart
+network --device=ens3 --hostname=overcloud-computehci-0.example.com --bootproto=static --ip=192.0.2.71 --netmask=255.255.255.0 --gateway=192.0.2.1 --nameserver=192.168.122.3
+auth --passalgo=sha512 --useshadow
+selinux --enforcing
+firewall --enabled --ssh
+skipx
+firstboot --disable
+%packages
+@^minimal-environment
+kexec-tools
+tar
+%end
+EOF
 
 # 安装 overcloud-computehci-1
+virsh attach-disk jwang-overcloud-ceph02 /root/jwang/isos/rhel-8.2-x86_64-dvd.iso hda --type cdrom --mode readonly --config
+# 重启 
+# ks=http://10.66.208.115/overcloud-computehci-1-ks.cfg nameserver=192.168.122.3 ip=192.0.2.72::192.0.2.1:255.255.255.0:overcloud-computehci-1.example.com:ens3:none
+
+# 生成 ks.cfg - overcloud-computehci-1
+cat > overcloud-computehci-1-ks.cfg <<'EOF'
+lang en_US
+keyboard us
+timezone Asia/Shanghai --isUtc
+rootpw $1$PTAR1+6M$DIYrE6zTEo5dWWzAp9as61 --iscrypted
+#platform x86, AMD64, or Intel EM64T
+reboot
+text
+cdrom
+bootloader --location=mbr --append="rhgb quiet crashkernel=auto"
+zerombr
+clearpart --all --initlabel
+ignoredisk --only-use=vda
+autopart
+network --device=ens3 --hostname=overcloud-computehci-1.example.com --bootproto=static --ip=192.0.2.72 --netmask=255.255.255.0 --gateway=192.0.2.1 --nameserver=192.168.122.3
+auth --passalgo=sha512 --useshadow
+selinux --enforcing
+firewall --enabled --ssh
+skipx
+firstboot --disable
+%packages
+@^minimal-environment
+kexec-tools
+tar
+%end
+EOF
 
 # 安装 overcloud-computehci-2
+virsh attach-disk jwang-overcloud-ceph03 /root/jwang/isos/rhel-8.2-x86_64-dvd.iso hda --type cdrom --mode readonly --config
+# 重启 
+# ks=http://10.66.208.115/overcloud-computehci-2-ks.cfg nameserver=192.168.122.3 ip=192.0.2.73::192.0.2.1:255.255.255.0:overcloud-computehci-2.example.com:ens3:none
+
+# 生成 ks.cfg - overcloud-computehci-2
+cat > overcloud-computehci-2-ks.cfg <<'EOF'
+lang en_US
+keyboard us
+timezone Asia/Shanghai --isUtc
+rootpw $1$PTAR1+6M$DIYrE6zTEo5dWWzAp9as61 --iscrypted
+#platform x86, AMD64, or Intel EM64T
+reboot
+text
+cdrom
+bootloader --location=mbr --append="rhgb quiet crashkernel=auto"
+zerombr
+clearpart --all --initlabel
+ignoredisk --only-use=vda
+autopart
+network --device=ens3 --hostname=overcloud-computehci-2.example.com --bootproto=static --ip=192.0.2.73 --netmask=255.255.255.0 --gateway=192.0.2.1 --nameserver=192.168.122.3
+auth --passalgo=sha512 --useshadow
+selinux --enforcing
+firewall --enabled --ssh
+skipx
+firstboot --disable
+%packages
+@^minimal-environment
+kexec-tools
+tar
+%end
+EOF
+
+# 在所有预部署节点上创建用户 stack
+useradd stack
+passwd stack
+
+# 设置 sudo
+echo "stack ALL=(root) NOPASSWD:ALL" | tee -a /etc/sudoers.d/stack
+chmod 0400 /etc/sudoers.d/stack
+
+# 建立 undercloud 到 overcloud 节点 stack 用户 ssh public key 登录
+(undercloud) [stack@undercloud ~]$ ssh-copy-id stack@192.0.2.51
+(undercloud) [stack@undercloud ~]$ ssh-copy-id stack@192.0.2.52
+(undercloud) [stack@undercloud ~]$ ssh-copy-id stack@192.0.2.53
+(undercloud) [stack@undercloud ~]$ ssh-copy-id stack@192.0.2.71
+(undercloud) [stack@undercloud ~]$ ssh-copy-id stack@192.0.2.72
+(undercloud) [stack@undercloud ~]$ ssh-copy-id stack@192.0.2.73
+
+# 生成 osp.repo
+(undercloud) [stack@undercloud ~]$ 
+> /tmp/osp.repo
+
+for i in rhel-8-for-x86_64-baseos-eus-rpms rhel-8-for-x86_64-appstream-eus-rpms rhel-8-for-x86_64-highavailability-eus-rpms ansible-2.9-for-rhel-8-x86_64-rpms openstack-16.1-for-rhel-8-x86_64-rpms fast-datapath-for-rhel-8-x86_64-rpms rhceph-4-tools-for-rhel-8-x86_64-rpms advanced-virt-for-rhel-8-x86_64-rpms
+do 
+cat >> /tmp/osp.repo <<EOF
+[$i]
+name=$i
+baseurl=http://192.0.2.1:8088/repos/osp16.1/$i/
+enabled=1
+gpgcheck=0
+
+EOF
+done
+
+# 生成 inventory
+cat > /tmp/inventory <<EOF
+[controller]
+192.0.2.5[1:3] ansible_user=stack ansible_become=yes ansible_become_method=sudo
+
+[computehci]
+192.0.2.7[1:3] ansible_user=stack ansible_become=yes ansible_become_method=sudo
+
+EOF
+
+# 拷贝 osp.repo 
+ansible -i /tmp/inventory all -m copy -a 'src=/tmp/osp.repo dest=/etc/yum.repos.d'
+
+# bind mount /var/www/html/repos 到 /var/lib/ironic/httpboot/repos 
+sudo -i
+cd /var/lib/ironic/httpboot
+mkdir -p repos
+mount -o bind /var/www/html/repos repos
+chown -R --reference pxelinux.cfg repos
+exit
 
 
 

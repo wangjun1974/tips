@@ -327,6 +327,7 @@ EOF
 resource_registry:
   OS::TripleO::Services::IpaClient: /usr/share/openstack-tripleo-heat-templates/deployment/ipa/ipaservices-baremetal-ansible.yaml
 parameter_defaults:
+  IdMModifyDNS: false
   IdMServer: helper.example.com
   IdMDomain: example.com
   IdMInstallClientPackages: True

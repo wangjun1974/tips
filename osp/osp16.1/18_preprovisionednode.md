@@ -245,17 +245,128 @@ cat > /tmp/inventory <<EOF
 
 EOF
 
-# 拷贝 osp.repo 
-ansible -i /tmp/inventory all -m copy -a 'src=/tmp/osp.repo dest=/etc/yum.repos.d'
-
 # bind mount /var/www/html/repos 到 /var/lib/ironic/httpboot/repos 
+# 这里 yum 服务器用 director 的 8088 端口提供服务
+# 因此需要 bind mount repos 目录到 /var/lib/ironic/httpboot/repos
+(undercloud) [stack@undercloud ~]$ 
 sudo -i
 cd /var/lib/ironic/httpboot
 mkdir -p repos
 mount -o bind /var/www/html/repos repos
 chown -R --reference pxelinux.cfg repos
 exit
+(undercloud) [stack@undercloud ~]$ 
+
+# 拷贝 osp.repo 
+(undercloud) [stack@undercloud ~]$ ansible -i /tmp/inventory all -m copy -a 'src=/tmp/osp.repo dest=/etc/yum.repos.d'
+
+# 设置 container-tools repository module 为版本 2.0
+(undercloud) [stack@undercloud ~]$ ansible -i /tmp/inventory all -m shell -a 'cmd="dnf module disable -y container-tools:rhel8"'
+(undercloud) [stack@undercloud ~]$ ansible -i /tmp/inventory all -m shell -a 'cmd="dnf module enable -y container-tools:2.0"'
+
+# 设置 virt repository module 为版本 8.2
+(undercloud) [stack@undercloud ~]$ ansible -i /tmp/inventory all -m shell -a 'cmd="dnf module disable -y virt:rhel"'
+(undercloud) [stack@undercloud ~]$ ansible -i /tmp/inventory all -m shell -a 'cmd="dnf dnf module enable -y virt:8.2"'
+
+# 更新系统
+(undercloud) [stack@undercloud ~]$ ansible -i /tmp/inventory all -m yum -a 'name=* state=latest'
+(undercloud) [stack@undercloud ~]$ ansible -i /tmp/inventory all -m reboot
+
+# 拷贝 cacert.pem 到 overcloud 节点
+(undercloud) [stack@undercloud ~]$ ansible -i /tmp/inventory all -m copy -a 'src=/home/stack/cacert.pem dest=/etc/pki/ca-trust/source/anchors'
+(undercloud) [stack@undercloud ~]$ ansible -i /tmp/inventory all -m shell -a 'cmd="update-ca-trust extract"'
+
+# 生成模版文件 neutron-port
+(undercloud) [stack@undercloud ~]$ cat > ~/templates/neutron-port.yaml <<'EOF'
+resource_registry:
+  OS::TripleO::DeployedServer::ControlPlanePort: /usr/share/openstack-tripleo-heat-templates/deployed-server/deployed-neutron-port.yaml
+  OS::TripleO::Network::Ports::RedisVipPort: /usr/share/openstack-tripleo-heat-templates/network/ports/noop.yaml
+  OS::TripleO::Network::Ports::OVNDBsVipPort: /usr/share/openstack-tripleo-heat-templates/network/ports/noop.yaml
+
+parameter_defaults:
+  DeployedServerPortMap:
+    control_virtual_ip:
+      fixed_ips:
+        - ip_address: 192.0.2.240
+      subnets:
+        - cidr: 24
+    controller-0-ctlplane:
+      fixed_ips:
+        - ip_address: 192.0.2.51
+      subnets:
+        - cidr: 24
+    controller-1-ctlplane:
+      fixed_ips:
+        - ip_address: 192.0.2.52
+      subnets:
+        - cidr: 24
+    controller-2-ctlplane:
+      fixed_ips:
+        - ip_address: 192.0.2..53
+      subnets:
+        - cidr: 24
+    computehci-0-ctlplane:
+      fixed_ips:
+        - ip_address: 192.0.2.71
+      subnets:
+        - cidr: 24
+    computehci-1-ctlplane:
+      fixed_ips:
+        - ip_address: 192.0.2.72
+      subnets:
+        - cidr: 24
+    computehci-2-ctlplane:
+      fixed_ips:
+        - ip_address: 192.0.2.73
+      subnets:
+        - cidr: 24
+EOF
+
+# 生成模版文件
+(undercloud) [stack@undercloud ~]$ cat > ~/templates/tls-parameters.yaml <<'EOF'
+resource_registry:
+  OS::TripleO::Services::IpaClient: /usr/share/openstack-tripleo-heat-templates/deployment/ipa/ipaservices-baremetal-ansible.yaml
+parameter_defaults:
+  IdMServer: helper.example.com
+  IdMDomain: example.com
+  IdMInstallClientPackages: True
+EOF
 
 
+生成部署脚本
+(undercloud) [stack@undercloud ~]$ cat > ~/deploy-tls-everywhere-preprovion.sh << 'EOF'
+#!/bin/bash
+THT=/usr/share/openstack-tripleo-heat-templates/
+CNF=~/templates/
 
+source ~/stackrc
+openstack overcloud deploy --debug \
+--disable-validations \
+--overcloud-ssh-user stack \
+--templates $THT \
+-e /usr/share/openstack-tripleo-heat-templates/environments/deployed-server-environment.yaml \
+-r $CNF/roles_data.yaml \
+-n $CNF/network_data.yaml \
+-e $THT/environments/ceph-ansible/ceph-ansible.yaml \
+-e $THT/environments/ceph-ansible/ceph-rgw.yaml \
+-e $THT/environments/ssl/enable-internal-tls.yaml \
+-e $THT/environments/ssl/tls-everywhere-endpoints-dns.yaml \
+-e $THT/environments/services/haproxy-public-tls-certmonger.yaml \
+-e $THT/environments/network-isolation.yaml \
+-e $CNF/environments/network-environment.yaml \
+-e $CNF/environments/fixed-ips.yaml \
+-e $CNF/environments/net-bond-with-vlans.yaml \
+-e $THT/environments/services/octavia.yaml \
+-e ~/containers-prepare-parameter.yaml \
+-e $CNF/custom-domain.yaml \
+-e $CNF/node-info.yaml \
+-e $CNF/enable-tls.yaml \
+-e $CNF/inject-trust-anchor.yaml \
+-e $CNF/keystone_domain_specific_ldap_backend.yaml \
+-e $CNF/tls-parameters.yaml \
+-e $CNF/neutron-port.yaml \
+-e $CNF/cephstorage.yaml \
+-e $CNF/fix-nova-reserved-host-memory.yaml \
+--ntp-server 192.0.2.1
+EOF
 ```

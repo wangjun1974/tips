@@ -583,5 +583,6 @@ https://access.redhat.com/solutions/5641801
 
 
 
-参考文档
-https://slagle.fedorapeople.org/tripleo-docs/install/advanced_deployment/deployed_server.html
+参考文档<br>
+https://slagle.fedorapeople.org/tripleo-docs/install/advanced_deployment/deployed_server.html<br>
+https://virtorbis.virtcompute.com/?tag=pre-provisioned-nodes<br>

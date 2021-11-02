@@ -1,5 +1,9 @@
 ### 预安装节点的部署方式
 ```
+
+# 这个工作并不顺利
+# 目前在这个方向上没有成功
+
 # 参考模版
 https://gitlab.cee.redhat.com/sputhenp/lab/-/blob/master/templates/osp-16-1/pre-provisioned/overcloud-deploy-tls-everywhere.sh
 
@@ -297,12 +301,37 @@ exit
 (undercloud) [stack@undercloud ~]$ ansible -i /tmp/inventory all -m yum -a 'name=* state=latest'
 (undercloud) [stack@undercloud ~]$ ansible -i /tmp/inventory all -m reboot
 
+# 在节点上安装 
+(undercloud) [stack@undercloud ~]$ ansible -i /tmp/inventory all -m yum -a 'name=python3-heat-agent* state=latest'
+
 # 拷贝 cacert.pem 到 overcloud 节点
 (undercloud) [stack@undercloud ~]$ ansible -i /tmp/inventory all -m copy -a 'src=/home/stack/cacert.pem dest=/etc/pki/ca-trust/source/anchors'
 (undercloud) [stack@undercloud ~]$ ansible -i /tmp/inventory all -m copy -a 'src=/etc/pki/ca-trust/source/anchors/cm-local-ca.pem dest=/etc/pki/ca-trust/source/anchors'
 (undercloud) [stack@undercloud ~]$ ansible -i /tmp/inventory all -m shell -a 'cmd="update-ca-trust extract"'
 
-# 生成模版文件 neutron-port
+# 生成 /etc/os-net-config/mapping.yaml 文件，拷贝到 overcloud 节点
+(undercloud) [stack@undercloud ~]$ cat > /tmp/mapping.yaml <<EOF
+interface_mapping:
+  nic1: ens3
+  nic2: ens4
+  nic3: ens5
+EOF
+(undercloud) [stack@undercloud ~]$ ansible -i /tmp/inventory all -m shell -a 'mkdir -p /etc/os-net-config'
+(undercloud) [stack@undercloud ~]$ ansible -i /tmp/inventory all -m copy -a 'src=/tmp/mapping.yaml dest=/etc/os-net-config'
+
+# 生成模版文件 ~/templates/hostnamemap.yaml
+(undercloud) [stack@undercloud ~]$ cat > ~/templates/hostnamemap.yaml <<EOF
+parameter_defaults:
+  HostnameMap:
+    overcloud-controller-0: overcloud-controller-0
+    overcloud-controller-1: overcloud-controller-1
+    overcloud-controller-2: overcloud-controller-2
+    overcloud-computehci-0: overcloud-computehci-0
+    overcloud-computehci-1: overcloud-computehci-1
+    overcloud-computehci-2: overcloud-computehci-2
+EOF
+
+# 生成模版文件 neutron-port 
 (undercloud) [stack@undercloud ~]$ cat > ~/templates/neutron-port.yaml <<'EOF'
 resource_registry:
   OS::TripleO::DeployedServer::ControlPlanePort: /usr/share/openstack-tripleo-heat-templates/deployed-server/deployed-neutron-port.yaml
@@ -357,6 +386,17 @@ EOF
 (undercloud) [stack@undercloud ~]$ /bin/bash /usr/share/openstack-tripleo-heat-templates/deployed-server/scripts/enable-ssh-admin.sh
 
 # 生成模版文件
+(undercloud) [stack@undercloud ~]$ cat > ~/templates/deployed-server-environment.yaml <<'EOF'
+resource_registry:
+  OS::TripleO::Server: ../deployed-server/deployed-server.yaml
+  OS::TripleO::DeployedServer::ControlPlanePort: OS::Neutron::Port
+  OS::TripleO::DeployedServer::Bootstrap: OS::Heat::None
+
+parameter_defaults:
+  EnablePackageInstall: True
+EOF
+
+# 生成模版文件
 (undercloud) [stack@undercloud ~]$ cat > ~/templates/tls-parameters.yaml <<'EOF'
 resource_registry:
   OS::TripleO::Services::IpaClient: /usr/share/openstack-tripleo-heat-templates/deployment/ipa/ipaservices-baremetal-ansible.yaml
@@ -367,7 +407,7 @@ parameter_defaults:
   IdMInstallClientPackages: True
 EOF
 
-生成 
+# 生成模版文件 （未使用）
 (undercloud) [stack@undercloud ~]$ cat > ~/templates/predeployed-config.yaml <<'EOF'
 resource_registry:
   OS::TripleO::Controller::Net::SoftwareConfig: /home/stack/templates/network/config/bond-with-vlans/controller.yaml
@@ -499,7 +539,7 @@ openstack overcloud deploy --debug \
 --templates $THT \
 -r $CNF/roles_data.yaml \
 -n $CNF/network_data.yaml \
--e $THT/environments/deployed-server-environment.yaml \
+-e $CNF/deployed-server-environment.yaml \
 -e $THT/environments/ceph-ansible/ceph-ansible.yaml \
 -e $THT/environments/ceph-ansible/ceph-rgw.yaml \
 -e $THT/environments/ssl/enable-internal-tls.yaml \
@@ -513,6 +553,7 @@ openstack overcloud deploy --debug \
 -e ~/containers-prepare-parameter.yaml \
 -e $CNF/custom-domain.yaml \
 -e $CNF/node-info.yaml \
+-e $CNF/hostnamemap.yaml \
 -e $CNF/enable-tls.yaml \
 -e $CNF/inject-trust-anchor.yaml \
 -e $CNF/keystone_domain_specific_ldap_backend.yaml \

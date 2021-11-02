@@ -311,6 +311,9 @@ resource_registry:
   OS::TripleO::Network::Ports::OVNDBsVipPort: /usr/share/openstack-tripleo-heat-templates/network/ports/noop.yaml
 
 parameter_defaults:
+  NeutronPublicInterface: ens4
+  EC2MetadataIp: 192.0.2.1
+  ControlPlaneDefaultRoute: 192.0.2.1
   DeployedServerPortMap:
     control_virtual_ip:
       fixed_ips:
@@ -364,6 +367,123 @@ parameter_defaults:
   IdMInstallClientPackages: True
 EOF
 
+生成 
+(undercloud) [stack@undercloud ~]$ cat > ~/templates/predeployed-config.yaml <<'EOF'
+resource_registry:
+  OS::TripleO::Controller::Net::SoftwareConfig: /home/stack/templates/network/config/bond-with-vlans/controller.yaml
+  OS::TripleO::Compute::Net::SoftwareConfig: /home/stack/templates/network/config/bond-with-vlans/compute.yaml
+  OS::TripleO::ComputeHCI::Net::SoftwareConfig: /home/stack/templates/network/config/bond-with-vlans/computehci.yaml
+
+  OS::TripleO::Controller::Ports::ExternalPort: /usr/share/openstack-tripleo-heat-templates/network/ports/external_from_pool.yaml
+  OS::TripleO::Controller::Ports::InternalApiPort: /usr/share/openstack-tripleo-heat-templates/network/ports/internal_api_from_pool.yaml
+  OS::TripleO::Controller::Ports::StoragePort: /usr/share/openstack-tripleo-heat-templates/network/ports/storage_from_pool.yaml
+  OS::TripleO::Controller::Ports::StorageMgmtPort: /usr/share/openstack-tripleo-heat-templates/network/ports/storage_mgmt_from_pool.yaml
+  OS::TripleO::Controller::Ports::TenantPort: /usr/share/openstack-tripleo-heat-templates/network/ports/tenant_from_pool.yaml
+
+  OS::TripleO::Compute::Ports::ExternalPort: /usr/share/openstack-tripleo-heat-templates/network/ports/external_from_pool.yaml
+  OS::TripleO::Compute::Ports::InternalApiPort: /usr/share/openstack-tripleo-heat-templates/network/ports/internal_api_from_pool.yaml
+  OS::TripleO::Compute::Ports::StoragePort: /usr/share/openstack-tripleo-heat-templates/network/ports/storage_from_pool.yaml
+  OS::TripleO::Compute::Ports::StorageMgmtPort: /usr/share/openstack-tripleo-heat-templates/network/ports/noop.yaml
+  OS::TripleO::Compute::Ports::TenantPort: /usr/share/openstack-tripleo-heat-templates/network/ports/tenant_from_pool.yaml
+
+  OS::TripleO::ComputeHCI::Ports::ExternalPort: /usr/share/openstack-tripleo-heat-templates/network/ports/external_from_pool.yaml
+  OS::TripleO::ComputeHCI::Ports::InternalApiPort: /usr/share/openstack-tripleo-heat-templates/network/ports/internal_api_from_pool.yaml
+  OS::TripleO::ComputeHCI::Ports::StoragePort: /usr/share/openstack-tripleo-heat-templates/network/ports/storage_from_pool.yaml
+  OS::TripleO::ComputeHCI::Ports::StorageMgmtPort: /usr/share/openstack-tripleo-heat-templates/network/ports/storage_mgmt_from_pool.yaml
+  OS::TripleO::ComputeHCI::Ports::TenantPort: /usr/share/openstack-tripleo-heat-templates/network/ports/tenant_from_pool.yaml
+
+  OS::TripleO::Network::Ports::ExternalVipPort: /usr/share/openstack-tripleo-heat-templates/network/ports/external.yaml
+  OS::TripleO::Network::Ports::InternalApiVipPort: /usr/share/openstack-tripleo-heat-templates/network/ports/internal_api.yaml
+  OS::TripleO::Network::Ports::StorageVipPort: /usr/share/openstack-tripleo-heat-templates/network/ports/storage.yaml
+  OS::TripleO::Network::Ports::StorageMgmtVipPort: /usr/share/openstack-tripleo-heat-templates/network/ports/storage_mgmt.yaml
+  OS::TripleO::Network::Ports::RedisVipPort: /usr/share/openstack-tripleo-heat-templates/network/ports/vip.yaml
+  OS::TripleO::Network::Ports::OVNDBsVipPort: /usr/share/openstack-tripleo-heat-templates/network/ports/vip.yaml
+
+parameter_defaults:
+  ControllerCount: 3
+  ComputeCount: 0
+  ComputeHCICount: 3
+  DnsServers: ['192.168.122.3']
+  NtpServer: '192.0.2.1'
+  DockerInsecureRegistryAddress: helper.example.com:5000
+  NeutronBridgeMappings: datacentre:br-ex
+  NeutronNetworkVLANRanges: datacentre:1:1000
+  HostnameMap:
+    overcloud-controller-0: overcloud-controller-0
+    overcloud-controller-1: overcloud-controller-1
+    overcloud-controller-2: overcloud-controller-2
+    overcloud-compute-0: overcloud-compute-0
+    overcloud-compute-1: overcloud-compute-1
+    overcloud-computehci-0: overcloud-computehci-0
+    overcloud-computehci-1: overcloud-computehci-1
+    overcloud-computehci-2: overcloud-computehci-2
+  ControlFixedIPs: [{'ip_address':'192.0.2.240'}]
+  PublicVirtualFixedIPs: [{'ip_address':'192.168.122.40'}]
+  InternalApiVirtualFixedIPs: [{'ip_address':'172.16.2.240'}]
+  StorageVirtualFixedIPs: [{'ip_address':'172.16.1.240'}]
+  StorageMgmtVirtualFixedIPs: [{'ip_address':'172.16.3.240'}]
+  RedisVirtualFixedIPs: [{'ip_address':'172.16.2.241'}]
+  OVNDBsVirtualFixedIPs: [{'ip_address':'172.16.2.242'}]
+  ControllerIPs:
+    ctlplane:
+    - 192.0.2.51
+    - 192.0.2.52
+    - 192.0.2.53
+    storage:
+    - 172.16.1.51
+    - 172.16.1.52
+    - 172.16.1.53
+    storage_mgmt:
+    - 172.16.3.51
+    - 172.16.3.52
+    - 172.16.3.53
+    internal_api:
+    - 172.16.2.51
+    - 172.16.2.52
+    - 172.16.2.53
+    tenant:
+    - 172.16.0.51
+    - 172.16.0.52
+    - 172.16.0.53
+    external:
+    - 192.168.122.31
+    - 192.168.122.32
+    - 192.168.122.33
+  ComputeIPs:
+    ctlplane:
+    - 192.0.2.61
+    - 192.0.2.62
+    storage:
+    - 172.16.1.61
+    - 172.16.1.62
+    internal_api:
+    - 172.16.2.61
+    - 172.16.2.62
+    tenant:
+    - 172.16.0.61
+    - 172.16.0.62
+  ComputeHCIIPs:
+    ctlplane:
+    - 192.0.2.71
+    - 192.0.2.72
+    - 192.0.2.73
+    storage:
+    - 172.16.1.71
+    - 172.16.1.72
+    - 172.16.1.73
+    storage_mgmt:
+    - 172.16.3.71
+    - 172.16.3.72
+    - 172.16.3.73
+    internal_api:
+    - 172.16.2.71
+    - 172.16.2.72
+    - 172.16.2.73
+    tenant:
+    - 172.16.0.71
+    - 172.16.0.72
+    - 172.16.0.73
+EOF
 
 生成部署脚本
 (undercloud) [stack@undercloud ~]$ cat > ~/deploy-tls-everywhere-preprovion.sh << 'EOF'
@@ -397,17 +517,30 @@ openstack overcloud deploy --debug \
 -e $CNF/inject-trust-anchor.yaml \
 -e $CNF/keystone_domain_specific_ldap_backend.yaml \
 -e $CNF/tls-parameters.yaml \
--e $CNF/neutron-port.yaml \
 -e $CNF/cephstorage.yaml \
 -e $CNF/fix-nova-reserved-host-memory.yaml \
+-e $CNF/predeployed-config.yaml \
+-e $CNF/neutron-port.yaml \
 --ntp-server 192.0.2.1
 EOF
 ```
 
 报错 
 ```
+1.
 Host overcloud.example.com not found in /home/stack/.ssh/known_hosts^M
 Cannot find any hosts on 'overcloud' in network 'ctlplane'
 
-ipa dnsrecord-del example.com overcloud.ctlplane --a-rec=192.0.2.240
+ipa dnszone-del ctlplane.example.com
+
+2.
+2021-11-02 02:38:46Z [overcloud]: CREATE_FAILED  'int' object has no attribute 'split'
+参考
+https://access.redhat.com/solutions/5641801
+
 ```
+
+
+
+参考文档
+https://slagle.fedorapeople.org/tripleo-docs/install/advanced_deployment/deployed_server.html

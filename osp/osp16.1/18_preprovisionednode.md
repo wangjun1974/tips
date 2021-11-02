@@ -327,7 +327,7 @@ parameter_defaults:
         - cidr: 24
     controller-2-ctlplane:
       fixed_ips:
-        - ip_address: 192.0.2..53
+        - ip_address: 192.0.2.53
       subnets:
         - cidr: 24
     computehci-0-ctlplane:
@@ -395,4 +395,12 @@ openstack overcloud deploy --debug \
 -e $CNF/fix-nova-reserved-host-memory.yaml \
 --ntp-server 192.0.2.1
 EOF
+```
+
+报错 
+```
+Host overcloud.example.com not found in /home/stack/.ssh/known_hosts^M
+Cannot find any hosts on 'overcloud' in network 'ctlplane'
+
+ipa dnsrecord-del example.com overcloud.ctlplane --a-rec=192.0.2.240
 ```

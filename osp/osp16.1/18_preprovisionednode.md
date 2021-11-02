@@ -299,12 +299,14 @@ exit
 
 # 拷贝 cacert.pem 到 overcloud 节点
 (undercloud) [stack@undercloud ~]$ ansible -i /tmp/inventory all -m copy -a 'src=/home/stack/cacert.pem dest=/etc/pki/ca-trust/source/anchors'
+(undercloud) [stack@undercloud ~]$ ansible -i /tmp/inventory all -m copy -a 'src=/etc/pki/ca-trust/source/anchors/cm-local-ca.pem dest=/etc/pki/ca-trust/source/anchors'
 (undercloud) [stack@undercloud ~]$ ansible -i /tmp/inventory all -m shell -a 'cmd="update-ca-trust extract"'
 
 # 生成模版文件 neutron-port
 (undercloud) [stack@undercloud ~]$ cat > ~/templates/neutron-port.yaml <<'EOF'
 resource_registry:
   OS::TripleO::DeployedServer::ControlPlanePort: /usr/share/openstack-tripleo-heat-templates/deployed-server/deployed-neutron-port.yaml
+  OS::TripleO::Network::Ports::ControlPlaneVipPort: /usr/share/openstack-tripleo-heat-templates/deployed-server/deployed-neutron-port.yaml
   OS::TripleO::Network::Ports::RedisVipPort: /usr/share/openstack-tripleo-heat-templates/network/ports/noop.yaml
   OS::TripleO::Network::Ports::OVNDBsVipPort: /usr/share/openstack-tripleo-heat-templates/network/ports/noop.yaml
 
@@ -347,6 +349,10 @@ parameter_defaults:
         - cidr: 24
 EOF
 
+# 预配置 ceph client
+(undercloud) [stack@undercloud ~]$ export OVERCLOUD_HOSTS="192.0.2.51 192.0.2.52 192.0.2.53 192.0.2.71 192.0.2.72 192.0.2.73"
+(undercloud) [stack@undercloud ~]$ /bin/bash /usr/share/openstack-tripleo-heat-templates/deployed-server/scripts/enable-ssh-admin.sh
+
 # 生成模版文件
 (undercloud) [stack@undercloud ~]$ cat > ~/templates/tls-parameters.yaml <<'EOF'
 resource_registry:
@@ -369,6 +375,7 @@ source ~/stackrc
 openstack overcloud deploy --debug \
 --disable-validations \
 --overcloud-ssh-user stack \
+--overcloud-ssh-key ~/.ssh/id_rsa \
 --templates $THT \
 -r $CNF/roles_data.yaml \
 -n $CNF/network_data.yaml \

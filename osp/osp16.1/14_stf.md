@@ -289,6 +289,18 @@ parameter_defaults:
           local:
             host: "%{hiera('fqdn_canonical')}"
             port: 11211
+
+        # set ceph daemon plugin
+        collectd::plugin::ceph::daemons:
+           - ceph-osd.0
+           - ceph-osd.1
+           - ceph-osd.2
+           - ceph-osd.3
+           - ceph-osd.4
+           - ceph-osd.5
+           - ceph-osd.6
+           - ceph-osd.7
+           - ceph-osd.8           
 EOF
 
 3.4 生成部署脚本
@@ -692,4 +704,7 @@ sudo openstack --debug tripleo container image push --local helper.example.com:5
 # 在 overcloud 计算节点上更新 openstack-collectd 镜像
 [heat-admin@overcloud-computehci-0 ~]$ sudo podman pull undercloud.ctlplane.example.com:8787/rhosp-rhel8/openstack-collectd:16.1 
 
+      "expr": "sum(collectd_cpu_percent{type_instance!=\"idle\", host=\"overcloud-computehci-2\", service=~\".+-cloud1-.+\"}) / count(sum by (type_instance) (collectd_cpu_percent{type_instance!=\"idle\",host=\"overcloud-computehci-2\", service=~\".+-cloud1-.+\"}))",
+
+sum(collectd_cpu_percent{type_instance!="idle", host="overcloud-computehci-2.example.com", service=~".+-cloud1-.+"}) / count(sum by (type_instance) (collectd_cpu_percent{type_instance!="idle",host="overcloud-computehci-2.example.com", service=~".+-cloud1-.+"}))
 ```

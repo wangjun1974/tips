@@ -602,3 +602,73 @@ $ cat /var/lib/config-data/puppet-generated/collectd/etc/collectd.d/10-virt.conf
 其中 HostnameFormat "name metadata hostname" 将造成 collectd 启动失败
 临时的解决方案是注释掉这行
 ```
+
+2. 部署失败，在 /var/lib/mistral/overcloud/ansible.log 里有如下报错
+```
+# 报错信息
+        "Error running ['podman', 'create', '--name', 'metrics_qdr', '--label', 'config_id=tripleo_step1', '--label', 'container_name=metrics_qdr'
+, '--label', 'managed_by=tripleo-Controller', '--label', 'config_data={\"environment\": {\"KOLLA_CONFIG_STRATEGY\": \"COPY_ALWAYS\", \"TRIPLEO_CON
+FIG_HASH\": \"f039f36b2ab1566505448ba88433a14d\"}, \"healthcheck\": {\"test\": \"/openstack/healthcheck\"}, \"image\": \"undercloud.ctlplane.examp
+le.com:8787/rhosp-rhel8/openstack-qdrouterd:16.1\", \"net\": \"host\", \"privileged\": false, \"restart\": \"always\", \"start_order\": 1, \"user\
+": \"qdrouterd\", \"volumes\": [\"/etc/hosts:/etc/hosts:ro\", \"/etc/localtime:/etc/localtime:ro\", \"/etc/pki/ca-trust/extracted:/etc/pki/ca-trus
+t/extracted:ro\", \"/etc/pki/ca-trust/source/anchors:/etc/pki/ca-trust/source/anchors:ro\", \"/etc/pki/tls/certs/ca-bundle.crt:/etc/pki/tls/certs/
+ca-bundle.crt:ro\", \"/etc/pki/tls/certs/ca-bundle.trust.crt:/etc/pki/tls/certs/ca-bundle.trust.crt:ro\", \"/etc/pki/tls/cert.pem:/etc/pki/tls/cer
+t.pem:ro\", \"/dev/log:/dev/log\", \"/etc/ipa/ca.crt:/etc/ipa/ca.crt:ro\", \"/etc/puppet:/etc/puppet:ro\", \"/var/lib/kolla/config_files/metrics_q
+dr.json:/var/lib/kolla/config_files/config.json:ro\", \"/var/lib/config-data/puppet-generated/metrics_qdr:/var/lib/kolla/config_files/src:ro\", \"
+/var/lib/metrics_qdr:/var/lib/qdrouterd:z\", \"/var/log/containers/metrics_qdr:/var/log/qdrouterd:z\", \"/etc/pki/tls/certs/metrics_qdr.crt:/var/l
+ib/kolla/config_files/src-tls/etc/pki/tls/certs/metrics_qdr.crt:ro\", \"/etc/pki/tls/private/metrics_qdr.key:/var/lib/kolla/config_files/src-tls/e
+tc/pki/tls/private/metrics_qdr.key:ro\", \"/etc/ipa/ca.crt:/etc/ipa/ca.crt:ro\"]}', '--conmon-pidfile=/var/run/metrics_qdr.pid', '--detach=true', 
+'--log-driver', 'k8s-file', '--log-opt', 'path=/var/log/containers/stdouts/metrics_qdr.log', '--env=KOLLA_CONFIG_STRATEGY=COPY_ALWAYS', '--env=TRI
+PLEO_CONFIG_HASH=f039f36b2ab1566505448ba88433a14d', '--net=host', '--privileged=false', '--user=qdrouterd', '--volume=/etc/hosts:/etc/hosts:ro', '
+--volume=/etc/localtime:/etc/localtime:ro', '--volume=/etc/pki/ca-trust/extracted:/etc/pki/ca-trust/extracted:ro', '--volume=/etc/pki/ca-trust/sou
+rce/anchors:/etc/pki/ca-trust/source/anchors:ro', '--volume=/etc/pki/tls/certs/ca-bundle.crt:/etc/pki/tls/certs/ca-bundle.crt:ro', '--volume=/etc/
+pki/tls/certs/ca-bundle.trust.crt:/etc/pki/tls/certs/ca-bundle.trust.crt:ro', '--volume=/etc/pki/tls/cert.pem:/etc/pki/tls/cert.pem:ro', '--volume
+=/dev/log:/dev/log', '--volume=/etc/ipa/ca.crt:/etc/ipa/ca.crt:ro', '--volume=/etc/puppet:/etc/puppet:ro', '--volume=/var/lib/kolla/config_files/m
+etrics_qdr.json:/var/lib/kolla/config_files/config.json:ro', '--volume=/var/lib/config-data/puppet-generated/metrics_qdr:/var/lib/kolla/config_fil
+es/src:ro', '--volume=/var/lib/metrics_qdr:/var/lib/qdrouterd:z', '--volume=/var/log/containers/metrics_qdr:/var/log/qdrouterd:z', '--volume=/etc/
+pki/tls/certs/metrics_qdr.crt:/var/lib/kolla/config_files/src-tls/etc/pki/tls/certs/metrics_qdr.crt:ro', '--volume=/etc/pki/tls/private/metrics_qd
+r.key:/var/lib/kolla/config_files/src-tls/etc/pki/tls/private/metrics_qdr.key:ro', '--volume=/etc/ipa/ca.crt:/etc/ipa/ca.crt:ro', 'undercloud.ctlp
+lane.example.com:8787/rhosp-rhel8/openstack-qdrouterd:16.1']. [125]",
+        "stderr: Error: /etc/ipa/ca.crt: duplicate mount destination",
+
+# 文件 /etc/ipa/ca.crt 在多处定义
+ [root@undercloud openstack-tripleo-heat-templates]# grep -r ca.crt deployment/ 
+deployment/apache/apache-baremetal-puppet.j2.yaml:    default: '/etc/ipa/ca.crt'
+deployment/containers-common.yaml:    default: '/etc/ipa/ca.crt'
+deployment/database/mysql-client.yaml:    default: '/etc/ipa/ca.crt'
+deployment/database/mysql-container-puppet.yaml:    default: '/etc/ipa/ca.crt'
+deployment/database/mysql-pacemaker-puppet.yaml:    default: '/etc/ipa/ca.crt'
+deployment/etcd/etcd-container-puppet.yaml:    default: '/etc/ipa/ca.crt'
+deployment/haproxy/haproxy-container-puppet.yaml:    default: '/etc/ipa/ca.crt'
+deployment/haproxy/haproxy-pacemaker-puppet.yaml:    default: '/etc/ipa/ca.crt'
+deployment/horizon/horizon-container-puppet.yaml:    default: '/etc/ipa/ca.crt'
+deployment/metrics/qdr-container-puppet.yaml.orig:    default: '/etc/ipa/ca.crt'
+deployment/metrics/qdr-container-puppet.yaml:    default: '/etc/ipa/ca.crt'
+deployment/neutron/neutron-api-container-puppet.yaml:    default: '/etc/ipa/ca.crt'
+deployment/neutron/neutron-dhcp-container-puppet.yaml:    default: '/etc/ipa/ca.crt'
+deployment/neutron/neutron-plugin-ml2-ovn.yaml:    default: '/etc/ipa/ca.crt'
+deployment/nova/nova-libvirt-container-puppet.yaml:    default: '/etc/ipa/ca.crt'
+deployment/octavia/providers/ovn-provider-config.yaml:    default: '/etc/ipa/ca.crt'
+deployment/ovn/ovn-controller-container-puppet.yaml:    default: '/etc/ipa/ca.crt'
+deployment/ovn/ovn-dbs-pacemaker-puppet.yaml:    default: '/etc/ipa/ca.crt'
+deployment/ovn/ovn-metadata-container-puppet.yaml:    default: '/etc/ipa/ca.crt'
+
+# 其中 deployment/containers-common.yaml 已经定义了，因此 deployment/metrics/qdr-container-puppet.yaml 再定义就重复了
+
+# 修改 undercloud 的 /usr/share/openstack-tripleo-heat-templates/deployment/metrics/qdr-container-puppet.yaml
+ [root@undercloud openstack-tripleo-heat-templates]# diff -urN deployment/metrics/qdr-container-puppet.yaml.orig deployment/metrics/qdr-container-puppet.yaml
+--- deployment/metrics/qdr-container-puppet.yaml.orig   2021-11-04 08:53:21.671394766 +0800
++++ deployment/metrics/qdr-container-puppet.yaml  2021-11-04 08:53:57.402394766 +0800
+@@ -332,11 +332,6 @@
+                   - internal_tls_enabled
+                   - - /etc/pki/tls/certs/metrics_qdr.crt:/var/lib/kolla/config_files/src-tls/etc/pki/tls/certs/metrics_qdr.crt:ro
+                     - /etc/pki/tls/private/metrics_qdr.key:/var/lib/kolla/config_files/src-tls/etc/pki/tls/private/metrics_qdr.key:ro
+-                    - list_join:
+-                      - ':'
+-                      - - {get_param: InternalTLSCAFile}
+-                        - {get_param: InternalTLSCAFile}
+-                        - 'ro'
+                   - null
+             environment:
+               KOLLA_CONFIG_STRATEGY: COPY_ALWAYS
+```

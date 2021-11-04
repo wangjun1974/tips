@@ -671,4 +671,21 @@ deployment/ovn/ovn-metadata-container-puppet.yaml:    default: '/etc/ipa/ca.crt'
                    - null
              environment:
                KOLLA_CONFIG_STRATEGY: COPY_ALWAYS
+
+# 在 undercloud 上更新 openstack-collectd 镜像
+# 参考链接: https://bugzilla.redhat.com/show_bug.cgi?id=1804045
+# 下载镜像
+podman login registry.redhat.io 
+podman pull registry.redhat.io/rhosp-rhel8/openstack-collectd:16.1.6-6
+
+# 为镜像打标签
+podman tag registry.redhat.io/rhosp-rhel8/openstack-collectd:16.1.6-6 helper.example.com:5000/rhosp-rhel8/openstack-collectd:16.1.6-6
+podman tag helper.example.com:5000/rhosp-rhel8/openstack-collectd:16.1.6-6 helper.example.com:5000/rhosp-rhel8/openstack-collectd:16.1
+
+# 上传更新的 openstack-collectd 镜像 
+podman push helper.example.com:5000/rhosp-rhel8/openstack-collectd:16.1.6-6
+podman push helper.example.com:5000/rhosp-rhel8/openstack-collectd:16.1
+
+# 在 undercloud 上更新 openstack-collectd 镜像
+sudo openstack --debug tripleo container image push --local helper.example.com:5000/rhosp-rhel8/openstack-collectd:16.1
 ```

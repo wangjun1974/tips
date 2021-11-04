@@ -703,8 +703,13 @@ sudo openstack --debug tripleo container image push --local helper.example.com:5
 
 # 在 overcloud 计算节点上更新 openstack-collectd 镜像
 [heat-admin@overcloud-computehci-0 ~]$ sudo podman pull undercloud.ctlplane.example.com:8787/rhosp-rhel8/openstack-collectd:16.1 
+```
 
-      "expr": "sum(collectd_cpu_percent{type_instance!=\"idle\", host=\"overcloud-computehci-2\", service=~\".+-cloud1-.+\"}) / count(sum by (type_instance) (collectd_cpu_percent{type_instance!=\"idle\",host=\"overcloud-computehci-2\", service=~\".+-cloud1-.+\"}))",
-
+```
 sum(collectd_cpu_percent{type_instance!="idle", host="overcloud-computehci-2.example.com", service=~".+-cloud1-.+"}) / count(sum by (type_instance) (collectd_cpu_percent{type_instance!="idle",host="overcloud-computehci-2.example.com", service=~".+-cloud1-.+"}))
+```
+
+```
+# collectd ceph plugins
+https://collectd.org/wiki/index.php/Plugin:Ceph
 ```

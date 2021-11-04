@@ -688,4 +688,8 @@ podman push helper.example.com:5000/rhosp-rhel8/openstack-collectd:16.1
 
 # 在 undercloud 上更新 openstack-collectd 镜像
 sudo openstack --debug tripleo container image push --local helper.example.com:5000/rhosp-rhel8/openstack-collectd:16.1
+
+# 在 overcloud 计算节点上更新 openstack-collectd 镜像
+[heat-admin@overcloud-computehci-0 ~]$ sudo podman pull undercloud.ctlplane.example.com:8787/rhosp-rhel8/openstack-collectd:16.1 
+
 ```

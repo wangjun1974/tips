@@ -904,4 +904,15 @@ https://github.com/wangjun1974/tips/blob/master/os/miscs.md#osp-161-undercloud-r
 (undercloud) [stack@undercloud ~]$ cat /etc/hosts | grep undercloud
 192.0.2.1 undercloud.ctlplane.example.com undercloud.ctlplane undercloud
 
+# collectd 
+https://www.jianshu.com/p/a05da23150fb
+https://collectd.org/documentation.shtml
+https://doc.yonyoucloud.com/doc/logstash-best-practice-cn/input/collectd.html
+https://collectd.org/wiki/index.php/Plugin:RRDtool
+https://collectd.org/wiki/index.php/Inside_the_RRDtool_plugin
+https://collectd.org/documentation/manpages/collectd.conf.5.shtml#plugin_rrdtool
+https://frontier.town/2017/10/collectd-and-rrdtool/
+https://www.jianshu.com/p/3c7d31a8e4cb
+
+
 ```

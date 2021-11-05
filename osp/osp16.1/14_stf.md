@@ -854,6 +854,50 @@ https://github.com/rochaporto/collectd-ceph
 # Bug 1984193 - Provide configuration to collect ceph mon metrics via collectd
 https://bugzilla.redhat.com/show_bug.cgi?id=1984193
 
+
+# undercloud 手工生成 ceph mon collectd 配置文件
+(undercloud) [stack@undercloud ~]$ cat > /tmp/10-ceph.conf <<EOF
+<LoadPlugin ceph>
+  Globals false
+</LoadPlugin>
+
+<Plugin ceph>
+  LongRunAvgLatency false
+  ConvertSpecialMetricTypes true
+
+  <Daemon "ceph-mon.overcloud-controller-0">
+    SocketPath "/var/run/ceph/ceph-mon.overcloud-controller-0.asok"
+  </Daemon>
+  <Daemon "ceph-mon.overcloud-controller-1">
+    SocketPath "/var/run/ceph/ceph-mon.overcloud-controller-1.asok"
+  </Daemon>
+  <Daemon "ceph-mon.overcloud-controller-2">
+    SocketPath "/var/run/ceph/ceph-mon.overcloud-controller-2.asok"
+  </Daemon>
+</Plugin>
+EOF
+
+# 生成 inventory 
+(undercloud) [stack@undercloud ~]$ 
+cat > /tmp/inventory <<EOF
+[controller]
+192.0.2.5[1:3] ansible_user=heat-admin ansible_become=yes ansible_become_method=sudo
+
+[computehci]
+192.0.2.7[1:3] ansible_user=heat-admin ansible_become=yes ansible_become_method=sudo
+
+EOF
+
+# 拷贝 controller ceph monitor collectd ceph plugin 配置文件
+(undercloud) [stack@undercloud ~]$ ansible -i /tmp/inventory controller -m copy -a 'src=/tmp/10-ceph.conf dest=/var/lib/config-data/puppet-generated/collectd/etc/collectd.d'
+
+# 重启 collectd
+(undercloud) [stack@undercloud ~]$ ansible -i /tmp/inventory controller -m shell -a 'podman restart collectd'
+
+# 检查日志
+[stack@undercloud ~]$ ssh heat-admin@192.0.2.51 sudo cat /var/log/containers/collectd/collectd.log
+
+
 # 重启 undercloud 后 rabbitmq 出现问题的处理
 https://github.com/wangjun1974/tips/blob/master/os/miscs.md#osp-161-undercloud-rabbitmq-%E6%9C%8D%E5%8A%A1%E6%97%A0%E6%B3%95%E5%90%AF%E5%8A%A8%E9%97%AE%E9%A2%98%E7%9A%84%E5%88%86%E6%9E%90
 

@@ -244,6 +244,7 @@ parameter_defaults:
     CollectdDefaultPollingInterval: 60
     CollectdExtraPlugins:
     - vmem
+    - ceph
 
     # set standard prefixes for where metrics and events are published to QDR
     MetricsQdrAddresses:
@@ -252,7 +253,7 @@ parameter_defaults:
     - prefix: 'anycast/ceilometer'
       distribution: multicast
 
-    ExtraConfig:
+    ComputeHCIExtraConfig:
         ceilometer::agent::polling::polling_interval: 60
         ceilometer::agent::polling::polling_meters:
         - cpu
@@ -302,6 +303,142 @@ parameter_defaults:
            - ceph-osd.7
            - ceph-osd.8           
 EOF
+
+# 添加 ceph 部分
+根据在以下路径已经存在了 $THT/environments/enable-stf.yaml 文件，考虑这个模版文件是否可以不用生成
+cat > ~/templates/enable-stf.yaml <<'EOF'
+parameter_defaults:
+    # only send to STF, not other publishers
+    EventPipelinePublishers: []
+    PipelinePublishers: []
+
+    # manage the polling and pipeline configuration files for Ceilometer agents
+    ManagePolling: true
+    ManagePipeline: true
+
+    # enable Ceilometer metrics and events
+    CeilometerQdrPublishMetrics: true
+    CeilometerQdrPublishEvents: true
+
+    # enable collection of API status
+    CollectdEnableSensubility: true
+    CollectdSensubilityTransport: amqp1
+    CollectdSensubilityResultsChannel: sensubility/telemetry
+
+    # enable collection of containerized service metrics
+    CollectdEnableLibpodstats: true
+
+    # set collectd overrides for higher telemetry resolution and extra plugins
+    # to load
+    CollectdConnectionType: amqp1
+    CollectdAmqpInterval: 60
+    CollectdDefaultPollingInterval: 60
+    CollectdExtraPlugins:
+    - vmem
+    - ceph
+
+    # set standard prefixes for where metrics and events are published to QDR
+    MetricsQdrAddresses:
+    - prefix: 'collectd'
+      distribution: multicast
+    - prefix: 'anycast/ceilometer'
+      distribution: multicast
+
+    ControllerExtraConfig:
+        ceilometer::agent::polling::polling_interval: 60
+        ceilometer::agent::polling::polling_meters:
+        - cpu
+        - disk.*
+        - ip.*
+        - image.*
+        - memory
+        - memory.*
+        - network.*
+        - perf.*
+        - port
+        - port.*
+        - switch
+        - switch.*
+        - storage.*
+        - volume.*
+
+        # to avoid filling the memory buffers if disconnected from the message bus
+        collectd::plugin::amqp1::send_queue_limit: 50
+
+        # receive extra information about virtual memory
+        collectd::plugin::vmem::verbose: true
+
+        # provide name and uuid in addition to hostname for better correlation
+        # to ceilometer data
+        collectd::plugin::virt::hostname_format: "name uuid hostname"
+
+        # provide the human-friendly name of the virtual instance
+        collectd::plugin::virt::plugin_instance_format: metadata
+
+        # set memcached collectd plugin to report its metrics by hostname
+        # rather than host IP, ensuring metrics in the dashboard remain uniform
+        collectd::plugin::memcached::instances:
+          local:
+            host: "%{hiera('fqdn_canonical')}"
+            port: 11211
+
+        # set ceph daemon plugin on controller
+        collectd::plugin::ceph::daemons:
+           - mon.overcloud-controller-0
+           - mon.overcloud-controller-1
+           - mon.overcloud-controller-2
+
+    ComputeHCIExtraConfig:
+        ceilometer::agent::polling::polling_interval: 60
+        ceilometer::agent::polling::polling_meters:
+        - cpu
+        - disk.*
+        - ip.*
+        - image.*
+        - memory
+        - memory.*
+        - network.*
+        - perf.*
+        - port
+        - port.*
+        - switch
+        - switch.*
+        - storage.*
+        - volume.*
+
+        # to avoid filling the memory buffers if disconnected from the message bus
+        collectd::plugin::amqp1::send_queue_limit: 50
+
+        # receive extra information about virtual memory
+        collectd::plugin::vmem::verbose: true
+
+        # provide name and uuid in addition to hostname for better correlation
+        # to ceilometer data
+        collectd::plugin::virt::hostname_format: "name uuid hostname"
+
+        # provide the human-friendly name of the virtual instance
+        collectd::plugin::virt::plugin_instance_format: metadata
+
+        # set memcached collectd plugin to report its metrics by hostname
+        # rather than host IP, ensuring metrics in the dashboard remain uniform
+        collectd::plugin::memcached::instances:
+          local:
+            host: "%{hiera('fqdn_canonical')}"
+            port: 11211
+
+        # set ceph daemon plugin on storage node
+        collectd::plugin::ceph::daemons:
+           - ceph-osd.0
+           - ceph-osd.1
+           - ceph-osd.2
+           - ceph-osd.3
+           - ceph-osd.4
+           - ceph-osd.5
+           - ceph-osd.6
+           - ceph-osd.7
+           - ceph-osd.8           
+EOF
+
 
 3.4 生成部署脚本
 cat > deploy-ironic-overcloud-stf.sh <<'EOF'
@@ -712,4 +849,8 @@ sum(collectd_cpu_percent{type_instance!="idle", host="overcloud-computehci-2.exa
 ```
 # collectd ceph plugins
 https://collectd.org/wiki/index.php/Plugin:Ceph
+https://github.com/rochaporto/collectd-ceph
+
+# Bug 1984193 - Provide configuration to collect ceph mon metrics via collectd
+https://bugzilla.redhat.com/show_bug.cgi?id=1984193
 ```

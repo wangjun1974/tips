@@ -853,4 +853,11 @@ https://github.com/rochaporto/collectd-ceph
 
 # Bug 1984193 - Provide configuration to collect ceph mon metrics via collectd
 https://bugzilla.redhat.com/show_bug.cgi?id=1984193
+
+# 重启 undercloud 后 rabbitmq 出现问题的处理
+https://github.com/wangjun1974/tips/blob/master/os/miscs.md#osp-161-undercloud-rabbitmq-%E6%9C%8D%E5%8A%A1%E6%97%A0%E6%B3%95%E5%90%AF%E5%8A%A8%E9%97%AE%E9%A2%98%E7%9A%84%E5%88%86%E6%9E%90
+
+(undercloud) [stack@undercloud ~]$ cat /etc/hosts | grep undercloud
+192.0.2.1 undercloud.ctlplane.example.com undercloud.ctlplane undercloud
+
 ```

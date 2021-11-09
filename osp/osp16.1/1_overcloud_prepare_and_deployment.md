@@ -409,11 +409,12 @@ Waiting for messages on queue 'tripleo' with no timeout.
 # 可以根据以下链接内容，停止 iscsid 服务
 # 重启 tripleo_iscsid 服务
 # 必要时添加 iptables 规则
+# 可以在 undercloud 上检查 tripleo 服务状态
+# systemctl -l | grep tripleo | grep -Ev "running|waiting"
 https://access.redhat.com/solutions/5464941
 Stderr: 'iscsiadm: Cannot perform discovery. Invalid Initiatorname.\niscsiadm: Could not perform SendTargets discovery: invalid parameter\n'
 https://bugzilla.redhat.com/show_bug.cgi?id=1764187
 https://gitlab.cee.redhat.com/rhci-documentation/docs-Red_Hat_Enterprise_Linux_OpenStack_Platform/-/commit/652e8c538c34337af521e3636ff5478ad7ff122b
-
 
 [root@undercloud ~]# systemctl -l | grep tripleo_iscsi
 tripleo_iscsid.service loaded failed     failed          iscsid container                               tripleo_iscsid_healthcheck.timer loaded failed     failed          iscsid container healthcheck
@@ -433,5 +434,4 @@ systemctl stop iscsid.socket
 systemctl disable iscsid.socket
 systemctl disable iscsid
 systemctl stop iscsid
-
 ```

@@ -389,3 +389,44 @@ Waiting for messages on queue 'tripleo' with no timeout.
 (undercloud) [stack@undercloud ~]$ for i in $(openstack baremetal node list -f value -c Name); do openstack baremetal introspection data save $i > $i.json ; done
 (undercloud) [stack@undercloud ~]$ pushd
 ```
+
+```
+# undercloud 重启后，如果 introspection 无法正常执行
+# 可以检查系统上是否有其他 dnsmasq 服务造成 tripleo_ironic_inspector_dnsmasq.service 服务无法正常启动
+(undercloud) [stack@undercloud ~]$ sudo systemctl disable libvirtd
+(undercloud) [stack@undercloud ~]$ sudo systemctl stop libvirtd-ro.socket
+(undercloud) [stack@undercloud ~]$ sudo systemctl stop libvirtd.socket
+(undercloud) [stack@undercloud ~]$ sudo systemctl stop libvirtd-admin.socket
+(undercloud) [stack@undercloud ~]$ sudo systemctl stop libvirtd 
+(undercloud) [stack@undercloud ~]$ sudo ps ax | grep dnsmasq 
+# kill 掉 libvirtd 对应的 dnsmasq
+# 重启 tripleo_ironic_inspector_dnsmasq.service 服务
+(undercloud) [stack@undercloud ~]$ sudo systemctl restart tripleo_ironic_inspector_dnsmasq.service
+
+
+https://access.redhat.com/solutions/5464941
+Stderr: 'iscsiadm: Cannot perform discovery. Invalid Initiatorname.\niscsiadm: Could not perform SendTargets discovery: invalid parameter\n'
+https://bugzilla.redhat.com/show_bug.cgi?id=1764187
+https://gitlab.cee.redhat.com/rhci-documentation/docs-Red_Hat_Enterprise_Linux_OpenStack_Platform/-/commit/652e8c538c34337af521e3636ff5478ad7ff122b
+
+
+[root@undercloud ~]# systemctl -l | grep tripleo_iscsi
+tripleo_iscsid.service loaded failed     failed          iscsid container                               tripleo_iscsid_healthcheck.timer loaded failed     failed          iscsid container healthcheck
+
+[root@undercloud ~]# sudo iptables -I INPUT 8 -p tcp -m multiport --dports 3260 -m state --state NEW -m comment --comment "100 iscsid ipv4" -j ACCEPT
+
+[root@undercloud ~]# systemctl restart tripleo_iscsid.service
+
+[root@undercloud ~]# podman logs iscsid
+...
++ exec /usr/sbin/iscsid -f
+iscsid: Can not bind IPC socket
+
+https://bugzilla.redhat.com/show_bug.cgi?id=1642582
+
+systemctl stop iscsid.socket
+systemctl disable iscsid.socket
+systemctl disable iscsid
+systemctl stop iscsid
+
+```

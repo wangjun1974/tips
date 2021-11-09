@@ -404,6 +404,11 @@ Waiting for messages on queue 'tripleo' with no timeout.
 (undercloud) [stack@undercloud ~]$ sudo systemctl restart tripleo_ironic_inspector_dnsmasq.service
 
 
+# 在 undercloud 上安装完 'Server with GUI' group 之后，有些 tripleo 服务会有问题
+# 其中 tripleo_iscsid 这个服务就是受影响的服务之一
+# 可以根据以下链接内容，停止 iscsid 服务
+# 重启 tripleo_iscsid 服务
+# 必要时添加 iptables 规则
 https://access.redhat.com/solutions/5464941
 Stderr: 'iscsiadm: Cannot perform discovery. Invalid Initiatorname.\niscsiadm: Could not perform SendTargets discovery: invalid parameter\n'
 https://bugzilla.redhat.com/show_bug.cgi?id=1764187

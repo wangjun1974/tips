@@ -37,4 +37,12 @@ openstack overcloud deploy --debug --templates $THT \
 -e $CNF/stf-connectors.yaml \
 --ntp-server 192.0.2.1
 EOF
+
+# 获取 dashboard admin password
+(undercloud) [stack@undercloud ~]$ sudo grep dashboard_admin_password /var/lib/mistral/overcloud/ceph-ansible/group_vars/all.yml
+
+# 获取 dashboard 的地址
+(undercloud) [stack@undercloud ~]$ sudo
+ grep dashboard_frontend_vip /var/lib/mistral/overcloud/ceph-ansible/group_vars/all.yml
+
 ``` 

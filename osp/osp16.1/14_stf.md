@@ -244,7 +244,6 @@ parameter_defaults:
     CollectdDefaultPollingInterval: 60
     CollectdExtraPlugins:
     - vmem
-    - ceph
 
     # set standard prefixes for where metrics and events are published to QDR
     MetricsQdrAddresses:

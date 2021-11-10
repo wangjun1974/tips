@@ -293,15 +293,15 @@ parameter_defaults:
 
         # set ceph daemon plugin
         collectd::plugin::ceph::daemons:
-           - ceph-osd.0
-           - ceph-osd.1
-           - ceph-osd.2
-           - ceph-osd.3
-           - ceph-osd.4
-           - ceph-osd.5
-           - ceph-osd.6
-           - ceph-osd.7
-           - ceph-osd.8           
+        - ceph-osd.0
+        - ceph-osd.1
+        - ceph-osd.2
+        - ceph-osd.3
+        - ceph-osd.4
+        - ceph-osd.5
+        - ceph-osd.6
+        - ceph-osd.7
+        - ceph-osd.8           
 EOF
 
 # 添加 ceph 部分
@@ -335,7 +335,6 @@ parameter_defaults:
     CollectdDefaultPollingInterval: 60
     CollectdExtraPlugins:
     - vmem
-    - ceph
 
     # set standard prefixes for where metrics and events are published to QDR
     MetricsQdrAddresses:
@@ -384,9 +383,9 @@ parameter_defaults:
 
         # set ceph daemon plugin on controller
         collectd::plugin::ceph::daemons:
-           - mon.overcloud-controller-0
-           - mon.overcloud-controller-1
-           - mon.overcloud-controller-2
+        - mon.overcloud-controller-0
+        - mon.overcloud-controller-1
+        - mon.overcloud-controller-2
 
     ComputeHCIExtraConfig:
         ceilometer::agent::polling::polling_interval: 60
@@ -428,15 +427,15 @@ parameter_defaults:
 
         # set ceph daemon plugin on storage node
         collectd::plugin::ceph::daemons:
-           - ceph-osd.0
-           - ceph-osd.1
-           - ceph-osd.2
-           - ceph-osd.3
-           - ceph-osd.4
-           - ceph-osd.5
-           - ceph-osd.6
-           - ceph-osd.7
-           - ceph-osd.8           
+        - ceph-osd.0
+        - ceph-osd.1
+        - ceph-osd.2
+        - ceph-osd.3
+        - ceph-osd.4
+        - ceph-osd.5
+        - ceph-osd.6
+        - ceph-osd.7
+        - ceph-osd.8           
 EOF
 
 

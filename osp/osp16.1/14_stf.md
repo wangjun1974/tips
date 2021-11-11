@@ -914,3 +914,6 @@ https://www.jianshu.com/p/3c7d31a8e4cb
 
 
 ```
+
+### 从 STF 1.2 升级到 STF 1.3
+https://access.redhat.com/documentation/en-us/red_hat_openstack_platform/16.2/html/service_telemetry_framework_1.3/assembly-upgrading-service-telemetry-framework-to-version-1-3_assembly

@@ -3,8 +3,8 @@
 
 # 这个工作并不顺利
 # 目前在这个方向上没有成功
-
-# 参考模版
+# 2021/11/11 - 继续尝试
+# 参考文档： https://virtorbis.virtcompute.com/?tag=pre-provisioned-nodes
 https://gitlab.cee.redhat.com/sputhenp/lab/-/blob/master/templates/osp-16-1/pre-provisioned/overcloud-deploy-tls-everywhere.sh
 
 # 安装 overcloud-controller-0

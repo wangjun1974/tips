@@ -915,5 +915,25 @@ https://www.jianshu.com/p/3c7d31a8e4cb
 
 ```
 
-### 从 STF 1.2 升级到 STF 1.3
+### STF 1.2 EOL 的说明
+从 STF 1.2 升级到 STF 1.3
 https://access.redhat.com/documentation/en-us/red_hat_openstack_platform/16.2/html/service_telemetry_framework_1.3/assembly-upgrading-service-telemetry-framework-to-version-1-3_assembly
+```
+[STF] Service Telemetry Framework 1.2 will EOL in early 2022
+
+Hey folks,
+
+Just putting out a public service announcement that Service Telemetry Framework (STF) v1.2 will be EOL once STF 1.4.0 is released in early 2022.
+
+This means STF 1.2 will no longer be tracked for container grades updates etc.
+
+If you have a customer or partner still running STF 1.2, please consider upgrading them to STF 1.3 or later. For more information about upgrades, see https://access.redhat.com/documentation/en-us/red_hat_openstack_platform/16.2/html/service_telemetry_framework_1.3/assembly-upgrading-service-telemetry-framework-to-version-1-3_assembly
+
+STF 1.2 also only supports OpenShift Container Platform v4.6 EUS which ends full support in March 2021. For more information about OpenShift support dates, see https://access.redhat.com/support/policy/updates/openshift#dates).
+
+STF 1.3.3 is shipping this week, and will support OpenShift Container Platform v4.6 through v4.8, allowing customers to upgrade STF on OpenShift Container Platform v4.6, and then subsequently upgrade their OpenShift to version v4.8. This will provide them the ability to upgrade to STF 1.4.0 as well. OpenShift v4.8 has full support through January 2022.
+
+We're still in the planning phases for future OpenShift Container Platform supported versions. There are cross-org planning challenges for dependent Operators in STF 1.4.0 meaning support for v4.9 and later needs to be coordinated, but our intent is to add OpenShift Container Platform v4.10 support in a future z-stream release.
+
+On behalf of the CloudOps DFG and STF development team, thank you for your interest!
+```

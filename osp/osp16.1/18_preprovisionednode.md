@@ -3,8 +3,6 @@
 
 # 这个工作并不顺利
 # 目前在这个方向上没有成功
-# 2021/11/11 - 继续尝试
-# 参考文档： https://virtorbis.virtcompute.com/?tag=pre-provisioned-nodes
 https://gitlab.cee.redhat.com/sputhenp/lab/-/blob/master/templates/osp-16-1/pre-provisioned/overcloud-deploy-tls-everywhere.sh
 
 # 安装 overcloud-controller-0
@@ -586,3 +584,33 @@ https://access.redhat.com/solutions/5641801
 参考文档<br>
 https://slagle.fedorapeople.org/tripleo-docs/install/advanced_deployment/deployed_server.html<br>
 https://virtorbis.virtcompute.com/?tag=pre-provisioned-nodes<br>
+
+
+```
+# 2021/11/11 - 继续尝试
+# 参考文档： https://virtorbis.virtcompute.com/?tag=pre-provisioned-nodes
+
+cat > templates/ctlplane-assignments.yaml <<EOF
+resource_registry:
+  OS::TripleO::DeployedServer::ControlPlanePort: /usr/share/openstack-tripleo-heat-templates/deployed-server/deployed-neutron-port.yaml
+parameter_defaults:
+  DeployedServerPortMap:
+    controller-00-ctlplane:
+      fixed_ips:
+        - ip_address: 192.0.2.51
+      subnets:
+        - cidr: 192.0.2.0/24
+      network:
+        tags:
+          - 192.0.2.0/24
+    compute-00-ctlplane:
+      fixed_ips:
+        - ip_address: 192.0.2.52
+      subnets:
+        - cidr: 192.0.2.0/24
+      network:
+        tags:
+          - 192.0.2.0/24
+EOF
+
+```

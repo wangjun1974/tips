@@ -48,3 +48,7 @@ EOF
 
 ### 如何改变 Grafana password in director
 [rhos-tech] [ceph-dashboard] How to change the Grafana password in director deployed ceph
+```
+# 检查这个模版文件
+/usr/share/openstack-tripleo-heat-templates/deployment/ceph-ansible/ceph-base.yaml
+```

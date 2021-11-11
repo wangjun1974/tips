@@ -44,6 +44,15 @@ EOF
 # 获取 dashboard 的地址
 (undercloud) [stack@undercloud ~]$ sudo grep dashboard_frontend_vip /var/lib/mistral/overcloud/ceph-ansible/group_vars/all.yml
 
+# 访问 Ceph dashboard
+https://overcloud.ctlplane.example.com:8444
+
+# 获取 dashboard admin password
+(undercloud) [stack@undercloud ~]$ sudo grep grafana_admin_password /var/lib/mistral/overcloud/ceph-ansible/group_vars/all.yml
+
+# 访问 Grafana dashboard
+https://overcloud.ctlplane.example.com:3100
+
 ``` 
 
 ### 如何改变 Grafana password in director

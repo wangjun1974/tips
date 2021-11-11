@@ -45,3 +45,6 @@ EOF
 (undercloud) [stack@undercloud ~]$ sudo grep dashboard_frontend_vip /var/lib/mistral/overcloud/ceph-ansible/group_vars/all.yml
 
 ``` 
+
+### 如何改变 Grafana password in director
+[rhos-tech] [ceph-dashboard] How to change the Grafana password in director deployed ceph

@@ -937,3 +937,6 @@ We're still in the planning phases for future OpenShift Container Platform suppo
 
 On behalf of the CloudOps DFG and STF development team, thank you for your interest!
 ```
+
+### Ceph Grafana Dashboard
+https://docs.ceph.com/en/latest/mgr/dashboard/#dashboard-grafana

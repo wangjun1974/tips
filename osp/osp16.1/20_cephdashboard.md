@@ -42,7 +42,6 @@ EOF
 (undercloud) [stack@undercloud ~]$ sudo grep dashboard_admin_password /var/lib/mistral/overcloud/ceph-ansible/group_vars/all.yml
 
 # 获取 dashboard 的地址
-(undercloud) [stack@undercloud ~]$ sudo
- grep dashboard_frontend_vip /var/lib/mistral/overcloud/ceph-ansible/group_vars/all.yml
+(undercloud) [stack@undercloud ~]$ sudo grep dashboard_frontend_vip /var/lib/mistral/overcloud/ceph-ansible/group_vars/all.yml
 
 ``` 

@@ -590,7 +590,21 @@ https://virtorbis.virtcompute.com/?tag=pre-provisioned-nodes<br>
 # 2021/11/11 - 继续尝试
 # 参考文档： https://virtorbis.virtcompute.com/?tag=pre-provisioned-nodes
 
-cat > templates/ctlplane-assignments.yaml <<EOF
+cat > ~/templates/node-info.yaml <<EOF
+parameter_defaults:
+  ControllerCount: 1
+  ComputeCount: 1
+  ComputeHCICount: 0
+EOF
+
+cat > ~/templates/hostname-map.yaml <<EOF
+parameter_defaults:
+  HostnameMap:
+    overcloud-controller-0: controller-00
+    overcloud-novacompute-0: compute-00
+EOF
+
+cat > ~/templates/ctlplane-assignments.yaml <<EOF
 resource_registry:
   OS::TripleO::DeployedServer::ControlPlanePort: /usr/share/openstack-tripleo-heat-templates/deployed-server/deployed-neutron-port.yaml
 parameter_defaults:
@@ -613,4 +627,26 @@ parameter_defaults:
           - 192.0.2.0/24
 EOF
 
+生成部署脚本
+(undercloud) [stack@undercloud ~]$ cat > ~/deploy-preprovion.sh << 'EOF'
+#!/bin/bash
+THT=/usr/share/openstack-tripleo-heat-templates/
+CNF=~/templates/
+
+source ~/stackrc
+openstack overcloud deploy --debug \
+--disable-validations \
+--overcloud-ssh-user stack \
+--overcloud-ssh-key ~/.ssh/id_rsa \
+--templates $THT \
+-r $CNF/roles_data.yaml \
+-n $CNF/network_data.yaml \
+-e $THT/deployed-server/deployed-server.yaml \
+-e ~/containers-prepare-parameter.yaml \
+-e $CNF/node-info.yaml \
+-e $CNF/hostname-map.yaml \
+-e $CNF/ctlplane-assignments.yaml \
+-e $CNF/fix-nova-reserved-host-memory.yaml \
+--ntp-server 192.0.2.1
+EOF
 ```

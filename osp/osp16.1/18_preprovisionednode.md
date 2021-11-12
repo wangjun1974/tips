@@ -657,3 +657,30 @@ openstack overcloud deploy --debug \
 --ntp-server 192.0.2.1
 EOF
 ```
+
+```
+# 2021/11/12: 部署成功，:-)
+(overcloud) [stack@undercloud ~]$ openstack compute service list
++--------------------------------------+----------------+---------------------------+----------+---------+-------+----------------------------+
+| ID                                   | Binary         | Host                      | Zone     | Status  | State | Updated At                 |
++--------------------------------------+----------------+---------------------------+----------+---------+-------+----------------------------+
+| 75b6137e-c2b7-485c-9d13-d915e1a81db4 | nova-conductor | controller-00.localdomain | internal | enabled | up    | 2021-11-12T01:48:03.000000 |
+| 93c38778-eb0c-4fd0-8426-302d1c40c055 | nova-scheduler | controller-00.localdomain | internal | enabled | up    | 2021-11-12T01:48:08.000000 |
+| 6f9dd990-4465-47d2-a56b-5c07b4a91512 | nova-compute   | compute-00.localdomain    | nova     | enabled | up    | 2021-11-12T01:48:08.000000 |
++--------------------------------------+----------------+---------------------------+----------+---------+-------+----------------------------+
+(overcloud) [stack@undercloud ~]$ openstack volume service list
++------------------+---------------------------+------+---------+-------+----------------------------+
+| Binary           | Host                      | Zone | Status  | State | Updated At                 |
++------------------+---------------------------+------+---------+-------+----------------------------+
+| cinder-scheduler | controller-00.example.com | nova | enabled | up    | 2021-11-12T01:48:21.000000 |
+| cinder-volume    | hostgroup@tripleo_iscsi   | nova | enabled | up    | 2021-11-12T01:48:21.000000 |
++------------------+---------------------------+------+---------+-------+----------------------------+
+(overcloud) [stack@undercloud ~]$ openstack network agent list
++--------------------------------------+----------------------+---------------------------+-------------------+-------+-------+-------------------------------+
+| ID                                   | Agent Type           | Host                      | Availability Zone | Alive | State | Binary                        |
++--------------------------------------+----------------------+---------------------------+-------------------+-------+-------+-------------------------------+
+| 914173e9-5b68-474d-b66f-ddd73f7ede20 | OVN Controller agent | compute-00.localdomain    |                   | :-)   | UP    | ovn-controller                |
+| 73c18d59-2771-4e82-86f9-626d7d33697e | OVN Metadata agent   | compute-00.localdomain    |                   | :-)   | UP    | networking-ovn-metadata-agent |
+| 85179806-c77a-4ca3-95b9-9ae30a8b7ab9 | OVN Controller agent | controller-00.localdomain |                   | :-)   | UP    | ovn-controller                |
++--------------------------------------+----------------------+---------------------------+-------------------+-------+-------+-------------------------------+
+```

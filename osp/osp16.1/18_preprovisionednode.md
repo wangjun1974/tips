@@ -697,4 +697,8 @@ EOF
 | 73c18d59-2771-4e82-86f9-626d7d33697e | OVN Metadata agent   | compute-00.localdomain    |                   | :-)   | UP    | networking-ovn-metadata-agent |
 | 85179806-c77a-4ca3-95b9-9ae30a8b7ab9 | OVN Controller agent | controller-00.localdomain |                   | :-)   | UP    | ovn-controller                |
 +--------------------------------------+----------------------+---------------------------+-------------------+-------+-------+-------------------------------+
+
+# 2021/11/12
+# 下一步计划是尝试在已安装服务器下部署包含 ceph 的 osp 环境
+
 ```

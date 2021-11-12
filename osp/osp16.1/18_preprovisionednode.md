@@ -588,7 +588,11 @@ https://virtorbis.virtcompute.com/?tag=pre-provisioned-nodes<br>
 
 ```
 # 2021/11/11 - 继续尝试
-# 参考文档： https://virtorbis.virtcompute.com/?tag=pre-provisioned-nodes
+# 参考文档： 
+# https://virtorbis.virtcompute.com/?tag=pre-provisioned-nodes
+# 2021/11/12 - 继续尝试
+# 参考文档：
+# https://opendev.org/openstack/tripleo-heat-templates/src/branch/master/deployed-server
 
 cat > ~/templates/node-info.yaml <<EOF
 parameter_defaults:
@@ -627,6 +631,9 @@ parameter_defaults:
           - 192.0.2.0/24
 EOF
 
+(undercloud) [stack@undercloud ~]$ cp /usr/share/openstack-tripleo-heat-templates/deployed-server/deployed-server.yaml ~/templates/
+(undercloud) [stack@undercloud ~]$ sed -i '/heat_template_version: rocky/d' ~/templates/deployed-server.yaml
+
 生成部署脚本
 (undercloud) [stack@undercloud ~]$ cat > ~/deploy-preprovion.sh << 'EOF'
 #!/bin/bash
@@ -641,7 +648,7 @@ openstack overcloud deploy --debug \
 --templates $THT \
 -r $CNF/roles_data.yaml \
 -n $CNF/network_data.yaml \
--e $THT/deployed-server/deployed-server.yaml \
+-e $THT/environments/deployed-server-environment.yaml \
 -e ~/containers-prepare-parameter.yaml \
 -e $CNF/node-info.yaml \
 -e $CNF/hostname-map.yaml \

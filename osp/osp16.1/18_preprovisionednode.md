@@ -660,6 +660,20 @@ EOF
 
 ```
 # 2021/11/12: 部署成功，:-)
+(undercloud) [stack@undercloud ~]$ source ~/overcloudrc
+(overcloud) [stack@undercloud ~]$ openstack endpoint list
++----------------------------------+-----------+--------------+----------------+---------+-----------+--------------------------------------------
+--+
+| ID                               | Region    | Service Name | Service Type   | Enabled | Interface | URL                                        
+  |
++----------------------------------+-----------+--------------+----------------+---------+-----------+--------------------------------------------
+--+
+| 0c0a5e9ff4b54e91a4c29aba8c16dd7e | regionOne | nova         | compute        | True    | public    | http://192.0.2.13:8774/v2.1                
+  |
+| 110f696299a24277a56f755180ec6314 | regionOne | cinderv3     | volumev3       | True    | public    | http://192.0.2.13:8776/v3/%(tenant_id)s    
+  |
+| 1ddb3ffddaae450281bea1afc30d2a84 | regionOne | heat         | orchestration  | True    | admin     | http://192.0.2.13:8004/v1/%(tenant_id)s    
+...
 (overcloud) [stack@undercloud ~]$ openstack compute service list
 +--------------------------------------+----------------+---------------------------+----------+---------+-------+----------------------------+
 | ID                                   | Binary         | Host                      | Zone     | Status  | State | Updated At                 |

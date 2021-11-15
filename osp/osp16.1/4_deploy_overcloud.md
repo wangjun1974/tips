@@ -68,4 +68,28 @@ EOF
 
 # 查看 overcloud compute 服务
 (overcloud) [stack@undercloud ~]$ openstack compute service list
+
+# 部署过程中
+# 查看 baremetal 节点状态
+(undercloud) [stack@undercloud ~]$ watch -n10 'openstack baremetal node list'
+
+# 查看 stack resource 状态
+(undercloud) [stack@undercloud ~]$ watch -n10 'openstack stack resource list -n5 overcloud | grep -Ev COMP'
+
+# 查看 mistral log, 检查最新日志文件的最后 10 行
+(undercloud) [stack@undercloud ~]$ sudo -i
+(undercloud) [stack@undercloud ~]# cd /var/log/containers/mistral
+(undercloud) [stack@undercloud ~]# watch -n5 "ls -ltr | tail -1 | awk '{print \$9}' | xargs cat | tail -10"
+
+# 查看 heat log, 检查最新日志文件的最后 10 行
+(undercloud) [stack@undercloud ~]$ sudo -i
+(undercloud) [stack@undercloud ~]# cd /var/log/containers/heat
+(undercloud) [stack@undercloud ~]# watch -n5 "ls -ltr | tail -1 | awk '{print \$9}' | xargs cat | tail -10"
+
+# 查看 ansible 日志
+(undercloud) [stack@undercloud ~]$ watch -n10 'sudo cat /var/lib/mistral/overcloud/ansible.log | grep -E TASK | tail -10'
+
+# 查看 ceph-ansible 日志
+(undercloud) [stack@undercloud ~]$ watch -n10 'sudo cat /var/lib/mistral/overcloud/ceph-ansible/ceph_ansible_command.log | grep -E TASK | tail -10'
+
 ```

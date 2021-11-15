@@ -790,4 +790,111 @@ EOF
 # https://docs.openstack.org/project-deploy-guide/tripleo-docs/latest/features/deployed_server.html
 # https://docs.openstack.org/project-deploy-guide/tripleo-docs/latest/features/custom_networks.html#custom-networks
 # https://docs.openstack.org/project-deploy-guide/tripleo-docs/latest/provisioning/baremetal_provision.html#baremetal-provision
+
+cat > ~/templates/ctlplane-assignments.yaml <<EOF
+resource_registry:
+  OS::TripleO::DeployedServer::ControlPlanePort: /usr/share/openstack-tripleo-heat-templates/deployed-server/deployed-neutron-port.yaml
+  OS::TripleO::Network::Ports::ControlPlaneVipPort: /usr/share/openstack-tripleo-heat-templates/deployed-server/deployed-neutron-port.yaml
+  OS::TripleO::Network::Ports::RedisVipPort: /usr/share/openstack-tripleo-heat-templates/deployed-server/deployed-neutron-port.yaml
+  OS::TripleO::Network::Ports::OVNDBsVipPort: /usr/share/openstack-tripleo-heat-templates/deployed-server/deployed-neutron-port.yaml
+
+parameter_defaults:
+  NeutronPublicInterface: bond1
+  EC2MetadataIp: 192.0.2.1
+  ControlPlaneDefaultRoute: 192.0.2.1
+  DeployedServerPortMap:
+    control_virtual_ip:
+      fixed_ips:
+        - ip_address: 192.0.2.240
+      subnets:
+        - cidr: 24
+    redis_virtual_ip:
+      fixed_ips:
+        - ip_address: 172.16.2.241
+      subnets:
+        - cidr: 24
+    ovn_dbs_virtual_ip:
+      fixed_ips:
+        - ip_address: 172.16.2.242
+      subnets:
+        - cidr: 24
+    overcloud-controller-0-ctlplane:
+      fixed_ips:
+        - ip_address: 192.0.2.51
+      subnets:
+        - cidr: 192.0.2.0/24
+      network:
+        tags:
+          - 192.0.2.0/24
+    overcloud-controller-1-ctlplane:
+      fixed_ips:
+        - ip_address: 192.0.2.52
+      subnets:
+        - cidr: 192.0.2.0/24
+      network:
+        tags:
+          - 192.0.2.0/24
+    overcloud-controller-2-ctlplane:
+      fixed_ips:
+        - ip_address: 192.0.2.53
+      subnets:
+        - cidr: 192.0.2.0/24
+      network:
+        tags:
+          - 192.0.2.0/24
+    overcloud-computehci-0-ctlplane:
+      fixed_ips:
+        - ip_address: 192.0.2.71
+      subnets:
+        - cidr: 192.0.2.0/24
+      network:
+        tags:
+          - 192.0.2.0/24
+    overcloud-computehci-1-ctlplane:
+      fixed_ips:
+        - ip_address: 192.0.2.72
+      subnets:
+        - cidr: 192.0.2.0/24
+      network:
+        tags:
+          - 192.0.2.0/24
+    overcloud-computehci-2-ctlplane:
+      fixed_ips:
+        - ip_address: 192.0.2.73
+      subnets:
+        - cidr: 192.0.2.0/24
+      network:
+        tags:
+          - 192.0.2.0/24
+EOF
+
+生成部署脚本
+(undercloud) [stack@undercloud ~]$ cat > ~/deploy-preprovion.sh << 'EOF'
+#!/bin/bash
+THT=/usr/share/openstack-tripleo-heat-templates/
+CNF=~/templates/
+
+source ~/stackrc
+openstack overcloud deploy --debug \
+--disable-validations \
+--overcloud-ssh-user stack \
+--overcloud-ssh-key ~/.ssh/id_rsa \
+--templates $THT \
+-r $CNF/roles_data.yaml \
+-n $CNF/network_data.yaml \
+-e $THT/environments/deployed-server-environment.yaml \
+-e $THT/environments/ceph-ansible/ceph-ansible.yaml \
+-e $THT/environments/ceph-ansible/ceph-rgw.yaml \
+-e $THT/environments/network-isolation.yaml \
+-e $CNF/environments/network-environment.yaml \
+-e $CNF/environments/fixed-ips.yaml \
+-e $CNF/environments/net-bond-with-vlans.yaml \
+-e ~/containers-prepare-parameter.yaml \
+-e $CNF/node-info.yaml \
+-e $CNF/ctlplane-assignments.yaml \
+-e $CNF/cephstorage.yaml \
+-e $CNF/fix-nova-reserved-host-memory.yaml \
+--ntp-server 192.0.2.1
+EOF
+
 ```

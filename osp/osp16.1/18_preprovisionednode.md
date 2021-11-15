@@ -631,9 +631,6 @@ parameter_defaults:
           - 192.0.2.0/24
 EOF
 
-(undercloud) [stack@undercloud ~]$ cp /usr/share/openstack-tripleo-heat-templates/deployed-server/deployed-server.yaml ~/templates/
-(undercloud) [stack@undercloud ~]$ sed -i '/heat_template_version: rocky/d' ~/templates/deployed-server.yaml
-
 生成部署脚本
 (undercloud) [stack@undercloud ~]$ cat > ~/deploy-preprovion.sh << 'EOF'
 #!/bin/bash
@@ -701,4 +698,96 @@ EOF
 # 2021/11/12
 # 下一步计划是尝试在已安装服务器下部署包含 ceph 的 osp 环境
 
+cat > ~/templates/node-info.yaml <<EOF
+parameter_defaults:
+  ControllerCount: 3
+  ComputeCount: 0
+  ComputeHCICount: 3
+EOF
+
+cat > ~/templates/ctlplane-assignments.yaml <<EOF
+resource_registry:
+  OS::TripleO::DeployedServer::ControlPlanePort: /usr/share/openstack-tripleo-heat-templates/deployed-server/deployed-neutron-port.yaml
+parameter_defaults:
+  DeployedServerPortMap:
+    overcloud-controller-0-ctlplane:
+      fixed_ips:
+        - ip_address: 192.0.2.51
+      subnets:
+        - cidr: 192.0.2.0/24
+      network:
+        tags:
+          - 192.0.2.0/24
+    overcloud-controller-1-ctlplane:
+      fixed_ips:
+        - ip_address: 192.0.2.52
+      subnets:
+        - cidr: 192.0.2.0/24
+      network:
+        tags:
+          - 192.0.2.0/24
+    overcloud-controller-2-ctlplane:
+      fixed_ips:
+        - ip_address: 192.0.2.53
+      subnets:
+        - cidr: 192.0.2.0/24
+      network:
+        tags:
+          - 192.0.2.0/24
+    overcloud-computehci-0-ctlplane:
+      fixed_ips:
+        - ip_address: 192.0.2.71
+      subnets:
+        - cidr: 192.0.2.0/24
+      network:
+        tags:
+          - 192.0.2.0/24
+    overcloud-computehci-1-ctlplane:
+      fixed_ips:
+        - ip_address: 192.0.2.72
+      subnets:
+        - cidr: 192.0.2.0/24
+      network:
+        tags:
+          - 192.0.2.0/24
+    overcloud-computehci-2-ctlplane:
+      fixed_ips:
+        - ip_address: 192.0.2.73
+      subnets:
+        - cidr: 192.0.2.0/24
+      network:
+        tags:
+          - 192.0.2.0/24
+EOF
+
+生成部署脚本
+(undercloud) [stack@undercloud ~]$ cat > ~/deploy-preprovion.sh << 'EOF'
+#!/bin/bash
+THT=/usr/share/openstack-tripleo-heat-templates/
+CNF=~/templates/
+
+source ~/stackrc
+openstack overcloud deploy --debug \
+--disable-validations \
+--overcloud-ssh-user stack \
+--overcloud-ssh-key ~/.ssh/id_rsa \
+--templates $THT \
+-r $CNF/roles_data.yaml \
+-n $CNF/network_data.yaml \
+-e $THT/environments/deployed-server-environment.yaml \
+-e $THT/environments/ceph-ansible/ceph-ansible.yaml \
+-e $THT/environments/ceph-ansible/ceph-rgw.yaml \
+-e ~/containers-prepare-parameter.yaml \
+-e $CNF/node-info.yaml \
+-e $CNF/ctlplane-assignments.yaml \
+-e $CNF/cephstorage.yaml \
+-e $CNF/fix-nova-reserved-host-memory.yaml \
+--ntp-server 192.0.2.1
+EOF
+
+# 继续做部署网络隔离和固定 IP 地址的配置
+# 参考链接：
+# https://docs.openstack.org/project-deploy-guide/tripleo-docs/latest/features/deployed_server.html
+# https://docs.openstack.org/project-deploy-guide/tripleo-docs/latest/features/custom_networks.html#custom-networks
+# https://docs.openstack.org/project-deploy-guide/tripleo-docs/latest/provisioning/baremetal_provision.html#baremetal-provision
 ```

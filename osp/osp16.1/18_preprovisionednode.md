@@ -789,6 +789,7 @@ openstack overcloud deploy --debug \
 EOF
 
 # 继续做部署网络隔离和固定 IP 地址的配置
+# 目前的做法下，需要检查部署完后的 RedisVip 和 OVSDBsVIP 是否与 $THT/environments/fixed-ips.yaml 里定义的一致
 # 参考链接：
 # https://docs.openstack.org/project-deploy-guide/tripleo-docs/latest/features/deployed_server.html
 # https://docs.openstack.org/project-deploy-guide/tripleo-docs/latest/features/custom_networks.html#custom-networks

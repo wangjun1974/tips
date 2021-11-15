@@ -251,13 +251,13 @@ cat > /tmp/inventory <<EOF
 EOF
 
 # 设置 public key auth
-ansible -i /tmp/inventory all -m authorized_key -a 'user=root state=present key="{{ lookup(\"file\",\"/home/stack/.ssh/id_rsa.pub\") }}"' -k
+ansible -i /tmp/inventory all -f 6 -m authorized_key -a 'user=root state=present key="{{ lookup(\"file\",\"/home/stack/.ssh/id_rsa.pub\") }}"' -k
 
 # 添加 stack 用户
-ansible -i /tmp/inventory all -m user -a 'name=stack state=present'
-ansible -i /tmp/inventory all -m shell -a 'echo "redhat" | passwd stack --stdin'
-ansible -i /tmp/inventory all -m shell -a 'echo "stack ALL=(root) NOPASSWD:ALL" | tee -a /etc/sudoers.d/stack'
-ansible -i /tmp/inventory all -m shell -a 'chmod 400 /etc/sudoers.d/stack'
+ansible -i /tmp/inventory all -f 6 -m user -a 'name=stack state=present'
+ansible -i /tmp/inventory all -f 6 -m shell -a 'echo "redhat" | passwd stack --stdin'
+ansible -i /tmp/inventory all -f 6 -m shell -a 'echo "stack ALL=(root) NOPASSWD:ALL" | tee -a /etc/sudoers.d/stack'
+ansible -i /tmp/inventory all -f 6 -m shell -a 'chmod 400 /etc/sudoers.d/stack'
 
 # 重新生成 inventory
 cat > /tmp/inventory <<EOF
@@ -270,7 +270,7 @@ cat > /tmp/inventory <<EOF
 EOF
 
 # 设置 public key auth
-ansible -i /tmp/inventory all -m authorized_key -a 'user=stack state=present key="{{ lookup(\"file\",\"/home/stack/.ssh/id_rsa.pub\") }}"' -k
+ansible -i /tmp/inventory all -f 6 -m authorized_key -a 'user=stack state=present key="{{ lookup(\"file\",\"/home/stack/.ssh/id_rsa.pub\") }}"' -k
 
 # bind mount /var/www/html/repos 到 /var/lib/ironic/httpboot/repos 
 # 这里 yum 服务器用 director 的 8088 端口提供服务
@@ -285,25 +285,25 @@ exit
 (undercloud) [stack@undercloud ~]$ 
 
 # 拷贝 osp.repo 
-(undercloud) [stack@undercloud ~]$ ansible -i /tmp/inventory all -m copy -a 'src=/tmp/osp.repo dest=/etc/yum.repos.d'
+(undercloud) [stack@undercloud ~]$ ansible -i /tmp/inventory all -f 6 -m copy -a 'src=/tmp/osp.repo dest=/etc/yum.repos.d'
 
 # 检查 yum repo 可用 
-(undercloud) [stack@undercloud ~]$ ansible -i /tmp/inventory all -m shell -a 'yum install -y chrony'
+(undercloud) [stack@undercloud ~]$ ansible -i /tmp/inventory all -f 6 -m shell -a 'yum install -y chrony'
 
 # 设置 container-tools repository module 为版本 2.0
-(undercloud) [stack@undercloud ~]$ ansible -i /tmp/inventory all -m shell -a 'cmd="dnf module disable -y container-tools:rhel8"'
-(undercloud) [stack@undercloud ~]$ ansible -i /tmp/inventory all -m shell -a 'cmd="dnf module enable -y container-tools:2.0"'
+(undercloud) [stack@undercloud ~]$ ansible -i /tmp/inventory all -f 6 -m shell -a 'cmd="dnf module disable -y container-tools:rhel8"'
+(undercloud) [stack@undercloud ~]$ ansible -i /tmp/inventory all -f 6 -m shell -a 'cmd="dnf module enable -y container-tools:2.0"'
 
 # 设置 virt repository module 为版本 8.2
-(undercloud) [stack@undercloud ~]$ ansible -i /tmp/inventory all -m shell -a 'cmd="dnf module disable -y virt:rhel"'
-(undercloud) [stack@undercloud ~]$ ansible -i /tmp/inventory all -m shell -a 'cmd="dnf dnf module enable -y virt:8.2"'
+(undercloud) [stack@undercloud ~]$ ansible -i /tmp/inventory all -f 6 -m shell -a 'cmd="dnf module disable -y virt:rhel"'
+(undercloud) [stack@undercloud ~]$ ansible -i /tmp/inventory all -f 6 -m shell -a 'cmd="dnf dnf module enable -y virt:8.2"'
 
 # 更新系统
-(undercloud) [stack@undercloud ~]$ ansible -i /tmp/inventory all -m yum -a 'name=* state=latest'
-(undercloud) [stack@undercloud ~]$ ansible -i /tmp/inventory all -m reboot
+(undercloud) [stack@undercloud ~]$ ansible -i /tmp/inventory all -f 6 -m yum -a 'name=* state=latest'
+(undercloud) [stack@undercloud ~]$ ansible -i /tmp/inventory all -f 6 -m reboot
 
 # 在节点上安装 
-(undercloud) [stack@undercloud ~]$ ansible -i /tmp/inventory all -m yum -a 'name=python3-heat-agent* state=latest'
+(undercloud) [stack@undercloud ~]$ ansible -i /tmp/inventory all -f 6 -m yum -a 'name=python3-heat-agent* state=latest'
 
 # 拷贝 cacert.pem 到 overcloud 节点
 (undercloud) [stack@undercloud ~]$ ansible -i /tmp/inventory all -m copy -a 'src=/home/stack/cacert.pem dest=/etc/pki/ca-trust/source/anchors'

@@ -800,8 +800,6 @@ cat > ~/templates/ctlplane-assignments.yaml <<EOF
 resource_registry:
   OS::TripleO::DeployedServer::ControlPlanePort: /usr/share/openstack-tripleo-heat-templates/deployed-server/deployed-neutron-port.yaml
   OS::TripleO::Network::Ports::ControlPlaneVipPort: /usr/share/openstack-tripleo-heat-templates/deployed-server/deployed-neutron-port.yaml
-  OS::TripleO::Network::Ports::RedisVipPort: /usr/share/openstack-tripleo-heat-templates/deployed-server/deployed-neutron-port.yaml
-  OS::TripleO::Network::Ports::OVNDBsVipPort: /usr/share/openstack-tripleo-heat-templates/deployed-server/deployed-neutron-port.yaml
 
 parameter_defaults:
   NeutronPublicInterface: bond1
@@ -910,6 +908,56 @@ openstack overcloud deploy --debug \
 -e $CNF/fix-nova-reserved-host-memory.yaml \
 --ntp-server 192.0.2.1
 EOF
+
+# 部署成功后
+# 确认使用了固定的 ip 地址
+(undercloud) [stack@undercloud ~]$ ssh stack@192.0.2.51 
+[stack@overcloud-controller-0 ~]$ sudo pcs status | grep ip 
+Cluster name: tripleo_cluster
+  * ip-192.0.2.240      (ocf::heartbeat:IPaddr2):       Started overcloud-controller-0
+  * ip-192.168.122.40   (ocf::heartbeat:IPaddr2):       Started overcloud-controller-1
+  * ip-172.16.2.241     (ocf::heartbeat:IPaddr2):       Started overcloud-controller-2
+  * ip-172.16.2.240     (ocf::heartbeat:IPaddr2):       Started overcloud-controller-0
+  * ip-172.16.1.240     (ocf::heartbeat:IPaddr2):       Started overcloud-controller-1
+  * ip-172.16.3.240     (ocf::heartbeat:IPaddr2):       Started overcloud-controller-2
+  * ip-172.16.2.242     (ocf::heartbeat:IPaddr2):       Started overcloud-controller-0
+[stack@overcloud-controller-0 ~]$ sudo podman exec -it ceph-mon-overcloud-controller-0 ceph status 
+  cluster:
+    id:     931fbdee-be5c-4968-a046-8d3a37542fea
+    health: HEALTH_OK
+ 
+  services:
+    mon: 3 daemons, quorum overcloud-controller-0,overcloud-controller-1,overcloud-controller-2 (age 59m)
+    mgr: overcloud-controller-0(active, since 56m), standbys: overcloud-controller-1, overcloud-controller-2
+    osd: 9 osds: 9 up (since 54m), 9 in (since 54m)
+    rgw: 3 daemons active (overcloud-controller-0.rgw0, overcloud-controller-1.rgw0, overcloud-controller-2.rgw0)
+ 
+  task status:
+ 
+  data:
+    pools:   7 pools, 896 pgs
+    objects: 190 objects, 6.7 KiB
+    usage:   9.1 GiB used, 891 GiB / 900 GiB avail
+    pgs:     896 active+clean
+
+(undercloud) [stack@undercloud ~]$ source overcloudrc
+(overcloud) [stack@undercloud ~]$ openstack endpoint list
++----------------------------------+-----------+--------------+----------------+---------+-----------+--------------------------------------------
+-------------+
+| ID                               | Region    | Service Name | Service Type   | Enabled | Interface | URL                                        
+             |
++----------------------------------+-----------+--------------+----------------+---------+-----------+--------------------------------------------
+-------------+
+| 137a44d080e64259b27384c5ddc9315a | regionOne | cinderv3     | volumev3       | True    | admin     | http://172.16.2.240:8776/v3/%(tenant_id)s  
+             |
+| 1a17b23033974d0e979184e365367845 | regionOne | heat         | orchestration  | True    | admin     | http://172.16.2.240:8004/v1/%(tenant_id)s  
+             |
+| 1d10e3b6e25444739e46f59f610b4e6f | regionOne | neutron      | network        | True    | public    | http://192.168.122.40:9696                 
+             |
+| 24e17b2fe3b340eb8422f7ad853fb4c4 | regionOne | nova         | compute        | True    | internal  | http://172.16.2.240:8774/v2.1              
+             |
+| 3786930a94084f43a18ce9d3a0864d0a | regionOne | keystone     | identity       | True    | admin     | http://192.0.2.240:35357      
+...
 
 # 部署时用的 ansible.cfg 
 # sudo cat /var/lib/mistral/overcloud/ansible.cfg

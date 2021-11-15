@@ -793,6 +793,7 @@ EOF
 # https://docs.openstack.org/project-deploy-guide/tripleo-docs/latest/features/deployed_server.html
 # https://docs.openstack.org/project-deploy-guide/tripleo-docs/latest/features/custom_networks.html#custom-networks
 # https://docs.openstack.org/project-deploy-guide/tripleo-docs/latest/provisioning/baremetal_provision.html#baremetal-provision
+# https://docs.openstack.org/project-deploy-guide/tripleo-docs/latest/features/deployed_server.html#deployed-server-with-config-download
 
 cat > ~/templates/ctlplane-assignments.yaml <<EOF
 resource_registry:

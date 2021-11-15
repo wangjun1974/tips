@@ -136,6 +136,7 @@ firstboot --disable
 @^minimal-environment
 kexec-tools
 tar
+gdisk
 %end
 EOF
 
@@ -169,6 +170,7 @@ firstboot --disable
 @^minimal-environment
 kexec-tools
 tar
+gdisk
 %end
 EOF
 
@@ -202,6 +204,7 @@ firstboot --disable
 @^minimal-environment
 kexec-tools
 tar
+gdisk
 %end
 EOF
 

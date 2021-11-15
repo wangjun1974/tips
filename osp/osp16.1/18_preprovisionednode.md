@@ -914,4 +914,5 @@ EOF
 # 部署时用的 ansible.cfg 
 # sudo cat /var/lib/mistral/overcloud/ansible.cfg
 # openstack overcloud deploy 有个参数 --override-ansible-cfg 可以按需定制 ansible.cfg 
+# https://docs.openstack.org/project-deploy-guide/tripleo-docs/latest/deployment/ansible_config_download.html
 ```

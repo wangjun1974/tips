@@ -911,4 +911,7 @@ openstack overcloud deploy --debug \
 --ntp-server 192.0.2.1
 EOF
 
+# 部署时用的 ansible.cfg 
+# sudo cat /var/lib/mistral/overcloud/ansible.cfg
+# openstack overcloud deploy 有个参数 --override-ansible-cfg 可以按需定制 ansible.cfg 
 ```

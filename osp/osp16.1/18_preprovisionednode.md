@@ -994,6 +994,10 @@ EOF
 (undercloud) [stack@undercloud ~]$ ansible -i /tmp/inventory all -f 6 -m shell -a "chmod 0644 /etc/krb5.keytab"
 (undercloud) [stack@undercloud ~]$ ansible -i /tmp/inventory all -f 6 -m shell -a "sudo ipa-getkeytab -s helper.example.com -k /etc/krb5.keytab -p host/$(hostname)"
 (undercloud) [stack@undercloud ~]$ ansible -i /tmp/inventory all -f 6 -m systemd -a "name=certmonger state=restarted"
+# 尝试失败了
+# 计划先实现一下 tls-everywhere 
+# 然后再回来实现 deployed-server tls-everywhere
+# 参考链接: https://review.gerrithub.io/c/redhat-openstack/infrared/+/491647
 
 # 继续尝试部署 tls-everywhere with novajoin
 生成部署脚本

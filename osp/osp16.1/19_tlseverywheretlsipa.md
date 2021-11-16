@@ -11,6 +11,10 @@ nameserver 192.168.122.3
 # 安装所需软件 python3-ipalib python3-ipaclient 和 krb5-devel
 (undercloud) [stack@undercloud ~]$ sudo dnf install -y python3-ipalib python3-ipaclient krb5-devel
 
+# 如果重新安装了 ipa server 
+# 记得从 ipa server 拷贝 /etc/ipa/ca.crt 文件
+# https://docs.openstack.org/project-deploy-guide/tripleo-docs/latest/features/tls-everywhere.html#tls-everywhere-with-tripleo-ipa
+
 # 设置环境变量
 (undercloud) [stack@undercloud ~]$ 
 export IPA_USER=admin
@@ -23,6 +27,19 @@ export IPA_SERVER_HOSTNAME=helper.example.com
 export UNDERCLOUD_FQDN=undercloud.example.com
 export USER=stack
 export CLOUD_DOMAIN=example.com
+
+# (不确定是否一定要执行) 运行 playbook ipa-server-create-role.yaml
+(undercloud) [stack@undercloud ~]$ kinit
+(undercloud) [stack@undercloud ~]$ export IPA_PASSWORD=$IPA_PASSWORD
+(undercloud) [stack@undercloud ~]$ export IPA_PRINCIPAL=$IPA_USER
+(undercloud) [stack@undercloud ~]$ export UNDERCLOUD_FQDN=undercloud.example.com
+(undercloud) [stack@undercloud ~]$ ansible-playbook /usr/share/ansible/tripleo-playbooks/ipa-server-create-role.yaml
+
+# (不确定是否一定要执行) 运行 playbook ipa-server-register-undercloud.yaml
+(undercloud) [stack@undercloud ~]$ export IPA_PASSWORD=$IPA_PASSWORD
+(undercloud) [stack@undercloud ~]$ export IPA_PRINCIPAL=$IPA_USER
+(undercloud) [stack@undercloud ~]$ export UNDERCLOUD_FQDN=undercloud.example.com
+(undercloud) [stack@undercloud ~]$ ansible-playbook /usr/share/ansible/tripleo-playbooks/ipa-server-register-undercloud.yaml
 
 # 运行 playbook undercloud-ipa-install.yaml
 (undercloud) [stack@undercloud ~]$ ansible-playbook \

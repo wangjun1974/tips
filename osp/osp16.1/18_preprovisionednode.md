@@ -973,6 +973,8 @@ parameter_defaults:
   IdMServer: helper.example.com
   IdMDomain: example.com
   IdMInstallClientPackages: True
+  DnsSearchDomains: example.com
+  DnsServers: 192.168.122.3
 EOF
 
 # tls-everywhere 需要

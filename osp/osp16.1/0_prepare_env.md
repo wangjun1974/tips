@@ -275,7 +275,7 @@ virt-install --name=jwang-helper-undercloud --vcpus=4 --ram=32768 \
 # 配置 yum 源
 # 根据现场实际情况配置
 # 这里用 undercloud 提供的 yum 源
-
+# 这个步骤可以在 undercloud 完成安装之后再做
 cat > /etc/yum.repos.d/w.repo << EOF
 [rhel-8-for-x86_64-baseos-eus-rpms]
 name=rhel-8-for-x86_64-baseos-eus-rpms

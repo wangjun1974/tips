@@ -975,6 +975,13 @@ parameter_defaults:
   IdMInstallClientPackages: True
 EOF
 
+# tls-everywhere 需要
+# 创建 /etc/pki/CA 目录
+# 在 overcloud 节点上安装 openssl-perl 
+# 查询提供者：sudo yum provides /etc/pki/CA
+# 参考链接：https://bugs.launchpad.net/tripleo/+bug/1821139
+(undercloud) [stack@undercloud ~]$ ansible -i /tmp/inventory all -f 6 -m yum -a 'name=openssl-perl* state=latest'
+
 
 # 继续尝试部署 tls-everywhere with novajoin
 生成部署脚本

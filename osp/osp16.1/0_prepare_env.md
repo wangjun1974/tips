@@ -395,4 +395,10 @@ systemctl set-default graphical.target
 
 # 切换到图形界面
 systemctl isolate graphical
+
+# 当 undercloud 安装完成，设置 ntp 指向 undercloud ntp
+cat > /etc/chrony.conf << EOF
+server 192.0.2.1 iburst
+EOF
+systemctl restart chronyd
 ```

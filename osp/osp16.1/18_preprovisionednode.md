@@ -982,6 +982,18 @@ EOF
 # 参考链接：https://bugs.launchpad.net/tripleo/+bug/1821139
 (undercloud) [stack@undercloud ~]$ ansible -i /tmp/inventory all -f 6 -m yum -a 'name=openssl-perl* state=latest'
 
+# 管理员身份登陆 ipa 服务器
+# 参考链接: 
+# https://access.redhat.com/solutions/642993
+# https://access.redhat.com/solutions/912853
+# echo <pass> | sudo kinit admin
+# sudo ipa-getkeytab -s helper.example.com -k /etc/krb5.keytab -p host/$(hostname)
+# sudo systemctl restart certmonger
+# sudo ipa-getcert list
+(undercloud) [stack@undercloud ~]$ ansible -i /tmp/inventory all -f 6 -m shell -a 'echo redhat123 | sudo kinit admin' 
+(undercloud) [stack@undercloud ~]$ ansible -i /tmp/inventory all -f 6 -m shell -a "chmod 0644 /etc/krb5.keytab"
+(undercloud) [stack@undercloud ~]$ ansible -i /tmp/inventory all -f 6 -m shell -a "sudo ipa-getkeytab -s helper.example.com -k /etc/krb5.keytab -p host/$(hostname)"
+(undercloud) [stack@undercloud ~]$ ansible -i /tmp/inventory all -f 6 -m systemd -a "name=certmonger state=restarted"
 
 # 继续尝试部署 tls-everywhere with novajoin
 生成部署脚本

@@ -48,6 +48,9 @@ export CLOUD_DOMAIN=example.com
 
 # 编辑 undercloud.conf 文件，包含 overcloud_domain_name 和 undercloud_nameservers
 # 不包含 enable_novajoin 和 ipa_otp
+(undercloud) [stack@undercloud ~]$ sed -ie '/enable_novajoin/d ' undercloud.conf
+(undercloud) [stack@undercloud ~]$ sed -ie '/ipa_otp/d ' undercloud.conf
+
 (undercloud) [stack@undercloud ~]$ diff -urN undercloud.conf.novajoin undercloud.conf 
 --- undercloud.conf.novajoin    2021-11-03 10:39:34.349105726 +0800
 +++ undercloud.conf     2021-11-03 10:39:51.291105726 +0800

@@ -1,4 +1,6 @@
 ### 
+https://access.redhat.com/documentation/en-us/red_hat_openstack_platform/16.1/html/advanced_overcloud_customization/sect-tripleo-ipa
+
 ```
 # 确认 /etc/resolv.conf 文件指向 ipa dns 
 (undercloud) [stack@undercloud ~]$ cat /etc/resolv.conf 

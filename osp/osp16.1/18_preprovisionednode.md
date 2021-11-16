@@ -964,6 +964,18 @@ Cluster name: tripleo_cluster
 # openstack overcloud deploy 有个参数 --override-ansible-cfg 可以按需定制 ansible.cfg 
 # https://docs.openstack.org/project-deploy-guide/tripleo-docs/latest/deployment/ansible_config_download.html
 
+# 生成 $THT/tls-params.yaml 文件
+(undercloud) [stack@undercloud ~]$ cat > ~/templates/tls-params.yaml << 'EOF'
+resource_registry:
+  OS::TripleO::Services::IpaClient: /usr/share/openstack-tripleo-heat-templates/deployment/ipa/ipaservices-baremetal-ansible.yaml
+parameter_defaults:
+  IdMModifyDNS: false
+  IdMServer: helper.example.com
+  IdMDomain: example.com
+  IdMInstallClientPackages: True
+EOF
+
+
 # 继续尝试部署 tls-everywhere with novajoin
 生成部署脚本
 (undercloud) [stack@undercloud ~]$ cat > ~/deploy-preprovion.sh << 'EOF'
@@ -996,6 +1008,7 @@ openstack overcloud deploy --debug \
 -e $CNF/keystone_domain_specific_ldap_backend.yaml \
 -e $CNF/ctlplane-assignments.yaml \
 -e $CNF/cephstorage.yaml \
+-e $CNF/tls-params.yaml \
 -e $CNF/fix-nova-reserved-host-memory.yaml \
 --ntp-server 192.0.2.1
 EOF

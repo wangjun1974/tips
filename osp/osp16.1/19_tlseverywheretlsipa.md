@@ -13,6 +13,9 @@ nameserver 192.168.122.3
 
 # 如果重新安装了 ipa server 
 # 记得从 ipa server 拷贝 /etc/ipa/ca.crt 文件
+# 再把 ca.crt 拷贝到 /etc/pki/ca-trust/source/anchors/
+# 最后执行 update-ca-trust extract 
+
 # https://docs.openstack.org/project-deploy-guide/tripleo-docs/latest/features/tls-everywhere.html#tls-everywhere-with-tripleo-ipa
 
 # 设置环境变量

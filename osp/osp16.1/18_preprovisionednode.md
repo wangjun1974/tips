@@ -814,22 +814,6 @@ parameter_defaults:
       network:
         tags:
           - 192.0.2.0/24
-    redis_virtual_ip:
-      fixed_ips:
-        - ip_address: 172.16.2.241
-      subnets:
-        - cidr: 172.16.2.0/24
-      network:
-        tags:
-          - 172.16.2.0/24
-    ovn_dbs_virtual_ip:
-      fixed_ips:
-        - ip_address: 172.16.2.242
-      subnets:
-        - cidr: 172.16.2.0/24
-      network:
-        tags:
-          - 172.16.2.0/24
     overcloud-controller-0-ctlplane:
       fixed_ips:
         - ip_address: 192.0.2.51

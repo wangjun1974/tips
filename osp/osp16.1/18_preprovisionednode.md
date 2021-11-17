@@ -957,8 +957,8 @@ parameter_defaults:
   IdMServer: helper.example.com
   IdMDomain: example.com
   IdMInstallClientPackages: True
-  DnsSearchDomains: example.com
-  DnsServers: 192.168.122.3
+  DnsSearchDomains: ["example.com"]
+  DnsServers: ["192.168.122.3"]
 EOF
 
 # tls-everywhere 需要
@@ -1004,6 +1004,7 @@ openstack overcloud deploy --debug \
 -e $THT/environments/ceph-ansible/ceph-ansible.yaml \
 -e $THT/environments/ceph-ansible/ceph-rgw.yaml \
 -e $THT/environments/ssl/enable-internal-tls.yaml \
+-e $THT/environments/services/haproxy-public-tls-certmonger.yaml \
 -e $THT/environments/ssl/tls-everywhere-endpoints-dns.yaml \
 -e $THT/environments/network-isolation.yaml \
 -e $CNF/environments/network-environment.yaml \
@@ -1012,8 +1013,6 @@ openstack overcloud deploy --debug \
 -e ~/containers-prepare-parameter.yaml \
 -e $CNF/custom-domain.yaml \
 -e $CNF/node-info.yaml \
--e $CNF/enable-tls.yaml \
--e $CNF/inject-trust-anchor.yaml \
 -e $CNF/keystone_domain_specific_ldap_backend.yaml \
 -e $CNF/ctlplane-assignments.yaml \
 -e $CNF/cephstorage.yaml \

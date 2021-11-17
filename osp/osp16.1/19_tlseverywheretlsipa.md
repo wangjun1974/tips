@@ -44,6 +44,12 @@ export CLOUD_DOMAIN=example.com
 (undercloud) [stack@undercloud ~]$ export UNDERCLOUD_FQDN=undercloud.example.com
 (undercloud) [stack@undercloud ~]$ ansible-playbook /usr/share/ansible/tripleo-playbooks/ipa-server-register-undercloud.yaml
 
+# (不确定是否一定要执行) 运行 playbook ipa-server-create-principal.yaml
+(undercloud) [stack@undercloud ~]$ export IPA_PASSWORD=$IPA_PASSWORD
+(undercloud) [stack@undercloud ~]$ export IPA_PRINCIPAL=$IPA_USER
+(undercloud) [stack@undercloud ~]$ export UNDERCLOUD_FQDN=undercloud.example.com
+(undercloud) [stack@undercloud ~]$ ansible-playbook /usr/share/ansible/tripleo-playbooks/ipa-server-create-principal.yaml
+
 # 运行 playbook undercloud-ipa-install.yaml
 (undercloud) [stack@undercloud ~]$ ansible-playbook \
 --ssh-extra-args "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" \

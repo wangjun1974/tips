@@ -66,7 +66,9 @@ ok: [localhost] => {
 /usr/share/ansible/tripleo-playbooks/undercloud-ipa-install.yaml
 
 # 编辑 undercloud.conf 文件，包含 overcloud_domain_name 和 undercloud_nameservers
-# 不包含 enable_novajoin
+# 不包含 enable_novajoin 和 ipa_otp 
+# 根据与 Sadique 的沟通，Ansible based 不需要设置 ipa_otp 
+# 可以再找时间尝试
 (undercloud) [stack@undercloud ~]$ sed -ie '/enable_novajoin/d ' undercloud.conf
 (undercloud) [stack@undercloud ~]$ otp='8Ck&Ktu1xH1r7~m!N)0%|Z'
 (undercloud) [stack@undercloud ~]$ crudini --set ~/undercloud.conf DEFAULT ipa_otp $otp

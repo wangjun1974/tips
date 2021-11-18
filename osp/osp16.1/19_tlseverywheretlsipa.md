@@ -110,3 +110,34 @@ EOF
 
 
 ```
+
+```
+# 当遇到以下报错时
+(undercloud) [stack@undercloud ~]$ sudo kinit -kt /etc/novajoin/krb5.keytab nova/undercloud.example.com@EXAMPLE.COM 
+kinit: Preauthentication failed while getting initial credentials
+
+# 检查 /etc/novajoin/krb5.keytab 文件，确认 stack 用户有这个文件的读取权限
+https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/7/html/linux_domain_identity_authentication_and_policy_guide/retrieve-existing-keytabs
+echo redhat123 | kinit admin
+ipa-getkeytab -s helper.example.com -p nova/undercloud.example.com -k /etc/novajoin/krb5.keytab
+klist
+kdestroy
+klist
+kinit -kt /etc/novajoin/krb5.keytab nova/undercloud.example.com
+klist
+chmod a+r /etc/novajoin/krb5.keytab
+
+# 安装过程中，在 ipa 服务器上可以检查服务的情况
+ipa service-find | grep "Number of" 
+
+
+"<13>Nov 18 03:00:07 puppet-user: Warning: Could not get certificate: Execution of '/usr/bin/getcert request -I libvirt-vnc-client-cert -f /etc/pki/libvirt-vnc/client-cert.pem -c IPA -N CN=overcloud-controller-0.internalapi.example.com -K libvirt-vnc/overcloud-controller-0.internalapi.example.com -D overcloud-controller-0.internalapi.example.com -C systemctl reload libvirtd -w -k /etc/pki/libvirt-vnc/client-key.pem -F /etc/pki/CA/certs/vnc.crt' returned 1: Path \"/etc/pki/CA/certs\": No such file or directory.",
+"<13>Nov 18 03:00:08 puppet-user: Error: /Stage[main]/Tripleo::Profile::Base::Certmonger_user/Tripleo::Certmonger::Libvirt_vnc[libvirt-vnc-client-cert]/Certmonger_certificate[libvirt-vnc-client-cert]: Could not evaluate: The certificate 'libvirt-vnc-client-cert' wasn't found in the list.",
+
+# tls-everywhere 需要
+# 创建 /etc/pki/CA 目录
+# 在 overcloud 节点上安装 openssl-perl 
+# 查询提供者：sudo yum provides /etc/pki/CA
+# 参考链接：https://bugs.launchpad.net/tripleo/+bug/1821139
+(undercloud) [stack@undercloud ~]$ ansible -i /tmp/inventory all -f 6 -m yum -a 'name=openssl-perl* state=latest'
+```

@@ -985,7 +985,7 @@ EOF
 # 然后再回来实现 deployed-server tls-everywhere
 # 参考链接: https://review.gerrithub.io/c/redhat-openstack/infrared/+/491647
 
-# 继续尝试部署 tls-everywhere with novajoin
+# 继续尝试部署 ansible-based tls-everywhere 
 生成部署脚本
 (undercloud) [stack@undercloud ~]$ cat > ~/deploy-preprovion.sh << 'EOF'
 #!/bin/bash
@@ -1021,4 +1021,61 @@ openstack overcloud deploy --debug \
 --ntp-server 192.0.2.1
 EOF
 
+# 尝试 IdMModifyDNS: true
+# 生成 $THT/tls-params.yaml 文件
+(undercloud) [stack@undercloud ~]$ cat > ~/templates/tls-params.yaml << 'EOF'
+resource_registry:
+  OS::TripleO::Services::IpaClient: /usr/share/openstack-tripleo-heat-templates/deployment/ipa/ipaservices-baremetal-ansible.yaml
+parameter_defaults:
+  IdMModifyDNS: true
+  IdMServer: helper.example.com
+  IdMDomain: example.com
+  IdMInstallClientPackages: True
+  DnsSearchDomains: ["example.com"]
+  DnsServers: ["192.168.122.3"]
+EOF
+
+# 继续尝试部署 ansible-based tls-everywhere 
+# 添加 octavia, ceph dashboard 和 stf 
+生成部署脚本
+(undercloud) [stack@undercloud ~]$ cat > ~/deploy-preprovion.sh << 'EOF'
+#!/bin/bash
+THT=/usr/share/openstack-tripleo-heat-templates/
+CNF=~/templates/
+
+source ~/stackrc
+openstack overcloud deploy --debug \
+--disable-validations \
+--overcloud-ssh-user stack \
+--overcloud-ssh-key ~/.ssh/id_rsa \
+--templates $THT \
+-r $CNF/roles_data.yaml \
+-n $CNF/network_data.yaml \
+-e $THT/environments/deployed-server-environment.yaml \
+-e $THT/environments/ceph-ansible/ceph-ansible.yaml \
+-e $THT/environments/ceph-ansible/ceph-rgw.yaml \
+-e $THT/environments/ceph-ansible/ceph-dashboard.yaml \
+-e $THT/environments/ssl/enable-internal-tls.yaml \
+-e $THT/environments/services/haproxy-public-tls-certmonger.yaml \
+-e $THT/environments/ssl/tls-everywhere-endpoints-dns.yaml \
+-e $THT/environments/network-isolation.yaml \
+-e $CNF/environments/network-environment.yaml \
+-e $CNF/environments/fixed-ips.yaml \
+-e $CNF/environments/net-bond-with-vlans.yaml \
+-e $THT/environments/services/octavia.yaml \
+-e $THT/environments/metrics/ceilometer-write-qdr.yaml \
+-e $THT/environments/metrics/collectd-write-qdr.yaml \
+-e $THT/environments/metrics/qdr-edge-only.yaml \
+-e ~/containers-prepare-parameter.yaml \
+-e $CNF/custom-domain.yaml \
+-e $CNF/node-info.yaml \
+-e $CNF/keystone_domain_specific_ldap_backend.yaml \
+-e $CNF/ctlplane-assignments.yaml \
+-e $CNF/cephstorage.yaml \
+-e $CNF/tls-params.yaml \
+-e $CNF/fix-nova-reserved-host-memory.yaml \
+-e $CNF/enable-stf.yaml \
+-e $CNF/stf-connectors.yaml \
+--ntp-server 192.0.2.1
+EOF
 ```

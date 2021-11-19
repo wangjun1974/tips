@@ -195,4 +195,8 @@ openstack overcloud deploy --debug --templates $THT \
 -e $CNF/fix-nova-reserved-host-memory.yaml \
 --ntp-server 192.0.2.1
 EOF
+
+# 为 helper ipa 添加 dns forwarder
+[root@helper ~]# ipa dnsconfig-mod --forwarder=10.64.63.6
 ```
+

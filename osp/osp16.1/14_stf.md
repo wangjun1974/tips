@@ -940,3 +940,6 @@ On behalf of the CloudOps DFG and STF development team, thank you for your inter
 
 ### Ceph Grafana Dashboard
 https://docs.ceph.com/en/latest/mgr/dashboard/#dashboard-grafana
+
+### 重点关注的问题
+https://bugzilla.redhat.com/show_bug.cgi?id=1949930

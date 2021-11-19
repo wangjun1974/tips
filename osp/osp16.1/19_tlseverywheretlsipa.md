@@ -132,3 +132,14 @@ ipa service-find | grep "Number of"
 # 参考链接：https://bugs.launchpad.net/tripleo/+bug/1821139
 (undercloud) [stack@undercloud ~]$ ansible -i /tmp/inventory all -f 6 -m yum -a 'name=openssl-perl* state=latest'
 ```
+
+```
+[1] How is TLS powered by certmonger being done
+https://jaosorior.dev/2016/how-is-tls-powered-by-certmonger-being-done/
+
+[2]
+https://github.com/openstack/tripleo-heat-templates/blob/master/deployment/haproxy/haproxy-public-tls-certmonger.yaml
+
+[3]
+https://access.redhat.com/documentation/en-us/red_hat_openstack_platform/13/html/advanced_overcloud_customization/converting_your_existing_deployment_to_use_tls
+```

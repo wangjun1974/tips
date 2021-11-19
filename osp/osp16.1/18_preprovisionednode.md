@@ -1069,6 +1069,8 @@ openstack overcloud deploy --debug \
 -e ~/containers-prepare-parameter.yaml \
 -e $CNF/custom-domain.yaml \
 -e $CNF/node-info.yaml \
+-e $CNF/enable-tls.yaml \
+-e $CNF/inject-trust-anchor.yaml \
 -e $CNF/keystone_domain_specific_ldap_backend.yaml \
 -e $CNF/ctlplane-assignments.yaml \
 -e $CNF/cephstorage.yaml \

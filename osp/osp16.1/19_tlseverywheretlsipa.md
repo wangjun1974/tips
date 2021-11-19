@@ -131,6 +131,18 @@ ipa service-find | grep "Number of"
 # 查询提供者：sudo yum provides /etc/pki/CA
 # 参考链接：https://bugs.launchpad.net/tripleo/+bug/1821139
 (undercloud) [stack@undercloud ~]$ ansible -i /tmp/inventory all -f 6 -m yum -a 'name=openssl-perl* state=latest'
+
+# 由于是使用自签名证书
+# 如果重新安装了 ipa 服务器，注意执行以下步骤
+# 参考链接：https://github.com/wangjun1974/tips/blob/master/osp/osp16.1/8_idm.md
+# 拷贝自签名证书和 IPA CA 证书到 undercloud 的 trusted store
+# 在 enable-tls.yaml 中添加 ca cert
+# 在 enable-tls.yaml 中添加 ssl private key
+# 在 enable-tls.yaml 中设置 PublicTLSCAFile 指向 /etc/pki/ca-trust/source/anchors/ca.crt.pem
+# 在 inject-trust-anchor.yaml 中添加 cacert.pem
+# 检查 enable-tls.yaml 和 inject-trust-anchor.yaml
+# 在生成 deploy-enable-tls.sh 时注意包含 $CNF/enable-tls.yaml 和 $CNF/inject-trust-anchor.yaml
+
 ```
 
 ```

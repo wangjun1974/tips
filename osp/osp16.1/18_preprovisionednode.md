@@ -1,8 +1,6 @@
 ### 预安装节点的部署方式
 ```
-
-# 这个工作并不顺利
-# 目前在这个方向上没有成功
+# 参考模版
 https://gitlab.cee.redhat.com/sputhenp/lab/-/blob/master/templates/osp-16-1/pre-provisioned/overcloud-deploy-tls-everywhere.sh
 
 # 安装 overcloud-controller-0
@@ -34,6 +32,7 @@ firstboot --disable
 @^minimal-environment
 kexec-tools
 tar
+openssl-perl
 %end
 EOF
 
@@ -66,6 +65,7 @@ firstboot --disable
 @^minimal-environment
 kexec-tools
 tar
+openssl-perl
 %end
 EOF
 
@@ -98,6 +98,7 @@ firstboot --disable
 @^minimal-environment
 kexec-tools
 tar
+openssl-perl
 %end
 EOF
 
@@ -137,6 +138,7 @@ firstboot --disable
 kexec-tools
 tar
 gdisk
+openssl-perl
 %end
 EOF
 
@@ -171,6 +173,7 @@ firstboot --disable
 kexec-tools
 tar
 gdisk
+openssl-perl
 %end
 EOF
 
@@ -205,24 +208,9 @@ firstboot --disable
 kexec-tools
 tar
 gdisk
+openssl-perl
 %end
 EOF
-
-# 在所有预部署节点上创建用户 stack
-useradd stack
-passwd stack
-
-# 设置 sudo
-echo "stack ALL=(root) NOPASSWD:ALL" | tee -a /etc/sudoers.d/stack
-chmod 0400 /etc/sudoers.d/stack
-
-# 建立 undercloud 到 overcloud 节点 stack 用户 ssh public key 登录
-(undercloud) [stack@undercloud ~]$ ssh-copy-id stack@192.0.2.51
-(undercloud) [stack@undercloud ~]$ ssh-copy-id stack@192.0.2.52
-(undercloud) [stack@undercloud ~]$ ssh-copy-id stack@192.0.2.53
-(undercloud) [stack@undercloud ~]$ ssh-copy-id stack@192.0.2.71
-(undercloud) [stack@undercloud ~]$ ssh-copy-id stack@192.0.2.72
-(undercloud) [stack@undercloud ~]$ ssh-copy-id stack@192.0.2.73
 
 # 生成 osp.repo
 (undercloud) [stack@undercloud ~]$ 
@@ -240,6 +228,13 @@ gpgcheck=0
 EOF
 done
 
+# 生成 ssh config
+cat > ~/.ssh/config <<EOF
+Host *
+   StrictHostKeyChecking no
+   UserKnownHostsFile=/dev/null
+EOF
+
 # 生成 inventory
 cat > /tmp/inventory <<EOF
 [controller]
@@ -250,10 +245,10 @@ cat > /tmp/inventory <<EOF
 
 EOF
 
-# 设置 public key auth
+# 设置 stack 用户的 public key auth
 ansible -i /tmp/inventory all -f 6 -m authorized_key -a 'user=root state=present key="{{ lookup(\"file\",\"/home/stack/.ssh/id_rsa.pub\") }}"' -k
 
-# 添加 stack 用户
+# 为 deployed server 添加 stack 用户
 ansible -i /tmp/inventory all -f 6 -m user -a 'name=stack state=present'
 ansible -i /tmp/inventory all -f 6 -m shell -a 'echo "redhat" | passwd stack --stdin'
 ansible -i /tmp/inventory all -f 6 -m shell -a 'echo "stack ALL=(root) NOPASSWD:ALL" | tee -a /etc/sudoers.d/stack'
@@ -272,7 +267,7 @@ EOF
 # 设置 public key auth
 ansible -i /tmp/inventory all -f 6 -m authorized_key -a 'user=stack state=present key="{{ lookup(\"file\",\"/home/stack/.ssh/id_rsa.pub\") }}"' -k
 
-# bind mount /var/www/html/repos 到 /var/lib/ironic/httpboot/repos 
+# 在 undercloud 上 bind mount /var/www/html/repos 到 /var/lib/ironic/httpboot/repos 
 # 这里 yum 服务器用 director 的 8088 端口提供服务
 # 因此需要 bind mount repos 目录到 /var/lib/ironic/httpboot/repos
 (undercloud) [stack@undercloud ~]$ 
@@ -302,294 +297,13 @@ exit
 (undercloud) [stack@undercloud ~]$ ansible -i /tmp/inventory all -f 6 -m yum -a 'name=* state=latest'
 (undercloud) [stack@undercloud ~]$ ansible -i /tmp/inventory all -f 6 -m reboot
 
-# 在节点上安装 
+# 在 overcloud 节点上安装 
 (undercloud) [stack@undercloud ~]$ ansible -i /tmp/inventory all -f 6 -m yum -a 'name=python3-heat-agent* state=latest'
 
-# 拷贝 cacert.pem 到 overcloud 节点
-(undercloud) [stack@undercloud ~]$ ansible -i /tmp/inventory all -m copy -a 'src=/home/stack/cacert.pem dest=/etc/pki/ca-trust/source/anchors'
-(undercloud) [stack@undercloud ~]$ ansible -i /tmp/inventory all -m copy -a 'src=/etc/pki/ca-trust/source/anchors/cm-local-ca.pem dest=/etc/pki/ca-trust/source/anchors'
-(undercloud) [stack@undercloud ~]$ ansible -i /tmp/inventory all -m shell -a 'cmd="update-ca-trust extract"'
+# 参考文档
+# https://slagle.fedorapeople.org/tripleo-docs/install/advanced_deployment/deployed_server.html
+# https://virtorbis.virtcompute.com/?tag=pre-provisioned-nodes
 
-# 生成 /etc/os-net-config/mapping.yaml 文件，拷贝到 overcloud 节点
-(undercloud) [stack@undercloud ~]$ cat > /tmp/mapping.yaml <<EOF
-interface_mapping:
-  nic1: ens3
-  nic2: ens4
-  nic3: ens5
-EOF
-(undercloud) [stack@undercloud ~]$ ansible -i /tmp/inventory all -m shell -a 'mkdir -p /etc/os-net-config'
-(undercloud) [stack@undercloud ~]$ ansible -i /tmp/inventory all -m copy -a 'src=/tmp/mapping.yaml dest=/etc/os-net-config'
-
-# 生成模版文件 ~/templates/hostnamemap.yaml
-(undercloud) [stack@undercloud ~]$ cat > ~/templates/hostnamemap.yaml <<EOF
-parameter_defaults:
-  HostnameMap:
-    overcloud-controller-0: overcloud-controller-0
-    overcloud-controller-1: overcloud-controller-1
-    overcloud-controller-2: overcloud-controller-2
-    overcloud-computehci-0: overcloud-computehci-0
-    overcloud-computehci-1: overcloud-computehci-1
-    overcloud-computehci-2: overcloud-computehci-2
-EOF
-
-# 生成模版文件 neutron-port 
-(undercloud) [stack@undercloud ~]$ cat > ~/templates/neutron-port.yaml <<'EOF'
-resource_registry:
-  OS::TripleO::DeployedServer::ControlPlanePort: /usr/share/openstack-tripleo-heat-templates/deployed-server/deployed-neutron-port.yaml
-  OS::TripleO::Network::Ports::ControlPlaneVipPort: /usr/share/openstack-tripleo-heat-templates/deployed-server/deployed-neutron-port.yaml
-  OS::TripleO::Network::Ports::RedisVipPort: /usr/share/openstack-tripleo-heat-templates/network/ports/noop.yaml
-  OS::TripleO::Network::Ports::OVNDBsVipPort: /usr/share/openstack-tripleo-heat-templates/network/ports/noop.yaml
-
-parameter_defaults:
-  NeutronPublicInterface: ens4
-  EC2MetadataIp: 192.0.2.1
-  ControlPlaneDefaultRoute: 192.0.2.1
-  DeployedServerPortMap:
-    control_virtual_ip:
-      fixed_ips:
-        - ip_address: 192.0.2.240
-      subnets:
-        - cidr: 24
-    controller-0-ctlplane:
-      fixed_ips:
-        - ip_address: 192.0.2.51
-      subnets:
-        - cidr: 24
-    controller-1-ctlplane:
-      fixed_ips:
-        - ip_address: 192.0.2.52
-      subnets:
-        - cidr: 24
-    controller-2-ctlplane:
-      fixed_ips:
-        - ip_address: 192.0.2.53
-      subnets:
-        - cidr: 24
-    computehci-0-ctlplane:
-      fixed_ips:
-        - ip_address: 192.0.2.71
-      subnets:
-        - cidr: 24
-    computehci-1-ctlplane:
-      fixed_ips:
-        - ip_address: 192.0.2.72
-      subnets:
-        - cidr: 24
-    computehci-2-ctlplane:
-      fixed_ips:
-        - ip_address: 192.0.2.73
-      subnets:
-        - cidr: 24
-EOF
-
-# 预配置 ceph client
-(undercloud) [stack@undercloud ~]$ export OVERCLOUD_HOSTS="192.0.2.51 192.0.2.52 192.0.2.53 192.0.2.71 192.0.2.72 192.0.2.73"
-(undercloud) [stack@undercloud ~]$ /bin/bash /usr/share/openstack-tripleo-heat-templates/deployed-server/scripts/enable-ssh-admin.sh
-
-# 生成模版文件
-(undercloud) [stack@undercloud ~]$ cat > ~/templates/deployed-server-environment.yaml <<'EOF'
-resource_registry:
-  OS::TripleO::Server: ../deployed-server/deployed-server.yaml
-  OS::TripleO::DeployedServer::ControlPlanePort: OS::Neutron::Port
-  OS::TripleO::DeployedServer::Bootstrap: OS::Heat::None
-
-parameter_defaults:
-  EnablePackageInstall: True
-EOF
-
-# 生成模版文件
-(undercloud) [stack@undercloud ~]$ cat > ~/templates/tls-parameters.yaml <<'EOF'
-resource_registry:
-  OS::TripleO::Services::IpaClient: /usr/share/openstack-tripleo-heat-templates/deployment/ipa/ipaservices-baremetal-ansible.yaml
-parameter_defaults:
-  IdMModifyDNS: false
-  IdMServer: helper.example.com
-  IdMDomain: example.com
-  IdMInstallClientPackages: True
-EOF
-
-# 生成模版文件 （未使用）
-(undercloud) [stack@undercloud ~]$ cat > ~/templates/predeployed-config.yaml <<'EOF'
-resource_registry:
-  OS::TripleO::Controller::Net::SoftwareConfig: /home/stack/templates/network/config/bond-with-vlans/controller.yaml
-  OS::TripleO::Compute::Net::SoftwareConfig: /home/stack/templates/network/config/bond-with-vlans/compute.yaml
-  OS::TripleO::ComputeHCI::Net::SoftwareConfig: /home/stack/templates/network/config/bond-with-vlans/computehci.yaml
-
-  OS::TripleO::Controller::Ports::ExternalPort: /usr/share/openstack-tripleo-heat-templates/network/ports/external_from_pool.yaml
-  OS::TripleO::Controller::Ports::InternalApiPort: /usr/share/openstack-tripleo-heat-templates/network/ports/internal_api_from_pool.yaml
-  OS::TripleO::Controller::Ports::StoragePort: /usr/share/openstack-tripleo-heat-templates/network/ports/storage_from_pool.yaml
-  OS::TripleO::Controller::Ports::StorageMgmtPort: /usr/share/openstack-tripleo-heat-templates/network/ports/storage_mgmt_from_pool.yaml
-  OS::TripleO::Controller::Ports::TenantPort: /usr/share/openstack-tripleo-heat-templates/network/ports/tenant_from_pool.yaml
-
-  OS::TripleO::Compute::Ports::ExternalPort: /usr/share/openstack-tripleo-heat-templates/network/ports/external_from_pool.yaml
-  OS::TripleO::Compute::Ports::InternalApiPort: /usr/share/openstack-tripleo-heat-templates/network/ports/internal_api_from_pool.yaml
-  OS::TripleO::Compute::Ports::StoragePort: /usr/share/openstack-tripleo-heat-templates/network/ports/storage_from_pool.yaml
-  OS::TripleO::Compute::Ports::StorageMgmtPort: /usr/share/openstack-tripleo-heat-templates/network/ports/noop.yaml
-  OS::TripleO::Compute::Ports::TenantPort: /usr/share/openstack-tripleo-heat-templates/network/ports/tenant_from_pool.yaml
-
-  OS::TripleO::ComputeHCI::Ports::ExternalPort: /usr/share/openstack-tripleo-heat-templates/network/ports/external_from_pool.yaml
-  OS::TripleO::ComputeHCI::Ports::InternalApiPort: /usr/share/openstack-tripleo-heat-templates/network/ports/internal_api_from_pool.yaml
-  OS::TripleO::ComputeHCI::Ports::StoragePort: /usr/share/openstack-tripleo-heat-templates/network/ports/storage_from_pool.yaml
-  OS::TripleO::ComputeHCI::Ports::StorageMgmtPort: /usr/share/openstack-tripleo-heat-templates/network/ports/storage_mgmt_from_pool.yaml
-  OS::TripleO::ComputeHCI::Ports::TenantPort: /usr/share/openstack-tripleo-heat-templates/network/ports/tenant_from_pool.yaml
-
-  OS::TripleO::Network::Ports::ExternalVipPort: /usr/share/openstack-tripleo-heat-templates/network/ports/external.yaml
-  OS::TripleO::Network::Ports::InternalApiVipPort: /usr/share/openstack-tripleo-heat-templates/network/ports/internal_api.yaml
-  OS::TripleO::Network::Ports::StorageVipPort: /usr/share/openstack-tripleo-heat-templates/network/ports/storage.yaml
-  OS::TripleO::Network::Ports::StorageMgmtVipPort: /usr/share/openstack-tripleo-heat-templates/network/ports/storage_mgmt.yaml
-  OS::TripleO::Network::Ports::RedisVipPort: /usr/share/openstack-tripleo-heat-templates/network/ports/vip.yaml
-  OS::TripleO::Network::Ports::OVNDBsVipPort: /usr/share/openstack-tripleo-heat-templates/network/ports/vip.yaml
-
-parameter_defaults:
-  ControllerCount: 3
-  ComputeCount: 0
-  ComputeHCICount: 3
-  DnsServers: ['192.168.122.3']
-  NtpServer: '192.0.2.1'
-  DockerInsecureRegistryAddress: helper.example.com:5000
-  NeutronBridgeMappings: datacentre:br-ex
-  NeutronNetworkVLANRanges: datacentre:1:1000
-  HostnameMap:
-    overcloud-controller-0: overcloud-controller-0
-    overcloud-controller-1: overcloud-controller-1
-    overcloud-controller-2: overcloud-controller-2
-    overcloud-compute-0: overcloud-compute-0
-    overcloud-compute-1: overcloud-compute-1
-    overcloud-computehci-0: overcloud-computehci-0
-    overcloud-computehci-1: overcloud-computehci-1
-    overcloud-computehci-2: overcloud-computehci-2
-  ControlFixedIPs: [{'ip_address':'192.0.2.240'}]
-  PublicVirtualFixedIPs: [{'ip_address':'192.168.122.40'}]
-  InternalApiVirtualFixedIPs: [{'ip_address':'172.16.2.240'}]
-  StorageVirtualFixedIPs: [{'ip_address':'172.16.1.240'}]
-  StorageMgmtVirtualFixedIPs: [{'ip_address':'172.16.3.240'}]
-  RedisVirtualFixedIPs: [{'ip_address':'172.16.2.241'}]
-  OVNDBsVirtualFixedIPs: [{'ip_address':'172.16.2.242'}]
-  ControllerIPs:
-    ctlplane:
-    - 192.0.2.51
-    - 192.0.2.52
-    - 192.0.2.53
-    storage:
-    - 172.16.1.51
-    - 172.16.1.52
-    - 172.16.1.53
-    storage_mgmt:
-    - 172.16.3.51
-    - 172.16.3.52
-    - 172.16.3.53
-    internal_api:
-    - 172.16.2.51
-    - 172.16.2.52
-    - 172.16.2.53
-    tenant:
-    - 172.16.0.51
-    - 172.16.0.52
-    - 172.16.0.53
-    external:
-    - 192.168.122.31
-    - 192.168.122.32
-    - 192.168.122.33
-  ComputeIPs:
-    ctlplane:
-    - 192.0.2.61
-    - 192.0.2.62
-    storage:
-    - 172.16.1.61
-    - 172.16.1.62
-    internal_api:
-    - 172.16.2.61
-    - 172.16.2.62
-    tenant:
-    - 172.16.0.61
-    - 172.16.0.62
-  ComputeHCIIPs:
-    ctlplane:
-    - 192.0.2.71
-    - 192.0.2.72
-    - 192.0.2.73
-    storage:
-    - 172.16.1.71
-    - 172.16.1.72
-    - 172.16.1.73
-    storage_mgmt:
-    - 172.16.3.71
-    - 172.16.3.72
-    - 172.16.3.73
-    internal_api:
-    - 172.16.2.71
-    - 172.16.2.72
-    - 172.16.2.73
-    tenant:
-    - 172.16.0.71
-    - 172.16.0.72
-    - 172.16.0.73
-EOF
-
-生成部署脚本
-(undercloud) [stack@undercloud ~]$ cat > ~/deploy-tls-everywhere-preprovion.sh << 'EOF'
-#!/bin/bash
-THT=/usr/share/openstack-tripleo-heat-templates/
-CNF=~/templates/
-
-source ~/stackrc
-openstack overcloud deploy --debug \
---disable-validations \
---overcloud-ssh-user stack \
---overcloud-ssh-key ~/.ssh/id_rsa \
---templates $THT \
--r $CNF/roles_data.yaml \
--n $CNF/network_data.yaml \
--e $CNF/deployed-server-environment.yaml \
--e $THT/environments/ceph-ansible/ceph-ansible.yaml \
--e $THT/environments/ceph-ansible/ceph-rgw.yaml \
--e $THT/environments/ssl/enable-internal-tls.yaml \
--e $THT/environments/ssl/tls-everywhere-endpoints-dns.yaml \
--e $THT/environments/services/haproxy-public-tls-certmonger.yaml \
--e $THT/environments/network-isolation.yaml \
--e $CNF/environments/network-environment.yaml \
--e $CNF/environments/fixed-ips.yaml \
--e $CNF/environments/net-bond-with-vlans.yaml \
--e $THT/environments/services/octavia.yaml \
--e ~/containers-prepare-parameter.yaml \
--e $CNF/custom-domain.yaml \
--e $CNF/node-info.yaml \
--e $CNF/hostnamemap.yaml \
--e $CNF/enable-tls.yaml \
--e $CNF/inject-trust-anchor.yaml \
--e $CNF/keystone_domain_specific_ldap_backend.yaml \
--e $CNF/tls-parameters.yaml \
--e $CNF/cephstorage.yaml \
--e $CNF/fix-nova-reserved-host-memory.yaml \
--e $CNF/predeployed-config.yaml \
--e $CNF/neutron-port.yaml \
---ntp-server 192.0.2.1
-EOF
-```
-
-报错 
-```
-1.
-Host overcloud.example.com not found in /home/stack/.ssh/known_hosts^M
-Cannot find any hosts on 'overcloud' in network 'ctlplane'
-
-ipa dnszone-del ctlplane.example.com
-
-2.
-2021-11-02 02:38:46Z [overcloud]: CREATE_FAILED  'int' object has no attribute 'split'
-参考
-https://access.redhat.com/solutions/5641801
-
-```
-
-
-
-参考文档<br>
-https://slagle.fedorapeople.org/tripleo-docs/install/advanced_deployment/deployed_server.html<br>
-https://virtorbis.virtcompute.com/?tag=pre-provisioned-nodes<br>
-
-
-```
 # 2021/11/11 - 继续尝试
 # 参考文档： 
 # https://virtorbis.virtcompute.com/?tag=pre-provisioned-nodes
@@ -1080,4 +794,19 @@ openstack overcloud deploy --debug \
 -e $CNF/stf-connectors.yaml \
 --ntp-server 192.0.2.1
 EOF
+```
+
+报错记录 
+```
+1.
+Host overcloud.example.com not found in /home/stack/.ssh/known_hosts^M
+Cannot find any hosts on 'overcloud' in network 'ctlplane'
+
+ipa dnszone-del ctlplane.example.com
+
+2.
+2021-11-02 02:38:46Z [overcloud]: CREATE_FAILED  'int' object has no attribute 'split'
+参考
+https://access.redhat.com/solutions/5641801
+
 ```

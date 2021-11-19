@@ -68,10 +68,18 @@ https://overcloud-controller-0.storage.example.com:3100
 
 ### 手工修改 haproxy.cfg 文件
 ```
+# 对于 OSP 16.2，可以定义 CephDashboardNetwork 参数指定 dashboard 所在的网络
+# 邮件名 [rhos-tech] Ceph-Dahsboard in RHOSP16.1
+[1] https://bugzilla.redhat.com/show_bug.cgi?id=1969411
+[2] https://bugzilla.redhat.com/show_bug.cgi?id=1973638
+[3] https://review.opendev.org/q/5dc5cdb62639fc240fd44b50b5322888fc40efc3
+
+# 对于 OSP 16.1，目前只能手工修改
 # Ceph dashboard 只支持部署到 overcloud ctrlplane 的 vip 所在的网络或者单独的 CephDashboardNetwork 上
 # 可以手工修改 overcloud controller 的 haproxy 配置文件 /etc/pki/tls/private/overcloud_endpoint.pem
 # 添加监听 external network 的选项
 # bind 192.168.122.40:8444 transparent ssl crt /etc/pki/tls/private/overcloud_endpoint.pem
+
 ssh heat-admin@192.0.2.51
 sudo -i
 cat /var/lib/config-data/puppet-generated/haproxy/etc/haproxy/haproxy.cfg

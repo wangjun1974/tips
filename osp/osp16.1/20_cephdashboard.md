@@ -65,3 +65,48 @@ https://overcloud-controller-0.storage.example.com:3100
 # 检查这个模版文件
 /usr/share/openstack-tripleo-heat-templates/deployment/ceph-ansible/ceph-base.yaml
 ```
+
+### 手工修改 haproxy.cfg 文件
+```
+# Ceph dashboard 只支持部署到 overcloud ctrlplane 的 vip 所在的网络或者单独的 CephDashboardNetwork 上
+# 可以手工修改 overcloud controller 的 haproxy 配置文件 /etc/pki/tls/private/overcloud_endpoint.pem
+# 添加监听 external network 的选项
+# bind 192.168.122.40:8444 transparent ssl crt /etc/pki/tls/private/overcloud_endpoint.pem
+ssh heat-admin@192.0.2.51
+sudo -i
+cat /var/lib/config-data/puppet-generated/haproxy/etc/haproxy/haproxy.cfg
+...
+listen ceph_dashboard
+  bind 192.0.2.240:8444 transparent ssl crt /etc/pki/tls/certs/haproxy/overcloud-haproxy-storage.pem
+  bind 192.168.122.40:8444 transparent ssl crt /etc/pki/tls/private/overcloud_endpoint.pem
+  mode http
+  balance source
+  http-check expect rstatus 2[0-9][0-9]
+  http-request set-header X-Forwarded-Proto https if { ssl_fc }
+  http-request set-header X-Forwarded-Proto http if !{ ssl_fc }
+  http-request set-header X-Forwarded-Port %[dst_port]
+  option httpchk HEAD /
+  server overcloud-controller-0.storage.example.com 172.16.1.51:8444 check fall 5 inter 2000 rise 2 ssl check verify none verifyhost overcloud-controller-0.storage.example.com
+...
+
+listen ceph_grafana
+  bind 192.0.2.240:3100 transparent ssl crt /etc/pki/tls/certs/haproxy/overcloud-haproxy-storage.pem
+  bind 192.168.122.40:3100 transparent ssl crt /etc/pki/tls/private/overcloud_endpoint.pem
+  mode http
+  balance source
+  http-request set-header X-Forwarded-Proto https if { ssl_fc }
+  http-request set-header X-Forwarded-Proto http if !{ ssl_fc }
+  http-request set-header X-Forwarded-Port %[dst_port]
+  option httpchk HEAD /
+  server overcloud-controller-0.storage.example.com 172.16.1.51:3100 ca-file /etc/ipa/ca.crt check fall 5 inter 2000 rise 2 ssl verify required verify
+host overcloud-controller-0.storage.example.com
+  server overcloud-controller-1.storage.example.com 172.16.1.52:3100 ca-file /etc/ipa/ca.crt check fall 5 inter 2000 rise 2 ssl verify required verify
+host overcloud-controller-1.storage.example.com
+  server overcloud-controller-2.storage.example.com 172.16.1.53:3100 ca-file /etc/ipa/ca.crt check fall 5 inter 2000 rise 2 ssl verify required verify
+host overcloud-controller-2.storage.example.com
+...
+
+# 重启 haproxy 服务
+pcs resource restart haproxy-bundle
+
+```

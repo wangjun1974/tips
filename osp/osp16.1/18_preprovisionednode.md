@@ -795,6 +795,12 @@ openstack overcloud deploy --debug \
 --ntp-server 192.0.2.1
 EOF
 
+# 如果配置了 ansible based TLS-E
+# 需要注意:
+# 在重新部署时:
+# 1. 需手工更新 undercloud 的 /etc/novajoin/krb5.keytab 文件
+# 2. 需手工更新 deployed server 的 krb5.keytab 文件
+
 在重新部署时，需手工更新 undercloud 的 /etc/novajoin/krb5.keytab 文件
 echo redhat123 | sudo kinit admin
 sudo ipa-getkeytab -s helper.example.com -p nova/undercloud.example.com -k /etc/novajoin/krb5.keytab

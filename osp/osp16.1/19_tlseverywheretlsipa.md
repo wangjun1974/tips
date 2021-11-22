@@ -143,6 +143,44 @@ ipa service-find | grep "Number of"
 # 检查 enable-tls.yaml 和 inject-trust-anchor.yaml
 # 在生成 deploy-enable-tls.sh 时注意包含 $CNF/enable-tls.yaml 和 $CNF/inject-trust-anchor.yaml
 
+# 如果配置了 ansible based TLS-E
+# 需要注意
+# 在重新部署时: 
+# 1. 需手工更新 undercloud 的 /etc/novajoin/krb5.keytab 文件
+# 2. 需手工更新 deployed server 的 krb5.keytab 文件
+
+# 在重新部署时，需手工更新 undercloud 的 /etc/novajoin/krb5.keytab 文件
+echo redhat123 | sudo kinit admin
+sudo ipa-getkeytab -s helper.example.com -p nova/undercloud.example.com -k /etc/novajoin/krb5.keytab
+sudo chmod a+r /etc/novajoin/krb5.keytab
+ls -l /etc/novajoin/krb5.keytab
+klist
+kdestroy
+klist
+kinit -kt /etc/novajoin/krb5.keytab nova/undercloud.example.com
+klist
+
+# 在重新部署时，需手工更新 deployed server 的 krb5.keytab 文件
+ansible -i /tmp/inventory all -f 6 -m shell -a 'echo redhat123 | sudo kinit admin' 
+ansible -i /tmp/inventory all -f 6 -m shell -a 'sudo ipa-join'
+ansible -i /tmp/inventory all -f 6 -m shell -a 'sudo rm -f /etc/krb5.keytab'
+# ssh overcloud node
+for i in $(seq 51 53) $(seq 71 73)
+do
+  ssh stack@192.0.2.$i "bash -c 'sudo ipa-getkeytab -s helper.example.com -p host/\$(hostname) -k /etc/krb5.keytab'"
+done
+# done
+
+ansible -i /tmp/inventory all -f 6 -m shell -a "sudo chmod a+r /etc/krb5.keytab"
+# ansible -i /tmp/inventory all -f 6 -m shell -a "kdestroy -A"
+# ansible -i /tmp/inventory all -f 6 -m shell -a "kinit -kt /etc/krb5.keytab host/$hostname"
+# ssh overcloud node
+for i in $(seq 51 53) $(seq 71 73)
+do
+  ssh stack@192.0.2.$i "bash -c 'kdestroy -A; kinit -kt /etc/krb5.keytab host/\$(hostname); klist'"
+  ssh stack@192.0.2.$i "bash -c 'sudo kdestroy -A; sudo kinit -kt /etc/krb5.keytab host/\$(hostname); sudo klist'"
+done 
+# done
 ```
 
 ```

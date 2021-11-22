@@ -795,6 +795,18 @@ openstack overcloud deploy --debug \
 --ntp-server 192.0.2.1
 EOF
 
+在重新部署时，需手工更新 undercloud 的 /etc/novajoin/krb5.keytab 文件
+echo redhat123 | sudo kinit admin
+sudo ipa-getkeytab -s helper.example.com -p nova/undercloud.example.com -k /etc/novajoin/krb5.keytab
+sudo chmod a+r /etc/novajoin/krb5.keytab
+ls -l /etc/novajoin/krb5.keytab
+klist
+kdestroy
+klist
+kinit -kt /etc/novajoin/krb5.keytab nova/undercloud.example.com
+klist
+chmod a+r /etc/novajoin/krb5.keytab
+
 在重新部署时，需手工更新 deployed server 的 krb5.keytab 文件
 ansible -i /tmp/inventory all -f 6 -m shell -a 'echo redhat123 | sudo kinit admin' 
 ansible -i /tmp/inventory all -f 6 -m shell -a 'sudo ipa-join'

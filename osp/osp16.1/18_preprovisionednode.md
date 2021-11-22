@@ -794,6 +794,23 @@ openstack overcloud deploy --debug \
 -e $CNF/stf-connectors.yaml \
 --ntp-server 192.0.2.1
 EOF
+
+在重新部署时，需手工更新 deployed server 的 krb5.keytab 文件
+ansible -i /tmp/inventory all -f 6 -m shell -a 'echo redhat123 | sudo kinit admin' 
+ansible -i /tmp/inventory all -f 6 -m shell -a 'sudo ipa-join'
+ansible -i /tmp/inventory all -f 6 -m shell -a 'sudo rm -f /etc/krb5.keytab'
+ansible -i /tmp/inventory all -f 6 -m setup
+# ssh overcloud node
+sudo ipa-getkeytab -s helper.example.com -p host/$(hostname) -k /etc/krb5.keytab
+# done
+
+ansible -i /tmp/inventory all -f 6 -m shell -a "sudo chmod a+r /etc/krb5.keytab"
+# ansible -i /tmp/inventory all -f 6 -m shell -a "kdestroy -A"
+# ansible -i /tmp/inventory all -f 6 -m shell -a "kinit -kt /etc/krb5.keytab host/$hostname"
+# ssh overcloud node
+kdestroy -A; kinit -kt /etc/krb5.keytab host/$(hostname); klist
+sudo kdestroy -A; sudo kinit -kt /etc/krb5.keytab host/$(hostname); sudo klist
+# done
 ```
 
 报错记录 

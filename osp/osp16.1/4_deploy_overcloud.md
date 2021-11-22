@@ -92,4 +92,6 @@ EOF
 # 查看 ceph-ansible 日志
 (undercloud) [stack@undercloud ~]$ watch -n10 'sudo cat /var/lib/mistral/overcloud/ceph-ansible/ceph_ansible_command.log | grep -E TASK | tail -10'
 
+# 查看 TripleO 模版环境变量
+(undercloud) [stack@undercloud ~]$ openstack stack environment show overcloud
 ```

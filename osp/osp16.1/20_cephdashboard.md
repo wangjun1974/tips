@@ -117,4 +117,16 @@ host overcloud-controller-2.storage.example.com
 # 重启 haproxy 服务
 pcs resource restart haproxy-bundle
 
+# 检查并且编辑 /var/lib/config-data/puppet-generated/haproxy/etc/haproxy/haproxy.cfg 文件
+sed -i -e 's|bind 192.0.2.240:3100 transparent ssl crt /etc/pki/tls/certs/haproxy/overcloud-haproxy-storage.pem|bind 192.0.2.240:3100 transparent ssl crt /etc/pki/tls/certs/haproxy/overcloud-haproxy-storage.pem\n  bind 192.168.122.40:3100 transparent ssl crt /etc/pki/tls/private/overcloud_endpoint.pem|' -e 's|bind 192.0.2.240:8444 transparent ssl crt /etc/pki/tls/certs/haproxy/overcloud-haproxy-storage.pem|bind 192.0.2.240:8444 transparent ssl crt /etc/pki/tls/certs/haproxy/overcloud-haproxy-storage.pem\n  bind 192.168.122.40:8444 transparent ssl crt /etc/pki/tls/private/overcloud_endpoint.pem|' /var/lib/config-data/puppet-generated/haproxy/etc/haproxy/haproxy.cfg
+
+# 修改 haproxy.cfg 文件
+# ceph_dashboard 和 ceph_grafana 
+# bind 到 external 网络上
+ansible -i /tmp/inventory controller -m shell -a "sed -i -e 's|bind 192.0.2.240:3100 transparent ssl crt /etc/pki/tls/certs/haproxy/overcloud-haproxy-storage.pem|bind 192.0.2.240:3100 transparent ssl crt /etc/pki/tls/certs/haproxy/overcloud-haproxy-storage.pem\n  bind 192.168.122.40:3100 transparent ssl crt /etc/pki/tls/private/overcloud_endpoint.pem|' -e 's|bind 192.0.2.240:8444 transparent ssl crt /etc/pki/tls/certs/haproxy/overcloud-haproxy-storage.pem|bind 192.0.2.240:8444 transparent ssl crt /etc/pki/tls/certs/haproxy/overcloud-haproxy-storage.pem\n  bind 192.168.122.40:8444 transparent ssl crt /etc/pki/tls/private/overcloud_endpoint.pem|' /var/lib/config-data/puppet-generated/haproxy/etc/haproxy/haproxy.cfg"
+
+# 重启 haproxy-bundle
+ssh stack@192.0.2.51 sudo pcs resource disable haproxy-bundle
+ssh stack@192.0.2.51 sudo pcs resource enable haproxy-bundle
+
 ```

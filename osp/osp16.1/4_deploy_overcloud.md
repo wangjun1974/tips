@@ -94,4 +94,12 @@ EOF
 
 # 查看 TripleO 模版环境变量
 (undercloud) [stack@undercloud ~]$ openstack stack environment show overcloud
+
+# 检查控制节点是否包含某个 puppet hieradata 设置
+[stack@overcloud-controller-2 ~]$ sudo grep -A10 neutron::plugins::ml2::extension_drivers  /etc/puppet/hieradata/service_configs.json
+
+# 检查 config-download 是否包含某个配置
+(overcloud) [stack@undercloud ~]$ sudo grep -r port_security /var/lib/mistral/config-download-latest/ | grep -Ev ansible.log
+/var/lib/mistral/config-download-latest/Controller/config_settings.yaml:- port_security
+/var/lib/mistral/config-download-latest/group_vars/Controller:  - port_security
 ```

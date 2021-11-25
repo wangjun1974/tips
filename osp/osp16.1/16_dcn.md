@@ -76,5 +76,58 @@ inspection_iprange = 192.168.100.100,192.168.100.190
 gateway = 192.168.100.1
 masquerade = False
 
+# 这个环境包含两个部署
+# overcloud 和 dcn0
+# overcloud 是 spine-leaf 网络架构的部署 - 代表中心机房或区域机房的 osp
+# dcn0 代表 1 个拉远部署
+(undercloud) [stack@undercloud ~]$ openstack stack list
++--------------------------------------+------------+----------------------------------+-----------------+----------------------+--------------+
+| ID                                   | Stack Name | Project                          | Stack Status    | Creation Time        | Updated Time |
++--------------------------------------+------------+----------------------------------+-----------------+----------------------+--------------+
+| 64eedaf9-775c-41f7-8903-810780cef2fa | dcn0       | 8877abea66e04144af606b8ce548d2b3 | CREATE_COMPLETE | 2021-01-13T18:52:14Z | None         |
+| b302c995-96b4-47cc-884e-6650221d3589 | overcloud  | 8877abea66e04144af606b8ce548d2b3 | CREATE_COMPLETE | 2021-01-13T14:05:29Z | None         |
++--------------------------------------+------------+----------------------------------+-----------------+----------------------+--------------+
 
+# 中央站点部署脚本 
+# role_data 模版为 roles_data_spine_leaf.yaml 
+# network_data 模版为 network_data_spine_leaf.yaml
+# 其他的模版文件包括
+# environments/network-environment.yaml
+# node-config.yaml
+
+(undercloud) [stack@undercloud ~]$ cat ~/bin/overcloud-deploy.sh 
+#!/bin/bash
+
+THT=/usr/share/openstack-tripleo-heat-templates
+CNF=~/templates
+
+openstack overcloud deploy --templates \
+-r $CNF/roles_data_spine_leaf.yaml \
+-n $CNF/network_data_spine_leaf.yaml \
+-e $THT/environments/network-isolation.yaml \
+-e $THT/environments/disable-telemetry.yaml \
+-e $THT/environments/low-memory-usage.yaml \
+-e $CNF/environments/network-environment.yaml \
+-e $CNF/node-config.yaml \
+-e ~/containers-prepare-parameter.yaml
+
+# DCN 部署脚本
+(undercloud) [stack@undercloud ~]$ cat dcn0/deploy-dcn.sh 
+#!/bin/bash
+THT=/usr/share/openstack-tripleo-heat-templates
+STACK=dcn0
+source ~/stackrc
+#     -e $THT/environments/network-isolation.yaml \
+time openstack overcloud deploy \
+     --stack $STACK \
+     --templates /usr/share/openstack-tripleo-heat-templates/ \
+     -r roles_data.yaml \
+     -n network_data_spine_leaf.yaml \
+     -e ~/dcn-common/central-export.yaml \
+     -e site-name.yaml \
+     -e dcn0-images-env.yaml \
+     -e ~/containers-prepare-parameter.yaml \
+     -e network-environment.yaml \
+     -e network-environment-dcn.yaml \
+     -e overrides.yaml
 ```

@@ -88,6 +88,39 @@ masquerade = False
 | b302c995-96b4-47cc-884e-6650221d3589 | overcloud  | 8877abea66e04144af606b8ce548d2b3 | CREATE_COMPLETE | 2021-01-13T14:05:29Z | None         |
 +--------------------------------------+------------+----------------------------------+-----------------+----------------------+--------------+
 
+# 环境的网络情况
+# 输出格式经过了手工调整
+# leaf0 的 subnet: leaf0(ctlplane), internal_api_subnet(internalapi), storage_subnet(storage), storage_mgmt_subnet(storage_mgmt), tenant_subnet(tenant), external_subnet(external)
+# leaf1 的 subnet: leaf1(ctlplane), internal_api1_subnet(internalapi), storage1_subnet(storage), storage_mgmt1_subnet(storage_mgmt), tenant1_subnet(tenant)
+# leaf2 的 subnet: leaf2(ctlplane), internal_api2_subnet(internalapi), storage2_subnet(storage), storage_mgmt2_subnet(storage_mgmt), tenant2_subnet(tenant)
+# az1 的 subnet: az1(ctlplane), internal_api100_subnet(internalapi)
+(undercloud) [stack@undercloud ~]$ openstack subnet list -f table -c Name -c Subnet
++------------------------+------------------+
+| Name                   | Subnet           |
++------------------------+------------------+
+| leaf0                  | 192.168.10.0/24  |
+| internal_api_subnet    | 172.18.0.0/24    |
+| storage_subnet         | 172.16.0.0/24    |
+| storage_mgmt_subnet    | 172.17.0.0/24    |
+| tenant_subnet          | 172.19.0.0/24    |
+| external_subnet        | 10.0.0.0/24      |
++------------------------+------------------+
+| leaf1                  | 192.168.11.0/24  |
+| internal_api1_subnet   | 172.18.1.0/24    |
+| storage1_subnet        | 172.16.1.0/24    |
+| storage_mgmt1_subnet   | 172.17.1.0/24    |
+| tenant1_subnet         | 172.19.1.0/24    |
++------------------------+------------------+
+| leaf2                  | 192.168.12.0/24  |
+| internal_api2_subnet   | 172.18.2.0/24    |
+| storage2_subnet        | 172.16.2.0/24    |
+| storage_mgmt2_subnet   | 172.17.2.0/24    |
+| tenant2_subnet         | 172.19.2.0/24    |
++------------------------+------------------+
+| az1                    | 192.168.100.0/24 |
+| internal_api100_subnet | 172.18.100.0/24  |
++------------------------+------------------+
+
 # 中央站点部署脚本 
 # role_data 模版为 roles_data_spine_leaf.yaml 
 # network_data 模版为 network_data_spine_leaf.yaml
@@ -130,4 +163,7 @@ time openstack overcloud deploy \
      -e network-environment.yaml \
      -e network-environment-dcn.yaml \
      -e overrides.yaml
+
+
+
 ```

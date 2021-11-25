@@ -149,7 +149,7 @@ masquerade = False
 # 192.168.100.0/24 - az1
 # vlan130 - internal_api100_subnet - 172.18.100.0/24
 
-# 检查控制节点的 ip 地址
+# 检查控制节点 overcloud-controller-0 的 ip 地址
 (undercloud) [stack@undercloud ~]$ ssh heat-admin@overcloud-controller-0.ctlplane /sbin/ip a|grep -E "global vlan|global ens3"
     inet 192.168.10.41/24 brd 192.168.10.255 scope global ens3
     inet 192.168.10.88/32 brd 192.168.10.255 scope global ens3
@@ -160,7 +160,7 @@ masquerade = False
     inet 172.16.0.185/32 brd 172.16.0.255 scope global vlan50
     inet 172.18.0.70/24 brd 172.18.0.255 scope global vlan30
 
-# 控制节点到其他 leaf 或者 dcn 的路由
+# 控制节点 overcloud-controller-0 到其他 leaf 或者 dcn 的路由
 # 缺省路由在 vlan10 - external 上
 # 到 172.16.1.0/24 storage1_subnet 通过 172.16.0.1
 # 到 172.16.2.0/24 storage2_subnet 通过 172.16.0.1
@@ -174,13 +174,33 @@ masquerade = False
 # 到 192.168.11.0/24 leaf1 通过 192.168.10.1
 # 到 192.168.12.0/24 leaf2 通过 192.168.10.1
 # 到 192.168.100.0/24 az1 通过 192.168.10.1
-
 (undercloud) [stack@undercloud ~]$ ssh heat-admin@overcloud-controller-0.ctlplane /sbin/ip r | grep " via "
 default via 10.0.0.253 dev vlan10 
 172.16.1.0/24 via 172.16.0.1 dev vlan50 
 172.16.2.0/24 via 172.16.0.1 dev vlan50 
 172.17.1.0/24 via 172.17.0.1 dev vlan20 
 172.17.2.0/24 via 172.17.0.1 dev vlan20 
+172.18.1.0/24 via 172.18.0.1 dev vlan30 
+172.18.2.0/24 via 172.18.0.1 dev vlan30 
+172.18.100.0/24 via 172.18.0.1 dev vlan30 
+172.19.1.0/24 via 172.19.0.1 dev vlan40 
+172.19.2.0/24 via 172.19.0.1 dev vlan40 
+192.168.11.0/24 via 192.168.10.1 dev ens3 
+192.168.12.0/24 via 192.168.10.1 dev ens3 
+192.168.100.0/24 via 192.168.10.1 dev ens3 
+
+# 检查计算节点 overcloud-novacompute0-0 的 ip 地址
+(undercloud) [stack@undercloud ~]$ ssh heat-admin@overcloud-novacompute0-0.ctlplane /sbin/ip a|grep -E "global vlan|global ens3"
+    inet 192.168.10.43/24 brd 192.168.10.255 scope global ens3
+    inet 172.18.0.31/24 brd 172.18.0.255 scope global vlan30
+    inet 172.19.0.200/24 brd 172.19.0.255 scope global vlan40
+    inet 172.16.0.195/24 brd 172.16.0.255 scope global vlan50
+
+# 计算节点 overcloud-novacompute0-0 到其他 leaf 或者 dcn 的路由
+(undercloud) [stack@undercloud ~]$ ssh heat-admin@overcloud-novacompute0-0.ctlplane /sbin/ip r|grep " via "
+default via 192.168.10.10 dev ens3 
+172.16.1.0/24 via 172.16.0.1 dev vlan50 
+172.16.2.0/24 via 172.16.0.1 dev vlan50 
 172.18.1.0/24 via 172.18.0.1 dev vlan30 
 172.18.2.0/24 via 172.18.0.1 dev vlan30 
 172.18.100.0/24 via 172.18.0.1 dev vlan30 

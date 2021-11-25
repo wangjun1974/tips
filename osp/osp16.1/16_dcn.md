@@ -121,6 +121,41 @@ masquerade = False
 | internal_api100_subnet | 172.18.100.0/24  |
 +------------------------+------------------+
 
+# 查看 spine-leaf 数据中心部署的情况
+(undercloud) [stack@undercloud ~]$ cat templates/network_data_spine_leaf.yaml | grep -E "name|vlan|subnet:" | more
+# leaf0 的网络
+# 192.168.10.0/24 - leaf0/ctlplane
+# vlan10 - external - 10.0.0.0/24
+# vlan20 - storage_mgmt - 172.17.0.0/24
+# vlan30 - internal_api - 172.18.0.0/24
+# vlan40 - tenant - 172.19.0.0/24
+# vlan50 - storage - 172.16.0.0/24
+# 
+# leaf1 的网络
+# 192.168.11.0/24 - leaf1
+# vlan21 - storage_mgmt1_subnet - 172.17.1.0/24
+# vlan31 - internal_api1_subnet - 172.18.1.0/24
+# vlan41 - tenant1_subnet - 172.19.1.0/24
+# vlan51 - storage1_subnet - 172.16.1.0/24
+# 
+# leaf2 的网络
+# 192.168.12.0/24 - leaf2
+# vlan22 - storage_mgmt2_subnet - 172.17.2.0/24
+# vlan32 - internal_api2_subnet - 172.18.2.0/24
+# vlan42 - tenant2_subnet - 172.19.2.0/24
+# vlan52 - storage2_subnet - 172.16.2.0/24
+
+# 检查控制节点的 ip 地址
+(undercloud) [stack@undercloud ~]$ ssh heat-admin@overcloud-controller-0.ctlplane /sbin/ip a|grep -E "global vlan|global ens3"
+    inet 192.168.10.41/24 brd 192.168.10.255 scope global ens3
+    inet 192.168.10.88/32 brd 192.168.10.255 scope global ens3
+    inet 10.0.0.35/24 brd 10.0.0.255 scope global vlan10
+    inet 172.17.0.218/24 brd 172.17.0.255 scope global vlan20
+    inet 172.19.0.18/24 brd 172.19.0.255 scope global vlan40
+    inet 172.16.0.172/24 brd 172.16.0.255 scope global vlan50
+    inet 172.16.0.185/32 brd 172.16.0.255 scope global vlan50
+    inet 172.18.0.70/24 brd 172.18.0.255 scope global vlan30
+
 # 中央站点部署脚本 
 # role_data 模版为 roles_data_spine_leaf.yaml 
 # network_data 模版为 network_data_spine_leaf.yaml

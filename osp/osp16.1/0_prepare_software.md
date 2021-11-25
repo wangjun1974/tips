@@ -395,6 +395,58 @@ EOF
 # https://gitlab.consulting.redhat.com/tbonds/ansible-role-rhospregistry
 
 # 同步镜像的脚本 syncimgs
+# 执行这个脚本前登录 registry.redhat.io 和 PUSHREGISTRY
+# 2021-11-25
+# OSP16.1
+cat > syncimgs <<'EOF'
+#!/bin/env bash
+
+PUSHREGISTRY=helper.example.com:5000
+FORK=4
+
+rhosp_namespace=registry.redhat.io/rhosp-rhel8
+rhosp_tag=16.1
+ceph_namespace=registry.redhat.io/rhceph
+ceph_image=rhceph-4-rhel8
+ceph_tag=latest
+ceph_alertmanager_namespace=registry.redhat.io/openshift4
+ceph_alertmanager_image=ose-prometheus-alertmanager
+ceph_alertmanager_tag=v4.6
+ceph_grafana_namespace=registry.redhat.io/rhceph
+ceph_grafana_image=rhceph-4-dashboard-rhel8
+ceph_grafana_tag=4
+ceph_node_exporter_namespace=registry.redhat.io/openshift4
+ceph_node_exporter_image=ose-prometheus-node-exporter
+ceph_node_exporter_tag=v4.6
+ceph_prometheus_namespace=registry.redhat.io/openshift4
+ceph_prometheus_image=ose-prometheus
+ceph_prometheus_tag=v4.6
+
+function copyimg() {
+  image=${1}
+  version=${2}
+
+  release=$(skopeo inspect docker://${image}:${version} | jq -r '.Labels | (.version + "-" + .release)')
+  dest="${PUSHREGISTRY}/${image#*\/}"
+  echo Copying ${image} to ${dest}
+  skopeo copy docker://${image}:${release} docker://${dest}:${release} --quiet
+  skopeo copy docker://${image}:${version} docker://${dest}:${version} --quiet
+}
+
+copyimg "${ceph_namespace}/${ceph_image}" ${ceph_tag} &
+copyimg "${ceph_alertmanager_namespace}/${ceph_alertmanager_image}" ${ceph_alertmanager_tag} &
+copyimg "${ceph_grafana_namespace}/${ceph_grafana_image}" ${ceph_grafana_tag} &
+copyimg "${ceph_node_exporter_namespace}/${ceph_node_exporter_image}" ${ceph_node_exporter_tag} &
+copyimg "${ceph_prometheus_namespace}/${ceph_prometheus_image}" ${ceph_prometheus_tag} &
+wait
+
+for rhosp_image in $(podman search ${rhosp_namespace} --limit 1000 --format "{{ .Name }}"); do
+  ((i=i%FORK)); ((i++==0)) && wait
+  copyimg ${rhosp_image} ${rhosp_tag} &
+done
+EOF
+
+# 同步镜像的脚本 syncimgs
 #!/bin/env bash
 
 PUSHREGISTRY=localhost:5000

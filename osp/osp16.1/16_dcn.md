@@ -5,6 +5,9 @@
 https://www.youtube.com/watch?v=bsQ-ORy37wk<br>
 ### 社区文档
 https://docs.openstack.org/project-deploy-guide/tripleo-docs/latest/features/routed_spine_leaf_network.html<br>
+### 知识库文档
+OSP 13 DCN 最大 RTT<br>
+https://access.redhat.com/articles/3965901<br>
 
 ### 实验环境
 ```

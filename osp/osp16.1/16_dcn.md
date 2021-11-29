@@ -2,7 +2,9 @@
 ### DCN 架构说明
 ### 例子
 ### 参考架构 
-https://www.youtube.com/watch?v=bsQ-ORy37wk
+https://www.youtube.com/watch?v=bsQ-ORy37wk<br>
+### 社区文档
+https://docs.openstack.org/project-deploy-guide/tripleo-docs/latest/features/routed_spine_leaf_network.html<br>
 
 ### 实验环境
 ```

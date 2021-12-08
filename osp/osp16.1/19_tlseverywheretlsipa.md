@@ -192,4 +192,10 @@ https://github.com/openstack/tripleo-heat-templates/blob/master/deployment/hapro
 
 [3]
 https://access.redhat.com/documentation/en-us/red_hat_openstack_platform/13/html/advanced_overcloud_customization/converting_your_existing_deployment_to_use_tls
+
+[4]
+https://github.com/gprocunier/openstack-odds-and-ends/blob/master/generate-certs-freeipa.sh
+
+[5]
+当计划使用 Active Directory Certificate Service 时，可以考虑创建 IDM，把 IDM 加入 AD Domain，把 AD CS 作为 IDM 的外部 CA
 ```

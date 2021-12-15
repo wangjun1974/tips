@@ -98,8 +98,7 @@ rm -rf ${OCP_PATH}/ocp-image/mirror_${OCP_VER}
 
 3.2.6	下载CoreOS镜像
 3.2.6.1	获取CoreOS版本信息
-RHCOS_VER=$(curl -s https://mirror.openshift.com/pub/openshift-v4/dependencies/rhcos/${OCP_MAJOR_VER}/latest/sha256sum.txt | \
-    grep x86_64-live.x86_64 | awk -F\- '{print $2}' | head -1)
+RHCOS_VER=$(curl -s https://mirror.openshift.com/pub/openshift-v4/dependencies/rhcos/${OCP_MAJOR_VER}/latest/sha256sum.txt | grep x86_64-live.x86_64 | awk -F\- '{print $2}' | head -1)
 echo ${RHCOS_VER}
 
 3.2.6.2	查看不同平台的CoreOS文件列表
@@ -107,11 +106,10 @@ curl -s https://mirror.openshift.com/pub/openshift-v4/dependencies/rhcos/${OCP_M
 
 3.2.6.3	 下载CoreOS启动镜像文件
 curl -L https://mirror.openshift.com/pub/openshift-v4/dependencies/rhcos/${OCP_MAJOR_VER}/${RHCOS_VER}/rhcos-${RHCOS_VER}-x86_64-live.x86_64.iso -o ${OCP_PATH}/rhcos/rhcos-${RHCOS_VER}-x86_64-live.x86_64.iso
-ll ${OCP_PATH}/rhcos
+ll -h ${OCP_PATH}/rhcos
 
 3.2.7	下载openshift-install
-curl -L https://mirror.openshift.com/pub/openshift-v4/clients/ocp/${OCP_VER}/openshift-install-linux-${OCP_VER}.tar.gz \
-  -o ${OCP_PATH}/ocp-installer/openshift-install-linux-${OCP_VER}.tar.gz
+curl -L https://mirror.openshift.com/pub/openshift-v4/clients/ocp/${OCP_VER}/openshift-install-linux-${OCP_VER}.tar.gz -o ${OCP_PATH}/ocp-installer/openshift-install-linux-${OCP_VER}.tar.gz
 ll -h ${OCP_PATH}/ocp-installer
 
 3.2.8	下载离线ImageStream镜像包（可选）
@@ -216,8 +214,8 @@ EOF
 
 source ~/.bashrc-${OCP_CLUSTER_ID}
 setVAR OCP_MAJOR_VER 4.8
-setVAR OCP_VER 4.8.10
-setVAR RHCOS_VER 4.8.2
+setVAR OCP_VER 4.8.24
+setVAR RHCOS_VER 4.8.14
 
 
 ```

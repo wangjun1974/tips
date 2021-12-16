@@ -68,8 +68,7 @@ popd
 subscription-manager unregister
 
 3.2.4	下载并安装OCP客户端
-curl -L https://mirror.openshift.com/pub/openshift-v4/clients/ocp/${OCP_VER}/openshift-client-linux-${OCP_VER}.tar.gz \
--o ${OCP_PATH}/ocp-client/openshift-client-linux-${OCP_VER}.tar.gz
+curl -L https://mirror.openshift.com/pub/openshift-v4/clients/ocp/${OCP_VER}/openshift-client-linux-${OCP_VER}.tar.gz -o ${OCP_PATH}/ocp-client/openshift-client-linux-${OCP_VER}.tar.gz
 tar -xzf ${OCP_PATH}/ocp-client/openshift-client-linux-${OCP_VER}.tar.gz -C /usr/local/sbin/
 oc version
 
@@ -111,6 +110,7 @@ ll -h ${OCP_PATH}/rhcos
 3.2.7	下载openshift-install
 curl -L https://mirror.openshift.com/pub/openshift-v4/clients/ocp/${OCP_VER}/openshift-install-linux-${OCP_VER}.tar.gz -o ${OCP_PATH}/ocp-installer/openshift-install-linux-${OCP_VER}.tar.gz
 ll -h ${OCP_PATH}/ocp-installer
+tar -xzf ${OCP_PATH}/ocp-installer/openshift-install-linux-${OCP_VER}.tar.gz -C /usr/local/sbin/
 
 3.2.8	下载离线ImageStream镜像包（可选）
 3.2.8.1	创建镜像列表文件

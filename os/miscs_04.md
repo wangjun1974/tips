@@ -269,5 +269,6 @@ oc logout
 # 重新使用 system:admin 登陆
 oc login -u system:admin
 
-
+# 查看 log 详情
+oc --loglevel 6 get nodes
 ```

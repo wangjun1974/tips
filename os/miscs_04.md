@@ -238,7 +238,10 @@ spec:
         name: htpass-secret
 EOF
 
-oc adm policy add-cluster-role-to-user cluster-admin admin --rolebinding-name=cluster-admin
+# 下面这个命令执行后，admin 用户看到的内容与 kubeadmin 不一样
+# oc adm policy add-cluster-role-to-user cluster-admin admin --rolebinding-name=cluster-admin\
+# 试试这条命令f
+oc adm policy add-cluster-role-to-user cluster-admin admin
 oc describe clusterrolebindings cluster-admin
 
 # 参考 https://access.redhat.com/solutions/4878721 里的步骤
@@ -271,4 +274,67 @@ oc login -u system:admin
 
 # 查看 log 详情
 oc --loglevel 6 get nodes
+
+# 配置 chrony
+timedatectl status | grep 'Time zone'
+systemctl status chronyd
+cp /etc/chrony.conf{,.bak}
+
+sed -i -e "s/^server*/#&/g" \
+       -e "s/#local stratum 10/local stratum 10/g" \
+       -e "s/#allow 192.168.0.0\/16/allow all/g" \
+       /etc/chrony.conf
+
+cat >> /etc/chrony.conf << EOF
+server 192.168.122.1 iburst
+EOF
+
+cat /etc/chrony.conf
+
+systemctl enable --now chronyd
+
+# 
+https://docs.openshift.com/container-platform/4.9/openshift_images/configuring-samples-operator.html
+
+cat > time.sync.conf << EOF
+server 192.168.122.1 iburst
+driftfile /var/lib/chrony/drift
+makestep 1.0 10
+rtcsync
+logdir /var/log/chrony
+EOF
+
+config_source=$(cat ./time.sync.conf | base64 -w 0 )
+
+cat << EOF > ./99-master-zzz-chrony-configuration.yaml
+apiVersion: machineconfiguration.openshift.io/v1
+kind: MachineConfig
+metadata:
+  labels:
+    machineconfiguration.openshift.io/role: master
+  name: masters-chrony-configuration
+spec:
+  config:
+    ignition:
+      config: {}
+      security:
+        tls: {}
+      timeouts: {}
+      version: 2.2.0
+    networkd: {}
+    passwd: {}
+    storage:
+      files:
+      - contents:
+          source: data:text/plain;charset=utf-8;base64,${config_source}
+          verification: {}
+        filesystem: root
+        mode: 420
+        path: /etc/chrony.conf
+  osImageURL: ""
+EOF
+
+oc apply -f ./99-master-zzz-chrony-configuration.yaml
+
+watch oc get mcp 
 ```

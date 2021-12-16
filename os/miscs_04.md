@@ -218,4 +218,56 @@ setVAR OCP_VER 4.8.24
 setVAR RHCOS_VER 4.8.14
 
 
+# 为集群添加用户
+htpasswd -bBc users.htpasswd admin P@ssw0rd
+oc create secret generic htpass-secret --from-file=htpasswd=users.htpasswd -n openshift-config
+
+cat << EOF | oc apply -f -
+---
+apiVersion: config.openshift.io/v1
+kind: OAuth
+metadata:
+  name: cluster
+spec:
+  identityProviders:
+  - name: htpasswd_provider 
+    mappingMethod: claim 
+    type: HTPasswd
+    htpasswd:
+      fileData:
+        name: htpass-secret
+EOF
+
+oc adm policy add-cluster-role-to-user cluster-admin admin --rolebinding-name=cluster-admin
+oc describe clusterrolebindings cluster-admin
+
+# 参考 https://access.redhat.com/solutions/4878721 里的步骤
+# 获取 sno certificate-authority
+oc get pod -n openshift-authentication -o jsonpath='{range .items[*]}{@.metadata.name}{"\n\t"}{@.metadata.labels}{"\n"}{end}'
+oc get pod -n openshift-authentication
+NAME                               READY   STATUS    RESTARTS   AGE
+oauth-openshift-854b6ddbc5-7fw2k   1/1     Running   0          9m38s
+
+oc get pod -n openshift-authentication -o jsonpath='{range .items[*]}{@.metadata.name}{"\n\t"}{@.metadata.labels}{"\n"}{end}'
+oauth-openshift-854b6ddbc5-7fw2k
+        {"app":"oauth-openshift","oauth-openshift-anti-affinity":"true","pod-template-hash":"854b6ddbc5"}
+
+oc get pod -n openshift-authentication -l app=oauth-openshift -o name
+
+# extract the ingress-ca certificate
+oc rsh -n openshift-authentication $(oc get pod -n openshift-authentication -l app=oauth-openshift -o name) cat /run/secrets/kubernetes.io/serviceaccount/ca.crt > ingress-ca.crt
+
+cp ingress-ca.crt /etc/pki/ca-trust/source/anchors
+update-ca-trust extract
+
+# 用 admin 用户登陆
+oc login https://api.${OCP_CLUSTER_ID}.${DOMAIN}:6443 -u admin -p P@ssw0rd
+
+# 登出
+oc logout 
+
+# 重新使用 system:admin 登陆
+oc login -u system:admin
+
+
 ```

@@ -337,4 +337,327 @@ EOF
 oc apply -f ./99-master-zzz-chrony-configuration.yaml
 
 watch oc get mcp 
+
+# 安装 nfs 服务 - 192.168.122.1
+yum -y install nfs-utils
+systemctl enable nfs-server --now
+systemctl status nfs-server
+
+export OCP_CLUSTER_ID='ocp4-1'
+export NFS_OCP_REGISTRY_PATH=/root/jwang/ocp4-cluster/${OCP_CLUSTER_ID}/nfs/ocp-registry
+export NFS_DOMAIN='192.168.122.1'
+export OCP_REGISTRY_PV_NAME="pv-ocp-registry"
+export OCP_REGISTRY_PVC_NAME="pvc-ocp-registry"
+
+mkdir -p ${NFS_OCP_REGISTRY_PATH}
+chown -R nfsnobody.nfsnobody ${NFS_OCP_REGISTRY_PATH}
+# https://www.thegeeksearch.com/how-to-configure-selinux-labeled-nfs-exports/
+# https://serverfault.com/questions/554659/selinux-contexts-with-nfs-shares
+# https://github.com/sous-chefs/nfs/issues/91
+chcon -Rv public_content_t ${NFS_OCP_REGISTRY_PATH}
+chmod -R 777 ${NFS_OCP_REGISTRY_PATH}
+echo ${NFS_OCP_REGISTRY_PATH} *'(rw,sync,no_wdelay,no_root_squash,insecure,fsid=0)' \
+> /etc/exports.d/ocp-registry-${OCP_CLUSTER_ID}.exports
+cat /etc/exports.d/ocp-registry-${OCP_CLUSTER_ID}.exports
+
+# nfs status port 如何设置
+cat > /etc/sysconfig/nfs <<EOF
+MOUNTD_PORT="10050"
+STATD_PORT="10051"
+LOCKD_TCPPORT="10052"
+LOCKD_UDPPORT="10052"
+RQUOTAD_PORT="10053"
+STATD_OUTGOING_PORT="10054"
+EOF
+
+systemctl restart nfs
+systemctl restart rpc-statd
+
+# Portmap ports
+iptables -I INPUT 1 -m state --state NEW -p tcp --dport 111 -j ACCEPT
+iptables -I INPUT -m state --state NEW -p udp --dport 111 -j ACCEPT
+# NFS daemon ports
+iptables -I INPUT 1 -m state --state NEW -p tcp --dport 2049 -j ACCEPT
+iptables -I INPUT 1 -m state --state NEW -p udp --dport 2049 -j ACCEPT
+# NFS mountd ports
+iptables -I INPUT 1 -m state --state NEW -p udp --dport 10050 -j ACCEPT
+iptables -I INPUT 1 -m state --state NEW -p tcp --dport 10050 -j ACCEPT
+# NFS status ports
+iptables -I INPUT 1 -m state --state NEW -p udp --dport 10051 -j ACCEPT
+iptables -I INPUT 1 -m state --state NEW -p tcp --dport 10051 -j ACCEPT
+# NFS lock manager ports
+iptables -I INPUT 1 -m state --state NEW -p udp --dport 10052 -j ACCEPT
+iptables -I INPUT 1 -m state --state NEW -p tcp --dport 10052 -j ACCEPT
+# NFS rquotad ports
+iptables -I INPUT 1 -m state --state NEW -p udp --dport 10053 -j ACCEPT
+iptables -I INPUT 1 -m state --state NEW -p tcp --dport 10053 -j ACCEPT
+
+# 创建 registry pv
+cat << EOF | oc create -f -
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: ${OCP_REGISTRY_PV_NAME}
+spec:
+  capacity:
+    storage: 100Gi 
+  accessModes:
+    - ReadWriteMany 
+  persistentVolumeReclaimPolicy: Retain 
+  nfs: 
+    path: ${NFS_OCP_REGISTRY_PATH}
+    server: ${NFS_DOMAIN}
+    readOnly: false
+EOF
+
+cat << EOF | oc create -f -
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: ${OCP_REGISTRY_PVC_NAME}
+  namespace: openshift-image-registry
+spec:
+  accessModes:
+  - ReadWriteMany      
+  resources:
+     requests:
+       storage: 100Gi
+EOF
+
+# 8.3.3.4	指定内部镜像库使用PVC
+oc patch configs.imageregistry.operator.openshift.io cluster --type merge \
+  --patch '{"spec":{"storage":{"pvc":{"claim":"'${OCP_REGISTRY_PVC_NAME}'"}}}}'
+oc patch configs.imageregistry.operator.openshift.io cluster --type merge --patch '{"spec":{"managementState": "Managed"}}'
+oc get configs.imageregistry.operator.openshift.io cluster -o json | jq -r '.spec |.managementState,.storage'
+oc get pod -n openshift-image-registry
+
+8.3.4	为应用使用的存储配置NFS StorageClass
+export NFS_USER_FILE_PATH="/root/jwang/ocp4-cluster/${OCP_CLUSTER_ID}/nfs/userfile"
+mkdir -p ${NFS_USER_FILE_PATH}
+chown -R nfsnobody.nfsnobody ${NFS_USER_FILE_PATH}
+chmod -R 777 ${NFS_USER_FILE_PATH}
+echo ${NFS_USER_FILE_PATH} *'(rw,sync,no_wdelay,no_root_squash,insecure)' > /etc/exports.d/userfile-${OCP_CLUSTER_ID}.exports
+exportfs -rav | grep userfile
+showmount -e | grep userfile
+
+# 创建本地 registry
+# 参考 https://github.com/wangjun1974/ospinstall/blob/main/helper_registry.example.md
+tar zxvf podman-docker-registry-v2.image.tgz 
+podman load -i docker-registry
+
+# 创建脚本
+mkdir -p /opt/registry/{auth,certs,data}
+cd /opt/registry/certs
+
+# openssl req -newkey rsa:4096 -nodes -sha256 -keyout domain.key -x509 -days 3650 -out domain.crt -addext "subjectAltName = DNS:registry.ocp4-1.example.com" -subj "/C=CN/ST=GD/L=SZ/O=Global Security/OU=IT Department/CN=registry.ocp4-1.example.com"
+
+openssl req -newkey rsa:4096 -nodes -sha256 -keyout domain.key -x509 -days 3650 -out domain.crt -subj "/C=CN/ST=GD/L=SZ/O=Global Security/OU=IT Department/CN=registry.ocp4-1.example.com"
+cp /opt/registry/certs/domain.crt /etc/pki/ca-trust/source/anchors/
+update-ca-trust extract
+
+cat > /usr/local/bin/localregistry.sh << 'EOF'
+#!/bin/bash
+podman run --name poc-registry -d -p 5000:5000 \
+-v /opt/registry/data:/var/lib/registry:z \
+-v /opt/registry/certs:/certs:z \
+-e REGISTRY_HTTP_TLS_CERTIFICATE=/certs/domain.crt \
+-e REGISTRY_HTTP_TLS_KEY=/certs/domain.key \
+localhost/docker-registry:latest 
+EOF
+
+chmod +x /usr/local/bin/localregistry.sh
+/usr/local/bin/localregistry.sh
+
+# 编辑 /etc/dnsmasq.conf
+# 添加 address=/registry.ocp4-1.example.com/192.168.122.1
+
+curl https://registry.ocp4-1.example.com:5000/v2/_catalog
+
+# 开放 container registry 所需防火墙端口
+iptables -I INPUT 1 -m state --state NEW -p tcp --dport 5000 -j ACCEPT
+
+8.3.4.2	创建NFS StorageClass部署配置
+
+在线集群倒入 nfs 
+https://www.ibm.com/support/pages/how-do-i-create-storage-class-nfs-dynamic-storage-provisioning-openshift-environment
+
+# 创建几个文件
+cat > /usr/local/src/nfs-provisioner-rbac.yaml <<EOF
+kind: ServiceAccount
+apiVersion: v1
+metadata:
+  name: nfs-client-provisioner
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: nfs-client-provisioner-runner
+rules:
+  - apiGroups: [""]
+    resources: ["persistentvolumes"]
+    verbs: ["get", "list", "watch", "create", "delete"]
+  - apiGroups: [""]
+    resources: ["persistentvolumeclaims"]
+    verbs: ["get", "list", "watch", "update"]
+  - apiGroups: ["storage.k8s.io"]
+    resources: ["storageclasses"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: [""]
+    resources: ["events"]
+    verbs: ["create", "update", "patch"]
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: run-nfs-client-provisioner
+subjects:
+  - kind: ServiceAccount
+    name: nfs-client-provisioner
+    namespace: nfs-provisioner
+roleRef:
+  kind: ClusterRole
+  name: nfs-client-provisioner-runner
+  apiGroup: rbac.authorization.k8s.io
+---
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: leader-locking-nfs-client-provisioner
+rules:
+  - apiGroups: [""]
+    resources: ["endpoints"]
+    verbs: ["get", "list", "watch", "create", "update", "patch"]
+---
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: leader-locking-nfs-client-provisioner
+subjects:
+  - kind: ServiceAccount
+    name: nfs-client-provisioner
+    # replace with namespace where provisioner is deployed
+    namespace: nfs-provisioner
+roleRef:
+  kind: Role
+  name: leader-locking-nfs-client-provisioner
+  apiGroup: rbac.authorization.k8s.io
+EOF
+
+cat > /usr/local/src/nfs-provisioner-deployment.yaml <<EOF
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: nfs-client-provisioner
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nfs-client-provisioner
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: nfs-client-provisioner
+    spec:
+      serviceAccountName: nfs-client-provisioner
+      containers:
+        - name: nfs-client-provisioner
+          image: quay.io/external_storage/nfs-client-provisioner:latest
+          volumeMounts:
+            - name: nfs-client-root
+              mountPath: /persistentvolumes
+          env:
+            - name: PROVISIONER_NAME
+              value: nfs-storage
+            - name: NFS_SERVER
+              value: 192.168.122.1
+            - name: NFS_PATH
+              value: ${NFS_USER_FILE_PATH}
+      volumes:
+        - name: nfs-client-root
+          nfs:
+            server: 192.168.122.1
+            path: ${NFS_USER_FILE_PATH}
+EOF
+
+cat > /usr/local/src/nfs-provisioner-sc.yaml <<EOF
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: nfs-storage-provisioner
+provisioner: nfs-storage
+parameters:
+  archiveOnDelete: "false"
+EOF
+
+cat > /usr/local/bin/nfs-provisioner-setup.sh <<'EEEE'
+#!/bin/bash
+nfsnamespace=nfs-provisioner
+rbac=/usr/local/src/nfs-provisioner-rbac.yaml
+deploy=/usr/local/src/nfs-provisioner-deployment.yaml
+sc=/usr/local/src/nfs-provisioner-sc.yaml
+#
+export PATH=/usr/local/bin:$PATH
+#
+## Check openshift connection
+if ! oc get project default -o jsonpath={.metadata.name} > /dev/null 2>&1 ; then
+        echo "ERROR: Cannot connect to OpenShift. Are you sure you exported your KUBECONFIG path and are admin?"
+        echo ""  
+        echo "...remember this is a POST INSTALL step."
+        exit 254 
+fi
+#
+## Check to see if the namespace exists
+if [ "$(oc get project default -o jsonpath={.metadata.name})" = "${nfsnamespace}" ]; then
+        echo "ERROR: Seems like NFS provisioner is already deployed"
+        exit 254 
+fi
+#
+## Check to see if important files are there
+for file in ${rbac} ${deploy} ${sc}
+do
+        [[ ! -f ${file} ]] && echo "FATAL: File ${file} does not exist" && exit 254
+done
+#
+## Check to see if the namespace exists
+if [ "$(oc get project default -o jsonpath={.metadata.name})" = "${nfsnamespace}" ]; then
+        echo "ERROR: Seems like NFS provisioner is already deployed"
+        exit 254 
+fi
+#
+## Check to see if important files are there
+for file in ${rbac} ${deploy} ${sc}
+do
+        [[ ! -f ${file} ]] && echo "FATAL: File ${file} does not exist" && exit 254
+done
+#
+## Check if the project is already there
+if oc get project ${nfsnamespace} -o jsonpath={.metadata.name} > /dev/null 2>&1 ; then
+        echo "ERROR: Looks like you've already deployed the nfs-provisioner"
+        exit 254 
+fi
+#
+## If we are here; I can try and deploy
+oc new-project ${nfsnamespace}
+oc project ${nfsnamespace}
+oc create -f ${rbac}
+oc adm policy add-scc-to-user hostmount-anyuid system:serviceaccount:${nfsnamespace}:nfs-client-provisioner
+oc create -f ${deploy} -n ${nfsnamespace}
+oc create -f ${sc}
+oc annotate storageclass nfs-storage-provisioner storageclass.kubernetes.io/is-default-class="true"
+oc project default
+oc rollout status deployment nfs-client-provisioner -n ${nfsnamespace}
+#
+## Show some info
+cat <<EOF
+
+Deployment started; you should monitor it with "oc get pods -n ${nfsnamespace}"
+
+EOF
+##
+##
+EEEE
+
+/bin/bash -x /usr/local/bin/nfs-provisioner-setup.sh 
 ```

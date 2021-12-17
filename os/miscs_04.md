@@ -660,4 +660,55 @@ EOF
 EEEE
 
 /bin/bash -x /usr/local/bin/nfs-provisioner-setup.sh 
+
+# 学习一下 cchen 写的 Assisted Installer 配置
+# 其中为 image registry 配置 nfs 的步骤可以参考以下内容
+# https://github.com/cchen666/OpenShift-Labs/blob/main/Installation/Assisted-Installer.md
+
+
+$ mkdir -p /home/imagepv
+$ chown nobody:nobody /home/imagepv
+$ chmod 777 /home
+$ chmod 777 /home/imagepv
+
+cat >> /etc/exports <<EOF
+/home/imagepv   *(rw,sync,no_wdelay,no_root_squash,insecure,fsid=0)
+EOF
+
+cat << EOF > pv.yaml
+
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: nfs-pv
+spec:
+  capacity:
+    storage: 100Gi
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain
+  nfs:
+    path: /home/imagepv
+    server: 192.168.122.1
+
+EOF
+
+oc apply -f pv.yaml
+
+$ oc edit configs.imageregistry.operator.openshift.io
+
+  managementState: Managed   <--------
+  observedConfig: null
+  operatorLogLevel: Normal
+  proxy: {}
+
+
+  storage:
+    managementState: Managed <--------
+    pvc:                     <--------
+      claim:                 <--------
+
+$ oc new-app https://github.com/cchen666/openshift-flask
+$ oc expose svc/openshift-flask
+$ curl openshift-flask-test-1.apps.ocp4-1.example.com
 ```

@@ -857,9 +857,106 @@ oc get -n openshift-ingress-operator secret router-ca -o jsonpath="{.data.tls\.c
 # 把 ocp 的 router ca 倒出来
 # 10:55 <yaoli> https://docs.openshift.com/container-platform/4.6/networking/enable-cluster-wide-proxy.html
 # 10:56 <yaoli> 这里有方法信任他那个 ca
-# 10:57 <yaoli> 然后试试看吧
+# 还有参考文档：http://uncontained.io/articles/external-container-registry-integration/
+oc create configmap -n openshift-config user-ca-bundle --from-file=ca-bundle.crt=./ca-bundle.crt
 
-# 
+# 以下这个步骤不工作 (待研究)
+cat > user-ca-bundle.yaml <<EOF
+apiVersion: v1
+data:
+  ca-bundle.crt: | 
+$( cat ca-bundle.crt | sed 's/^/    /g' ) 
+kind: ConfigMap
+metadata:
+  name: user-ca-bundle 
+  namespace: openshift-config
+EOF
+oc create configmap -n openshift-config user-ca-bundle --from-file=ca-bundle.crt=
+
+oc create -f user-ca-bundle.yaml
+# 以上这个步骤不工作 (待研究)
+
+oc patch proxy/cluster \
+     --type=merge \
+     --patch='{"spec":{"trustedCA":{name":""}}}'
+oc patch proxy/cluster \
+     --type=merge \
+     --patch='{"spec":{"trustedCA":{"name":"user-ca-bundle"}}}'
+# 检查 
+oc get configmaps user-ca-bundle -n openshift-config -o jsonpath='{.data.ca-bundle\.crt}' | openssl x509 -text -noout | more
+
+# 检查 ca 
+openssl s_client -showcerts -servername server -connect canary-openshift-ingress-canary.apps.ocp4-1.example.com:443
+
+# 参考 https://docs.openshift.com/container-platform/4.7/release_notes/ocp-4-7-release-notes.html
+
+# 检查日志
+# openshift-ingress-canary
+[root@base-pvg ocp4-cluster]# oc get pods -n openshift-ingress-canary
+NAME                   READY   STATUS    RESTARTS   AGE
+ingress-canary-h76cz   1/1     Running   4          2d23h
+[root@base-pvg ocp4-cluster]# oc -n openshift-ingress-canary logs ingress-canary-h76cz 
+# openshift-ingress-operator
+[root@base-pvg ocp4-cluster]# oc -n openshift-ingress-operator get pods
+NAME                                READY   STATUS    RESTARTS      AGE
+ingress-operator-6fc689cfc8-zkrhg   2/2     Running   2 (24m ago)   25m
+
+[root@base-pvg ocp4-cluster]# oc -n openshift-ingress-operator logs ingress-operator-6fc689cfc8-zkrhg ingress-operator | tail -100 
+...
+2021-12-20T05:00:11.958Z        INFO    operator.ingress_controller     controller/controller.go:298    reconciling     {"request": "openshift-ingress-operator/default"}
+2021-12-20T05:00:12.459Z        ERROR   operator.ingress_controller     controller/controller.go:298    got retryable error; requeueing {"after": "1m0s", "error": "IngressController is degraded: CanaryChecksSucceeding=False (CanaryChecksRepetitiveFailures: Canary route checks for the default ingress controller are failing)"}
+2021-12-20T05:00:37.960Z        ERROR   operator.canary_controller      wait/wait.go:155        error performing canary route check     {"error": "error sending canary HTTP Request: Timeout: Get \"https://canary-openshift-ingress-canary.apps.ocp4-1.example.com\": context deadline exceeded (Client.Timeout exceeded while awaiting headers)"}
+
+# 根据日志显示
+http://pastebin.test.redhat.com/1016818
+# ingress operator 容器可访问 https://canary-openshift-ingress-canary.apps.ocp4-1.example.com
+# 但是不知道为什么 ingress operator 容器仍报以上错误
+
+
+# 调整一下 /var/lib/libvirt/dnsmasq/default.conf 文件内容
+cat > /var/lib/libvirt/dnsmasq/default.conf <<EOF
+##WARNING:  THIS IS AN AUTO-GENERATED FILE. CHANGES TO IT ARE LIKELY TO BE
+##OVERWRITTEN AND LOST.  Changes to this configuration should be made using:
+##    virsh net-edit default
+## or other application using the libvirt API.
+##
+## dnsmasq conf file created by libvirt
+strict-order
+local=/.ocp4-1.example.com/192.168.122.1
+pid-file=/var/run/libvirt/network/default.pid
+except-interface=lo
+bind-dynamic
+interface=virbr0
+dhcp-range=192.168.122.1,static
+dhcp-no-override
+dhcp-authoritative
+dhcp-hostsfile=/var/lib/libvirt/dnsmasq/default.hostsfile
+addn-hosts=/var/lib/libvirt/dnsmasq/default.addnhosts
+host-record=lb.ocp4-1.example.com,192.168.122.101
+host-record=api.ocp4-1.example.com,192.168.122.101
+#host-record=api-int.ocp4-1.example.com,192.168.122.101
+#host-record=master-0.ocp4-1.example.com,192.168.122.101
+#cname=ocp4-1.example.com,lb.ocp4-1.example.com
+#cname=*.apps.ocp4-1.example.com,lb.ocp4-1.example.com
+#auth-zone=ocp4-1.example.com
+#auth-server=ocp4-1.example.com,*
+EOF
+#  cat /var/lib/libvirt/dnsmasq/default.hostsfile 
+52:54:00:1c:14:57,192.168.122.101,master-0.ocp4-1.example.com
+
+# 这个服务不能停
+/usr/sbin/dnsmasq --conf-file=/var/lib/libvirt/dnsmasq/default.conf
+
+# 报错
+# oc get clusteroperators | grep -Ev "4.9.9     True        False         False"
+authentication                             4.9.9     True        False         True       2s      ProxyConfigControllerDegraded: endpoint("https://oauth-
+openshift.apps.ocp4-1.example.com/healthz") found in NO_PROXY(".cluster.local,.svc,10.128.0.0/14,127.0.0.1,172.30.0.0/16,192.168.122.0/24,api-int.ocp4-1.
+example.com,localhost,ocp4-1.example.com,openshift.com,opentlc.com,quay.io,redhat.com,rhcnsa.com") is unreachable with proxy(Get "https://oauth-openshift
+.apps.ocp4-1.example.com/healthz": context deadline exceeded) and without proxy(Get "https://oauth-openshift.apps.ocp4-1.example.com/healthz": context deadline exceeded)
+console                                    4.9.9     False       True          False      3h29m   DeploymentAvailable: 0 replicas available for console deployment...
+ingress                                    4.9.9     True        False         True       3d      The "default" ingress controller reports Degraded=True:
+ DegradedConditions: One or more other status conditions indicate a degraded state: CanaryChecksSucceeding=False (CanaryChecksRepetitiveFailures: Canary route checks for the default ingress controller are failing)
+machine-config                             4.9.9     False       False         True       160m    Cluster not available for 4.9.9
 
 # 站点1 到 站点2 的 OCP 需求
 # 1. 中心站点与边缘站点之间路由可达

@@ -427,7 +427,7 @@ EOF
 # 8.3.3.4	指定内部镜像库使用PVC
 oc patch configs.imageregistry.operator.openshift.io cluster --type merge \
   --patch '{"spec":{"storage":{"pvc":{"claim":"'${OCP_REGISTRY_PVC_NAME}'"}}}}'
-oc patch configs.imageregistry.operator.openshift.io cluster --type merge --patch '{"spec":{"managementState": "Managed"}}'
+oc patch configs.imageregistry.operator.openshift.io cluster --type merge --patch '{"spec":{"managementState": "Unmanaged"}}'
 oc get configs.imageregistry.operator.openshift.io cluster -o json | jq -r '.spec |.managementState,.storage'
 oc get pod -n openshift-image-registry
 
@@ -661,6 +661,7 @@ EEEE
 
 /bin/bash -x /usr/local/bin/nfs-provisioner-setup.sh 
 
+# nfs 报错
 # 学习一下 cchen 写的 Assisted Installer 配置
 # 其中为 image registry 配置 nfs 的步骤可以参考以下内容
 # https://github.com/cchen666/OpenShift-Labs/blob/main/Installation/Assisted-Installer.md
@@ -674,6 +675,9 @@ $ chmod 777 /home/imagepv
 cat >> /etc/exports <<EOF
 /home/imagepv   *(rw,sync,no_wdelay,no_root_squash,insecure,fsid=0)
 EOF
+
+
+
 
 cat << EOF > pv.yaml
 
@@ -711,4 +715,109 @@ $ oc edit configs.imageregistry.operator.openshift.io
 $ oc new-app https://github.com/cchen666/openshift-flask
 $ oc expose svc/openshift-flask
 $ curl openshift-flask-test-1.apps.ocp4-1.example.com
+
+
+$ mkdir -p /home/userfile
+$ chown nobody:nobody /home/userfile
+$ chmod 777 /home
+$ chmod 777 /home/userfile
+
+cat >> /etc/exports <<EOF
+/home/userfile   *(rw,sync,no_wdelay,no_root_squash,insecure,fsid=0)
+EOF
+
+exportfs -rav 
+
+# 登陆 sno: 手工登陆 quay.io
+# 是不是没用我的 pull-secret
+# 在手工下载镜像后
+# 报错:E1217 09:40:42.606518       1 controller.go:1004] provision "openshift-image-registry/image-registry-storage" class "nfs-storage-provisioner": unexpected error getting claim reference: selfLink was empty, can't make reference
+# 这个报错参考:
+# https://github.com/kubernetes-sigs/nfs-subdir-external-provisioner/issues/25
+# 应该按照：https://access.redhat.com/solutions/5685971 里给的方法修改
+
+
+# https://github.com/kubernetes-sigs/nfs-subdir-external-provisioner
+
+# Step 2: Get the NFS Subdir External Provisioner files
+$ git clone https://github.com/kubernetes-sigs/nfs-subdir-external-provisioner
+$ cd nfs-subdir-external-provisioner
+
+# Step 3: Setup authorization
+$ oc project default
+$ oc delete project nfs-provisioner 
+$ oc new-project nfs-provisioner
+$ NS=$(oc config get-contexts|grep -e "^\*" |awk '{print $5}')
+$ NAMESPACE=${NS:-default}
+$ sed -i'' "s/namespace:.*/namespace: $NAMESPACE/g" ./deploy/rbac.yaml ./deploy/deployment.yaml
+$ oc create -f deploy/rbac.yaml
+$ oc adm policy add-scc-to-user hostmount-anyuid system:serviceaccount:$NAMESPACE:nfs-client-provisioner
+
+Step 4: Configure the NFS subdir external provisioner
+# 编辑 deploy/deployment.yaml
+...
+    spec:
+      serviceAccountName: nfs-client-provisioner
+      containers:
+        - name: nfs-client-provisioner
+          image: k8s.gcr.io/sig-storage/nfs-subdir-external-provisioner:v4.0.2
+          volumeMounts:
+            - name: nfs-client-root
+              mountPath: /persistentvolumes
+          env:
+            - name: PROVISIONER_NAME
+              value: nfs-storage
+            - name: NFS_SERVER
+              value: 192.168.122.1
+            - name: NFS_PATH
+              value: /home/userfile
+      volumes:
+        - name: nfs-client-root
+          nfs:
+            server: 192.168.122.1
+            path: /home/userfile
+
+$ oc apply -f deploy/deployment.yaml
+
+# 编辑 deploy/class.yaml
+cat > deploy/class.yaml <<'EOF'
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: nfs-storage-provisioner
+provisioner: nfs-storage
+parameters:
+  pathPattern: ${.PVC.namespace}-${.PVC.name}
+  archiveOnDelete: "false"
+EOF
+
+$ oc annotate storageclass nfs-storage-provisioner storageclass.kubernetes.io/is-default-class="true"
+$ oc project default
+$ oc rollout status deployment nfs-client-provisioner -n ${NAMESPACE}
+
+$ cat > deploy/test-claim.yaml <<EOF
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: test-claim
+spec:
+  storageClassName: nfs-storage-provisioner
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 1Mi
+EOF
+$ oc create -f deploy/test-claim.yaml -f deploy/test-pod.yaml
+$ oc delete -f deploy/test-claim.yaml -f deploy/test-pod.yaml
+
+# 报错 Error writing blob: Error initiating layer upload to /v2/test4/openshift-flask/blobs/uploads/ in image-registry.openshift-image-registry.svc:5000: received unexpected HTTP status: 500 Internal Server Error
+
+
+# 站点1 到 站点2 的 OCP 需求
+# 1. 中心站点与边缘站点之间路由可达
+# 2. 中心站点可解析边缘站点域名
+# 3. 边缘站点可解析中心站点域名
+
+
 ```

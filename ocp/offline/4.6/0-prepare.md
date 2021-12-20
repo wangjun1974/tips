@@ -15,6 +15,26 @@
 |Domain|example.com|
 |OCP_CLUSTER_ID|ocp4-1|
 
+|DNS Name|IP|
+|---|---|
+|support.example.com|192.168.122.12|
+|dns.example.com|192.168.122.12|
+|nfs.example.com|192.168.122.12|
+|yum.example.com|192.168.122.12|
+|registry.example.com|192.168.122.12|
+|lb.ocp4-1.example.com|192.168.122.12|
+|api.ocp4-1.example.com|192.168.122.12|
+|api-int.ocp4-1.example.com|192.168.122.12|
+|*.apps.ocp4-1.example.com|192.168.122.12|
+|bootstrap.ocp4-1.example.com|192.168.122.200|
+|master-0.ocp4-1.example.com|192.168.122.201|
+|master-1.ocp4-1.example.com|192.168.122.202|
+|master-2.ocp4-1.example.com|192.168.122.203|
+|worker-0.ocp4-1.example.com|192.168.122.210|
+|worker-1.ocp4-1.example.com|192.168.122.211|
+
+### 
+
 ### 安装 support 机器
 ```
 

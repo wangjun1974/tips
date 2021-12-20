@@ -813,6 +813,53 @@ $ oc delete -f deploy/test-claim.yaml -f deploy/test-pod.yaml
 
 # 报错 Error writing blob: Error initiating layer upload to /v2/test4/openshift-flask/blobs/uploads/ in image-registry.openshift-image-registry.svc:5000: received unexpected HTTP status: 500 Internal Server Error
 
+# 获取 ingress-operator 日志
+oc logs ingress-operator-6fbd8b6746-nmhkj -c ingress-operator  -n openshift-ingress-operator  | grep -Ev "INFO" 
+...
+2021-12-20T02:26:37.133Z        ERROR   operator.canary_controller      wait/wait.go:155        error performing canary route check     {"error": "error sending canary HTTP Request: Timeout: Get \"https://canary-openshift-ingress-canary.apps.ocp4-1.example.com\": context deadline exceeded (Client.Timeout exceeded while awaiting headers)"}
+# 知识库文档
+https://access.redhat.com/solutions/5891131
+
+[root@base-pvg ocp4-cluster]# oc get pods -n openshift-ingress 
+NAME                             READY   STATUS    RESTARTS   AGE
+router-default-d49579f44-dzszr   1/1     Running   2          2d21h
+[root@base-pvg ocp4-cluster]# oc -n openshift-ingress rsh router-default-d49579f44-dzszr 
+sh-4.4$ curl -v https://canary-openshift-ingress-canary.apps.ocp4-1.example.com
+* Rebuilt URL to: https://canary-openshift-ingress-canary.apps.ocp4-1.example.com/
+*   Trying 192.168.122.101...
+* TCP_NODELAY set
+* Connected to canary-openshift-ingress-canary.apps.ocp4-1.example.com (192.168.122.101) port 443 (#0)
+* ALPN, offering h2
+* ALPN, offering http/1.1
+* successfully set certificate verify locations:
+*   CAfile: /etc/pki/tls/certs/ca-bundle.crt
+  CApath: none
+* TLSv1.3 (OUT), TLS handshake, Client hello (1):
+* TLSv1.3 (IN), TLS handshake, Server hello (2):
+* TLSv1.3 (IN), TLS handshake, [no content] (0):
+* TLSv1.3 (IN), TLS handshake, Encrypted Extensions (8):
+* TLSv1.3 (IN), TLS handshake, [no content] (0):
+* TLSv1.3 (IN), TLS handshake, Certificate (11):
+* TLSv1.3 (OUT), TLS alert, unknown CA (560):
+* SSL certificate problem: self signed certificate in certificate chain
+* Closing connection 0
+curl: (60) SSL certificate problem: self signed certificate in certificate chain
+More details here: https://curl.haxx.se/docs/sslcerts.html
+
+curl failed to verify the legitimacy of the server and therefore could not
+establish a secure connection to it. To learn more about this situation and
+how to fix it, please visit the web page mentioned above.
+sh-4.4$ 
+
+# 获取 openshift-ingress-operator 的 ca 证书
+# 10:54 <yaoli> # 
+oc get -n openshift-ingress-operator secret router-ca -o jsonpath="{.data.tls\.crt}" | base64 -d >ca-bundle.crt
+# 把 ocp 的 router ca 倒出来
+# 10:55 <yaoli> https://docs.openshift.com/container-platform/4.6/networking/enable-cluster-wide-proxy.html
+# 10:56 <yaoli> 这里有方法信任他那个 ca
+# 10:57 <yaoli> 然后试试看吧
+
+# 
 
 # 站点1 到 站点2 的 OCP 需求
 # 1. 中心站点与边缘站点之间路由可达

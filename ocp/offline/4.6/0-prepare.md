@@ -654,5 +654,364 @@ cat /etc/haproxy/haproxy.cfg
 systemctl restart haproxy
 ss -lntp |grep haproxy
 
+# 访问如下页面http://lb.ocp4-1.example.internal:9000/，确认每行颜色和下图一致。注意：为了能解析域名，运行浏览器所在节点需要将DNS设置到support节点的地址。
+
+# 5	准备定制安装文件
+# 5.1	准备Ignition引导文件
+# 5.1.1	安装openshift-install
+tar -xzf ${OCP_PATH}/ocp-installer/openshift-install-linux-${OCP_VER}.tar.gz -C /usr/local/sbin/
+openshift-install version
+
+# 5.1.2	准备install-config.yaml文件
+# 5.1.2.1	设置环境变量
+setVAR REPLICA_WORKER 0                                             ## 在安装阶段，将WORKER的数量设为0
+setVAR REPLICA_MASTER 3                                             ## 本文档的OpenShift集群只有1个master节点
+setVAR CLUSTER_PATH /data/ocp-cluster/${OCP_CLUSTER_ID}
+setVAR IGN_PATH ${CLUSTER_PATH}/ignition                            ## 存放Ignition相关文件的目录
+setVAR PULL_SECRET_STR "\$(cat \${PULL_SECRET_FILE})"                    ## 在安装过程使用${PULL_SECRET_FILE}拉取镜像
+setVAR SSH_KEY_PATH ${CLUSTER_PATH}/ssh-key                         ## 存放ssh-key相关文件的目录
+setVAR SSH_PRI_FILE ${SSH_KEY_PATH}/id_rsa                          ## 节点之间访问的私钥文件名
+
+# 5.1.2.2	创建CoreOS SSH访问密钥
+# 该密钥用于登录OpenShift集群节点的CoreOS。
+mkdir -p ${IGN_PATH}
+mkdir -p ${SSH_KEY_PATH}
+ssh-keygen -N '' -f ${SSH_KEY_PATH}/id_rsa
+ll ${SSH_KEY_PATH}
+setVAR SSH_PUB_STR "\$(cat ${SSH_KEY_PATH}/id_rsa.pub)"             ## 节点之间访问的公钥文件内容
+echo ${SSH_PUB_STR}
+
+# 5.1.2.3	创建无证书的install-config.yaml文件
+cat << EOF > ${IGN_PATH}/install-config.yaml
+apiVersion: v1
+baseDomain: ${DOMAIN}
+compute:
+- hyperthreading: Enabled
+  name: worker
+  replicas: ${REPLICA_WORKER}
+controlPlane:
+  hyperthreading: Enabled
+  name: master
+  replicas: ${REPLICA_MASTER}
+metadata:
+  name: ${OCP_CLUSTER_ID}
+networking:
+  clusterNetworks:
+  - cidr: 10.128.0.0/14
+    hostPrefix: 23
+  networkType: OpenShiftSDN
+  serviceNetwork:
+  - 172.30.0.0/16
+platform:
+  none: {}
+fips: false
+pullSecret: '${PULL_SECRET_STR}'
+sshKey: '${SSH_PUB_STR}'
+imageContentSources: 
+- mirrors:
+  - ${REGISTRY_DOMAIN}/${REGISTRY_REPO}
+  source: quay.io/openshift-release-dev/ocp-release
+- mirrors:
+  - ${REGISTRY_DOMAIN}/${REGISTRY_REPO}
+  source: quay.io/openshift-release-dev/ocp-v4.0-art-dev
+EOF
+
+# 5.1.2.4	附加Docker Registry镜像库的证书到install-config.yaml文件
+cp ${REGISTRY_PATH}/certs/registry.crt ${IGN_PATH}/
+sed -i -e 's/^/  /' ${IGN_PATH}/registry.crt
+echo "additionalTrustBundle: |" >> ${IGN_PATH}/install-config.yaml
+cat ${IGN_PATH}/registry.crt >> ${IGN_PATH}/install-config.yaml
+
+# 5.1.2.5	查看最终的install-config.yaml文件
+# 重要说明：由于install-config.yaml中的安装证书有效期只有24小时，因此如果在生成该文件后24小时没有安装好OpenShift集群，需要重新操作生成install-config.yaml和其他所有安装前的准备步骤（所有以前生成的文件可以删除掉）。
+cat ${IGN_PATH}/install-config.yaml
+
+# 5.1.2.6	备份install-config.yaml文件
+cp ${IGN_PATH}/install-config.yaml{,.`date +%Y%m%d%H%M`.bak}
+ll ${IGN_PATH}
+
+# 5.1.3	准备manifest文件
+# 5.1.3.1	生成manifest文件
+# OpenShift集群节点在启动后会根据manifest文件生成的Ignition设置各自的操作系统配置。
+openshift-install create manifests --dir ${IGN_PATH}
+tree ${IGN_PATH}/manifests/ ${IGN_PATH}/openshift/
+
+# 5.1.3.2	修改master节点的调度策略
+# 修改mastersSchedulable为false, 禁用master节点运行用户负载。
+sed -i 's/mastersSchedulable: true/mastersSchedulable: false/g' ${IGN_PATH}/manifests/cluster-scheduler-02-config.yml
+cat ${IGN_PATH}/manifests/cluster-scheduler-02-config.yml | grep mastersSchedulable
+
+# 5.1.3.3	为所有节点创建时钟同步配置文件
+setVAR NTP_CONF $(cat << EOF | base64 -w 0
+server ntp.${DOMAIN} iburst
+driftfile /var/lib/chrony/drift
+makestep 1.0 3
+rtcsync
+logdir /var/log/chrony
+EOF)
+
+echo ${NTP_CONF} | base64 -d
+
+# 创建master节点的创建时钟同步配置文件。
+cat << EOF > ${IGN_PATH}/openshift/99_masters-chrony-configuration.yaml
+apiVersion: machineconfiguration.openshift.io/v1
+kind: MachineConfig
+metadata:
+  labels:
+    machineconfiguration.openshift.io/role: master
+  name: masters-chrony-configuration
+spec:
+  config:
+    ignition:
+      config: {}
+      security:
+        tls: {}
+      timeouts: {}
+      version: 3.1.0
+    networkd: {}
+    passwd: {}
+    storage:
+      files:
+      - contents:
+          source: data:text/plain;charset=utf-8;base64,${NTP_CONF}
+        mode: 420
+        overwrite: true
+        path: /etc/chrony.conf
+  osImageURL: ""
+EOF
+cat ${IGN_PATH}/openshift/99_masters-chrony-configuration.yaml
+
+# 创建worker节点的创建时钟同步配置文件。
+cat << EOF > ${IGN_PATH}/openshift/99_workers-chrony-configuration.yaml
+apiVersion: machineconfiguration.openshift.io/v1
+kind: MachineConfig
+metadata:
+  labels:
+    machineconfiguration.openshift.io/role: worker
+  name: workers-chrony-configuration
+spec:
+  config:
+    ignition:
+      config: {}
+      security:
+        tls: {}
+      timeouts: {}
+      version: 3.1.0
+    networkd: {}
+    passwd: {}
+    storage:
+      files:
+      - contents:
+          source: data:text/plain;charset=utf-8;base64,${NTP_CONF}
+        mode: 420
+        overwrite: true
+        path: /etc/chrony.conf
+  osImageURL: ""
+EOF
+more ${IGN_PATH}/openshift/99_workers-chrony-configuration.yaml
+
+# 5.1.4	创建Ignition引导文件
+openshift-install create ignition-configs --dir ${IGN_PATH}/
+ll ${IGN_PATH}/*.ign
+jq .ignition.config ${IGN_PATH}/master.ign 
+jq .ignition.config ${IGN_PATH}/worker.ign 
+
+# 5.2	准备节点自动设置文件
+# 为了方面CoreOS节点首次启动后的设置操作，所有操作都放在节点自动设置文件中，只需下载该文件执行即可完成对应节点的所有配置。
+setVAR GATEWAY_IP 192.168.122.1      ## CoreOS启动时使用的GATEWAY
+setVAR NETMASK 24                  ## CoreOS启动时使用的NETMASK
+setVAR CONNECT_NAME "Wired Connection"    
+# CoreOS的nmcli看到的connection名称，OCP4.6 是“Wired Connection”
+# CoreOS的nmcli看到的connection名称，OCP4.8 是“Wired connection 1”
+
+creat_auto_config_file(){
+
+cat << EOF > ${IGN_PATH}/set-${NODE_NAME}
+nmcli connection modify "${CONNECT_NAME}" ipv4.addresses ${IP}/${NETMASK}
+nmcli connection modify "${CONNECT_NAME}" ipv4.dns ${DNS_IP}
+nmcli connection modify "${CONNECT_NAME}" ipv4.gateway ${GATEWAY_IP}
+nmcli connection modify "${CONNECT_NAME}" ipv4.method manual
+nmcli connection down "${CONNECT_NAME}"
+nmcli connection up "${CONNECT_NAME}"
+
+sudo coreos-installer install /dev/sda --insecure-ignition --ignition-url=http://${YUM_DOMAIN}/${OCP_CLUSTER_ID}/ignition/${NODE_TYPE}.ign --firstboot-args 'rd.neednet=1' --copy-network
+EOF
+}
+
+#创建BOOTSTRAP启动定制文件
+NODE_TYPE="bootstrap"
+NODE_NAME="bootstrap"
+IP=${BOOTSTRAP_IP}
+creat_auto_config_file
+cat ${IGN_PATH}/set-${NODE_NAME}
+
+#创建master-0启动定制文件
+NODE_TYPE="master"
+NODE_NAME="master-0"
+IP=${MASTER0_IP}
+creat_auto_config_file
+
+#创建master-1启动定制文件
+NODE_TYPE="master"
+NODE_NAME="master-1"
+IP=${MASTER1_IP}
+creat_auto_config_file
+
+#创建master-2启动定制文件
+NODE_TYPE="master"
+NODE_NAME="master-2"
+IP=${MASTER2_IP}
+creat_auto_config_file
+
+#创建worker-0启动定制文件
+NODE_TYPE="worker"
+NODE_NAME="worker-0"
+IP=${WORKER0_IP}
+creat_auto_config_file
+
+#创建worker-1启动定制文件
+NODE_TYPE="worker"
+NODE_NAME="worker-1"
+IP=${WORKER1_IP}
+creat_auto_config_file
+
+ll ${IGN_PATH}/set-*
+
+# 5.3	创建文件下载目录
+# 为定制文件创建Apache HTTP上的可下载目录。
+chmod -R 705 ${IGN_PATH}/
+cat << EOF > /etc/httpd/conf.d/ignition.conf
+Alias /${OCP_CLUSTER_ID} "${IGN_PATH}/../"
+<Directory "${IGN_PATH}/../">
+  Options +Indexes +FollowSymLinks
+  Require all granted
+</Directory>
+<Location /${OCP_CLUSTER_ID}>
+  SetHandler None
+</Location>
+EOF
+systemctl restart httpd
+# 确认所有安装所需文件可下载。
+curl http://${YUM_DOMAIN}/${OCP_CLUSTER_ID}/ignition/bootstrap.ign | jq 
+curl http://${YUM_DOMAIN}/${OCP_CLUSTER_ID}/ignition/worker.ign | jq
+curl http://${YUM_DOMAIN}/${OCP_CLUSTER_ID}/ignition/master.ign | jq
+curl http://${YUM_DOMAIN}/${OCP_CLUSTER_ID}/ignition/set-bootstrap
+curl http://${YUM_DOMAIN}/${OCP_CLUSTER_ID}/ignition/set-master-0
+curl http://${YUM_DOMAIN}/${OCP_CLUSTER_ID}/ignition/set-master-1
+curl http://${YUM_DOMAIN}/${OCP_CLUSTER_ID}/ignition/set-master-2
+curl http://${YUM_DOMAIN}/${OCP_CLUSTER_ID}/ignition/set-worker-0
+curl http://${YUM_DOMAIN}/${OCP_CLUSTER_ID}/ignition/set-worker-1
+
+# 6	创建Bootstrap、Master、Worker虚拟机节点
+# 具体根据不同的IaaS环境和虚机节点配置要求创建bootstrap、master-0、master-1、master-2、worker-0、worker-1虚拟机节点，方法和过程略。需要注意以下事项：
+# 1.	将硬盘的启动优先级设为最高，并将rhcos-4.8.10-x86_64-live.x86_64.iso作为所有虚机的启动盘。
+# 2.	为虚拟机配置一个网卡，并使用网桥类型的网络。
+# 3.	虚拟机操作系统类型选择RHEL 7或RHEL 8。
+
+# 7	安装OCP集群
+# 7.1	第一阶段：部署bootstrap阶段
+# 7.1.1	两次启动
+# 配置 ip 地址
+sudo nmcli con mod 'Wired Connection' connection.autoconnect 'yes' ipv4.method 'manual' ipv4.address '192.168.122.200/24' ipv4.gateway '192.168.122.1' ipv4.dns '192.168.122.12'
+sudo nmcli con down 'Wired Connection'
+sudo nmcli con up 'Wired Connection'
+
+# 使用命令检查网卡配置是否成功
+ip a
+
+# 在bootstrap节点中执行以下命令，先下载自动配置文件，然后执行它。注意：由于此节点当前还未完成配置，因此只能通过IP地址获取自动配置文件。
+curl -O http://<SOPPORT-IP>:8080/<OCP_CLUSTER_ID>/ignition/set-bootstrap
+source set-bootstrap
+# 执行命令重启bootstrap节点。
+reboot
+
+# 7.1.2	查看bootstrap节点部署进程
+# 1.	删除以前ssh保留的登录主机信息。
+rm -rf ~/.ssh/known_hosts
+# 2.	检查bootstrap节点的镜像库mirror配置是否按照install-config.yaml的内容进行配置
+ssh -i ${SSH_PRI_FILE} core@bootstrap.${OCP_CLUSTER_ID}.${DOMAIN} "sudo cat /etc/containers/registries.conf"
+# 3.	检查bootstrap节点是否能访问到Registry。
+ssh -i ${SSH_PRI_FILE} core@bootstrap.${OCP_CLUSTER_ID}.${DOMAIN} "curl -s -u openshift:redhat https://registry.${DOMAIN}:5000/v2/_catalog"
+# 4.	检查bootstrap节点的本地pods。
+ssh -i ${SSH_PRI_FILE} core@bootstrap.${OCP_CLUSTER_ID}.${DOMAIN} "sudo crictl pods"
+# 5.	访问如下地址http://lb.ocp4-1.example.internal:9000/，确认只有两处bootstrap节点变为绿色。
+# 6.	确认可以通过curl命令查看machine config配置服务是否启动。
+ssh -i ${SSH_PRI_FILE} core@bootstrap.${OCP_CLUSTER_ID}.${DOMAIN} "curl -kIs https://api-int.${OCP_CLUSTER_ID}.${DOMAIN}:22623/config/master"
+
+# 7.	可通过如下命令从宏观面观察部署过程。
+openshift-install wait-for install-complete --log-level=debug --dir=${IGN_PATH}
+
+# 8.	跟踪bootstrap的日志以识别安装进度，当循环出现如下红色字体提示的内容的时候，并且haproxy的web监控界面openshift-api-server和machine-config-server的bootstrap部分变为绿色时，说明bootstrap的引导服务已经启动，此时可进入下一个阶段。
+ssh -i ${SSH_PRI_FILE} core@bootstrap.${OCP_CLUSTER_ID}.${DOMAIN} "journalctl -b -f -u bootkube.service"
+
+# 7.2	第二阶段：部署master阶段
+# 7.2.1	两次启动
+# 参照bootstrap的两次启动步骤启动所有master节点，将网络参数换成各自master的地址。
+# 7.2.2	查看master节点部署进程
+# 在support节点执行命令检查master节点的镜像库配置是否按照install-config.yaml的内容进行配置
+ssh -i ${SSH_PRI_FILE} core@master-0.${OCP_CLUSTER_ID}.${DOMAIN} "sudo cat /etc/containers/registries.conf"
+# 检查是否能够正常访问registry
+ssh -i ${SSH_PRI_FILE} core@master-0.${OCP_CLUSTER_ID}.${DOMAIN} "curl -s -u openshift:redhat https://registry.${DOMAIN}:5000/v2/_catalog"
+# 安装过程中可以通过查看如下日志来跟踪安装过程。注意以下日志的红色字体部分，这些内容指示master的不同安装阶段
+ssh -i ${SSH_PRI_FILE} core@bootstrap.${OCP_CLUSTER_ID}.${DOMAIN} "journalctl -b -f -u bootkube.service"
+# 出现上述最后两条红色字体后，说明bootstrap的任务已经完成，可以已经进入后续安装部署节点
+# 另外，我们也可以通过如下方法了解安装进程：
+tail -f ${IGN_PATH}/.openshift_install.log 
+openshift-install wait-for bootstrap-complete --log-level debug --dir ${IGN_PATH}
+# 现在我们可以关闭bootstrap节点，继续进行下一个阶段部署。
+ssh -i ${SSH_PRI_FILE} core@bootstrap.${OCP_CLUSTER_ID}.${DOMAIN} "sudo shutdown -h now"
+# 在安装过程中，也可以通过以下方法查看master节点的日志 
+# ssh -i ${SSH_PRI_FILE} core@master-0.${OCP_CLUSTER_ID}.${DOMAIN} "journalctl -xef"
+
+# 复制kubeconfig文件到用户缺省目录，以便可以用oc命令访问集群。
+mkdir ~/.kube
+cp ${IGN_PATH}/auth/kubeconfig ~/.kube/config
+
+# 检查节点状态，确保master的STATUS均为Ready状态
+oc get node
+
+# 7.3	第三阶段：部署worker阶段
+# 7.3.1	两次启动
+# 参照bootstrap的两次启动步骤启动所有worker节点，将网络参数换成各自worker的地址。
+# 7.3.2	批准csr请求
+# 通过如下命令查看 csr批准请求，第一批出现的是“kube-apiserver-client-kubelet”相关csr。
+oc get csr | grep Pending
+# 执行以下命令批准请求。
+oc get csr | grep Pending | awk '{print $1}' | xargs oc adm certificate approve
+# 再次执行命令查看 csr批准请求，第二批出现的是“kubelet-serving”相关csr。
+oc get csr | grep Pending
+# 执行以下命令批准请求。
+oc get csr | grep Pending | awk '{print $1}' | xargs oc adm certificate approve
+
+# 7.3.3	查看集群部署进展
+# 执行以下命令来查看集群部署是否完成，整个过程需要一些时间。出现以下红色字体部分，说明集群已经部署完成。请记下kubeadmin和对应的登录密码。
+oc get node
+oc get clusteroperators
+oc get clusterversion
+tail -f ${IGN_PATH}/.openshift_install.log
+openshift-install wait-for install-complete --log-level debug --dir ${IGN_PATH}
+
+
+
+
+
+# 报错
+Dec 21 05:48:26 bootstrap.ocp4-1.example.com bootkube.sh[2319]: "99_masters-chrony-configuration.yaml": unable to get REST mapping for "99_masters-chrony-configuration.yaml": no matches for kind "MachineConfig" in version "machineconfiguration.openshift.io/v1"
+
+Dec 21 06:16:11 bootstrap.ocp4-1.example.com hyperkube[2245]: E1221 06:16:11.287099    2245 pod_workers.go:191] Error syncing pod e2d3b3f34d40434ecdfba6a18d83a1ff ("bootstrap-machine-config-operator-bootstrap.ocp4-1.example.com_default(e2d3b3f34d40434ecdfba6a18d83a1ff)"), skipping: failed to "StartContainer" for "machine-config-controller" with CrashLoopBackOff: "back-off 2m40s restarting failed container=machine-config-controller pod=bootstrap-machine-config-operator-bootstrap.ocp4-1.example.com_default(e2d3b3f34d40434ecdfba6a18d83a1ff)"
+
+# 报错 
+# https://gist.github.com/therevoman/f5818a20fd56edd573fa853c6e2ee877
+# 找到 spec version 不正确的配置文件
+[core@bootstrap ~]$ sudo crictl logs b94ce7e23a70b 
+I1221 06:18:23.751217       1 bootstrap.go:40] Version: v4.6.0-202111301700.p0.gc0b5ea5.assembly.stream-dirty (c0b5ea57cf1be9fb30092472809bbb9378614c2e)
+I1221 06:18:23.832930       1 bootstrap.go:116] skipping "/etc/mcc/bootstrap/cluster-dns-02-config.yml" [1] manifest because of unhandled *v1.DNS
+I1221 06:18:23.835966       1 bootstrap.go:116] skipping "/etc/mcc/bootstrap/cluster-infrastructure-02-config.yml" [1] manifest because of unhandled *v1.Infrastructure
+I1221 06:18:23.851468       1 bootstrap.go:116] skipping "/etc/mcc/bootstrap/cluster-ingress-02-config.yml" [1] manifest because of unhandled *v1.Ingress
+I1221 06:18:23.853400       1 bootstrap.go:116] skipping "/etc/mcc/bootstrap/cluster-network-02-config.yml" [1] manifest because of unhandled *v1.Network
+I1221 06:18:23.854607       1 bootstrap.go:116] skipping "/etc/mcc/bootstrap/cluster-proxy-01-config.yaml" [1] manifest because of unhandled *v1.Proxy
+I1221 06:18:23.856291       1 bootstrap.go:116] skipping "/etc/mcc/bootstrap/cluster-scheduler-02-config.yml" [1] manifest because of unhandled *v1.Scheduler
+I1221 06:18:23.866055       1 bootstrap.go:116] skipping "/etc/mcc/bootstrap/cvo-overrides.yaml" [1] manifest because of unhandled *v1.ClusterVersion
+F1221 06:18:24.239767       1 bootstrap.go:47] error running MCC[BOOTSTRAP]: parsing Ignition config failed: unknown version. Supported spec versions: 2.2, 3.0, 3.1
 
 ```

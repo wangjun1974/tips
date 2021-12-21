@@ -973,6 +973,9 @@ oc get node
 # 7.3	第三阶段：部署worker阶段
 # 7.3.1	两次启动
 # 参照bootstrap的两次启动步骤启动所有worker节点，将网络参数换成各自worker的地址。
+# 等待 worker machine-config-daemon-firstboot service 完成
+ssh -i ${SSH_PRI_FILE} core@worker-1.${OCP_CLUSTER_ID}.${DOMAIN} "sudo journalctl -f -u machine-config-daemon-firstboot.service"
+
 # 7.3.2	批准csr请求
 # 通过如下命令查看 csr批准请求，第一批出现的是“kube-apiserver-client-kubelet”相关csr。
 oc get csr | grep Pending
@@ -991,8 +994,84 @@ oc get clusterversion
 tail -f ${IGN_PATH}/.openshift_install.log
 openshift-install wait-for install-complete --log-level debug --dir ${IGN_PATH}
 
+# 检查 kube-apiserver operator 日志
+oc -n openshift-kube-apiserver-operator logs $(oc get pods -n openshift-kube-apiserver-operator -o jsonpath='{ .items[*].metadata.name }') -f
 
+# 7.3.4	登录OpenShift
+# 执行命令，将配置文件复制到用户的缺省目录。
+cp ${IGN_PATH}/auth/kubeconfig ~/.kube/config
+# 用初始化用户和密码登录。
+# extract the ingress-ca certificate
+oc -n openshift-authentication rsh $(oc get pod -n openshift-authentication -l app=oauth-openshift -o name | head -1) cat /run/secrets/kubernetes.io/serviceaccount/ca.crt > ${IGN_PATH}/ingress-ca.crt
+cp ${IGN_PATH}/ingress-ca.crt /etc/pki/ca-trust/source/anchors
+update-ca-trust
+oc login https://api.${OCP_CLUSTER_ID}.${DOMAIN}:6443 -u kubeadmin -p <KUBEADMIN-PASSWORD>
 
+# 7.4	第五阶段：连续运行24小时
+# 在完成上述OpenShift集群安装步骤后，需要让OpenShift集群以非降级状态运行 24 小时，以完成第一次证书轮转。
+
+# 3.2.8	下载离线ImageStream镜像包（可选）
+# 3.2.8.1	创建镜像列表文件
+mkdir -p ${OCP_PATH}/app-image/redhat-app/images
+# 执行命令，将所有下载镜像写入app-images.txt文件。
+IMAGE_LIST_FILE_NAME=${OCP_PATH}/app-image/redhat-app/app-images.txt
+touch ${IMAGE_LIST_FILE_NAME}
+oc project openshift
+IMAGES=$(oc get is -o custom-columns=NAME:metadata.name --no-headers -l samples.operator.openshift.io/managed)
+for IMAGE in ${IMAGES}
+do
+  i=0
+  IS_KINDS=$(oc get is ${IMAGE} -o=jsonpath='{.spec.tags[*].from.kind}')
+  for IS_KIND in ${IS_KINDS}
+  do
+    if [ $IS_KIND = "DockerImage" ]; then
+        IS_ADDR=$(oc get is ${IMAGE} -o=jsonpath={.spec.tags[$i].from.name})
+        SITE=${IS_ADDR:0:8}
+        if [ ${SITE} = "registry" ]; then
+            echo ${IS_ADDR} >> ${IMAGE_LIST_FILE_NAME}
+        fi
+    fi
+    ((i++))
+  done
+done
+# 3.2.8.2	测试下载
+# 先以其中一个镜像为例，测试下载过程是否正常
+oc image mirror -a ${PULL_SECRET_FILE} --filter-by-os=linux/amd64 registry.redhat.io/rhscl/ruby-25-rhel7:latest --dir=${OCP_PATH}/app-image/redhat-app/images file://rhscl/ruby-25-rhel7:latest
+oc image info --dir=${OCP_PATH}/app-image/redhat-app/images file://rhscl/ruby-25-rhel7:latest
+# 删除测试文件
+rm -rf ${OCP_PATH}/app-image/redhat-app/images
+# 3.2.8.3	批量下载镜像
+cat ${OCP_PATH}/app-image/redhat-app/app-images.txt | while read line; do
+  echo “"================> Begin downloading $line <================"”
+  oc image mirror -a ${PULL_SECRET_FILE} ${line} --filter-by-os=linux/amd64 --dir=${OCP_PATH}/app-image/redhat-app/images file://$(echo ${line} | cut -d '/' -f2)/$(echo ${line} | cut -d '/' -f3)
+done
+du -lh ${OCP_PATH}/app-image/redhat-app/images/v2 --max-depth=1
+
+# 3.2.8.4	检查下载镜像
+# 查看已下载镜像，查看是否有下载错误出现
+cat ${OCP_PATH}/app-image/redhat-app/app-images.txt | while read line; do
+  oc image info --dir=${OCP_PATH}/app-image/redhat-app/images \
+    file://$(echo ${line} | cut -d '/' -f2)/$(echo ${line} | cut -d '/' -f3) | grep error
+  if [ $? -eq 0 ]; then
+    echo "ERROR for ${line}."
+  else
+    echo "RIGHT for ${line}."
+  fi
+done
+
+# 3.2.8.5	批量打包镜像
+for dir1 in $(ls --indicator-style=none ${OCP_PATH}/app-image/redhat-app/images/v2); do
+  for dir2 in $(ls --indicator-style=none ${OCP_PATH}/app-image/redhat-app/images/v2/${dir1}); do
+   tar -zcvf ${OCP_PATH}/app-image/redhat-app/images/v2/${dir1}/${dir2}.tar.gz \
+     -C ${OCP_PATH}/app-image/redhat-app/images/v2/${dir1} ${dir2}
+  done
+done
+
+# 3.2.8.6	清除下载文件
+shopt -s extglob
+for dir1 in $(ls --indicator-style=none ${OCP_PATH}/app-image/redhat-app/images/v2); do
+   rm -rf ${OCP_PATH}/app-image/redhat-app/images/v2/${dir1}/!(*.tar.gz)
+done
 
 
 # 报错

@@ -1112,7 +1112,25 @@ oc adm policy add-cluster-role-to-user cluster-admin admin
 # oc adm policy add-cluster-role-to-user cluster-admin admin --rolebinding-name=cluster-admin
 # oc describe clusterrolebindings cluster-admin
 
+# 先移去缺省的KUBECONFIG对应的文件，再用admin用户通过命令行和浏览器登录（浏览器中选择“htpasswd_provider”）。
+mv ~/.kube/config ~/.kube/config.bak 
+oc login https://api.${OCP_CLUSTER_ID}.${DOMAIN}:6443 -u admin -p P@ssw0rd
+oc get identity
 
+# 8.1.3	新建普通用户
+htpasswd -b ${CLUSTER_PATH}/users.htpasswd user1 P@ssw0rd
+cat ${CLUSTER_PATH}/users.htpasswd
+# 更新用户认证库secret
+oc create secret generic htpass-secret --from-file=htpasswd=${CLUSTER_PATH}/users.htpasswd -n openshift-config --dry-run -o yaml | oc apply -f -
+# 添加授权
+oc adm policy add-cluster-role-to-user admin user1
+# 登录验证，确认权限差别（也可以在浏览器控制台中看到和admin用户的区别）
+oc login https://api.${OCP_CLUSTER_ID}.${DOMAIN}:6443 -u user1 -p P@ssw0rd
+oc get identity
+
+# 8.1.4	删除kubeadmin
+# 在上述步骤完成后，特别是添加了具有cluster-admin role的用户后，即可删除kubeadmin用户
+oc delete secret kubeadmin -n kube-system
 
 ### 安装过程报错记录
 ### 以下这个报错是因为手工生成的 chrony machine config 文件指定的 spec version 是 3.2

@@ -1,3 +1,12 @@
+### 内容引用
+内容原创作者：林文炜，刘晓宇
+
+### 说明
+1.	本文内容只适用于安装运行OpenShift 4.8的试用环境，而不适用于生产环境。
+2.	本文中的操作只适用于和本文相同的OpenShift安装方式和部署架构，其它安装方式和部署架构请参考Red Hat官方文档。
+3.	本文中的配置说明了如何部署3 master的OpenShift集群。
+4.	本文操作默认是在support节点上完成，如有例外，请参见每章节说明。
+
 ### 服务器IP地址
 |Hostname|IP Address|Gateway|NetMask|DNS|
 |---|---|---|---|---|
@@ -1073,6 +1082,7 @@ for dir1 in $(ls --indicator-style=none ${OCP_PATH}/app-image/redhat-app/images/
    rm -rf ${OCP_PATH}/app-image/redhat-app/images/v2/${dir1}/!(*.tar.gz)
 done
 
+# 8	集群初始化和功能验证
 
 
 

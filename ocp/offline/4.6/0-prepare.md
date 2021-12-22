@@ -1074,6 +1074,12 @@ for dir1 in $(ls --indicator-style=none ${OCP_PATH}/app-image/redhat-app/images/
 done
 
 
+
+
+
+### 安装过程报错记录
+### 以下这个报错是因为手工生成的 chrony machine config 文件指定的 spec version 是 3.2
+### OCP 4.6 的 machine config controller 支持的 spec version 是 2.2, 3.0, 3.1
 # 报错
 Dec 21 05:48:26 bootstrap.ocp4-1.example.com bootkube.sh[2319]: "99_masters-chrony-configuration.yaml": unable to get REST mapping for "99_masters-chrony-configuration.yaml": no matches for kind "MachineConfig" in version "machineconfiguration.openshift.io/v1"
 

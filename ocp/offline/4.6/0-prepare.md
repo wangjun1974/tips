@@ -1485,6 +1485,11 @@ ls -al ${NFS_USER_FILE_PATH}/pv-demo-pvc-busybox-$(oc get pvc pvc-busybox -o jso
 # 注意：在OpenShift 4.8中由于对应的Kubernetes 1.21版本，因此需要为kube-api-server增加“RemoveSelfLink=false”参数。
 请参考以下文档 https://access.redhat.com/solutions/5685971 为名为cluster的kubeapiservers.operator.openshift.io对象增加参数。
 # 在完成上述修改并且等所有master节点生效后，可以执行以下命令确认生效。
+# oc edit kubeapiservers.operator.openshift.io cluster
+#  unsupportedConfigOverrides: 
+#    apiServerArguments:
+#      feature-gates:
+#      - RemoveSelfLink=false
 oc get -o yaml kubeapiservers.operator.openshift.io/cluster
 
 

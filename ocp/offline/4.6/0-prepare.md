@@ -1487,6 +1487,8 @@ ls -al ${NFS_USER_FILE_PATH}/pv-demo-pvc-busybox-$(oc get pvc pvc-busybox -o jso
 # 在完成上述修改并且等所有master节点生效后，可以执行以下命令确认生效。
 oc get -o yaml kubeapiservers.operator.openshift.io/cluster
 
+
+
 ### 安装过程报错记录
 ### 以下这个报错是因为手工生成的 chrony machine config 文件指定的 spec version 是 3.2
 ### OCP 4.6 的 machine config controller 支持的 spec version 是 2.2, 3.0, 3.1

@@ -669,6 +669,7 @@ oc delete pod curl
 
 ### ocp 4.8 上安装 STF 1.3
 ```
+# https://github.com/wangjun1974/tips/blob/master/os/miscs_02.md#%E5%A6%82%E4%BD%95%E4%B8%BA-ocp-48-%E5%87%86%E5%A4%87-stf-13-catalogsource
 oc apply -f - <<EOF
 apiVersion: operators.coreos.com/v1alpha1
 kind: CatalogSource

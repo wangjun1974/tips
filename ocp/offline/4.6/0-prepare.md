@@ -1083,7 +1083,34 @@ for dir1 in $(ls --indicator-style=none ${OCP_PATH}/app-image/redhat-app/images/
 done
 
 # 8	集群初始化和功能验证
+# 8.1.1	用户管理
+# 8.1.2	新建集群管理员
+# 创建包含admin用户和对应密码的文件：users.htpasswd
+htpasswd -bBc ${CLUSTER_PATH}/users.htpasswd admin P@ssw0rd
+# 基于users.htpasswd文件创建secret验证库
+oc create secret generic htpass-secret --from-file=htpasswd=${CLUSTER_PATH}/users.htpasswd -n openshift-config
+# 创建基于HTPasswd的IdentityProvider，并提供验证库htpass-secret
+cat << EOF | oc apply -f -
+---
+apiVersion: config.openshift.io/v1
+kind: OAuth
+metadata:
+  name: cluster
+spec:
+  identityProviders:
+  - name: htpasswd_provider 
+    mappingMethod: claim 
+    type: HTPasswd
+    htpasswd:
+      fileData:
+        name: htpass-secret
+EOF
+# 授予admin用户cluster-admin权限
+oc adm policy add-cluster-role-to-user cluster-admin admin
 
+# 测试环境里如果加上 --rolebinding-name=cluster-admin 登陆 console-openshift-console 看到的界面与 kubeadmin 不一样，因此不需要执行以下两条命令
+# oc adm policy add-cluster-role-to-user cluster-admin admin --rolebinding-name=cluster-admin
+# oc describe clusterrolebindings cluster-admin
 
 
 

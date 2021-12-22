@@ -1132,6 +1132,361 @@ oc get identity
 # 在上述步骤完成后，特别是添加了具有cluster-admin role的用户后，即可删除kubeadmin用户
 oc delete secret kubeadmin -n kube-system
 
+# 8.2	部署BusyBox应用
+# 8.2.1	导入BusyBox的应用镜像
+setVAR BUSYBOX_IMG_PATH ${OCP_PATH}/app-image/thirdparty/busybox
+skopeo copy --dest-creds=openshift:redhat docker-archive:${BUSYBOX_IMG_PATH}/busybox_1.31.1.tar.gz \
+      docker://${REGISTRY_DOMAIN}/apps/busybox:1.31.1
+skopeo copy --dest-creds=openshift:redhat docker-archive:${BUSYBOX_IMG_PATH}/busybox_1.31.1.tar.gz \
+      docker://${REGISTRY_DOMAIN}/apps/busybox:latest
+skopeo inspect --creds=openshift:redhat docker://${REGISTRY_DOMAIN}/apps/busybox:latest
+
+# 8.2.2	部署BusyBox应用
+oc new-project busybox
+cat << EOF | oc apply -f -
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: busybox
+  namespace: busybox
+  labels:
+    app: busybox
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: busybox
+  template:
+    metadata:
+      labels:
+        app: busybox
+    spec:
+      containers:
+        - name: pod-backend
+          image: ${REGISTRY_DOMAIN}/apps/busybox:latest
+          command: ["sleep"]
+          args: ["1000"]
+EOF
+oc get pod
+oc rsh $(oc get pod | grep busybox | awk '{print $1}') echo HelloWorld
+
+# 8.3	配置存储
+# 8.3.1	设置存储相关环境变量
+setVAR NFS_OCP_REGISTRY_PATH /data/ocp-cluster/${OCP_CLUSTER_ID}/nfs/ocp-registry	## 存放本集群Registry数据的根目录
+setVAR NFS_USER_FILE_PATH    /data/ocp-cluster/${OCP_CLUSTER_ID}/nfs/userfile		## 存放本集群用户数据的根目录
+setVAR NFS_DOMAIN nfs.${DOMAIN} 										## 运行NFS Server的域名
+setVAR NFS_CLIENT_NAMESPACE csi-nfs									## 在OCP上运行NFS Client的项目
+setVAR NFS_CLIENT_PROVISIONER_IMAGE ${REGISTRY_DOMAIN}/${NFS_CLIENT_NAMESPACE}/nfs-client-provisioner  ## NFS Client Image
+setVAR PROVISIONER_NAME kubernetes-nfs
+setVAR STORAGECLASS_NAME sc-csi-nfs
+setVAR OCP_REGISTRY_PVC_NAME pvc-ocp-registry
+setVAR OCP_REGISTRY_PV_NAME pv-ocp-registry
+
+# 8.3.2	安装NFS服务
+yum -y install nfs-utils
+systemctl enable nfs-server --now
+systemctl status nfs-server
+
+# 8.3.3	配置OpenShift内部镜像库的存储
+# 8.3.3.1	创建内部镜像库使用的NFS目录
+mkdir -p ${NFS_OCP_REGISTRY_PATH}
+chown -R nfsnobody.nfsnobody ${NFS_OCP_REGISTRY_PATH}
+chmod -R 777 ${NFS_OCP_REGISTRY_PATH}
+
+echo ${NFS_OCP_REGISTRY_PATH} *'(rw,sync,no_wdelay,no_root_squash,insecure,fsid=0)' \
+> /etc/exports.d/ocp-registry-${OCP_CLUSTER_ID}.exports
+cat /etc/exports.d/ocp-registry-${OCP_CLUSTER_ID}.exports
+
+exportfs -rav | grep ocp-registry
+showmount -e ${NFS_DOMAIN}
+
+# 8.3.3.2	创建PV
+cat << EOF | oc create -f -
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: ${OCP_REGISTRY_PV_NAME}
+spec:
+  capacity:
+    storage: 100Gi 
+  accessModes:
+    - ReadWriteMany 
+  persistentVolumeReclaimPolicy: Retain 
+  nfs: 
+    path: ${NFS_OCP_REGISTRY_PATH}
+    server: ${NFS_DOMAIN}
+    readOnly: false
+EOF
+oc get pv
+
+# 8.3.3.3	创建PVC
+oc project openshift-image-registry
+cat << EOF | oc create -f -
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: ${OCP_REGISTRY_PVC_NAME}
+  namespace: openshift-image-registry
+spec:
+  accessModes:
+  - ReadWriteMany      
+  resources:
+     requests:
+       storage: 100Gi
+EOF
+oc get pvc
+
+# 此时PV已经变为Bound的状态了。
+oc get pv
+
+# 8.3.3.4	指定内部镜像库使用PVC
+oc patch configs.imageregistry.operator.openshift.io cluster --type merge \
+  --patch '{"spec":{"storage":{"pvc":{"claim":"'${OCP_REGISTRY_PVC_NAME}'"}}}}'
+oc patch configs.imageregistry.operator.openshift.io cluster --type merge --patch '{"spec":{"managementState": "Managed"}}'
+oc get configs.imageregistry.operator.openshift.io cluster -o json | jq -r '.spec |.managementState,.storage'
+oc get pod -n openshift-image-registry
+
+# 8.3.4	为应用使用的存储配置NFS StorageClass
+# 为了OpenShift应用能够使用存储，本文将以NFS为例说明如何为OpenShift添加StorageClass。
+# 8.3.4.1	创建NFS 目录
+mkdir -p ${NFS_USER_FILE_PATH}
+chown -R nfsnobody.nfsnobody ${NFS_USER_FILE_PATH}
+chmod -R 777 ${NFS_USER_FILE_PATH}
+
+echo ${NFS_USER_FILE_PATH} *'(rw,sync,no_wdelay,no_root_squash,insecure)' > /etc/exports.d/userfile-${OCP_CLUSTER_ID}.exports
+cat /etc/exports.d/userfile-${OCP_CLUSTER_ID}.exports
+
+exportfs -rav | grep userfile
+showmount -e | grep userfile
+
+# 8.3.4.2	创建NFS StorageClass部署配置
+# 8.3.4.2.1	导入NFS Client镜像
+skopeo copy --dest-creds=openshift:redhat \
+      docker-archive:${OCP_PATH}/csi/nfs/nfs-client-provisioner_v3.1.0-k8s1.11.tar.gz \
+      docker://${NFS_CLIENT_PROVISIONER_IMAGE}:v3.1.0-k8s1.11
+skopeo copy --dest-creds=openshift:redhat \
+      docker-archive:${OCP_PATH}/csi/nfs/nfs-client-provisioner_v3.1.0-k8s1.11.tar.gz \
+      docker://${NFS_CLIENT_PROVISIONER_IMAGE}:latest
+curl -u openshift:redhat https://${REGISTRY_DOMAIN}/v2/_catalog 
+skopeo inspect --creds=openshift:redhat docker://${NFS_CLIENT_PROVISIONER_IMAGE}:latest
+
+# 8.3.4.2.2	从Docker Registry中删除镜像（可选）
+# 1.	先允许删除镜像
+sed -i 's/enabled: false/enabled: true/g' /etc/docker-distribution/registry/config.yml
+# 2.	重启Docker Registry
+systemctl restart docker-distribution
+# 3.	删除容器镜像
+skopeo delete --creds=openshift:redhat docker://${NFS_CLIENT_PROVISIONER_IMAGE}:latest
+# 4.	删除blobs/layers中的镜像垃圾
+registry garbage-collect /etc/docker-distribution/registry/config.yml
+# 5.	重启Docker Registry，释放缓存
+systemctl restart docker-distribution
+
+# 8.3.4.2.3	创建rbac.yaml文件
+cat << EOF > ${CLUSTER_PATH}/rbac.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: sa-nfs-client-provisioner
+  namespace: ${NFS_CLIENT_NAMESPACE}
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: cr-nfs-client-provisioner
+rules:
+  - apiGroups: [""]
+    resources: ["persistentvolumes"]
+    verbs: ["get", "list", "watch", "create", "delete"]
+  - apiGroups: [""]
+    resources: ["persistentvolumeclaims"]
+    verbs: ["get", "list", "watch", "update"]
+  - apiGroups: ["storage.k8s.io"]
+    resources: ["storageclasses"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: [""]
+    resources: ["events"]
+    verbs: ["create", "update", "patch"]
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: crb-nfs-client-provisioner
+subjects:
+  - kind: ServiceAccount
+    name: sa-nfs-client-provisioner
+    namespace: ${NFS_CLIENT_NAMESPACE}
+roleRef:
+  kind: ClusterRole
+  name: cr-nfs-client-provisioner
+  apiGroup: rbac.authorization.k8s.io
+---
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: r-nfs-client-provisioner
+  namespace: ${NFS_CLIENT_NAMESPACE}
+rules:
+  - apiGroups: [""]
+    resources: ["endpoints"]
+    verbs: ["get", "list", "watch", "create", "update", "patch"]
+---
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: rb-nfs-client-provisioner
+  namespace: ${NFS_CLIENT_NAMESPACE}
+subjects:
+  - kind: ServiceAccount
+    name: sa-nfs-client-provisioner
+    namespace: ${NFS_CLIENT_NAMESPACE}
+roleRef:
+  kind: Role
+  name: r-nfs-client-provisioner
+  apiGroup: rbac.authorization.k8s.io
+EOF
+
+# 8.3.4.2.4	创建deployment.yaml文件
+cat << EOF > ${CLUSTER_PATH}/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nfs-client-provisioner
+  namespace: ${NFS_CLIENT_NAMESPACE}
+  labels:
+    app: nfs-client-provisioner
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: nfs-client-provisioner
+  template:
+    metadata:
+      labels:
+        app: nfs-client-provisioner
+    spec:
+      serviceAccountName: sa-nfs-client-provisioner
+      containers:
+        - name: nfs-client-provisioner
+          image: ${NFS_CLIENT_PROVISIONER_IMAGE}:latest
+          volumeMounts:
+            - name: nfs-client-root
+              mountPath: /persistentvolumes
+          env:
+            - name: PROVISIONER_NAME
+              value: ${PROVISIONER_NAME}
+            - name: NFS_SERVER
+              value: ${NFS_DOMAIN}
+            - name: NFS_PATH
+              value: ${NFS_USER_FILE_PATH}
+      volumes:
+        - name: nfs-client-root
+          nfs:
+            server: ${NFS_DOMAIN}
+            path: ${NFS_USER_FILE_PATH}
+EOF
+
+# 8.3.4.2.5	创建storageclass.yaml文件
+cat << EOF > ${CLUSTER_PATH}/storageclass.yaml
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: ${STORAGECLASS_NAME}
+provisioner: ${PROVISIONER_NAME}
+parameters:
+  archiveOnDelete: "false"
+EOF
+
+# Note: archiveOnDelete： "false" 删除PVC时不会保留数据，"true"将保留PVC数据
+
+# 8.3.4.3	执行NFS StorageClass部署配置
+# 部署NFS StorageClass配置
+oc new-project ${NFS_CLIENT_NAMESPACE}
+
+oc apply -f ${CLUSTER_PATH}/rbac.yaml
+oc get clusterrole,clusterrolebinding,role,rolebinding -n ${NFS_CLIENT_NAMESPACE} | grep nfs
+oc describe scc hostmount-anyuid -n ${NFS_CLIENT_NAMESPACE}
+
+oc adm policy add-scc-to-user hostmount-anyuid system:serviceaccount:${NFS_CLIENT_NAMESPACE}:sa-nfs-client-provisioner
+oc describe scc hostmount-anyuid -n ${NFS_CLIENT_NAMESPACE}
+
+oc apply -f ${CLUSTER_PATH}/deployment.yaml
+oc get pod -n ${NFS_CLIENT_NAMESPACE}
+
+oc apply -f ${CLUSTER_PATH}/storageclass.yaml 
+oc get storageclass 
+
+# 配置为默认存储类
+oc patch storageclass ${STORAGECLASS_NAME} -p '{"metadata": {"annotations": {"storageclass.kubernetes.io/is-default-class": "true"}}}' 
+oc get storageclass 
+
+# 8.3.4.4	部署测试应用验证NFS存储
+# 创建验证应用使用的PVC资源
+oc new-project pv-demo
+cat << EOF | oc apply -f -
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pvc-busybox
+  namespace: pv-demo
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 1Gi
+  storageClassName: ${STORAGECLASS_NAME}
+EOF
+oc get pv,pvc -n pv-demo
+
+# 基于busybox部署backend应用
+cat << EOF | oc apply -f -
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: busybox
+  namespace: pv-demo
+  labels:
+    app: busybox
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: busybox
+  template:
+    metadata:
+      labels:
+        app: busybox
+    spec:
+      containers:
+        - name: pod-busybox
+          image: ${REGISTRY_DOMAIN}/apps/busybox:latest
+          command: ["/bin/sh"]
+          args: ["-c", "while true; do date >> /mnt/index.html; hostname >> /mnt/index.html; sleep $(($RANDOM % 5 + 5)); done"]
+          volumeMounts:
+          - name: volume-busybox
+            mountPath: /mnt
+      volumes:
+      - name: volume-busybox
+        persistentVolumeClaim:
+          claimName: pvc-busybox
+EOF
+oc get pod -n pv-demo
+# 向上面2个busybox pod其中一个创建一个新文件“/mnt/test”，然后再另一个pod中确认可以查看到该文件，说明2个pod的/mnt挂在的是NFS共享目录。
+oc rsh $(oc get pod -n pv-demo | sed -n 2p | awk '{print $1}') touch /mnt/test
+oc rsh $(oc get pod -n pv-demo | sed -n 3p | awk '{print $1}') ls -al /mnt/test
+
+# 执行命令，确认${NFS_USER_FILE_PATH}下已经有busybox使用PVC的目录。
+ls -al ${NFS_USER_FILE_PATH}/pv-demo-pvc-busybox-$(oc get pvc pvc-busybox -o jsonpath='{.spec.volumeName}')
+
+# 注意：在OpenShift 4.8中由于对应的Kubernetes 1.21版本，因此需要为kube-api-server增加“RemoveSelfLink=false”参数。
+请参考以下文档 https://access.redhat.com/solutions/5685971 为名为cluster的kubeapiservers.operator.openshift.io对象增加参数。
+# 在完成上述修改并且等所有master节点生效后，可以执行以下命令确认生效。
+oc get -o yaml kubeapiservers.operator.openshift.io/cluster
+
 ### 安装过程报错记录
 ### 以下这个报错是因为手工生成的 chrony machine config 文件指定的 spec version 是 3.2
 ### OCP 4.6 的 machine config controller 支持的 spec version 是 2.2, 3.0, 3.1

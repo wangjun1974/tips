@@ -1589,8 +1589,113 @@ oc adm catalog mirror \
      
 # 检查并统计每个频道的镜像数量
 for APPREGISTRY_ORG in redhat-operator community-operator certified-operator; do
-  echo ${APPREGISTRY_ORG} && cat ${MANIFEST_DIR}/${APPREGISTRY_ORG}-index-manifests/mapping.txt |wc -l;
-  done
+  echo ${APPREGISTRY_ORG} && cat ${MANIFEST_DIR}/manifests-${APPREGISTRY_ORG}-index-*/mapping.txt |wc -l;
+done
+
+# Operator镜像tag信息联机修订说明
+# mapping.txt文件中，存在以下几个方面问题
+# 以sha256为标识的镜像，其目标镜像路径缺少tag标记，这不符合常规的镜像库管理要求（部分镜像库程序可能会拒绝此类镜像），这部分，我们会通过oc image info获取真实的tag标记并进行补全，并添加到名为mapping-tag.txt的文件中
+# 上述镜像中，可能会存在如下几种情况：
+# 有少量镜像的sha256不同，但镜像tag确是相同的，使用oc image info查看，实际是architecture的不同，比如一个是amd64，一个是s390，这种镜像很少，但我们需要给它标记
+# 有少量上述镜像通过oc image info无法获取真实的tag标记，这些镜像有两种情况：
+# 一种是镜像存在，但没有tag标记，则使用latest作为标记进行补全
+# 还有一种可能实际在镜像库上并不存在（或因各种原因已被删除）
+# 少数镜像是shema version1的镜像，比如etcd operator，这种镜像暂时无法使用oc image mirror和skopeo命令下载到本地文件，因为sha256会变化（直接mirror到镜像库则不会有此问题），该bug目前还和研发沟通中
+
+# 9.3.3 Operator镜像下载第一步：镜像列表联机修订
+setVAR SECRET_REG_REDHAT /data/OCP-4.6.52/ocp/secret/redhat-pull-secret.json
+
+_Command () {
+  echo "Verifying the images"
+cd ${MANIFEST_DIR}/manifests-${APPREGISTRY_ORG}-index-*/
+SOURCEFILE=mapping.txt
+TARGETFILE=newmapping.txt
+NOFOUNDFILE=nofound.txt
+VERIFIED=verified.txt
+SCHEMAV1=schemav1.txt
+SCHEMAV2=schemav2.txt
+NOORGTAG=noorgtag.txt
+EXSITED=exsited.txt
+ 
+echo -n "" > ${TARGETFILE}
+echo -n "" > ${NOFOUNDFILE}
+echo -n "" > ${VERIFIED}
+echo -n "" > ${SCHEMAV1}
+echo -n "" > ${SCHEMAV2}
+echo -n "" > ${NOORGTAG}
+echo -n "" > ${EXSITED}
+ 
+cat ${SOURCEFILE} | sort | uniq | while read line;
+do
+  sourceimage=${line%=*};
+  echo "----------------------------------------------"
+  echo -e "\033[32m starting verify image: ${sourceimage} \033[0m"
+# 左侧没有tag
+  if [[ !  ${sourceimage} =~ ":" ]]; then
+    echo ${line} >> ${NOORGTAG};
+    sourceimage=${sourceimage}:latest
+  if [[ ! ${line##*/} =~ ":" ]]; then
+     line=${sourceimage}=${line#*=}
+  fi
+  fi
+# 左侧有tag，右侧也有tag
+  if [[ ${line##*/} =~ ":" ]]; then
+    echo -e "\033[32m tag already exist \033[0m"
+    strtag=`oc image info -a ${SECRET_REG_REDHAT} ${sourceimage} --filter-by-os=linux/amd64 -o json | jq -r '.config | .config.Labels.version+"-"+.config.Labels.release+"_"+.os+"-"+.architecture'`;
+   # 查不到镜像
+   if [ ! $strtag ]; then
+     echo $line >> ${NOFOUNDFILE};
+     echo -e "\033[31m can not find image! \033[0m"
+   else
+     echo ${line} >> ${EXSITED};
+     echo ${line} >> ${TARGETFILE};
+     echo -e "\033[36m this image have been verified \033[0m"
+   fi
+# 左侧有tag，右侧没有tag
+  else
+    strtag=`oc image info -a ${SECRET_REG_REDHAT} ${sourceimage} --filter-by-os=linux/amd64 -o json | jq -r '.config | .config.Labels.version+"-"+.config.Labels.release+"_"+.os+"-"+.architecture'`;
+    # 查不到镜像
+    if [ ! $strtag ]; then
+      echo ${line%=*}
+      echo -e "\033[31m can not find image! \033[0m"
+      echo ${line} >> ${NOFOUNDFILE};
+    # 缺少version和release的镜像，此类镜像要区分manifest schema版本
+    else if [ ! ${strtag%%-*} ]; then
+      echo -e "\033[33m lack version & release! \033[0m"
+      echo -e "\033[33m Inspect image schema version \033[0m"
+      schemaVersion=$(skopeo inspect --raw --authfile ${SECRET_REG_REDHAT} docker://${sourceimage} |jq -r .schemaVersion)
+    # 发现为manifest schema v1的版本，则放到SCHEMAV1文件中
+         if [ ${schemaVersion} = "1" ]; then
+           echo -e "\033[31m This image manifest is schema v1! \033[0m"
+           echo ${line} >> ${SCHEMAV1}
+         # 发现为manifest schema v2的版本，则原样放到TARGETFILE文件中
+         else if [ ${schemaVersion} = "2" ]; then
+           echo -e "\033[36m This image manifest is schema v2 and without tag! \033[0m"
+           echo The verified target url is: ${line#*=}
+           echo ${line} >> ${SCHEMAV2}
+           echo ${line} >> ${TARGETFILE};
+              fi
+         fi
+    else
+      echo -e "\033[36m this image tag have been found and added\033[0m"
+      echo The original target url is: ${line#*=}
+      echo The verified target url is: ${line#*=}:${strtag}
+      echo ${line}:${strtag} >> ${TARGETFILE};
+         fi
+    fi
+  fi
+done
+}
+ 
+PS3='Please enter the channel: '
+options=("redhat-operator" "community-operator" "certified-operator")
+ 
+select opt in "${options[@]}"
+do
+  APPREGISTRY_ORG="${opt}"
+    _Command
+  break
+done
 
 
 ### 安装过程报错记录

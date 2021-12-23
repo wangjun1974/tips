@@ -1492,6 +1492,105 @@ ls -al ${NFS_USER_FILE_PATH}/pv-demo-pvc-busybox-$(oc get pvc pvc-busybox -o jso
 #      - RemoveSelfLink=false
 oc get -o yaml kubeapiservers.operator.openshift.io/cluster
 
+# 9 OperatorHub 镜像包下载
+# 9.1 环境变量设定
+setVAR OPERATOR_VER v4.6
+# 设置 CatalogSource 的快照时间，由于 OPERATOR Hub 不停的在更新，我们设置如下参数，以标记我 们制作 CatalogSource 的时间
+setVAR DATE 20211223
+
+# 9.2 获取 OperatorHub CatalogSource 镜像
+# 目前，红帽主要提供了如下 4 个应用目录镜像(CatalogSource)
+# 
+# Catalog: redhat-operators
+# Index image: https://registry.redhat.io/redhat/redhat-operator-index:v4.6
+# Description: Red Hat products packaged and shipped by Red Hat. Supported by Red Hat.
+# 
+# Catalog: certified-operators
+# Index image: http://registry.redhat.io/redhat/certified-operator-index:v4.6
+# Description: Products from leading independent software vendors (ISVs). Red Hat partners with ISVs to package and ship. Supported by the ISV.
+# 
+# Catalog: community-operators
+# Index image: https://registry.redhat.io/redhat/community-operator-index:latest
+# Description: Software maintained by relevant representatives in community-operators the operator-framework/community-operators GitHub repository. No official support.
+# 
+# Catalog: redhat-marketplace
+# Index image: https://registry.redhat.io/redhat/redhat-marketplace-index:v4.6
+# Description: Certified software that can be purchased from Red Hat Marketplace.
+
+# 本文将以最常用的 redhat、certified 和 community 三个频道的 CatalogSource 为例，将其离线下载下 来
+mkdir -p /data/ocp-operator/operator/${OPERATOR_VER}-${DATE}/catalog
+cd /data/ocp-operator/operator/${OPERATOR_VER}-${DATE}/catalog
+
+# 先记录下每个目录镜像的真实版本号，以备后续更新升级时检查版本号差异之用
+ 
+oc image info -a ${PULL_SECRET_FILE} \
+--filter-by-os=linux/amd64 \
+registry.redhat.io/redhat/redhat-operator-index:${OPERATOR_VER} \
+-o json | jq -r '.config.config.Labels | .version+ "-" +.release' > redhat-operator-index-version.txt
+
+oc image info -a ${PULL_SECRET_FILE} \
+--filter-by-os=linux/amd64 \
+registry.redhat.io/redhat/certified-operator-index:${OPERATOR_VER} \
+-o json | jq -r '.config.config.Labels | .version+ "-" +.release' > certified-operator-index-version.txt
+   
+oc image info -a ${PULL_SECRET_FILE} \
+--filter-by-os=linux/amd64 \
+registry.redhat.io/redhat/community-operator-index:latest \
+-o json | jq -r '.config.config.Labels | .version+ "-" +.release' > community-operator-index-version.txt
+   
+# 下载镜像
+# 下载 redhat-operators 的 CatalogSource 镜像 
+skopeo copy \
+--authfile ${PULL_SECRET_FILE} \
+docker://registry.redhat.io/redhat/redhat-operator-index:${OPERATOR_VER} \ docker-archive:redhat-operator-index.tar.gz
+
+# 下载 certified-operators 的 CatalogSource 镜像 
+skopeo copy \
+--authfile ${PULL_SECRET_FILE} \
+docker://registry.redhat.io/redhat/certified-operator-index:${OPERATOR_VER} \ docker-archive:certified-operator-index.tar.gz
+
+# 下载 community-operators 的 CatalogSource 镜像 
+skopeo copy \
+--authfile ${PULL_SECRET_FILE} \
+docker://registry.redhat.io/redhat/community-operator-index:${OPERATOR_VER} \ docker-archive:community-operator-index.tar.gz
+
+# 9.3 OperatorHub 应用镜像包批量下载(可选)
+# 如果使用后续“高级配置”篇中的代理网络方案的话，本章节内容无需执行
+# 9.3.1 获取 OperatorHub CatalogSource 镜像列表
+# 我们需要将每个频道中所包含的镜像列表导出，以便于我们进行批量下载这些应用该镜像
+mkdir -p /data/ocp-operator/operator/${OPERATOR_VER}-${DATE}/manifest
+export MANIFEST_DIR=/data/ocp-operator/operator/${OPERATOR_VER}-${DATE}/manifest
+export REGISTRY_DOMAIN=registry.example.com:5000
+cd /data/ocp-operator/operator/${OPERATOR_VER}-${DATE}/manifest
+
+# 导出 redhat-operators 中的镜像列表
+oc adm catalog mirror \
+  registry.redhat.io/redhat/redhat-operator-index:${OPERATOR_VER} \
+  ${REGISTRY_DOMAIN} \
+  -a ${PULL_SECRET_FILE} \
+  --filter-by-os="linux/amd64" \
+  --manifests-only
+
+# 导出 certified-operators 中的镜像列表
+oc adm catalog mirror \
+  registry.redhat.io/redhat/certified-operator-index:${OPERATOR_VER} \
+  ${REGISTRY_DOMAIN} \
+  -a ${PULL_SECRET_FILE} \
+  --filter-by-os="linux/amd64" \
+  --manifests-only
+
+# 导出 community-operators 中的镜像列表
+oc adm catalog mirror \
+  registry.redhat.io/redhat/community-operator-index:latest \
+  ${REGISTRY_DOMAIN} \
+  -a ${PULL_SECRET_FILE} \
+  --filter-by-os="linux/amd64" \
+  --manifests-only
+     
+# 检查并统计每个频道的镜像数量
+for APPREGISTRY_ORG in redhat-operator community-operator certified-operator; do
+  echo ${APPREGISTRY_ORG} && cat ${MANIFEST_DIR}/${APPREGISTRY_ORG}-index-manifests/mapping.txt |wc -l;
+  done
 
 
 ### 安装过程报错记录

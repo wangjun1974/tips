@@ -1697,6 +1697,54 @@ do
   break
 done
 
+# Operator镜像下载第二步：批量下载镜像
+# 由于此处，下载较长时间，三个频道根据实际需要按需输入下载
+REG_DOMAIN=${REGISTRY_DOMAIN}
+APPIMAGEDIR=/data/ocp-operator/operator/${OPERATOR_VER}-${DATE}/appimages/${APPREGISTRY_ORG}
+mkdir -p ${APPIMAGEDIR}
+_Downloadimages () {
+  echo "Downloading the images"
+cd ${APPIMAGEDIR}
+export MAPPINGFILE=${MANIFEST_DIR}/manifests-${APPREGISTRY_ORG}-index-*/newmapping.txt
+ 
+ERRIMAGE=errimage.txt
+echo -n "" > ${ERRIMAGE}
+ 
+cat ${MAPPINGFILE} | while read line; do
+  sourceimage=${line%=*};
+  targetimage=$(echo ${line#*=} | sed -e "s/${REG_DOMAIN}\//file:\/\//g")
+  echo -e "\033[31m original image url: ${line%=*} \033[0m"
+  echo -e "\033[31m target image url: file://${sourceimage#*/} \033[0m"
+  echo oc image mirror -a ${SECRET_REG_REDHAT} ${line%=*} --filter-by-os=.* \
+     --keep-manifest-list=true \
+     --dir=${APPIMAGEDIR} \
+     ${targetimage};
+  oc image mirror -a ${SECRET_REG_REDHAT} ${line%=*} --filter-by-os=.* \
+     --keep-manifest-list=true \
+     --dir=${APPIMAGEDIR} \
+     ${targetimage};
+  error=`oc image info -a ${SECRET_REG_REDHAT} --filter-by-os=linux/amd64 --dir=${APPIMAGEDIR} ${targetimage}`
+  if [ "$error" ]; then
+   echo -e "\033[32m image check ok! \033[0m"
+  else
+   echo -e "\033[33m can not find image! \033[0m"
+   echo -e "\033[33m ${sourceimage} \033[0m"
+   echo ${line} >> ${ERRIMAGE};
+  fi
+done
+}
+ 
+PS3='Please enter the channel: '
+options=("redhat-operator" "community-operator" "certified-operator")
+ 
+select opt in "${options[@]}"
+do
+  APPREGISTRY_ORG="${opt}"
+    _Downloadimages
+  break
+done
+
+
 
 ### 安装过程报错记录
 ### 以下这个报错是因为手工生成的 chrony machine config 文件指定的 spec version 是 3.2

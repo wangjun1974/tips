@@ -31,7 +31,7 @@ export LANG=en_US.UTF-8
 
 subscription-manager register --force --user ${SUB_USER} --password ${SUB_PASSWD}
 subscription-manager refresh
-subscription-manager list --available --matches 'Red Hat OpenShift Container Platform' | grep "Pool ID"
+subscription-manager list --available --matches 'Red Hat OpenShift Container Platform' | grep -E "Pool ID|System Type"
 subscription-manager attach --pool=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
 3.2.3.2	开启订阅频道

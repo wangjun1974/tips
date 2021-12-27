@@ -153,6 +153,7 @@ systemctl enable named --now
 cp /etc/named.conf{,_bak}
 sed -i -e "s/listen-on port.*/listen-on port 53 { any; };/" /etc/named.conf
 sed -i -e "s/allow-query.*/allow-query { any; };/" /etc/named.conf
+systemctl restart named
 rndc reload
 grep -E 'listen-on port|allow-query' /etc/named.conf 
 
@@ -317,9 +318,9 @@ rndc reload
 journalctl -u named
 
 # 4.6.5	将Support节点的DNS配置指向自己
-nmcli c mod $(nmcli con show |awk 'NR==2{print}'|awk '{print $1}') ipv4.dns "${DNS_IP}"
+nmcli c mod "$(nmcli --fields name con show |awk 'NR==2{print}' | sed -e 's, $,,g')" ipv4.dns "${DNS_IP}"
 systemctl restart network
-nmcli c show $(nmcli con show |awk 'NR==2{print}'|awk '{print $1}')| grep ipv4.dns
+nmcli c show "$(nmcli --fields name con show |awk 'NR==2{print}' | sed -e 's, $,,g')" | grep ipv4.dns
 
 # 4.6.6	测试正反向DNS解析
 # 1.	正向解析测试

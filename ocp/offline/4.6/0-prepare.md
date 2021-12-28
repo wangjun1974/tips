@@ -922,9 +922,9 @@ curl http://${YUM_DOMAIN}/${OCP_CLUSTER_ID}/ignition/set-worker-1
 # 7.1	第一阶段：部署bootstrap阶段
 # 7.1.1	两次启动
 # 配置 ip 地址
-sudo nmcli con mod 'Wired Connection' connection.autoconnect 'yes' ipv4.method 'manual' ipv4.address '192.168.122.200/24' ipv4.gateway '192.168.122.1' ipv4.dns '192.168.122.12'
-sudo nmcli con down 'Wired Connection'
-sudo nmcli con up 'Wired Connection'
+sudo nmcli con mod 'Wired Connection 1' connection.autoconnect 'yes' ipv4.method 'manual' ipv4.address '192.168.122.200/24' ipv4.gateway '192.168.122.1' ipv4.dns '192.168.122.12'
+sudo nmcli con down 'Wired Connection 1'
+sudo nmcli con up 'Wired Connection 1'
 
 # 使用命令检查网卡配置是否成功
 ip a

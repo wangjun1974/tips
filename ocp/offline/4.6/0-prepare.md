@@ -539,14 +539,14 @@ yum -y install podman skopeo
 setVAR PULL_SECRET_FILE ${OCP_PATH}/secret/redhat-pull-secret.json
 cp ${OCP_PATH}/secret/redhat-pull-secret.json{,.bak}
 podman login -u openshift -p redhat --authfile ${PULL_SECRET_FILE} ${REGISTRY_DOMAIN}
-cat $PULL_SECRET_FILE | jq . 
+cat $PULL_SECRET_FILE | jq -c | tee $PULL_SECRET_FILE
 
 # 4.9.6.3	向Docker Registry导入OpenShift核心镜像
 tar -xvf ${OCP_PATH}/ocp-image/ocp-image-${OCP_VER}.tar -C ${OCP_PATH}/ocp-image/
 rm -f ${OCP_PATH}/ocp-image/ocp-image-${OCP_VER}.tar
 
-oc image mirror -a ${PULL_SECRET_FILE} \
-     --dir=${OCP_PATH}/ocp-image/mirror_${OCP_VER} file://openshift/release:${OCP_VER}* ${REGISTRY_DOMAIN}/${REGISTRY_REPO}
+oc image mirror -a ${PULL_SECRET_FILE} --dir=${OCP_PATH}/ocp-image/mirror_${OCP_VER} \
+     file://openshift/release:${OCP_VER}* ${REGISTRY_DOMAIN}/${REGISTRY_REPO}
 
 # 查看已经导入镜像库镜像数量，然后查看镜像信息。
 curl -u openshift:redhat https://${REGISTRY_DOMAIN}/v2/_catalog

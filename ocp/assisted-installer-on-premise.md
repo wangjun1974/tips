@@ -5,6 +5,7 @@ https://cloud.redhat.com/blog/assisted-installer-on-premise-deep-dive<br>
 # Assisted Installer On-Premise Deep Dive
 
 # 1. 安装 Assisted Install 服务
+# 这个部分先安装 openshift upi support 服务器
 sed -i 's/SELINUX=enforcing/SELINUX=disabled/g' /etc/sysconfig/selinux
 setenforce 0
 dnf install -y @container-tools

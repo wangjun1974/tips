@@ -4,4 +4,14 @@ https://cloud.redhat.com/blog/assisted-installer-on-premise-deep-dive<br>
 ```
 # Assisted Installer On-Premise Deep Dive
 
+# 1. 安装 Assisted Install 服务
+sed -i 's/SELINUX=enforcing/SELINUX=disabled/g' /etc/sysconfig/selinux
+setenforce 0
+dnf install -y @container-tools
+dnf group install "Development Tools" -y
+dnf -y install python3-pip socat make tmux git jq crun
+git clone https://github.com/openshift/assisted-service
+cd assisted-service
+IP=192.167.124.1
+AI_URL=http://$IP:8090
 ```

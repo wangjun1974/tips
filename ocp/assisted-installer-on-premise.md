@@ -148,5 +148,34 @@ echo $CLUSTER_ID
 # 检查 cluster 状态
 curl -s -X GET "$AI_URL/api/assisted-install/v2/clusters?with_hosts=true" -H "accept: application/json" -H "get_unregistered_clusters: false"| jq -r '.[].status'
 
+# 获取 discovered hosts 发现状态
+curl -s -X GET "$AI_URL/api/assisted-install/v2/clusters?with_hosts=true" \
+ -H "accept: application/json" \
+ -H "get_unregistered_clusters: false"| jq -r '.[].progress'
 
+# 查看已 discovered hosts 信息
+curl -s -X GET "$AI_URL/api/assisted-install/v2/clusters?with_hosts=true" \
+-H "accept: application/json" \
+-H "get_unregistered_clusters: false"| jq -r '.[].hosts'
+
+# 获取 validations_info
+curl -s -X GET "$AI_URL/api/assisted-install/v2/clusters?with_hosts=true" -H "accept: application/json" \
+-H "get_unregistered_clusters: false"| jq -r '.[].validations_info'|jq .
+
+# 获取 hosts inventory 信息
+curl -s -X GET "$AI_URL/api/assisted-install/v2/clusters?with_hosts=true" -H "accept: application/json" \
+-H "get_unregistered_clusters: false"| jq -r '.[].hosts[].inventory'|jq -r .
+
+# 获取 host id
+curl -s -X GET "$AI_URL/api/assisted-install/v2/clusters?with_hosts=true" \
+-H "accept: application/json" -H "get_unregistered_clusters: false"| jq -r '.[].hosts[].id'
+
+# 获取 host role
+curl -s -X GET "$AI_URL/api/assisted-install/v2/clusters?with_hosts=true" -H "accept:    application/json" -H "get_unregistered_clusters: false"| jq -r '.[].hosts[].role'
+
+# 可选，如果希望改变 host role 为 master，可执行以下命令
+ for i in `curl -s -X GET "$AI_URL/api/assisted-install/v2/clusters?with_hosts=true"\
+   -H "accept: application/json" -H "get_unregistered_clusters: false"| jq -r '.[].hosts[].id'| awk 'NR>0' |awk '{print $1;}'`
+ do curl -X PATCH "$AI_URL/api/assisted-install/v1/clusters/$CLUSTER_ID" -H "accept: application/json" -H "Content-Type: application/json" -d "{ \"hosts_roles\": [ { \"id\": \"$i\", \"role\": \"master\" } ]}"
+ done
 ```

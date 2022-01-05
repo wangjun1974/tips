@@ -73,13 +73,13 @@ PROXY_URL="10.0.10.10:3128/"
 export http_proxy="$PROXY_URL"
 export https_proxy="$PROXY_URL"
 export ftp_proxy="$PROXY_URL"
-export no_proxy="127.0.0.1,localhost,.rhsacn.org,.gcr.io,quay.io,registry.access.redhat.com,access.redhat.com,.openshift.com"
+export no_proxy="127.0.0.1,192.168.122.14,localhost,.rhsacn.org,.gcr.io,quay.io,registry.access.redhat.com,access.redhat.com,.openshift.com,.example.com"
 
 # For curl
 export HTTP_PROXY="$PROXY_URL"
 export HTTPS_PROXY="$PROXY_URL"
 export FTP_PROXY="$PROXY_URL"
-export NO_PROXY="127.0.0.1,localhost,.rhsacn.org,.gcr.io,quay.io,registry.access.redhat.com,access.redhat.com,.openshift.com"
+export NO_PROXY="127.0.0.1,192.168.122.14,localhost,.rhsacn.org,.gcr.io,quay.io,registry.access.redhat.com,access.redhat.com,.openshift.com,.example.com"
 
 git clone https://github.com/openshift/assisted-service
 cd assisted-service
@@ -94,5 +94,59 @@ sed -i "s@^IMAGE_SERVICE_BASE_URL=.*@IMAGE_SERVICE_BASE_URL=$AI_IMAGE_URL@" onpr
 # sed -i "s/5432,8000,8090,8080/5432:5432 -p 8000:8000 -p 8090:8090 -p 8080:8080/" Makefile
 make deploy-onprem
 # 具体执行了哪些命令，可以参考这个 make target
+
+export CLUSTER_SSHKEY=$(cat ~/.ssh/id_rsa.pub)
+export PULL_SECRET=$(cat pull-secret.txt | jq -R .)
+cat << EOF > ./deployment-singlenodes.json
+{
+  "kind": "Cluster",
+  "name": "ocp-1",  
+  "openshift_version": "4.9",
+  "ocp_release_image": "registry.example.com:5000/ocp4/openshift4:4.9.9-x86_64",
+  "base_dns_domain": "example.com",
+  "hyperthreading": "all",
+  "schedulable_masters": true,
+  "high_availability_mode": "None",
+  "user_managed_networking": true,
+  "platform": {
+    "type": "baremetal"
+   },
+  "cluster_networks": [
+    {
+      "cidr": "10.128.0.0/14",
+      "host_prefix": 23
+    }
+  ],
+  "service_networks": [
+    {
+      "cidr": "172.31.0.0/16"
+    }
+  ],
+  "machine_networks": [
+    {
+      "cidr": "192.168.122.0/24"
+    }
+  ],
+  "network_type": "OVNKubernetes",
+  "additional_ntp_source": "ntp.example.com",
+  "vip_dhcp_allocation": false,      
+  "ssh_public_key": "$CLUSTER_SSHKEY",
+  "pull_secret": $PULL_SECRET
+}
+EOF
+
+# 用 deployment-singlenodes.json 注册 cluster
+AI_URL='http://192.168.122.14:8090'
+curl -s -X POST "$AI_URL/api/assisted-install/v1/clusters" \
+   -d @./deployment-singlenodes.json --header "Content-Type: application/json" | jq .
+
+
+# 获取已注册的 cluster id
+CLUSTER_ID=$(curl -s -X GET "$AI_URL/api/assisted-install/v2/clusters?with_hosts=true" -H "accept: application/json" -H "get_unregistered_clusters: false"| jq -r '.[].id')
+echo $CLUSTER_ID
+
+# 检查 cluster 状态
+curl -s -X GET "$AI_URL/api/assisted-install/v2/clusters?with_hosts=true" -H "accept: application/json" -H "get_unregistered_clusters: false"| jq -r '.[].status'
+
 
 ```

@@ -41,9 +41,30 @@ EOF
 # 创建 jwang-ocp-ai 虚拟机，安装操作系统
 virt-install --debug --name=jwang-ocp-ai --vcpus=4 --ram=32768 --disk path=/data/kvm/jwang-ocp-ai.qcow2,bus=virtio,size=100 --os-variant rhel8.0 --network network=default,model=virtio --boot menu=on --location /root/jwang/isos/rhel-8.4-x86_64-dvd.iso --initrd-inject /tmp/ks-ocp-ai.cfg --extra-args='ks=file:/ks-ocp-ai.cfg'
 
+# 挂载 iso
+mount /dev/sr0 /mnt
 
-yum groupinstall -y "Development Tools"
-yum install -y python3-pip socat make tmux git jq crun
+# 生成本地 yum 源
+cat > /etc/yum.repos.d/local.repo << EOF
+[baseos]
+name=baseos
+baseurl=file:///mnt/BaseOS
+enabled=1
+gpgcheck=0
+
+[appstream]
+name=appstream
+baseurl=file:///mnt/AppStream
+enabled=1
+gpgcheck=0
+EOF
+
+sed -i 's/SELINUX=enforcing/SELINUX=disabled/g' /etc/sysconfig/selinux
+setenforce 0
+
+dnf install -y @container-tools
+dnf groupinstall -y "Development Tools"
+dnf install -y python3-pip socat make tmux git jq crun
 
 # 设置代理（可选）
 # 如果 git clone 有问题，可以考虑设置代理
@@ -72,5 +93,6 @@ sed -i "s@^IMAGE_SERVICE_BASE_URL=.*@IMAGE_SERVICE_BASE_URL=$AI_IMAGE_URL@" onpr
 # 下面这条命令新仓库里已经不用之行 2022/01/04 
 # sed -i "s/5432,8000,8090,8080/5432:5432 -p 8000:8000 -p 8090:8090 -p 8080:8080/" Makefile
 make deploy-onprem
+# 具体执行了哪些命令，可以参考这个 make target
 
 ```

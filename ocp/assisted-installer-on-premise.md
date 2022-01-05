@@ -73,13 +73,13 @@ PROXY_URL="10.0.10.10:3128/"
 export http_proxy="$PROXY_URL"
 export https_proxy="$PROXY_URL"
 export ftp_proxy="$PROXY_URL"
-export no_proxy="127.0.0.1,localhost,.rhsacn.org,.gcr.io,.quay.io"
+export no_proxy="127.0.0.1,localhost,.rhsacn.org,.gcr.io,quay.io,registry.access.redhat.com,access.redhat.com"
 
 # For curl
 export HTTP_PROXY="$PROXY_URL"
 export HTTPS_PROXY="$PROXY_URL"
 export FTP_PROXY="$PROXY_URL"
-export NO_PROXY="127.0.0.1,localhost,.rhsacn.org,.gcr.io,.quay.io"
+export NO_PROXY="127.0.0.1,localhost,.rhsacn.org,.gcr.io,quay.io,registry.access.redhat.com,access.redhat.com"
 
 git clone https://github.com/openshift/assisted-service
 cd assisted-service

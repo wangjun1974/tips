@@ -131,7 +131,15 @@ cat << EOF > ./deployment-singlenodes.json
   "additional_ntp_source": "ntp.example.com",
   "vip_dhcp_allocation": false,      
   "ssh_public_key": "$CLUSTER_SSHKEY",
-  "pull_secret": $PULL_SECRET
+  "pull_secret": $PULL_SECRET,
+  "imageContentSources":  
+- mirrors:
+  - ${REGISTRY_DOMAIN}/${REGISTRY_REPO}
+  source: quay.io/openshift-release-dev/ocp-release
+- mirrors:
+  - ${REGISTRY_DOMAIN}/${REGISTRY_REPO}
+  source: quay.io/openshift-release-dev/ocp-v4.0-art-dev
+EOF
 }
 EOF
 
@@ -178,4 +186,21 @@ curl -s -X GET "$AI_URL/api/assisted-install/v2/clusters?with_hosts=true" -H "ac
    -H "accept: application/json" -H "get_unregistered_clusters: false"| jq -r '.[].hosts[].id'| awk 'NR>0' |awk '{print $1;}'`
  do curl -X PATCH "$AI_URL/api/assisted-install/v1/clusters/$CLUSTER_ID" -H "accept: application/json" -H "Content-Type: application/json" -d "{ \"hosts_roles\": [ { \"id\": \"$i\", \"role\": \"master\" } ]}"
  done
+
+# 查看 
+curl -s -X GET "$AI_URL/api/assisted-install/v1/clusters/$CLUSTER_ID/manifests/files"
+
+# 设置 
+export AIA_IMG_PATH=${OCP_PATH}/app-image/thirdparty/assisted-installer-agent
+mkdir -p $AIA_IMG_PATH
+skopeo copy docker://quay.io/ocpmetal/assisted-installer-agent:latest docker-archive:${AIA_IMG_PATH}/assisted-installer-agent-latest.tar.gz
+
+[[registry]]
+   prefix = ""
+   location = "quay.io/ocpmetal"
+   mirror-by-digest-only = false
+   [[registry.mirror]]
+   location = "registry.example.com:5000/ocpmetal"
+
+   
 ```

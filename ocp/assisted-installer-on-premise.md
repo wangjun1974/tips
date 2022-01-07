@@ -100,7 +100,7 @@ export PULL_SECRET=$(cat pull-secret.txt | jq -R .)
 cat << EOF > ./deployment-singlenodes.json
 {
   "kind": "Cluster",
-  "name": "ocp-1",  
+  "name": "ocp4-1",  
   "openshift_version": "4.9",
   "ocp_release_image": "registry.example.com:5000/ocp4/openshift4:4.9.9-x86_64",
   "base_dns_domain": "example.com",
@@ -202,5 +202,133 @@ skopeo copy docker://quay.io/ocpmetal/assisted-installer-agent:latest docker-arc
    [[registry.mirror]]
    location = "registry.example.com:5000/ocpmetal"
 
-   
+# 安装 aicli
+git clone https://github.com/karmab/assisted-installer-cli 
+cd assisted-installer-cli
+pip3 install aicli
+
+# 查询 cluster
+# aicli -U $AI_URL list cluster   
++---------+--------------------------------------+--------+-------------+
+| Cluster |                  Id                  | Status |  Dns Domain |
++---------+--------------------------------------+--------+-------------+
+|  ocp-1  | b769070b-e387-4f42-8bc0-14b649a1a5fe | ready  | example.com |
++---------+--------------------------------------+--------+-------------+
+
+# aicli -U $AI_URL info cluster ocp4-1
+
+# 生成 static_network_config
+cat > static_network_config.yml <<EOF
+static_network_config:
+- interfaces:
+    - name: ens3
+      type: ethernet
+      state: up
+      ethernet:
+        auto-negotiation: true
+        duplex: full
+        speed: 10000
+      ipv4:
+        address:
+        - ip: 192.168.122.201
+          prefix-length: 24
+        enabled: true
+      mtu: 1500
+      mac-address: 52:54:00:1c:14:57
+  dns-resolver:
+    config:
+      server:
+      - 192.168.122.12
+  routes:
+    config:
+    - destination: 192.168.122.0/24
+      next-hop-address: 192.168.122.1
+      next-hop-interface: ens3
+    - destination: 0.0.0.0/0
+      next-hop-address: 192.168.122.1
+      next-hop-interface: ens3
+      table-id: 254
+EOF
+
+# 拷贝 pull-secret 到 my_pull_secret.json
+
+# 生成 aicli_parameters.yml
+cat > aicli_parameters.yml <<EOF
+base_dns_domain: example.com
+openshift_version: 4.9
+ocp_release_image: registry.example.com:5000/ocp4/openshift4:4.9.9-x86_64
+sno: true
+additional_ntp_source: ntp.example.com
+$(cat static_network_config.yml)
+pull_secret: my_pull_secret.json
+ssh_public_key: '$(cat /root/.ssh/id_rsa.pub)'
+disconnected_url: registry.example.com:5000
+installconfig:
+  additionalTrustBundle: |
+$(cat /etc/pki/ca-trust/source/anchors/registry.crt | sed 's|^|    |')
+  imageContentSources:
+  - mirrors:
+    - registry.example.com:5000/ocp4
+    source: quay.io/openshift-release-dev/ocp-v4.0-art-dev
+  - mirrors:
+    - registry.example.com:5000/ocp4
+    source: registry.ci.openshift.org/ocp-release
+EOF
+
+# 创建 cluster
+aicli -U $AI_URL create cluster ocp4-1
+
+# 查看 infraenv
+[root@ocpai assisted-installer-cli]# aicli -U $AI_URL list infraenvs
+Using http://192.168.122.14:8090 as base url
++------------------+--------------------------------------+---------+-------------------+----------+
+|     Infraenv     |                  Id                  | Cluster | Openshift Version | Iso Type |
++------------------+--------------------------------------+---------+-------------------+----------+
+| ocp4-1_infra-env | 2097fca5-3f66-4ea8-b85a-98c24c5180ca |  ocp4-1 |        4.9        | full-iso |
++------------------+--------------------------------------+---------+-------------------+----------+
+
+# 在 discovery ISO 里添加 trustbundle
+# The additional trust bundle must be embeded into discovery ignition override
+# https://github.com/openshift/assisted-service/blob/master/docs/user-guide/install-customization.md#add-additionaltrustbundle-in-install-config
+
+INFRA_ENV_ID=$(aicli -U $AI_URL list infraenvs | grep ocp4-1 | awk '{print $4}')
+request_body=$(mktemp)
+jq -n --arg OVERRIDE "{\"ignition\": {\"version\": \"3.1.0\"}, \"storage\": {\"files\": [{\"path\": \"/etc/pki/ca-trust/source/anchors/registry.crt\", \"mode\": 420, \"overwrite\": true, \"user\": { \"name\": \"root\"},\"contents\": {\"source\": \"data:text/plain;base64,$(cat /etc/pki/ca-trust/source/anchors/registry.crt | base64 -w 0)\"}}]}}" \
+'{
+   "ignition_config_override": $OVERRIDE
+}' > $request_body
+
+curl \
+    --header "Content-Type: application/json" \
+    --request PATCH \
+    --data  @$request_body \
+"$AI_URL/api/assisted-install/v2/infra-envs/$INFRA_ENV_ID"
+
+# Add additionalTrustbundle in install-config
+install_config_patch=$(mktemp)
+jq -n --arg BUNDLE "$(cat /etc/pki/ca-trust/source/anchors/registry.crt)" \
+'{
+    "additionalTrustBundle": $BUNDLE
+}| tojson' > $install_config_patch
+
+CLUSTER_ID=$( aicli -U $AI_URL list cluster | grep ocp4-1 | awk '{print $4}' )
+curl \
+    --header "Content-Type: application/json" \
+    --request PATCH \
+    --data  @$install_config_patch \
+"$AI_URL/api/assisted-install/v2/clusters/$CLUSTER_ID/install-config"
+
+# 获取 iso
+aicli -U $AI_URL create iso ocp4-1
+Using http://192.168.122.14:8090 as base url
+This api call is deprecated
+Getting Iso url for infraenv ocp4-1
+Using default parameter file aicli_parameters.yml
+http://192.168.122.14:8888/images/442a3cab-f104-4088-9349-57f14748fee3?arch=x86_64&type=full-iso&version=4.9
+
+# 下载 iso
+DISCOVERY_ISO=$(aicli -U $AI_URL info iso ocp4-1 | grep images)
+echo curl -L "'"${DISCOVERY_ISO}"'" -o /tmp/sno-ocp4-1.iso
+
+
 ```

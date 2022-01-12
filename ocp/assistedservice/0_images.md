@@ -36,3 +36,20 @@ for i in assisted-installer-images/*.tar ; do
   podman load -i $i
 done
 ```
+
+### 备份 podman container checkpoint
+```
+mkdir -p assisted-installer-images-checkpoint
+
+podman container checkpoint -a -e assisted-installer-images-checkpoint/assisted-installer-images-checkpoint-checkpoint.tar.gz
+
+
+podman ps -a | grep -Ev "CONTAINER"  | awk '{print $1}' | while read id ; do 
+  podman container checkpoint ${id} -e assisted-installer-images-checkpoint/${id}.checkpoint.tar.gz
+done
+
+
+podman ps -a | grep -Ev "CONTAINER"  | awk '{print $1}' | while read id ; do 
+  podman start ${id}
+done
+```

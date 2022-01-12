@@ -97,6 +97,8 @@ make deploy-onprem
 
 export CLUSTER_SSHKEY=$(cat ~/.ssh/id_rsa.pub)
 export PULL_SECRET=$(cat pull-secret.txt | jq -R .)
+export REGISTRY_DOMAIN="registry.example.com:5000"
+export REGISTRY_REPO="ocp4/openshift4"
 cat << EOF > ./deployment-singlenodes.json
 {
   "kind": "Cluster",
@@ -139,7 +141,6 @@ cat << EOF > ./deployment-singlenodes.json
 - mirrors:
   - ${REGISTRY_DOMAIN}/${REGISTRY_REPO}
   source: quay.io/openshift-release-dev/ocp-v4.0-art-dev
-EOF
 }
 EOF
 
@@ -263,6 +264,11 @@ $(cat static_network_config.yml)
 pull_secret: my_pull_secret.json
 ssh_public_key: '$(cat /root/.ssh/id_rsa.pub)'
 disconnected_url: registry.example.com:5000
+machine_network_cidr: "192.168.122.0/24"
+cluster_network_cidr: "10.128.0.0/14"
+cluster_network_host_prefix: "23"
+service_network_cidr: "172.30.0.0/16"
+network_type: OpenShiftSDN
 installconfig:
   additionalTrustBundle: |
 $(cat /etc/pki/ca-trust/source/anchors/registry.crt | sed 's|^|    |')
@@ -273,6 +279,9 @@ $(cat /etc/pki/ca-trust/source/anchors/registry.crt | sed 's|^|    |')
   - mirrors:
     - registry.example.com:5000/ocp4
     source: registry.ci.openshift.org/ocp-release
+  - mirrors:
+    - registry.example.com:5000/ocpmetal
+    source: quay.io/ocpmetal    
 EOF
 
 # 创建 cluster

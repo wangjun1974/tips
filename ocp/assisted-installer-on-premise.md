@@ -274,14 +274,17 @@ installconfig:
 $(cat /etc/pki/ca-trust/source/anchors/registry.crt | sed 's|^|    |')
   imageContentSources:
   - mirrors:
-    - registry.example.com:5000/ocp4
+    - registry.example.com:5000/ocp4/openshift4
     source: quay.io/openshift-release-dev/ocp-v4.0-art-dev
   - mirrors:
-    - registry.example.com:5000/ocp4
-    source: registry.ci.openshift.org/ocp-release
+    - registry.example.com:5000/ocp4/openshift4
+    source: quay.io/openshift-release-dev/ocp-release
   - mirrors:
-    - registry.example.com:5000/ocpmetal
-    source: quay.io/ocpmetal    
+    - registry.example.com:5000/ocpmetal/assisted-installer
+    source: quay.io/ocpmetal/assisted-installer
+  - mirrors:
+    - registry.example.com:5000/ocpmetal/assisted-installer-agent
+    source: quay.io/ocpmetal/assisted-installer-agent
 EOF
 
 # 创建 cluster
@@ -388,5 +391,7 @@ echo curl -L "'"${DISCOVERY_ISO}"'" -o /tmp/sno-ocp4-1.iso
 # 更新 assisted-service container 的 ca-trust 
 ASSISTED_SERVICE_CONTAINER_ID=$( podman ps | grep assisted-service | awk '{print $1}' )
 podman cp /etc/pki/ca-trust/source/anchors/registry.crt ${ASSISTED_SERVICE_CONTAINER_ID}:/etc/pki/ca-trust/source/anchors
-podman exec -it  ${ASSISTED_SERVICE_CONTAINER_ID} /usr/bin/update-ca-trust
+podman exec -it  ${ASSISTED_SERVICE_CONTAINER_ID} sh
+sh-4.4# update-ca-trust
+
 ```

@@ -257,7 +257,6 @@ EOF
 cat > aicli_parameters.yml <<EOF
 base_dns_domain: example.com
 openshift_version: 4.9
-ocp_release_image: registry.example.com:5000/ocp4/openshift4:4.9.9-x86_64
 sno: true
 additional_ntp_source: ntp.example.com
 $(cat static_network_config.yml)
@@ -394,4 +393,27 @@ podman cp /etc/pki/ca-trust/source/anchors/registry.crt ${ASSISTED_SERVICE_CONTA
 podman exec -it  ${ASSISTED_SERVICE_CONTAINER_ID} sh
 sh-4.4# update-ca-trust
 
+# 在安装过程中，检查 SNO 节点的 /etc/containers/registries.conf 文件
+# 如果内容不正确则重新生成这个文件，并重启 crio 服务
+cat > /etc/containers/registries.conf <<EOF
+unqualified-search-registries = ["registry.access.redhat.com", "docker.io"]
+ 
+[[registry]]
+  prefix = ""
+  location = "quay.io/openshift-release-dev/ocp-release"
+  mirror-by-digest-only = true
+ 
+  [[registry.mirror]]
+    location = "registry.example.com:5000/ocp4/openshift4"
+ 
+[[registry]]
+  prefix = ""
+  location = "quay.io/openshift-release-dev/ocp-v4.0-art-dev"
+  mirror-by-digest-only = true
+ 
+  [[registry.mirror]]
+    location = "registry.example.com:5000/ocp4/openshift4"
+EOF
+chmod a+r /etc/containers/registries.conf
+systemctl restart crio.service
 ```

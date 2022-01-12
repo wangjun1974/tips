@@ -324,6 +324,14 @@ unqualified-search-registries = ["registry.access.redhat.com", "docker.io"]
 
 [[registry]]
   prefix = ""
+  location = "quay.io/ocpmetal/assisted-installer"
+  mirror-by-digest-only = false
+ 
+  [[registry.mirror]]
+    location = "registry.example.com:5000/ocpmetal/assisted-installer"
+
+[[registry]]
+  prefix = ""
   location = "quay.io/ocpmetal/assisted-installer-agent"
   mirror-by-digest-only = false
  
@@ -377,4 +385,8 @@ http://192.168.122.14:8888/images/442a3cab-f104-4088-9349-57f14748fee3?arch=x86_
 DISCOVERY_ISO=$(aicli -U $AI_URL info iso ocp4-1 | grep images)
 echo curl -L "'"${DISCOVERY_ISO}"'" -o /tmp/sno-ocp4-1.iso
 
+# 更新 assisted-service 
+ASSISTED_SERVICE_CONTAINER_ID=$( podman ps | grep assisted-service | awk '{print $1}' )
+podman cp /etc/pki/ca-trust/source/anchors/registry.crt ${ASSISTED_SERVICE_CONTAINER_ID}:/etc/pki/ca-trust/source/anchors
+podman exec -it  ${ASSISTED_SERVICE_CONTAINER_ID} /usr/bin/update-ca-trust
 ```

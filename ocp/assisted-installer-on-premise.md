@@ -266,7 +266,7 @@ ssh_public_key: '$(cat /root/.ssh/id_rsa.pub)'
 disconnected_url: registry.example.com:5000
 machine_network_cidr: "192.168.122.0/24"
 cluster_network_cidr: "10.128.0.0/14"
-cluster_network_host_prefix: "23"
+cluster_network_host_prefix: 23
 service_network_cidr: "172.30.0.0/16"
 network_type: OpenShiftSDN
 installconfig:
@@ -301,8 +301,40 @@ Using http://192.168.122.14:8090 as base url
 # https://github.com/openshift/assisted-service/blob/master/docs/user-guide/install-customization.md#add-additionaltrustbundle-in-install-config
 
 INFRA_ENV_ID=$(aicli -U $AI_URL list infraenvs | grep ocp4-1 | awk '{print $4}')
+
+# 生成 registries.conf 文件
+cat > /tmp/registries.conf <<EOF
+[registries.search]
+registries = ['registry.access.redhat.com', 'registry.redhat.io', 'docker.io']
+unqualified-search-registries = ["registry.access.redhat.com", "docker.io"]
+ 
+[[registry]]
+  prefix = ""
+  location = "quay.io/openshift-release-dev/ocp-release"
+  mirror-by-digest-only = true
+ 
+  [[registry.mirror]]
+    location = "registry.example.com:5000/ocp4/openshift4"
+ 
+[[registry]]
+  prefix = ""
+  location = "quay.io/openshift-release-dev/ocp-v4.0-art-dev"
+  mirror-by-digest-only = true
+ 
+  [[registry.mirror]]
+    location = "registry.example.com:5000/ocp4/openshift4"
+
+[[registry]]
+  prefix = ""
+  location = "quay.io/ocpmetal/assisted-installer-agent"
+  mirror-by-digest-only = false
+ 
+  [[registry.mirror]]
+    location = "registry.example.com:5000/ocpmetal/assisted-installer-agent"
+EOF
+
 request_body=$(mktemp)
-jq -n --arg OVERRIDE "{\"ignition\": {\"version\": \"3.1.0\"}, \"storage\": {\"files\": [{\"path\": \"/etc/pki/ca-trust/source/anchors/registry.crt\", \"mode\": 420, \"overwrite\": true, \"user\": { \"name\": \"root\"},\"contents\": {\"source\": \"data:text/plain;base64,$(cat /etc/pki/ca-trust/source/anchors/registry.crt | base64 -w 0)\"}}]}}" \
+jq -n --arg OVERRIDE "{\"ignition\": {\"version\": \"3.1.0\"}, \"storage\": {\"files\": [{\"path\": \"/etc/containers/registries.conf\", \"mode\": 420, \"overwrite\": true, \"user\": { \"name\": \"root\"},\"contents\": {\"source\": \"data:text/plain;base64,$(cat /tmp/registries.conf | base64 -w 0)\"}},{\"path\": \"/etc/pki/ca-trust/source/anchors/registry.crt\", \"mode\": 420, \"overwrite\": true, \"user\": { \"name\": \"root\"},\"contents\": {\"source\": \"data:text/plain;base64,$(cat /etc/pki/ca-trust/source/anchors/registry.crt | base64 -w 0)\"}}]}}" \
 '{
    "ignition_config_override": $OVERRIDE
 }' > $request_body
@@ -338,6 +370,7 @@ http://192.168.122.14:8888/images/442a3cab-f104-4088-9349-57f14748fee3?arch=x86_
 # 下载 iso
 DISCOVERY_ISO=$(aicli -U $AI_URL info iso ocp4-1 | grep images)
 echo curl -L "'"${DISCOVERY_ISO}"'" -o /tmp/sno-ocp4-1.iso
+
 
 
 ```

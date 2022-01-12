@@ -304,8 +304,6 @@ INFRA_ENV_ID=$(aicli -U $AI_URL list infraenvs | grep ocp4-1 | awk '{print $4}')
 
 # 生成 registries.conf 文件
 cat > /tmp/registries.conf <<EOF
-[registries.search]
-registries = ['registry.access.redhat.com', 'registry.redhat.io', 'docker.io']
 unqualified-search-registries = ["registry.access.redhat.com", "docker.io"]
  
 [[registry]]
@@ -359,6 +357,14 @@ curl \
     --data  @$install_config_patch \
 "$AI_URL/api/assisted-install/v2/clusters/$CLUSTER_ID/install-config"
 
+# 设置 machine_network_cidr
+# aicli_parameters.yml 里的 machine_network_cidr 不知道为什么没设置上
+curl \
+    --header "Content-Type: application/json" \
+    --request PATCH \
+    --data  "{ \"machine_network_cidr\": \"192.168.122.0/24\"}" \
+"$AI_URL/api/assisted-install/v2/clusters/$CLUSTER_ID"
+
 # 获取 iso
 aicli -U $AI_URL create iso ocp4-1
 Using http://192.168.122.14:8090 as base url
@@ -370,7 +376,5 @@ http://192.168.122.14:8888/images/442a3cab-f104-4088-9349-57f14748fee3?arch=x86_
 # 下载 iso
 DISCOVERY_ISO=$(aicli -U $AI_URL info iso ocp4-1 | grep images)
 echo curl -L "'"${DISCOVERY_ISO}"'" -o /tmp/sno-ocp4-1.iso
-
-
 
 ```

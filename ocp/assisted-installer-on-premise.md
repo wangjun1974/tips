@@ -398,7 +398,7 @@ sh-4.4# update-ca-trust
 # 在安装过程中，检查 SNO 节点的 /etc/containers/registries.conf 文件
 # 如果内容不正确则重新生成这个文件，并重启 crio 服务
 cat > /etc/containers/registries.conf <<EOF
-unqualified-search-registries = ["registry.access.redhat.com", "docker.io"]
+unqualified-search-registries = ['registry.access.redhat.com', 'docker.io']
  
 [[registry]]
   prefix = ""
@@ -551,4 +551,162 @@ backend ingress-https-${OCP_CLUSTER_ID}
     server     master-0 master-0.${OCP_CLUSTER_ID}.${DOMAIN}:443 check
 EOF
 
+###
+# 在 Assisted Installer 的客户端上
+###
+mkdir ocp4-2
+cd ocp4-2
+
+# 拷贝 pull-secret 文件到 my_pull_secret.json
+
+# 创建 static_network_config.yml
+cat > static_network_config.yml <<EOF
+static_network_config:
+- interfaces:
+    - name: ens3
+      type: ethernet
+      state: up
+      ethernet:
+        auto-negotiation: true
+        duplex: full
+        speed: 10000
+      ipv4:
+        address:
+        - ip: 192.168.122.202
+          prefix-length: 24
+        enabled: true
+      mtu: 1500
+      mac-address: 52:54:00:92:b4:e6          # 来自主机的部署网卡 mac 地址
+  dns-resolver:
+    config:
+      server:
+      - 192.168.122.12
+  routes:
+    config:
+    - destination: 192.168.122.0/24
+      next-hop-address: 192.168.122.1
+      next-hop-interface: ens3
+    - destination: 0.0.0.0/0
+      next-hop-address: 192.168.122.1
+      next-hop-interface: ens3
+      table-id: 254
+EOF
+
+# 生成 
+cat > aicli_parameters.yml <<EOF
+base_dns_domain: example.com
+openshift_version: 4.9
+sno: true
+additional_ntp_source: ntp.example.com
+$(cat static_network_config.yml)
+pull_secret: my_pull_secret.json
+ssh_public_key: '$(cat /root/.ssh/id_rsa.pub)'
+disconnected_url: registry.example.com:5000
+machine_network_cidr: "192.168.122.0/24"
+cluster_network_cidr: "10.129.0.0/14"
+cluster_network_host_prefix: 23
+service_network_cidr: "172.31.0.0/16"
+network_type: OpenShiftSDN
+installconfig:
+  additionalTrustBundle: |
+$(cat /etc/pki/ca-trust/source/anchors/registry.crt | sed 's|^|    |')
+  imageContentSources:
+  - mirrors:
+    - registry.example.com:5000/ocp4/openshift4
+    source: quay.io/openshift-release-dev/ocp-v4.0-art-dev
+  - mirrors:
+    - registry.example.com:5000/ocp4/openshift4
+    source: quay.io/openshift-release-dev/ocp-release
+EOF
+
+# 创建集群 ocp4-2
+aicli -U $AI_URL create cluster ocp4-2
+
+# 查看 infraenv
+aicli -U $AI_URL list infraenvs
+
+# 获取 ocp4-2 的 infraenvs id 
+INFRA_ENV_ID=$(aicli -U $AI_URL list infraenvs | grep ocp4-2 | awk '{print $4}')
+
+# 生成 registries.conf 文件
+cat > /tmp/registries.conf <<EOF
+unqualified-search-registries = ['registry.access.redhat.com', 'docker.io']
+ 
+[[registry]]
+  prefix = ""
+  location = "quay.io/openshift-release-dev/ocp-release"
+  mirror-by-digest-only = true
+ 
+  [[registry.mirror]]
+    location = "registry.example.com:5000/ocp4/openshift4"
+ 
+[[registry]]
+  prefix = ""
+  location = "quay.io/openshift-release-dev/ocp-v4.0-art-dev"
+  mirror-by-digest-only = true
+ 
+  [[registry.mirror]]
+    location = "registry.example.com:5000/ocp4/openshift4"
+
+[[registry]]
+  prefix = ""
+  location = "quay.io/ocpmetal/assisted-installer"
+  mirror-by-digest-only = false
+ 
+  [[registry.mirror]]
+    location = "registry.example.com:5000/ocpmetal/assisted-installer"
+
+[[registry]]
+  prefix = ""
+  location = "quay.io/ocpmetal/assisted-installer-agent"
+  mirror-by-digest-only = false
+ 
+  [[registry.mirror]]
+    location = "registry.example.com:5000/ocpmetal/assisted-installer-agent"
+EOF
+
+request_body=$(mktemp)
+jq -n --arg OVERRIDE "{\"ignition\": {\"version\": \"3.1.0\"}, \"storage\": {\"files\": [{\"path\": \"/etc/containers/registries.conf\", \"mode\": 420, \"overwrite\": true, \"user\": { \"name\": \"root\"},\"contents\": {\"source\": \"data:text/plain;base64,$(cat /tmp/registries.conf | base64 -w 0)\"}},{\"path\": \"/etc/pki/ca-trust/source/anchors/registry.crt\", \"mode\": 420, \"overwrite\": true, \"user\": { \"name\": \"root\"},\"contents\": {\"source\": \"data:text/plain;base64,$(cat /etc/pki/ca-trust/source/anchors/registry.crt | base64 -w 0)\"}}]}}" \
+'{
+   "ignition_config_override": $OVERRIDE
+}' > $request_body
+
+curl \
+    --header "Content-Type: application/json" \
+    --request PATCH \
+    --data  @$request_body \
+"$AI_URL/api/assisted-install/v2/infra-envs/$INFRA_ENV_ID"
+
+# Add additionalTrustbundle in install-config
+install_config_patch=$(mktemp)
+jq -n --arg BUNDLE "$(cat /etc/pki/ca-trust/source/anchors/registry.crt)" \
+'{
+    "additionalTrustBundle": $BUNDLE
+}| tojson' > $install_config_patch
+
+# 获取 ocp4-2 的 cluster id
+CLUSTER_ID=$( aicli -U $AI_URL list cluster | grep ocp4-2 | awk '{print $4}' )
+curl \
+    --header "Content-Type: application/json" \
+    --request PATCH \
+    --data  @$install_config_patch \
+"$AI_URL/api/assisted-install/v2/clusters/$CLUSTER_ID/install-config"
+
+# 设置 machine_network_cidr
+# aicli_parameters.yml 里的 machine_network_cidr 不知道为什么没设置上
+curl \
+    --header "Content-Type: application/json" \
+    --request PATCH \
+    --data  "{ \"machine_network_cidr\": \"192.168.122.0/24\"}" \
+"$AI_URL/api/assisted-install/v2/clusters/$CLUSTER_ID"
+
+# 创建 iso
+aicli -U $AI_URL create iso ocp4-2
+
+# 下载 iso
+DISCOVERY_ISO=$(aicli -U $AI_URL info iso ocp4-2 | grep images)
+echo curl -L "'"${DISCOVERY_ISO}"'" -o /tmp/sno-ocp4-2.iso
+
+# 在线安装完成
+[root@ocpai1 ocp4-2]# oc --kubeconfig=/root/kubeconfig-ocp4-2 --insecure-skip-tls-verify get clusteroperators
 ```

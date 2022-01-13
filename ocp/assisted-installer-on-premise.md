@@ -1,6 +1,7 @@
 ### 测试 Assisted Installer 
 参考文档：<br>
 https://cloud.redhat.com/blog/assisted-installer-on-premise-deep-dive<br>
+https://cloud.redhat.com/blog/making-openshift-on-bare-metal-easy<br>
 ```
 # Assisted Installer On-Premise Deep Dive
 

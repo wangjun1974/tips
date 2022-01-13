@@ -421,6 +421,9 @@ systemctl restart crio.service
 ```
 
 ```
+# 为接口添加 ip 地址
+nmcli con mod 'System eth0' +ipv4.address "192.168.122.22/24"
+
 # 更新 /var/named/ocp4-2.example.com.zone 文件
 cat > /var/named/ocp4-2.example.com.zone <<'EOF'
 $ORIGIN ocp4-2.example.com.
@@ -434,11 +437,11 @@ $TTL 1D
 
 @             IN NS                         dns.example.com.
 
-lb             IN A                          192.168.122.12
+lb             IN A                          192.168.122.22
 
-api            IN A                          192.168.122.12
-api-int        IN A                          192.168.122.12
-*.apps         IN A                          192.168.122.12
+api            IN A                          192.168.122.22
+api-int        IN A                          192.168.122.22
+*.apps         IN A                          192.168.122.22
 
 bootstrap      IN A                          192.168.122.202
 
@@ -472,9 +475,9 @@ $TTL 1D
 12.122.168.192.in-addr.arpa.     IN PTR      lb.ocp4-1.example.com.
 12.122.168.192.in-addr.arpa.     IN PTR      api.ocp4-1.example.com.
 12.122.168.192.in-addr.arpa.     IN PTR      api-int.ocp4-1.example.com.
-12.122.168.192.in-addr.arpa.     IN PTR      lb.ocp4-2.example.com.
-12.122.168.192.in-addr.arpa.     IN PTR      api.ocp4-2.example.com.
-12.122.168.192.in-addr.arpa.     IN PTR      api-int.ocp4-2.example.com.
+22.122.168.192.in-addr.arpa.     IN PTR      lb.ocp4-2.example.com.
+22.122.168.192.in-addr.arpa.     IN PTR      api.ocp4-2.example.com.
+22.122.168.192.in-addr.arpa.     IN PTR      api-int.ocp4-2.example.com.
 
 201.122.168.192.in-addr.arpa.    IN PTR      bootstrap.ocp4-1.example.com.
 

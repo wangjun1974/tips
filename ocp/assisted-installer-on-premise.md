@@ -2,6 +2,7 @@
 参考文档：<br>
 https://cloud.redhat.com/blog/assisted-installer-on-premise-deep-dive<br>
 https://cloud.redhat.com/blog/making-openshift-on-bare-metal-easy<br>
+https://github.com/openshift/assisted-service/blob/902a54d507dc4661d0ca2977114dc8500f52ee05/docs/user-guide/restful-api-guide.md<br>
 ```
 # Assisted Installer On-Premise Deep Dive
 
@@ -417,4 +418,137 @@ unqualified-search-registries = ["registry.access.redhat.com", "docker.io"]
 EOF
 chmod a+r /etc/containers/registries.conf
 systemctl restart crio.service
+```
+
+```
+# 更新 /var/named/ocp4-2.example.com.zone 文件
+cat > /var/named/ocp4-2.example.com.zone <<'EOF'
+$ORIGIN ocp4-2.example.com.
+$TTL 1D
+@           IN SOA  ocp4-2.example.com. admin.ocp4-2.example.com. (
+                                        0          ; serial
+                                        1D         ; refresh
+                                        1H         ; retry
+                                        1W         ; expire
+                                        3H )       ; minimum
+
+@             IN NS                         dns.example.com.
+
+lb             IN A                          192.168.122.12
+
+api            IN A                          192.168.122.12
+api-int        IN A                          192.168.122.12
+*.apps         IN A                          192.168.122.12
+
+bootstrap      IN A                          192.168.122.202
+
+master-0       IN A                          192.168.122.202
+
+etcd-0         IN A                          192.168.122.202
+
+_etcd-server-ssl._tcp.ocp4-2.example.com. 8640 IN SRV 0 10 2380 etcd-0.ocp4-2.example.com.
+EOF
+
+# 更新 168.192.in-addr.arpa.zone 文件
+cat > /var/named/168.192.in-addr.arpa.zone <<'EOF'
+$TTL 1D
+@           IN SOA  example.com. admin.example.com. (
+                                        0       ; serial
+                                        1D      ; refresh
+                                        1H      ; retry
+                                        1W      ; expire
+                                        3H )    ; minimum
+                                        
+@                              IN NS       dns.example.com.
+
+13.122.168.192.in-addr.arpa.     IN PTR      bastion.example.com.
+
+12.122.168.192.in-addr.arpa.     IN PTR      support.example.com.
+12.122.168.192.in-addr.arpa.     IN PTR      dns.example.com.
+12.122.168.192.in-addr.arpa.     IN PTR      ntp.example.com.
+12.122.168.192.in-addr.arpa.     IN PTR      yum.example.com.
+12.122.168.192.in-addr.arpa.     IN PTR      registry.example.com.
+12.122.168.192.in-addr.arpa.     IN PTR      nfs.example.com.
+12.122.168.192.in-addr.arpa.     IN PTR      lb.ocp4-1.example.com.
+12.122.168.192.in-addr.arpa.     IN PTR      api.ocp4-1.example.com.
+12.122.168.192.in-addr.arpa.     IN PTR      api-int.ocp4-1.example.com.
+12.122.168.192.in-addr.arpa.     IN PTR      lb.ocp4-2.example.com.
+12.122.168.192.in-addr.arpa.     IN PTR      api.ocp4-2.example.com.
+12.122.168.192.in-addr.arpa.     IN PTR      api-int.ocp4-2.example.com.
+
+201.122.168.192.in-addr.arpa.    IN PTR      bootstrap.ocp4-1.example.com.
+
+201.122.168.192.in-addr.arpa.    IN PTR      master-0.ocp4-1.example.com.
+
+202.122.168.192.in-addr.arpa.    IN PTR      bootstrap.ocp4-2.example.com.
+
+202.122.168.192.in-addr.arpa.    IN PTR      master-0.ocp4-2.example.com.
+EOF
+
+# 更新 /etc/named.rfc1912.zones 文件
+setVAR DOMAIN example.com
+setVAR OCP_CLUSTER_ID ocp4-2
+cat >> /etc/named.rfc1912.zones << EOF
+zone "${OCP_CLUSTER_ID}.${DOMAIN}" IN {
+        type master;
+        file "${OCP_CLUSTER_ID}.${DOMAIN}.zone";
+        allow-transfer { any; };
+};
+
+EOF
+
+# 重启 dns 服务
+systemctl restart named
+rndc reload
+
+# 更新 haproxy
+cat >> /etc/haproxy/haproxy.cfg <<EOF
+
+frontend  openshift-api-server-${OCP_CLUSTER_ID}
+    bind lb.${OCP_CLUSTER_ID}.${DOMAIN}:6443
+    mode tcp
+    option tcplog
+    default_backend openshift-api-server-${OCP_CLUSTER_ID}
+
+frontend  machine-config-server-${OCP_CLUSTER_ID}
+    bind lb.${OCP_CLUSTER_ID}.${DOMAIN}:22623
+    mode tcp
+    option tcplog
+    default_backend machine-config-server-${OCP_CLUSTER_ID}
+
+frontend  ingress-http-${OCP_CLUSTER_ID}
+    bind lb.${OCP_CLUSTER_ID}.${DOMAIN}:80
+    mode tcp
+    option tcplog
+    default_backend ingress-http-${OCP_CLUSTER_ID}
+
+frontend  ingress-https-${OCP_CLUSTER_ID}
+    bind lb.${OCP_CLUSTER_ID}.${DOMAIN}:443
+    mode tcp
+    option tcplog
+    default_backend ingress-https-${OCP_CLUSTER_ID}
+
+backend openshift-api-server-${OCP_CLUSTER_ID}
+    balance source
+    mode tcp
+    server     bootstrap bootstrap.${OCP_CLUSTER_ID}.${DOMAIN}:6443 check
+    server     master-0 master-0.${OCP_CLUSTER_ID}.${DOMAIN}:6443 check
+
+backend machine-config-server-${OCP_CLUSTER_ID}
+    balance source
+    mode tcp
+    server     bootstrap bootstrap.${OCP_CLUSTER_ID}.${DOMAIN}:22623 check
+    server     master-0 master-0.${OCP_CLUSTER_ID}.${DOMAIN}:22623 check
+
+backend ingress-http-${OCP_CLUSTER_ID}
+    balance source
+    mode tcp
+    server     master-0 master-0.${OCP_CLUSTER_ID}.${DOMAIN}:80 check
+
+backend ingress-https-${OCP_CLUSTER_ID}
+    balance source
+    mode tcp
+    server     master-0 master-0.${OCP_CLUSTER_ID}.${DOMAIN}:443 check
+EOF
+
 ```

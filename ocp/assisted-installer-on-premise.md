@@ -713,3 +713,352 @@ echo curl -L "'"${DISCOVERY_ISO}"'" -o /tmp/sno-ocp4-2.iso
 # 在线安装完成
 [root@ocpai1 ocp4-2]# oc --kubeconfig=/root/kubeconfig-ocp4-2 --insecure-skip-tls-verify get clusteroperators
 ```
+
+```
+# 按照以下链接里的步骤安装 ACM
+# 创建 ManageClusterHub
+# https://cloud.redhat.com/blog/telco-5g-zero-touch-provisioning-ztp
+
+oc --kubeconfig=/root/kubeconfig-ocp4-1 project open-cluster-management 
+
+oc --kubeconfig=/root/kubeconfig-ocp4-1 get pods
+NAME                                                              READY   STATUS    RESTARTS   AGE
+cluster-manager-56bdd694b8-fffwh                                  1/1     Running   0          9m9s
+cluster-manager-56bdd694b8-gtvpc                                  1/1     Running   0          9m9s
+cluster-manager-56bdd694b8-ms2vg                                  1/1     Running   0          9m9s
+hive-operator-7469c75f7b-s4lp5                                    1/1     Running   0          9m8s
+multicluster-observability-operator-575f888f8c-9kbst              1/1     Running   0          9m9s
+multicluster-operators-application-7b58459868-bndxt               4/4     Running   0          9m8s
+multicluster-operators-channel-6796c88d5b-tfb7j                   1/1     Running   0          9m8s
+multicluster-operators-hub-subscription-7bcdcb65b4-6bk5m          1/1     Running   0          9m8s
+multicluster-operators-standalone-subscription-85c4b566ff-c6z4c   1/1     Running   0          9m8s
+multiclusterhub-operator-5b5786bc4-694ff                          1/1     Running   0          9m9s
+submariner-addon-5c76dc5668-fpwqm                                 1/1     Running   0          9m8s
+
+oc --kubeconfig=/root/kubeconfig-ocp4-1 get HiveConfig -o yaml 
+
+oc --kubeconfig=/root/kubeconfig-ocp4-1 patch hiveconfig hive --type merge -p '{"spec":{"targetNamespace":"hive","logLevel":"debug","featureGates":{"custom":{"enabled":["AlphaAgentInstallStrategy"]},"featureSet":"Custom"}}}'
+
+touch $HOME/htpasswd
+htpasswd -Bb $HOME/htpasswd admin redhat
+htpasswd -Bb $HOME/htpasswd user1 redhat
+
+oc --kubeconfig=/root/kubeconfig-ocp4-1 create secret generic htpasswd --from-file=$HOME/htpasswd -n openshift-config
+
+oc --kubeconfig=/root/kubeconfig-ocp4-1 apply -f - <<EOF
+apiVersion: config.openshift.io/v1
+kind: OAuth
+metadata:
+  name: cluster
+spec:
+  identityProviders:
+  - name: Local Password
+    mappingMethod: claim
+    type: HTPasswd
+    htpasswd:
+      fileData:
+        name: htpasswd
+EOF
+
+oc --kubeconfig=/root/kubeconfig-ocp4-1 adm policy add-cluster-role-to-user cluster-admin admin
+oc login https://api.ocp4-1.example.com:6443 -u admin 
+
+# 创建 SNO Local DIR Storage Class
+# 登陆 SNO 节点
+# 创建 /srv/openshift/pv-{0..99} 目录
+# 设置目录的访问模式 (777) 和 selinux context (svirt_sanbox_file_t)
+ssh core@192.168.122.201 "sudo /bin/bash -c 'mkdir -p /srv/openshift/pv-{0..99} ; chmod -R 777 /srv/openshift ; chcon -R -t svirt_sandbox_file_t /srv/openshift'"
+
+# 创建 PV 
+for i in {0..99}; do
+  oc --kubeconfig=/root/kubeconfig-ocp4-1 create -f - <<EOF
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv-$i
+  labels:
+    type: local
+spec:
+  storageClassName: manual
+  capacity:
+    storage: 40Gi
+  accessModes:
+  - ReadWriteOnce
+  - ReadWriteMany
+  persistentVolumeReclaimPolicy: Recycle
+  hostPath:
+    path: "/srv/openshift/pv-$i"
+EOF
+done
+
+# 创建 StorageClass
+oc --kubeconfig=/root/kubeconfig-ocp4-1 create -f - <<EOF
+kind: StorageClass
+apiVersion: storage.k8s.io/v1
+metadata:
+  name: manual
+  annotations:
+    storageclass.kubernetes.io/is-default-class: 'true'
+provisioner: kubernetes.io/no-provisioner
+reclaimPolicy: Delete
+volumeBindingMode: WaitForFirstConsumer
+EOF
+
+# 创建 ClusterImageSet
+oc --kubeconfig=/root/kubeconfig-ocp4-1 apply -f - <<EOF
+apiVersion: hive.openshift.io/v1
+kind: ClusterImageSet
+metadata:
+  name: openshift-v4.9.9
+  namespace: open-cluster-management
+spec:
+  releaseImage: registry.example.com:5000/ocp4/openshift4:4.9.9-x86_64
+EOF
+
+# 创建 AssistedServiceConfig
+oc --kubeconfig=/root/kubeconfig-ocp4-1 apply -f - <<EOF
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: assisted-service-config
+  namespace: open-cluster-management
+  labels:
+    app: assisted-service
+data:
+  CONTROLLER_IMAGE: quay.io/ocpmetal/assisted-installer-controller@sha256:93f193d97556711dce20b2f11f9e2793ae26eb25ad34a23b93d74484bc497ecc
+  LOG_LEVEL: "debug"
+EOF
+
+# 创建 AgentServiceConfig
+oc --kubeconfig=/root/kubeconfig-ocp4-1 apply -f - <<EOF
+apiVersion: agent-install.openshift.io/v1beta1
+kind: AgentServiceConfig
+metadata:
+  name: agent
+  namespace: open-cluster-management
+  ### This is the annotation that injects modifications in the Assisted Service pod
+  annotations:
+    unsupported.agent-install.openshift.io/assisted-service-configmap: "assisted-service-config"
+###
+spec:
+  databaseStorage:
+    accessModes:
+      - ReadWriteOnce
+    resources:
+      requests:
+        storage: 40Gi
+  filesystemStorage:
+    accessModes:
+      - ReadWriteOnce
+    resources:
+      requests:
+        storage: 40Gi
+  ###
+  osImages:
+    - openshiftVersion: "4.9"
+      version: ""
+      url: "http://192.168.122.15/pub/openshift-v4/dependencies/rhcos/4.9/4.9.0/rhcos-4.9.0-x86_64-live.x86_64.iso"
+      rootFSUrl: "http://192.168.122.15/pub/openshift-v4/dependencies/rhcos/4.9/4.9.0/rhcos-live-rootfs.x86_64.img"
+EOF
+
+# Private Key
+oc --kubeconfig=/root/kubeconfig-ocp4-1 apply -f - <<EOF
+apiVersion: v1
+kind: Secret
+metadata:
+  name: assisted-deployment-ssh-private-key
+  namespace: open-cluster-management
+stringData:
+  ssh-privatekey: |-
+$( cat /root/.ssh/id_rsa | sed -e 's/^/    /g' )
+type: Opaque
+EOF
+
+# Pull Secret
+PULL_SECRET_FILE=/root/assisted-installer-cli/pull-secret.txt
+PULL_SECRET_STR=$( cat ${PULL_SECRET_FILE}|jq -c . )
+oc --kubeconfig=/root/kubeconfig-ocp4-1 apply -f - <<EOF
+apiVersion: v1
+kind: Secret
+metadata:
+  name: assisted-deployment-pull-secret
+  namespace: open-cluster-management
+stringData: 
+  .dockerconfigjson: '${PULL_SECRET_STR}'
+EOF
+
+# 被管理集群设置
+# SNO Cluster Definition
+SSH_PUBLIC_KEY_STR=$( cat /root/.ssh/id_rsa.pub )
+oc --kubeconfig=/root/kubeconfig-ocp4-1 apply -f - <<EOF
+apiVersion: extensions.hive.openshift.io/v1beta1
+kind: AgentClusterInstall
+metadata:
+  name: ocp4-2
+  namespace: open-cluster-management
+spec:
+  clusterDeploymentRef:
+    name: ocp4-2
+  imageSetRef:
+    name: openshift-v4.9.9
+  networking:
+    clusterNetwork:
+      - cidr: "10.129.0.0/14"
+        hostPrefix: 23
+    serviceNetwork:
+      - "172.31.0.0/16"
+    machineNetwork:
+      - cidr: "192.168.122.0/24"
+  provisionRequirements:
+    controlPlaneAgents: 1
+  sshPublicKey: '${SSH_PUBLIC_KEY_STR}'
+EOF
+
+# ClusterDeployment
+# spec.baseDomain 
+# spec.clusterName
+# spec.clusterInstallRef
+# spec.pullSecretRef.name
+oc --kubeconfig=/root/kubeconfig-ocp4-1 apply -f - <<EOF
+apiVersion: hive.openshift.io/v1
+kind: ClusterDeployment
+metadata:
+  name: ocp4-2
+  namespace: open-cluster-management
+spec:
+  baseDomain: example.com
+  clusterName: ocp4-2
+  controlPlaneConfig:
+    servingCertificates: {}
+  installed: false
+  clusterInstallRef:
+    group: extensions.hive.openshift.io
+    kind: AgentClusterInstall
+    name: ocp4-2
+    version: v1beta1
+  platform:
+    agentBareMetal:
+      agentSelector:
+        matchLabels:
+          bla: "aaa"
+  pullSecretRef:
+    name: assisted-deployment-pull-secret
+EOF
+
+# NMState Config
+oc --kubeconfig=/root/kubeconfig-ocp4-1 apply -f - <<EOF
+apiVersion: agent-install.openshift.io/v1beta1
+kind: NMStateConfig
+metadata:
+  name: assisted-deployment-nmstate-ocp4-2
+  labels:
+    cluster-name: nmstate-ocp4-2
+spec:
+  config:
+    interfaces:
+      - name: ens3
+        type: ethernet
+        state: up
+        ethernet:
+          auto-negotiation: true
+          duplex: full
+          speed: 10000
+        ipv4:
+          address:
+          - ip: 192.168.122.202
+            prefix-length: 24
+          enabled: true
+        mtu: 1500
+        mac-address: 52:54:00:92:b4:e6
+    dns-resolver:
+      config:
+        server:
+        - 192.168.122.12
+    routes:
+      config:
+      - destination: 192.168.122.0/24
+        next-hop-address: 192.168.122.1
+        next-hop-interface: ens3
+      - destination: 0.0.0.0/0
+        next-hop-address: 192.168.122.1
+        next-hop-interface: ens3
+        table-id: 254
+EOF     
+
+# InfraEnv
+# jq -n --arg OVERRIDE "{\"ignition\": {\"version\": \"3.1.0\"}, \"storage\": {\"files\": [{\"path\": \"/etc/containers/registries.conf\", \"mode\": 420, \"overwrite\": true, \"user\": { \"name\": \"root\"},\"contents\": {\"source\": \"data:text/plain;base64,$(cat /tmp/registries.conf | base64 -w 0)\"}},{\"path\": \"/etc/pki/ca-trust/source/anchors/registry.crt\", \"mode\": 420, \"overwrite\": true, \"user\": { \"name\": \"root\"},\"contents\": {\"source\": \"data:text/plain;base64,$(cat /etc/pki/ca-trust/source/anchors/registry.crt | base64 -w 0)\"}}]}}" 
+
+# 生成 /tmp/registries.conf 文件
+cat > /tmp/registries.conf <<EOF
+unqualified-search-registries = ['registry.access.redhat.com', 'docker.io']
+ 
+[[registry]]
+  prefix = ""
+  location = "quay.io/openshift-release-dev/ocp-release"
+  mirror-by-digest-only = true
+ 
+  [[registry.mirror]]
+    location = "registry.example.com:5000/ocp4/openshift4"
+ 
+[[registry]]
+  prefix = ""
+  location = "quay.io/openshift-release-dev/ocp-v4.0-art-dev"
+  mirror-by-digest-only = true
+ 
+  [[registry.mirror]]
+    location = "registry.example.com:5000/ocp4/openshift4"
+
+[[registry]]
+  prefix = ""
+  location = "quay.io/ocpmetal/assisted-installer"
+  mirror-by-digest-only = false
+ 
+  [[registry.mirror]]
+    location = "registry.example.com:5000/ocpmetal/assisted-installer"
+
+[[registry]]
+  prefix = ""
+  location = "quay.io/ocpmetal/assisted-installer-agent"
+  mirror-by-digest-only = false
+ 
+  [[registry.mirror]]
+    location = "registry.example.com:5000/ocpmetal/assisted-installer-agent"
+EOF
+
+SSH_PUBLIC_KEY_STR=$( cat /root/.ssh/id_rsa.pub )
+oc --kubeconfig=/root/kubeconfig-ocp4-1 apply -f - <<EOF
+apiVersion: agent-install.openshift.io/v1beta1
+kind: InfraEnv
+metadata:
+  name: ocp4-2
+  namespace: open-cluster-management
+spec:
+  additionalNTPSources:
+    - ntp.example.com  
+  clusterRef:
+    name: ocp4-2
+    namespace: open-cluster-management
+  sshAuthorizedKey: '${SSH_PUBLIC_KEY_STR}'
+  agentLabelSelector:
+    matchLabels:
+      bla: "aaa"
+  pullSecretRef:
+    name: assisted-deployment-pull-secret
+  ignitionConfigOverride: '{"ignition": {"version": "3.1.0"}, "storage": {"files": [{"path": "/etc/containers/registries.conf", "mode": 420, "overwrite": true, "user": { "name": "root" }, "contents": {"source": "data:text/plain;base64,$(cat /tmp/registries.conf | base64 -w 0)"}},{"path": "/etc/pki/ca-trust/source/anchors/registry.crt", "mode": 420, "overwrite": true, "user": { "name": "root" }, contents": {"source": "data:text/plain;base64,$(cat /tmp/registries.conf | base64 -w 0)"}}]}}'
+  nmStateConfigLabelSelector:
+    matchLabels:
+      cluster-name: nmstate-ocp4-2
+EOF
+
+# SPOKE CLUSTER DEPLOYMENT
+oc --kubeconfig=/root/kubeconfig-ocp4-1 get pods -A | grep metal
+
+# Fully Automated ZTP
+# 在我的环境里，我没有看到 provisioning-configuration
+oc --kubeconfig=/root/kubeconfig-ocp4-1 patch provisioning provisioning-configuration --type merge -p '{"spec":{"watchAllNamespaces": true}}'
+
+# Manual Spoke cluster deployment
+# 1. We need to get the ISO URL from the InfraEnv CR with this command:
+oc --kubeconfig=/root/kubeconfig-ocp4-1 get infraenv ocp4-2 -o jsonpath={.status.isoDownloadURL}
+
+```

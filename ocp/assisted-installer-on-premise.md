@@ -1062,3 +1062,13 @@ oc --kubeconfig=/root/kubeconfig-ocp4-1 patch provisioning provisioning-configur
 oc --kubeconfig=/root/kubeconfig-ocp4-1 get infraenv ocp4-2 -o jsonpath={.status.isoDownloadURL}
 
 ```
+
+### local registry self signed certs 报错
+```
+报错
+AgentClusterInstall ocp4-2
+The Spec could not be synced due to backend error: command oc adm release info -o template --template '{{.metadata.version}}' --insecure=false registry.example.com:5000/ocp4/openshift4:4.9.9-x86_64 exited with non-zero exit code 1:
+error: unable to read image registry.example.com:5000/ocp4/openshift4:4.9.9-x86_64: Get "https://registry.example.com:5000/v2/": x509: certificate signed by unknown authority
+
+# 这个报错的解决方法在 https://docs.openshift.com/container-platform/4.2/openshift_images/image-configuration.html#images-configuration-insecure_image-configuration 
+```

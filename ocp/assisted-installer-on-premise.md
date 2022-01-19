@@ -829,6 +829,63 @@ data:
   LOG_LEVEL: "debug"
 EOF
 
+# 创建 configmap mirror-registry-config-map
+cat <<EOF | oc --kubeconfig=/root/kubeconfig-ocp4-1 apply -f -
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mirror-registry-config-map
+  namespace: "open-cluster-management"
+  labels:
+    app: assisted-service
+data:
+  ca-bundle.crt: |
+$( cat /etc/pki/ca-trust/source/anchors/registry.crt | sed -e 's|^|    |g' )
+
+  registries.conf: |
+    unqualified-search-registries = ["registry.access.redhat.com", "docker.io"]
+
+    [[registry]]
+      prefix = ""
+      location = "quay.io/openshift-release-dev/ocp-release"
+      mirror-by-digest-only = true
+     
+      [[registry.mirror]]
+        location = "registry.example.com:5000/ocp4/openshift4"
+     
+    [[registry]]
+      prefix = ""
+      location = "quay.io/openshift-release-dev/ocp-v4.0-art-dev"
+      mirror-by-digest-only = true
+     
+      [[registry.mirror]]
+        location = "registry.example.com:5000/ocp4/openshift4"
+    
+    [[registry]]
+      prefix = ""
+      location = "quay.io/ocpmetal/assisted-installer"
+      mirror-by-digest-only = false
+     
+      [[registry.mirror]]
+        location = "registry.example.com:5000/ocpmetal/assisted-installer"
+    
+    [[registry]]
+      prefix = ""
+      location = "quay.io/ocpmetal/assisted-installer-agent"
+      mirror-by-digest-only = false
+     
+      [[registry.mirror]]
+        location = "registry.example.com:5000/ocpmetal/assisted-installer-agent"
+
+    [[registry]]
+       prefix = ""
+       location = "quay.io/ocpmetal"
+       mirror-by-digest-only = false
+
+       [[registry.mirror]]
+       location = "mirror1.registry.corp.com:5000/ocpmetal"
+EOF
+
 # 创建 AgentServiceConfig
 oc --kubeconfig=/root/kubeconfig-ocp4-1 apply -f - <<EOF
 apiVersion: agent-install.openshift.io/v1beta1
@@ -853,7 +910,9 @@ spec:
     resources:
       requests:
         storage: 40Gi
-  ###
+  ### disconnected env need default this configmap. it contain ca-bundle.crt and registries.conf
+  mirrorRegistryRef:
+    name: "mirror-registry-config-map"
   osImages:
     - openshiftVersion: "4.9"
       version: ""
@@ -1110,9 +1169,84 @@ oc --kubeconfig=/root/kubeconfig-ocp4-1 -n open-cluster-management create config
 
 oc --kubeconfig=/root/kubeconfig-ocp4-1 -n open-cluster-management set volume deployment/multicluster-operators-hub-subscription --overwrite --add --name=local-registry-ca-volume --type=configmap --configmap-name=local-registry-ca.crt --mount-path=/etc/pki/ca-trust/sources/anchors
 
-# 配置信任 
-oc --kubeconfig=/root/kubeconfig-ocp4-1 patch image.config.openshift.io cluster -p '{"spec":{"additionalTrustedCA":{"name":"user-ca-bundle"}}}' --type merge
+# 配置信任，这个配置方法不行
+# oc --kubeconfig=/root/kubeconfig-ocp4-1 patch image.config.openshift.io cluster -p '{"spec":{"additionalTrustedCA":{"name":"user-ca-bundle"}}}' --type merge
 
 # assisted service 的配置
 # https://docs.google.com/document/d/1JN_KHsBpBk6vrf_aQjP9-vpmwODM5WcoJm18-k0Ofb4/edit#heading=h.sacp69wt8jj4
+
+# 配置 additional CA 来信任 registry
+# 这个方法正在尝试中
+# registry.example.com:5000 在 configmap 配置过程中 key 写为 registry.example.com..5000
+cd /etc/pki/ca-trust/source/anchors/
+ls
+registry.crt
+oc --kubeconfig=/root/kubeconfig-ocp4-1 create configmap registry-config --from-file="registry.example.com..5000"=registry.crt -n openshift-config
+oc --kubeconfig=/root/kubeconfig-ocp4-1 patch image.config.openshift.io/cluster -p '{"spec":{"additionalTrustedCA":{"name":"registry-config"}}}'  --type=merge
+
+ls ca-bundle.crt 
+ca-bundle.crt
+oc --kubeconfig=/root/kubeconfig-ocp4-1 create configmap registry-config --from-file="registry.example.com..5000"=ca-bundle.crt -n open-cluster-management
+
+# 需要理解这些内容
+# https://github.com/RHsyseng/labs-index/blob/master/lab-kcli-ipi-baremetal/06_disconnected.sh
+# https://github.com/karmab/kcli-openshift4-baremetal/blob/master/06_disconnected.sh
+# https://github.com/RHsyseng/labs-index/blob/9c3fd987a76eb03c1e6687b0fc0b99735339d914/lab-kcli-ipi-baremetal/06_disconnected.sh#L58
+
+# 真正解决疑惑的是这个链接
+cat <<EOF | oc --kubeconfig=/root/kubeconfig-ocp4-1 apply -f -
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mirror-registry-config-map
+  namespace: "open-cluster-management"
+  labels:
+    app: assisted-service
+data:
+  ca-bundle.crt: |
+$( cat /etc/pki/ca-trust/source/anchors/registry.crt | sed -e 's|^|    |g' )
+
+  registries.conf: |
+    unqualified-search-registries = ["registry.access.redhat.com", "docker.io"]
+
+    [[registry]]
+      prefix = ""
+      location = "quay.io/openshift-release-dev/ocp-release"
+      mirror-by-digest-only = true
+     
+      [[registry.mirror]]
+        location = "registry.example.com:5000/ocp4/openshift4"
+     
+    [[registry]]
+      prefix = ""
+      location = "quay.io/openshift-release-dev/ocp-v4.0-art-dev"
+      mirror-by-digest-only = true
+     
+      [[registry.mirror]]
+        location = "registry.example.com:5000/ocp4/openshift4"
+    
+    [[registry]]
+      prefix = ""
+      location = "quay.io/ocpmetal/assisted-installer"
+      mirror-by-digest-only = false
+     
+      [[registry.mirror]]
+        location = "registry.example.com:5000/ocpmetal/assisted-installer"
+    
+    [[registry]]
+      prefix = ""
+      location = "quay.io/ocpmetal/assisted-installer-agent"
+      mirror-by-digest-only = false
+     
+      [[registry.mirror]]
+        location = "registry.example.com:5000/ocpmetal/assisted-installer-agent"
+
+    [[registry]]
+       prefix = ""
+       location = "quay.io/ocpmetal"
+       mirror-by-digest-only = false
+
+       [[registry.mirror]]
+       location = "mirror1.registry.corp.com:5000/ocpmetal"
+EOF
 ```

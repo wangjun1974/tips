@@ -1286,4 +1286,7 @@ EOF
 
 ### download minimal iso
 curl -k 'https://assisted-service-open-cluster-management.apps.ocp4-1.example.com/api/assisted-install/v1/clusters/0f430649-6a93-419f-876a-14899135df80/downloads/image?api_key=eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbHVzdGVyX2lkIjoiMGY0MzA2NDktNmE5My00MTlmLTg3NmEtMTQ4OTkxMzVkZjgwIn0.1a9ix70v09Z15RYm8EInr9o5ZDO-dJBuUPS5dJeZA3-Wf7i6yK0zUIIQDCFtje_FzySXGx8xTcity5OdKEOrKA' -o /tmp/sno-ocp4-2.iso
+
+### 检查 iso ignition 的命令 
+zcat $ISO_MOUNT_PATH/images/ignition.img | sed '1d; $d'
 ```

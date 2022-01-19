@@ -1071,4 +1071,48 @@ The Spec could not be synced due to backend error: command oc adm release info -
 error: unable to read image registry.example.com:5000/ocp4/openshift4:4.9.9-x86_64: Get "https://registry.example.com:5000/v2/": x509: certificate signed by unknown authority
 
 # 这个报错的解决方法在 https://docs.openshift.com/container-platform/4.2/openshift_images/image-configuration.html#images-configuration-insecure_image-configuration 
+# https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/8/html/security_hardening/using-shared-system-certificates_security-hardening
+
+
+oc --kubeconfig=/root/kubeconfig-ocp4-1 get pod -n open-cluster-management | grep hub-subscription
+multicluster-operators-hub-subscription-7bcdcb65b4-6bk5m          1/1     Running     6 (3h52m ago)     4d3h
+
+# 无法用 oc rsync 和 oc cp 向 pod 里拷贝文件
+oc rsync --kubeconfig=/root/kubeconfig-ocp4-1 -n open-cluster-management /etc/pki/ca-trust/source/anchors multicluster-operators-hub-subscription-7bcdcb65b4-6bk5m:/etc/pki/ca-trust/source/anchors
+
+# oc --kubeconfig=/root/kubeconfig-ocp4-1 -n open-cluster-management cp /etc/pki/ca-trust/source/anchors/registry.crt multicluster-operators-hub-subscription-7bcdcb65b4-6bk5m:/tmp
+time="2022-01-18T07:19:59Z" level=error msg="exec failed: container_linux.go:380: starting container process caused: exec: \"tar\": executable file not found in $PATH"
+command terminated with exit code 1
+
+
+https://drive.google.com/drive/folders/16DVMhh4M0BqnViEal_DSROX0H1mkjXvj?usp=sharing  Design Thinking的学习资料，大家有空学习一下这个思维方式
+
+        - name: local-registry-8r7jc
+          readOnly: true
+          mountPath: /etc/pki/ca-trust/source/anchors
+  volumes:
+  ...
+    - name: local-registry-8r7jc
+      projected:
+        sources:
+          - configMap:
+              name: local-registry-ca.crt
+              items:        
+                - key: registry.crt
+                  path: registry.crt
+
+[root@ocpai1 ocp4-2]# cd /etc/pki/ca-trust/source/anchors/
+[root@ocpai1 anchors]# ls
+registry.crt
+
+这些命令不能为 deployment 添加 configmap 类型的 volume
+oc --kubeconfig=/root/kubeconfig-ocp4-1 -n open-cluster-management create configmap local-registry-ca.crt --from-file=./registry.crt 
+
+oc --kubeconfig=/root/kubeconfig-ocp4-1 -n open-cluster-management set volume deployment/multicluster-operators-hub-subscription --overwrite --add --name=local-registry-ca-volume --type=configmap --configmap-name=local-registry-ca.crt --mount-path=/etc/pki/ca-trust/sources/anchors
+
+# 配置信任 
+oc --kubeconfig=/root/kubeconfig-ocp4-1 patch image.config.openshift.io cluster -p '{"spec":{"additionalTrustedCA":{"name":"user-ca-bundle"}}}' --type merge
+
+# assisted service 的配置
+# https://docs.google.com/document/d/1JN_KHsBpBk6vrf_aQjP9-vpmwODM5WcoJm18-k0Ofb4/edit#heading=h.sacp69wt8jj4
 ```

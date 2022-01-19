@@ -816,6 +816,9 @@ spec:
 EOF
 
 # 创建 AssistedServiceConfig
+# 更新 AssistedServiceConfig 包含 ISO_IMAGE_TYPE 为 full-iso
+# https://coreos.slack.com/archives/CUPJTHQ5P/p1618337178015900?thread_ts=1618334807.010700&cid=CUPJTHQ5P
+# https://coreos.slack.com/archives/CUPJTHQ5P/p1629814200385700
 oc --kubeconfig=/root/kubeconfig-ocp4-1 apply -f - <<EOF
 apiVersion: v1
 kind: ConfigMap
@@ -825,6 +828,7 @@ metadata:
   labels:
     app: assisted-service
 data:
+  ISO_IMAGE_TYPE: "full-iso"
   CONTROLLER_IMAGE: quay.io/ocpmetal/assisted-installer-controller@sha256:93f193d97556711dce20b2f11f9e2793ae26eb25ad34a23b93d74484bc497ecc
   LOG_LEVEL: "debug"
 EOF
@@ -1279,4 +1283,7 @@ storage:
     overwrite: true
     path: /etc/pki/ca-trust/source/anchors/registry.crt
 EOF
+
+### download minimal iso
+curl -k 'https://assisted-service-open-cluster-management.apps.ocp4-1.example.com/api/assisted-install/v1/clusters/0f430649-6a93-419f-876a-14899135df80/downloads/image?api_key=eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbHVzdGVyX2lkIjoiMGY0MzA2NDktNmE5My00MTlmLTg3NmEtMTQ4OTkxMzVkZjgwIn0.1a9ix70v09Z15RYm8EInr9o5ZDO-dJBuUPS5dJeZA3-Wf7i6yK0zUIIQDCFtje_FzySXGx8xTcity5OdKEOrKA' -o /tmp/sno-ocp4-2.iso
 ```

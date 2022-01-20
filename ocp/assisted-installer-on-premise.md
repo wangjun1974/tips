@@ -959,6 +959,8 @@ metadata:
 EOF
 
 # NMState Config
+# 参考 https://docs.google.com/document/d/1G-1b56huNvAtiSBBxLggvHxbYh7P29-Tz5asXstXZXw/edit#
+# interfaces: macAddress
 oc --kubeconfig=/root/kubeconfig-ocp4-1 apply -f - <<EOF
 apiVersion: agent-install.openshift.io/v1beta1
 kind: NMStateConfig

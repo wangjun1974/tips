@@ -941,7 +941,7 @@ spec:
   mirrorRegistryRef:
     name: "mirror-registry-config-map"
   osImages:
-    - openshiftVersion: "4.9.0"
+    - openshiftVersion: "4.9"
       version: "49.84.202110081407-0"
       url: "http://192.168.122.15/pub/openshift-v4/dependencies/rhcos/4.9/4.9.0/rhcos-4.9.0-x86_64-live.x86_64.iso"
       rootFSUrl: "http://192.168.122.15/pub/openshift-v4/dependencies/rhcos/4.9/4.9.0/rhcos-live-rootfs.x86_64.img"
@@ -963,10 +963,10 @@ oc --kubeconfig=/root/kubeconfig-ocp4-1 apply -f - <<EOF
 apiVersion: agent-install.openshift.io/v1beta1
 kind: NMStateConfig
 metadata:
-  name: assisted-deployment-nmstate-ocp4-2
+  name: ocp4-2
   namespace: ocp4-2
   labels:
-    cluster-name: nmstate-ocp4-2
+    cluster-name: ocp4-2
 spec:
   config:
     interfaces:
@@ -997,6 +997,9 @@ spec:
         next-hop-address: 192.168.122.1
         next-hop-interface: ens3
         table-id: 254
+  interfaces:
+    - name: ens3
+      macAddress: "52:54:00:92:b4:e6"
 EOF
 
 # Private Key
@@ -1149,7 +1152,7 @@ spec:
   ignitionConfigOverride: '{"ignition":{"version":"3.1.0"},"storage":{"files":[{"contents":{"source":"data:text/plain;charset=utf-8;base64,$(cat /tmp/registries.conf | base64 -w0)","verification":{}},"filesystem":"root","mode":420,"overwrite":true,"path":"/etc/containers/registries.conf"},{"contents":{"source":"data:text/plain;charset=utf-8;base64,$(cat /etc/pki/ca-trust/source/anchors/registry.crt | base64 -w0)","verification":{}},"filesystem":"root","mode":420,"overwrite":true,"path":"/etc/pki/ca-trust/source/anchors/registry.crt"}]}}'
   nmStateConfigLabelSelector:
     matchLabels:
-      cluster-name: nmstate-ocp4-2
+      cluster-name: ocp4-2
 EOF
 
 

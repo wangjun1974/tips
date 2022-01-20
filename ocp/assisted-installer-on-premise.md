@@ -881,17 +881,39 @@ $( cat /etc/pki/ca-trust/source/anchors/registry.crt | sed -e 's|^|    |g' )
      
       [[registry.mirror]]
         location = "registry.example.com:5000/ocpmetal/assisted-installer-agent"
-
-    [[registry]]
-       prefix = ""
-       location = "quay.io/ocpmetal"
-       mirror-by-digest-only = false
-
-       [[registry.mirror]]
-       location = "mirror1.registry.corp.com:5000/ocpmetal"
 EOF
 
 # 创建 AgentServiceConfig
+# 在线
+oc --kubeconfig=/root/kubeconfig-ocp4-1 apply -f - <<EOF
+apiVersion: agent-install.openshift.io/v1beta1
+kind: AgentServiceConfig
+metadata:
+  name: agent
+  namespace: open-cluster-management
+  ### This is the annotation that injects modifications in the Assisted Service pod
+  annotations:
+    unsupported.agent-install.openshift.io/assisted-service-configmap: "assisted-service-config"
+###
+spec:
+  databaseStorage:
+    accessModes:
+      - ReadWriteOnce
+    resources:
+      requests:
+        storage: 40Gi
+  filesystemStorage:
+    accessModes:
+      - ReadWriteOnce
+    resources:
+      requests:
+        storage: 40Gi
+EOF
+
+# 离线环境
+# https://docs.openshift.com/container-platform-ocp/4.8/scalability_and_performance/cnf-provisioning-and-deploying-a-distributed-unit.html#cnf-installing-the-operators_installing-du
+# https://github.com/openshift/assisted-service/blob/master/docs/operator.md
+# https://docs.google.com/document/d/1jDrwSyKFssIh-yxJ-wSdB-OCcPvsfm06P54oTk1C6BI/edit
 oc --kubeconfig=/root/kubeconfig-ocp4-1 apply -f - <<EOF
 apiVersion: agent-install.openshift.io/v1beta1
 kind: AgentServiceConfig
@@ -919,10 +941,11 @@ spec:
   mirrorRegistryRef:
     name: "mirror-registry-config-map"
   osImages:
-    - openshiftVersion: "4.9"
-      version: ""
+    - openshiftVersion: "4.9.0"
+      version: "49.84.202110081407-0"
       url: "http://192.168.122.15/pub/openshift-v4/dependencies/rhcos/4.9/4.9.0/rhcos-4.9.0-x86_64-live.x86_64.iso"
       rootFSUrl: "http://192.168.122.15/pub/openshift-v4/dependencies/rhcos/4.9/4.9.0/rhcos-live-rootfs.x86_64.img"
+      cpuArchitecture: "x86_64"
 EOF
 
 # SPOKE 集群定义
@@ -1324,4 +1347,9 @@ oc1 get ValidatingWebhookConfiguration
 oc1 delete ValidatingWebhookConfiguration multiclusterhub-operator-validating-webhook
 oc1 patch mch multiclusterhub -n open-cluster-management -p '{"metadata":{"finalizers":[]}}' --type=merge
 oc1 delete mch multiclusterhub -n open-cluster-management
+
+# 报错
+Pod installer-6-master-0.ocp4-1.example.com
+Failed to get config map openshift-kube-controller-manager/client-ca
+
 ```

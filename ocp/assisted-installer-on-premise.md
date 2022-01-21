@@ -1403,4 +1403,7 @@ Failed to get config map openshift-kube-controller-manager/client-ca
     ram_mib: 32768
     disk_size_gb: 120
     installation_disk_speed_threshold_ms: 10
+
+# ACM Application FailOver
+https://github.com/stolostron/labs/blob/403150df04b3c05370df2449f29c4994eb5bf50d/introduction-to-gitops-and-policies/03_deploying_apps_to_clusters.md    
 ```

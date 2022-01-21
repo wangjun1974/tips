@@ -829,6 +829,27 @@ metadata:
   labels:
     app: assisted-service
 data:
+  HW_VALIDATOR_REQUIREMENTS:
+  - version: default
+    master:
+      cpu_cores: 4
+      ram_mib: 16384
+      disk_size_gb: 120
+      installation_disk_speed_threshold_ms: 10
+      network_latency_threshold_ms: 100
+      packet_loss_percentage: 0
+    worker:
+      cpu_cores: 2
+      ram_mib: 8192
+      disk_size_gb: 120
+      installation_disk_speed_threshold_ms: 10
+      network_latency_threshold_ms: 1000
+      packet_loss_percentage: 10
+    sno:
+      cpu_cores: 8
+      ram_mib: 32768
+      disk_size_gb: 120
+      installation_disk_speed_threshold_ms: 10
   ISO_IMAGE_TYPE: "full-iso"
   CONTROLLER_IMAGE: quay.io/ocpmetal/assisted-installer-controller@sha256:93f193d97556711dce20b2f11f9e2793ae26eb25ad34a23b93d74484bc497ecc
   LOG_LEVEL: "debug"
@@ -1362,5 +1383,24 @@ Failed to get config map openshift-kube-controller-manager/client-ca
 # https://github.com/openshift/assisted-service/blob/master/docs/operator.md#specifying-environmental-variables-via-configmap
 # https://issues.redhat.com/browse/MGMT-8820
 
-
+- version: default
+  master:
+    cpu_cores: 4
+    ram_mib: 16384
+    disk_size_gb: 120
+    installation_disk_speed_threshold_ms: 10
+    network_latency_threshold_ms: 100
+    packet_loss_percentage: 0
+  worker:
+    cpu_cores: 2
+    ram_mib: 8192
+    disk_size_gb: 120
+    installation_disk_speed_threshold_ms: 10
+    network_latency_threshold_ms: 1000
+    packet_loss_percentage: 10
+  sno:
+    cpu_cores: 8
+    ram_mib: 32768
+    disk_size_gb: 120
+    installation_disk_speed_threshold_ms: 10
 ```

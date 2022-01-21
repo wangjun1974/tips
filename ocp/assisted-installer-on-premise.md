@@ -1360,6 +1360,7 @@ Failed to get config map openshift-kube-controller-manager/client-ca
 # 如何降低 SNO 对资源的需求
 # ok, look for a config map called assisted-service and inside of it you will see the HW_VALIDATOR_REQUIREMENTS
 # https://github.com/openshift/assisted-service/blob/master/docs/operator.md#specifying-environmental-variables-via-configmap
+# https://issues.redhat.com/browse/MGMT-8820
 
 
 ```

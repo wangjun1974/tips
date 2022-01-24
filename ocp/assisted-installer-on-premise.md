@@ -1422,4 +1422,7 @@ https://access.redhat.com/solutions/5812571
 报错
 1-2022 03:33:01" level=error msg="Next step runner has crashed and will be restarted in 1h0m0s" file="main.go:35" error="next step ru>
 
+报错
+Jan 24 03:57:59 master-0.ocp4-2.example.com agent[356762]: time="24-01-2022 03:57:59" level=error msg="Next step runner has crashed and will be restarted in 1h0m0s" file="main.go:35" error="next step runner command exited with non-zero exit code 2: time=\"2022-01-24T03:56:59Z\" level=warning msg=\"The input device is not a TTY. The --tty and --interactive flags might not work properly\"\ntime=\"2022-01-24T03:57:59Z\" level=warning msg=\"lstat /sys/fs/cgroup/devices/machine.slice/libpod-0c8a8208fd63b79a26c603d3be52b40cbc0d587c9e6653bce12b473516539c53.scope: no such file or directory\"\n"
+https://bugzilla.redhat.com/show_bug.cgi?id=2014237
 ```

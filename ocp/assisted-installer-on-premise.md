@@ -1442,6 +1442,7 @@ USER     TTY      FROM             LOGIN@   IDLE   JCPU   PCPU WHAT
 
 经过了 32 分钟，SNO 完成了重启，clusteroperators 状态正常
 
+# pod 'assisted-service' container 'assisted-service' logs
 # oc logs assisted-service-8659487655-jq8gv assisted-service -p -n open-cluster-management 
 ...
 time="2022-01-24T06:32:14Z" level=info msg="ClusterDeployment Reconcile ended" func="github.com/openshift/assisted-service/internal/controller/controllers.(*ClusterDeploymentsReconciler).Reconcile.func1" file="/remote-source/assisted-service/app/internal/controller/controllers/clusterdeployments_controller.go:114" agent_cluster_install=ocp4-2 agent_cluster_install_namespace=ocp4-2 cluster_deployment=ocp4-2 cluster_deployment_namespace=ocp4-2 go-id=825 request_id=01c84889-7237-4fd9-b792-94fb50a2ab37

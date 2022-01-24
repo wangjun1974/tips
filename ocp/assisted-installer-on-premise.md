@@ -851,9 +851,14 @@ data:
       disk_size_gb: 120
       installation_disk_speed_threshold_ms: 10
   ISO_IMAGE_TYPE: "full-iso"
-  CONTROLLER_IMAGE: quay.io/ocpmetal/assisted-installer-controller@sha256:93f193d97556711dce20b2f11f9e2793ae26eb25ad34a23b93d74484bc497ecc
+  # CONTROLLER_IMAGE: quay.io/ocpmetal/assisted-installer-controller@sha256:93f193d97556711dce20b2f11f9e2793ae26eb25ad34a23b93d74484bc497ecc
   LOG_LEVEL: "debug"
 EOF
+
+# 修改 configmap assisted-service-config
+# 取消 CONTROLLER_IMAGE 设置
+# 重启 deployment assisted-server
+oc rollout restart deployment/assisted-service -n open-cluster-management
 
 # 创建 configmap mirror-registry-config-map
 cat <<EOF | oc --kubeconfig=/root/kubeconfig-ocp4-1 apply -f -
@@ -1436,4 +1441,20 @@ ssh -i /root/.ssh/id_rsa core@192.168.122.201 w
 USER     TTY      FROM             LOGIN@   IDLE   JCPU   PCPU WHAT
 
 经过了 32 分钟，SNO 完成了重启，clusteroperators 状态正常
+
+# oc logs assisted-service-8659487655-jq8gv assisted-service -p -n open-cluster-management 
+...
+time="2022-01-24T06:32:14Z" level=info msg="ClusterDeployment Reconcile ended" func="github.com/openshift/assisted-service/internal/controller/controllers.(*ClusterDeploymentsReconciler).Reconcile.func1" file="/remote-source/assisted-service/app/internal/controller/controllers/clusterdeployments_controller.go:114" agent_cluster_install=ocp4-2 agent_cluster_install_namespace=ocp4-2 cluster_deployment=ocp4-2 cluster_deployment_namespace=ocp4-2 go-id=825 request_id=01c84889-7237-4fd9-b792-94fb50a2ab37
+time="2022-01-24T06:32:14Z" level=info msg="ClusterDeployment Reconcile started" func="github.com/openshift/assisted-service/internal/controller/controllers.(*ClusterDeploymentsReconciler).Reconcile" file="/remote-source/assisted-service/app/internal/controller/controllers/clusterdeployments_controller.go:117" cluster_deployment=ocp4-2 cluster_deployment_namespace=ocp4-2 go-id=825 request_id=e76f1747-59f2-4e9f-95fe-b06eb9126d7a
+time="2022-01-24T06:32:14Z" level=debug msg="Pushing cluster event ocp4-2 ocp4-2" func="github.com/openshift/assisted-service/internal/controller/controllers.(*controllerEventsWrapper).NotifyKubeApiClusterEvent" file="/remote-source/assisted-service/app/internal/controller/controllers/controller_event_wrapper.go:92"
+panic: runtime error: invalid memory address or nil pointer dereference
+[signal SIGSEGV: segmentation violation code=0x1 addr=0x0 pc=0x1bfa4e9]
+
+goroutine 932 [running]:
+github.com/openshift/assisted-service/internal/bminventory.(*bareMetalInventory).generateClusterInstallConfig(_, {_, _}, {{{0x0, 0x0}, {0x0, 0x0}, {0x0, 0x0}, 0x0, ...}, ...})
+        /remote-source/assisted-service/app/internal/bminventory/inventory.go:2011 +0x1a9
+github.com/openshift/assisted-service/internal/bminventory.(*bareMetalInventory).InstallClusterInternal.func3()
+        /remote-source/assisted-service/app/internal/bminventory/inventory.go:1641 +0x245
+created by github.com/openshift/assisted-service/internal/bminventory.(*bareMetalInventory).InstallClusterInternal
+        /remote-source/assisted-service/app/internal/bminventory/inventory.go:1628 +0x8cf
 ```

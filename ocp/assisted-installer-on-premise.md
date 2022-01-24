@@ -1458,4 +1458,10 @@ github.com/openshift/assisted-service/internal/bminventory.(*bareMetalInventory)
         /remote-source/assisted-service/app/internal/bminventory/inventory.go:1641 +0x245
 created by github.com/openshift/assisted-service/internal/bminventory.(*bareMetalInventory).InstallClusterInternal
         /remote-source/assisted-service/app/internal/bminventory/inventory.go:1628 +0x8cf
+
+
+Jan 24 07:01:31 master-0.ocp4-2.example.com agent[3912]: time="24-01-2022 07:01:31" level=error msg="Next step runner has crashed and will be restarted in 1h0m0s" file="main.go:35" error="next step runner command exited with non-zero exit code 2: time=\"2022-01-24T07:00:30Z\" level=warning msg=\"The input device is not a TTY. The --tty and --interactive flags might not work properly\"\ntime=\"2022-01-24T07:01:31Z\" level=warning msg=\"lstat /sys/fs/cgroup/devices/machine.slice/libpod-9cf89ec25fd2d773bc6bab90549bf172499d6875d662dea2116548112c9fd013.scope: no such file or directory\"\n"
+
+# 根据以上报错，创建 Bug 2044175
+https://bugzilla.redhat.com/show_bug.cgi?id=2044175
 ```

@@ -1425,4 +1425,15 @@ https://access.redhat.com/solutions/5812571
 报错
 Jan 24 03:57:59 master-0.ocp4-2.example.com agent[356762]: time="24-01-2022 03:57:59" level=error msg="Next step runner has crashed and will be restarted in 1h0m0s" file="main.go:35" error="next step runner command exited with non-zero exit code 2: time=\"2022-01-24T03:56:59Z\" level=warning msg=\"The input device is not a TTY. The --tty and --interactive flags might not work properly\"\ntime=\"2022-01-24T03:57:59Z\" level=warning msg=\"lstat /sys/fs/cgroup/devices/machine.slice/libpod-0c8a8208fd63b79a26c603d3be52b40cbc0d587c9e6653bce12b473516539c53.scope: no such file or directory\"\n"
 https://bugzilla.redhat.com/show_bug.cgi?id=2014237
+
+报错 - 重启 SNO 之后, oc get clusteroperators 
+这些报错都可以通过等待消除
+dns                                        4.9.9     False       True          True       69s     DNS "default" is unavailable.
+network                                    4.9.9     True        True          True       3d22h   DaemonSet "openshift-multus/multus-additional-cni-plugins" rollout is not making progress - last change 2022-01-24T06:11:29Z
+
+ssh -i /root/.ssh/id_rsa core@192.168.122.201 w 
+ 06:32:16 up 32 min,  0 users,  load average: 32.76, 30.87, 21.69
+USER     TTY      FROM             LOGIN@   IDLE   JCPU   PCPU WHAT
+
+经过了 32 分钟，SNO 完成了重启，clusteroperators 状态正常
 ```

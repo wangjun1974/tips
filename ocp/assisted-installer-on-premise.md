@@ -1407,7 +1407,19 @@ Failed to get config map openshift-kube-controller-manager/client-ca
 # ACM Application FailOver
 https://github.com/stolostron/labs/blob/403150df04b3c05370df2449f29c4994eb5bf50d/introduction-to-gitops-and-policies/03_deploying_apps_to_clusters.md
 
-# 更新 assisted-service config 
+# 更新 assisted-service-config configmap 实现定制化
   HW_VALIDATOR_REQUIREMENTS: >-
     [{"version":"default","master":{"cpu_cores":4,"ram_mib":16384,"disk_size_gb":120,"installation_disk_speed_threshold_ms":10,"network_latency_threshold_ms":100,"packet_loss_percentage":0},"worker":{"cpu_cores":2,"ram_mib":8192,"disk_size_gb":120,"installation_disk_speed_threshold_ms":10,"network_latency_threshold_ms":1000,"packet_loss_percentage":10},"sno":{"cpu_cores":8,"ram_mib":4096,"disk_size_gb":120,"installation_disk_speed_threshold_ms":10}}]
+
+  HW_VALIDATOR_REQUIREMENTS: >-
+    [{"version":"default","master":{"cpu_cores":4,"ram_mib":16384,"disk_size_gb":120,"installation_disk_speed_threshold_ms":10,"network_latency_threshold_ms":100,"packet_loss_percentage":0},"worker":{"cpu_cores":2,"ram_mib":8192,"disk_size_gb":120,"installation_disk_speed_threshold_ms":10,"network_latency_threshold_ms":1000,"packet_loss_percentage":10},"sno":{"cpu_cores":8,"ram_mib":4096,"disk_size_gb":120,"installation_disk_speed_threshold_ms":10}}]
+
+报错及恢复
+(combined from similar events): Error: Kubelet may be retrying requests that are timing out in CRI-O due to system load: context deadline exceeded: error reserving ctr name k8s_assisted-service_assisted-service-7795d8f895-x6tpx_open-cluster-management_c560ebd2-f6b4-4d58-9dce-50b57d1c5f93_2 for id ebb5ae1ea296d5bb7d7ca45295cbcb541a4f50c10b1d9c2a90fc1baf0b6c3814: name is reserved
+https://access.redhat.com/solutions/5812571
+在 SNO 这种场景下，可以尝试 systemctl restart crio.service
+
+报错
+1-2022 03:33:01" level=error msg="Next step runner has crashed and will be restarted in 1h0m0s" file="main.go:35" error="next step ru>
+
 ```

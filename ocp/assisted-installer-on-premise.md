@@ -1464,4 +1464,35 @@ Jan 24 07:01:31 master-0.ocp4-2.example.com agent[3912]: time="24-01-2022 07:01:
 
 # 根据以上报错，创建 Bug 2044175
 https://bugzilla.redhat.com/show_bug.cgi?id=2044175
+
+# InfraEnv 报错
+Insufficient
+Validated: The agent's validations are failing: Missing inventory or machine network CIDR,Host couldn't synchronize with any NTP server,Parse error for domain name resolutions result.
+
+# agentclusterinstalls.extensions.hive.openshift.io "ocp4-2" was not valid:
+# * spec.networking.machineNetwork: Invalid value: "string": spec.networking.machineNetwork in body must be of type object: "string"
+
+
+# 经验证这个是工作的
+SSH_PUBLIC_KEY_STR=$( cat /root/.ssh/id_rsa.pub )
+oc --kubeconfig=/root/kubeconfig-ocp4-1 apply -f - <<EOF
+apiVersion: agent-install.openshift.io/v1beta1
+kind: InfraEnv
+metadata:
+  name: ocp4-2
+  namespace: ocp4-2
+spec:
+  additionalNTPSources:
+    - ntp.example.com  
+  clusterRef:
+    name: ocp4-2
+    namespace: ocp4-2
+  sshAuthorizedKey: '${SSH_PUBLIC_KEY_STR}'
+  pullSecretRef:
+    name: assisted-deployment-pull-secret
+  ignitionConfigOverride: '{"ignition":{"version":"3.1.0"},"storage":{"files":[{"contents":{"source":"data:text/plain;charset=utf-8;base64,$(cat /tmp/registries.conf | base64 -w0)","verification":{}},"filesystem":"root","mode":420,"overwrite":true,"path":"/etc/containers/registries.conf"},{"contents":{"source":"data:text/plain;charset=utf-8;base64,$(cat /etc/pki/ca-trust/source/anchors/registry.crt | base64 -w0)","verification":{}},"filesystem":"root","mode":420,"overwrite":true,"path":"/etc/pki/ca-trust/source/anchors/registry.crt"}]}}'
+  nmStateConfigLabelSelector:
+    matchLabels:
+      cluster-name: ocp4-2
+EOF
 ```

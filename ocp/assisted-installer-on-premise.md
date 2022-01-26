@@ -1499,6 +1499,8 @@ EOF
 # SiteConfig.yaml
 # 定义了一个新的对象 SiteConfig
 # SiteConfig 对象应该可以创建 InfraEnv, ClusterDeployment, AgentClusterInstall 和 ManagedCluster 对象
+# https://docs.openshift.com/container-platform/4.9/scalability_and_performance/ztp-deploying-disconnected.html
+# https://cloud.redhat.com/blog/telco-5g-zero-touch-provisioning-ztp
 apiVersion: ran.openshift.io/v1
 kind: SiteConfig
 metadata:
@@ -1550,4 +1552,8 @@ spec:
                    dhcp: true
                  ipv6:
                    enabled: false
+
+# https://github.com/openshift/installer/blob/master/data/data/manifests/openshift/baremetal-provisioning-config.yaml.template
+# 4.10 支持 non Baremetal Hub
+# 这时用户需要创建一个 metal3 Provisioning CR
 ```

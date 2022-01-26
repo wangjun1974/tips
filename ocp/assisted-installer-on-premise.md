@@ -1553,6 +1553,7 @@ spec:
                  ipv6:
                    enabled: false
 
+# Metal3 在哪个版本支持 Baremetal 非 IPI 部署的 Hub
 # https://github.com/openshift/installer/blob/master/data/data/manifests/openshift/baremetal-provisioning-config.yaml.template
 # 4.10 支持 non Baremetal Hub
 # 这时用户需要创建一个 metal3 Provisioning CR

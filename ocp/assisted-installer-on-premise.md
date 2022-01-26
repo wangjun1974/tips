@@ -1495,4 +1495,59 @@ spec:
     matchLabels:
       cluster-name: ocp4-2
 EOF
+
+# SiteConfig.yaml
+# 定义了一个新的对象 SiteConfig
+# SiteConfig 对象应该可以创建 InfraEnv, ClusterDeployment, AgentClusterInstall 和 ManagedCluster 对象
+apiVersion: ran.openshift.io/v1
+kind: SiteConfig
+metadata:
+  name: "sno0-openshift-edge"
+  namespace: "sno0-openshift-edge"
+spec:
+  baseDomain: "airtel.local"
+  pullSecretRef:
+    name: "assisted-deployment-pull-secret"
+  clusterImageSetNameRef: "img4.9.9-x86-64-appsub" 
+  sshPublicKey: "********************************"
+  clusters:
+  - clusterName: "sno0-openshift-edge"
+    clusterType: "sno"
+    clusterProfile: "cu"
+    numMasters: 1
+    clusterLabels:
+      common: true
+      sites : "sno0-openshift-edge"
+    clusterNetwork:
+       - cidr: 10.128.0.0/14
+         hostPrefix: 23
+    serviceNetwork:
+       - 172.30.0.0/16
+    machineNetwork:
+       - cidr: 172.16.68.40/29
+    nodes:
+       - hostName: "sno0-openshift-edge"
+         bmcAddress: "idrac-virtualmedia+https://172.16.82.11/redfish/v1/Systems/System.Embedded.1" 
+         bmcCredentialsName:
+           name: "sno0-openshift-edge-sno0-openshift-edge-bmh-secret"
+         bootMACAddress: "04:3F:72:C2:18:50"
+         bootMode: "UEFI"
+         rootDeviceHints:
+           deviceName: "/dev/sda"
+         cpuset: "0-3,4-79"
+         nodeNetwork:
+            interfaces:
+            - name: eno1
+              macAddress: "04:3F:72:C2:18:50"
+            config:
+               interfaces:
+               - name: eno1
+                 type: ethernet
+                 state: up
+                 macAddress: "04:3F:72:C2:18:50"
+                 ipv4:
+                   enabled: true
+                   dhcp: true
+                 ipv6:
+                   enabled: false
 ```

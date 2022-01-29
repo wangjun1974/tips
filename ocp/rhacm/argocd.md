@@ -84,6 +84,8 @@ EOF
 
 ### 在 ACM Hub 部署 ArgoCD/OpenShift GitOps ApplicationSets
 # https://github.com/argoproj-labs/applicationset/issues/71
+# https://argocd-applicationset.readthedocs.io/en/stable/Generators-Cluster-Decision-Resource/
+# https://itnext.io/level-up-your-argo-cd-game-with-applicationset-ccd874977c4c
 1. 
 cat <<'EOF' | oc apply -f -
 apiVersion: argoproj.io/v1alpha1
@@ -101,20 +103,23 @@ spec:
         requeueAfterSeconds: 180
   template:
     metadata:
-      name: 'acm-appsets-{{cluster}}'
+      name: 'acm-appset1-{{name}}'
     spec:
       destination:
         namespace: bgdk
-        server: ''
+        server: '{{server}}'
       project: default
       source:
         path: apps/bgd/overlays/bgdk
-        repoURL: 'https://github.com/RedHat-EMEA-SSA-Team/ns-apps/'
+        repoURL: https://github.com/RedHat-EMEA-SSA-Team/ns-apps/
         targetRevision: single-app
       syncPolicy:
         automated:
           prune: true
           selfHeal: true
+        syncOptions:
+        - CreateNamespace=true
+        - PrunePropagationPolicy=foreground
 EOF
 
 报错

@@ -132,4 +132,26 @@ time="2022-01-29T07:58:33Z" level=error msg="error generating params" error="no 
 time="2022-01-29T07:58:33Z" level=error msg="error generating application from params" error="no clusterDecisionResources found" generator="{<nil> <nil> <nil> <nil> <nil> 0xc00070bba0}"
 2022-01-29T07:58:33.189Z	ERROR	controller-runtime.manager.controller.applicationset	Reconciler error	{"reconciler group": "argoproj.io", "reconciler kind": "ApplicationSet", "name": "acm-appsets", "namespace": "openshift-gitops", "error": "no clusterDecisionResources found"}
 sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).processNextWorkItem
+
+在 Hub Cluster 上导出 Managed Cluster 的 klusterlet-crd.yaml 和 import.yaml
+---
+CLUSTER_NAME="test3"
+ocp4 get secret ${CLUSTER_NAME}-import -n $CLUSTER_NAME -o jsonpath={.data.crds\\.yaml} | base64 --decode > /tmp/klusterlet-crd.yaml
+ocp4 get secret ${CLUSTER_NAME}-import -n $CLUSTER_NAME -o jsonpath={.data.import\\.yaml} | base64 --decode > /tmp/import.yaml
+
+---
+# On Managed/Spoke Cluster
+ocp4.9 apply -f /tmp/klusterlet-crd.yaml
+ocp4.9 apply -f /tmp/import.yaml 
+
+https://access.redhat.com/documentation/en-us/red_hat_advanced_cluster_management_for_kubernetes/2.4/html/clusters/managing-your-clusters#remove-a-cluster-by-using-the-cli
+https://github.com/stolostron/deploy/blob/master/hack/cleanup-managed-cluster.sh
+---
+在 Hub Cluster 上压缩 etcd 
+ocp4 get pods -n openshift-etcd
+ocp4 rsh -n openshift-etcd etcd-master0.ocp4.rhcnsa.com etcdctl endpoint status --cluster -w table
+ocp4 rsh -n openshift-etcd etcd-master0.ocp4.rhcnsa.com 
+sh-4.4# etcdctl compact $(etcdctl endpoint status --write-out="json" |  egrep -o '"revision":[0-9]*' | egrep -o '[0-9]*' -m1)
+compacted revision 400503440
+
 ```

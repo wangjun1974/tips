@@ -28,7 +28,7 @@ cat << EOF | oc apply -f -
 apiVersion: cluster.open-cluster-management.io/v1beta1
 kind: ManagedClusterSet
 metadata:
-  name: gitosp-openshift-clusters
+  name: gitops-openshift-clusters
   spec: {}
 EOF
 

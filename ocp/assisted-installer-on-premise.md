@@ -290,6 +290,8 @@ $(cat /etc/pki/ca-trust/source/anchors/registry.crt | sed 's|^|    |')
 EOF
 
 # 创建 cluster
+tar zxvf aicli.tar.gz -C /
+yum install -y python3-pyyaml
 aicli -U $AI_URL create cluster ocp4-1
 
 # 查看 infraenv

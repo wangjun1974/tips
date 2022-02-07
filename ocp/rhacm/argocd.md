@@ -154,4 +154,35 @@ ocp4 rsh -n openshift-etcd etcd-master0.ocp4.rhcnsa.com
 sh-4.4# etcdctl compact $(etcdctl endpoint status --write-out="json" |  egrep -o '"revision":[0-9]*' | egrep -o '[0-9]*' -m1)
 compacted revision 400503440
 
+# RHACM 2.4.1 UI 有 Bug，在 UI 上删除 Cluster 之后，界面仍然显示 Managed Cluster 
+# 解决的方法是在 ACM Hub 上重启 console-chart pod
+
+# RHACM 2.4.1 UI 不显示 Applications 的处理
+# https://docs.google.com/document/d/1M8yGOwXnY8w-4g-a_Pt2pJlirDTi3EYHN1Es2V0t18E/edit
+
+cat > patchsrch.sh <<'EOF'
+#!/bin/bash
+
+export NS=$1
+echo "Applying search patch in namespace $NS"
+
+cat > manifest-oneimage.json <<EOF
+[
+    {
+        "image-name": "search-collector-rhel8",
+        "image-version": "2.4.1",
+        "image-remote": "registry.redhat.io/rhacm2",
+        "image-digest": "sha256:960bdc30912f856860026ad4e204d09d979de648d298496229944307597c30d4",
+        "image-key": "search_collector"
+    }
+]
+EOF
+
+kubectl create configmap patchsrch --from-file=./manifest-oneimage.json -n $NS
+kubectl annotate mch multiclusterhub --overwrite mch-imageOverridesCM=patchsrch -n $NS
+EOF
+
+sh patchsrch.sh open-cluster-management
+
+oc delete appsub search-prod-sub -n open-cluster-management
 ```

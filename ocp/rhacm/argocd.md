@@ -185,4 +185,47 @@ EOF
 sh patchsrch.sh open-cluster-management
 
 oc delete appsub search-prod-sub -n open-cluster-management
+
+# 学习学习 ArgoCD ApplicationSet Controller 的文档
+# https://blog.argoproj.io/introducing-the-applicationset-controller-for-argo-cd-982e28b62dc5
+拿 https://github.com/wangjun1974/book-import 这个仓库测试一下
+### 在 ACM Hub 部署 ArgoCD/OpenShift GitOps ApplicationSets
+# https://github.com/argoproj-labs/applicationset/issues/71
+# https://argocd-applicationset.readthedocs.io/en/stable/Generators-Cluster-Decision-Resource/
+# https://itnext.io/level-up-your-argo-cd-game-with-applicationset-ccd874977c4c
+1. 
+cat <<'EOF' | ocp4 apply -f -
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: acm-appset2
+  namespace: openshift-gitops
+spec:
+  generators:
+    - clusterDecisionResource:
+        configMapRef: acm-placement
+        labelSelector:
+          matchLabels:
+            cluster.open-cluster-management.io/placement: gitops-openshift-clusters
+        requeueAfterSeconds: 180
+  template:
+    metadata:
+      name: 'acm-appset2-{{name}}'
+    spec:
+      destination:
+        namespace: book-import-2
+        server: ''
+      project: default
+      source:
+        path: book-import
+        repoURL: https://github.com/wangjun1974/book-import
+        targetRevision: master-no-pre-post
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+        - CreateNamespace=true
+        - PrunePropagationPolicy=foreground
+EOF
 ```

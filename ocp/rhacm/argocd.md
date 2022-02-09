@@ -214,7 +214,7 @@ spec:
     spec:
       destination:
         namespace: book-import-2
-        server: ''
+        server: '{{server}}'
       project: default
       source:
         path: book-import
@@ -228,4 +228,112 @@ spec:
         - CreateNamespace=true
         - PrunePropagationPolicy=foreground
 EOF
+
+# 安装 Red Hat GPTE Gitea Operator
+# https://github.com/redhat-gpte-devopsautomation/gitea-operator
+# 安装 CatalogSource
+oc apply -f https://raw.githubusercontent.com/redhat-gpte-devopsautomation/gitea-operator/master/catalog_source.yaml
+
+# 在 UI 上安装 Gitea Operator
+
+# 创建 gitea project
+oc new-project gitea
+
+# 创建 Gitea 实例
+cat <<EOF | oc apply -f -
+apiVersion: gpte.opentlc.com/v1
+kind: Gitea
+metadata:
+  name: gitea-with-admin
+spec:
+  giteaSsl: true
+  giteaAdminUser: opentlc-mgr
+  giteaAdminPassword: ""
+  giteaAdminPasswordLength: 32
+  giteaAdminEmail: opentlc-mgr@redhat.com
+  giteaCreateUsers: true
+  giteaGenerateUserFormat: "lab-user-%d"
+  giteaUserNumber: 2
+  giteaUserPassword: openshift
+  giteaMigrateRepositories: true
+  giteaRepositoriesList:
+  - repo: https://gitee.com/wangjun1974/book-import
+    name: book-import
+    private: false
+EOF
+
+创建 ApplicationSet 
+cat <<'EOF' | ocp4 apply -f -
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: acm-appset3
+  namespace: openshift-gitops
+spec:
+  generators:
+    - clusterDecisionResource:
+        configMapRef: acm-placement
+        labelSelector:
+          matchLabels:
+            cluster.open-cluster-management.io/placement: gitops-openshift-clusters
+        requeueAfterSeconds: 180
+  template:
+    metadata:
+      name: 'acm-appset3-{{name}}'
+    spec:
+      destination:
+        namespace: book-import-3
+        server: '{{server}}'
+      project: default
+      source:
+        path: book-import
+        repoURL: https://gitea-with-admin-gitea.apps.ocp4.rhcnsa.com/lab-user-1/book-import
+        targetRevision: master-no-pre-post
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+        - CreateNamespace=true
+        - PrunePropagationPolicy=foreground
+EOF
+
+ArgoCD 报错
+rpc error: code = Unknown desc = Get "https://gitea-with-admin-gitea.apps.ocp4.rhcnsa.com/lab-user-1/book-import/info/refs?service=git-upload-pack": x509: certificate signed by unknown authority
+# 参考
+# https://access.redhat.com/solutions/6678751
+
+# 获取 gitea-with-admin-gitea.apps.ocp4.rhcnsa.com 的证书
+openssl s_client -connect gitea-with-admin-gitea.apps.ocp4.rhcnsa.com:443 2>/dev/null </dev/null | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' | sed -e 's|^|        |g' 
+
+# 编辑 ArgoCD CRD
+# 参考 https://github.com/iam-veeramalla/openshift-gitops-examples/blob/master/argocd/GITOPS-1725/argocd-initialTLScerts.yaml
+oc edit argocd openshift-gitops -n openshift-gitops
+
+# 在 tls: 段添加 
+    initialCerts:
+      gitea-with-admin-gitea.apps.ocp4.rhcnsa.com: |
+        -----BEGIN CERTIFICATE-----
+        MIIDYzCCAkugAwIBAgIIQRP3xrlQftgwDQYJKoZIhvcNAQELBQAwJjEkMCIGA1UE
+        AwwbaW5ncmVzcy1vcGVyYXRvckAxNjI2NjA2MTU2MB4XDTIxMDcxODExMDIzOFoX
+        DTIzMDcxODExMDIzOVowITEfMB0GA1UEAwwWKi5hcHBzLm9jcDQucmhjbnNhLmNv
+        bTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAOPdR9qh1gTs1iUqUcK8
+        IDhekCUPmJywFwRuatzydztAPcGDvj4Y5GWx2pu+D8BD2A+Q3F59904BZWb4FlTe
+        6kDoMvcXr9Y5HGsfIMQpJ5GdFGzNg0veDu88K1P4NAmK5C+FKVYKb83wBja/x7Ys
+        3g0oqXaQuESY83okJCM3zplPcXxFyqVgrC7E9A/TNJsuZvRZWGfQHIUrxsUPEiVT
+        jp8AwOcmyAEocm5mdNWThQGvBARdmuKuySb1/03BNbKD7qmj5x8/dz3rCyF7ufz3
+        JOXsKzCuv5VGBx+IEg9IX+rvlNd2MCq/dJy3oAUrSEYUjOi4ZZ/OH87fndXuMNKC
+        eesCAwEAAaOBmTCBljAOBgNVHQ8BAf8EBAMCBaAwEwYDVR0lBAwwCgYIKwYBBQUH
+        AwEwDAYDVR0TAQH/BAIwADAdBgNVHQ4EFgQUpW/Kg6qjguBcMYBqbilYtopB4E0w
+        HwYDVR0jBBgwFoAULmTEKt6hRTncC2BADMSke8A25rgwIQYDVR0RBBowGIIWKi5h
+        cHBzLm9jcDQucmhjbnNhLmNvbTANBgkqhkiG9w0BAQsFAAOCAQEAB97KrWlCuUgV
+        gcZKqw800F4VOiJGXxsEQhHQ1EMfaBNkV51LBWLiD0iJND9UDL3nOVK0DTXLNbh6
+        kofsI21vo3/XsJ/BofC6Pu1kFGqNiztVMh4BogCQSXkIu4K3wM04kgsj5Ynh4/Vz
+        3UpUqR9q7AkqBgEEX55ytIY1l/Py/KnBgj3DGVLEQuJnOOyyhsPoKFz9pMOJ/r4+
+        zJ+L0bpLRjsH1Zb7OPodzTHMCqPgdY/b7YOYtQcFYHSrtP5dmIIlUoLdqgCAlBGb
+        oIAtkZlQQFudmI6p28zbmV3zoAsY9QSFv6Gg4Eiik+lttgy86yk6OqdSF+K2kwXQ
+        qairhQ9Log==
+        -----END CERTIFICATE-----
+
+# 然后重启 Deployment openshift-gitops-server
 ```

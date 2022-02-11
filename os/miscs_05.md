@@ -100,7 +100,6 @@ virsh -c qemu:///system?authfile=/etc/ovirt-hosted-engine/virsh_auth.conf list
 ...
  2     jwang-rhel8-01                 running
 
-node1 obtains vm1 lease and start vm1. For some reason, node1 does not renew vm1 lease, but vm1 is still running on node1
-node2 obtains vm1 lease then start vm1
-vm1 run on node1 and node2 at the same time
+从 Host 视角查看 lockspace 的 delta lease 信息
+sanlock client host_status -D
 ```

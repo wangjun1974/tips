@@ -9,6 +9,10 @@ https://www.ovirt.org/develop/ha-vms.html<br>
 https://www.ovirt.org/develop/developer-guide/vdsm/sanlock.html<br>
 https://cloud.tencent.com/developer/article/1651000<br>
 https://blog.didiyun.com/index.php/2018/12/27/sanlock-kvm/<br>
+https://www.ovirt.org/develop/release-management/features/storage/vm-leases.html<br>
+https://blog.csdn.net/maokexu123/article/details/40790939<br>
+http://ahadas.com/slides/high_availability_with_no_split_brains.pdf<br>
+
 ```
 1. ovirt 关注的虚拟机失效情况包括
 * 虚拟机所在的 host 失效
@@ -90,4 +94,13 @@ lver 是 77
 lver 代表 leader version 
 
 cat libvirtd.conf | grep -Ev "^#|^$" 
+
+
+virsh -c qemu:///system?authfile=/etc/ovirt-hosted-engine/virsh_auth.conf list
+...
+ 2     jwang-rhel8-01                 running
+
+node1 obtains vm1 lease and start vm1. For some reason, node1 does not renew vm1 lease, but vm1 is still running on node1
+node2 obtains vm1 lease then start vm1
+vm1 run on node1 and node2 at the same time
 ```

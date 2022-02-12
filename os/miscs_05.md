@@ -12,6 +12,7 @@ https://blog.didiyun.com/index.php/2018/12/27/sanlock-kvm/<br>
 https://www.ovirt.org/develop/release-management/features/storage/vm-leases.html<br>
 https://blog.csdn.net/maokexu123/article/details/40790939<br>
 http://ahadas.com/slides/high_availability_with_no_split_brains.pdf<br>
+https://github.com/oVirt/vdsm/blob/master/lib/vdsm/storage/xlease.py<br>
 
 ```
 1. ovirt 关注的虚拟机失效情况包括
@@ -99,6 +100,13 @@ cat libvirtd.conf | grep -Ev "^#|^$"
 virsh -c qemu:///system?authfile=/etc/ovirt-hosted-engine/virsh_auth.conf list
 ...
  2     jwang-rhel8-01                 running
+
+virsh -c qemu:///system?authfile=/etc/ovirt-hosted-engine/virsh_auth.conf dumpxml jwang-rhel8-01 | grep "<lease>" -A4
+    <lease>
+      <lockspace>2b34a3a0-817f-4f92-acaa-77a4acc16e87</lockspace>
+      <key>4dfc2a55-7942-4895-b83e-aa2d742b8a85</key>
+      <target path='/rhev/data-center/mnt/node2.rhcnsa.org:_ds21/2b34a3a0-817f-4f92-acaa-77a4acc16e87/dom_md/xleases' offset='3145728'/>
+    </lease>
 
 从 Host 视角查看 lockspace 的 delta lease 信息
 sanlock client host_status -D

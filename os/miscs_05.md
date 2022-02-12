@@ -13,6 +13,7 @@ https://www.ovirt.org/develop/release-management/features/storage/vm-leases.html
 https://blog.csdn.net/maokexu123/article/details/40790939<br>
 http://ahadas.com/slides/high_availability_with_no_split_brains.pdf<br>
 https://github.com/oVirt/vdsm/blob/master/lib/vdsm/storage/xlease.py<br>
+https://www.ovirt.org/develop/release-management/features/storage/vm-leases.html<br>
 
 ```
 1. ovirt 关注的虚拟机失效情况包括

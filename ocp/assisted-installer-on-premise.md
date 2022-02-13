@@ -419,8 +419,8 @@ sh-4.4# update-ca-trust
 
 # 在安装过程中，检查 SNO 节点的 /etc/containers/registries.conf 文件
 # 如果内容不正确则重新生成这个文件
-# 如果是 bootkube 阶段，无需重启服务
-# 如果是其他阶段，需重启 crio 服务
+# 如果是 bootkube 阶段，需重启 kubelet 服务
+# 如果是其他阶段，需重启 kubelet 和 crio 服务
 cat > /etc/containers/registries.conf <<EOF
 unqualified-search-registries = ['registry.access.redhat.com', 'docker.io']
  
@@ -442,6 +442,9 @@ unqualified-search-registries = ['registry.access.redhat.com', 'docker.io']
 EOF
 chmod a+r /etc/containers/registries.conf
 # 可选
+systemctl restart kubelet.service
+# 可选
+systemctl restart kubelet.service
 systemctl restart crio.service
 ```
 

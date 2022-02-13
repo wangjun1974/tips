@@ -606,6 +606,32 @@ spec:
     - registry.example.com:5000/rh-sso-7
     source: rh-sso-7
 EOF
+
+# 设置OAuth
+touch $HOME/htpasswd
+htpasswd -Bb $HOME/htpasswd admin redhat
+htpasswd -Bb $HOME/htpasswd user1 redhat
+
+oc --kubeconfig=/root/kubeconfig-ocp4-1 create secret generic htpasswd --from-file=$HOME/htpasswd -n openshift-config
+
+oc --kubeconfig=/root/kubeconfig-ocp4-1 apply -f - <<EOF
+apiVersion: config.openshift.io/v1
+kind: OAuth
+metadata:
+  name: cluster
+spec:
+  identityProviders:
+  - name: Local Password
+    mappingMethod: claim
+    type: HTPasswd
+    htpasswd:
+      fileData:
+        name: htpasswd
+EOF
+
+oc --kubeconfig=/root/kubeconfig-ocp4-1 adm policy add-cluster-role-to-user cluster-admin admin
+oc login https://api.ocp4-1.example.com:6443 -u admin 
+
 ```
 
 ```

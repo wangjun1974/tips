@@ -287,6 +287,24 @@ $(cat /etc/pki/ca-trust/source/anchors/registry.crt | sed 's|^|    |')
   - mirrors:
     - registry.example.com:5000/ocpmetal/assisted-installer-agent
     source: quay.io/ocpmetal/assisted-installer-agent
+  - mirrors:
+    - registry.example.com:5000/rhacm2
+    source: registry.redhat.io/rhacm2
+  - mirrors:
+    - registry.example.com:5000/openshift-gitops-1
+    source: registry.redhat.io/openshift-gitops-1
+  - mirrors:
+    - registry.example.com:5000/openshift4
+    source: openshift4
+  - mirrors:
+    - registry.example.com:5000/redhat
+    source: registry.redhat.io/redhat
+  - mirrors:
+    - registry.example.com:5000/rhel8
+    source: registry.redhat.io/rhel8
+  - mirrors:
+    - registry.example.com:5000/rh-sso-7
+    source: registry.redhat.io/rh-sso-7
 EOF
 
 # 创建 cluster
@@ -358,6 +376,7 @@ curl \
     --data  @$request_body \
 "$AI_URL/api/assisted-install/v2/infra-envs/$INFRA_ENV_ID"
 
+# 这个步骤应该不需要执行，因为 install-config 里已经有 additionalTrustbundle 部分了
 # Add additionalTrustbundle in install-config
 install_config_patch=$(mktemp)
 jq -n --arg BUNDLE "$(cat /etc/pki/ca-trust/source/anchors/registry.crt)" \
@@ -399,7 +418,9 @@ podman exec -it  ${ASSISTED_SERVICE_CONTAINER_ID} sh
 sh-4.4# update-ca-trust
 
 # 在安装过程中，检查 SNO 节点的 /etc/containers/registries.conf 文件
-# 如果内容不正确则重新生成这个文件，并重启 crio 服务
+# 如果内容不正确则重新生成这个文件
+# 如果是 bootkube 阶段，无需重启服务
+# 如果是其他阶段，需重启 crio 服务
 cat > /etc/containers/registries.conf <<EOF
 unqualified-search-registries = ['registry.access.redhat.com', 'docker.io']
  
@@ -420,6 +441,7 @@ unqualified-search-registries = ['registry.access.redhat.com', 'docker.io']
     location = "registry.example.com:5000/ocp4/openshift4"
 EOF
 chmod a+r /etc/containers/registries.conf
+# 可选
 systemctl restart crio.service
 ```
 

@@ -327,7 +327,7 @@ Using http://192.168.122.14:8090 as base url
 
 INFRA_ENV_ID=$(aicli -U $AI_URL list infraenvs | grep ocp4-1 | awk '{print $4}')
 
-# 生成 registries.conf 文件
+# 生成 registries.conf 文件，ignition 时添加 registry.crt 和 registries.conf  
 cat > /tmp/registries.conf <<EOF
 unqualified-search-registries = ["registry.access.redhat.com", "docker.io"]
  
@@ -441,6 +441,19 @@ unqualified-search-registries = ['registry.access.redhat.com', 'docker.io']
 EOF
 chmod a+r /etc/containers/registries.conf
 systemctl restart crio.service
+
+# bootkube 完成重启后
+# 拷贝 registry.crt 到 master-0 
+# 不清楚为什么 ignition 时没有将 registry.crt 和 registries.conf 文件写入到磁盘内
+scp /etc/pki/ca-trust/source/anchors/registry.crt core@192.168.122.201:/tmp
+ssh core@192.168.122.201 sudo cp /tmp/registry.crt /etc/pki/ca-trust/source/anchors
+ssh core@192.168.122.201 sudo update-ca-trust
+
+# 最后在安装完之后，需要修改 /etc/container/registries.conf 文件为
+# 如果不修改回去，mcp 状态会不正常
+cat > /etc/containers/registries.conf <<EOF
+unqualified-search-registries = ['registry.access.redhat.com', 'docker.io']
+EOF
 ```
 
 ```

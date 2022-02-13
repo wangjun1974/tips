@@ -454,6 +454,158 @@ ssh core@192.168.122.201 sudo update-ca-trust
 cat > /etc/containers/registries.conf <<EOF
 unqualified-search-registries = ['registry.access.redhat.com', 'docker.io']
 EOF
+
+# 在安装完成后，禁用 insight operator
+# https://docs.openshift.com/container-platform/4.5/support/remote_health_monitoring/opting-out-of-remote-health-reporting.html
+
+oc extract secret/pull-secret -n openshift-config --to=.
+# 编辑 .dockerconfigjson 文件
+# 移除 cloud.openshift.com JSON 片段
+
+oc set data secret/pull-secret -n openshift-config --from-file=.dockerconfigjson=. 
+
+# Assisted Installer 显示
+# Cluster has hosts pending user action
+
+生成 registries.conf 文件
+cat > registries.conf <<EOF
+unqualified-search-registries = ['registry.access.redhat.com', 'docker.io']
+ 
+[[registry]]
+  prefix = ""
+  location = "quay.io/openshift-release-dev/ocp-release"
+  mirror-by-digest-only = true
+ 
+  [[registry.mirror]]
+    location = "registry.example.com:5000/ocp4/openshift4"
+ 
+[[registry]]
+  prefix = ""
+  location = "quay.io/openshift-release-dev/ocp-v4.0-art-dev"
+  mirror-by-digest-only = true
+ 
+  [[registry.mirror]]
+    location = "registry.example.com:5000/ocp4/openshift4"
+
+[[registry]]
+  prefix = ""
+  location = "quay.io/ocpmetal/assisted-installer"
+  mirror-by-digest-only = false
+ 
+  [[registry.mirror]]
+    location = "registry.example.com:5000/ocpmetal/assisted-installer"
+
+[[registry]]
+  prefix = ""
+  location = "quay.io/ocpmetal/assisted-installer-agent"
+  mirror-by-digest-only = false
+ 
+  [[registry.mirror]]
+    location = "registry.example.com:5000/ocpmetal/assisted-installer-agent"
+
+[[registry]]
+  prefix = ""
+  location = "quay.io/ocpmetal/assisted-installer-controller"
+  mirror-by-digest-only = false
+ 
+  [[registry.mirror]]
+    location = "registry.example.com:5000/ocpmetal/assisted-installer-controller"    
+EOF
+
+config_source=$(cat ./registries.conf | base64 -w 0 )
+
+# machine config 例子
+cat << EOF > ./99-master-zzz-registries-configuration.yaml
+apiVersion: machineconfiguration.openshift.io/v1
+kind: MachineConfig
+metadata:
+  labels:
+    machineconfiguration.openshift.io/role: master
+  name: masters-registries-configuration
+spec:
+  config:
+    ignition:
+      config: {}
+      security:
+        tls: {}
+      timeouts: {}
+      version: 3.1.0
+    networkd: {}
+    passwd: {}
+    storage:
+      files:
+      - contents:
+          source: data:text/plain;charset=utf-8;base64,${config_source}
+          verification: {}
+        filesystem: root
+        mode: 420
+        path: /etc/containers/registries.conf
+  osImageURL: ""
+EOF
+
+oc apply -f ./99-master-zzz-registries-configuration.yaml
+
+LOCAL_SECRET_JSON=/data/OCP-4.9.9/ocp/secret/redhat-pull-secret.json
+source=quay.io/ocpmetal/assisted-installer-controller:latest
+local=registry.example.com:5000/ocpmetal/assisted-installer-controller:latest
+podman login -u openshift -p redhat --authfile ${LOCAL_SECRET_JSON} registry.example.com:5000
+skopeo copy --format v2s2 --authfile ${LOCAL_SECRET_JSON} --all docker://$source docker://$local
+
+# 禁用默认的 catalogsources
+oc patch OperatorHub cluster --type json -p '[{"op": "add", "path": "/spec/disableAllDefaultSources", "value": true}]'
+
+# 设置本地 CatalogSource
+cat <<EOF | oc1 apply -f -
+apiVersion: operators.coreos.com/v1alpha1
+kind: CatalogSource
+metadata:
+  name: redhat-operator-index
+  namespace: openshift-marketplace
+spec:
+  image: registry.example.com:5000/redhat/redhat-operator-index:v4.9
+  sourceType: grpc
+EOF
+
+# 设置 ImageContentSourcePolicy
+cat <<EOF | oc1 apply -f -
+---
+apiVersion: operator.openshift.io/v1alpha1
+kind: ImageContentSourcePolicy
+metadata:
+  name: generic-0
+spec:
+  repositoryDigestMirrors:
+  - mirrors:
+    - registry.example.com:5000/operator-framework
+    source: operator-framework
+---
+apiVersion: operator.openshift.io/v1alpha1
+kind: ImageContentSourcePolicy
+metadata:
+  labels:
+    operators.openshift.org/catalog: "true"
+  name: operator-0
+spec:
+  repositoryDigestMirrors:
+  - mirrors:
+    - registry.example.com:5000/rhacm2
+    source: rhacm2
+  - mirrors:
+    - registry.example.com:5000/openshift-gitops-1
+    source: openshift-gitops-1
+  - mirrors:
+    - registry.example.com:5000/openshift4
+    source: openshift4
+  - mirrors:
+    - registry.example.com:5000/redhat
+    source: registry.redhat.io/redhat
+  - mirrors:
+    - registry.example.com:5000/rhel8
+    source: rhel8
+  - mirrors:
+    - registry.example.com:5000/rh-sso-7
+    source: rh-sso-7
+EOF
 ```
 
 ```

@@ -111,4 +111,7 @@ virsh -c qemu:///system?authfile=/etc/ovirt-hosted-engine/virsh_auth.conf dumpxm
 
 从 Host 视角查看 lockspace 的 delta lease 信息
 sanlock client host_status -D
+
+获取 sanlock 的 lockspace 下 host 的状态
+sanlock client gets -h 1
 ```

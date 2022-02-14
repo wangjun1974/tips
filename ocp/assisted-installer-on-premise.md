@@ -509,7 +509,103 @@ unqualified-search-registries = ['registry.access.redhat.com', 'docker.io']
   mirror-by-digest-only = false
  
   [[registry.mirror]]
-    location = "registry.example.com:5000/ocpmetal/assisted-installer-controller"    
+    location = "registry.example.com:5000/ocpmetal/assisted-installer-controller"
+
+[[registry]]
+  prefix = ""
+  location = "registry.redhat.io/rhacm2/acm-operator-bundle"
+  mirror-by-digest-only = true
+ 
+  [[registry.mirror]]
+    location = "registry.example.com:5000/rhacm2/acm-operator-bundle"
+
+[[registry]]
+  prefix = ""
+  location = "registry.redhat.io/rhacm2/registration-rhel8-operator"
+  mirror-by-digest-only = true
+ 
+  [[registry.mirror]]
+    location = "registry.example.com:5000/rhacm2/registration-rhel8-operator"
+
+[[registry]]
+  prefix = ""
+  location = "registry.redhat.io/rhacm2/openshift-hive-rhel8"
+  mirror-by-digest-only = true
+ 
+  [[registry.mirror]]
+    location = "registry.example.com:5000/rhacm2/openshift-hive-rhel8"
+
+[[registry]]
+  prefix = ""
+  location = "registry.redhat.io/rhacm2/multicluster-observability-rhel8-operator"
+  mirror-by-digest-only = true
+ 
+  [[registry.mirror]]
+    location = "registry.example.com:5000/rhacm2/multicluster-observability-rhel8-operator"
+
+[[registry]]
+  prefix = ""
+  location = "registry.redhat.io/rhacm2/multicluster-operators-placementrule-rhel8"
+  mirror-by-digest-only = true
+ 
+  [[registry.mirror]]
+    location = "registry.example.com:5000/rhacm2/multicluster-operators-placementrule-rhel8"
+
+[[registry]]
+  prefix = ""
+  location = "registry.redhat.io/rhacm2/multicluster-operators-channel-rhel8"
+  mirror-by-digest-only = true
+ 
+  [[registry.mirror]]
+    location = "registry.example.com:5000/rhacm2/multicluster-operators-channel-rhel8"
+
+[[registry]]
+  prefix = ""
+  location = "registry.redhat.io/rhacm2/multicluster-operators-subscription-rhel8"
+  mirror-by-digest-only = true
+ 
+  [[registry.mirror]]
+    location = "registry.example.com:5000/rhacm2/multicluster-operators-subscription-rhel8"
+
+[[registry]]
+  prefix = ""
+  location = "registry.redhat.io/rhacm2/multiclusterhub-rhel8"
+  mirror-by-digest-only = true
+ 
+  [[registry.mirror]]
+    location = "registry.example.com:5000/rhacm2/multiclusterhub-rhel8"
+
+[[registry]]
+  prefix = ""
+  location = "registry.redhat.io/rhacm2/submariner-addon-rhel8"
+  mirror-by-digest-only = true
+ 
+  [[registry.mirror]]
+    location = "registry.example.com:5000/rhacm2/submariner-addon-rhel8"
+
+[[registry]]
+  prefix = ""
+  location = "registry.redhat.io/rhacm2/multicloud-integrations-rhel8"
+  mirror-by-digest-only = true
+ 
+  [[registry.mirror]]
+    location = "registry.example.com:5000/rhacm2/multicloud-integrations-rhel8"
+
+[[registry]]
+  prefix = ""
+  location = "registry.redhat.io/rhacm2/multicluster-operators-deployable-rhel8"
+  mirror-by-digest-only = true
+ 
+  [[registry.mirror]]
+    location = "registry.example.com:5000/rhacm2/multicluster-operators-deployable-rhel8"
+
+[[registry]]
+  prefix = ""
+  location = "registry.redhat.io/rhacm2/multicluster-operators-application-rhel8"
+  mirror-by-digest-only = true
+ 
+  [[registry.mirror]]
+    location = "registry.example.com:5000/rhacm2/multicluster-operators-application-rhel8"
 EOF
 
 config_source=$(cat ./registries.conf | base64 -w 0 )
@@ -588,8 +684,8 @@ metadata:
 spec:
   repositoryDigestMirrors:
   - mirrors:
-    - registry.example.com:5000/rhacm2
-    source: rhacm2
+    - registry.example.com:5000/rhacm2/acm-operator-bundle
+    source: registry.redhat.io/rhacm2/acm-operator-bundle
   - mirrors:
     - registry.example.com:5000/openshift-gitops-1
     source: openshift-gitops-1
@@ -1810,4 +1906,19 @@ spec:
 # https://github.com/openshift/installer/blob/master/data/data/manifests/openshift/baremetal-provisioning-config.yaml.template
 # 4.10 支持 non Baremetal Hub
 # 这时用户需要创建一个 metal3 Provisioning CR
+
+# 报错
+Bundle unpacking failed. Reason: DeadlineExceeded, and Message: Job was active longer than specified deadline
+# 参考 https://access.redhat.com/solutions/6459071
+# 按照以下步骤删除有问题的对象
+oc get job -n openshift-marketplace -o json | jq -r '.items[] | select(.spec.template.spec.containers[].env[].value|contains ("<operator_name_keyword>")) | .metadata.name'
+oc delete job <job_string_returned_above> -n openshift-marketplace
+oc delete configmap <job_string_returned_above> -n openshift-marketplace
+# 在界面删除 Operator
+oc delete ip <operator_installplan_name> -n <user_namespace>
+oc delete sub <operator_subscription_name> -n <user_namespace>
+oc delete csv <operator_csv_name> -n <user_namespace>
+
+
+
 ```

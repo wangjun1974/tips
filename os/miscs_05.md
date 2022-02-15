@@ -14,6 +14,7 @@ https://blog.csdn.net/maokexu123/article/details/40790939<br>
 http://ahadas.com/slides/high_availability_with_no_split_brains.pdf<br>
 https://github.com/oVirt/vdsm/blob/master/lib/vdsm/storage/xlease.py<br>
 https://www.ovirt.org/develop/release-management/features/storage/vm-leases.html<br>
+https://www.thegeekdiary.com/how-does-sanlock-work-in-redhat-virtualization/<br>
 
 ```
 1. ovirt 关注的虚拟机失效情况包括
@@ -275,14 +276,14 @@ Nir
 在 node2 添加以下防火墙规则
 iptables -I INPUT 1 -s 10.66.208.53/32 -p tcp -m conntrack --ctstate NEW,RELATED,ESTABLISHED --dport 2049 -j DROP
 
-过一段时间后可以看到 h 3 也就是 node3 状态变为 FAIL 了
+过一段时间后可以看到 h 3 也就是 node3 状态变为 FAIL 了，80秒未更新，h 状态变为 FAIL
 [root@node2 ~]# sanlock client gets -h 3 
 s 2b34a3a0-817f-4f92-acaa-77a4acc16e87:2:/rhev/data-center/mnt/node2.rhcnsa.org:_ds21/2b34a3a0-817f-4f92-acaa-77a4acc16e87/dom_md/ids:0 
 h 1 gen 249 timestamp 3303294 LIVE
 h 2 gen 213 timestamp 1582908 LIVE
 h 3 gen 223 timestamp 3303400 FAIL
 
-再过一段时间可以看到 h 3 也就是 node3 状态变为 DEAD 了
+再过一段时间可以看到 h 3 也就是 node3 状态变为 DEAD 了，140秒未更新，h 状态变为 DEAD
 [root@node2 ~]# sanlock client gets -h 3 
 s 2b34a3a0-817f-4f92-acaa-77a4acc16e87:2:/rhev/data-center/mnt/node2.rhcnsa.org:_ds21/2b34a3a0-817f-4f92-acaa-77a4acc16e87/dom_md/ids:0 
 h 1 gen 249 timestamp 3303376 LIVE

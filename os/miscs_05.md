@@ -303,3 +303,7 @@ h 3 gen 223 timestamp 3303400 DEAD
 8. 回到 rhev 界面，可以看到 node3 已经被 wdmd 重启
 9. 虚拟机 jwang-rhel8-01 在其他节点上自动重启
 ```
+
+```
+sudo dnf install https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm
+```

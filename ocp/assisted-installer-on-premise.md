@@ -1920,5 +1920,13 @@ oc delete sub <operator_subscription_name> -n <user_namespace>
 oc delete csv <operator_csv_name> -n <user_namespace>
 
 
+# 报错
+Feb 17 04:53:51 master-0.ocp4-1.example.com hyperkube[2045]: I0217 04:53:51.703002    2045 kubelet_pods.go:898] "Unable to retrieve pull secret, the image pull may not succeed." pod="open-cluster-management-agent/klusterlet-registration-agent-7c96c87cf6-mr9l4" secret="" err="secret \"open-cluster-management-image-pull-credentials\" not found"
+
+# 在 open-cluster-management-agent namespace 下创建 secret open-cluster-management-image-pull-credentials
+oc project open-cluster-management-agent
+oc create secret generic open-cluster-management-image-pull-credentials \
+    --from-file=.dockerconfigjson=/tmp/redhat-pull-secret.json \
+    --type=kubernetes.io/dockerconfigjson
 
 ```

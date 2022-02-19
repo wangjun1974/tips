@@ -1933,4 +1933,9 @@ spec:
     - 172.30.0.0/16
     machineNetwork:
     - cidr: 192.168.122.0/24
+
+编辑 infraenv ocp4-2 添加
+  nmStateConfigLabelSelector:
+    matchLabels:
+      cluster-name: ocp4-2
 ```

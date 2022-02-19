@@ -1914,5 +1914,23 @@ oc create secret generic open-cluster-management-image-pull-credentials \
 sudo journalctl -u agent.service -f
 Feb 19 10:41:45 master-0.ocp4-2.example.com agent[1913]: time="19-02-2022 10:41:45" level=error msg="Next step runner has crashed and will be restarted in 1h0m0s" file="main.go:35" error="next step runner command exited with non-zero exit code 2: time=\"2022-02-19T10:39:44Z\" level=warning msg=\"The input device is not a TTY. The --tty and --interactive flags might not work properly\"\ntime=\"2022-02-19T10:41:45Z\" level=warning msg=\"lstat /sys/fs/cgroup/devices/machine.slice/libpod-78bfe501fa184c8654c03c447896f2bad6f879ecd2fb5583da566c121be54d36.scope: no such file or directory\"\n"
 
+Feb 19 11:31:26 master-0.ocp4-2.example.com agent[2005]: time="19-02-2022 11:31:26" level=warning msg="Error registering host: Internal Server Error, Failed to get cluster 9efed3dc-cab5-4593-a4cb-aa6506527283: record not found" file="register_node.go:50" request_id=2b774f5f-defc-469f-8795-237e79c8c989
 
+为 agentclusterinstall 添加 machineNetwork
+oc edit agentclusterinstall ocp4-2 -n ocp4-2
+...
+spec:
+  clusterDeploymentRef:
+    name: ocp4-2
+  holdInstallation: true
+  imageSetRef:
+    name: openshift-v4.9.9
+  networking:
+    clusterNetwork:
+    - cidr: 10.128.0.0/14
+      hostPrefix: 23
+    serviceNetwork:
+    - 172.30.0.0/16
+    machineNetwork:
+    - cidr: 192.168.122.0/24
 ```

@@ -461,8 +461,7 @@ EOF
 oc extract secret/pull-secret -n openshift-config --to=.
 # 编辑 .dockerconfigjson 文件
 # 移除 cloud.openshift.com JSON 片段
-
-oc set data secret/pull-secret -n openshift-config --from-file=.dockerconfigjson=. 
+oc set data secret/pull-secret -n openshift-config --from-file=.dockerconfigjson=./.dockerconfigjson 
 
 # Assisted Installer 显示
 # Cluster has hosts pending user action

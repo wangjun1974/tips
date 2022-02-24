@@ -17,12 +17,7 @@ radosgw-admin user info --uid test_user
     ],
 ...
 
-# 配置 s3fs 标准 AWS credentials file 
-cat ~/.aws/credentials 
-[default]
-aws_access_key_id = JKT0TCBHNQPAZ8BGH9SP
-aws_secret_access_key = aBm3DNOwicyhgy9EBNTWLISQBvZeJgNA5ArUTp1K
-
+# 配置 s3fs AWS credentials file 
 ACCESS_KEY_ID="JKT0TCBHNQPAZ8BGH9SP"
 SECRET_ACCESS_KEY="aBm3DNOwicyhgy9EBNTWLISQBvZeJgNA5ArUTp1K"
 

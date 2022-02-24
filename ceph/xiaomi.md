@@ -29,11 +29,11 @@ SECRET_ACCESS_KEY="aBm3DNOwicyhgy9EBNTWLISQBvZeJgNA5ArUTp1K"
 echo ${ACCESS_KEY_ID}:${SECRET_ACCESS_KEY} > ${HOME}/.passwd-s3fs
 chmod 600 ${HOME}/.passwd-s3fs
 
-# 查看 bucket
+# 查看 ceph rgw bucket
 aws --endpoint=https://jwang-ceph04.example.com:443 s3 ls
 2021-12-06 13:50:00 test
 
-# 挂载文件系统
+# 挂载 ceph s3 文件系统
 mkdir -p /mnt/s3
 s3fs test /mnt/s3 -o passwd_file=${HOME}/.passwd-s3fs -o url=https://jwang-ceph04.example.com -o use_path_request_style
 

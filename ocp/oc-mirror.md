@@ -78,4 +78,41 @@ mirror:
 EOF
 /usr/local/bin/oc-mirror --config /root/image-config-realse-local.yaml file://output-dir
 
+# 同步 4.9.9 和 4.9.10
+# 通过 operator-index 里的部分 operator 
+cat > image-config-realse-local.yaml <<EOF
+apiVersion: mirror.openshift.io/v1alpha1
+kind: ImageSetConfiguration
+mirror:
+  ocp:
+    channels:
+      - name: stable-4.9
+        versions:
+          - '4.9.9'
+          - '4.9.10'
+    graph: true
+  operators:
+    - catalog: registry.redhat.io/redhat/redhat-operator-index:v4.9
+      headsOnly: false
+      packages:
+        - name: local-storage-operator
+        - name: openshift-gitops-operator
+        - name: advanced-cluster-management
+        - name: redhat-oadp-operator
+        - name: kubevirt-hyperconverged
+        - name: odf-operator
+        - name: odf-multicluster-orchestrator
+    - catalog: registry.redhat.io/redhat/certified-operator-index:v4.9
+      headsOnly: false
+      packages:
+        - name: elasticsearch-eck-operator-certified
+    - catalog: registry.redhat.io/redhat/community-operator-index:v4.9
+      headsOnly: false
+      packages:
+        - name: oadp-operator
+        - name: grafana-operator
+        - name: opendatahub-operator
+EOF
+/usr/local/bin/oc-mirror --config /root/image-config-realse-local.yaml file://output-dir
+
 ```

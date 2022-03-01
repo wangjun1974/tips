@@ -1,4 +1,6 @@
 ### 测试 oadp 
+https://docs.google.com/document/d/1YkEQLmTVu4lS88xmoyQLAxYVm-BvrDusemPJptclvjQ
+
 ```
 ################################
 # 首先安装一个 minio 作为 s3 服务 #
@@ -95,7 +97,7 @@ spec:
 EOF
 
 # 创建备份 gitea-persistent-1 ，备份 gitea namespace
-$ $cat <<EOF | oc apply -f -
+$ cat <<EOF | oc apply -f -
 apiVersion: velero.io/v1
 kind: Backup
 metadata:
@@ -112,6 +114,26 @@ spec:
   ttl: 2h0m0s
 EOF
 
+# 创建 restic 备份
+# 创建备份 gitea-persistent-1 ，备份 gitea namespace
+$ cat <<EOF | oc apply -f -
+apiVersion: velero.io/v1
+kind: Backup
+metadata:
+  name: gitea-persistent-4
+  labels:
+    velero.io/storage-location: default
+  namespace: openshift-adp
+spec:
+  hooks: {}
+  includedNamespaces:
+  - gitea
+  snapshotVolumes: false
+  storageLocation: dpa-sample-1
+  defaultVolumesToRestic: true
+  ttl: 2h0m0s
+EOF
+
 # 查看备份内容
 $ aws --endpoint-url http://minio-velero.apps.ocp1.rhcnsa.com/ s3 ls s3://velero/velero/backups/gitea-persistent-1/
 2022-03-01 09:42:05         29 gitea-persistent-1-csi-volumesnapshotcontents.json.gz
@@ -122,6 +144,16 @@ $ aws --endpoint-url http://minio-velero.apps.ocp1.rhcnsa.com/ s3 ls s3://velero
 2022-03-01 09:42:05         29 gitea-persistent-1-volumesnapshots.json.gz
 2022-03-01 09:42:04     662707 gitea-persistent-1.tar.gz
 2022-03-01 09:41:58       2632 velero-backup.json
+$ aws --endpoint-url http://minio-velero.apps.ocp1.rhcnsa.com/ s3 ls s3://velero/velero/restic/gitea/
+                           PRE data/
+                           PRE index/
+                           PRE keys/
+                           PRE snapshots/
+2022-03-01 10:45:57        155 config
+
+# 下载备份内容
+$ aws --endpoint-url http://minio-velero.apps.ocp1.rhcnsa.com/ s3 cp s3://velero/velero/backups/gitea-persistent-1/ /tmp --recursive
+
 
 # 查看可用备份 
 $ oc get backup -n openshift-adp 
@@ -137,7 +169,7 @@ $ cat <<EOF | oc apply -f -
 apiVersion: velero.io/v1
 kind: Restore
 metadata:
-  name: gitea
+  name: gitea-2
   namespace: openshift-adp
 spec:
   backupName: gitea-persistent-1
@@ -184,5 +216,6 @@ status:
   startTimestamp: "2022-03-01T02:07:45Z"
   warnings: 12
 
+$ oc -n mysql-persistent-restic annotate pod/mysql-7d99fc949-zxz7r backup.velero.io/backup-volumes=mysql-data,kube-api-access-78zt8
 
 ```

@@ -169,7 +169,7 @@ $ cat <<EOF | oc apply -f -
 apiVersion: velero.io/v1
 kind: Restore
 metadata:
-  name: gitea-2
+  name: gitea
   namespace: openshift-adp
 spec:
   backupName: gitea-persistent-1

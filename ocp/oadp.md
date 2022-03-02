@@ -120,7 +120,7 @@ $ cat <<EOF | oc apply -f -
 apiVersion: velero.io/v1
 kind: Backup
 metadata:
-  name: gitea-persistent-4
+  name: gitea-persistent-5
   labels:
     velero.io/storage-location: default
   namespace: openshift-adp
@@ -131,7 +131,7 @@ spec:
   snapshotVolumes: false
   storageLocation: dpa-sample-1
   defaultVolumesToRestic: true
-  ttl: 2h0m0s
+  ttl: 48h0m0s
 EOF
 
 # 查看备份内容
@@ -172,7 +172,7 @@ metadata:
   name: gitea
   namespace: openshift-adp
 spec:
-  backupName: gitea-persistent-1
+  backupName: gitea-persistent-5
   excludedResources:
   - nodes
   - events
@@ -217,5 +217,18 @@ status:
   warnings: 12
 
 $ oc -n mysql-persistent-restic annotate pod/mysql-7d99fc949-zxz7r backup.velero.io/backup-volumes=mysql-data,kube-api-access-78zt8
+
+
+# 查看 velero 版本
+VELERO=$(oc -n openshift-adp get pods -l component=velero -o name | head -1) 
+oc -n openshift-adp rsh $VELERO
+sh-4.4# ./velero version
+sh-4.4# ./velero backup get
+NAME                 STATUS      ERRORS   WARNINGS   CREATED                         EXPIRES   STORAGE LOCATION   SELECTOR
+gitea-persistent-5   Completed   0        0          2022-03-02 01:10:36 +0000 UTC   1d        dpa-sample-1       <none>
+
+# 注意事项
+# 在目标集群里需要创建与源集群同名的 StorageClass
+# 因为迁移前的 PVC 如果包含 StorageClass，PVC 可以找到需要的 StorageClass
 
 ```

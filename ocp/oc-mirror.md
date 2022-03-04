@@ -83,6 +83,9 @@ EOF
 cat > image-config-realse-local.yaml <<EOF
 apiVersion: mirror.openshift.io/v1alpha1
 kind: ImageSetConfiguration
+storageConfig:
+  local:
+    path: /root/oc-workspace
 mirror:
   ocp:
     channels:
@@ -95,13 +98,20 @@ mirror:
     - catalog: registry.redhat.io/redhat/redhat-operator-index:v4.9
       headsOnly: false
       packages:
+        - name: advanced-cluster-management
+        - name: kubernetes-nmstate-operator
+        - name: kubevirt-hyperconverged
         - name: local-storage-operator
         - name: openshift-gitops-operator
-        - name: advanced-cluster-management
-        - name: redhat-oadp-operator
-        - name: kubevirt-hyperconverged
+        - name: ocs-operator
         - name: odf-operator
         - name: odf-multicluster-orchestrator
+        - name: odr-hub-operator
+        - name: odr-cluster-operator
+        - name: redhat-oadp-operator
+        - name: rhacs-operator
+        - name: submariner
+        - name: quay-operator
     - catalog: registry.redhat.io/redhat/certified-operator-index:v4.9
       headsOnly: false
       packages:
@@ -109,7 +119,6 @@ mirror:
     - catalog: registry.redhat.io/redhat/community-operator-index:v4.9
       headsOnly: false
       packages:
-        - name: oadp-operator
         - name: grafana-operator
         - name: opendatahub-operator
 EOF

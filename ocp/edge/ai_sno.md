@@ -1,3 +1,4 @@
+```
 ## 重要：重要：重要
 # 在安装过程中，检查 SNO 节点的 /etc/containers/registries.conf 文件
 # 如果内容不正确则重新生成这个文件
@@ -116,6 +117,46 @@ unqualified-search-registries = ['registry.access.redhat.com', "docker.io"]
  
   [[registry.mirror]]
     location = "registry.example.com:5000/rhacm2"
+
+[[registry]]
+  prefix = ""
+  location = "registry.redhat.io/openshift-gitops-1"
+  mirror-by-digest-only = true
+ 
+  [[registry.mirror]]
+    location = "registry.example.com:5000/openshift-gitops-1"
+
+[[registry]]
+  prefix = ""
+  location = "registry.redhat.io/openshift4"
+  mirror-by-digest-only = true
+ 
+  [[registry.mirror]]
+    location = "registry.example.com:5000/openshift4"
+
+[[registry]]
+  prefix = ""
+  location = "registry.redhat.io/redhat"
+  mirror-by-digest-only = true
+ 
+  [[registry.mirror]]
+    location = "registry.example.com:5000/redhat"
+
+[[registry]]
+  prefix = ""
+  location = "registry.redhat.io/rhel8"
+  mirror-by-digest-only = true
+ 
+  [[registry.mirror]]
+    location = "registry.example.com:5000/rhel8"
+
+[[registry]]
+  prefix = ""
+  location = "registry.redhat.io/rh-sso-7"
+  mirror-by-digest-only = true
+ 
+  [[registry.mirror]]
+    location = "registry.example.com:5000/rh-sso-7"
 EOF
 
 config_source=$(cat ./registries.conf | base64 -w 0 )
@@ -151,3 +192,47 @@ EOF
 oc apply -f ./99-master-zzz-registries-configuration.yaml
 
 ## 重要：重要：重要
+
+# 禁用默认的 catalogsources
+oc patch OperatorHub cluster --type json -p '[{"op": "add", "path": "/spec/disableAllDefaultSources", "value": true}]'
+
+# 设置本地 CatalogSource
+cat <<EOF | oc apply -f -
+apiVersion: operators.coreos.com/v1alpha1
+kind: CatalogSource
+metadata:
+  name: redhat-operator-index
+  namespace: openshift-marketplace
+spec:
+  image: registry.example.com:5000/redhat/redhat-operator-index:v4.9
+  sourceType: grpc
+EOF
+
+# 设置OAuth
+touch $HOME/htpasswd
+htpasswd -Bb $HOME/htpasswd admin redhat
+htpasswd -Bb $HOME/htpasswd user1 redhat
+
+oc --kubeconfig=/root/kubeconfig-ocp4-1 create secret generic htpasswd --from-file=$HOME/htpasswd -n openshift-config
+
+oc --kubeconfig=/root/kubeconfig-ocp4-1 apply -f - <<EOF
+apiVersion: config.openshift.io/v1
+kind: OAuth
+metadata:
+  name: cluster
+spec:
+  identityProviders:
+  - name: Local Password
+    mappingMethod: claim
+    type: HTPasswd
+    htpasswd:
+      fileData:
+        name: htpasswd
+EOF
+
+oc --kubeconfig=/root/kubeconfig-ocp4-1 adm policy add-cluster-role-to-user cluster-admin admin
+oc login https://api.ocp4-1.example.com:6443 -u admin 
+
+
+
+```

@@ -112,6 +112,14 @@ unqualified-search-registries = ['registry.access.redhat.com', "docker.io"]
 
 [[registry]]
   prefix = ""
+  location = "quay.io/ocpmetal/assisted-installer-controller"
+  mirror-by-digest-only = false
+ 
+  [[registry.mirror]]
+    location = "registry.example.com:5000/ocpmetal/assisted-installer-controller"
+
+[[registry]]
+  prefix = ""
   location = "registry.redhat.io/rhacm2"
   mirror-by-digest-only = true
  
@@ -233,6 +241,46 @@ EOF
 oc --kubeconfig=/root/kubeconfig-ocp4-1 adm policy add-cluster-role-to-user cluster-admin admin
 oc login https://api.ocp4-1.example.com:6443 -u admin 
 
+# 创建 SNO Local DIR Storage Class
+# 登陆 SNO 节点
+# 创建 /srv/openshift/pv-{0..99} 目录
+# 设置目录的访问模式 (777) 和 selinux context (svirt_sanbox_file_t)
+ssh core@192.168.122.201 "sudo /bin/bash -c 'mkdir -p /srv/openshift/pv-{0..99} ; chmod -R 777 /srv/openshift ; chcon -R -t svirt_sandbox_file_t /srv/openshift'"
+
+# 创建 PV 
+for i in {0..99}; do
+  oc --kubeconfig=/root/kubeconfig-ocp4-1 create -f - <<EOF
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv-$i
+  labels:
+    type: local
+spec:
+  storageClassName: manual
+  capacity:
+    storage: 40Gi
+  accessModes:
+  - ReadWriteOnce
+  - ReadWriteMany
+  persistentVolumeReclaimPolicy: Recycle
+  hostPath:
+    path: "/srv/openshift/pv-$i"
+EOF
+done
+
+# 创建 StorageClass
+oc --kubeconfig=/root/kubeconfig-ocp4-1 create -f - <<EOF
+kind: StorageClass
+apiVersion: storage.k8s.io/v1
+metadata:
+  name: manual
+  annotations:
+    storageclass.kubernetes.io/is-default-class: 'true'
+provisioner: kubernetes.io/no-provisioner
+reclaimPolicy: Delete
+volumeBindingMode: WaitForFirstConsumer
+EOF
 
 
 ```

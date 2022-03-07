@@ -330,7 +330,7 @@ BaiduPCS-Go upload output-dir/redhat-operator-index/v4.9/redhat_operator_index_v
 
 # 下载 quay-operator
 OPERATOR_NAME='quay-operator'
-OPERATOR_VERSION='3.6.4'
+OPERATOR_VERSION='3.6.3'
 OPERATOR_CHANNEL='stable-3.6'
 cat > image-config-realse-local.yaml <<EOF
 apiVersion: mirror.openshift.io/v1alpha1

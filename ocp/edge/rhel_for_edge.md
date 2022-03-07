@@ -19,4 +19,6 @@ systemctl enable cockpit.socket
 
 # 配置 composer-cli bash 补齐
 source  /etc/bash_completion.d/composer-cli
+
+
 ```

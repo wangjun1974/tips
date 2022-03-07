@@ -329,7 +329,7 @@ INFRA_ENV_ID=$(aicli -U $AI_URL list infraenvs | grep ocp4-1 | awk '{print $4}')
 
 # 生成 registries.conf 文件，ignition 时添加 registry.crt 和 registries.conf  
 cat > /tmp/registries.conf <<EOF
-unqualified-search-registries = ["registry.access.redhat.com", "docker.io"]
+unqualified-search-registries = ['registry.access.redhat.com', "docker.io"]
  
 [[registry]]
   prefix = ""
@@ -362,6 +362,14 @@ unqualified-search-registries = ["registry.access.redhat.com", "docker.io"]
  
   [[registry.mirror]]
     location = "registry.example.com:5000/ocpmetal/assisted-installer-agent"
+
+[[registry]]
+  prefix = ""
+  location = "registry.redhat.io/rhacm2"
+  mirror-by-digest-only = true
+ 
+  [[registry.mirror]]
+    location = "registry.example.com:5000/rhacm2"
 EOF
 
 request_body=$(mktemp)

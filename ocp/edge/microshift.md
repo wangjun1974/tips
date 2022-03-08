@@ -53,11 +53,17 @@ gpgcheck=0
 EOF
 
 # 安装 cri-o cri-tools
-sudo dnf install -y cri-o cri-tools
-sudo systemctl enable crio --now
+dnf module disable container-tools:rhel8
+dnf module enable container-tools:3.0
+dnf install -y cri-o cri-tools
+systemctl enable crio --now
 
 # 安装 podman
 sudo dnf install -y podman
+
+# 执行初始化脚本
+# curl -sfL https://raw.githubusercontent.com/redhat-et/microshift/main/install.sh | bash
+# curl -o https://raw.githubusercontent.com/redhat-et/microshift/main/install.sh
 
 # 将镜像同步到本地
 LOCAL_SECRET_JSON=/data/OCP-4.9.9/ocp/secret/redhat-pull-secret.json
@@ -192,26 +198,11 @@ openshift-node                                Active
 Client Version: 4.9.9
 Kubernetes Version: v1.21.1
 
-# 配置 dnsmasq
-IPADDR=$(/usr/sbin/ip a s dev ens3 | /usr/bin/grep 'inet ' | /usr/bin/awk '{print $2}' | /usr/bin/sed -e 's|/24||')
-dnf install -y dnsmasq
-cat >> /etc/dnsmasq.conf <<EOF
-address=/example.com/${IPADDR}
-address=/registry.example.com/192.168.122.12
-address=/microshift-demo.example.com/192.168.122.203
-bind-interfaces
-EOF
-systemctl restart dnsmasq
-
-nmcli con mod ens3 ipv4.dns '127.0.0.1' +ipv4.dns '192.168.122.12'
-nmcli con down ens3 && nmcli con up ens3 
-
 # 拷贝 quay.io/tasato/hello-js 到 registry.example.com:5000/tasato/hello-js
 LOCAL_SECRET_JSON=/data/OCP-4.9.9/ocp/secret/redhat-pull-secret.json
 skopeo copy --format v2s2 --authfile ${LOCAL_SECRET_JSON} --all docker://quay.io/tasato/hello-js:latest docker://registry.example.com:5000/tasato/hello-js:latest
 
-
-# 配置一下 dns
+# 在 DNS 上添加 edge-1 的解析
 cat >> /etc/named.rfc1912.zones <<EOF
 zone "edge-1.example.com" IN {
         type master;
@@ -255,7 +246,9 @@ EOF
 
 systemctl restart named
 
-# 配置一下 haproxy 
+# 在负载均衡节点上添加 edge-1 的流量
+# 配置 haproxy 
+cat >> /etc/haproxy/haproxy.cfg <<EOF
 frontend  openshift-api-server-edge-1
     bind lb.edge-1.example.com:6443
     mode tcp
@@ -288,15 +281,27 @@ backend ingress-https-edge-1
     balance source
     mode tcp
     server     master-0 master-0.edge-1.example.com:443 check
+EOF
+systemctl restart haproxy
 
+# 在 edge-1 节点上添加防火墙规则
+sudo firewall-cmd --zone=public --add-port=80/tcp --permanent
+sudo firewall-cmd --zone=public --add-port=443/tcp --permanent
+sudo firewall-cmd --zone=public --add-port=5353/udp --permanent
+sudo firewall-cmd --zone=public --permanent --add-port=6443/tcp
+sudo firewall-cmd --zone=public --permanent --add-port=30000-32767/tcp
+sudo firewall-cmd --reload
 
-
-
-# 
+# 创建测试程序
 oc new-project test
 oc create deploy hello --image=registry.example.com:5000/tasato/hello-js:latest
 oc expose deploy hello --port 8080
-oc expose svc hello --hostname=hello.example.com
+oc expose svc hello --hostname=hello.apps.edge-1.example.com
 oc get route
+
+# 访问 hello.apps.edge-1.example.com
+curl http://hello.apps.edge-1.example.com
+Hello ::ffff:10.42.0.1 from hello-bc68c5c66-94g7r
+
 ```
 

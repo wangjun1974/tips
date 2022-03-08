@@ -296,11 +296,12 @@ sudo firewall-cmd --reload
 oc new-project test
 oc create deploy hello --image=registry.example.com:5000/tasato/hello-js:latest
 oc expose deploy hello --port 8080
+# 暴露路由，指定路由使用的 hostname
 oc expose svc hello --hostname=hello.apps.edge-1.example.com
 oc get route
 
 # 访问 hello.apps.edge-1.example.com
-curl http://hello.apps.edge-1.example.com
+curl $(oc get route hello -n test -o jsonpath='{"http://"}{.spec.host}{"\n"}')
 Hello ::ffff:10.42.0.1 from hello-bc68c5c66-94g7r
 
 ```

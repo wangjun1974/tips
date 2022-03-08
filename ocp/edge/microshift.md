@@ -61,7 +61,7 @@ sudo dnf install -y podman
 
 # 将 quay.io/microshift/microshift:latest 同步到本地 registry.example.com:5000/microshift/microshift:latest
 LOCAL_SECRET_JSON=/data/OCP-4.9.9/ocp/secret/redhat-pull-secret.json
-skopeo copy --format v2s2 --authfile ${LOCAL_SECRET_JSON} --all docker://quay.io/microshift/microshift:latest docker://registry.example.com:5000/microshift/microshift:latest
+skopeo copy --format v2s2 --authfile ${LOCAL_SECRET_JSON} --all docker://quay.io/microshift/microshift:4.8.0-0.microshift-2022-02-04-005920 docker://registry.example.com:5000/microshift/microshift:4.8.0-0.microshift-2022-02-04-005920
 
 # 生成 ~/.docker/config.json
 mkdir -p ~/.docker
@@ -91,7 +91,7 @@ Restart=on-failure
 TimeoutStopSec=70
 ExecStartPre=/usr/bin/mkdir -p /var/lib/kubelet ; /usr/bin/mkdir -p /var/hpvolumes
 ExecStartPre=/bin/rm -f %t/%n.ctr-id
-ExecStart=/usr/bin/podman run --cidfile=%t/%n.ctr-id --cgroups=no-conmon --rm --replace --sdnotify=container --label io.containers.autoupdate=registry --network=host --privileged -d --name microshift -v /var/hpvolumes:/var/hpvolumes:z,rw,rshared -v /var/run/crio/crio.sock:/var/run/crio/crio.sock:rw,rshared -v microshift-data:/var/lib/microshift:rw,rshared -v /var/lib/kubelet:/var/lib/kubelet:z,rw,rshared -v /var/log:/var/log -v /etc:/etc registry.example.com:5000/microshift/microshift:latest
+ExecStart=/usr/bin/podman run --cidfile=%t/%n.ctr-id --cgroups=no-conmon --rm --replace --sdnotify=container --label io.containers.autoupdate=registry --network=host --privileged -d --name microshift -v /var/hpvolumes:/var/hpvolumes:z,rw,rshared -v /var/run/crio/crio.sock:/var/run/crio/crio.sock:rw,rshared -v microshift-data:/var/lib/microshift:rw,rshared -v /var/lib/kubelet:/var/lib/kubelet:z,rw,rshared -v /var/log:/var/log -v /etc:/etc registry.example.com:5000/microshift/microshift:4.8.0-0.microshift-2022-02-04-005920
 ExecStop=/usr/bin/podman stop --ignore --cidfile=%t/%n.ctr-id
 ExecStopPost=/usr/bin/podman rm -f --ignore --cidfile=%t/%n.ctr-id
 Type=notify
@@ -133,11 +133,69 @@ Kubernetes Version: v1.21.1
 IPADDR=$(/usr/sbin/ip a s dev ens3 | /usr/bin/grep 'inet ' | /usr/bin/awk '{print $2}' | /usr/bin/sed -e 's|/24||')
 dnf install -y dnsmasq
 cat >> /etc/dnsmasq.conf <<EOF
-address=/cluster.local/${IPADDR}
+address=/example.com/${IPADDR}
+address=/registry.example.com/192.168.122.12
+address=/microshift-demo.example.com/192.168.122.203
 bind-interfaces
 EOF
 systemctl restart dnsmasq
 
+nmcli con mod ens3 ipv4.dns '127.0.0.1' +ipv4.dns '192.168.122.12'
+nmcli con down ens3 && nmcli con up ens3 
 
+# 拷贝 quay.io/tasato/hello-js 到 registry.example.com:5000/tasato/hello-js
+LOCAL_SECRET_JSON=/data/OCP-4.9.9/ocp/secret/redhat-pull-secret.json
+skopeo copy --format v2s2 --authfile ${LOCAL_SECRET_JSON} --all docker://quay.io/tasato/hello-js:latest docker://registry.example.com:5000/tasato/hello-js:latest
+
+
+# 配置一下 dns
+
+cat >> /etc/named.rfc1912.zones <<EOF
+zone "edge-1.example.com" IN {
+        type master;
+        file "edge-1.example.com.zone";
+        allow-transfer { any; };
+};
+
+EOF
+
+cat > /var/named/edge-1.example.com.zone <<'EOF'
+$ORIGIN edge-1.example.com.
+$TTL 1D
+@           IN SOA  edge-1.example.com. admin.edge-1.example.com. (
+                                        0          ; serial
+                                        1D         ; refresh
+                                        1H         ; retry
+                                        1W         ; expire
+                                        3H )       ; minimum
+
+@             IN NS                         dns.example.com.
+
+lb             IN A                          192.168.122.12
+
+api            IN A                          192.168.122.12
+api-int        IN A                          192.168.122.12
+*.apps         IN A                          192.168.122.12
+
+master-0       IN A                          192.168.122.203
+microshift-demo IN A                          192.168.122.203
+
+EOF
+
+
+cat >> /var/named/168.192.in-addr.arpa.zone  <<'EOF'
+
+203.122.168.192.in-addr.arpa.    IN PTR      master-0.edge-1.example.com.
+
+203.122.168.192.in-addr.arpa.    IN PTR      microshift-demo.edge-1.example.com.
+
+EOF
+
+# 
+oc new-project test
+oc create deploy hello --image=registry.example.com:5000/tasato/hello-js:latest
+oc expose deploy hello --port 8080
+oc expose svc hello --hostname=hello.example.com
+oc get route
 ```
 

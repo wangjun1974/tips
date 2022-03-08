@@ -1,4 +1,4 @@
-### 在 RHEL8.4 上安装 microshift
+/### 在 RHEL8.4 上安装 microshift
 ```
 # RHEL8.4 最小化上安装 cri-o
 mkdir -p /data/OCP-4.9.9/yum
@@ -25,7 +25,7 @@ gpgcheck=0
 EOF
 
 # 安装 tar 
-yum install tar gzip
+yum install tar gzip conntrack-tools
 
 # 解压缩
 cd /data/OCP-4.9.9/yum
@@ -59,9 +59,72 @@ sudo systemctl enable crio --now
 # 安装 podman
 sudo dnf install -y podman
 
-# 将 quay.io/microshift/microshift:latest 同步到本地 registry.example.com:5000/microshift/microshift:latest
+# 将镜像同步到本地
 LOCAL_SECRET_JSON=/data/OCP-4.9.9/ocp/secret/redhat-pull-secret.json
+
+# quay.io/microshift/microshift:4.8.0-0.microshift-2022-02-04-005920
 skopeo copy --format v2s2 --authfile ${LOCAL_SECRET_JSON} --all docker://quay.io/microshift/microshift:4.8.0-0.microshift-2022-02-04-005920 docker://registry.example.com:5000/microshift/microshift:4.8.0-0.microshift-2022-02-04-005920
+
+# quay.io/microshift/flannel-cni:4.8.0-0.okd-2021-10-10-030117
+skopeo copy --format v2s2 --authfile ${LOCAL_SECRET_JSON} --all docker://quay.io/microshift/flannel-cni:4.8.0-0.okd-2021-10-10-030117 docker://registry.example.com:5000/microshift/flannel-cni:4.8.0-0.okd-2021-10-10-030117
+
+# quay.io/coreos/flannel:v0.14.0
+skopeo copy --format v2s2 --authfile ${LOCAL_SECRET_JSON} --all docker://quay.io/coreos/flannel:v0.14.0 docker://registry.example.com:5000/coreos/flannel:v0.14.0
+
+# quay.io/kubevirt/hostpath-provisioner:v0.8.0
+skopeo copy --format v2s2 --authfile ${LOCAL_SECRET_JSON} --all docker://quay.io/kubevirt/hostpath-provisioner:v0.8.0 docker://registry.example.com:5000/kubevirt/hostpath-provisioner:v0.8.0
+
+# quay.io/openshift/okd-content@sha256:bcdefdbcee8af1e634e68a850c52fe1e9cb31364525e30f5b20ee4eacb93c3e8
+skopeo copy --format v2s2 --authfile ${LOCAL_SECRET_JSON} --all docker://quay.io/openshift/okd-content@sha256:bcdefdbcee8af1e634e68a850c52fe1e9cb31364525e30f5b20ee4eacb93c3e8 docker://registry.example.com:5000/openshift/okd-content@sha256:bcdefdbcee8af1e634e68a850c52fe1e9cb31364525e30f5b20ee4eacb93c3e8
+
+# quay.io/openshift/okd-content@sha256:459f15f0e457edaf04fa1a44be6858044d9af4de276620df46dc91a565ddb4ec
+skopeo copy --format v2s2 --authfile ${LOCAL_SECRET_JSON} --all docker://quay.io/openshift/okd-content@sha256:459f15f0e457edaf04fa1a44be6858044d9af4de276620df46dc91a565ddb4ec docker://registry.example.com:5000/openshift/okd-content@sha256:459f15f0e457edaf04fa1a44be6858044d9af4de276620df46dc91a565ddb4ec
+
+# quay.io/openshift/okd-content@sha256:27f7918b5f0444e278118b2ee054f5b6fadfc4005cf91cb78106c3f5e1833edd
+skopeo copy --format v2s2 --authfile ${LOCAL_SECRET_JSON} --all docker://quay.io/openshift/okd-content@sha256:27f7918b5f0444e278118b2ee054f5b6fadfc4005cf91cb78106c3f5e1833edd docker://registry.example.com:5000/openshift/okd-content@sha256:27f7918b5f0444e278118b2ee054f5b6fadfc4005cf91cb78106c3f5e1833edd
+
+# quay.io/openshift/okd-content@sha256:01cfbbfdc11e2cbb8856f31a65c83acc7cfbd1986c1309f58c255840efcc0b64
+skopeo copy --format v2s2 --authfile ${LOCAL_SECRET_JSON} --all docker://quay.io/openshift/okd-content@sha256:01cfbbfdc11e2cbb8856f31a65c83acc7cfbd1986c1309f58c255840efcc0b64 docker://registry.example.com:5000/openshift/okd-content@sha256:01cfbbfdc11e2cbb8856f31a65c83acc7cfbd1986c1309f58c255840efcc0b64
+
+# quay.io/openshift/okd-content@sha256:dd1cd4d7b1f2d097eaa965bc5e2fe7ebfe333d6cbaeabc7879283af1a88dbf4e
+skopeo copy --format v2s2 --authfile ${LOCAL_SECRET_JSON} --all docker://quay.io/openshift/okd-content@sha256:dd1cd4d7b1f2d097eaa965bc5e2fe7ebfe333d6cbaeabc7879283af1a88dbf4e docker://registry.example.com:5000/openshift/okd-content@sha256:dd1cd4d7b1f2d097eaa965bc5e2fe7ebfe333d6cbaeabc7879283af1a88dbf4e
+
+# 生成 /etc/containers/registries.conf 使用本地镜像仓库镜像
+cat > /etc/containers/registries.conf <<EOF
+unqualified-search-registries = ['registry.example.com:5000']
+ 
+[[registry]]
+  prefix = ""
+  location = "quay.io/openshift/okd-content"
+  mirror-by-digest-only = true
+ 
+  [[registry.mirror]]
+    location = "registry.example.com:5000/openshift/okd-content"
+
+[[registry]]
+  prefix = ""
+  location = "quay.io/microshift/flannel-cni"
+  mirror-by-digest-only = false
+ 
+  [[registry.mirror]]
+    location = "registry.example.com:5000/microshift/flannel-cni"
+
+[[registry]]
+  prefix = ""
+  location = "quay.io/coreos/flannel"
+  mirror-by-digest-only = false
+ 
+  [[registry.mirror]]
+    location = "registry.example.com:5000/coreos/flannel"    
+
+[[registry]]
+  prefix = ""
+  location = "quay.io/kubevirt/hostpath-provisioner"
+  mirror-by-digest-only = false
+ 
+  [[registry.mirror]]
+    location = "registry.example.com:5000/kubevirt/hostpath-provisioner"
+EOF
 
 # 生成 ~/.docker/config.json
 mkdir -p ~/.docker
@@ -149,7 +212,6 @@ skopeo copy --format v2s2 --authfile ${LOCAL_SECRET_JSON} --all docker://quay.io
 
 
 # 配置一下 dns
-
 cat >> /etc/named.rfc1912.zones <<EOF
 zone "edge-1.example.com" IN {
         type master;
@@ -190,6 +252,45 @@ cat >> /var/named/168.192.in-addr.arpa.zone  <<'EOF'
 203.122.168.192.in-addr.arpa.    IN PTR      microshift-demo.edge-1.example.com.
 
 EOF
+
+systemctl restart named
+
+# 配置一下 haproxy 
+frontend  openshift-api-server-edge-1
+    bind lb.edge-1.example.com:6443
+    mode tcp
+    option tcplog
+    default_backend openshift-api-server-edge-1
+
+frontend  ingress-http-edge-1
+    bind lb.edge-1.example.com:80
+    mode tcp
+    option tcplog
+    default_backend ingress-http-edge-1
+
+frontend  ingress-https-edge-1
+    bind lb.edge-1.example.com:443
+    mode tcp
+    option tcplog
+    default_backend ingress-https-edge-1
+
+backend openshift-api-server-edge-1
+    balance source
+    mode tcp
+    server     master-0 master-0.edge-1.example.com:6443 check
+
+backend ingress-http-edge-1
+    balance source
+    mode tcp
+    server     master-0 master-0.edge-1.example.com:80 check
+
+backend ingress-https-edge-1
+    balance source
+    mode tcp
+    server     master-0 master-0.edge-1.example.com:443 check
+
+
+
 
 # 
 oc new-project test

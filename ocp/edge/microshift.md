@@ -1,4 +1,5 @@
-/### 在 RHEL8.4 上安装 microshift
+### microshift
+https://blog.csdn.net/weixin_43902588/article/details/122190458
 ```
 # RHEL8.4 最小化上安装 cri-o
 mkdir -p /data/OCP-4.9.9/yum
@@ -6,7 +7,7 @@ mkdir -p /data/OCP-4.9.9/yum
 # 将 rhocp-4.9-for-rhel-8-x86_64-rpm 安装源从外部拷入进来
 scp /data/OCP-4.9.9/yum/rhocp-4.9-for-rhel-8-x86_64-rpms.tar.gz 192.168.122.203:/data/OCP-4.9.9/yum
 
-# 挂载光驱
+# 挂载 rhel 8.4 ISO
 mount /dev/sr0 /mnt
 
 # 创建软件仓库
@@ -71,6 +72,9 @@ LOCAL_SECRET_JSON=/data/OCP-4.9.9/ocp/secret/redhat-pull-secret.json
 # quay.io/microshift/microshift:4.8.0-0.microshift-2022-02-04-005920
 skopeo copy --format v2s2 --authfile ${LOCAL_SECRET_JSON} --all docker://quay.io/microshift/microshift:4.8.0-0.microshift-2022-02-04-005920 docker://registry.example.com:5000/microshift/microshift:4.8.0-0.microshift-2022-02-04-005920
 
+# quay.io/microshift/microshift:4.8.0-0.microshift-2022-01-06-210147
+skopeo copy --format v2s2 --authfile ${LOCAL_SECRET_JSON} --all docker://quay.io/microshift/microshift:4.8.0-0.microshift-2022-01-06-210147 docker://registry.example.com:5000/microshift/microshift:4.8.0-0.microshift-2022-01-06-210147
+
 # quay.io/microshift/flannel-cni:4.8.0-0.okd-2021-10-10-030117
 skopeo copy --format v2s2 --authfile ${LOCAL_SECRET_JSON} --all docker://quay.io/microshift/flannel-cni:4.8.0-0.okd-2021-10-10-030117 docker://registry.example.com:5000/microshift/flannel-cni:4.8.0-0.okd-2021-10-10-030117
 
@@ -130,6 +134,14 @@ unqualified-search-registries = ['registry.example.com:5000']
  
   [[registry.mirror]]
     location = "registry.example.com:5000/kubevirt/hostpath-provisioner"
+
+[[registry]]
+  prefix = ""
+  location = "registry.redhat.io/rhacm2"
+  mirror-by-digest-only = true
+ 
+  [[registry.mirror]]
+    location = "registry.example.com:5000/rhacm2"
 EOF
 
 # 生成 ~/.docker/config.json
@@ -212,6 +224,7 @@ zone "edge-1.example.com" IN {
 
 EOF
 
+nmcli con mod 'System eth0' +ipv4.address "192.168.122.32/24"
 cat > /var/named/edge-1.example.com.zone <<'EOF'
 $ORIGIN edge-1.example.com.
 $TTL 1D
@@ -224,11 +237,10 @@ $TTL 1D
 
 @             IN NS                         dns.example.com.
 
-lb             IN A                          192.168.122.12
-
-api            IN A                          192.168.122.12
-api-int        IN A                          192.168.122.12
-*.apps         IN A                          192.168.122.12
+lb             IN A                          192.168.122.32
+api            IN A                          192.168.122.32
+api-int        IN A                          192.168.122.32
+*.apps         IN A                          192.168.122.32
 
 master-0       IN A                          192.168.122.203
 microshift-demo IN A                          192.168.122.203
@@ -285,6 +297,7 @@ EOF
 systemctl restart haproxy
 
 # 在 edge-1 节点上添加防火墙规则
+sudo firewall-cmd --zone=trusted --add-source=10.42.0.0/16 --permanent
 sudo firewall-cmd --zone=public --add-port=80/tcp --permanent
 sudo firewall-cmd --zone=public --add-port=443/tcp --permanent
 sudo firewall-cmd --zone=public --add-port=5353/udp --permanent
@@ -304,5 +317,84 @@ oc get route
 curl $(oc get route hello -n test -o jsonpath='{"http://"}{.spec.host}{"\n"}')
 Hello ::ffff:10.42.0.1 from hello-bc68c5c66-94g7r
 
+### 将 microshift 与 acm 集成在一起
+# https://microshift.io/docs/user-documentation/how-tos/acm-with-microshift/
+### Hub
+
+# 创建 edge-1 cluster
+export CLUSTER_NAME=edge-1
+oc --kubeconfig=<hub-kubeconfig> new-project ${CLUSTER_NAME}
+oc --kubeconfig=<hub-kubeconfig> label namespace ${CLUSTER_NAME} cluster.open-cluster-management.io/managedCluster=${CLUSTER_NAME}
+
+# 定义 Cluster
+cat <<EOF | oc --kubeconfig=<hub-kubeconfig> apply -f -
+apiVersion: agent.open-cluster-management.io/v1
+kind: KlusterletAddonConfig
+metadata:
+  name: ${CLUSTER_NAME}
+  namespace: ${CLUSTER_NAME}
+spec:
+  clusterName: ${CLUSTER_NAME}
+  clusterNamespace: ${CLUSTER_NAME}
+  applicationManager:
+    enabled: true
+  certPolicyController:
+    enabled: true
+  clusterLabels:
+    cloud: auto-detect
+    vendor: auto-detect
+  iamPolicyController:
+    enabled: true
+  policyController:
+    enabled: true
+  searchCollector:
+    enabled: true
+  version: 2.2.0
+EOF
+
+cat <<EOF | oc --kubeconfig=<hub-kubeconfig> apply -f -
+apiVersion: cluster.open-cluster-management.io/v1
+kind: ManagedCluster
+metadata:
+  name: ${CLUSTER_NAME}
+spec:
+  hubAcceptsClient: true
+EOF
+
+# 上面的命令在 ${CLUSTER_NAME} namespace 下生成 secret ${CLUSTER_NAME}-import 
+# 导出 import.yaml 和 crds.yaml 
+IMPORT=$(oc get -n ${CLUSTER_NAME} secret ${CLUSTER_NAME}-import -o jsonpath='{.data.import\.yaml}')
+CRDS=$(oc get -n ${CLUSTER_NAME} secret ${CLUSTER_NAME}-import -o jsonpath='{.data.crds\.yaml}')
+
+### 在 edge-1 创建 open-cluster-management-agent namespace，创建 serviceaccount，修改 imagePullSecrets
+podman login registry.example.com:5000 --authfile=./auth.json
+oc new-project open-cluster-management-agent
+oc create secret generic rhacm --from-file=.dockerconfigjson=auth.json --type=kubernetes.io/dockerconfigjson
+oc create sa klusterlet
+oc patch sa klusterlet -p '{"imagePullSecrets": [{"name": "rhacm"}]}' -n open-cluster-management-agent
+oc create sa klusterlet-registration-sa
+oc patch sa klusterlet-registration-sa -p '{"imagePullSecrets": [{"name": "rhacm"}]}'
+oc create sa klusterlet-work-sa
+oc patch sa klusterlet-work-sa -p '{"imagePullSecrets": [{"name": "rhacm"}]}'
+oc patch serviceaccount klusterlet -p '{"imagePullSecrets": [{"name": "rhacm"}]}' -n open-cluster-management-agent
+oc patch serviceaccount klusterlet-work-sa -p '{"imagePullSecrets": [{"name": "rhacm"}]}' -n open-cluster-management-agent
+
+### 在 edge-1 创建 open-cluster-management-agent-addon namespace， 创建 serviceaccount，修改 imagePullSecrets
+oc new-project open-cluster-management-agent-addon
+oc create secret generic rhacm --from-file=.dockerconfigjson=auth.json --type=kubernetes.io/dockerconfigjson
+oc create sa klusterlet-addon-operator
+oc patch sa klusterlet-addon-operator -p '{"imagePullSecrets": [{"name": "rhacm"}]}'
+
+### 在 edge-1 切换到 open-cluster-management-agent namespace
+oc project open-cluster-management-agent
+echo $CRDS | base64 -d | oc apply -f -
+echo $IMPORT | base64 -d | oc apply -f -
+
+### 在 edge-1 切换到 open-cluster-management-agent-addon namespace
+oc project open-cluster-management-agent-addon
+for sa in klusterlet-addon-appmgr klusterlet-addon-certpolicyctrl klusterlet-addon-iampolicyctrl-sa klusterlet-addon-policyctrl klusterlet-addon-search klusterlet-addon-workmgr ; do
+  oc patch sa $sa -p '{"imagePullSecrets": [{"name": "rhacm"}]}'
+done
+oc delete pod --all -n open-cluster-management-agent-addon
 ```
 

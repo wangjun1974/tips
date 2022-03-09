@@ -157,7 +157,7 @@ update-ca-trust
 # 尝试拉取 registry.example.com:5000/microshift/microshift:latest
 podman pull registry.example.com:5000/microshift/microshift:latest
 
-# 生成 /etc/systemd/system/microshift.service，引用本地镜像 registry.example.com:5000/microshift/microshift:latest
+# 生成 /etc/systemd/system/microshift.service，引用本地镜像 registry.example.com:5000/microshift/microshift:<imagetag>
 cat > /etc/systemd/system/microshift.service <<'EOF'
 [Unit]
 Description=MicroShift Containerized
@@ -369,21 +369,19 @@ CRDS=$(oc get -n ${CLUSTER_NAME} secret ${CLUSTER_NAME}-import -o jsonpath='{.da
 ### 在 edge-1 创建 open-cluster-management-agent namespace，创建 serviceaccount，修改 imagePullSecrets
 podman login registry.example.com:5000 --authfile=./auth.json
 oc new-project open-cluster-management-agent
-oc create secret generic rhacm --from-file=.dockerconfigjson=auth.json --type=kubernetes.io/dockerconfigjson
-oc create sa klusterlet
-oc patch sa klusterlet -p '{"imagePullSecrets": [{"name": "rhacm"}]}' -n open-cluster-management-agent
-oc create sa klusterlet-registration-sa
-oc patch sa klusterlet-registration-sa -p '{"imagePullSecrets": [{"name": "rhacm"}]}'
-oc create sa klusterlet-work-sa
-oc patch sa klusterlet-work-sa -p '{"imagePullSecrets": [{"name": "rhacm"}]}'
-oc patch serviceaccount klusterlet -p '{"imagePullSecrets": [{"name": "rhacm"}]}' -n open-cluster-management-agent
-oc patch serviceaccount klusterlet-work-sa -p '{"imagePullSecrets": [{"name": "rhacm"}]}' -n open-cluster-management-agent
+oc -n open-cluster-management-agent create secret generic rhacm --from-file=.dockerconfigjson=auth.json --type=kubernetes.io/dockerconfigjson
+oc -n open-cluster-management-agent create sa klusterlet
+oc -n open-cluster-management-agent patch sa klusterlet -p '{"imagePullSecrets": [{"name": "rhacm"}]}'
+oc -n open-cluster-management-agent create sa klusterlet-registration-sa
+oc -n open-cluster-management-agent patch sa klusterlet-registration-sa -p '{"imagePullSecrets": [{"name": "rhacm"}]}'
+oc -n open-cluster-management-agent create sa klusterlet-work-sa
+oc -n open-cluster-management-agent patch sa klusterlet-work-sa -p '{"imagePullSecrets": [{"name": "rhacm"}]}'
 
 ### 在 edge-1 创建 open-cluster-management-agent-addon namespace， 创建 serviceaccount，修改 imagePullSecrets
 oc new-project open-cluster-management-agent-addon
-oc create secret generic rhacm --from-file=.dockerconfigjson=auth.json --type=kubernetes.io/dockerconfigjson
-oc create sa klusterlet-addon-operator
-oc patch sa klusterlet-addon-operator -p '{"imagePullSecrets": [{"name": "rhacm"}]}'
+oc -n open-cluster-management-agent-addon create secret generic rhacm --from-file=.dockerconfigjson=auth.json --type=kubernetes.io/dockerconfigjson
+oc -n open-cluster-management-agent-addon create sa klusterlet-addon-operator
+oc -n open-cluster-management-agent-addon patch sa klusterlet-addon-operator -p '{"imagePullSecrets": [{"name": "rhacm"}]}'
 
 ### 在 edge-1 切换到 open-cluster-management-agent namespace
 oc project open-cluster-management-agent

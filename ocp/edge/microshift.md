@@ -396,3 +396,10 @@ done
 oc delete pod --all -n open-cluster-management-agent-addon
 ```
 
+### 在 Hub 上清理 edge-1
+```
+CLUSTER_NAME='edge-1'
+oc delete ManagedCluster ${CLUSTER_NAME}
+
+
+```

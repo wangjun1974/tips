@@ -99,6 +99,10 @@ skopeo copy --format v2s2 --authfile ${LOCAL_SECRET_JSON} --all docker://quay.io
 # quay.io/openshift/okd-content@sha256:dd1cd4d7b1f2d097eaa965bc5e2fe7ebfe333d6cbaeabc7879283af1a88dbf4e
 skopeo copy --format v2s2 --authfile ${LOCAL_SECRET_JSON} --all docker://quay.io/openshift/okd-content@sha256:dd1cd4d7b1f2d097eaa965bc5e2fe7ebfe333d6cbaeabc7879283af1a88dbf4e docker://registry.example.com:5000/openshift/okd-content@sha256:dd1cd4d7b1f2d097eaa965bc5e2fe7ebfe333d6cbaeabc7879283af1a88dbf4e
 
+# 
+skopeo copy --format v2s2 --authfile ${LOCAL_SECRET_JSON} --all docker://k8s.gcr.io/pause:3.5 docker://registry.example.com:5000/pause/pause:3.5
+
+
 # 生成 /etc/containers/registries.conf 使用本地镜像仓库镜像
 cat > /etc/containers/registries.conf <<EOF
 unqualified-search-registries = ['registry.example.com:5000']
@@ -134,6 +138,14 @@ unqualified-search-registries = ['registry.example.com:5000']
  
   [[registry.mirror]]
     location = "registry.example.com:5000/kubevirt/hostpath-provisioner"
+
+[[registry]]
+  prefix = ""
+  location = "k8s.gcr.io/pause"
+  mirror-by-digest-only = false
+ 
+  [[registry.mirror]]
+    location = "registry.example.com:5000/pause/pause"
 
 [[registry]]
   prefix = ""

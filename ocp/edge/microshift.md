@@ -416,6 +416,23 @@ oc delete ManagedCluster ${CLUSTER_NAME}
 
 ### 配置 MicroShift 的说明
 https://microshift.io/docs/user-documentation/configuring/
+```
+mkdir -p /etc/microshift
+cat > /etc/microshift/config.yaml <<EOF
+--- 
+dataDir: /tmp/microshift/data
+LogDir: /tmp/microshift/logs
+logVLevel: 4
+nodeName: master-0.edge-1.rhcnsa.com
+nodeIP: '8.130.18.10'
+cluster:
+  url: https://8.130.18.10:6443
+  clusterCIDR: '10.42.0.0/16'
+  serviceCIDR: '10.43.0.0/16'
+  dns: '10.43.0.10'
+  domain: apps.edge-1.rhcnsa.com
+EOF
+```
 
 ### 为 serviceaccount 指定 imagePullSecrets
 ```

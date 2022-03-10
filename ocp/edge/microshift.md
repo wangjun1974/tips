@@ -412,6 +412,12 @@ oc delete pod --all -n open-cluster-management-agent-addon
 ```
 CLUSTER_NAME='edge-1'
 oc delete ManagedCluster ${CLUSTER_NAME}
+```
 
+### 配置 MicroShift 的说明
+https://microshift.io/docs/user-documentation/configuring/
 
+### 为 serviceaccount 指定 imagePullSecrets
+```
+Alright this worked oc patch -n openshift-marketplace sa redhat-operators -p '{"imagePullSecrets": [{"name": "openshift-pull-secret"}]}' but running into other problems. But At least I'm over this hump
 ```

@@ -415,7 +415,8 @@ oc delete ManagedCluster ${CLUSTER_NAME}
 ```
 
 ### 配置 MicroShift 的说明
-https://microshift.io/docs/user-documentation/configuring/
+https://microshift.io/docs/user-documentation/configuring/<br>
+
 ```
 mkdir -p /etc/microshift
 cat > /etc/microshift/config.yaml <<EOF
@@ -437,4 +438,10 @@ EOF
 ### 为 serviceaccount 指定 imagePullSecrets
 ```
 Alright this worked oc patch -n openshift-marketplace sa redhat-operators -p '{"imagePullSecrets": [{"name": "openshift-pull-secret"}]}' but running into other problems. But At least I'm over this hump
+```
+
+### 为 edge cluster 安装 argocd core
+```
+kubectl create namespace argocd
+kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/core-install.yaml
 ```

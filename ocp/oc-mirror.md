@@ -389,9 +389,11 @@ BaiduPCS-Go upload output-dir/redhat-operator-index/v4.9/redhat_operator_index_v
 
 
 # 下载社区版 ArgoCD Operator
+mkdir -p output-dir/community-operator-index/v4.9
+
 OPERATOR_NAME='argocd-operator'
-OPERATOR_VERSION='1.0.1'
-OPERATOR_CHANNEL='stable'
+OPERATOR_VERSION='0.2.1'
+OPERATOR_CHANNEL='alpha'
 cat > image-config-realse-local.yaml <<EOF
 apiVersion: mirror.openshift.io/v1alpha1
 kind: ImageSetConfiguration
@@ -406,6 +408,56 @@ mirror:
             - name: ${OPERATOR_CHANNEL}
 EOF
 /usr/local/bin/oc-mirror --config /root/image-config-realse-local.yaml file://output-dir
-mv output-dir/mirror_seq1_000000.tar output-dir/redhat-operator-index/v4.9/redhat_operator_index_v4.9_${OPERATOR_NAME}_${OPERATOR_VERSION}.tar 
-BaiduPCS-Go upload output-dir/redhat-operator-index/v4.9/redhat_operator_index_v4.9_${OPERATOR_NAME}_${OPERATOR_VERSION}.tar /ocp4/oc-mirror
+mv output-dir/mirror_seq1_000000.tar output-dir/community-operator-index/v4.9/community-operator-index_v4.9_${OPERATOR_NAME}_${OPERATOR_VERSION}.tar 
+BaiduPCS-Go upload output-dir/community-operator-index/v4.9/community-operator-index_v4.9_${OPERATOR_NAME}_${OPERATOR_VERSION}.tar /ocp4/oc-mirror
+
+# 上传镜像到本地镜像仓库 
+/usr/local/bin/oc-mirror --from output-dir/community-operator-index/v4.9/community-operator-index_v4.9_${OPERATOR_NAME}_${OPERATOR_VERSION}.tar docker://registry.example.com:5000
+
+cat <<EOF | oc apply -f -
+apiVersion: operators.coreos.com/v1alpha1
+kind: CatalogSource
+metadata:
+  name: community-operator-index
+  namespace: openshift-marketplace
+spec:
+  image: registry.example.com:5000/redhat/community-operator-index:v4.9
+  sourceType: grpc
+EOF
+
+cat <<EOF | oc apply -f -
+---
+apiVersion: operator.openshift.io/v1alpha1
+kind: ImageContentSourcePolicy
+metadata:
+  labels:
+    operators.openshift.org/catalog: "true"
+  name: catalog-0
+spec:
+  repositoryDigestMirrors:
+  - mirrors:
+    - registry.example.com:5000/openshift-community-operators
+    source: quay.io/openshift-community-operators
+  - mirrors:
+    - registry.example.com:5000/kubebuilder
+    source: gcr.io/kubebuilder
+  - mirrors:
+    - registry.example.com:5000/argoprojlabs
+    source: quay.io/argoprojlabs
+  - mirrors:
+    - registry.example.com:5000/redhat
+    source: registry.redhat.io/redhat
+---
+apiVersion: operator.openshift.io/v1alpha1
+kind: ImageContentSourcePolicy
+metadata:
+  name: generic-0
+spec:
+  repositoryDigestMirrors:
+  - mirrors:
+    - registry.example.com:5000/operator-framework
+    source: quay.io/operator-framework
+EOF
+
+
 ```

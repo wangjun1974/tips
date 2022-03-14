@@ -347,4 +347,28 @@ $ ARGOCD_URL=$(oc get route openshift-gitops-server -n openshift-gitops -o jsonp
 $ argocd login --username admin --password ${PASSWD} --insecure ${ARGOCD_URL}
 
 # 登录 argocd 的 argocd
+$ PASSWD=$(oc get secret argocd-secret -n argocd -ojsonpath='{.data.admin\.password}' | base64 -d)
+$ ARGOCD_URL=$(oc get route argocd-sample-server -n argocd -o jsonpath='{.spec.host}')
+$ argocd login --username admin --password ${PASSWD} --insecure ${ARGOCD_URL}
+
+# 重置 argocd admin password
+# https://stackoverflow.com/questions/68297354/what-is-the-default-password-of-argocd
+$ kubectl -n argocd patch secret argocd-secret  -p '{"data": {"admin.password": null, "admin.passwordMtime": null}}'
+$ kubectl -n argocd scale deployment argocd-sample-server --replicas=0
+# 过一段时间 operator 会恢复 argocd-sample-server 
+# 经测试这个方法不行
+
+# 重置 argocd admin password
+# https://github.com/argoproj/argo-cd/blob/master/docs/faq.md
+# $2a$10$LXic7E3hgPbXDzExqUpz3OldP..e0yMGnYA53.x3FuRkqb7.fM4uO
+# bcrypt(password)=$2a$10$LXic7E3hgPbXDzExqUpz3OldP..e0yMGnYA53.x3FuRkqb7.fM4uO
+kubectl -n argocd patch secret argocd-secret \
+  -p '{"stringData": {
+    "admin.password": "JDJhJDEwJExYaWM3RTNoZ1BiWER6RXhxVXB6M09sZFAuLmUweU1HbllBNTMueDNGdVJrcWI3LmZNNHVPCg==",
+    "admin.passwordMtime": "'$(date +%FT%T%Z)'"
+  }}'
+# 经测试这个方法不行
+
+
+
 ```

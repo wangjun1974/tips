@@ -337,3 +337,14 @@ oc edit argocd openshift-gitops -n openshift-gitops
 
 # 然后重启 Deployment openshift-gitops-server
 ```
+
+
+### 登录 argocd  
+```
+# 登录 openshift-gitops 的 argocd
+$ PASSWD=$(oc get secret openshift-gitops-cluster -n openshift-gitops -ojsonpath='{.data.admin\.password}' | base64 -d)
+$ ARGOCD_URL=$(oc get route openshift-gitops-server -n openshift-gitops -o jsonpath='{.spec.host}')
+$ argocd login --username admin --password ${PASSWD} --insecure ${ARGOCD_URL}
+
+# 登录 argocd 的 argocd
+```

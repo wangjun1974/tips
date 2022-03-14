@@ -488,3 +488,13 @@ pass in inet proto udp from any to 10.42.0.0/16 port 0:65535 no state
 # 重新加载规则
 sudo pfctl -f /etc/pf.conf
 ```
+
+### 在 Mac OS 上启动 microshift
+```
+# 启动 microshift 
+docker run -d --rm --name microshift --privileged -v microshift-data:/var/lib -p 6443:6443 quay.io/microshift/microshift-aio:latest
+```
+
+### 参考链接
+[WIP] Add OAuth API server to Microshift #244<br>
+https://github.com/redhat-et/microshift/pull/244

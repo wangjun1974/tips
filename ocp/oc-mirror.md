@@ -1,5 +1,22 @@
 # 如何用 oc-mirror 同步 openshift-release 和 operator 到目标集群
 
+### 用 grpcurl 检查 index 内容
+```
+# 用 grpcurl 检查 index 内容
+mkdir -p redhat-operator-index/v4.9
+grpcurl -plaintext localhost:50051 api.Registry/ListPackages > redhat-operator-index/v4.9/packages.out
+cat redhat-operator-index/v4.9/packages.out
+mkdir -p certified-operator-index/v4.9
+grpcurl -plaintext localhost:50051 api.Registry/ListPackages > certified-operator-index/v4.9/packages.out
+cat certified-operator-index/v4.9/packages.out
+mkdir -p community-operator-index/v4.9
+grpcurl -plaintext localhost:50051 api.Registry/ListPackages > community-operator-index/v4.9/packages.out
+cat community-operator-index/v4.9/packages.out
+mkdir -p upstream-community-operators/latest
+grpcurl -plaintext localhost:50051 api.Registry/ListPackages > upstream-community-operators/latest/packages.out
+cat upstream-community-operators/latest/packages.out
+```
+
 ### Install oc-mirror on rhel7
 https://asciinema.org/a/uToc11VnzG0RMZrht2dsaTfo9<br>
 https://golangissues.com/issues/1156078<br>
@@ -359,6 +376,28 @@ kind: ImageSetConfiguration
 mirror:
   operators:
     - catalog: registry.redhat.io/redhat/redhat-operator-index:v4.9
+      headsOnly: false
+      packages:
+        - name: ${OPERATOR_NAME}
+          startingVersion: ${OPERATOR_VERSION}
+          channels:
+            - name: ${OPERATOR_CHANNEL}
+EOF
+/usr/local/bin/oc-mirror --config /root/image-config-realse-local.yaml file://output-dir
+mv output-dir/mirror_seq1_000000.tar output-dir/redhat-operator-index/v4.9/redhat_operator_index_v4.9_${OPERATOR_NAME}_${OPERATOR_VERSION}.tar 
+BaiduPCS-Go upload output-dir/redhat-operator-index/v4.9/redhat_operator_index_v4.9_${OPERATOR_NAME}_${OPERATOR_VERSION}.tar /ocp4/oc-mirror
+
+
+# 下载社区版 ArgoCD Operator
+OPERATOR_NAME='argocd-operator'
+OPERATOR_VERSION='1.0.1'
+OPERATOR_CHANNEL='stable'
+cat > image-config-realse-local.yaml <<EOF
+apiVersion: mirror.openshift.io/v1alpha1
+kind: ImageSetConfiguration
+mirror:
+  operators:
+    - catalog: registry.redhat.io/redhat/community-operator-index:v4.9
       headsOnly: false
       packages:
         - name: ${OPERATOR_NAME}

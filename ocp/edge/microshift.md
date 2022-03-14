@@ -445,3 +445,47 @@ Alright this worked oc patch -n openshift-marketplace sa redhat-operators -p '{"
 kubectl create namespace argocd
 kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/core-install.yaml
 ```
+
+### 为 mac 防火墙添加规则
+https://blog.neilsabol.site/post/quickly-easily-adding-pf-packet-filter-firewall-rules-macos-osx/<br>
+https://srobb.net/pf.html<br>
+```
+# 在 mac 上运行 microshift 需要调整 mac 的防火墙规则
+sudo cp /etc/pf.conf /etc/pf.conf.bak
+
+
+# 编辑 /etc/pf.conf 文件，在文件末尾添加以下规则
+
+#
+# Your own rules here
+#
+# sudo firewall-cmd --zone=public --add-port=80/tcp --permanent
+# sudo firewall-cmd --zone=public --add-port=443/tcp --permanent
+# sudo firewall-cmd --zone=public --add-port=5353/udp --permanent
+# sudo firewall-cmd --zone=public --permanent --add-port=6443/tcp
+# sudo firewall-cmd --zone=public --permanent --add-port=30000-32767/tcp
+
+# Allow port 80 tcp access
+pass in inet proto tcp from any to any port 80 no state
+
+# Allow port 443 tcp access
+pass in inet proto tcp from any to any port 443 no state
+
+# Allow port 5333 udp access
+pass in inet proto udp from any to any port 5333 no state
+
+# Allow port 6443 tcp access
+pass in inet proto tcp from any to any port 6443 no state
+
+# Allow port 30000-32767 tcp access
+pass in inet proto tcp from any to any port 30000:32767 no state
+
+# Trust subnet 10.42.0.0/16
+pass in inet proto tcp from 10.42.0.0/16 to any port 0:65535 no state
+pass in inet proto udp from 10.42.0.0/16 to any port 0:65535 no state
+pass in inet proto tcp from any to 10.42.0.0/16 port 0:65535 no state
+pass in inet proto udp from any to 10.42.0.0/16 port 0:65535 no state
+
+# 重新加载规则
+sudo pfctl -f /etc/pf.conf
+```

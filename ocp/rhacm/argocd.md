@@ -378,3 +378,33 @@ $ oc config rename-context test/192.168.122.203:6443/system:masters edge-1
 $ argocd cluster add ocp4-1
 $ argocd cluster add edge-1
 ```
+
+### 
+```
+$ argocd cluster get 'edge-1' -o yaml --grpc-web
+config:
+  tlsClientConfig:
+    insecure: true
+connectionState:
+  attemptedAt: "2022-03-15T02:36:29Z"
+  message: Cluster has no application and not being monitored.
+  status: Unknown
+info:
+  applicationsCount: 0
+  cacheInfo: {}
+  connectionState:
+    attemptedAt: "2022-03-15T02:36:29Z"
+    message: Cluster has no application and not being monitored.
+    status: Unknown
+labels:
+  apps.open-cluster-management.io/acm-cluster: "true"
+  apps.open-cluster-management.io/cluster-name: edge-1
+  apps.open-cluster-management.io/cluster-server: ""
+name: edge-1
+server: ""
+
+# 删除 cluster edge-1
+$ argocd cluster rm edge-1 --server "" --grpc-web 
+FATA[0000] rpc error: code = PermissionDenied desc = permission denied 
+
+```

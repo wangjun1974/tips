@@ -4,17 +4,26 @@
 ```
 # 用 grpcurl 检查 index 内容
 mkdir -p redhat-operator-index/v4.9
+podman run -p50051:50051 -it registry.redhat.io/redhat/redhat-operator-index:v4.9
 grpcurl -plaintext localhost:50051 api.Registry/ListPackages > redhat-operator-index/v4.9/packages.out
 cat redhat-operator-index/v4.9/packages.out
 mkdir -p certified-operator-index/v4.9
+podman run -p50051:50051 -it registry.redhat.io/redhat/certified-operator-index:v4.9
 grpcurl -plaintext localhost:50051 api.Registry/ListPackages > certified-operator-index/v4.9/packages.out
 cat certified-operator-index/v4.9/packages.out
 mkdir -p community-operator-index/v4.9
+podman run -p50051:50051 -it registry.redhat.io/redhat/community-operator-index:v4.9
 grpcurl -plaintext localhost:50051 api.Registry/ListPackages > community-operator-index/v4.9/packages.out
 cat community-operator-index/v4.9/packages.out
 mkdir -p upstream-community-operators/latest
+podman run -p50051:50051 -it quay.io/operator-framework/upstream-community-operators:latest
 grpcurl -plaintext localhost:50051 api.Registry/ListPackages > upstream-community-operators/latest/packages.out
 cat upstream-community-operators/latest/packages.out
+mkdir -p gitea-catalog/latest
+podman run -p50051:50051 -it quay.io/gpte-devops-automation/gitea-catalog:latest
+grpcurl -plaintext localhost:50051 api.Registry/ListPackages > gitea-catalog/latest/packages.out
+cat gitea-catalog/latest/packages.out
+
 ```
 
 ### Install oc-mirror on rhel7
@@ -459,5 +468,65 @@ spec:
     source: quay.io/operator-framework
 EOF
 
+
+
+# 下载社区版 ArgoCD Operator
+mkdir -p output-dir/gitea-catalog/latest
+
+OPERATOR_NAME='gitea-operator'
+OPERATOR_VERSION='1.3.0'
+OPERATOR_CHANNEL='stable'
+cat > image-config-realse-local.yaml <<EOF
+apiVersion: mirror.openshift.io/v1alpha1
+kind: ImageSetConfiguration
+mirror:
+  operators:
+    - catalog: quay.io/gpte-devops-automation/gitea-catalog:latest
+      headsOnly: false
+      packages:
+        - name: ${OPERATOR_NAME}
+          startingVersion: ${OPERATOR_VERSION}
+          channels:
+            - name: ${OPERATOR_CHANNEL}
+EOF
+/usr/local/bin/oc-mirror --config /root/image-config-realse-local.yaml file://output-dir
+mv output-dir/mirror_seq1_000000.tar output-dir/gitea-catalog/latest/gitea-catalog_latest_${OPERATOR_NAME}_${OPERATOR_VERSION}.tar 
+BaiduPCS-Go upload output-dir/gitea-catalog/latest/gitea-catalog_latest_${OPERATOR_NAME}_${OPERATOR_VERSION}.tar /ocp4/oc-mirror
+
+# 添加 catalogsources gitea-catalog
+cat << EOF | oc apply -f -
+apiVersion: operators.coreos.com/v1alpha1
+kind: CatalogSource
+metadata:
+  name: gitea-catalog
+  namespace: openshift-marketplace
+spec:
+  image: registry.example.com:5000/gpte-devops-automation/gitea-catalog:latest
+  sourceType: grpc
+EOF
+
+# 手工拷贝非 mirror-by-digest-only 的镜像
+skopeo copy --all --authfile /root/.docker/config.json docker://registry.redhat.io/openshift4/ose-kube-rbac-proxy:v4.7.0 docker://registry.example.com:5000/openshift4/ose-kube-rbac-proxy:v4.7.0
+
+skopeo copy --all --authfile /root/.docker/config.json docker://quay.io/gpte-devops-automation/gitea-operator:v1.3.0 docker://registry.example.com:5000/gpte-devops-automation/gitea-operator:v1.3.0
+
+# 更新 mcp，让 /etc/container/registries.conf 文件包含以下内容
+---
+[[registry]]
+  prefix = ""
+  location = "registry.redhat.io/openshift4"
+  mirror-by-digest-only = false
+ 
+  [[registry.mirror]]
+    location = "registry.example.com:5000/openshift4"
+---
+[[registry]]
+  prefix = ""
+  location = "quay.io/gpte-devops-automation"
+  mirror-by-digest-only = false
+
+  [[registry.mirror]]
+    location = "registry.example.com:5000/gpte-devops-automation"
+---    
 
 ```

@@ -505,10 +505,14 @@ spec:
   sourceType: grpc
 EOF
 
-# 手工拷贝非 mirror-by-digest-only 的镜像
+# 手工拷贝以下非 mirror-by-digest-only 的镜像
 skopeo copy --all --authfile /root/.docker/config.json docker://registry.redhat.io/openshift4/ose-kube-rbac-proxy:v4.7.0 docker://registry.example.com:5000/openshift4/ose-kube-rbac-proxy:v4.7.0
 
 skopeo copy --all --authfile /root/.docker/config.json docker://quay.io/gpte-devops-automation/gitea-operator:v1.3.0 docker://registry.example.com:5000/gpte-devops-automation/gitea-operator:v1.3.0
+
+skopeo copy --all --authfile /root/.docker/config.json docker://quay.io/gpte-devops-automation/gitea:latest docker://registry.example.com:5000/gpte-devops-automation/gitea:latest
+
+skopeo copy --all --authfile /root/.docker/config.json docker://registry.redhat.io/rhel8/postgresql-12:latest docker://registry.example.com:5000/rhel8/postgresql-12:latest
 
 # 更新 mcp，让 /etc/container/registries.conf 文件包含以下内容
 ---
@@ -527,6 +531,16 @@ skopeo copy --all --authfile /root/.docker/config.json docker://quay.io/gpte-dev
 
   [[registry.mirror]]
     location = "registry.example.com:5000/gpte-devops-automation"
----    
+---
+[[registry]]
+  prefix = ""
+  location = "registry.redhat.io/rhel8"
+  mirror-by-digest-only = false
+
+  [[registry.mirror]]
+    location = "registry.example.com:5000/rhel8"
+---
+
+
 
 ```

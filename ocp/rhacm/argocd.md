@@ -377,6 +377,24 @@ $ oc config rename-context test/192.168.122.203:6443/system:masters edge-1
 # 添加 argocd cluster
 $ argocd cluster add ocp4-1
 $ argocd cluster add edge-1
+
+# 创建应用 
+$ oc --context ocp4-1 new-project book-import 
+$ argocd app create --project default --name book-import-ocp4-1 \
+  --repo http://gitea-without-admin-gitea.apps.ocp4-1.example.com/test1/book-import.git \
+  --path book-import/ \
+  --dest-server $(argocd cluster list | grep ocp4-1 | awk '{print $1}') \
+  --dest-namespace book-import \
+  --revision master-no-pre-post --sync-policy automated
+
+$ oc --context edge-1 new-project book-import 
+$ argocd app create --project default --name book-import-edge-1 \
+  --repo http://gitea-without-admin-gitea.apps.ocp4-1.example.com/test1/book-import.git \
+  --path book-import/ \
+  --dest-server $(argocd cluster list | grep edge-1 | awk '{print $1}') \
+  --dest-namespace book-import \
+  --revision master-no-pre-post --sync-policy automated
+
 ```
 
 ### 
@@ -406,5 +424,4 @@ server: ""
 # 删除 cluster edge-1
 $ argocd cluster rm edge-1 --server "" --grpc-web 
 FATA[0000] rpc error: code = PermissionDenied desc = permission denied 
-
 ```

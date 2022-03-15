@@ -347,28 +347,34 @@ $ ARGOCD_URL=$(oc get route openshift-gitops-server -n openshift-gitops -o jsonp
 $ argocd login --username admin --password ${PASSWD} --insecure ${ARGOCD_URL}
 
 # 登录 argocd 的 argocd
-$ PASSWD=$(oc get secret argocd-secret -n argocd -ojsonpath='{.data.admin\.password}' | base64 -d)
+$ PASSWD=$(oc get secret argocd-sample-cluster -n argocd -ojsonpath='{.data.admin\.password}' | base64 -d)
 $ ARGOCD_URL=$(oc get route argocd-sample-server -n argocd -o jsonpath='{.spec.host}')
 $ argocd login --username admin --password ${PASSWD} --insecure ${ARGOCD_URL}
 
-# 重置 argocd admin password
-# https://stackoverflow.com/questions/68297354/what-is-the-default-password-of-argocd
-$ kubectl -n argocd patch secret argocd-secret  -p '{"data": {"admin.password": null, "admin.passwordMtime": null}}'
-$ kubectl -n argocd scale deployment argocd-sample-server --replicas=0
-# 过一段时间 operator 会恢复 argocd-sample-server 
-# 经测试这个方法不行
+# 设置 KUBECONFIG 指向 edge-1 的 kubeconfig
+# export KUBECONFIG=/root/kubeconfig/edge-1/kubeconfig 
+[root@ocpai1 edge-1]# oc config get-contexts
+CURRENT   NAME                                                                      CLUSTER                AUTHINFO                              NAMESPACE
+          microshift                                                                microshift             user                                  default
+          open-cluster-management-agent-addon/192-168-122-203:6443/system:masters   192-168-122-203:6443   system:masters/192-168-122-203:6443   open-cluster-management-agent-addon
+*         open-cluster-management-agent/192-168-122-203:6443/system:masters         192-168-122-203:6443   system:masters/192-168-122-203:6443   open-cluster-management-agent
+          test/192.168.122.203:6443/system:masters                                  192.168.122.203:6443   system:masters/192.168.122.203:6443   test
 
-# 重置 argocd admin password
-# https://github.com/argoproj/argo-cd/blob/master/docs/faq.md
-# $2a$10$LXic7E3hgPbXDzExqUpz3OldP..e0yMGnYA53.x3FuRkqb7.fM4uO
-# bcrypt(password)=$2a$10$LXic7E3hgPbXDzExqUpz3OldP..e0yMGnYA53.x3FuRkqb7.fM4uO
-kubectl -n argocd patch secret argocd-secret \
-  -p '{"stringData": {
-    "admin.password": "JDJhJDEwJExYaWM3RTNoZ1BiWER6RXhxVXB6M09sZFAuLmUweU1HbllBNTMueDNGdVJrcWI3LmZNNHVPCg==",
-    "admin.passwordMtime": "'$(date +%FT%T%Z)'"
-  }}'
-# 经测试这个方法不行
+# 在此基础上登录 ocp4-1 cluster
+[root@ocpai1 edge-1]# oc login https://api.ocp4-1.example.com:6443 -u admin 
 
+# 获取 context
+[root@ocpai1 edge-1]# oc config get-contexts
+CURRENT   NAME                                                                      CLUSTER                       AUTHINFO                              NAMESPACE
+*         default/api-ocp4-1-example-com:6443/admin                                 api-ocp4-1-example-com:6443   admin/api-ocp4-1-example-com:6443     default
+...
+          test/192.168.122.203:6443/system:masters                                  192.168.122.203:6443          system:masters/192.168.122.203:6443   test
 
+# 将 context 重命名
+$ oc config rename-context default/api-ocp4-1-example-com:6443/admin ocp4-1
+$ oc config rename-context test/192.168.122.203:6443/system:masters edge-1
 
+# 添加 argocd cluster
+$ argocd cluster add ocp4-1
+$ argocd cluster add edge-1
 ```

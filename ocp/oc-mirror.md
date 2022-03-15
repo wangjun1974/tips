@@ -542,5 +542,9 @@ skopeo copy --all --authfile /root/.docker/config.json docker://registry.redhat.
 ---
 
 
+# book-import 
+# 手工拷贝以下非 mirror-by-digest-only 的镜像
+skopeo copy --all --authfile /root/.docker/config.json docker://quay.io/jpacker/hugo-nginx:latest docker://registry.example.com:5000/jpacker/hugo-nginx:latest
+
 
 ```

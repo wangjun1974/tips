@@ -495,6 +495,21 @@ sudo pfctl -f /etc/pf.conf
 docker run -d --rm --name microshift --privileged -v microshift-data:/var/lib -p 6443:6443 quay.io/microshift/microshift-aio:latest
 ```
 
+### 替换默认通配域名
+https://github.com/redhat-et/microshift/issues/614#issuecomment-1059821598
+```
+oc project openshift-ingress
+oc edit deployment router-default
+...
+        - name: ROUTER_SUBDOMAIN
+          value: ${name}-${namespace}.apps.edge-1.example.com
+        - name: ROUTER_ALLOW_WILDCARD_ROUTES
+          value: "true"
+        - name: ROUTER_OVERRIDE_HOSTNAME
+          value: "true"
+...
+```
+
 ### 参考链接
 [WIP] Add OAuth API server to Microshift #244<br>
 https://github.com/redhat-et/microshift/pull/244

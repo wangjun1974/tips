@@ -403,7 +403,7 @@ echo $IMPORT | base64 -d | oc apply -f -
 ### 在 edge-1 切换到 open-cluster-management-agent-addon namespace
 oc project open-cluster-management-agent-addon
 for sa in klusterlet-addon-appmgr klusterlet-addon-certpolicyctrl klusterlet-addon-iampolicyctrl-sa klusterlet-addon-policyctrl klusterlet-addon-search klusterlet-addon-workmgr ; do
-  oc patch sa $sa -p '{"imagePullSecrets": [{"name": "rhacm"}]}'
+  oc -n open-cluster-management-agent-addon patch sa $sa -p '{"imagePullSecrets": [{"name": "rhacm"}]}'
 done
 oc delete pod --all -n open-cluster-management-agent-addon
 ```
@@ -445,6 +445,14 @@ Alright this worked oc patch -n openshift-marketplace sa redhat-operators -p '{"
 kubectl create namespace argocd
 kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/core-install.yaml
 ```
+
+### 在 Linux 上安装 Microshift AIO
+```
+command -v setsebool >/dev/null 2>&1 || sudo setsebool -P container_manage_cgroup true
+sudo podman run -d --rm --name microshift --privileged -v microshift-data:/var/lib -p 6443:6443 quay.io/microshift/microshift-aio:latest
+
+```
+
 
 ### 为 Mac OSX 防火墙添加规则
 https://blog.neilsabol.site/post/quickly-easily-adding-pf-packet-filter-firewall-rules-macos-osx/<br>
@@ -494,6 +502,11 @@ sudo pfctl -f /etc/pf.conf
 ```
 # 启动 microshift 
 docker run -d --rm --name microshift --privileged -v microshift-data:/var/lib -p 6443:6443 quay.io/microshift/microshift-aio:latest
+
+# 待探索
+# https://golangexample.com/connect-directly-to-docker-for-mac-containers-via-ip-address/
+# 启动 microshift - Mac Docker Desktop 下容器连接的是虚拟机里的网络
+docker run -d --rm --name microshift --net=host --privileged -v microshift-data:/var/lib -p 6443:6443 quay.io/microshift/microshift-aio:latest
 
 # 拷贝 kubeconfig
 docker cp microshift:/var/lib/microshift/resources/kubeadmin/kubeconfig ./kubeconfig

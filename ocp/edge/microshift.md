@@ -450,7 +450,8 @@ kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/st
 https://blog.neilsabol.site/post/quickly-easily-adding-pf-packet-filter-firewall-rules-macos-osx/<br>
 https://srobb.net/pf.html<br>
 ```
-# 在 mac 上运行 microshift 需要调整 mac 的防火墙规则
+# 如果使用 Docker Desktop 在 mac 上运行 microshift 不需要调整 mac 的防火墙规则
+# 但是保留用于说明如何通过命令行调整 Mac 的防火墙规则
 sudo cp /etc/pf.conf /etc/pf.conf.bak
 
 # 编辑 /etc/pf.conf 文件，在文件末尾添加以下规则

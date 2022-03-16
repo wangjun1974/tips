@@ -494,6 +494,10 @@ sudo pfctl -f /etc/pf.conf
 ```
 # 启动 microshift 
 docker run -d --rm --name microshift --privileged -v microshift-data:/var/lib -p 6443:6443 quay.io/microshift/microshift-aio:latest
+
+# 拷贝 kubeconfig
+docker cp microshift:/var/lib/microshift/resources/kubeadmin/kubeconfig ./kubeconfig
+oc get all -A --kubeconfig ./kubeconfig
 ```
 
 ### 替换默认通配域名

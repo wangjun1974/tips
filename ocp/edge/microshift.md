@@ -446,14 +446,6 @@ kubectl create namespace argocd
 kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/core-install.yaml
 ```
 
-### 在 Linux 上安装 Microshift AIO
-```
-command -v setsebool >/dev/null 2>&1 || sudo setsebool -P container_manage_cgroup true
-sudo podman run -d --rm --name microshift --privileged -v microshift-data:/var/lib -p 6443:6443 quay.io/microshift/microshift-aio:latest
-
-```
-
-
 ### 为 Mac OSX 防火墙添加规则
 https://blog.neilsabol.site/post/quickly-easily-adding-pf-packet-filter-firewall-rules-macos-osx/<br>
 https://srobb.net/pf.html<br>

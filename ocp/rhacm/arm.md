@@ -75,4 +75,18 @@ for sa in klusterlet-addon-appmgr klusterlet-addon-certpolicyctrl klusterlet-add
   oc -n open-cluster-management-agent-addon patch sa $sa -p '{"imagePullSecrets": [{"name": "rhacm"}]}'
 done
 oc delete pod --all -n open-cluster-management-agent-addon
+
+# 拷贝镜像
+# brew.registry.redhat.io/rh-osbs/rhacm2-registration-rhel8-operator:v2.5.0-2
+skopeo copy --format v2s2 --authfile ${LOCAL_SECRET_JSON} --all docker://brew.registry.redhat.io/rh-osbs/rhacm2-registration-rhel8-operator:v2.5.0-2 docker://quay.ocp4.rhcnsa.com/rh-osbs/rhacm2-registration-rhel8-operator:v2.5.0-2
+
+skopeo inspect --authfile ./pull-secret-full.json docker://brew.registry.redhat.io/rh-osbs/rhacm2-registration-rhel8-operator:v2.5.0-2
+skopeo inspect --authfile ./pull-secret-full.json docker://brew.registry.redhat.io/rh-osbs/rhacm2-registration-rhel8-operator:v2.5.0-2 | grep aarch64
+...
+        "rhacm-2.5-rhel-8-containers-candidate-76196-20220214035701-aarch64",
+
+skopeo inspect --authfile ./pull-secret-full.json docker://brew.registry.redhat.io/rh-osbs/rhacm2-registration-rhel8-operator:rhacm-2.5-rhel-8-containers-candidate-76196-20220214035701-aarch64
+
+
+skopeo inspect --authfile ./pull-secret-full.json docker://brew.registry.redhat.io/multicluster-engine/registration-operator-rhel8/images/v2.0.0-13
 ```

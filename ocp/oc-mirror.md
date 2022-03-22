@@ -24,6 +24,19 @@ podman run -p50051:50051 -it quay.io/gpte-devops-automation/gitea-catalog:latest
 grpcurl -plaintext localhost:50051 api.Registry/ListPackages > gitea-catalog/latest/packages.out
 cat gitea-catalog/latest/packages.out
 
+# 检查 index image from brew
+mkdir -p multicluster-engine-klusterlet-operator-bundle/v2.0.0-23
+podman run --authfile /root/pull-secret-full.json -p50051:50051 -it brew.registry.redhat.io/rh-osbs/iib:198969
+grpcurl -plaintext localhost:50051 api.Registry/ListPackages > multicluster-engine-klusterlet-operator-bundle/v2.0.0-23/packages.out
+cat multicluster-engine-klusterlet-operator-bundle/v2.0.0-23/packages.out
+
+# 从容器内拷贝 /database/index.db 到本地
+# 参考 jq 的使用：https://shapeshed.com/jq-json/
+podman cp 11fd2d1e933f://database/index.db multicluster-engine-klusterlet-operator-bundle/v2.0.0-23/
+# 查询 index.db 内容
+echo "select * from related_image \
+    where operatorbundle_name like 'klusterlet%';" \
+    | sqlite3 -line ./multicluster-engine-klusterlet-operator-bundle/v2.0.0-23/index.db 
 ```
 
 ### Install oc-mirror on rhel7

@@ -25,55 +25,25 @@ enabled=1
 gpgcheck=0
 EOF
 
-# 安装 tar 
-yum install tar gzip conntrack-tools
+# 安装基本工具
+yum install tar gzip conntrack-tools socat
 
-# 解压缩
-cd /data/OCP-4.9.9/yum
-tar zxf rhocp-4.9-for-rhel-8-x86_64-rpms.tar.gz
-
-# 更新软件仓库内容
-cat > /etc/yum.repos.d/local.repo <<EOF
-[baseos]
-name=baseos
-baseurl=file:///mnt/BaseOS
-enabled=1
-gpgcheck=0
-
-[appstream]
-name=appstream
-baseurl=file:///mnt/AppStream
-enabled=1
-gpgcheck=0
-
-[rhocp-4.9-for-rhel-8-x86_64-rpms] 
-name=rhocp-4.9-for-rhel-8-x86_64-rpms
-baseurl=file:///data/OCP-4.9.9/yum/rhocp-4.9-for-rhel-8-x86_64-rpms/
-enabled=1
-gpgcheck=0 
-EOF
+# 下载 cri-o 和 cri-tools
+# 链接: https://pan.baidu.com/s/1MmoDE-AHImulV9Zvs9fzSg?pwd=3rd6 提取码: 3rd6
 
 # 安装 cri-o cri-tools
-dnf module disable container-tools:rhel8
-dnf module enable container-tools:3.0
-dnf install -y cri-o cri-tools
+yum localinstall -y cri-o-1.21.6-3.1.el8.x86_64.rpm cri-tools-1.23.0-.el8.1.3.x86_64.rpm
 systemctl enable crio --now
 
 # 安装 podman
 sudo dnf install -y podman
 
-# 执行初始化脚本
-# curl -sfL https://raw.githubusercontent.com/redhat-et/microshift/main/install.sh | bash
-# curl -o https://raw.githubusercontent.com/redhat-et/microshift/main/install.sh
 
-# 将镜像同步到本地
+# 将镜像同步到本地，离线环境需同步镜像到本地，在线环境无需执行
 LOCAL_SECRET_JSON=/data/OCP-4.9.9/ocp/secret/redhat-pull-secret.json
 
 # quay.io/microshift/microshift:4.8.0-0.microshift-2022-02-04-005920
 skopeo copy --format v2s2 --authfile ${LOCAL_SECRET_JSON} --all docker://quay.io/microshift/microshift:4.8.0-0.microshift-2022-02-04-005920 docker://registry.example.com:5000/microshift/microshift:4.8.0-0.microshift-2022-02-04-005920
-
-# quay.io/microshift/microshift:4.8.0-0.microshift-2022-01-06-210147
-skopeo copy --format v2s2 --authfile ${LOCAL_SECRET_JSON} --all docker://quay.io/microshift/microshift:4.8.0-0.microshift-2022-01-06-210147 docker://registry.example.com:5000/microshift/microshift:4.8.0-0.microshift-2022-01-06-210147
 
 # quay.io/microshift/flannel-cni:4.8.0-0.okd-2021-10-10-030117
 skopeo copy --format v2s2 --authfile ${LOCAL_SECRET_JSON} --all docker://quay.io/microshift/flannel-cni:4.8.0-0.okd-2021-10-10-030117 docker://registry.example.com:5000/microshift/flannel-cni:4.8.0-0.okd-2021-10-10-030117
@@ -99,7 +69,7 @@ skopeo copy --format v2s2 --authfile ${LOCAL_SECRET_JSON} --all docker://quay.io
 # quay.io/openshift/okd-content@sha256:dd1cd4d7b1f2d097eaa965bc5e2fe7ebfe333d6cbaeabc7879283af1a88dbf4e
 skopeo copy --format v2s2 --authfile ${LOCAL_SECRET_JSON} --all docker://quay.io/openshift/okd-content@sha256:dd1cd4d7b1f2d097eaa965bc5e2fe7ebfe333d6cbaeabc7879283af1a88dbf4e docker://registry.example.com:5000/openshift/okd-content@sha256:dd1cd4d7b1f2d097eaa965bc5e2fe7ebfe333d6cbaeabc7879283af1a88dbf4e
 
-# 
+# k8s.gcr.io/pause:3.5
 skopeo copy --format v2s2 --authfile ${LOCAL_SECRET_JSON} --all docker://k8s.gcr.io/pause:3.5 docker://registry.example.com:5000/pause/pause:3.5
 
 

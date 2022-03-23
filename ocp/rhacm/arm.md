@@ -77,6 +77,7 @@ done
 oc delete pod --all -n open-cluster-management-agent-addon
 
 # 拷贝镜像
+# https://brewweb.engineering.redhat.com/brew/packageinfo?packageID=80906
 # brew.registry.redhat.io/rh-osbs/rhacm2-registration-rhel8-operator:v2.5.0-2
 skopeo copy --format v2s2 --authfile ${LOCAL_SECRET_JSON} --all docker://brew.registry.redhat.io/rh-osbs/rhacm2-registration-rhel8-operator:v2.5.0-2 docker://quay.ocp4.rhcnsa.com/rh-osbs/rhacm2-registration-rhel8-operator:v2.5.0-2
 
@@ -88,5 +89,33 @@ skopeo inspect --authfile ./pull-secret-full.json docker://brew.registry.redhat.
 skopeo inspect --authfile ./pull-secret-full.json docker://brew.registry.redhat.io/rh-osbs/rhacm2-registration-rhel8-operator:rhacm-2.5-rhel-8-containers-candidate-76196-20220214035701-aarch64
 
 
-skopeo inspect --authfile ./pull-secret-full.json docker://brew.registry.redhat.io/multicluster-engine/registration-operator-rhel8/images/v2.0.0-13
+skopeo inspect --authfile ./pull-secret-full.json docker://brew.registry.redhat.io/rh-osbs/multicluster-engine-registration-operator-rhel8:v2.0.0-13
+
+skopeo copy --format v2s2 --authfile ${LOCAL_SECRET_JSON} --all docker://brew.registry.redhat.io/rh-osbs/multicluster-engine-registration-operator-rhel8@sha256:ade2f1ba7379d591ba76788888721bb8e65d2c573b08ae78f38d984768725fdd docker://quay.ocp4.rhcnsa.com/rh-osbs/multicluster-engine-registration-operator-rhel8@sha256:ade2f1ba7379d591ba76788888721bb8e65d2c573b08ae78f38d984768725fdd
+
+# 保存证书，把证书里的 -----BEGIN CERTIFICATE----- 到 -----END CERTIFICATE----- 之间的内容拷贝到
+# /etc/pki/ca-trust/source/anchors/example-registry-quay-ocp4.crt 
+openssl s_client -host example-registry-quay-openshift-operators.router-default.apps.ocp4.rhcnsa.com -port 443 -showcerts > trace < /dev/null
+
+# 拷贝 3 个镜像
+# https://brewweb.engineering.redhat.com/brew/buildinfo?buildID=1937154
+# multicluster-engine/registration-operator-rhel8
+skopeo copy --format v2s2 --authfile ${LOCAL_SECRET_JSON} --all docker://brew.registry.redhat.io/rh-osbs/multicluster-engine/registration-operator-rhel8@sha256:ade2f1ba7379d591ba76788888721bb8e65d2c573b08ae78f38d984768725fdd docker://example-registry-quay-openshift-operators.router-default.apps.ocp4.rhcnsa.com/multicluster-engine/registration-operator-rhel8@sha256:ade2f1ba7379d591ba76788888721bb8e65d2c573b08ae78f38d984768725fdd
+
+skopeo copy --format v2s2 --authfile ${LOCAL_SECRET_JSON} --all docker://brew.registry.redhat.io/rh-osbs/multicluster-engine/registration-operator-rhel8@sha256:ade2f1ba7379d591ba76788888721bb8e65d2c573b08ae78f38d984768725fdd docker://example-registry-quay-openshift-operators.router-default.apps.ocp4.rhcnsa.com/multicluster-engine/registration-operator-rhel8:2.0.0-61
+
+skopeo copy --authfile ${LOCAL_SECRET_JSON} --all docker://brew.registry.redhat.io/rh-osbs/multicluster-engine/registration-operator-rhel8@sha256:ade2f1ba7379d591ba76788888721bb8e65d2c573b08ae78f38d984768725fdd docker://example-registry-quay-openshift-operators.router-default.apps.ocp4.rhcnsa.com/multicluster-engine/registration-operator-rhel8:2.0.0-61
+
+podman pull example-registry-quay-openshift-operators.router-default.apps.ocp4.rhcnsa.com/multicluster-engine/registration-operator-rhel8:2.0.0-61
+
+skopeo copy --format v2s2 --authfile ${LOCAL_SECRET_JSON} --all docker://brew.registry.redhat.io/rh-osbs/multicluster-engine/registration-operator-rhel8:2.0.0-61 docker://example-registry-quay-openshift-operators.router-default.apps.ocp4.rhcnsa.com/multicluster-engine/registration-operator-rhel8:2.0.0-61
+
+
+skopeo copy --format v2s2 --authfile ${LOCAL_SECRET_JSON} --all docker://brew.registry.redhat.io/rh-osbs/multicluster-engine/registration-operator-rhel8@sha256:ade2f1ba7379d591ba76788888721bb8e65d2c573b08ae78f38d984768725fdd
+
+skopeo inspect --authfile ${LOCAL_SECRET_JSON} docker://example-registry-quay-openshift-operators.router-default.apps.ocp4.rhcnsa.com/multicluster-engine/registration-operator-rhel8@sha256:ade2f1ba7379d591ba76788888721bb8e65d2c573b08ae78f38d984768725fdd
+
+# 
+skopeo copy --format v2s2 --authfile ${LOCAL_SECRET_JSON} --all docker://brew.registry.redhat.io/rh-osbs/multicluster-engine/registration-rhel8@sha256:1d5d6418ccd87be4122cf74de81071b84ccbd4bb99124cce1db957518bbce65d docker://quay.ocp4.rhcnsa.com/rh-osbs/multicluster-engine-registration-operator-rhel8@sha256:ade2f1ba7379d591ba76788888721bb8e65d2c573b08ae78f38d984768725fdd
+multicluster-engine/registration-operator-rhel8@sha256:ade2f1ba7379d591ba76788888721bb8e65d2c573b08ae78f38d984768725fdd
 ```

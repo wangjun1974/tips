@@ -3,7 +3,7 @@
 ### Hub
 
 # 创建 arm-1 cluster
-export CLUSTER_NAME=arm-1
+ 
 oc --kubeconfig=<hub-kubeconfig> new-project ${CLUSTER_NAME}
 oc --kubeconfig=<hub-kubeconfig> label namespace ${CLUSTER_NAME} cluster.open-cluster-management.io/managedCluster=${CLUSTER_NAME}
 
@@ -78,7 +78,6 @@ oc delete pod --all -n open-cluster-management-agent-addon
 
 # 拷贝镜像
 # https://brewweb.engineering.redhat.com/brew/packageinfo?packageID=80906
-# brew.registry.redhat.io/rh-osbs/rhacm2-registration-rhel8-operator:v2.5.0-2
 skopeo copy --format v2s2 --authfile ${LOCAL_SECRET_JSON} --all docker://brew.registry.redhat.io/rh-osbs/rhacm2-registration-rhel8-operator:v2.5.0-2 docker://quay.ocp4.rhcnsa.com/rh-osbs/rhacm2-registration-rhel8-operator:v2.5.0-2
 
 skopeo inspect --authfile ./pull-secret-full.json docker://brew.registry.redhat.io/rh-osbs/rhacm2-registration-rhel8-operator:v2.5.0-2
@@ -99,8 +98,55 @@ openssl s_client -host example-registry-quay-openshift-operators.router-default.
 
 # 拷贝 3 个镜像
 # https://brewweb.engineering.redhat.com/brew/buildinfo?buildID=1937154
-# multicluster-engine/registration-operator-rhel8
-skopeo copy --format v2s2 --authfile ${LOCAL_SECRET_JSON} --all docker://brew.registry.redhat.io/rh-osbs/multicluster-engine/registration-operator-rhel8@sha256:ade2f1ba7379d591ba76788888721bb8e65d2c573b08ae78f38d984768725fdd docker://example-registry-quay-openshift-operators.router-default.apps.ocp4.rhcnsa.com/multicluster-engine/registration-operator-rhel8@sha256:ade2f1ba7379d591ba76788888721bb8e65d2c573b08ae78f38d984768725fdd
+# 第一个镜像 
+# deployment: klusterlet
+# Package: registration-operator-container
+# Build: registration-operator-container-v2.5.0-2
+# archive: docker-image-sha256:a804faa6db171d94524f0a4afe5c2f13142e82b25b495bce4c8f27e544ffca94.aarch64.tar.gz
+
+# podman pull brew.registry.redhat.io/rh-osbs/rhacm2-registration-rhel8-operator@sha256:6c39c3b874789bfd3f3e8e984d0523e1f0ad3cbcb75da62c70de7cc2d5859640 --authfile=./pull-secret-full.json 
+Trying to pull brew.registry.redhat.io/rh-osbs/rhacm2-registration-rhel8-operator@sha256:6c39c3b874789bfd3f3e8e984d0523e1f0ad3cbcb75da62c70de7cc2d5859640...
+Getting image source signatures
+Copying blob 9640b2616835 skipped: already exists  
+Copying blob c12760e6753c skipped: already exists  
+Copying blob 464e272c479a done  
+Copying config 6a2ed563e0 done  
+Writing manifest to image destination
+Storing signatures
+6a2ed563e07e5a5fa69175d114a21f5f623ce836a282c58c8c2cb166331655bb
+
+# podman tag 6a2ed563e07e5a5fa69175d114a21f5f623ce836a282c58c8c2cb166331655bb example-registry-quay-openshift-operators.apps.cluster-k9sh6.k9sh6.sandbox779.opentlc.com/multicluster-engine/rhacm2-registration-rhel8-operator:latest
+
+# podman push example-registry-quay-openshift-operators.apps.cluster-k9sh6.k9sh6.sandbox779.opentlc.com/multicluster-engine/rhacm2-registration-rhel8-operator:latest --authfile=./pull-secret-full.json 
+Getting image source signatures
+Copying blob e52e11b64771 done  
+Copying blob d3eb93f5b44d done  
+Copying blob 2b88c5990358 done  
+Copying config a804faa6db [--------------------------------------] 0.0b / 3.7KiB
+Writing manifest to image destination
+Storing signatures
+
+ocp4.10 patch deployment klusterlet -n open-cluster-management-agent --patch='{"spec":{"template":{"spec":{"containers":[{"name": "klusterlet", "image":"example-registry-quay-openshift-operators.apps.cluster-k9sh6.k9sh6.sandbox779.opentlc.com/multicluster-engine/rhacm2-registration-rhel8-operator:latest"}]}}}}'
+ocp4.10 patch deployment klusterlet -n open-cluster-management-agent  --patch "{\"spec\":{\"template\":{\"metadata\":{\"annotations\":{\"last-restart\":\"`date +'%s'`\"}}}}}"
+
+# 第二个镜像
+# deployment klusterlet-registration-agent
+# Package: registration-container
+# Build: registration-container-v2.5.0-2
+# archive: docker-image-sha256:a804faa6db171d94524f0a4afe5c2f13142e82b25b495bce4c8f27e544ffca94.aarch64.tar.gz
+
+# podman pull brew.registry.redhat.io/rh-osbs/rhacm2-registration-rhel8@sha256:31be20d77322ac1fc2c287f894af7b929a9ec4907dbb81dd6080233b7bdab74c --authfile=./pull-secret-full.json
+# podman tag a804faa6db17 example-registry-quay-openshift-operators.apps.cluster-k9sh6.k9sh6.sandbox779.opentlc.com/multicluster-engine/rhacm2-registration-rhel8:latest
+# podman push example-registry-quay-openshift-operators.apps.cluster-k9sh6.k9sh6.sandbox779.opentlc.com/multicluster-engine/rhacm2-registration-rhel8:latest --authfile=./pull-secret-full.json
+
+ocp4.10 -n open-cluster-management-agent patch deployment klusterlet-registration-agent --type json -p '[{"op": "replace", "path": "/spec/template/spec/containers/0/image", "value": "example-registry-quay-openshift-operators.apps.cluster-k9sh6.k9sh6.sandbox779.opentlc.com/multicluster-engine/rhacm2-registration-rhel8:latest"}]'
+
+ocp4.10 patch deployment klusterlet-registration-agent -n open-cluster-management-agent  --patch "{\"spec\":{\"template\":{\"metadata\":{\"annotations\":{\"last-restart\":\"`date +'%s'`\"}}}}}"
+
+
+# podman tag a804faa6db17 example-registry-quay-openshift-operators.apps.cluster-k9sh6.k9sh6.sandbox779.opentlc.com/multicluster-engine/rhacm2-registration-rhel8:latest
+
+skopeo copy --format v2s2 --authfile ${LOCAL_SECRET_JSON} --all docker://brew.registry.redhat.io/rh-osbs/rhacm2-registration-rhel8@sha256:31be20d77322ac1fc2c287f894af7b929a9ec4907dbb81dd6080233b7bdab74c docker://example-registry-quay-openshift-operators.apps.cluster-k9sh6.k9sh6.sandbox779.opentlc.com/multicluster-engine/rhacm2-registration-rhel8@sha256:31be20d77322ac1fc2c287f894af7b929a9ec4907dbb81dd6080233b7bdab74c
 
 skopeo copy --format v2s2 --authfile ${LOCAL_SECRET_JSON} --all docker://brew.registry.redhat.io/rh-osbs/multicluster-engine/registration-operator-rhel8@sha256:ade2f1ba7379d591ba76788888721bb8e65d2c573b08ae78f38d984768725fdd docker://example-registry-quay-openshift-operators.router-default.apps.ocp4.rhcnsa.com/multicluster-engine/registration-operator-rhel8:2.0.0-61
 

@@ -10,10 +10,10 @@ usage() {
 
 install_minio() {
   cd ${TEMPDIR}
-  git clone https://github.com/vmware-tanzu/velero.git
+  git clone https://github.com/wangjun1974/velero-minio
 
   # deploy minio
-  ${OC_CMD} -n velero apply -f velero/examples/minio/00-minio-deployment.yaml
+  ${OC_CMD} -n velero apply -f velero-minio/examples/minio/00-minio-deployment.yaml
   ${OC_CMD} -n velero expose svc minio
 }
 
@@ -42,7 +42,7 @@ EOF
     sleep 5s
   done
 
-  ( ${OC_CMD} get projects | grep -q "example-registry" ) || {${OC_CMD} new-project example-registry
+  ( ${OC_CMD} get projects | grep -q "example-registry" ) || ${OC_CMD} new-project example-registry
 
   cd ${TEMPDIR}
   ${OC_CMD} -n velero get route minio -o jsonpath='{.spec.host}' | tee quay_hostname
@@ -99,9 +99,9 @@ spec:
   configBundleSecret: config-bundle-secret
 EOF
 
-}
+  ( ${OC_CMD} -n example-registry get limitrange | grep -q "example-registry-core-resource-limits" ) && ${OC_CMD} -n example-registry delete limitrang example-registry-core-resource-limits 
 
-mkdir -p ${TEMPDIR}
+}
 
 if [ x$1 == 'x' ]; then
   OC_CMD='oc '
@@ -111,3 +111,6 @@ fi
 
 install_minio
 install_quay
+
+rm -rf ${TEMPDIR}
+

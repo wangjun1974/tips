@@ -11,12 +11,13 @@
 └── secret
     └── auth.json
 
-# /opt/acm/bin/cluster_operator.sh 是控制器，它会扫描目录 /opt/acm/clusters/add 和 /opt/acm/clusters/remove 向 acm 自动添加和删除集群
+# /opt/acm/bin/cluster_operator.sh
+# 控制器，它会扫描目录 /opt/acm/clusters/add 和 /opt/acm/clusters/remove 下的配置文件，自动添加和删除集群
 # 参见：https://github.com/wangjun1974/tips/blob/master/ocp/edge/cluster_operator.sh
 
 # /opt/acm/hub/lb-ext.kubeconfig 是 hub 的 kubeconfig
 
-# /opt/acm/auth/auth.json 是访问 registry 的 pull secret，自动添加 cluster 时在 spoke cluster 里根据它生成供 sa 适用的 secret
+# /opt/acm/auth/auth.json 是访问 registry 的 pull secret，添加 cluster 时在 spoke cluster 里生成供 sa 使用的 pull secret
 
 # /opt/acm/clusters/add 目录下存放要添加集群的配置文件
 
@@ -29,6 +30,10 @@ CLUSTER_NAME="edge-1"
 CLUSTER_KUBECONFIG="/opt/acm/clusters/${CLUSTER_NAME}/kubeconfig"
 CLUSTER_API="8.130.18.107"
 EOF
+
+# 在控制器节点上通过定时任务执行 cluster_operator.sh
+$ crontab -l 
+*/5 * * * * /bin/bash /opt/acm/bin/cluster_operator.sh
 ```
 
 ### 添加集群时在 spoke cluster 执行
@@ -62,6 +67,7 @@ ssh -i ${SSH_KEY} -p ${REMOTE_PORT} ${REMOTE_HOST} mkdir -p /opt/acm/clusters/${
 scp -i ${SSH_KEY} -P ${REMOTE_PORT} ${CLUSTER_NAME} ${REMOTE_HOST}:/opt/acm/clusters/add
 scp -i ${SSH_KEY} -P ${REMOTE_PORT} ~/.kube/config ${REMOTE_HOST}:/opt/acm/clusters/${CLUSTER_NAME}/kubeconfig
 ```
+
 ### 删除集群时在 spoke cluster 执行
 ```
 # 上传 edge-1 文件到远程主机的目录 /opt/acm/clusters/remove 

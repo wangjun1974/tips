@@ -5,8 +5,6 @@
 │   └── cluster_operator.sh
 ├── clusters
 │   ├── add
-│   ├── edge-1
-│   │   └── kubeconfig
 │   └── remove
 ├── hub
 │   └── lb-ext.kubeconfig

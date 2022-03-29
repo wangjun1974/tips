@@ -48,18 +48,18 @@ SSH_KEY="/root/.ssh/acm"
 CLUSTER_NAME="edge-1"
 REMOTE_HOST="8.140.106.163"
 REMOTE_PORT="6022"
-CLUSTER_API="8.130.18.107"
+CLUSTER_API_IP="8.130.18.107"
 
 # 生成 kubeconfig，用 CLUSTER_API 替换 127.0.0.1
 mkdir -p ~/.kube
 podman cp microshift:/var/lib/microshift/resources/kubeadmin/kubeconfig ~/.kube/config
-sed -i "s|127.0.0.1|${CLUSTER_API}|g" ~/.kube/config
+sed -i "s|127.0.0.1|${CLUSTER_API_IP}|g" ~/.kube/config
 
 # 生成配置文件
-cat > ${CLUSTER_NAME} <<'EOF'
+cat > ${CLUSTER_NAME} <<EOF
 CLUSTER_NAME="edge-1"
 CLUSTER_KUBECONFIG="/opt/acm/clusters/${CLUSTER_NAME}/kubeconfig"
-CLUSTER_API="8.130.18.107"
+CLUSTER_API="${CLUSTER_API_IP}"
 EOF
 
 # 上传配置文件和 kubeconfig
@@ -80,15 +80,26 @@ SSH_KEY="/root/.ssh/acm"
 CLUSTER_NAME="edge-1"
 REMOTE_HOST="8.140.106.163"
 REMOTE_PORT="6022"
-CLUSTER_API="8.130.18.107"
+CLUSTER_API_IP="8.130.18.107"
 
 # 生成配置文件
-cat > ${CLUSTER_NAME} <<'EOF'
+cat > ${CLUSTER_NAME} <<EOF
 CLUSTER_NAME="edge-1"
 CLUSTER_KUBECONFIG="/opt/acm/clusters/${CLUSTER_NAME}/kubeconfig"
-CLUSTER_API="8.130.18.107"
+CLUSTER_API="${CLUSTER_API_IP}"
 EOF
 
 # 上传配置文件和 kubeconfig
 scp -i ${SSH_KEY} -P ${REMOTE_PORT} ${CLUSTER_NAME} ${REMOTE_HOST}:/opt/acm/clusters/remove
+```
+
+### 配置文件说明
+```
+# CLUSTER_NAME: 集群在 acm 内的名字 
+# spoke cluster 是通过 scp 上传配置文件到远程控制节点特定目录
+# spoke cluster 与远程控制节点间通过 key 进行认证
+# SSH_KEY: spoke cluster 向 ${REMOTE_HOST} 认证时要用到的 key，可以在系统安装时拷贝到系统里
+# REMOTE_HOST: 上传文件的服务器
+# REMOTE_PORT: 上传文件的端口
+# CLUSTER_API_IP: spoke cluster 的 api endpoint，对于 microshift 来说，可以使用节点的 external ip
 ```

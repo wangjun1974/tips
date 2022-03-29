@@ -425,3 +425,32 @@ server: ""
 $ argocd cluster rm edge-1 --server "" --grpc-web 
 FATA[0000] rpc error: code = PermissionDenied desc = permission denied 
 ```
+
+### GitOps - Subscription/Channel/Application/Placement 
+```
+klusterlet-addon-appmgr 日志报错
+[root@edge-1 ~]# oc -n open-cluster-management-agent-addon logs klusterlet-addon-appmgr-7bb4bfcf5c-mkvbm 
+...
+E0329 01:54:13.405420       1 gitrepo.go:285] Get "https://gitea-with-admin-gitea.apps.ocp4.rhcnsa.com/lab-user-1/book-import/info/refs?service=git-upload-pack": x509: certificate signed by unknown authority Failed to git clone with the primary channel: Get "https://gitea-with-admin-gitea.apps.ocp4.rhcnsa.com/lab-user-1/book-import/info/refs?service=git-upload-pack": x509: certificate signed by unknown authority
+E0329 01:54:13.405437       1 gitrepo.go:172] no secondary channel to try
+E0329 01:54:13.405443       1 gitrepo.go:291] Failed to get Git clone options with the secondary channel.
+E0329 01:54:13.405451       1 git_subscriber_item.go:207] Failed to get Git clone options with the secondary channel:  err: no secondary channel to tryUnable to clone the git repo https://gitea-with-admin-gitea.apps.ocp4.rhcnsa.com/lab-user-1/book-import
+I0329 01:54:13.405457       1 git_subscriber_item.go:210] exit doSubscription: book-import/book-import-subscription-1
+E0329 01:54:13.405461       1 git_subscriber_item.go:174] Failed to get Git clone options with the secondary channel:  err: no secondary channel to trySubscription error.
+I0329 01:54:13.453313       1 git_subscriber_item.go:170] Re-try #1: subcribing to the Git repo
+I0329 01:54:13.453334       1 git_subscriber_item.go:186] enter doSubscription: testapp/testapp-subscription-1
+
+参考：
+https://access.redhat.com/documentation/en-us/red_hat_advanced_cluster_management_for_kubernetes/2.4/html/applications/managing-applications#using-custom-CA-certificates-for-secure-HTTPS-connection
+# 1.4.4.2. Making an insecure HTTPS connection to a Git server
+$ oc -n nswith-admin-giteaappsocp4rhcnsacom-lab-user-1-book-import-ns get channel nswith-admin-giteaappsocp4rhcnsacom-lab-user-1-book-import -o yaml 
+
+$ oc -n nswith-admin-giteaappsocp4rhcnsacom-lab-user-1-book-import-ns patch channel  nswith-admin-giteaappsocp4rhcnsacom-lab-user-1-book-import --type json -p '[{"op": "add", "path": "/spec/insecureSkipVerify", "value": true}]'
+
+以下报错应该可以忽略
+[junwang@JundeMacBook-Pro ~]$ oc logs klusterlet-addon-appmgr-55bd45bf7c-k8wc9  -n open-cluster-management-agent-addon 
+...
+E0329 02:26:37.523595       1 subscription_controller.go:319] failed to update status for subscription book-import/book-import-subscription-1-local with error Operation cannot be fulfilled on subscriptions.apps.open-cluster-management.io "book-import-subscription-1-local": the object has been modified; please apply your changes to the latest version and try again retry after 1 second
+
+
+```

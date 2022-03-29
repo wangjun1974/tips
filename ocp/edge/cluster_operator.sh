@@ -4,12 +4,7 @@
 HUB_KUBECONFIG="/opt/acm/hub/lb-ext.kubeconfig"
 PULL_SECRETS="/opt/acm/secrets/auth.json"
 
-usage() {
-  echo "use this program to remove edge cluster in acm hub"
-  echo "usage $0 <cluster_name>"
-  exit 0
-}
-
+# function: check if spoke cluster exists
 check_spoke_cluster_exist() {
   SPOKE_CLUSTER_NAME=$1
 
@@ -25,6 +20,7 @@ check_spoke_cluster_exist() {
   fi
 }
 
+# function: check if spoke cluster api endpoint live
 check_spoke_cluster_api_exist() {
   SPOKE_CLUSTER_API=$1
 
@@ -40,6 +36,7 @@ check_spoke_cluster_api_exist() {
   fi
 }
 
+# function: check if spoke cluster kubeconfig exist and can use it access spoke cluster
 check_spoke_cluster_kubeconfig_exist() {
   SPOKE_CLUSTER_KUBECONFIG=$1
 
@@ -55,6 +52,7 @@ check_spoke_cluster_kubeconfig_exist() {
   fi
 }
 
+# function: remove spoke cluster
 remove_spoke_cluster() {
   SPOKE_CLUSTER_NAME=$1
 
@@ -72,6 +70,7 @@ remove_spoke_cluster() {
   fi
 }
 
+# function: add spoke cluster
 add_spoke_cluster() {
   SPOKE_CLUSTER_NAME=$1
   SPOKE_CLUSTER_KUBECONFIG=$2
@@ -154,13 +153,14 @@ EOF
   return 0
 }
 
-
+# function: reset env
 reset_env() {
   CLUSTER_NAME=''
   CLUSTER_KUBECONFIG=''
   CLUSTER_API=''
 }
 
+# function: call function add_spoke_cluster add cluster to acm
 add_cluster() {
   echo "cluster name is ${CLUSTER_NAME}"
   echo "kubeconfig is ${CLUSTER_KUBECONFIG}"
@@ -176,6 +176,7 @@ add_cluster() {
   fi
 } 
 
+# function: call function remove_spoke_cluster remove cluster from acm
 remove_cluster() {
   echo "cluster name is ${CLUSTER_NAME}"
   echo "kubeconfig is ${CLUSTER_KUBECONFIG}"
@@ -187,6 +188,7 @@ remove_cluster() {
   fi
 } 
 
+# control loop - add cluster
 if [ -d /opt/acm/clusters/add ] && [ $(ls -A /opt/acm/clusters/add | wc -m) != "0" ]; then
   for i in /opt/acm/clusters/add/* ; do 
     reset_env
@@ -195,6 +197,7 @@ if [ -d /opt/acm/clusters/add ] && [ $(ls -A /opt/acm/clusters/add | wc -m) != "
   done
 fi
 
+# control loop - remove cluster
 if [ -d /opt/acm/clusters/remove ] && [ $(ls -A /opt/acm/clusters/remove | wc -m) != "0" ]; then
   for i in /opt/acm/clusters/remove/* ; do
     reset_env

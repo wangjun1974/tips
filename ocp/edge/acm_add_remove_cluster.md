@@ -96,7 +96,7 @@ scp -i ${SSH_KEY} -P ${REMOTE_PORT} ${CLUSTER_NAME} ${REMOTE_HOST}:/opt/acm/clus
 ### 配置文件说明
 ```
 # CLUSTER_NAME: 集群在 acm 内的名字 
-# spoke cluster 是通过 scp 上传配置文件到远程控制节点特定目录
+# spoke cluster 通过 scp 上传配置文件到远程控制节点特定目录
 # spoke cluster 与远程控制节点间通过 key 进行认证
 # SSH_KEY: spoke cluster 向 ${REMOTE_HOST} 认证时要用到的 key，可以在系统安装时拷贝到系统里
 # REMOTE_HOST: 上传文件的服务器

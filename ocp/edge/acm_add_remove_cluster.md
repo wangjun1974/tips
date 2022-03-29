@@ -18,9 +18,9 @@
 
 # /opt/acm/auth/auth.json 是访问 registry 的 pull secret，自动添加 cluster 时在 spoke cluster 里根据它生成供 sa 适用的 secret
 
-# /opt/acm/clusters/add 下存放要添加集群的配置文件
+# /opt/acm/clusters/add 目录下存放要添加集群的配置文件
 
-# /opt/acm/clusters/remove 下存放要删除集群的配置文件
+# /opt/acm/clusters/remove 目录下存放要删除集群的配置文件
 
 # 配置文件格式
 CLUSTER_NAME="edge-1"

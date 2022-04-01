@@ -276,4 +276,110 @@ $ oc --kubeconfig=/Users/junwang/kubeconfig/ocp4.6/lb-ext.kubeconfig  get -n sub
 $ oc --kubeconfig=/Users/junwang/kubeconfig/ocp4.6/lb-ext.kubeconfig create namespace nginx-test
 $ oc --kubeconfig=/Users/junwang/kubeconfig/ocp4.6/lb-ext.kubeconfig run -n nginx-test tmp-shell --rm -i --tty --image quay.io/submariner/nettest -- /bin/bash
 bash-5.0# curl nginx.nginx-test.svc.clusterset.local:8080
+
+
+$ subctl uninstall --kubeconfig /Users/junwang/kubeconfig/ocp4.6/lb-ext.kubeconfig
+? This will completely uninstall Submariner from the cluster "api-cluster-f8t4x-f8t4x-sandbox1457-opentlc-com:6443". Are you sure you want to continue? Yes
+ ✓ Checking if the connectivity component is installed on cluster "api-cluster-f8t4x-f8t4x-sandbox1457-opentlc-com:6443" 
+ ✓ The connectivity component is installed on cluster "api-cluster-f8t4x-f8t4x-sandbox1457-opentlc-com:6443"
+ ✓ Deleting the Submariner resource - this may take some time 
+ ✓ Deleting the Submariner cluster roles and bindings on cluster "api-cluster-f8t4x-f8t4x-sandbox1457-opentlc-com:6443" 
+ ✓ Deleted the "submariner-diagnose" cluster role and binding
+ ✓ Deleted the "submariner-gateway" cluster role and binding
+ ✓ Deleted the "submariner-globalnet" cluster role and binding
+ ✓ Deleted the "submariner-lighthouse-agent" cluster role and binding
+ ✓ Deleted the "submariner-lighthouse-coredns" cluster role and binding
+ ✓ Deleted the "submariner-networkplugin-syncer" cluster role and binding
+ ✓ Deleted the "submariner-operator" cluster role and binding
+ ✓ Deleted the "submariner-routeagent" cluster role and binding
+ ✓ Deleting the Submariner namespace "submariner-operator" on cluster "api-cluster-f8t4x-f8t4x-sandbox1457-opentlc-com:6443" 
+ ✓ Deleting the broker namespace "submariner-k8s-broker" on cluster "api-cluster-f8t4x-f8t4x-sandbox1457-opentlc-com:6443" 
+ ✓ Deleting the Submariner custom resource definitions on cluster "api-cluster-f8t4x-f8t4x-sandbox1457-opentlc-com:6443" 
+ ✓ Deleted the "brokers.submariner.io" custom resource definition
+ ✓ Deleted the "clusterglobalegressips.submariner.io" custom resource definition
+ ✓ Deleted the "clusters.submariner.io" custom resource definition
+ ✓ Deleted the "endpoints.submariner.io" custom resource definition
+ ✓ Deleted the "gateways.submariner.io" custom resource definition
+ ✓ Deleted the "globalegressips.submariner.io" custom resource definition
+ ✓ Deleted the "globalingressips.submariner.io" custom resource definition
+ ✓ Deleted the "servicediscoveries.submariner.io" custom resource definition
+ ✓ Deleted the "submariners.submariner.io" custom resource definition
+ ✓ Unlabeling gateway nodes on cluster "api-cluster-f8t4x-f8t4x-sandbox1457-opentlc-com:6443" 
+
+$ subctl uninstall --kubeconfig /Users/junwang/kubeconfig/ocp4.8/lb-ext.kubeconfig
+? This will completely uninstall Submariner from the cluster "api-cluster-lr8jz-lr8jz-sandbox1298-opentlc-com:6443". Are you sure you want to continue? Yes
+ ✓ Checking if the connectivity component is installed on cluster "api-cluster-lr8jz-lr8jz-sandbox1298-opentlc-com:6443" 
+ ✓ The connectivity component is installed on cluster "api-cluster-lr8jz-lr8jz-sandbox1298-opentlc-com:6443"
+ ✓ Deleting the Submariner resource - this may take some time 
+ ✓ Deleting the Submariner cluster roles and bindings on cluster "api-cluster-lr8jz-lr8jz-sandbox1298-opentlc-com:6443" 
+ ✓ Deleted the "submariner-diagnose" cluster role and binding
+ ✓ Deleted the "submariner-gateway" cluster role and binding
+ ✓ Deleted the "submariner-globalnet" cluster role and binding
+ ✓ Deleted the "submariner-lighthouse-agent" cluster role and binding
+ ✓ Deleted the "submariner-lighthouse-coredns" cluster role and binding
+ ✓ Deleted the "submariner-networkplugin-syncer" cluster role and binding
+ ✓ Deleted the "submariner-operator" cluster role and binding
+ ✓ Deleted the "submariner-routeagent" cluster role and binding
+ ✓ Deleting the Submariner namespace "submariner-operator" on cluster "api-cluster-lr8jz-lr8jz-sandbox1298-opentlc-com:6443" 
+ ✓ Deleting the Submariner custom resource definitions on cluster "api-cluster-lr8jz-lr8jz-sandbox1298-opentlc-com:6443" 
+ ✓ Deleted the "brokers.submariner.io" custom resource definition
+ ✓ Deleted the "clusterglobalegressips.submariner.io" custom resource definition
+ ✓ Deleted the "clusters.submariner.io" custom resource definition
+ ✓ Deleted the "endpoints.submariner.io" custom resource definition
+ ✓ Deleted the "gateways.submariner.io" custom resource definition
+ ✓ Deleted the "globalegressips.submariner.io" custom resource definition
+ ✓ Deleted the "globalingressips.submariner.io" custom resource definition
+ ✓ Deleted the "servicediscoveries.submariner.io" custom resource definition
+ ✓ Deleted the "submariners.submariner.io" custom resource definition
+ ✓ Unlabeling gateway nodes on cluster "api-cluster-lr8jz-lr8jz-sandbox1298-opentlc-com:6443" 
+
+$ subctl uninstall --kubeconfig /Users/junwang/kubeconfig/ocp4.9/lb-ext.kubeconfig
+? This will completely uninstall Submariner from the cluster "api-cluster-6lr59-6lr59-sandbox311-opentlc-com:6443". Are you sure you want to continue? Yes
+ ✓ Checking if the connectivity component is installed on cluster "api-cluster-6lr59-6lr59-sandbox311-opentlc-com:6443" 
+ ✓ The connectivity component is installed on cluster "api-cluster-6lr59-6lr59-sandbox311-opentlc-com:6443"
+ ✓ Deleting the Submariner resource - this may take some time 
+ ✓ Deleting the Submariner cluster roles and bindings on cluster "api-cluster-6lr59-6lr59-sandbox311-opentlc-com:6443" 
+ ✓ Deleted the "submariner-diagnose" cluster role and binding
+ ✓ Deleted the "submariner-gateway" cluster role and binding
+ ✓ Deleted the "submariner-globalnet" cluster role and binding
+ ✓ Deleted the "submariner-lighthouse-agent" cluster role and binding
+ ✓ Deleted the "submariner-lighthouse-coredns" cluster role and binding
+ ✓ Deleted the "submariner-networkplugin-syncer" cluster role and binding
+ ✓ Deleted the "submariner-operator" cluster role and binding
+ ✓ Deleted the "submariner-routeagent" cluster role and binding
+ ✓ Deleting the Submariner namespace "submariner-operator" on cluster "api-cluster-6lr59-6lr59-sandbox311-opentlc-com:6443" 
+ ✓ Deleting the broker namespace "submariner-k8s-broker" on cluster "api-cluster-6lr59-6lr59-sandbox311-opentlc-com:6443" 
+ ✓ Deleting the Submariner custom resource definitions on cluster "api-cluster-6lr59-6lr59-sandbox311-opentlc-com:6443" 
+ ✓ Deleted the "brokers.submariner.io" custom resource definition
+ ✓ Deleted the "clusterglobalegressips.submariner.io" custom resource definition
+ ✓ Deleted the "clusters.submariner.io" custom resource definition
+ ✓ Deleted the "endpoints.submariner.io" custom resource definition
+ ✓ Deleted the "gateways.submariner.io" custom resource definition
+ ✓ Deleted the "globalegressips.submariner.io" custom resource definition
+ ✓ Deleted the "globalingressips.submariner.io" custom resource definition
+ ✓ Deleted the "servicediscoveries.submariner.io" custom resource definition
+ ✓ Deleted the "submariners.submariner.io" custom resource definition
+ ✓ Unlabeling gateway nodes on cluster "api-cluster-6lr59-6lr59-sandbox311-opentlc-com:6443" 
+
+# Deploy submariner broker on ocp4.8 with globalnet enabled
+$ subctl deploy-broker  --kubeconfig /Users/junwang/kubeconfig/ocp4.8/lb-ext.kubeconfig --globalnet
+ ✓ Setting up broker RBAC 
+ ✓ Deploying the Submariner operator 
+ ✓ Created operator CRDs
+ ✓ Created operator namespace: submariner-operator
+ ✓ Created operator service account and role
+ ✓ Created lighthouse service account and role
+ ✓ Created Lighthouse service accounts and roles
+ ✓ Deployed the operator successfully
+ ✓ Deploying the broker 
+ ✓ The broker has been deployed
+ ✓ Creating broker-info.subm file 
+ ⚠ Reusing IPsec PSK from existing broker-info.subm
+ ✓ Backed up previous broker-info.subm to broker-info.subm.2022-04-01T15_22_28+08_00
+
+# Prepare cloud 
+subctl cloud prepare aws --ocp-metadata path/to/ocp-4.8/metadata.json
+subctl cloud prepare aws --credentials <path-to-aws-credentials> --infra-id <infra> --region <region>
+
+$ subctl join --kubeconfig /Users/junwang/kubeconfig/ocp4.8/lb-ext.kubeconfig broker-info.subm --clusterid cluster2
 ```

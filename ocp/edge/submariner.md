@@ -1,5 +1,6 @@
 ### Test submarinar in rhpds
-https://submariner.io/operations/usage/
+https://submariner.io/operations/usage/<br>
+https://submariner.io/operations/deployment/subctl/<br>
 ```
 # deploy broker
 $ subctl deploy-broker --kubeconfig /Users/junwang/kubeconfig/ocp4.9/lb-ext.kubeconfig 

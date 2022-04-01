@@ -110,13 +110,13 @@ EOF
   echo "Configuring cluster-init bundle"
   CENTRAL_DATA={\"name\":\"local-cluster\"}
   CENTRAL_PASSWORD=$(echo cGFzc3dvcmQK | base64 -d )
-  CENTRAL_ROUTE=$(${OC_CMD} -n stackrox get route central -o jsonpath='{.spec.host}')
-  curl -k -o ./bundle.json -X POST -u "admin:${CENTRAL_PASSWORD}" -H "Content-Type: application/json" --data ${CENTRAL_DATA} https://${CENTRAL_ROUTE}/v1/cluster-init/init-bundles
+  CENTRAL_ROUTE=$(${OC_CMD} -n rhacs-operator get route central -o jsonpath='{.spec.host}')
+  curl -k -o ~/tmp/bundle.json -X POST -u "admin:${CENTRAL_PASSWORD}" -H "Content-Type: application/json" --data ${CENTRAL_DATA} https://${CENTRAL_ROUTE}/v1/cluster-init/init-bundles
   echo "Bundle received"
  
   echo "Applying bundle"
   # No jq in container, python to the rescue
-  cat ./bundle.json | python3 -c "import sys, json; print(json.load(sys.stdin)['kubectlBundle'])" | base64 -d | ${OC_CMD} apply -f -
+  cat ~/tmp/bundle.json | python3 -c "import sys, json; print(json.load(sys.stdin)['kubectlBundle'])" | base64 -d | ${OC_CMD} apply -f -
 
   echo "Create SecuredCluster ..."
 

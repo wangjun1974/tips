@@ -384,3 +384,109 @@ subctl cloud prepare aws --credentials <path-to-aws-credentials> --infra-id <inf
 
 $ subctl join --kubeconfig /Users/junwang/kubeconfig/ocp4.8/lb-ext.kubeconfig broker-info.subm --clusterid cluster2
 ```
+
+### 在 microshift 环境下尝试
+```
+$ subctl version 
+subctl version: v0.12.0
+# Deploy submariner broker on edge-1 with globalnet enabled
+$ subctl deploy-broker --kubeconfig /root/kubeconfig/edge/edge-1/kubeconfig --globalnet
+ ✓ Setting up broker RBAC 
+ ✓ Deploying the Submariner operator 
+ ✓ Created operator CRDs
+ ✓ Created operator namespace: submariner-operator
+ ✓ Created operator service account and role
+ ✓ Updated the privileged SCC
+ ✓ Created lighthouse service account and role
+ ✓ Updated the privileged SCC
+ ✓ Created Lighthouse service accounts and roles
+ ✓ Deployed the operator successfully
+ ✓ Deploying the broker
+ ✓ The broker has been deployed
+ ✓ Creating broker-info.subm file
+ ✓ A new IPsec PSK will be generated for broker-info.subm
+
+$ subctl cloud prepare generic --kubeconfig /root/kubeconfig/edge/edge-1/kubeconfig
+ ✓ Successfully deployed gateway nodes
+
+$ subctl join --kubeconfig /root/kubeconfig/edge/edge-1/kubeconfig broker-info.subm --clusterid cluster1
+* broker-info.subm says broker is at: https://10.66.208.162:6443
+* There are 1 labeled nodes in the cluster:
+  - edge-1.example.com
+        Network plugin:  generic
+        Service CIDRs:   [10.43.0.0/16]
+        Cluster CIDRs:   [10.42.0.0/24]
+ ✓ Discovering network details
+ ✓ Retrieving Globalnet information from the Broker
+ ✓ Validating Globalnet configuration
+ ✓ Assigning Globalnet IPs
+ ✓ Allocated global CIDR 242.0.0.0/16
+ ✓ Updating the Globalnet information on the Broker
+ ✓ Deploying the Submariner operator 
+ ✓ Created Lighthouse service accounts and roles
+ ✓ Creating SA for cluster
+ ✓ Deploying Submariner
+ ✓ Submariner is up and running
+
+# edge-2
+$ subctl cloud prepare generic --kubeconfig /root/kubeconfig/edge/edge-2/kubeconfig
+ ✓ Successfully deployed gateway nodes
+
+$ subctl join --kubeconfig /root/kubeconfig/edge/edge-2/kubeconfig broker-info.subm --clusterid cluster2
+* broker-info.subm says broker is at: https://10.66.208.162:6443
+* There are 1 labeled nodes in the cluster:
+  - edge-2.example.com
+        Network plugin:  generic
+        Service CIDRs:   [10.43.0.0/16]
+        Cluster CIDRs:   [10.42.0.0/24]
+ ✓ Discovering network details
+ ✓ Retrieving Globalnet information from the Broker
+ ✓ Validating Globalnet configuration
+ ✓ Assigning Globalnet IPs
+ ✓ Allocated global CIDR 242.1.0.0/16
+ ✓ Updating the Globalnet information on the Broker
+ ✓ Deploying the Submariner operator 
+ ✓ Created operator CRDs
+ ✓ Created operator namespace: submariner-operator
+ ✓ Created operator service account and role
+ ✓ Updated the privileged SCC
+ ✓ Created lighthouse service account and role
+ ✓ Updated the privileged SCC
+ ✓ Created Lighthouse service accounts and roles
+ ✓ Deployed the operator successfully
+ ✓ Creating SA for cluster
+ ✓ Deploying Submariner
+ ✓ Submariner is up and running
+
+# edge-3
+$ subctl cloud prepare generic --kubeconfig /root/kubeconfig/edge/edge-3/kubeconfig
+ ✓ Successfully deployed gateway nodes
+
+$ subctl join --kubeconfig /root/kubeconfig/edge/edge-3/kubeconfig broker-info.subm --clusterid cluster3
+* broker-info.subm says broker is at: https://10.66.208.162:6443
+* There are 1 labeled nodes in the cluster:
+  - edge-3.example.com
+        Network plugin:  generic
+        Service CIDRs:   [10.43.0.0/16]
+        Cluster CIDRs:   [10.42.0.0/24]
+ ✓ Discovering network details
+ ✓ Retrieving Globalnet information from the Broker
+ ✓ Validating Globalnet configuration
+ ✓ Assigning Globalnet IPs
+ ✓ Allocated global CIDR 242.2.0.0/16
+ ✓ Updating the Globalnet information on the Broker
+ ✓ Deploying the Submariner operator 
+ ✓ Created operator CRDs
+ ✓ Created operator namespace: submariner-operator
+ ✓ Created operator service account and role
+ ✓ Updated the privileged SCC
+ ✓ Created lighthouse service account and role
+ ✓ Updated the privileged SCC
+ ✓ Created Lighthouse service accounts and roles
+ ✓ Deployed the operator successfully
+ ✓ Creating SA for cluster
+ ✓ Deploying Submariner
+ ✓ Submariner is up and running
+
+
+```

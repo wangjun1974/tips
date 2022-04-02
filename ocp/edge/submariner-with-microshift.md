@@ -13,7 +13,8 @@ edge-3.example.com   Ready    <none>   17h   v1.21.0
 
 $ subctl version 
 subctl version: v0.12.0
-# Deploy submariner broker on edge-1 with globalnet enabled
+
+### Deploy submariner broker on edge-1 with globalnet enabled
 $ subctl deploy-broker --kubeconfig /root/kubeconfig/edge/edge-1/kubeconfig --globalnet
  ✓ Setting up broker RBAC 
  ✓ Deploying the Submariner operator 
@@ -30,9 +31,11 @@ $ subctl deploy-broker --kubeconfig /root/kubeconfig/edge/edge-1/kubeconfig --gl
  ✓ Creating broker-info.subm file
  ✓ A new IPsec PSK will be generated for broker-info.subm
 
+### run cloud prepare generic on edge-1
 $ subctl cloud prepare generic --kubeconfig /root/kubeconfig/edge/edge-1/kubeconfig
  ✓ Successfully deployed gateway nodes
 
+### join edge-1 to broker as cluster1
 $ subctl join --kubeconfig /root/kubeconfig/edge/edge-1/kubeconfig broker-info.subm --clusterid cluster1
 * broker-info.subm says broker is at: https://10.66.208.162:6443
 * There are 1 labeled nodes in the cluster:
@@ -52,10 +55,11 @@ $ subctl join --kubeconfig /root/kubeconfig/edge/edge-1/kubeconfig broker-info.s
  ✓ Deploying Submariner
  ✓ Submariner is up and running
 
-# edge-2
+### run cloud prepare generic on edge-2
 $ subctl cloud prepare generic --kubeconfig /root/kubeconfig/edge/edge-2/kubeconfig
  ✓ Successfully deployed gateway nodes
 
+### join edge-2 to broker as cluster2
 $ subctl join --kubeconfig /root/kubeconfig/edge/edge-2/kubeconfig broker-info.subm --clusterid cluster2
 * broker-info.subm says broker is at: https://10.66.208.162:6443
 * There are 1 labeled nodes in the cluster:
@@ -82,10 +86,11 @@ $ subctl join --kubeconfig /root/kubeconfig/edge/edge-2/kubeconfig broker-info.s
  ✓ Deploying Submariner
  ✓ Submariner is up and running
 
-# edge-3
+### run cloud prepare generic on edge-3
 $ subctl cloud prepare generic --kubeconfig /root/kubeconfig/edge/edge-3/kubeconfig
  ✓ Successfully deployed gateway nodes
 
+### join edge-3 to broker as cluster3
 $ subctl join --kubeconfig /root/kubeconfig/edge/edge-3/kubeconfig broker-info.subm --clusterid cluster3
 * broker-info.subm says broker is at: https://10.66.208.162:6443
 * There are 1 labeled nodes in the cluster:
@@ -112,7 +117,7 @@ $ subctl join --kubeconfig /root/kubeconfig/edge/edge-3/kubeconfig broker-info.s
  ✓ Deploying Submariner
  ✓ Submariner is up and running
 
-### Check Submariner CRDs 
+### Check Submariner CRDs on edge-1/2/3
 $ oc get crds --kubeconfig=/root/kubeconfig/edge/edge-1/kubeconfig | grep -iE 'submariner|multicluster.x-k8s.io'
 brokers.submariner.io                                2022-04-02T01:29:25Z
 clusterglobalegressips.submariner.io                 2022-04-02T01:30:02Z
@@ -127,7 +132,30 @@ serviceimports.multicluster.x-k8s.io                 2022-04-02T01:29:58Z
 submariners.submariner.io                            2022-04-02T01:29:25Z
 
 $ oc get crds --kubeconfig=/root/kubeconfig/edge/edge-2/kubeconfig | grep -iE 'submariner|multicluster.x-k8s.io'
+brokers.submariner.io                                2022-04-02T01:53:40Z
+clusterglobalegressips.submariner.io                 2022-04-02T01:54:14Z
+clusters.submariner.io                               2022-04-02T01:54:14Z
+endpoints.submariner.io                              2022-04-02T01:54:14Z
+gateways.submariner.io                               2022-04-02T01:54:14Z
+globalegressips.submariner.io                        2022-04-02T01:54:14Z
+globalingressips.submariner.io                       2022-04-02T01:54:15Z
+servicediscoveries.submariner.io                     2022-04-02T01:53:40Z
+serviceexports.multicluster.x-k8s.io                 2022-04-02T01:54:10Z
+serviceimports.multicluster.x-k8s.io                 2022-04-02T01:54:10Z
+submariners.submariner.io                            2022-04-02T01:53:40Z
+
 $ oc get crds --kubeconfig=/root/kubeconfig/edge/edge-3/kubeconfig | grep -iE 'submariner|multicluster.x-k8s.io'
+brokers.submariner.io                                2022-04-02T01:55:07Z
+clusterglobalegressips.submariner.io                 2022-04-02T01:55:40Z
+clusters.submariner.io                               2022-04-02T01:55:40Z
+endpoints.submariner.io                              2022-04-02T01:55:40Z
+gateways.submariner.io                               2022-04-02T01:55:40Z
+globalegressips.submariner.io                        2022-04-02T01:55:41Z
+globalingressips.submariner.io                       2022-04-02T01:55:41Z
+servicediscoveries.submariner.io                     2022-04-02T01:55:07Z
+serviceexports.multicluster.x-k8s.io                 2022-04-02T01:55:36Z
+serviceimports.multicluster.x-k8s.io                 2022-04-02T01:55:36Z
+submariners.submariner.io                            2022-04-02T01:55:07Z
 
 ### Get clusters in broker
 $ oc --kubeconfig=/root/kubeconfig/edge/edge-1/kubeconfig -n submariner-k8s-broker get clusters.submariner.io
@@ -136,7 +164,7 @@ cluster1   5m45s
 cluster2   3m45s
 cluster3   2m24s
 
-### Get Pods 
+### Get Pods on edge-1/2/3
 $ oc --kubeconfig=/root/kubeconfig/edge/edge-1/kubeconfig -n submariner-operator get pods
 NAME                                            READY   STATUS    RESTARTS   AGE
 submariner-gateway-48c5g                        1/1     Running   0          8m5s
@@ -148,13 +176,31 @@ submariner-operator-7b6fd97fcf-fgmxl            1/1     Running   1          31m
 submariner-routeagent-zczhw                     1/1     Running   0          8m3s
 
 $ oc --kubeconfig=/root/kubeconfig/edge/edge-2/kubeconfig -n submariner-operator get pods
+NAME                                             READY   STATUS    RESTARTS   AGE
+submariner-gateway-9scnk                         1/1     Running   0          40m
+submariner-globalnet-9t7vv                       1/1     Running   0          40m
+submariner-lighthouse-agent-7b8bd64bcb-88dhx     1/1     Running   0          40m
+submariner-lighthouse-coredns-79dcc466fb-2cmmg   1/1     Running   0          40m
+submariner-lighthouse-coredns-79dcc466fb-bblv2   1/1     Running   0          40m
+submariner-operator-7b6fd97fcf-jlbqs             1/1     Running   1          41m
+submariner-routeagent-47sng                      1/1     Running   0          40m
+
 $ oc --kubeconfig=/root/kubeconfig/edge/edge-3/kubeconfig -n submariner-operator get pods
+NAME                                            READY   STATUS    RESTARTS   AGE
+submariner-gateway-9lz9b                        1/1     Running   0          39m
+submariner-globalnet-rwpc5                      1/1     Running   0          39m
+submariner-lighthouse-agent-7c896fd965-mwmwf    1/1     Running   0          39m
+submariner-lighthouse-coredns-545b557bc-7vkbq   1/1     Running   0          39m
+submariner-lighthouse-coredns-545b557bc-wkckx   1/1     Running   0          39m
+submariner-operator-7b6fd97fcf-jpksw            1/1     Running   1          39m
+submariner-routeagent-fct9p                     1/1     Running   0          39m
 
 ### edge-1 - check node info
 $ oc --kubeconfig=/root/kubeconfig/edge/edge-1/kubeconfig get node --selector=submariner.io/gateway=true -o wide
 NAME                 STATUS   ROLES    AGE   VERSION   INTERNAL-IP     EXTERNAL-IP   OS-IMAGE                               KERNEL-VERSION          CONTAINER-RUNTIME
 edge-1.example.com   Ready    <none>   16h   v1.21.0   10.66.208.162   <none>        Red Hat Enterprise Linux 8.4 (Ootpa)   4.18.0-305.el8.x86_64   cri-o://1.21.6
 
+### edge-1 - show connections
 $ subctl show connections --kubeconfig /root/kubeconfig/edge/edge-1/kubeconfig
 Cluster "microshift"
  ✓ Showing Connections
@@ -167,6 +213,7 @@ $ oc --kubeconfig=/root/kubeconfig/edge/edge-2/kubeconfig get node --selector=su
 NAME                 STATUS   ROLES    AGE   VERSION   INTERNAL-IP     EXTERNAL-IP   OS-IMAGE                               KERNEL-VERSION          CONTAINER-RUNTIME
 edge-2.example.com   Ready    <none>   16h   v1.21.0   10.66.208.163   <none>        Red Hat Enterprise Linux 8.4 (Ootpa)   4.18.0-305.el8.x86_64   cri-o://1.21.6
 
+### edge-2 - show connections
 $ subctl show connections --kubeconfig /root/kubeconfig/edge/edge-2/kubeconfig
 Cluster "microshift"
  ✓ Showing Connections
@@ -179,6 +226,7 @@ $ oc --kubeconfig=/root/kubeconfig/edge/edge-3/kubeconfig get node --selector=su
 NAME                 STATUS   ROLES    AGE   VERSION   INTERNAL-IP     EXTERNAL-IP   OS-IMAGE                               KERNEL-VERSION          CONTAINER-RUNTIME
 edge-3.example.com   Ready    <none>   16h   v1.21.0   10.66.208.164   <none>        Red Hat Enterprise Linux 8.4 (Ootpa)   4.18.0-305.el8.x86_64   cri-o://1.21.6
 
+### edge-3 - show connections
 $ subctl show connections --kubeconfig /root/kubeconfig/edge/edge-3/kubeconfig
 Cluster "microshift"
  ✓ Showing Connections

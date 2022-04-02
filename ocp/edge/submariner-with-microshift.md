@@ -1,4 +1,4 @@
-### submarinner with microshift walkthrough
+### submarinner with globalnet enabled + microshift walkthrough
 ```
 ### prepare 3 microshift cluster
 $ oc --kubeconfig=/root/kubeconfig/edge/edge-1/kubeconfig get nodes

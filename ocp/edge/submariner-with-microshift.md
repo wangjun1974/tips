@@ -432,4 +432,8 @@ subctl uninstall --kubeconfig <path-to-kubeconfig>
 
 # NAT TRAVERSAL
 # https://submariner.io/operations/nat-traversal/
+
+# Quick Start Guide - Kind
+# --natt=false
+https://submariner.io/getting-started/quickstart/kind/
 ```

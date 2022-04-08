@@ -424,3 +424,12 @@ Commercial support is available at
 </body>
 </html>
 ```
+
+### Day2 Operations 
+```
+# uninstall 
+subctl uninstall --kubeconfig <path-to-kubeconfig>
+
+# NAT TRAVERSAL
+# https://submariner.io/operations/nat-traversal/
+```

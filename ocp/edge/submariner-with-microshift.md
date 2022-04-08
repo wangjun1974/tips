@@ -436,4 +436,13 @@ subctl uninstall --kubeconfig <path-to-kubeconfig>
 # Quick Start Guide - Kind
 # --natt=false
 https://submariner.io/getting-started/quickstart/kind/
+
+$ subctl deploy-broker --kubeconfig /root/kubeconfig/edge/edge-1/kubeconfig --globalnet
+$ subctl join --kubeconfig /root/kubeconfig/edge/edge-1/kubeconfig broker-info.subm --clusterid cluster1 --natt=false
+$ subctl join --kubeconfig /root/kubeconfig/edge/edge-2/kubeconfig broker-info.subm --clusterid cluster2 --natt=false
+$ subctl join --kubeconfig /root/kubeconfig/edge/edge-3/kubeconfig broker-info.subm --clusterid cluster3 --natt=false
+
+# Submariner Troubleshooting
+# https://submariner.io/operations/troubleshooting/
+$ oc --kubeconfig /root/kubeconfig/edge/edge-2/kubeconfig describe Gateway -n submariner-operator
 ```

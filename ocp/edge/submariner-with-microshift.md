@@ -445,4 +445,17 @@ $ subctl join --kubeconfig /root/kubeconfig/edge/edge-3/kubeconfig broker-info.s
 # Submariner Troubleshooting
 # https://submariner.io/operations/troubleshooting/
 $ oc --kubeconfig /root/kubeconfig/edge/edge-2/kubeconfig describe Gateway -n submariner-operator
+
+    Latency RTT:
+      Average:       0s
+      Last:          0s
+      Max:           0s
+      Min:           0s
+      Std Dev:       0s
+    Status:          error
+    Status Message:  Failed to successfully ping the remote endpoint IP "242.2.255.254"
+    Using IP:        10.66.208.164
+  Ha Status:         active
+
+
 ```

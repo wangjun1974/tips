@@ -175,6 +175,14 @@ mkdir ~/.kube
 podman cp microshift:/var/lib/microshift/resources/kubeadmin/kubeconfig ~/.kube/config
 chown `whoami`: ~/.kube/config
 
+# 拷贝 kubeconfig 到 helper
+# 这里 edge-x 可以是 edge-1/edge-2/edge-3/...
+# EDGE_X_IP 是 microshift 节点的 IP
+(helper)$ mkdir -p ~/kubeconfig/edge/<edge-x>
+(helper)$ scp <edge-x>:~/.kube/config ~/kubeconfig/edge/<edge-x>/kubeconfig
+(helper)$ EDGE_X_IP="aaa.bbb.ccc.ddd"
+(helper)$ sed -i "s|127.0.0.1|${EDGE_X_IP}|g" ~/kubeconfig/edge/<edge-x>/kubeconfig
+
 # 查看对象
 oc get project 
 NAME                           DISPLAY NAME   STATUS

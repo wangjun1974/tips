@@ -570,3 +570,8 @@ EOF
 # 重启 crio 和 microshift 
 systemctl restart crio ; systemctl restart microshift
 ```
+
+### 检查 gateway 的 logs
+```
+oc -n submariner-operator logs $(oc -n submariner-operator get pods -l app=submariner-gateway -o name)
+```

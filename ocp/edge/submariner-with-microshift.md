@@ -494,6 +494,10 @@ skopeo copy --format v2s2 --authfile ${LOCAL_SECRET_JSON} --all docker://quay.io
 
 # quay.io/submariner/submariner-route-agent:0.12.0
 skopeo copy --format v2s2 --authfile ${LOCAL_SECRET_JSON} --all docker://quay.io/submariner/submariner-route-agent:0.12.0 docker://registry.example.com:5000/submariner/submariner-route-agent:0.12.0
+
+# gcr.io/google_containers/pause
+skopeo copy --format v2s2 --authfile ${LOCAL_SECRET_JSON} --all docker://gcr.io/google_containers/pause:latest docker://registry.example.com:5000/google_containers/pause:latest
+
 ```
 
 ### 为 submariner 更新 microshift 的 /etc/container/registries.conf 
@@ -564,7 +568,15 @@ unqualified-search-registries = ['registry.example.com:5000']
   mirror-by-digest-only = false
  
   [[registry.mirror]]
-    location = "registry.example.com:5000/submariner"    
+    location = "registry.example.com:5000/submariner"
+
+[[registry]]
+  prefix = ""
+  location = "gcr.io/google_containers"
+  mirror-by-digest-only = false
+ 
+  [[registry.mirror]]
+    location = "registry.example.com:5000/google_containers"     
 EOF
 
 # 重启 crio 和 microshift 
@@ -597,5 +609,18 @@ oc -n submariner-operator logs $(oc -n submariner-operator get pods -l app=subma
 
 # submariner-routeagent
 oc -n submariner-operator logs $(oc -n submariner-operator get pods -l app=submariner-routeagent -o name)
+
+```
+
+
+### 通过 annotation 指定 publicip
+```
+# 用命令描述 node 的 public-ip
+# 离线部署时需要提前设置
+# kubectl annotate node $GW gateway.submariner.io/public-ip=ipv4:<1.2.3.4>
+oc --kubeconfig=/root/kubeconfig/edge/edge1/kubeconfig annotate node edge1.example.com gateway.submariner.io/public-ip=ipv4:172.16.0.41
+oc --kubeconfig=/root/kubeconfig/edge/edge2/kubeconfig annotate node edge2.example.com gateway.submariner.io/public-ip=ipv4:172.16.0.42
+oc --kubeconfig=/root/kubeconfig/edge/edge3/kubeconfig annotate node edge3.example.com gateway.submariner.io/public-ip=ipv4:172.16.0.43
+
 
 ```

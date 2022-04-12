@@ -494,5 +494,76 @@ skopeo copy --format v2s2 --authfile ${LOCAL_SECRET_JSON} --all docker://quay.io
 
 # quay.io/submariner/submariner-route-agent:0.12.0
 skopeo copy --format v2s2 --authfile ${LOCAL_SECRET_JSON} --all docker://quay.io/submariner/submariner-route-agent:0.12.0 docker://registry.example.com:5000/submariner/submariner-route-agent:0.12.0
+```
 
+### 为 submariner 更新 microshift 的 /etc/container/registries.conf 
+```
+# 生成 /etc/containers/registries.conf 使用本地镜像仓库镜像
+cat > /etc/containers/registries.conf <<EOF
+unqualified-search-registries = ['registry.example.com:5000']
+ 
+[[registry]]
+  prefix = ""
+  location = "quay.io/openshift/okd-content"
+  mirror-by-digest-only = true
+ 
+  [[registry.mirror]]
+    location = "registry.example.com:5000/openshift/okd-content"
+
+[[registry]]
+  prefix = ""
+  location = "quay.io/microshift/flannel-cni"
+  mirror-by-digest-only = false
+ 
+  [[registry.mirror]]
+    location = "registry.example.com:5000/microshift/flannel-cni"
+
+[[registry]]
+  prefix = ""
+  location = "quay.io/coreos/flannel"
+  mirror-by-digest-only = false
+ 
+  [[registry.mirror]]
+    location = "registry.example.com:5000/coreos/flannel"    
+
+[[registry]]
+  prefix = ""
+  location = "quay.io/kubevirt/hostpath-provisioner"
+  mirror-by-digest-only = false
+ 
+  [[registry.mirror]]
+    location = "registry.example.com:5000/kubevirt/hostpath-provisioner"
+
+[[registry]]
+  prefix = ""
+  location = "k8s.gcr.io/pause"
+  mirror-by-digest-only = false
+ 
+  [[registry.mirror]]
+    location = "registry.example.com:5000/pause/pause"
+
+[[registry]]
+  prefix = ""
+  location = "registry.redhat.io/rhacm2"
+  mirror-by-digest-only = true
+ 
+  [[registry.mirror]]
+    location = "registry.example.com:5000/rhacm2"
+
+[[registry]]
+  prefix = ""
+  location = "k8s.gcr.io/pause"
+  mirror-by-digest-only = false
+ 
+  [[registry.mirror]]
+    location = "registry.example.com:5000/pause/pause"
+
+[[registry]]
+  prefix = ""
+  location = "quay.io/submariner"
+  mirror-by-digest-only = false
+ 
+  [[registry.mirror]]
+    location = "registry.example.com:5000/submariner"    
+EOF
 ```

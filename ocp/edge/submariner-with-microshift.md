@@ -471,3 +471,28 @@ sudo firewall-cmd --zone=public --add-port=4800/udp --permanent
 sudo firewall-cmd --zone=public --add-port=8080/tcp --permanent
 sudo firewall-cmd --reload
 ```
+
+### Submariner 镜像同步
+```
+# 将镜像同步到本地，离线环境需同步镜像到本地，在线环境无需执行
+LOCAL_SECRET_JSON=/data/OCP-4.9.9/ocp/secret/redhat-pull-secret.json
+
+# quay.io/submariner/lighthouse-agent:0.12.0
+skopeo copy --format v2s2 --authfile ${LOCAL_SECRET_JSON} --all docker://quay.io/submariner/lighthouse-agent:0.12.0 docker://registry.example.com:5000/submariner/lighthouse-agent:0.12.0
+
+# quay.io/submariner/lighthouse-coredns:0.12.0
+skopeo copy --format v2s2 --authfile ${LOCAL_SECRET_JSON} --all docker://quay.io/submariner/lighthouse-coredns:0.12.0 docker://registry.example.com:5000/submariner/lighthouse-coredns:0.12.0
+
+# quay.io/submariner/submariner-gateway:0.12.0
+skopeo copy --format v2s2 --authfile ${LOCAL_SECRET_JSON} --all docker://quay.io/submariner/submariner-gateway:0.12.0 docker://registry.example.com:5000/submariner/submariner-gateway:0.12.0
+
+# quay.io/submariner/submariner-globalnet:0.12.0
+skopeo copy --format v2s2 --authfile ${LOCAL_SECRET_JSON} --all docker://quay.io/submariner/submariner-globalnet:0.12.0 docker://registry.example.com:5000/submariner/submariner-globalnet:0.12.0
+
+# quay.io/submariner/submariner-operator:0.12.0
+skopeo copy --format v2s2 --authfile ${LOCAL_SECRET_JSON} --all docker://quay.io/submariner/submariner-operator:0.12.0 docker://registry.example.com:5000/submariner/submariner-operator:0.12.0
+
+# quay.io/submariner/submariner-route-agent:0.12.0
+skopeo copy --format v2s2 --authfile ${LOCAL_SECRET_JSON} --all docker://quay.io/submariner/submariner-route-agent:0.12.0 docker://registry.example.com:5000/submariner/submariner-route-agent:0.12.0
+
+```

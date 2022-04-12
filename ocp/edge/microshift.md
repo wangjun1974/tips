@@ -124,6 +124,14 @@ unqualified-search-registries = ['registry.example.com:5000']
  
   [[registry.mirror]]
     location = "registry.example.com:5000/rhacm2"
+
+[[registry]]
+  prefix = ""
+  location = "k8s.gcr.io/pause"
+  mirror-by-digest-only = false
+ 
+  [[registry.mirror]]
+    location = "registry.example.com:5000/pause/pause"
 EOF
 
 # 生成 ~/.docker/config.json
@@ -136,8 +144,8 @@ EOF
 scp registry.example.com:/etc/pki/ca-trust/source/anchors/registry.crt /etc/pki/ca-trust/source/anchors
 update-ca-trust
 
-# 尝试拉取 registry.example.com:5000/microshift/microshift:latest
-podman pull registry.example.com:5000/microshift/microshift:latest
+# 尝试拉取 registry.example.com:5000/microshift/microshift:4.8.0-0.microshift-2022-02-04-005920
+podman pull registry.example.com:5000/microshift/microshift:4.8.0-0.microshift-2022-02-04-005920
 
 # 生成 /etc/systemd/system/microshift.service，引用本地镜像 registry.example.com:5000/microshift/microshift:<imagetag>
 cat > /etc/systemd/system/microshift.service <<'EOF'
@@ -166,9 +174,9 @@ EOF
 systemctl enable microshift --now
 systemctl start microshift
 
-# 拷贝 oc 客户端
-scp /data/OCP-4.9.9/ocp/ocp-client/openshift-client-linux-4.9.9.tar.gz 192.168.122.203:/root
-sudo tar zxf openshift-client-linux-4.9.9.tar.gz -C /usr/local/bin oc kubectl
+# 下载 oc 客户端
+# 链接: https://pan.baidu.com/s/1TRglppWcdqm9harAOZalfA?pwd=azdr 提取码: azdr
+sudo tar zxf openshift-client-linux-4.9.26.tar.gz -C /usr/local/bin oc kubectl
 
 # 拷贝 kubeconfig
 mkdir ~/.kube

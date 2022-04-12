@@ -571,7 +571,18 @@ EOF
 systemctl restart crio ; systemctl restart microshift
 ```
 
-### 检查 gateway 的 logs
+### 检查日志
 ```
+# submariner-gateway
 oc -n submariner-operator logs $(oc -n submariner-operator get pods -l app=submariner-gateway -o name)
+
+# 如果日志里有错误
+E0412 05:04:33.019441       1 token_source.go:152] Unable to rotate token: failed to read token file "/run/secrets/submariner.io/broker-secret-7qc9f/token": open /run/secrets/submariner.io/broker-secret-7qc9f/token: no such file or directory
+
+# 删除 submariner-gateway pod
+oc -n submariner-operator delete $(oc -n submariner-operator get pods -l app=submariner-gateway -o name)
+
+# submariner-operator
+oc -n submariner-operator logs $(oc -n submariner-operator get pods -l name=submariner-operator -o name)
+
 ```

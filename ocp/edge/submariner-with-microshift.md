@@ -566,4 +566,7 @@ unqualified-search-registries = ['registry.example.com:5000']
   [[registry.mirror]]
     location = "registry.example.com:5000/submariner"    
 EOF
+
+# 重启 crio 和 microshift 
+systemctl restart crio ; systemctl restart microshift
 ```

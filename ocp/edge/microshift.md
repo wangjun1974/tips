@@ -511,9 +511,14 @@ oc edit deployment router-default
 # 如果 pod 日志有报错
 # W0412 02:23:13.288571       1 reflector.go:436] k8s.io/client-go/informers/factory.go:134: watch of *v1.MutatingWebhookConfiguration ended with: very short watch: k8s.io/client-go/informers/factory.go:134: Unexpected watch close - watch lasted less than a second and no items received
 # W0412 02:23:13.288625       1 reflector.go:436] k8s.io/kube-aggregator/pkg/client/informers/externalversions/factory.go:117: watch of *v1.APIService ended with: very short watch: k8s.io/kube-aggregator/pkg/client/informers/externalversions/factory.go:117: Unexpected watch close - watch lasted less than a second and no items received
-# 可以删除重建 pod
+# 可以删除重建 pod，这个步骤不对，问题不是出在 openshift-service-ca pod 本身
 oc -n openshift-service-ca delete $(oc -n openshift-service-ca get pods -l app=service-ca -o name)
 oc -n openshift-service-ca logs $(oc -n openshift-service-ca get pods -l app=service-ca -o name) 
+
+# 检查 pod 的 IP，删除 ip 为 10.85 的 pod
+# https://github.com/redhat-et/microshift/issues/356
+oc get pods -A -o wide
+oc get pods -A -o wide | grep -Ev "NAME|192|10.42" | awk '{print $1" "$2}' | while read namespace podname ; do oc -n $namespace delete pod $podname ; done
 ```
 
 ### 参考链接

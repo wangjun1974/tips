@@ -585,4 +585,17 @@ oc -n submariner-operator delete $(oc -n submariner-operator get pods -l app=sub
 # submariner-operator
 oc -n submariner-operator logs $(oc -n submariner-operator get pods -l name=submariner-operator -o name)
 
+# submariner-globalnet
+oc -n submariner-operator logs $(oc -n submariner-operator get pods -l app=submariner-globalnet -o name)
+
+# submariner-lighthouse-coredns
+oc -n submariner-operator logs $(oc -n submariner-operator get pods -l app=submariner-lighthouse-coredns -o name | head -1)
+oc -n submariner-operator logs $(oc -n submariner-operator get pods -l app=submariner-lighthouse-coredns -o name | tail -1)
+
+# submariner-lighthouse-agent
+oc -n submariner-operator logs $(oc -n submariner-operator get pods -l app=submariner-lighthouse-agent -o name)
+
+# submariner-routeagent
+oc -n submariner-operator logs $(oc -n submariner-operator get pods -l app=submariner-routeagent -o name)
+
 ```

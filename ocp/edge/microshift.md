@@ -526,8 +526,10 @@ oc get pods -A -o wide | grep -Ev "NAME|192|10.42" | awk '{print $1" "$2}' | whi
 ### 参考链接
 [WIP] Add OAuth API server to Microshift #244<br>
 https://github.com/redhat-et/microshift/pull/244<br>
-https://github.com/redhat-et/microshift/pull/457<br>
+
 ```
+https://github.com/redhat-et/microshift/pull/457
+https://microshift.slack.com/archives/C025AQ0QD8B/p1639426608149600
 # 区别
 # -v microshift-data:/var/lib/microshift:rw,rshared
 # -v /var/lib/microshift:/var/lib/microshift:rw,rshared

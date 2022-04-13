@@ -20,7 +20,7 @@ gpgcheck=0
 EOF
 
 # 安装基本工具
-yum install tar gzip conntrack-tools socat
+yum install -y tar gzip conntrack-tools socat
 
 # 下载 cri-o 和 cri-tools
 # 链接: https://pan.baidu.com/s/1MmoDE-AHImulV9Zvs9fzSg?pwd=3rd6 提取码: 3rd6

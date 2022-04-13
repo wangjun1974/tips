@@ -436,6 +436,10 @@ Commercial support is available at
 # uninstall 
 subctl uninstall --kubeconfig <path-to-kubeconfig>
 
+# remove submariner annotation from microshift nodes
+oc annotate $(oc get nodes -o name) submariner.io/cniIfaceIp-
+oc annotate $(oc get nodes -o name) submariner.io/globalIp-
+
 # NAT TRAVERSAL
 # https://submariner.io/operations/nat-traversal/
 

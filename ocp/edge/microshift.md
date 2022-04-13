@@ -525,4 +525,14 @@ oc get pods -A -o wide | grep -Ev "NAME|192|10.42" | awk '{print $1" "$2}' | whi
 
 ### 参考链接
 [WIP] Add OAuth API server to Microshift #244<br>
-https://github.com/redhat-et/microshift/pull/244
+https://github.com/redhat-et/microshift/pull/244<br>
+https://github.com/redhat-et/microshift/pull/457<br>
+```
+# 区别
+# -v microshift-data:/var/lib/microshift:rw,rshared
+# -v /var/lib/microshift:/var/lib/microshift:rw,rshared
+ExecStart=/usr/bin/podman run --cidfile=%t/%n.ctr-id --cgroups=no-conmon --rm --replace --sdnotify=container --label io.containers.autoupdate=registry --network=host --privileged -d --name microshift -v /var/hpvolumes:/var/hpvolumes:z,rw,rshared -v /var/run/crio/crio.sock:/var/run/crio/crio.sock:rw,rshared -v microshift-data:/var/lib/microshift:rw,rshared -v /var/lib/kubelet:/var/lib/kubelet:z,rw,rshared -v /var/log:/var/log -v /etc:/etc quay.io/microshift/microshift:4.8.0-0.microshift-2022-02-04-005920
+
+ExecStart=/usr/bin/podman run --cidfile=%t/%n.ctr-id --cgroups=no-conmon --rm --replace --sdnotify=container --label io.containers.autoupdate=registry --network=host --privileged -d --name microshift -v /var/run/crio/crio.sock:/var/run/crio/crio.sock:rw,rshared -v /var/lib/microshift:/var/lib/microshift:rw,rshared -v /var/lib/kubelet:/var/lib/kubelet:rw,rshared -v /var/log:/var/log -e KUBECONFIG=/var/lib/microshift/resources/kubeadmin/kubeconfig quay.io/microshift/microshift:latest
+
+```

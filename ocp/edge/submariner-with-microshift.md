@@ -437,6 +437,7 @@ Commercial support is available at
 subctl uninstall --kubeconfig <path-to-kubeconfig>
 
 # remove submariner annotation from microshift nodes
+oc get $(oc get nodes -o name) -o yaml
 oc annotate $(oc get nodes -o name) submariner.io/cniIfaceIp-
 oc annotate $(oc get nodes -o name) submariner.io/globalIp-
 

@@ -32,6 +32,14 @@ systemctl enable crio --now
 # 安装 podman
 sudo dnf install -y podman
 
+# 添加防火墙规则
+sudo firewall-cmd --zone=trusted --add-source=10.42.0.0/16 --permanent
+sudo firewall-cmd --zone=public --add-port=80/tcp --permanent
+sudo firewall-cmd --zone=public --add-port=443/tcp --permanent
+sudo firewall-cmd --zone=public --add-port=5353/udp --permanent
+sudo firewall-cmd --zone=public --permanent --add-port=6443/tcp
+sudo firewall-cmd --zone=public --permanent --add-port=30000-32767/tcp
+sudo firewall-cmd --reload
 
 # 将镜像同步到本地，离线环境需同步镜像到本地，在线环境无需执行
 LOCAL_SECRET_JSON=/data/OCP-4.9.9/ocp/secret/redhat-pull-secret.json

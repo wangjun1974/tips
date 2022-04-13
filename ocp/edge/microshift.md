@@ -521,6 +521,9 @@ oc -n openshift-service-ca logs $(oc -n openshift-service-ca get pods -l app=ser
 # https://github.com/redhat-et/microshift/issues/356
 oc get pods -A -o wide
 oc get pods -A -o wide | grep -Ev "NAME|192|10.42" | awk '{print $1" "$2}' | while read namespace podname ; do oc -n $namespace delete pod $podname ; done
+
+# 在 microshift 启动一段时间后，查看 microshift container 日志
+podman logs microshift 2>&1 | grep -E "^E0" | grep -Ev "failed to get cgroup stats|could not find container" 
 ```
 
 ### 参考链接

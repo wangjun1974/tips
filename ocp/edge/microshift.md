@@ -4,9 +4,6 @@ https://blog.csdn.net/weixin_43902588/article/details/122190458
 # RHEL8.4 最小化上安装 cri-o
 mkdir -p /data/OCP-4.9.9/yum
 
-# 将 rhocp-4.9-for-rhel-8-x86_64-rpm 安装源从外部拷入进来
-scp /data/OCP-4.9.9/yum/rhocp-4.9-for-rhel-8-x86_64-rpms.tar.gz 192.168.122.203:/data/OCP-4.9.9/yum
-
 # 挂载 rhel 8.4 ISO
 mount /dev/sr0 /mnt
 

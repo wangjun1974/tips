@@ -472,7 +472,7 @@ $ oc --kubeconfig /root/kubeconfig/edge/edge-2/kubeconfig describe Gateway -n su
 ```
 
 
-### Submariner Gateway Firewall 需求
+### Submariner Gateway Firewall
 ```
 # https://submariner.io/getting-started/
 sudo firewall-cmd --zone=public --add-port=4500/udp --permanent
@@ -483,9 +483,8 @@ sudo firewall-cmd --zone=public --add-port=8080/tcp --permanent
 sudo firewall-cmd --reload
 ```
 
-### Submariner 镜像同步
+### Save Submariner images to local registry
 ```
-# 将镜像同步到本地，离线环境需同步镜像到本地，在线环境无需执行
 LOCAL_SECRET_JSON=/data/OCP-4.9.9/ocp/secret/redhat-pull-secret.json
 
 # quay.io/submariner/lighthouse-agent:0.12.0
@@ -511,9 +510,9 @@ skopeo copy --format v2s2 --authfile ${LOCAL_SECRET_JSON} --all docker://gcr.io/
 
 ```
 
-### 为 submariner 更新 microshift 的 /etc/container/registries.conf 
+### update /etc/container/registries.conf 
 ```
-# 生成 /etc/containers/registries.conf 使用本地镜像仓库镜像
+# generate /etc/containers/registries.conf using local registry mirror
 cat > /etc/containers/registries.conf <<EOF
 unqualified-search-registries = ['registry.example.com:5000']
  
@@ -590,19 +589,19 @@ unqualified-search-registries = ['registry.example.com:5000']
     location = "registry.example.com:5000/google_containers"     
 EOF
 
-# 重启 crio 和 microshift 
+# restart crio and microshift 
 systemctl restart crio ; systemctl restart microshift
 ```
 
-### 检查日志
+### check logs
 ```
 # submariner-gateway
 oc -n submariner-operator logs $(oc -n submariner-operator get pods -l app=submariner-gateway -o name)
 
-# 如果日志里有错误
+# if logs has this type of error 
 E0412 05:04:33.019441       1 token_source.go:152] Unable to rotate token: failed to read token file "/run/secrets/submariner.io/broker-secret-7qc9f/token": open /run/secrets/submariner.io/broker-secret-7qc9f/token: no such file or directory
 
-# 删除 submariner-gateway pod
+# delete submariner-gateway pod
 oc -n submariner-operator delete $(oc -n submariner-operator get pods -l app=submariner-gateway -o name)
 
 # submariner-operator

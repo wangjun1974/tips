@@ -11,6 +11,12 @@ $ oc --kubeconfig=/root/kubeconfig/edge/edge-3/kubeconfig get nodes
 NAME                 STATUS   ROLES    AGE   VERSION
 edge-3.example.com   Ready    <none>   17h   v1.21.0
 
+### annotate node public-ip in on-prem env
+### e.g.: kubectl annotate node $GW gateway.submariner.io/public-ip=ipv4:<1.2.3.4>
+$ oc --kubeconfig=/root/kubeconfig/edge/edge1/kubeconfig annotate node edge-1.example.com gateway.submariner.io/public-ip=ipv4:172.16.0.41
+$ oc --kubeconfig=/root/kubeconfig/edge/edge2/kubeconfig annotate node edge-2.example.com gateway.submariner.io/public-ip=ipv4:172.16.0.42
+$ oc --kubeconfig=/root/kubeconfig/edge/edge3/kubeconfig annotate node edge-3.example.com gateway.submariner.io/public-ip=ipv4:172.16.0.43
+
 $ subctl version 
 subctl version: v0.12.0
 
@@ -613,14 +619,12 @@ oc -n submariner-operator logs $(oc -n submariner-operator get pods -l app=subma
 ```
 
 
-### 通过 annotation 指定 publicip
+### annotate node public-ip in on-prem env
 ```
-# 用命令描述 node 的 public-ip
-# 离线部署时需要提前设置
+### annotate node public-ip in on-prem env
+### e.g.: kubectl annotate node $GW gateway.submariner.io/public-ip=ipv4:<1.2.3.4>
 # kubectl annotate node $GW gateway.submariner.io/public-ip=ipv4:<1.2.3.4>
 oc --kubeconfig=/root/kubeconfig/edge/edge1/kubeconfig annotate node edge1.example.com gateway.submariner.io/public-ip=ipv4:172.16.0.41
 oc --kubeconfig=/root/kubeconfig/edge/edge2/kubeconfig annotate node edge2.example.com gateway.submariner.io/public-ip=ipv4:172.16.0.42
 oc --kubeconfig=/root/kubeconfig/edge/edge3/kubeconfig annotate node edge3.example.com gateway.submariner.io/public-ip=ipv4:172.16.0.43
-
-
 ```

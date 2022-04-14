@@ -645,3 +645,12 @@ oc -n submariner-operator patch secret broker-secret-chd2k --type='json' -p='[{"
 
 
 ```
+
+### Submariner add mysql firewall rules 
+```
+sudo firewall-cmd --zone=public --add-port=3306/tcp --permanent
+sudo firewall-cmd --zone=public --add-port=4444/tcp --permanent
+sudo firewall-cmd --zone=public --add-port=4567/tcp --permanent
+sudo firewall-cmd --zone=public --add-port=4568/tcp --permanent
+sudo firewall-cmd --reload
+```

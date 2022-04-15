@@ -529,6 +529,8 @@ podman logs microshift 2>&1 | grep -E "^E0" | grep -Ev "failed to get cgroup sta
 ### 参考链接
 [WIP] Add OAuth API server to Microshift #244<br>
 https://github.com/redhat-et/microshift/pull/244<br>
+https://microshift.io/docs/user-documentation/configuring/<br>
+https://github.com/redhat-et/microshift/blob/main/test/config.yaml<br>
 
 ```
 https://github.com/redhat-et/microshift/pull/457

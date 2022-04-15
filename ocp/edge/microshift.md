@@ -524,6 +524,12 @@ oc get pods -A -o wide | grep -Ev "NAME|192|10.42" | awk '{print $1" "$2}' | whi
 
 # 在 microshift 启动一段时间后，查看 microshift container 日志
 podman logs microshift 2>&1 | grep -E "^E0" | grep -Ev "failed to get cgroup stats|could not find container" 
+
+# 删除 IP 地址既不是 Node IP 的 Pods，也不是 clusterCIDR 的 Pods
+# 根据经验看一般是 kubevirt-hostpath-provisioner 和 service-ca 这两个 Pod
+oc get pods -A -o wide
+oc -n openshift-service-ca delete $(oc -n openshift-service-ca get pods -l app=service-ca -o name)
+oc -n kubevirt-hostpath-provisioner delete $(oc -n kubevirt-hostpath-provisioner get pods -l k8s-app=kubevirt-hostpath-provisioner -o name)
 ```
 
 ### 改变 clusterCIDR 和 serviceCIDR 配置 

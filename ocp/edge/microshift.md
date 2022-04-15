@@ -526,6 +526,59 @@ oc get pods -A -o wide | grep -Ev "NAME|192|10.42" | awk '{print $1" "$2}' | whi
 podman logs microshift 2>&1 | grep -E "^E0" | grep -Ev "failed to get cgroup stats|could not find container" 
 ```
 
+### 改变 clusterCIDR 和 serviceCIDR 配置 
+```
+# 在 microshift 节点上创建 /etc/microshift/config.yaml 
+mkdir -p /etc/microshift
+cat > /etc/microshift/config.yaml <<EOF
+---
+cluster:
+  clusterCIDR: '10.52.0.0/16'
+  serviceCIDR: '10.53.0.0/16'
+  dns: '10.53.0.10'
+  domain: cluster.local
+EOF
+chcon -R --reference /var/lib/kubelet /etc/microshift
+
+# 重新生成 /etc/systemd/system/microshift.service 包含 /etc/microshift/config.yaml
+cat > /etc/systemd/system/microshift.service <<EOF
+[Unit]
+Description=MicroShift Containerized
+Documentation=man:podman-generate-systemd(1)
+Wants=network-online.target crio.service
+After=network-online.target crio.service
+RequiresMountsFor=%t/containers
+
+[Service]
+Environment=PODMAN_SYSTEMD_UNIT=%n
+Restart=on-failure
+TimeoutStopSec=70
+ExecStartPre=/usr/bin/mkdir -p /var/lib/kubelet ; /usr/bin/mkdir -p /var/hpvolumes ; /usr/bin/mkdir -p /etc/microshift
+ExecStartPre=/bin/rm -f %t/%n.ctr-id
+ExecStart=/usr/bin/podman run --cidfile=%t/%n.ctr-id --cgroups=no-conmon --rm --replace --sdnotify=container --label io.containers.autoupdate=registry --network=host --privileged -d --name microshift -v /etc/microshift/config.yaml:/etc/microshift/config.yaml:z,rw,rshared -v /var/hpvolumes:/var/hpvolumes:z,rw,rshared -v /var/run/crio/crio.sock:/var/run/crio/crio.sock:rw,rshared -v microshift-data:/var/lib/microshift:rw,rshared -v /var/lib/kubelet:/var/lib/kubelet:z,rw,rshared -v /var/log:/var/log -v /etc:/etc quay.io/microshift/microshift:4.8.0-0.microshift-2022-02-04-005920
+ExecStop=/usr/bin/podman stop --ignore --cidfile=%t/%n.ctr-id
+ExecStopPost=/usr/bin/podman rm -f --ignore --cidfile=%t/%n.ctr-id
+Type=notify
+NotifyAccess=all
+
+[Install]
+WantedBy=multi-user.target default.target
+EOF
+systemctl daemon-reload
+
+# 清理之前的部署
+systemctl stop microshift
+/usr/bin/crictl stopp $(/usr/bin/crictl pods -q)
+/usr/bin/crictl stop $(/usr/bin/crictl ps -aq)
+/usr/bin/crictl rmp $(crictl pods -q)
+rm -rf /var/lib/containers/*
+crio wipe -f
+
+# 重启 microshift
+systemctl start microshift
+```
+
+
 ### 参考链接
 [WIP] Add OAuth API server to Microshift #244<br>
 https://github.com/redhat-et/microshift/pull/244<br>

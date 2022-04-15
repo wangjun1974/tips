@@ -576,6 +576,10 @@ crio wipe -f
 
 # 重启 microshift
 systemctl start microshift
+
+# 添加防火墙规则
+sudo firewall-cmd --zone=trusted --add-source=10.52.0.0/16 --permanent
+sudo firewall-cmd --reload
 ```
 
 

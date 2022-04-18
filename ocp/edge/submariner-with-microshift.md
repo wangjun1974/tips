@@ -13,9 +13,9 @@ edge-3.example.com   Ready    <none>   17h   v1.21.0
 
 ### annotate node public-ip in on-prem env
 ### e.g.: kubectl annotate node $GW gateway.submariner.io/public-ip=ipv4:<1.2.3.4>
-$ oc --kubeconfig=/root/kubeconfig/edge/edge1/kubeconfig annotate node edge-1.example.com gateway.submariner.io/public-ip=ipv4:172.16.0.41
-$ oc --kubeconfig=/root/kubeconfig/edge/edge2/kubeconfig annotate node edge-2.example.com gateway.submariner.io/public-ip=ipv4:172.16.0.42
-$ oc --kubeconfig=/root/kubeconfig/edge/edge3/kubeconfig annotate node edge-3.example.com gateway.submariner.io/public-ip=ipv4:172.16.0.43
+$ oc --kubeconfig=/root/kubeconfig/edge/edge-1/kubeconfig annotate node edge-1.example.com gateway.submariner.io/public-ip=ipv4:172.16.0.41
+$ oc --kubeconfig=/root/kubeconfig/edge/edge-2/kubeconfig annotate node edge-2.example.com gateway.submariner.io/public-ip=ipv4:172.16.0.42
+$ oc --kubeconfig=/root/kubeconfig/edge/edge-3/kubeconfig annotate node edge-3.example.com gateway.submariner.io/public-ip=ipv4:172.16.0.43
 
 $ subctl version 
 subctl version: v0.12.0

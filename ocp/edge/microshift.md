@@ -639,6 +639,16 @@ sudo firewall-cmd --zone=trusted --add-source=10.72.0.0/16 --permanent
 sudo firewall-cmd --reload
 ```
 
+### 删除 microshift  
+```
+systemctl stop microshift
+/usr/bin/crictl stopp $(/usr/bin/crictl pods -q)
+/usr/bin/crictl stop $(/usr/bin/crictl ps -aq)
+/usr/bin/crictl rmp $(crictl pods -q)
+rm -rf /var/lib/containers/*
+crio wipe -f
+```
+
 
 ### 参考链接
 [WIP] Add OAuth API server to Microshift #244<br>

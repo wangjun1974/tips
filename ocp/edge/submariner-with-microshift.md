@@ -656,3 +656,33 @@ sudo firewall-cmd --zone=public --add-port=4567/tcp --permanent
 sudo firewall-cmd --zone=public --add-port=4568/tcp --permanent
 sudo firewall-cmd --reload
 ```
+
+### join cluster with --cable-driver=vxlan
+```
+### annotate node public-ip in on-prem env
+### e.g.: kubectl annotate node $GW gateway.submariner.io/public-ip=ipv4:<1.2.3.4>
+$ oc --kubeconfig=/root/kubeconfig/edge/edge-1/kubeconfig annotate node edge-1.example.com gateway.submariner.io/public-ip=ipv4:172.16.0.41
+$ oc --kubeconfig=/root/kubeconfig/edge/edge-2/kubeconfig annotate node edge-2.example.com gateway.submariner.io/public-ip=ipv4:172.16.0.42
+$ oc --kubeconfig=/root/kubeconfig/edge/edge-3/kubeconfig annotate node edge-3.example.com gateway.submariner.io/public-ip=ipv4:172.16.0.43
+
+### Deploy submariner broker on edge-1 without globalnet enabled
+$ subctl deploy-broker --kubeconfig /root/kubeconfig/edge/edge-1/kubeconfig 
+
+### run cloud prepare generic on edge-1
+$ subctl cloud prepare generic --kubeconfig /root/kubeconfig/edge/edge-1/kubeconfig
+
+### join edge-1 to broker as cluster1 with cable-driver 'vxlan'
+$ subctl join --kubeconfig /root/kubeconfig/edge/edge-1/kubeconfig broker-info.subm --clusterid cluster1 --cable-driver=vxlan
+
+### run cloud prepare generic on edge-2
+$ subctl cloud prepare generic --kubeconfig /root/kubeconfig/edge/edge-2/kubeconfig
+
+### join edge-2 to broker as cluster1 with cable-driver 'vxlan'
+$ subctl join --kubeconfig /root/kubeconfig/edge/edge-2/kubeconfig broker-info.subm --clusterid cluster2 --cable-driver=vxlan
+
+### run cloud prepare generic on edge-3
+$ subctl cloud prepare generic --kubeconfig /root/kubeconfig/edge/edge-2/kubeconfig
+
+### join edge-3 to broker as cluster1 with cable-driver 'vxlan'
+$ subctl join --kubeconfig /root/kubeconfig/edge/edge-3/kubeconfig broker-info.subm --clusterid cluster3 --cable-driver=vxlan
+```

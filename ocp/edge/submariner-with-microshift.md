@@ -475,8 +475,10 @@ $ oc --kubeconfig /root/kubeconfig/edge/edge-2/kubeconfig describe Gateway -n su
 ### Submariner Gateway Firewall
 ```
 # https://submariner.io/getting-started/
-sudo firewall-cmd --zone=public --add-port=4500/udp --permanent
+sudo firewall-cmd --zone=public --add-port=500/udp --permanent
+sudo firewall-cmd --zone=public --add-port=501/udp --permanent
 sudo firewall-cmd --zone=public --add-port=4490/udp --permanent
+sudo firewall-cmd --zone=public --add-port=4500/udp --permanent
 sudo firewall-cmd --zone=public --add-port=4501/udp --permanent
 sudo firewall-cmd --zone=public --add-port=4800/udp --permanent
 sudo firewall-cmd --zone=public --add-port=8080/tcp --permanent

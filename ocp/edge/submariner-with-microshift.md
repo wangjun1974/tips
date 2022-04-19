@@ -686,3 +686,103 @@ $ subctl cloud prepare generic --kubeconfig /root/kubeconfig/edge/edge-2/kubecon
 ### join edge-3 to broker as cluster1 with cable-driver 'vxlan'
 $ subctl join --kubeconfig /root/kubeconfig/edge/edge-3/kubeconfig broker-info.subm --clusterid cluster3 --cable-driver=vxlan
 ```
+
+### Submariner 0.10
+```
+
+### download subctl 0.10
+$ wget https://github.com/submariner-io/submariner-operator/releases/download/subctl-release-0.10/subctl-release-0.10-linux-amd64.tar.xz
+$ tar Jxf subctl-release-0.10-linux-amd64.tar.xz
+$ mv subctl-release-0.10/subctl-release-0.10-linux-amd64 /usr/local/bin/subctl 
+
+$ subctl version
+subctl version: release-0.10
+
+### annotate node public-ip in on-prem env
+### e.g.: kubectl annotate node $GW gateway.submariner.io/public-ip=ipv4:<1.2.3.4>
+$ oc --kubeconfig=/root/kubeconfig/edge/edge-1/kubeconfig annotate node edge-1.example.com gateway.submariner.io/public-ip=ipv4:172.16.0.41
+$ oc --kubeconfig=/root/kubeconfig/edge/edge-2/kubeconfig annotate node edge-2.example.com gateway.submariner.io/public-ip=ipv4:172.16.0.42
+$ oc --kubeconfig=/root/kubeconfig/edge/edge-3/kubeconfig annotate node edge-3.example.com gateway.submariner.io/public-ip=ipv4:172.16.0.43
+
+$ subctl deploy-broker --kubeconfig /root/kubeconfig/edge/edge-1/kubeconfig 
+$ subctl join --kubeconfig /root/kubeconfig/edge/edge-1/kubeconfig broker-info.subm --clusterid cluster1 --natt=false
+$ subctl join --kubeconfig /root/kubeconfig/edge/edge-2/kubeconfig broker-info.subm --clusterid cluster2 --natt=false
+$ subctl join --kubeconfig /root/kubeconfig/edge/edge-3/kubeconfig broker-info.subm --clusterid cluster3 --natt=false
+
+### microshift can not verify by this method
+$ subctl verify /root/kubeconfig/edge/edge-1/kubeconfig /root/kubeconfig/edge/edge-2/kubeconfig --only connectivity --verbose
+
+### deploy nginx on edge-1/2/3
+$ oc --kubeconfig=/root/kubeconfig/edge/edge-1/kubeconfig create namespace nginx-test
+$ oc --kubeconfig=/root/kubeconfig/edge/edge-1/kubeconfig -n nginx-test create deployment nginx --image=nginxinc/nginx-unprivileged:stable-alpine
+$ oc --kubeconfig=/root/kubeconfig/edge/edge-2/kubeconfig create namespace nginx-test
+$ oc --kubeconfig=/root/kubeconfig/edge/edge-2/kubeconfig -n nginx-test create deployment nginx --image=nginxinc/nginx-unprivileged:stable-alpine
+$ oc --kubeconfig=/root/kubeconfig/edge/edge-3/kubeconfig create namespace nginx-test
+$ oc --kubeconfig=/root/kubeconfig/edge/edge-3/kubeconfig -n nginx-test create deployment nginx --image=nginxinc/nginx-unprivileged:stable-alpine
+
+### obtain pod ip
+$ oc --kubeconfig=/root/kubeconfig/edge/edge-1/kubeconfig -n nginx-test get $(oc --kubeconfig=/root/kubeconfig/edge/edge-1/kubeconfig -n nginx-test get pods -l app=nginx -o name) -o jsonpath='{.status.podIP}{"\n"}'
+10.42.0.67
+$ oc --kubeconfig=/root/kubeconfig/edge/edge-2/kubeconfig -n nginx-test get $(oc --kubeconfig=/root/kubeconfig/edge/edge-2/kubeconfig -n nginx-test get pods -l app=nginx -o name) -o jsonpath='{.status.podIP}{"\n"}'
+10.52.0.20
+$ oc --kubeconfig=/root/kubeconfig/edge/edge-3/kubeconfig -n nginx-test get $(oc --kubeconfig=/root/kubeconfig/edge/edge-3/kubeconfig -n nginx-test get pods -l app=nginx -o name) -o jsonpath='{.status.podIP}{"\n"}'
+10.62.0.13
+
+### 
+$ oc -n nginx-test run tmp-shell --rm -i --tty --image quay.io/submariner/nettest -- /bin/bash
+bash-5.0# curl 10.42.0.67:8080
+bash-5.0# curl 10.52.0.20:8080
+bash-5.0# curl 10.62.0.13:8080
+
+### Describe Gateway
+$ oc -n submariner-operator describe Gateway
+
+
+### deployment and daemonset
+$ oc get deployment -A 
+NAMESPACE              NAME                            READY   UP-TO-DATE   AVAILABLE   AGE
+...
+submariner-operator    submariner-lighthouse-agent     1/1     1            1           21m
+submariner-operator    submariner-lighthouse-coredns   2/2     2            2           21m
+submariner-operator    submariner-operator             1/1     1            1           22m
+
+$ oc get daemonset -A 
+NAMESPACE                       NAME                            DESIRED   CURRENT   READY   UP-TO-DATE   AVAILABLE   NODE SELECTOR                AGE
+...
+submariner-operator             submariner-gateway              1         1         1       1            1           submariner.io/gateway=true   21m
+submariner-operator             submariner-routeagent           1         1         1       1            1           <none>                       21m
+
+
+### obtain image list
+oc -n submariner-operator get deployment submariner-operator -o jsonpath='{.spec.template.spec.containers[0].image}{"\n"}'
+oc -n submariner-operator get deployment submariner-lighthouse-agent -o jsonpath='{.spec.template.spec.containers[0].image}{"\n"}'
+oc -n submariner-operator get deployment submariner-lighthouse-coredns -o jsonpath='{.spec.template.spec.containers[0].image}{"\n"}'
+
+oc -n submariner-operator get daemonset submariner-gateway -o jsonpath='{.spec.template.spec.containers[0].image}{"\n"}'
+oc -n submariner-operator get daemonset submariner-routeagent -o jsonpath='{.spec.template.spec.containers[0].image}{"\n"}'
+
+quay.io/submariner/submariner-operator:release-0.10
+quay.io/submariner/lighthouse-agent:release-0.10
+quay.io/submariner/lighthouse-coredns:release-0.10
+quay.io/submariner/submariner-gateway:release-0.10
+quay.io/submariner/submariner-route-agent:release-0.10
+
+### 
+oc image mirror quay.io/submariner/lighthouse-agent:release-0.10          file://submariner/lighthouse-agent:release-0.10
+oc image mirror quay.io/submariner/lighthouse-coredns:release-0.10        file://submariner/lighthouse-coredns:release-0.10
+oc image mirror quay.io/submariner/submariner-gateway:release-0.10        file://submariner/submariner-gateway:release-0.10
+oc image mirror quay.io/submariner/submariner-operator:release-0.10       file://submariner/submariner-operator:release-0.10
+oc image mirror quay.io/submariner/submariner-route-agent:release-0.10    file://submariner/submariner-route-agent:release-0.10
+oc image mirror gcr.io/google_containers/pause:latest             file://google_containers/pause:latest
+
+tar -cf xxxx.tar  ./
+
+tar -xf xxxx.tar
+
+oc image mirror  --from-dir=./  file://submariner/lighthouse-agent:release-0.10         registry.gaolantest.greeyun.com:8443/microshift/submariner/lighthouse-agent:release-0.10      
+oc image mirror  --from-dir=./  file://submariner/lighthouse-coredns:release-0.10       registry.gaolantest.greeyun.com:8443/microshift/submariner/lighthouse-coredns:release-0.10    
+oc image mirror  --from-dir=./  file://submariner/submariner-gateway:release-0.10       registry.gaolantest.greeyun.com:8443/microshift/submariner/submariner-gateway:release-0.10    
+oc image mirror  --from-dir=./  file://submariner/submariner-operator:release-0.10      registry.gaolantest.greeyun.com:8443/microshift/submariner/submariner-operator:release-0.10   
+oc image mirror  --from-dir=./  file://submariner/submariner-route-agent:release-0.10   registry.gaolantest.greeyun.com:8443/microshift/submariner/submariner-route-agent:release-0.10
+oc image mirror  --from-dir=./  file://google_containers/pause:latest             registry.gaolantest.greeyun.com:8443/microshift/google_containers/pause:latest      
+```

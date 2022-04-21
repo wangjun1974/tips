@@ -642,13 +642,49 @@ sudo firewall-cmd --reload
 ### 删除 microshift  
 ```
 systemctl stop microshift
-/usr/bin/crictl stopp $(/usr/bin/crictl pods -q)
-/usr/bin/crictl stop $(/usr/bin/crictl ps -aq)
-/usr/bin/crictl rmp $(crictl pods -q)
-rm -rf /var/lib/containers/*
+#/usr/bin/crictl stopp $(/usr/bin/crictl pods -q)
+#/usr/bin/crictl stop $(/usr/bin/crictl ps -aq)
+#/usr/bin/crictl rmp $(crictl pods -q)
+/usr/bin/crictl rm --all --force
+/usr/bin/crictl rmi --all --prune
+pkill -9 conmon
+pkill -9 pause
 crio wipe -f
+rm -rf /var/lib/containers/*
+
+以下步骤可不执行
+#/usr/bin/crictl stopp $(/usr/bin/crictl pods -q)
+#/usr/bin/crictl stop $(/usr/bin/crictl ps -aq)
+#/usr/bin/crictl rmp $(crictl pods -q)
 ```
 
+### 通过 /etc/microshift/config.yaml 设置 clusterCIDR 和 serviceCIDR 时
+```
+$ cat /etc/microshift/config.yaml
+---
+cluster:
+  clusterCIDR: '10.52.0.0/16'
+  serviceCIDR: '10.53.0.0/16'
+  dns: '10.53.0.10'
+  domain: cluster.local
+
+# 需手动更新 flannel 的 configmap kube-flannel-cfg
+$ oc get configmap kube-flannel-cfg -n kube-system -o yaml | grep -Ev "creationTimestamp|resourceVersion|selfLink|uid" | tee kube-flannel-cfg.yaml
+$ FLANEL_NETWORK="10.52.0.0"
+$ sed -i "s|10.42.0.0|${FLANEL_NETWORK}|g" kube-flannel-cfg.yaml
+$ oc apply -f kube-flannel-cfg.yaml
+
+# 并且删除重建 flannel pod
+$ oc -n kube-system delete $(oc -n kube-system get pods -l app=flannel -o name) 
+
+# 之后检查/run/flannel/subnet.env
+$ oc -n kube-system rsh $(oc -n kube-system get pods -l app=flannel -o name) cat /run/flannel/subnet.env 
+Defaulted container "kube-flannel" out of: kube-flannel, install-cni-bin (init), install-cni (init)
+FLANNEL_NETWORK=10.52.0.0/16
+FLANNEL_SUBNET=10.52.0.1/24
+FLANNEL_MTU=1450
+FLANNEL_IPMASQ=true
+```
 
 ### 参考链接
 [WIP] Add OAuth API server to Microshift #244<br>

@@ -684,6 +684,9 @@ FLANNEL_NETWORK=10.52.0.0/16
 FLANNEL_SUBNET=10.52.0.1/24
 FLANNEL_MTU=1450
 FLANNEL_IPMASQ=true
+
+# 测试域名解析
+oc -n openshift-dns rsh $(oc -n openshift-dns get pods -l dns.operator.openshift.io/daemonset-dns=default -o name) dig <domainname>
 ```
 
 ### 参考链接

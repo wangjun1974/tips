@@ -722,10 +722,40 @@ $ oc -n kube-system rsh $(oc -n kube-system get pods -l app=flannel -o name) cat
 
 # 测试域名解析
 $ oc -n openshift-dns rsh $(oc -n openshift-dns get pods -l dns.operator.openshift.io/daemonset-dns=default -o name) dig <domainname>
-$ ocl1 -n openshift-dns rsh $(ocl1 -n openshift-dns get pods -l dns.operator.openshift.io/daemonset-dns=default -o name) dig www.bing.com
+
+# 查看 kubevirt-hostpath-provisioner pod 日志
+$ oc -n kubevirt-hostpath-provisioner logs $(oc -n kubevirt-hostpath-provisioner get pods -l k8s-app=kubevirt-hostpath-provisioner -o name)
+
+# 查看 node-resolver pod 日志
+$ oc -n openshift-dns logs $(oc -n openshift-dns get pods -l dns.operator.openshift.io/daemonset-node-resolver="" -o name)
+
+# 查看 router-default pod 日志
+$ oc -n openshift-ingress logs $(oc -n openshift-ingress get pods -l ingresscontroller.operator.openshift.io/deployment-ingresscontroller="default" -o name)
+
+# 删除 router-default pod
+$ oc -n openshift-ingress delete $(oc -n openshift-ingress get pods -l ingresscontroller.operator.openshift.io/deployment-ingresscontroller="default" -o name)
+
+```
+
+### 检查 microshift pods 日志
+```
+# 查看 flannel pod 日志
+$ oc -n kube-system logs $(oc -n kube-system get pods -l app=flannel -o name) 
+
+# 查看 dns-default pod 日志
+$ oc -n openshift-dns logs $(oc -n openshift-dns get pods -l dns.operator.openshift.io/daemonset-dns=default -o name)
+
+# 查看 node-resolver pod 日志
+$ oc -n openshift-dns logs $(oc -n openshift-dns get pods -l dns.operator.openshift.io/daemonset-node-resolver="" -o name)
+
+# 查看 router-default pod 日志
+$ oc -n openshift-ingress logs $(oc -n openshift-ingress get pods -l ingresscontroller.operator.openshift.io/deployment-ingresscontroller="default" -o name)
 
 # 查看 service-ca pod 日志
-oc -n openshift-ingress logs $(oc -n openshift-ingress get pods -l ingresscontroller.operator.openshift.io/deployment-ingresscontroller=default -o name)
+$ oc -n openshift-service-ca logs $(oc -n openshift-service-ca get pods -l app=service-ca -o name) 
+
+# 查看 kubevirt-hostpath-provisioner pod 日志
+$ oc -n kubevirt-hostpath-provisioner logs $(oc -n kubevirt-hostpath-provisioner get pods -l k8s-app=kubevirt-hostpath-provisioner -o name)
 ```
 
 ### 参考链接

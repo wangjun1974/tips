@@ -440,6 +440,7 @@ https://srobb.net/pf.html<br>
 ```
 # 如果使用 Docker Desktop 在 mac 上运行 microshift 不需要调整 mac 的防火墙规则
 # 但是保留用于说明如何通过命令行调整 Mac 的防火墙规则
+# 每次打开 Mac 都需要执行
 sudo cp /etc/pf.conf /etc/pf.conf.bak
 
 # 编辑 /etc/pf.conf 文件，在文件末尾添加以下规则

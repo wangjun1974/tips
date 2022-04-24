@@ -758,6 +758,44 @@ $ oc -n openshift-service-ca logs $(oc -n openshift-service-ca get pods -l app=s
 $ oc -n kubevirt-hostpath-provisioner logs $(oc -n kubevirt-hostpath-provisioner get pods -l k8s-app=kubevirt-hostpath-provisioner -o name)
 ```
 
+### 检查 klusterlet 日志
+```
+# 查看 klusterlet pod 日志
+$ oc -n open-cluster-management-agent logs $(oc -n open-cluster-management-agent get pods -l app=klusterlet -o name) 
+
+# 查看 klusterlet-registration-agent pod 日志
+$ oc -n open-cluster-management-agent logs $(oc -n open-cluster-management-agent get pods -l app=klusterlet-registration-agent -o name) 
+
+# 查看 klusterlet-work-agent pod 日志
+$ oc -n open-cluster-management-agent logs $(oc -n open-cluster-management-agent get pods -l app=klusterlet-manifestwork-agent -o name) 
+```
+
+### 检查 klusterlet addon 日志
+```
+# 查看 klusterlet-addon-operator pod 日志
+$ oc -n open-cluster-management-agent-addon logs $(oc -n open-cluster-management-agent-addon get pods -l name=klusterlet-addon-operator -o name) 
+
+# 查看 klusterlet-addon-appmgr pod 日志
+$ oc -n open-cluster-management-agent-addon logs $(oc -n open-cluster-management-agent-addon get pods -l app=application-manager -o name) 
+
+# 查看 klusterlet-addon-certpolicyctrl pod 日志
+$ oc -n open-cluster-management-agent-addon logs $(oc -n open-cluster-management-agent-addon get pods -l app=cert-policy-controller -o name) 
+
+# 查看 klusterlet-addon-policyctrl-framework pod 日志
+$ oc -n open-cluster-management-agent-addon logs $(oc -n open-cluster-management-agent-addon get pods -l app=policy-framework -o name) -c spec-sync
+$ oc -n open-cluster-management-agent-addon logs $(oc -n open-cluster-management-agent-addon get pods -l app=policy-framework -o name) -c status-sync
+$ oc -n open-cluster-management-agent-addon logs $(oc -n open-cluster-management-agent-addon get pods -l app=policy-framework -o name) -c template-sync
+
+# 查看 klusterlet-addon-policyctrl-config-policy pod 日志
+$ oc -n open-cluster-management-agent-addon logs $(oc -n open-cluster-management-agent-addon get pods -l app=policy-config-policy -o name)
+
+# 查看 klusterlet-addon-search pod 日志
+$ oc -n open-cluster-management-agent-addon logs $(oc -n open-cluster-management-agent-addon get pods -l app=search -o name)
+
+# 查看 klusterlet-addon-workmgr pod 日志
+$ oc -n open-cluster-management-agent-addon logs $(oc -n open-cluster-management-agent-addon get pods -l app=work-manager -o name)
+```
+
 ### 参考链接
 [WIP] Add OAuth API server to Microshift #244<br>
 https://github.com/redhat-et/microshift/pull/244<br>

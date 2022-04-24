@@ -723,6 +723,9 @@ $ oc -n kube-system rsh $(oc -n kube-system get pods -l app=flannel -o name) cat
 # 测试域名解析
 $ oc -n openshift-dns rsh $(oc -n openshift-dns get pods -l dns.operator.openshift.io/daemonset-dns=default -o name) dig <domainname>
 $ ocl1 -n openshift-dns rsh $(ocl1 -n openshift-dns get pods -l dns.operator.openshift.io/daemonset-dns=default -o name) dig www.bing.com
+
+# 查看 service-ca pod 日志
+oc -n openshift-ingress logs $(oc -n openshift-ingress get pods -l ingresscontroller.operator.openshift.io/deployment-ingresscontroller=default -o name)
 ```
 
 ### 参考链接

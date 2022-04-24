@@ -178,6 +178,7 @@ mirror:
         - name: opendatahub-operator
 EOF
 /usr/local/bin/oc-mirror --config /root/image-config-realse-local.yaml file://output-dir
+/usr/local/bin/oc-mirror --config /root/image-config-realse-local.yaml --continue-on-error file://output-dir
 
 # 下载 cluster-logging operator
 cat > image-config-realse-local.yaml <<EOF

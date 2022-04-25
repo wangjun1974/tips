@@ -8,7 +8,7 @@
 │   └── remove
 ├── hub
 │   └── lb-ext.kubeconfig
-└── secret
+└── secrets
     └── auth.json
 
 # /opt/acm/bin/cluster_operator.sh
@@ -17,7 +17,7 @@
 
 # /opt/acm/hub/lb-ext.kubeconfig 是 hub 的 kubeconfig
 
-# /opt/acm/auth/auth.json 是访问 registry 的 pull secret，添加 cluster 时在 spoke cluster 里生成供 sa 使用的 pull secret
+# /opt/acm/secrets/auth.json 是访问 registry 的 pull secret，添加 cluster 时在 spoke cluster 里生成供 sa 使用的 pull secret
 
 # /opt/acm/clusters/add 目录下存放要添加集群的配置文件
 

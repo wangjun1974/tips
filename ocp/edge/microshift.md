@@ -824,9 +824,13 @@ status:
 EOF
 
 $ oc -n nginx-test expose service nginx --type=NodePort --name=nginx-nodeport --generator="service/v2"
+
+# 按需替换 nodePort
 $ oc -n nginx-test patch service nginx-nodeport --type json -p '[{"op": "replace", "path": "/spec/ports/0/nodePort", "value": 8080}]'
 
 $ oc run -n nginx-test tmp-shell --rm -i --tty --image quay.io/submariner/nettest -- /bin/bash
+
+
 
 ```
 

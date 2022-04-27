@@ -378,4 +378,90 @@ pool-peer-token-ocs-storagecluster-cephblockpool
 
 oc --kubeconfig ./hub/lb-ext.kubeconfig get cephblockpool.ceph.rook.io/ocs-storagecluster-cephblockpool -n openshift-storage -ojsonpath='{.status.info.rbdMirrorBootstrapPeerSecretName}{"\n"}'
 
+
+https://red-hat-storage.github.io/ocs-training/RegionalDR/manual/ocs4-multisite-replication.html#_configuring_multisite_storage_replication
+
+
+cat <<EOF | oc --kubeconfig=./hub/lb-ext.kubeconfig apply -f -
+apiVersion: ceph.rook.io/v1
+kind: CephBlockPool
+metadata:
+   name: replicapool
+   namespace: openshift-storage
+spec:
+   replicated:
+     size: 3
+   mirroring:
+     enabled: true
+     mode: image
+     snapshotSchedules:
+       - interval: 5m
+   statusCheck:
+     mirror:
+       disabled: false
+       interval: 60s
+EOF
+
+oc --kubeconfig=./hub/lb-ext.kubeconfig get CephBlockPool -A
+
+cat <<EOF | oc --kubeconfig=./cluster1/lb-ext.kubeconfig apply -f -
+apiVersion: ceph.rook.io/v1
+kind: CephBlockPool
+metadata:
+   name: replicapool
+   namespace: openshift-storage
+spec:
+   replicated:
+     size: 3
+   mirroring:
+     enabled: true
+     mode: image
+     snapshotSchedules:
+       - interval: 5m
+   statusCheck:
+     mirror:
+       disabled: false
+       interval: 60s
+EOF
+
+oc --kubeconfig=./cluster1/lb-ext.kubeconfig get CephBlockPool -A
+
+# 在 secondary cluster 首先执行
+oc --kubeconfig=./hub/lb-ext.kubeconfig get cephblockpool.ceph.rook.io/replicapool -n openshift-storage -ojsonpath='{.status.info.rbdMirrorBootstrapPeerSecretName}{"\n"}'
+pool-peer-token-replicapool
+
+oc --kubeconfig=./hub/lb-ext.kubeconfig get secrets pool-peer-token-replicapool -n openshift-storage -o jsonpath='{.data.token}' | base64 -d
+eyJmc2lkIjoiMzQwMDlkMGQtOTYxZS00NWYyLWE4MjQtYjliZmUxNjY0MmVjIiwiY2xpZW50X2lkIjoicmJkLW1pcnJvci1wZWVyIiwia2V5IjoiQVFENVRXZGkxRjRyRlJBQURGeENlYnpKMlcyQm5BMjVZM0Jxbnc9PSIsIm1vbl9ob3N0IjoiW3YyOjE3Mi4zMi4zOS4yMTQ6MzMwMCx2MToxNzIuMzIuMzkuMjE0OjY3ODldLFt2MjoxNzIuMzIuMTk0LjE1OTozMzAwLHYxOjE3Mi4zMi4xOTQuMTU5OjY3ODldLFt2MjoxNzIuMzIuMjU0LjE0OTozMzAwLHYxOjE3Mi4zMi4yNTQuMTQ5OjY3ODldIiwibmFtZXNwYWNlIjoib3BlbnNoaWZ0LXN0b3JhZ2UifQ==
+
+# 获取 site_name
+oc --kubeconfig=./hub/lb-ext.kubeconfig get cephblockpools.ceph.rook.io replicapool -n openshift-storage -o jsonpath='{.status.mirroringInfo.site_name}{"\n"}'
+34009d0d-961e-45f2-a824-b9bfe16642ec
+
+oc --kubeconfig=./cluster1/lb-ext.kubeconfig -n openshift-storage \
+  create secret generic 34009d0d-961e-45f2-a824-b9bfe16642ec \
+  --from-literal=token=eyJmc2lkIjoiMzQwMDlkMGQtOTYxZS00NWYyLWE4MjQtYjliZmUxNjY0MmVjIiwiY2xpZW50X2lkIjoicmJkLW1pcnJvci1wZWVyIiwia2V5IjoiQVFENVRXZGkxRjRyRlJBQURGeENlYnpKMlcyQm5BMjVZM0Jxbnc9PSIsIm1vbl9ob3N0IjoiW3YyOjE3Mi4zMi4zOS4yMTQ6MzMwMCx2MToxNzIuMzIuMzkuMjE0OjY3ODldLFt2MjoxNzIuMzIuMTk0LjE1OTozMzAwLHYxOjE3Mi4zMi4xOTQuMTU5OjY3ODldLFt2MjoxNzIuMzIuMjU0LjE0OTozMzAwLHYxOjE3Mi4zMi4yNTQuMTQ5OjY3ODldIiwibmFtZXNwYWNlIjoib3BlbnNoaWZ0LXN0b3JhZ2UifQ== \
+  --from-literal=pool=replicapool
+
+oc --kubeconfig=./cluster1/lb-ext.kubeconfig get cephblockpool.ceph.rook.io/replicapool -n openshift-storage -ojsonpath='{.status.info.rbdMirrorBootstrapPeerSecretName}{"\n"}'
+pool-peer-token-replicapool
+
+oc --kubeconfig=./cluster1/lb-ext.kubeconfig get secrets pool-peer-token-replicapool -n openshift-storage -o jsonpath='{.data.token}' | base64 -d
+eyJmc2lkIjoiNDQwYmJlNjItNzZlYi00Y2M2LWJiZDgtNDcyNDkzZGI3MTE4IiwiY2xpZW50X2lkIjoicmJkLW1pcnJvci1wZWVyIiwia2V5IjoiQVFCVWwyZGlHdFZzQXhBQVpVcmdmZW1BMDVreEthQ09ZK0JOUEE9PSIsIm1vbl9ob3N0IjoiW3YyOjE3Mi4zMC4xNDAuNzQ6MzMwMCx2MToxNzIuMzAuMTQwLjc0OjY3ODldLFt2MjoxNzIuMzAuMTEwLjIxODozMzAwLHYxOjE3Mi4zMC4xMTAuMjE4OjY3ODldLFt2MjoxNzIuMzAuMTU2LjIyNDozMzAwLHYxOjE3Mi4zMC4xNTYuMjI0OjY3ODldIiwibmFtZXNwYWNlIjoib3BlbnNoaWZ0LXN0b3JhZ2UifQ==
+
+oc --kubeconfig=./cluster1/lb-ext.kubeconfig get cephblockpools.ceph.rook.io replicapool -n openshift-storage -o jsonpath='{.status.mirroringInfo.site_name}{"\n"}'
+440bbe62-76eb-4cc6-bbd8-472493db7118
+
+oc --kubeconfig=./hub/lb-ext.kubeconfig -n openshift-storage \
+  create secret generic 440bbe62-76eb-4cc6-bbd8-472493db7118 \
+  --from-literal=token=eyJmc2lkIjoiZjI4YWJjZjktMWZmZS00MWEwLWJkMmYtZjQzMDU2NGYwZWU1IiwiY2xpZW50X2lkIjoicmJkLW1pcnJvci1wZWVyIiwia2V5IjoiQVFDeStWTmdHQ25GQWhBQU5MNWQ1Zk9IQ1lMcTFYRDBSTkxMRHc9PSIsIm1vbl9ob3N0IjoiW3YyOjEwLjE2Ljc1LjE2NTozMzAwLHYxOjEwLjE2Ljc1LjE2NTo2Nzg5XSxbdjI6MTAuMTYuMTc2LjEwMTozMzAwLHYxOjEwLjE2LjE3Ni4xMDE6Njc4OV0sW3YyOjEwLjE2LjI0OC4yNDM6MzMwMCx2MToxMC4xNi4yNDguMjQzOjY3ODldIn0= \
+  --from-literal=pool=replicapool
+
+oc --kubeconfig=./hub/lb-ext.kubeconfig get CephRBDMirror -A
+oc --kubeconfig=./hub/lb-ext.kubeconfig get CephBlockPool -A
+
+oc --kubeconfig=./hub/lb-ext.kubeconfig get CephBlockPool ocs-storagecluster-cephblockpool -n openshift-storage -o yaml 
+
+oc --kubeconfig=./cluster1/lb-ext.kubeconfig get CephBlockPool ocs-storagecluster-cephblockpool -n openshift-storage -o yaml 
+
+oc --kubeconfig=./hub/lb-ext.kubeconfig get MirrorPeer mirrorpeer-localcluster-cluster1
 ```

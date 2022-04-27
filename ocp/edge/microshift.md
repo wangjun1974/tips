@@ -796,6 +796,65 @@ $ oc -n open-cluster-management-agent-addon logs $(oc -n open-cluster-management
 $ oc -n open-cluster-management-agent-addon logs $(oc -n open-cluster-management-agent-addon get pods -l app=work-manager -o name)
 ```
 
+### 测试实例
+```
+$ oc create namespace nginx-test
+$ oc -n nginx-test create deployment nginx --image=nginxinc/nginx-unprivileged:stable-alpine
+
+$ cat <<EOF | oc apply -f -
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: nginx
+  name: nginx
+  namespace: nginx-test
+spec:
+  ports:
+  - name: http
+    port: 8080
+    protocol: TCP
+    targetPort: 8080
+  selector:
+    app: nginx
+  sessionAffinity: None
+  type: ClusterIP
+status:
+  loadBalancer: {}
+EOF
+
+$ oc -n nginx-test expose service nginx --type=NodePort --name=nginx-nodeport --generator="service/v2"
+$ oc -n nginx-test patch service nginx-nodeport --type json -p '[{"op": "replace", "path": "/spec/ports/0/nodePort", "value": 8080}]'
+
+$ oc run -n nginx-test tmp-shell --rm -i --tty --image quay.io/submariner/nettest -- /bin/bash
+
+```
+
+### 安装数据库实例
+定义 NodePort 范围
+https://github.com/redhat-et/microshift/pull/649
+```
+# set default storage class 
+oc patch storageclass kubevirt-hostpath-provisioner -p '{"metadata": {"annotations": {"storageclass.kubernetes.io/is-default-class": "true"}}}'
+
+# 将服务暴露为 nodeport
+oc -n default expose service my-release-mariadb-galera --type=NodePort --name=my-release-mariadb-galera-nodeport --generator="service/v2"
+
+# microshift 设置 nodeport
+https://github.com/redhat-et/microshift/pull/649
+
+cat > /etc/microshift/config.yaml <<EOF
+---
+cluster:
+  clusterCIDR: '10.42.0.0/16'
+  serviceCIDR: '10.43.0.0/16'
+  serviceNodePortRange: "3000-33000"
+  dns: '10.43.0.10'
+  domain: cluster.local
+EOF
+```
+
+
 ### 参考链接
 [WIP] Add OAuth API server to Microshift #244<br>
 https://github.com/redhat-et/microshift/pull/244<br>

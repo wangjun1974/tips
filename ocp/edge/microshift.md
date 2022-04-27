@@ -799,7 +799,7 @@ $ oc -n open-cluster-management-agent-addon logs $(oc -n open-cluster-management
 ### 测试实例
 ```
 $ oc create namespace nginx-test
-$ oc -n nginx-test create deployment nginx --image=nginxinc/nginx-unprivileged:stable-alpine
+$ oc -n nginx-test create deployment nginx --image=docker.io/nginxinc/nginx-unprivileged:stable-alpine
 
 $ cat <<EOF | oc apply -f -
 apiVersion: v1

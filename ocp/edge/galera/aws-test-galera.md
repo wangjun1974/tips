@@ -43,7 +43,7 @@ MariaDB [(none)]> EXIT;
 $ mysql -u root -p -h 10.66.208.165
 
 ### 停止 mariadb 服务
-systemctl stop mariadb
+$ systemctl stop mariadb
 
 ### 编辑首节点 /etc/my.cnf.d/galera.cnf 
 # wsrep_cluster_address=gcomm://

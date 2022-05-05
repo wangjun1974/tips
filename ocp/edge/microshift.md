@@ -864,6 +864,7 @@ EOF
 https://github.com/redhat-et/microshift/pull/244<br>
 https://microshift.io/docs/user-documentation/configuring/<br>
 https://github.com/redhat-et/microshift/blob/main/test/config.yaml<br>
+https://microshift.io/docs/user-documentation/how-tos/private-registries/<br>
 
 ```
 https://github.com/redhat-et/microshift/pull/457

@@ -863,6 +863,15 @@ EOF
 oc -n openshift-ingress set env deployment/router-default ROUTER_SUBDOMAIN="\${name}-\${namespace}.apps.example.com" ROUTER_ALLOW_WILDCARD_ROUTES="true" ROUTER_OVERRIDE_HOSTNAME="true"
 ```
 
+### 更新 openshift router-default 证书
+https://www.opensourcerers.org/2022/01/17/openshift-on-raspberry-pi-4/
+```
+[root@microshift ~]# oc create secret \ -n openshift-ingress tls letsencrypt \ --cert=cert.crt --key=cert.key
+secret/letsencrypt created
+[root@microshift ~]# oc set volumes \ -n openshift-ingress deployment/router-default \ --add --name=default-certificate \ --secret-name=letsencrypt --overwrite deployment.apps/router-default
+volume updated
+```
+
 ### 参考链接
 [WIP] Add OAuth API server to Microshift #244<br>
 https://github.com/redhat-et/microshift/pull/244<br>

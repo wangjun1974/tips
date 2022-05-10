@@ -860,6 +860,15 @@ cluster:
 EOF
 ```
 
+### 安装helm
+```
+$ curl http://<DOWNLOADURL>/tools/helm-linux-amd64.tar.gz -o helm.tar.gz
+$ tar xvfz helm.tar.gz 
+$ rm helm.tar.gz 
+$ chmod +x helm
+$ mv helm /usr/local/bin/.
+```
+
 ### 更新 deployment router-default 的 env，设置 route 为定制化域名格式
 ```
 oc -n openshift-ingress set env deployment/router-default ROUTER_SUBDOMAIN="\${name}-\${namespace}.apps.example.com" ROUTER_ALLOW_WILDCARD_ROUTES="true" ROUTER_OVERRIDE_HOSTNAME="true"

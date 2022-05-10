@@ -838,6 +838,8 @@ $ oc run -n nginx-test tmp-shell --rm -i --tty --image quay.io/submariner/nettes
 定义 NodePort 范围
 https://github.com/redhat-et/microshift/pull/649
 ```
+# quay.io/microshift/microshift:4.8.0-0.microshift-2022-04-20-182108
+# worked
 # set default storage class 
 oc patch storageclass kubevirt-hostpath-provisioner -p '{"metadata": {"annotations": {"storageclass.kubernetes.io/is-default-class": "true"}}}'
 

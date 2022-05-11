@@ -167,3 +167,6 @@ $ rm -rf /var/lib/mysql/*
 $ rm -rf /var/lib/mysql/.sst
 $ ls -al /var/lib/mysql
 ```
+
+### 其他参考
+https://cgruver.github.io/mariadb-galera-okd/pages/ContainerBuild.html<br>

@@ -862,11 +862,17 @@ EOF
 
 ### 安装helm
 ```
+$ cd /tmp
 $ curl http://<DOWNLOADURL>/tools/helm-linux-amd64.tar.gz -o helm.tar.gz
 $ tar xvfz helm.tar.gz 
 $ rm helm.tar.gz 
 $ chmod +x helm
 $ mv helm /usr/local/bin/.
+
+$ curl http://10.27.133.3:81/tools/charts-master.zip -o charts.zip
+
+NAME                               STATUS   ROLES    AGE    VERSION
+fen1unit1.gaolantest.greeyun.com   Ready    <none>   5d6h   v1.21.0
 ```
 
 ### 更新 deployment router-default 的 env，设置 route 为定制化域名格式

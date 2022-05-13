@@ -44,11 +44,12 @@ $ crontab -l
 
 add_cluster_to_acm()
 # 定义环境变量
-SSH_KEY="/root/.ssh/acm"
-CLUSTER_NAME="edge-1"
-REMOTE_HOST="8.140.106.163"
-REMOTE_PORT="6022"
-CLUSTER_API_IP="8.130.18.107"
+SSH_KEY="${HOME}/.ssh/acm"
+CLUSTER_NAME="fen1unit1"
+REMOTE_USER="infra-cluster"
+REMOTE_HOST="10.27.133.3"
+REMOTE_PORT="22"
+CLUSTER_API_IP="172.17.30.1"
 
 # 生成 kubeconfig，用 CLUSTER_API 替换 127.0.0.1
 mkdir -p ~/.kube
@@ -57,15 +58,15 @@ sed -i "s|127.0.0.1|${CLUSTER_API_IP}|g" ~/.kube/config
 
 # 生成配置文件
 cat > ${CLUSTER_NAME} <<EOF
-CLUSTER_NAME="edge-1"
+CLUSTER_NAME="${CLUSTER_NAME}"
 CLUSTER_KUBECONFIG="/opt/acm/clusters/${CLUSTER_NAME}/kubeconfig"
 CLUSTER_API="${CLUSTER_API_IP}"
 EOF
 
 # 上传配置文件和 kubeconfig
-ssh -i ${SSH_KEY} -p ${REMOTE_PORT} ${REMOTE_HOST} mkdir -p /opt/acm/clusters/${CLUSTER_NAME}
-scp -i ${SSH_KEY} -P ${REMOTE_PORT} ${CLUSTER_NAME} ${REMOTE_HOST}:/opt/acm/clusters/add
-scp -i ${SSH_KEY} -P ${REMOTE_PORT} ~/.kube/config ${REMOTE_HOST}:/opt/acm/clusters/${CLUSTER_NAME}/kubeconfig
+ssh -i ${SSH_KEY} -p ${REMOTE_PORT} ${REMOTE_USER}@${REMOTE_HOST} mkdir -p /opt/acm/clusters/${CLUSTER_NAME}
+scp -i ${SSH_KEY} -P ${REMOTE_PORT} ${CLUSTER_NAME} ${REMOTE_USER}@${REMOTE_HOST}:/opt/acm/clusters/add
+scp -i ${SSH_KEY} -P ${REMOTE_PORT} ~/.kube/config ${REMOTE_USER}@${REMOTE_HOST}:/opt/acm/clusters/${CLUSTER_NAME}/kubeconfig
 ```
 
 ### 删除集群时在 spoke cluster 执行
@@ -76,21 +77,22 @@ scp -i ${SSH_KEY} -P ${REMOTE_PORT} ~/.kube/config ${REMOTE_HOST}:/opt/acm/clust
 
 remove_cluster_from_acm()
 # 定义环境变量
-SSH_KEY="/root/.ssh/acm"
-CLUSTER_NAME="edge-1"
-REMOTE_HOST="8.140.106.163"
-REMOTE_PORT="6022"
-CLUSTER_API_IP="8.130.18.107"
+SSH_KEY="${HOME/.ssh/acm"
+CLUSTER_NAME="fen1unit1"
+REMOTE_USER="infra-cluster"
+REMOTE_HOST="10.27.133.3"
+REMOTE_PORT="22"
+CLUSTER_API_IP="172.17.30.1"
 
 # 生成配置文件
 cat > ${CLUSTER_NAME} <<EOF
-CLUSTER_NAME="edge-1"
+CLUSTER_NAME="${CLUSTER_NAME}"
 CLUSTER_KUBECONFIG="/opt/acm/clusters/${CLUSTER_NAME}/kubeconfig"
 CLUSTER_API="${CLUSTER_API_IP}"
 EOF
 
 # 上传配置文件和 kubeconfig
-scp -i ${SSH_KEY} -P ${REMOTE_PORT} ${CLUSTER_NAME} ${REMOTE_HOST}:/opt/acm/clusters/remove
+scp -i ${SSH_KEY} -P ${REMOTE_PORT} ${CLUSTER_NAME} ${REMOTE_USER}@${REMOTE_HOST}:/opt/acm/clusters/remove
 ```
 
 ### 配置文件说明

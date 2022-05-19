@@ -973,3 +973,13 @@ oc adm policy remove-scc-from-user anyuid -z cadvisor
 
 
 ```
+
+### obtain cadvisor metrics from microshift
+```
+$ kubectl create clusterrolebinding add-on-cluster-admin --clusterrole=cluster-admin --serviceaccount=kube-system:default
+$ oc project kube-system
+$ TOKEN=$(oc serviceaccounts get-token default)
+$ curl -Ssk --header "Authorization: Bearer ${TOKEN}" https://localhost:10250/metrics
+$ curl -Ssk --header "Authorization: Bearer ${TOKEN}" https://localhost:10250/metrics/cadvisor
+$ curl -Ssk --header "Authorization: Bearer ${TOKEN}" https://localhost:10250/stats/summary
+```

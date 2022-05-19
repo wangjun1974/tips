@@ -983,3 +983,6 @@ $ curl -Ssk --header "Authorization: Bearer ${TOKEN}" https://localhost:10250/me
 $ curl -Ssk --header "Authorization: Bearer ${TOKEN}" https://localhost:10250/metrics/cadvisor
 $ curl -Ssk --header "Authorization: Bearer ${TOKEN}" https://localhost:10250/stats/summary
 ```
+
+### 下一个问题是 cadvisor 下包含哪些内容
+https://kubernetes.io/zh/docs/concepts/cluster-administration/system-metrics/<br>

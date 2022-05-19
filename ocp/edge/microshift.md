@@ -965,8 +965,6 @@ oc adm policy add-scc-to-user privileges -z cadvisor
 oc adm policy remove-scc-from-user anyuid -z cadvisor
 
 
-kubelet  Error: container create failed
-mkdir /var/lib/containers/storage/overlay merged/run/secrets
-read-only file system
+
 
 ```

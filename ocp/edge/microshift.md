@@ -906,3 +906,52 @@ ExecStart=/usr/bin/podman run --cidfile=%t/%n.ctr-id --cgroups=no-conmon --rm --
 
 ExecStart=/usr/bin/podman run --cidfile=%t/%n.ctr-id --cgroups=no-conmon --rm --replace --sdnotify=container --label io.containers.autoupdate=registry --network=host --privileged -d --name microshift -v /var/run/crio/crio.sock:/var/run/crio/crio.sock:rw,rshared -v /var/lib/microshift:/var/lib/microshift:rw,rshared -v /var/lib/kubelet:/var/lib/kubelet:rw,rshared -v /var/log:/var/log -e KUBECONFIG=/var/lib/microshift/resources/kubeadmin/kubeconfig quay.io/microshift/microshift:latest
 ```
+
+### add metric server to microshift
+https://github.com/openshift/microshift/issues/302<br>
+https://github.com/kubernetes-incubator/metrics-server<br>
+https://prometheus.io/blog/2021/11/16/agent/<br>
+```
+$ kubectl apply -f https://raw.githubusercontent.com/redhat-et/ushift-workload/master/metrics-server/metrics-components.yaml
+serviceaccount/metrics-server created
+clusterrole.rbac.authorization.k8s.io/system:aggregated-metrics-reader created
+clusterrole.rbac.authorization.k8s.io/system:metrics-server created
+rolebinding.rbac.authorization.k8s.io/metrics-server-auth-reader created
+clusterrolebinding.rbac.authorization.k8s.io/metrics-server:system:auth-delegator created
+clusterrolebinding.rbac.authorization.k8s.io/system:metrics-server created
+service/metrics-server created
+deployment.apps/metrics-server created
+apiservice.apiregistration.k8s.io/v1beta1.metrics.k8s.io created
+
+# try to open port 10250, 9090, 9573 for crio metrics
+sudo firewall-cmd --zone=public --add-port=10250/tcp --permanent
+sudo firewall-cmd --reload
+sudo firewall-cmd --zone=public --add-port=9090/tcp --permanent
+sudo firewall-cmd --reload
+sudo firewall-cmd --zone=public --add-port=9573/tcp --permanent
+sudo firewall-cmd --reload
+
+# check metrics-server logs
+oc -n kube-system logs $(oc -n kube-system get pods -l k8s-app=metrics-server -o name)
+oc -n kube-system delete $(oc -n kube-system get pods -l k8s-app=metrics-server -o name)
+oc -n kube-system logs $(oc -n kube-system get pods -l k8s-app=metrics-server -o name) v=4
+
+# check metrics
+
+# /etc/crio/crio.conf
+...
+# A necessary configuration for Prometheus based metrics retrieval
+[crio.metrics]
+
+# Globally enable or disable metrics support.
+enable_metrics = true
+
+# The port on which the metrics server will listen.
+metrics_port = 9537
+
+# 
+E0518 09:43:53.060171       1 server.go:132] unable to fully scrape metrics: unable to fully scrape metrics from node edge-2.example.com: unable to fetch metrics from node edge-2.example.com: Get "https://10.66.208.163:10250/stats/summary?only_cpu_and_memory=true": dial tcp 10.66.208.163:10250: connect: connection refused
+
+# error logs
+E0519 01:16:37.509949       1 pathrecorder.go:107] registered "/metrics" from goroutine 1 [running]:
+```

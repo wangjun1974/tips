@@ -914,6 +914,7 @@ https://prometheus.io/blog/2021/11/16/agent/<br>
 https://kubernetes-sigs.github.io/metrics-server/<br>
 https://sysdig.com/blog/how-to-monitor-kubelet/<br>
 https://github.com/google/cadvisor<br>
+https://github.com/cri-o/cri-o/blob/main/tutorials/metrics.md<br>
 ```
 $ kubectl apply -f https://raw.githubusercontent.com/redhat-et/ushift-workload/master/metrics-server/metrics-components.yaml
 serviceaccount/metrics-server created
@@ -951,6 +952,10 @@ enable_metrics = true
 
 # The port on which the metrics server will listen.
 metrics_port = 9537
+
+# crio metrics 
+# 这个不是所需要的 metrics
+curl -v http://localhost:9537/metrics
 
 # 
 E0518 09:43:53.060171       1 server.go:132] unable to fully scrape metrics: unable to fully scrape metrics from node edge-2.example.com: unable to fetch metrics from node edge-2.example.com: Get "https://10.66.208.163:10250/stats/summary?only_cpu_and_memory=true": dial tcp 10.66.208.163:10250: connect: connection refused

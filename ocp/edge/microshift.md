@@ -915,6 +915,7 @@ https://kubernetes-sigs.github.io/metrics-server/<br>
 https://sysdig.com/blog/how-to-monitor-kubelet/<br>
 https://github.com/google/cadvisor<br>
 https://github.com/cri-o/cri-o/blob/main/tutorials/metrics.md<br>
+https://www.cnblogs.com/zhangmingcheng/p/15770672.html<br>
 ```
 $ kubectl apply -f https://raw.githubusercontent.com/redhat-et/ushift-workload/master/metrics-server/metrics-components.yaml
 serviceaccount/metrics-server created
@@ -976,7 +977,7 @@ oc adm policy remove-scc-from-user anyuid -z cadvisor
 
 ### obtain cadvisor metrics from microshift
 ```
-$ kubectl create clusterrolebinding add-on-cluster-admin --clusterrole=cluster-admin --serviceaccount=kube-system:default
+$ kubectl create clusterrolebinding add-on-cluster-admin-to-kubesystem-default --clusterrole=cluster-admin --serviceaccount=kube-system:default
 $ oc project kube-system
 $ TOKEN=$(oc serviceaccounts get-token default)
 $ curl -Ssk --header "Authorization: Bearer ${TOKEN}" https://localhost:10250/metrics
@@ -986,3 +987,8 @@ $ curl -Ssk --header "Authorization: Bearer ${TOKEN}" https://localhost:10250/st
 
 ### 下一个问题是 cadvisor 下包含哪些内容
 https://kubernetes.io/zh/docs/concepts/cluster-administration/system-metrics/<br>
+```
+$ oc project kube-system
+$ kubectl create clusterrolebinding add-on-cluster-admin-to-metrics-server --clusterrole=cluster-admin --serviceaccount=kube-system:metrics-server
+$ TOKEN=$(oc serviceaccounts get-token metrics-server)
+```

@@ -911,6 +911,9 @@ ExecStart=/usr/bin/podman run --cidfile=%t/%n.ctr-id --cgroups=no-conmon --rm --
 https://github.com/openshift/microshift/issues/302<br>
 https://github.com/kubernetes-incubator/metrics-server<br>
 https://prometheus.io/blog/2021/11/16/agent/<br>
+https://kubernetes-sigs.github.io/metrics-server/<br>
+https://sysdig.com/blog/how-to-monitor-kubelet/<br>
+https://github.com/google/cadvisor<br>
 ```
 $ kubectl apply -f https://raw.githubusercontent.com/redhat-et/ushift-workload/master/metrics-server/metrics-components.yaml
 serviceaccount/metrics-server created
@@ -954,4 +957,16 @@ E0518 09:43:53.060171       1 server.go:132] unable to fully scrape metrics: una
 
 # error logs
 E0519 01:16:37.509949       1 pathrecorder.go:107] registered "/metrics" from goroutine 1 [running]:
+
+
+oc adm policy add-scc-to-user anyuid -z cadvisor
+oc adm policy add-scc-to-user privileges -z cadvisor
+
+oc adm policy remove-scc-from-user anyuid -z cadvisor
+
+
+kubelet  Error: container create failed
+mkdir /var/lib/containers/storage/overlay merged/run/secrets
+read-only file system
+
 ```

@@ -916,6 +916,9 @@ https://sysdig.com/blog/how-to-monitor-kubelet/<br>
 https://github.com/google/cadvisor<br>
 https://github.com/cri-o/cri-o/blob/main/tutorials/metrics.md<br>
 https://www.cnblogs.com/zhangmingcheng/p/15770672.html<br>
+https://www.cloudforecast.io/blog/cadvisor-and-kubernetes-monitoring-guide/<br>
+https://observability.thomasriley.co.uk/monitoring-kubernetes/metrics/kubelet-cadvisor/<br>
+https://www.rancher.cn/blog/2019/native-kubernetes-monitoring-tools-part-1<br>
 ```
 $ kubectl apply -f https://raw.githubusercontent.com/redhat-et/ushift-workload/master/metrics-server/metrics-components.yaml
 serviceaccount/metrics-server created

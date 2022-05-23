@@ -995,3 +995,62 @@ $ oc project kube-system
 $ kubectl create clusterrolebinding add-on-cluster-admin-to-metrics-server --clusterrole=cluster-admin --serviceaccount=kube-system:metrics-server
 $ TOKEN=$(oc serviceaccounts get-token metrics-server)
 ```
+
+### microshift 获取 cadvisor metrics 的处理方法
+seealso:https://github.com/openshift/microshift/issues/475
+```
+1. enable cgroupv2 for RHEL8 
+https://access.redhat.com/solutions/3777261
+
+### check boot kernel options
+$ grub2-editenv - list | grep kernelopts
+kernelopts=root=/dev/mapper/rhel-root ro resume=/dev/mapper/rhel-swap rd.lvm.lv=rhel/root rd.lvm.lv=rhel/swap rhgb quiet 
+
+### add systemd.unified_cgroup_hierarchy=1 to boot kernel options 
+$ grub2-editenv - set "kernelopts=root=/dev/mapper/rhel-root ro resume=/dev/mapper/rhel-swap rd.lvm.lv=rhel/root rd.lvm.lv=rhel/swap systemd.unified_cgroup_hierarchy=1"
+
+$ reboot
+
+2. add cgroupv2 relate params to microshift.service unit file
+### ExecStart
+### --cgroup-manager=cgroupfs
+### -v /sys/fs/cgroup:/sys/fs/cgroup:ro
+$ cat > /etc/systemd/system/microshift.service <<'EOF'
+[Unit]
+Description=MicroShift Containerized
+Documentation=man:podman-generate-systemd(1)
+Wants=network-online.target crio.service
+After=network-online.target crio.service
+RequiresMountsFor=%t/containers
+
+[Service]
+Environment=PODMAN_SYSTEMD_UNIT=%n
+Restart=on-failure
+TimeoutStopSec=70
+ExecStartPre=/usr/bin/mkdir -p /var/lib/kubelet ; /usr/bin/mkdir -p /var/hpvolumes ; /usr/bin/mkdir -p /etc/microshift
+ExecStartPre=/bin/rm -f %t/%n.ctr-id
+ExecStart=/usr/bin/podman run --cidfile=%t/%n.ctr-id --cgroup-manager=cgroupfs --cgroups=no-conmon --rm --replace --sdnotify=container --label io.containers.autoupdate=registry --network=host --privileged -d --name microshift -v /etc/microshift/config.yaml:/etc/microshift/config.yaml:z,rw,rshared -v /sys/fs/cgroup:/sys/fs/cgroup:ro -v /var/hpvolumes:/var/hpvolumes:z,rw,rshared -v /var/run/crio/crio.sock:/var/run/crio/crio.sock:rw,rshared -v microshift-data:/var/lib/microshift:rw,rshared -v /var/lib/kubelet:/var/lib/kubelet:z,rw,rshared -v /var/log:/var/log -v /etc:/etc quay.io/microshift/microshift:4.8.0-0.microshift-2022-04-20-182108
+ExecStop=/usr/bin/podman stop --ignore --cidfile=%t/%n.ctr-id
+ExecStopPost=/usr/bin/podman rm -f --ignore --cidfile=%t/%n.ctr-id
+Type=notify
+NotifyAccess=all
+
+[Install]
+WantedBy=multi-user.target default.target
+EOF
+
+$ systemctl daemon-reload
+$ systemctl restart crio; systemctl restart microshift
+
+3. check microshift 'metrics/cadvisor' has container metrics
+$ kubectl create clusterrolebinding add-on-cluster-admin-to-kubesystem-default --clusterrole=cluster-admin --serviceaccount=kube-system:default
+$ oc project kube-system
+$ TOKEN=$(oc serviceaccounts get-token default)
+$ curl -Ssk --header "Authorization: Bearer ${TOKEN}" https://localhost:10250/metrics/cadvisor
+...
+container_cpu_usage_seconds_total{container="router",cpu="total",id="/system.slice/crio-53e810986873266c721099367572bb6fbd5b97ca01befab2298efe5f0416e
+6c2.scope",image="quay.io/openshift/okd-content@sha256:01cfbbfdc11e2cbb8856f31a65c83acc7cfbd1986c1309f58c255840efcc0b64",name="k8s_router_router-defa
+ult-6c96f6bc66-2kmf4_openshift-ingress_a3c0b24b-97b9-408f-9b8f-09f85c4abfdf_0",namespace="openshift-ingress",pod="router-default-6c96f6bc66-2kmf4"} 0
+.471184 1653276165463
+...
+```

@@ -1054,3 +1054,6 @@ ult-6c96f6bc66-2kmf4_openshift-ingress_a3c0b24b-97b9-408f-9b8f-09f85c4abfdf_0",n
 .471184 1653276165463
 ...
 ```
+
+### 将 cadvisor 集成到 prometheus
+https://prometheus.io/docs/guides/cadvisor/<br>

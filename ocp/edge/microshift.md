@@ -1067,3 +1067,4 @@ https://github.com/stolostron/multicluster-observability-operator/blob/main/oper
 https://access.redhat.com/documentation/en-us/red_hat_advanced_cluster_management_for_kubernetes/2.4/html/observability/observing-environments-intro#adding-custom-metrics<br>
 https://docs.google.com/document/d/1OuRHCx9lgBGFK0aadPTDOCo2ZmLMCpwEUwVjCt2c9Hc<br>
 https://issues.redhat.com/browse/ACM-197<br>
+https://thanos.io/tip/thanos/storage.md/#object-storage<br>

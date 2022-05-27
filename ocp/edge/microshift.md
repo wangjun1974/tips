@@ -1057,3 +1057,12 @@ ult-6c96f6bc66-2kmf4_openshift-ingress_a3c0b24b-97b9-408f-9b8f-09f85c4abfdf_0",n
 
 ### 将 cadvisor 集成到 prometheus
 https://prometheus.io/docs/guides/cadvisor/<br>
+
+### User application monitoring and ACM observability?
+https://thanos.io/tip/thanos/storage.md/#s3<br>
+https://github.com/stolostron/acm-aap-aas-operations/pull/117/files#diff-a178efb0591fe7fc8a2ab48c6a8a1c26a135826d8b7235465452708caed78eba<br>
+https://issues.redhat.com/browse/ACM-1320<br>
+https://github.com/stolostron/multicluster-observability-operator/blob/main/docs/MoreAboutPersistentStorage.md<br>
+https://github.com/stolostron/multicluster-observability-operator/blob/main/operators/multiclusterobservability/manifests/base/config/metrics_allowlist.yaml<br>
+https://access.redhat.com/documentation/en-us/red_hat_advanced_cluster_management_for_kubernetes/2.4/html/observability/observing-environments-intro#adding-custom-metrics<br>
+https://docs.google.com/document/d/1OuRHCx9lgBGFK0aadPTDOCo2ZmLMCpwEUwVjCt2c9Hc<br>

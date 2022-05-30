@@ -1097,6 +1097,7 @@ d8abdc1e0ed6a1352477474e06a13e007f69d126bbafc99be0dad98b9ea11bf8
 
 ### test acm observability service
 https://www.ibm.com/docs/en/spectrum-archive-ee/1.3.1?topic=reference-solution-showcase-using-minio-spectrum-archive-s3-api<br>
+https://cloud.redhat.com/blog/how-your-grafana-can-fetch-metrics-from-red-hat-advanced-cluster-management-observability-observatorium-and-thanos<br>
 ```
 oc create namespace open-cluster-management-observability
 DOCKER_CONFIG_JSON=`oc extract secret/pull-secret -n openshift-config --to=-`
@@ -1126,4 +1127,36 @@ stringData:
       access_key: minio
       secret_key: minio123
 EOF
+
+cat <<EOF | oc apply -f -
+apiVersion: observability.open-cluster-management.io/v1beta2
+kind: MultiClusterObservability
+metadata:
+  name: observability
+spec:
+  enableDownsampling: true
+  observabilityAddonSpec:
+    enableMetrics: true
+    interval: 300
+  storageConfig:
+    alertmanagerStorageSize: 1Gi
+    compactStorageSize: 100Gi
+    metricObjectStorage:
+      key: thanos.yaml
+      name: thanos-object-storage
+    receiveStorageSize: 100Gi
+    ruleStorageSize: 1Gi
+    storageClass: gp2
+    storeStorageSize: 10Gi
+EOF
+
+oc project open-cluster-management-observability 
+# 查看 observatorium-operator 的日志
+oc -n open-cluster-management-observability logs $(oc -n open-cluster-management-observability get pods -l control-plane='observatorium-operator' -o name)
+
+# 获取 TOKEN 
+oc get useroauthaccesstokens 
+TOKEN='sha256~7l7lqp2tZ_IvwNRRcyt7cqvCaQuS1b3172R1ilxJIXY'
+PROXY_ROUTE_URL=$(oc get route rbac-query-proxy -n open-cluster-management-observability -o jsonpath='{.spec.host}')
+curl -Ssk --header "Authorization: Bearer ${TOKEN}"  https://${PROXY_ROUTE_URL}/api/v1/query?query=cluster_infrastructure_provider
 ```

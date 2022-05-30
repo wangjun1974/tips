@@ -1122,7 +1122,7 @@ stringData:
     type: s3
     config:
       bucket: observability
-      endpoint: minio-velero.apps.cluster-m7n8k.m7n8k.sandbox1752.opentlc.com
+      endpoint: minio-velero.apps.cluster-r2j8m.r2j8m.sandbox212.opentlc.com
       insecure: true
       access_key: minio
       secret_key: minio123
@@ -1150,13 +1150,47 @@ spec:
     storeStorageSize: 10Gi
 EOF
 
+oc get secret observability-server-ca-certs -n open-cluster-management-observability
+oc get secret observability-client-ca-certs -n open-cluster-management-observability -o json | jq '.data."ca.crt"' | tee ca.crt
+ oc get secret observability-grafana-certs -n open-cluster-management-observability -o json | jq '.data."tls.key"' | tee tls.key
+
+
+
 oc project open-cluster-management-observability 
 # 查看 observatorium-operator 的日志
 oc -n open-cluster-management-observability logs $(oc -n open-cluster-management-observability get pods -l control-plane='observatorium-operator' -o name)
+
+# 查看 multicluster-observability-grafana 的日志
+oc -n open-cluster-management-observability logs $(oc -n open-cluster-management-observability get pods -l app='multicluster-observability-grafana' -o name | head -1) -c grafana
+oc -n open-cluster-management-observability logs $(oc -n open-cluster-management-observability get pods -l app='multicluster-observability-grafana' -o name | tail -1) -c grafana
+
 
 # 获取 TOKEN 
 oc get useroauthaccesstokens 
 TOKEN='sha256~7l7lqp2tZ_IvwNRRcyt7cqvCaQuS1b3172R1ilxJIXY'
 PROXY_ROUTE_URL=$(oc get route rbac-query-proxy -n open-cluster-management-observability -o jsonpath='{.spec.host}')
 curl -Ssk --header "Authorization: Bearer ${TOKEN}"  https://${PROXY_ROUTE_URL}/api/v1/query?query=cluster_infrastructure_provider
+
+
+
+
+oc --kubeconfig=./kubeconfig new-project open-cluster-management-agent
+oc --kubeconfig=./kubeconfig -n open-cluster-management-agent create secret generic rhacm --from-file=.dockerconfigjson=auth.json --type=kubernetes.io/dockerconfigjson
+oc --kubeconfig=./kubeconfig -n open-cluster-management-agent create sa klusterlet
+oc --kubeconfig=./kubeconfig -n open-cluster-management-agent patch sa klusterlet -p '{"imagePullSecrets": [{"name": "rhacm"}]}'
+oc --kubeconfig=./kubeconfig -n open-cluster-management-agent create sa klusterlet-registration-sa
+oc --kubeconfig=./kubeconfig -n open-cluster-management-agent patch sa klusterlet-registration-sa -p '{"imagePullSecrets": [{"name": "rhacm"}]}'
+oc --kubeconfig=./kubeconfig -n open-cluster-management-agent create sa klusterlet-work-sa
+oc --kubeconfig=./kubeconfig -n open-cluster-management-agent patch sa klusterlet-work-sa -p '{"imagePullSecrets": [{"name": "rhacm"}]}'
+
+oc --kubeconfig=./kubeconfig new-project open-cluster-management-agent-addon
+oc --kubeconfig=./kubeconfig -n open-cluster-management-agent-addon create secret generic rhacm --from-file=.dockerconfigjson=auth.json --type=kubernetes.io/dockerconfigjson
+oc --kubeconfig=./kubeconfig -n open-cluster-management-agent-addon create sa klusterlet-addon-operator
+oc --kubeconfig=./kubeconfig -n open-cluster-management-agent-addon patch sa klusterlet-addon-operator -p '{"imagePullSecrets": [{"name": "rhacm"}]}'
+
+oc --kubeconfig=./kubeconfig project open-cluster-management-agent
+echo $CRDS | base64 -d | oc --kubeconfig=./kubeconfig apply -f -
+echo $IMPORT | base64 -d | oc --kubeconfig=./kubeconfig apply -f -
+
+
 ```

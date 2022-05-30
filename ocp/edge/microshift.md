@@ -1093,3 +1093,37 @@ d8abdc1e0ed6a1352477474e06a13e007f69d126bbafc99be0dad98b9ea11bf8
     ]
 }
 ```
+
+
+### test acm observability service
+https://www.ibm.com/docs/en/spectrum-archive-ee/1.3.1?topic=reference-solution-showcase-using-minio-spectrum-archive-s3-api<br>
+```
+oc create namespace open-cluster-management-observability
+DOCKER_CONFIG_JSON=`oc extract secret/pull-secret -n openshift-config --to=-`
+oc create secret generic multiclusterhub-operator-pull-secret \
+    -n open-cluster-management-observability \
+    --from-literal=.dockerconfigjson="$DOCKER_CONFIG_JSON" \
+    --type=kubernetes.io/dockerconfigjson
+
+# 参考步骤配置 minio
+aws --endpoint=http://minio-velero.apps.cluster-m7n8k.m7n8k.sandbox1752.opentlc.com s3 ls 
+aws --endpoint=http://minio-velero.apps.cluster-m7n8k.m7n8k.sandbox1752.opentlc.com s3 mb s3://observability
+
+cat <<EOF | oc apply -f -
+apiVersion: v1
+kind: Secret
+metadata:
+  name: thanos-object-storage
+  namespace: open-cluster-management-observability
+type: Opaque
+stringData:
+  thanos.yaml: |
+    type: s3
+    config:
+      bucket: observability
+      endpoint: minio-velero.apps.cluster-m7n8k.m7n8k.sandbox1752.opentlc.com
+      insecure: true
+      access_key: minio
+      secret_key: minio123
+EOF
+```

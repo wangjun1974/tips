@@ -1068,3 +1068,28 @@ https://access.redhat.com/documentation/en-us/red_hat_advanced_cluster_managemen
 https://docs.google.com/document/d/1OuRHCx9lgBGFK0aadPTDOCo2ZmLMCpwEUwVjCt2c9Hc<br>
 https://issues.redhat.com/browse/ACM-197<br>
 https://thanos.io/tip/thanos/storage.md/#object-storage<br>
+
+### 运行 podman manifest 命令为 image 创建或者添加 manifest
+```
+[kni@provisioner ~]$ podman manifest create test:v1
+d8abdc1e0ed6a1352477474e06a13e007f69d126bbafc99be0dad98b9ea11bf8
+You have mail in /var/spool/mail/kni
+[kni@provisioner ~]$ podman manifest add test:v1 registry.connect.redhat.com/intel/sriov-fec-operator@sha256:4b68377310cb6806fe8eca8bdb5874e7ed96503c5290967ea43bf177f28aafe7
+d8abdc1e0ed6a1352477474e06a13e007f69d126bbafc99be0dad98b9ea11bf8
+[kni@provisioner ~]$ podman manifest inspect test:v1
+{
+    "schemaVersion": 2,
+    "mediaType": "application/vnd.docker.distribution.manifest.list.v2+json",
+    "manifests": [
+        {
+            "mediaType": "application/vnd.oci.image.manifest.v1+json",
+            "size": 974,
+            "digest": "sha256:4b68377310cb6806fe8eca8bdb5874e7ed96503c5290967ea43bf177f28aafe7",
+            "platform": {
+                "architecture": "amd64",
+                "os": "linux"
+            }
+        }
+    ]
+}
+```

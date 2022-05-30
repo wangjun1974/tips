@@ -1188,9 +1188,26 @@ oc --kubeconfig=./kubeconfig -n open-cluster-management-agent-addon create secre
 oc --kubeconfig=./kubeconfig -n open-cluster-management-agent-addon create sa klusterlet-addon-operator
 oc --kubeconfig=./kubeconfig -n open-cluster-management-agent-addon patch sa klusterlet-addon-operator -p '{"imagePullSecrets": [{"name": "rhacm"}]}'
 
+oc --kubeconfig=./kubeconfig new-project open-cluster-management-addon-observability
+
 oc --kubeconfig=./kubeconfig project open-cluster-management-agent
 echo $CRDS | base64 -d | oc --kubeconfig=./kubeconfig apply -f -
 echo $IMPORT | base64 -d | oc --kubeconfig=./kubeconfig apply -f -
 
+### 检查 open-cluster-management-addon-observability namespace 下的 pod 日志
+# prometheus
+oc -n open-cluster-management-addon-observability logs $(oc -n open-cluster-management-addon-observability get pods -l app.kubernetes.io/name='prometheus' -o name)
+
+# endpoint-observability-operator
+oc -n open-cluster-management-addon-observability logs $(oc -n open-cluster-management-addon-observability get pods -l name='endpoint-observability-operator' -o name)
+
+# metrics-collector
+oc -n open-cluster-management-addon-observability logs $(oc -n open-cluster-management-addon-observability get pods -l component='metrics-collector' -o name)
+
+# kube-state-metrics
+oc -n open-cluster-management-addon-observability logs $(oc -n open-cluster-management-addon-observability get pods -l app.kubernetes.io/name='kube-state-metrics' -o name)
+
+# node-exporter
+oc -n open-cluster-management-addon-observability logs $(oc -n open-cluster-management-addon-observability get pods -l app.kubernetes.io/name='node-exporter' -o name) -c node-exporter
 
 ```

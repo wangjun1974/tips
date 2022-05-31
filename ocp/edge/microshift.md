@@ -1188,6 +1188,7 @@ oc --kubeconfig=./kubeconfig -n open-cluster-management-agent-addon create secre
 oc --kubeconfig=./kubeconfig -n open-cluster-management-agent-addon create sa klusterlet-addon-operator
 oc --kubeconfig=./kubeconfig -n open-cluster-management-agent-addon patch sa klusterlet-addon-operator -p '{"imagePullSecrets": [{"name": "rhacm"}]}'
 
+# 如果启用了 ACM Observability 注意在 ManageCluster 里创建 open-cluster-management-addon-observability namespace
 oc --kubeconfig=./kubeconfig new-project open-cluster-management-addon-observability
 
 oc --kubeconfig=./kubeconfig project open-cluster-management-agent

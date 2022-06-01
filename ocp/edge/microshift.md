@@ -1213,3 +1213,32 @@ oc -n open-cluster-management-addon-observability logs $(oc -n open-cluster-mana
 oc -n open-cluster-management-addon-observability logs $(oc -n open-cluster-management-addon-observability get pods -l app.kubernetes.io/name='node-exporter' -o name) -c node-exporter
 
 ```
+
+### rpm based microshift
+```
+# 更新系统到 RHEL 8.6，microshift 依赖高版本的 policy-selinux 和 policy-selinux-base 
+sudo dnf copr enable -y @redhat-et/microshift
+sudo dnf install -y microshift
+
+# 设置防火墙规则 
+sudo firewall-cmd --zone=trusted --add-source=10.42.0.0/16 --permanent
+sudo firewall-cmd --zone=public --add-port=80/tcp --permanent
+sudo firewall-cmd --zone=public --add-port=443/tcp --permanent
+sudo firewall-cmd --zone=public --add-port=5353/udp --permanent
+sudo firewall-cmd --reload
+
+# 启动服务
+sudo systemctl enable microshift --now
+
+# 拷贝 kubeconfig
+mkdir ~/.kube
+sudo cat /var/lib/microshift/resources/kubeadmin/kubeconfig > ~/.kube/config
+
+# 错误处理
+# 清理时删除 /var/lib/kubelet/pods 下的目录
+# 如目录无法删除注意卸载有关目录
+umount $(df -HT | grep '/var/lib/kubelet/pods' | awk '{print $7}')
+umount $(mount | grep kubelet | grep "volume-subpaths" | awk '{print $3}')
+rm -rf /var/lib/kubelet/pods/*
+
+```

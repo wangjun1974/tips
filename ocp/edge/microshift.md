@@ -1243,3 +1243,30 @@ umount $(mount | grep kubelet | grep "volume-subpaths" | awk '{print $3}')
 rm -rf /var/lib/kubelet/pods/*
 
 ```
+
+### microshift 与 olm
+```
+# download operator-sdk
+# https://sdk.operatorframework.io/docs/installation/
+export ARCH=$(case $(uname -m) in x86_64) echo -n amd64 ;; aarch64) echo -n arm64 ;; *) echo -n $(uname -m) ;; esac)
+export OS=$(uname | awk '{print tolower($0)}')
+
+export OPERATOR_SDK_DL_URL=https://github.com/operator-framework/operator-sdk/releases/download/v1.21.0
+curl -LO ${OPERATOR_SDK_DL_URL}/operator-sdk_${OS}_${ARCH}
+
+# Verify the downloaded binary
+gpg --keyserver keyserver.ubuntu.com --recv-keys 052996E2A20B5C7E
+curl -LO ${OPERATOR_SDK_DL_URL}/checksums.txt
+curl -LO ${OPERATOR_SDK_DL_URL}/checksums.txt.asc
+gpg -u "Operator SDK (release) <cncf-operator-sdk@cncf.io>" --verify checksums.txt.asc
+
+# Install the release binary in your PATH
+chmod +x operator-sdk_${OS}_${ARCH} && sudo mv operator-sdk_${OS}_${ARCH} /usr/local/bin/operator-sdk
+
+
+# deploy the OLM, now you will have all the operator from operatorhub.io
+operator-sdk olm install
+
+# list all the available operators
+kubectl get packagemanifests
+```

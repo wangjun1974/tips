@@ -1216,7 +1216,8 @@ oc -n open-cluster-management-addon-observability logs $(oc -n open-cluster-mana
 
 ### rpm based microshift
 ```
-# 更新系统到 RHEL 8.6，microshift 依赖高版本的 policy-selinux 和 policy-selinux-base 
+# 更新系统到 RHEL 8.6，microshift 依赖高版本的 selinux-policy 和 selinux-policy-base 
+sudo dnf update -y selinux-policy selinux-policy-base 
 sudo dnf copr enable -y @redhat-et/microshift
 sudo dnf install -y microshift
 

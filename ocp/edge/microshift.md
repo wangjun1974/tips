@@ -1269,4 +1269,58 @@ operator-sdk olm install
 
 # list all the available operators
 kubectl get packagemanifests
+
+# k8s logging operator 介绍
+# https://cloud.tencent.com/developer/article/1810778
+# https://blog.csdn.net/tao12345666333/article/details/116178235
+```
+
+### RHEL for Edge
+https://github.com/osbuild/rhel-for-edge-demo
+```
+# 在 RHEL 8.3 以上版本安装 osbuild-composer cockpit-composer
+yum install -y osbuild-composer cockpit-composer
+
+# 启用 osbuild-composer.socket 
+sudo systemctl enable --now osbuild-composer.socket
+
+# 启用 osbuild-composer.service
+sudo systemctl enable --now osbuild-composer.service
+
+
+# 启用 cockpit.socket
+# 测试环境下 cockpit.socket 里的 Image Builder -> Edit package 一直转圈
+systemctl enable --now cockpit.socket
+
+# 用命令行方式尝试一下
+
+# 生成 blueprint.toml 
+cat > blueprint.toml <<'EOF'
+name = "Edge"
+description = ""
+version = "0.0.1"
+
+[[modules]]
+name = "crun"
+version = "*"
+EOF
+
+# 基于 blueprint.toml 创建 blueprints
+composer-cli blueprints push blueprint.toml
+
+# 基于前一个步骤创建的 blueprints 创建 compose 
+composer-cli compose start-ostree Edge rhel-edge-container
+
+# 查看 compose 状态
+(oc-mirror)[root@jwang ~/rhel4edge]# composer-cli compose status
+d9332dc2-84bb-4e82-831a-37ed52531e49 RUNNING  Thu Jun  2 10:14:23 2022 Edge            0.0.1 edge-container   
+540a4771-2fe1-466f-a90e-b5f826f3885b FINISHED Mon Apr 18 13:27:23 2022 ostree-demo     0.0.1 edge-container  
+
+# 查看 compose 详情
+(oc-mirror)[root@jwang ~/rhel4edge]# composer-cli compose info d9332dc2-84bb-4e82-831a-37ed52531e49 
+
+# 查看 compose 日志
+(oc-mirror)[root@jwang ~/rhel4edge]# composer-cli compose log d9332dc2-84bb-4e82-831a-37ed52531e49 
+
+
 ```

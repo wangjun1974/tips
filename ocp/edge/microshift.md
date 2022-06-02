@@ -1390,13 +1390,11 @@ copr:copr.fedorainfracloud.org:group_redhat-et:microshift          Copr repo for
 rhel-8-for-x86_64-appstream-rpms                                   Red Hat Enterprise Linux 8 for x86_64 - AppStream (RPMs)
 rhel-8-for-x86_64-baseos-rpms                                      Red Hat Enterprise Linux 8 for x86_64 - BaseOS (RPMs)
 rhocp-4.10-for-rhel-8-x86_64-rpms                                  Red Hat OpenShift Container Platform 4.10 for RHEL 8 x86_64 (RPMs)
-
-
-
 ```
 
 
 ### Install microshift on Fedora-IoT 35
+https://microshift.io/docs/getting-started/<br>
 ```
 curl -L -o /etc/yum.repos.d/fedora-modular.repo https://src.fedoraproject.org/rpms/fedora-repos/raw/rawhide/f/fedora-modular.repo
 curl -L -o /etc/yum.repos.d/fedora-updates-modular.repo https://src.fedoraproject.org/rpms/fedora-repos/raw/rawhide/f/fedora-updates-modular.repo

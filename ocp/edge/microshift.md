@@ -1300,13 +1300,16 @@ name = "Edge"
 description = ""
 version = "0.0.1"
 
-[[modules]]
-name = "crun"
+[[packages]]
+name = "microshift"
 version = "*"
 EOF
 
 # 基于 blueprint.toml 创建 blueprints
 composer-cli blueprints push blueprint.toml
+composer-cli blueprints list 
+composer-cli blueprints show Edge
+composer-cli blueprints depsolve Edge
 
 # 基于前一个步骤创建的 blueprints 创建 compose 
 composer-cli compose start-ostree Edge rhel-edge-container
@@ -1323,4 +1326,85 @@ d9332dc2-84bb-4e82-831a-37ed52531e49 RUNNING  Thu Jun  2 10:14:23 2022 Edge     
 (oc-mirror)[root@jwang ~/rhel4edge]# composer-cli compose log d9332dc2-84bb-4e82-831a-37ed52531e49 
 
 
+
+```
+
+
+### 安装 multus
+https://gist.github.com/usrbinkat/0f08e0600f9a9ff64bf46d1ec9251f23
+```
+kubectl apply -f https://raw.githubusercontent.com/k8snetworkplumbingwg/multus-cni/master/deployments/multus-daemonset-thick-plugin.yml
+
+
+# 查看日志
+oc -n kube-system logs $(oc -n kube-system get pods -l app=multus -o name)
+
+##################################################################################
+# Configure net-attach-def
+
+cat <<EOF | oc apply -f -
+apiVersion: k8s.cni.cncf.io/v1
+kind: NetworkAttachmentDefinition
+metadata:
+  name: nadbr0
+spec:
+  config: '{"cniVersion":"0.3.1","name":"br0","plugins":[{"type":"bridge","bridge":"br0","ipam":{}},{"type":"tuning"}]}'
+EOF
+
+kubectl get net-attach-def -oyaml
+
+
+
+
+(oc-mirror)[root@jwang ~/rhel4edge]# cat blueprint.toml 
+name = "Edge"
+description = ""
+version = "0.0.1"
+
+[[packages]]
+name = "microshift"
+version = "*"
+
+[[packages]]
+name = "cri-o"
+version = "*"
+
+[[packages]]
+name = "cri-tools"
+version = "*"
+
+(oc-mirror)[root@jwang ~/rhel4edge]# composer-cli blueprints push blueprint.toml 
+(oc-mirror)[root@jwang ~/rhel4edge]# composer-cli blueprints list
+Edge
+(oc-mirror)[root@jwang ~/rhel4edge]# composer-cli blueprints depsolve Edge
+ERROR: BlueprintsError: Edge: DNF error occured: DepsolveError: There was a problem depsolving ['microshift', 'kernel']: 
+ Problem: conflicting requests
+  - nothing provides cri-o needed by microshift-4.8.0-2022_04_20_141053.el8.x86_64
+  - nothing provides cri-tools needed by microshift-4.8.0-2022_04_20_141053.el8.x86_64
+blueprint: Edge v0.0.1
+
+(oc-mirror)[root@jwang ~/rhel4edge]# yum repolist
+Updating Subscription Management repositories.
+repo id                                                            repo name
+copr:copr.fedorainfracloud.org:group_redhat-et:microshift          Copr repo for microshift owned by @redhat-et
+rhel-8-for-x86_64-appstream-rpms                                   Red Hat Enterprise Linux 8 for x86_64 - AppStream (RPMs)
+rhel-8-for-x86_64-baseos-rpms                                      Red Hat Enterprise Linux 8 for x86_64 - BaseOS (RPMs)
+rhocp-4.10-for-rhel-8-x86_64-rpms                                  Red Hat OpenShift Container Platform 4.10 for RHEL 8 x86_64 (RPMs)
+
+
+
+```
+
+
+### Install microshift on Fedora-IoT 35
+```
+curl -L -o /etc/yum.repos.d/fedora-modular.repo https://src.fedoraproject.org/rpms/fedora-repos/raw/rawhide/f/fedora-modular.repo
+curl -L -o /etc/yum.repos.d/fedora-updates-modular.repo https://src.fedoraproject.org/rpms/fedora-repos/raw/rawhide/f/fedora-updates-modular.repo
+curl -L -o /etc/yum.repos.d/group_redhat-et-microshift-fedora-35.repo https://copr.fedorainfracloud.org/coprs/g/redhat-et/microshift/repo/fedora-35/group_redhat-et-microshift-fedora-35.repo
+rpm-ostree ex module enable cri-o:1.21
+
+rpm-ostree upgrade
+rpm-ostree install cri-o cri-tools microshift
+
+systemctl reboot
 ```

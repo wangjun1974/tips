@@ -1406,3 +1406,42 @@ rpm-ostree install cri-o cri-tools microshift
 
 systemctl reboot
 ```
+
+### microshift and rhel for edge
+https://github.com/redhat-et/microshift-demos/tree/main/ostree-demo
+```
+### 1. 启用 rhel-8-for-x86_64-baseos-rpms, rhel-8-for-x86_64-appstream-rpms 和 rhocp-4.8-for-rhel-8-x86_64-rpms 软件仓库
+sudo subscription-manager repos --list-enabled | grep ID
+Repo ID:   rhel-8-for-x86_64-appstream-rpms
+Repo ID:   rhel-8-for-x86_64-baseos-rpms
+Repo ID:   rhocp-4.8-for-rhel-8-x86_64-rpms
+
+### 克隆 git 仓库
+git clone https://github.com/redhat-et/microshift-demos.git
+cd microshift-demos/ostree-demo
+
+### 设置变量 GITOPS_REPO 和 UPGRADE_SERVER_IP
+export GITOPS_REPO="https://github.com/wangjun1974/microshift-config"
+export UPGRADE_SERVER_IP=10.66.208.130
+
+### 2. 构建 ostrees 与 installer image
+./prepare_builder.sh
+./customize.sh
+./build.sh
+
+### 在测试环境下需要打这个补丁
+(oc-mirror)[root@jwang ~/rhel4edge/microshift-demos/ostree-demo]# diff -urN build.sh.orig build.sh 
+--- build.sh.orig   2022-06-02 17:30:23.190856599 +0800
++++ build.sh    2022-06-02 15:46:45.391367540 +0800
+@@ -59,7 +59,7 @@
+         title "Serving ${parent_blueprint} v${parent_version} container locally"
+         sudo podman rm -f "${parent_blueprint}-server" 2>/dev/null || true
+         sudo podman rmi -f "localhost/${parent_blueprint}:${parent_version}" 2>/dev/null || true
+-        imageid=$(cat "./${parent_blueprint}-${parent_version}-container.tar" | sudo podman load | grep -o -P '(?<=sha256[@:])[a-z0-9]*')
++        imageid=$(cat "./${parent_blueprint}-${parent_version}-container.tar" | sudo podman load | grep -o -P '(?<=[@])[a-z0-9]*')
+         sudo podman tag "${imageid}" "localhost/${parent_blueprint}:${parent_version}"
+         sudo podman run -d --name="${parent_blueprint}-server" -p 8080:8080 "localhost/${parent_blueprint}:${parent_version}"
+
+
+
+```

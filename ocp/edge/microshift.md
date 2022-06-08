@@ -1273,6 +1273,20 @@ kubectl get packagemanifests
 # k8s logging operator 介绍
 # https://cloud.tencent.com/developer/article/1810778
 # https://blog.csdn.net/tao12345666333/article/details/116178235
+
+# 添加 redhat-operators CatalogSource
+cat << EOF | oc apply -f -
+apiVersion: operators.coreos.com/v1alpha1
+kind: CatalogSource
+metadata:
+  name: redhat-operators
+  namespace: olm
+spec:
+  displayName: Red Hat Operators
+  sourceType: grpc
+  image: registry.redhat.io/redhat/redhat-operator-index:v4.8
+  publisher: RedHat
+EOF
 ```
 
 ### RHEL for Edge

@@ -1456,6 +1456,30 @@ export UPGRADE_SERVER_IP=10.66.208.130
          sudo podman tag "${imageid}" "localhost/${parent_blueprint}:${parent_version}"
          sudo podman run -d --name="${parent_blueprint}-server" -p 8080:8080 "localhost/${parent_blueprint}:${parent_version}"
 
+```
 
+### open-cluster-management-addon-observability pods images
+```
+# prometheus 
+# oc -n open-cluster-management-addon-observability get pods -l app.kubernetes.io/name='prometheus' -o yaml  | grep image | grep registry | sort -u 
+      image: registry.redhat.io/openshift4/ose-configmap-reloader@sha256:ca6df8d39998275a1b42c761df0379911025386ca4130c1801d83f4141ee3576
+      image: registry.redhat.io/rhacm2/kube-rbac-proxy-rhel8@sha256:99048f0bcce9fadafcaec2fe9c58d06721ee686f287499b14ced978841932671
+      image: registry.redhat.io/rhacm2/prometheus-rhel8@sha256:66e94011bfeb917240eadba94b67fe6b2997e9aeeca6dd5cf28d65a7886999f9
+# endpoint-observability-operator 用到的镜像
+# oc -n open-cluster-management-addon-observability get pods -l name='endpoint-observability-operator' -o yaml | grep image | grep registry | sort -u
+      image: registry.redhat.io/rhacm2/endpoint-monitoring-rhel8-operator@sha256:736a2f35323457935ed159722d2cb0d82b574210839934c96a3db70bfe70e3a5
 
+# metrics-collector 
+# oc -n open-cluster-management-addon-observability get pods -l component='metrics-collector' -o yaml | grep image | grep registry | sort -u
+      image: registry.redhat.io/rhacm2/metrics-collector-rhel8@sha256:d9080554d5e946b58d60a7b4b7eae75d5a55a9be5b1e070262f9b166d418e114
+
+# kube-state-metrics 
+# oc -n open-cluster-management-addon-observability get pods -l app.kubernetes.io/name='kube-state-metrics' -o yaml | grep image | grep registry | sort -u
+      image: registry.redhat.io/rhacm2/kube-rbac-proxy-rhel8@sha256:99048f0bcce9fadafcaec2fe9c58d06721ee686f287499b14ced978841932671
+      image: registry.redhat.io/rhacm2/kube-state-metrics-rhel8@sha256:493db3fc9cff5cde6bfdcac91620d6cb5ece5596e5401f87f18664176c49664d
+
+# node-exporter
+# oc -n open-cluster-management-addon-observability get pods -l app.kubernetes.io/name='node-exporter' -o yaml | grep image | grep registry | sort -u
+      image: registry.redhat.io/rhacm2/kube-rbac-proxy-rhel8@sha256:99048f0bcce9fadafcaec2fe9c58d06721ee686f287499b14ced978841932671
+      image: registry.redhat.io/rhacm2/node-exporter-rhel8@sha256:2be52d07036590ab6387ae9154e6739d7a8b5da7330ef9d0dd59a54a5a1504e7
 ```

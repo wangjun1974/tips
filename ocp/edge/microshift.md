@@ -1505,6 +1505,19 @@ oc patch applicationmanagers.agent.open-cluster-management.io klusterlet-addon-a
 oc get klusterlets.operator.open-cluster-management.io -A -o name | while read i ; do oc patch $i -p '{"metadata":{"finalizers":[]}}' --type=merge; done 
 oc get klusterlets.operator.open-cluster-management.io -A -o name | while read i ; do oc delete $i ; done 
 
+# patch namespace
+oc get namespace -o name | grep open-cluster-management | while read i ; do oc patch $i -p '{"metadata":{"finalizers":[]}}' --type=merge; done 
+
+# patch pods and force delete pods
+oc -n open-cluster-management-agent get pods -o name | while read i ; do oc -n open-cluster-management-agent patch $i -p '{"metadata":{"finalizers":[]}}' --type=merge; done 
+oc -n open-cluster-management-agent get pods -o name | while read i ; do oc -n open-cluster-management-agent delete $i --force; done 
+
+oc -n open-cluster-management-addon get pods -o name | while read i ; do oc -n open-cluster-management-addon patch $i -p '{"metadata":{"finalizers":[]}}' --type=merge; done 
+oc -n open-cluster-management-addon get pods -o name | while read i ; do oc -n open-cluster-management-addon delete $i --force; done 
+
+oc -n open-cluster-management-addon-observability get pods -o name | while read i ; do oc -n open-cluster-management-addon-observability patch $i -p '{"metadata":{"finalizers":[]}}' --type=merge; done 
+oc -n open-cluster-management-addon-observability get pods -o name | while read i ; do oc -n open-cluster-management-addon-observability delete $i --force; done 
+
 # 删除 namespace 
 oc delete project open-cluster-management-agent open-cluster-management-agent-addon open-cluster-management-addon-observability edge-1
 
@@ -1514,5 +1527,6 @@ oc get clusterclaims.cluster.open-cluster-management.io -o name | while read i ;
 # 删除 acm 安装的 appliedmanifest
 oc get appliedmanifestworks.work.open-cluster-management.io -A -o name | while read i ; do oc patch $i -p '{"metadata":{"finalizers":[]}}' --type=merge; done 
 oc get appliedmanifestworks.work.open-cluster-management.io -A -o name | while read i ; do oc delete $i ; done 
+
 
 ```

@@ -1107,6 +1107,7 @@ oc create secret generic multiclusterhub-operator-pull-secret \
     --type=kubernetes.io/dockerconfigjson
 
 # 参考步骤配置 minio
+# https://github.com/wangjun1974/tips/blob/master/os/miscs.md#%E5%A4%87%E4%BB%BD-openshift-%E8%B5%84%E6%BA%90
 aws --endpoint=http://minio-velero.apps.cluster-m7n8k.m7n8k.sandbox1752.opentlc.com s3 ls 
 aws --endpoint=http://minio-velero.apps.cluster-m7n8k.m7n8k.sandbox1752.opentlc.com s3 mb s3://observability
 
@@ -1152,9 +1153,7 @@ EOF
 
 oc get secret observability-server-ca-certs -n open-cluster-management-observability
 oc get secret observability-client-ca-certs -n open-cluster-management-observability -o json | jq '.data."ca.crt"' | tee ca.crt
- oc get secret observability-grafana-certs -n open-cluster-management-observability -o json | jq '.data."tls.key"' | tee tls.key
-
-
+oc get secret observability-grafana-certs -n open-cluster-management-observability -o json | jq '.data."tls.key"' | tee tls.key
 
 oc project open-cluster-management-observability 
 # 查看 observatorium-operator 的日志
@@ -1164,16 +1163,13 @@ oc -n open-cluster-management-observability logs $(oc -n open-cluster-management
 oc -n open-cluster-management-observability logs $(oc -n open-cluster-management-observability get pods -l app='multicluster-observability-grafana' -o name | head -1) -c grafana
 oc -n open-cluster-management-observability logs $(oc -n open-cluster-management-observability get pods -l app='multicluster-observability-grafana' -o name | tail -1) -c grafana
 
-
 # 获取 TOKEN 
 oc get useroauthaccesstokens 
 TOKEN='sha256~7l7lqp2tZ_IvwNRRcyt7cqvCaQuS1b3172R1ilxJIXY'
 PROXY_ROUTE_URL=$(oc get route rbac-query-proxy -n open-cluster-management-observability -o jsonpath='{.spec.host}')
 curl -Ssk --header "Authorization: Bearer ${TOKEN}"  https://${PROXY_ROUTE_URL}/api/v1/query?query=cluster_infrastructure_provider
 
-
-
-
+# 参考导入 ACM Hub 的步骤，将 microshift 作为 Managed Cluster 导入到 ACM Hub 中
 oc --kubeconfig=./kubeconfig new-project open-cluster-management-agent
 oc --kubeconfig=./kubeconfig -n open-cluster-management-agent create secret generic rhacm --from-file=.dockerconfigjson=auth.json --type=kubernetes.io/dockerconfigjson
 oc --kubeconfig=./kubeconfig -n open-cluster-management-agent create sa klusterlet
@@ -1482,4 +1478,43 @@ export UPGRADE_SERVER_IP=10.66.208.130
 # oc -n open-cluster-management-addon-observability get pods -l app.kubernetes.io/name='node-exporter' -o yaml | grep image | grep registry | sort -u
       image: registry.redhat.io/rhacm2/kube-rbac-proxy-rhel8@sha256:99048f0bcce9fadafcaec2fe9c58d06721ee686f287499b14ced978841932671
       image: registry.redhat.io/rhacm2/node-exporter-rhel8@sha256:2be52d07036590ab6387ae9154e6739d7a8b5da7330ef9d0dd59a54a5a1504e7
+```
+
+### 清理 microshift 上的 acm 内容
+```
+# 如果 ACM Hub 因为某种原因被删除了，
+# 需要手工清理 microshift 上遗留的对象
+
+# 查找 acm 在 managed cluster 上安装的对象
+oc get crds | grep open-cluster-management  | awk '{print $1}'  | while read i ; do echo "" ; echo "======"; echo "oc get $i -A"; oc get $i -A; echo "" ; done 
+
+# 设置 finalizers 为 []
+oc patch workmanagers.agent.open-cluster-management.io klusterlet-addon-workmgr -n open-cluster-management-agent-addon -p '{"metadata":{"finalizers":[]}}' --type=merge
+
+oc patch searchcollectors.agent.open-cluster-management.io klusterlet-addon-search -n open-cluster-management-agent-addon -p '{"metadata":{"finalizers":[]}}' --type=merge
+
+oc patch policycontrollers.agent.open-cluster-management.io klusterlet-addon-policyctrl -n open-cluster-management-agent-addon -p '{"metadata":{"finalizers":[]}}' --type=merge
+
+oc patch iampolicycontrollers.agent.open-cluster-management.io klusterlet-addon-iampolicyctrl -n open-cluster-management-agent-addon -p '{"metadata":{"finalizers":[]}}' --type=merge
+
+oc patch certpolicycontrollers.agent.open-cluster-management.io klusterlet-addon-certpolicyctrl -n open-cluster-management-agent-addon -p '{"metadata":{"finalizers":[]}}' --type=merge
+
+oc patch applicationmanagers.agent.open-cluster-management.io klusterlet-addon-appmgr -n open-cluster-management-agent-addon -p '{"metadata":{"finalizers":[]}}' --type=merge
+
+klusterlets.operator.open-cluster-management.io
+
+# 删除 namespace 
+oc delete project open-cluster-management-agent open-cluster-management-agent-addon open-cluster-management-addon-observability edge-1
+
+# 删除 klusterlet
+oc get klusterlets.operator.open-cluster-management.io -A -o name | while read i ; do oc patch $i -p '{"metadata":{"finalizers":[]}}' --type=merge; done 
+oc get klusterlets.operator.open-cluster-management.io -A -o name | while read i ; do oc delete $i ; done 
+
+# 删除 clusterclaims 
+oc get clusterclaims.cluster.open-cluster-management.io -o name | while read i ; do oc delete $i ; done 
+
+# 删除 acm 安装的 appliedmanifest
+oc get appliedmanifestworks.work.open-cluster-management.io -A -o name | while read i ; do oc patch $i -p '{"metadata":{"finalizers":[]}}' --type=merge; done 
+oc get appliedmanifestworks.work.open-cluster-management.io -A -o name | while read i ; do oc delete $i ; done 
+
 ```

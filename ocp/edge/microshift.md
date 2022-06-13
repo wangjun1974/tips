@@ -1501,14 +1501,12 @@ oc patch certpolicycontrollers.agent.open-cluster-management.io klusterlet-addon
 
 oc patch applicationmanagers.agent.open-cluster-management.io klusterlet-addon-appmgr -n open-cluster-management-agent-addon -p '{"metadata":{"finalizers":[]}}' --type=merge
 
-klusterlets.operator.open-cluster-management.io
-
-# 删除 namespace 
-oc delete project open-cluster-management-agent open-cluster-management-agent-addon open-cluster-management-addon-observability edge-1
-
 # 删除 klusterlet
 oc get klusterlets.operator.open-cluster-management.io -A -o name | while read i ; do oc patch $i -p '{"metadata":{"finalizers":[]}}' --type=merge; done 
 oc get klusterlets.operator.open-cluster-management.io -A -o name | while read i ; do oc delete $i ; done 
+
+# 删除 namespace 
+oc delete project open-cluster-management-agent open-cluster-management-agent-addon open-cluster-management-addon-observability edge-1
 
 # 删除 clusterclaims 
 oc get clusterclaims.cluster.open-cluster-management.io -o name | while read i ; do oc delete $i ; done 

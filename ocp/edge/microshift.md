@@ -1527,6 +1527,74 @@ oc get clusterclaims.cluster.open-cluster-management.io -o name | while read i ;
 # 删除 acm 安装的 appliedmanifest
 oc get appliedmanifestworks.work.open-cluster-management.io -A -o name | while read i ; do oc patch $i -p '{"metadata":{"finalizers":[]}}' --type=merge; done 
 oc get appliedmanifestworks.work.open-cluster-management.io -A -o name | while read i ; do oc delete $i ; done 
+```
 
+### 尝试自定义 clusterLabels vendor 为 microshift
+```
+# 首先 oc login 到 ACM Hub 所在的 OCP Cluster 上
+# 在 ACM Hub 上执行
+export CLUSTER_NAME=edge-1
+oc new-project ${CLUSTER_NAME}
+oc label namespace ${CLUSTER_NAME} cluster.open-cluster-management.io/managedCluster=${CLUSTER_NAME}
 
+# 尝试设置 
+# cloud 为 Bare-Metal
+# vendor 为 microshift
+cat <<EOF | oc apply -f -
+apiVersion: agent.open-cluster-management.io/v1
+kind: KlusterletAddonConfig
+metadata:
+  name: ${CLUSTER_NAME}
+  namespace: ${CLUSTER_NAME}
+spec:
+  clusterName: ${CLUSTER_NAME}
+  clusterNamespace: ${CLUSTER_NAME}
+  applicationManager:
+    enabled: true
+  certPolicyController:
+    enabled: true
+  clusterLabels:
+    cloud: Bare-Metal
+    vendor: microshift
+  iamPolicyController:
+    enabled: true
+  policyController:
+    enabled: true
+  searchCollector:
+    enabled: true
+  version: 2.2.0
+EOF
+
+cat <<EOF | oc apply -f -
+apiVersion: cluster.open-cluster-management.io/v1
+kind: ManagedCluster
+metadata:
+  name: ${CLUSTER_NAME}
+spec:
+  hubAcceptsClient: true
+EOF
+
+# 上面的命令在 ${CLUSTER_NAME} namespace 下生成 secret ${CLUSTER_NAME}-import 
+# 导出 import.yaml 和 crds.yaml 
+IMPORT=$(oc get -n ${CLUSTER_NAME} secret ${CLUSTER_NAME}-import -o jsonpath='{.data.import\.yaml}')
+CRDS=$(oc get -n ${CLUSTER_NAME} secret ${CLUSTER_NAME}-import -o jsonpath='{.data.crds\.yaml}')
+
+# 参考导入 ACM Hub 的步骤，将 microshift 作为 Managed Cluster 导入到 ACM Hub 中
+oc --kubeconfig=./kubeconfig new-project open-cluster-management-agent
+oc --kubeconfig=./kubeconfig -n open-cluster-management-agent create secret generic rhacm --from-file=.dockerconfigjson=auth.json --type=kubernetes.io/dockerconfigjson
+oc --kubeconfig=./kubeconfig -n open-cluster-management-agent create sa klusterlet
+oc --kubeconfig=./kubeconfig -n open-cluster-management-agent patch sa klusterlet -p '{"imagePullSecrets": [{"name": "rhacm"}]}'
+oc --kubeconfig=./kubeconfig -n open-cluster-management-agent create sa klusterlet-registration-sa
+oc --kubeconfig=./kubeconfig -n open-cluster-management-agent patch sa klusterlet-registration-sa -p '{"imagePullSecrets": [{"name": "rhacm"}]}'
+oc --kubeconfig=./kubeconfig -n open-cluster-management-agent create sa klusterlet-work-sa
+oc --kubeconfig=./kubeconfig -n open-cluster-management-agent patch sa klusterlet-work-sa -p '{"imagePullSecrets": [{"name": "rhacm"}]}'
+
+oc --kubeconfig=./kubeconfig new-project open-cluster-management-agent-addon
+oc --kubeconfig=./kubeconfig -n open-cluster-management-agent-addon create secret generic rhacm --from-file=.dockerconfigjson=auth.json --type=kubernetes.io/dockerconfigjson
+oc --kubeconfig=./kubeconfig -n open-cluster-management-agent-addon create sa klusterlet-addon-operator
+oc --kubeconfig=./kubeconfig -n open-cluster-management-agent-addon patch sa klusterlet-addon-operator -p '{"imagePullSecrets": [{"name": "rhacm"}]}'
+
+oc --kubeconfig=./kubeconfig project open-cluster-management-agent
+echo $CRDS | base64 -d | oc --kubeconfig=./kubeconfig apply -f -
+echo $IMPORT | base64 -d | oc --kubeconfig=./kubeconfig apply -f -
 ```

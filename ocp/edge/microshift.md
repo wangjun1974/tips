@@ -1108,8 +1108,9 @@ oc create secret generic multiclusterhub-operator-pull-secret \
 
 # 参考步骤配置 minio
 # https://github.com/wangjun1974/tips/blob/master/os/miscs.md#%E5%A4%87%E4%BB%BD-openshift-%E8%B5%84%E6%BA%90
-aws --endpoint=http://minio-velero.apps.cluster-m7n8k.m7n8k.sandbox1752.opentlc.com s3 ls 
-aws --endpoint=http://minio-velero.apps.cluster-m7n8k.m7n8k.sandbox1752.opentlc.com s3 mb s3://observability
+aws --endpoint=$(oc -n velero get route minio -o jsonpath='{"http://"}{.spec.host}') s3 ls 
+aws --endpoint=$(oc -n velero get route minio -o jsonpath='{"http://"}{.spec.host}') s3 mb s3://observability
+aws --endpoint=$(oc -n velero get route minio -o jsonpath='{"http://"}{.spec.host}') s3 ls 
 
 cat <<EOF | oc apply -f -
 apiVersion: v1
@@ -1123,7 +1124,7 @@ stringData:
     type: s3
     config:
       bucket: observability
-      endpoint: minio-velero.apps.cluster-r2j8m.r2j8m.sandbox212.opentlc.com
+      endpoint: $(oc -n velero get route minio -o jsonpath='{.spec.host}')
       insecure: true
       access_key: minio
       secret_key: minio123
@@ -1554,8 +1555,8 @@ spec:
   certPolicyController:
     enabled: true
   clusterLabels:
-    cloud: Bare-Metal
-    vendor: microshift
+    cloud: auto-detect
+    vendor: auto-detect
   iamPolicyController:
     enabled: true
   policyController:
@@ -1580,6 +1581,7 @@ IMPORT=$(oc get -n ${CLUSTER_NAME} secret ${CLUSTER_NAME}-import -o jsonpath='{.
 CRDS=$(oc get -n ${CLUSTER_NAME} secret ${CLUSTER_NAME}-import -o jsonpath='{.data.crds\.yaml}')
 
 # 参考导入 ACM Hub 的步骤，将 microshift 作为 Managed Cluster 导入到 ACM Hub 中
+cd /root/kubeconfig/edge/edge-1
 oc --kubeconfig=./kubeconfig new-project open-cluster-management-agent
 oc --kubeconfig=./kubeconfig -n open-cluster-management-agent create secret generic rhacm --from-file=.dockerconfigjson=auth.json --type=kubernetes.io/dockerconfigjson
 oc --kubeconfig=./kubeconfig -n open-cluster-management-agent create sa klusterlet
@@ -1597,4 +1599,15 @@ oc --kubeconfig=./kubeconfig -n open-cluster-management-agent-addon patch sa klu
 oc --kubeconfig=./kubeconfig project open-cluster-management-agent
 echo $CRDS | base64 -d | oc --kubeconfig=./kubeconfig apply -f -
 echo $IMPORT | base64 -d | oc --kubeconfig=./kubeconfig apply -f -
+
+### 在执行完上面的命令之后，尝试循环删除 namespace 下的所有 pods 
+### 这种方法经测试并不可行
+for i in {1..300}; do oc --kubeconfig=./kubeconfig -n open-cluster-management-agent-addon delete pods --all; sleep 1; done
+### 这种方法也不生效
+for i in {1..200}; do 
+  oc --kubeconfig=./kubeconfig -n open-cluster-management-agent-addon scale deployment klusterlet-addon-appmgr --replicas=0
+  oc --kubeconfig=./kubeconfig -n open-cluster-management-agent-addon scale deployment klusterlet-addon-search --replicas=0
+  oc --kubeconfig=./kubeconfig -n open-cluster-management-agent-addon scale deployment klusterlet-addon-workmgr --replicas=0
+  sleep 1
+done
 ```

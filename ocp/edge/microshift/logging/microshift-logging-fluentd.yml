@@ -1,0 +1,291 @@
+kind: ServiceAccount
+apiVersion: v1
+metadata:
+  name: logcollector
+  namespace: logging-test
+  finalizers:
+    - foregroundDeletion
+---
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: log-collector-privileged
+  namespace: logging-test
+ 
+rules:
+  - verbs:
+      - use
+    apiGroups:
+      - security.openshift.io
+    resources:
+      - securitycontextconstraints
+    resourceNames:
+      - log-collector-scc
+---
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: log-collector-privileged-binding
+  namespace: logging-test
+  
+subjects:
+  - kind: ServiceAccount
+    name: logcollector
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: log-collector-privileged
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: cluster-logging-admin
+
+subjects:
+  - kind: ServiceAccount
+    name: logcollector
+    namespace: logging-test
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: admin
+
+
+---
+
+kind: DaemonSet
+apiVersion: apps/v1
+metadata:
+  name: collector
+  namespace: logging-test
+  labels:
+    component: collector
+    logging-infra: collector
+    provider: openshift
+spec:
+  selector:
+    matchLabels:
+      component: collector
+      logging-infra: collector
+      provider: openshift
+  template:
+    metadata:
+      name: collector
+      creationTimestamp: null
+      labels:
+        component: collector
+        logging-infra: collector
+        provider: openshift
+      annotations:
+        scheduler.alpha.kubernetes.io/critical-pod: ''
+        target.workload.openshift.io/management: '{"effect": "PreferredDuringScheduling"}'
+    spec:
+      nodeSelector:
+        kubernetes.io/os: linux
+      restartPolicy: Always
+      serviceAccountName: logcollector
+      schedulerName: default-scheduler
+      terminationGracePeriodSeconds: 10
+      securityContext: {}
+      containers:
+        - resources:
+            limits:
+              memory: 736Mi
+            requests:
+              cpu: 100m
+              memory: 736Mi
+          terminationMessagePath: /dev/termination-log
+          name: collector
+          env:
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: spec.nodeName
+            - name: METRICS_CERT
+              value: /etc/fluent/metrics/tls.crt
+            - name: METRICS_KEY
+              value: /etc/fluent/metrics/tls.key
+            - name: K8S_NODE_NAME
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: spec.nodeName
+            - name: NODE_IPV4
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: status.hostIP
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: status.podIP
+            - name: COLLECTOR_CONF_HASH
+              value: f96782108e2cf321b79b9b1662dca06b
+          securityContext:
+            seLinuxOptions:
+              type: spc_t
+            readOnlyRootFilesystem: true
+            allowPrivilegeEscalation: false
+          ports:
+            - name: metrics
+              containerPort: 24231
+              protocol: TCP
+          imagePullPolicy: IfNotPresent
+          volumeMounts:
+            - name: varlogcontainers
+              readOnly: true
+              mountPath: /var/log/containers
+            - name: varlogpods
+              readOnly: true
+              mountPath: /var/log/pods
+            - name: varlogjournal
+              readOnly: true
+              mountPath: /var/log/journal
+            - name: varlogaudit
+              readOnly: true
+              mountPath: /var/log/audit
+            - name: varlogovn
+              readOnly: true
+              mountPath: /var/log/ovn
+            - name: varlogoauthapiserver
+              readOnly: true
+              mountPath: /var/log/oauth-apiserver
+            - name: varlogopenshiftapiserver
+              readOnly: true
+              mountPath: /var/log/openshift-apiserver
+            - name: varlogkubeapiserver
+              readOnly: true
+              mountPath: /var/log/kube-apiserver
+            - name: config
+              readOnly: true
+              mountPath: /etc/fluent/configs.d/user
+            - name: secureforwardconfig
+              readOnly: true
+              mountPath: /etc/fluent/configs.d/secure-forward
+            - name: secureforwardcerts
+              readOnly: true
+              mountPath: /etc/ocp-forward
+            - name: syslogconfig
+              readOnly: true
+              mountPath: /etc/fluent/configs.d/syslog
+            - name: syslogcerts
+              readOnly: true
+              mountPath: /etc/ocp-syslog
+            - name: entrypoint
+              readOnly: true
+              mountPath: /opt/app-root/src/run.sh
+              subPath: run.sh
+            - name: certs
+              readOnly: true
+              mountPath: /etc/fluent/keys
+            - name: localtime
+              readOnly: true
+              mountPath: /etc/localtime
+            - name: filebufferstorage
+              mountPath: /var/lib/fluentd
+            - name: tmp
+              mountPath: /tmp
+          terminationMessagePolicy: File
+          image: >-
+            registry.redhat.io/openshift-logging/fluentd-rhel8@sha256:abff937554500f84df46b6ec1a55f775f9e75e3215685e664dcac9eab2e30041
+        
+      serviceAccount: logcollector
+      volumes:
+        - name: varlog
+          hostPath:
+            path: /var/log
+            type: ''
+        - name: varlogcontainers
+          hostPath:
+            path: /var/log/containers
+            type: ''
+        - name: varlogpods
+          hostPath:
+            path: /var/log/pods
+            type: ''
+        - name: varlogjournal
+          hostPath:
+            path: /var/log/journal
+            type: ''
+        - name: varlogaudit
+          hostPath:
+            path: /var/log/audit
+            type: ''
+        - name: varlogovn
+          hostPath:
+            path: /var/log/ovn
+            type: ''
+        - name: varlogoauthapiserver
+          hostPath:
+            path: /var/log/oauth-apiserver
+            type: ''
+        - name: varlogopenshiftapiserver
+          hostPath:
+            path: /var/log/openshift-apiserver
+            type: ''
+        - name: varlogkubeapiserver
+          hostPath:
+            path: /var/log/kube-apiserver
+            type: ''
+        - name: config
+          configMap:
+            name: collector
+            defaultMode: 420
+        - name: secureforwardconfig
+          configMap:
+            name: secure-forward
+            defaultMode: 420
+            optional: true
+        - name: secureforwardcerts
+          secret:
+            secretName: secure-forward
+            defaultMode: 420
+            optional: true
+        - name: syslogconfig
+          configMap:
+            name: syslog
+            defaultMode: 420
+            optional: true
+        - name: syslogcerts
+          secret:
+            secretName: syslog
+            defaultMode: 420
+            optional: true
+        - name: entrypoint
+          configMap:
+            name: collector
+            defaultMode: 420
+        - name: certs
+          secret:
+            secretName: collector
+            defaultMode: 420
+            optional: true
+        - name: localtime
+          hostPath:
+            path: /etc/localtime
+            type: ''
+        - name: filebufferstorage
+          hostPath:
+            path: /var/lib/fluentd
+            type: ''
+        - name: tmp
+          emptyDir:
+            medium: Memory
+      dnsPolicy: ClusterFirst
+      tolerations:
+        - key: node-role.kubernetes.io/master
+          operator: Exists
+          effect: NoSchedule
+        - key: node.kubernetes.io/disk-pressure
+          operator: Exists
+          effect: NoSchedule
+
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 0
+  revisionHistoryLimit: 10
+

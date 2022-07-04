@@ -1611,3 +1611,283 @@ for i in {1..200}; do
   sleep 1
 done
 ```
+
+### RHEL8.5 上构建 microshift 的 rpm-ostree image
+https://github.com/redhat-et/microshift-demos/tree/main/ostree-demo<br>
+https://www.osbuild.org/guides/user-guide/edge-container+installer.html<br>
+https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/8/html/composing_installing_and_managing_rhel_for_edge_images/composing-a-rhel-for-edge-image-using-image-builder-command-line_composing-installing-managing-rhel-for-edge-images<br>
+https://bugzilla.redhat.com/show_bug.cgi?id=2033192<br>
+https://toml.io/en/<br>
+```
+### 安装 rhel 8.5
+### 注册系统到 RHN
+subscription-manager register
+### 查看可用 Red Hat OpenShift Container Platform 的 pool
+subscription-manager list --available --matches 'Red Hat OpenShift Container Platform' | grep -E "Pool ID|Entitlement Type"
+### 绑定合适的 pool
+subscription-manager attach --pool=xxxxxxxx
+
+### 启用软件仓库
+### 问题：Image Builder 理论上应该不依赖于 subscription
+### 但是 Image Builder 需要解析 compose 需要的软件包
+### 默认 Image Builder 使用在线软件仓库获取软件内容
+### 用户/管理员其实可以在在线环境构建 rpm-ostree image
+### 然后在离线环境里使用并且维护构建好的 image
+subscription-manager repos --enable=rhel-8-for-x86_64-baseos-rpms --enable=rhel-8-for-x86_64-appstream-rpms --enable=rhocp-4.8-for-rhel-8-x86_64-rpms
+
+### 安装 image builder 所需软件包
+dnf install -y git cockpit cockpit-composer osbuild-composer composer-cli bash-completion podman genisoimage syslinux skopeo
+
+### 启用 cockpit 和 osbuild-composer 服务
+systemctl enable --now osbuild-composer.socket
+systemctl enable --now cockpit.socket
+
+### 配置 composer-cli bash 补齐
+source  /etc/bash_completion.d/composer-cli
+
+### 创建 composer repo 文件，拷贝系统默认 repo 文件
+### osbuild-composer 使用的 repo 文件与 dnf 的 repo 文件不同
+### 是 json 格式的文件
+### 以下是为 image builder 覆盖默认软件仓库的例子 
+mkdir -p /etc/osbuild-composer/repositories
+curl -L https://raw.githubusercontent.com/wangjun1974/tips/master/ocp/edge/microshift/demo/rhel-86.json -o /etc/osbuild-composer/repositories/rhel-86.json
+curl -L https://raw.githubusercontent.com/wangjun1974/tips/master/ocp/edge/microshift/demo/rhel-8.json -o /etc/osbuild-composer/repositories/rhel-8.json
+
+### 重启 osbuild-composer.service 服务
+systemctl restart osbuild-composer.service
+
+### 创建 microshift 的 osbuild-composer 的 repo source
+mkdir -p microshift-demo
+cd microshift-demo
+cat >microshift.toml<<EOF
+id = "microshift"
+name = "microshift"
+type = "yum-baseurl"
+url = "https://download.copr.fedorainfracloud.org/results/@redhat-et/microshift/epel-8-x86_64"
+check_gpg = true
+check_ssl = false
+system = false
+EOF
+### 添加 osbuild-composer 的 repo source
+composer-cli sources add microshift.toml
+composer-cli sources list
+
+### 创建 openshift-cli 的 osbuild-composer 的 repo source
+cat >openshiftcli.toml<<EOF
+id = "oc-cli-tools"
+name = "openshift-cli"
+type = "yum-baseurl"
+url = "https://cdn.redhat.com/content/dist/layered/rhel8/x86_64/rhocp/4.8/source/SRPMS"
+check_gpg = true
+check_ssl = true
+system = true
+rhsm = true
+EOF
+composer-cli sources add openshiftcli.toml
+composer-cli sources list
+
+### 创建 openshift-tools 的 osbuild-composer 的 repo source
+cat >openshiftools.toml<<EOF
+id = "oc-tools"
+name = "openshift-tools"
+type = "yum-baseurl"
+url = "https://cdn.redhat.com/content/dist/layered/rhel8/x86_64/rhocp/4.8/os"
+check_gpg = true
+check_ssl = true
+system = true
+rhsm = true
+EOF
+composer-cli sources add openshiftools.toml
+composer-cli sources list
+
+### 下载 microshift blueprint
+curl -OL https://raw.githubusercontent.com/redhat-cop/rhel-edge-automation-arch/blueprints/microshift/blueprint.toml
+
+### 添加 blueprints 
+### 解决 blueprints 的依赖关系
+composer-cli blueprints push blueprint.toml
+composer-cli blueprints list
+composer-cli blueprints show microshift
+composer-cli blueprints depresolv microshift
+
+
+### 查看状态
+composer-cli status show
+
+### 查看 compose types
+composer-cli compose types
+
+### 触发类型为 edge-container 的 compose 
+### 如果希望构建 rhel for edge 的镜像，也就是 rpm-ostree 格式的镜像，类型需要为 edge-container
+composer-cli compose start-ostree --ref "rhel/edge/example" microshift edge-container
+### 用 journalctl 观察 compose 是否完成
+### 创建时间大概15分钟
+journalctl -f
+### 等到消息出现
+Jun 30 22:31:49 jwang-imagebuilder.example.com osbuild-worker[16129]: time="2022-06-30T22:31:49-04:00" level=info msg="Job '56665cb3-7c68-4668-83fb-9342d07d6566' (osbuild) finished"
+
+composer-cli compose status 
+composer-cli compose log 2a6ac0ca-1237-4d45-be8b-db51879b9ff0
+### 保存日志
+composer-cli compose logs 2a6ac0ca-1237-4d45-be8b-db51879b9ff0
+
+### 解压缩后日志文件为 logs/osbuild.log
+composer-cli compose logs 2a6ac0ca-1237-4d45-be8b-db51879b9ff0
+
+### 获取 compose image 文件
+### 在获取前建议获取 compose 对应的 logs 和 metadata
+composer-cli compose log 2a6ac0ca-1237-4d45-be8b-db51879b9ff0
+composer-cli compose metadata 2a6ac0ca-1237-4d45-be8b-db51879b9ff0
+composer-cli compose image 2a6ac0ca-1237-4d45-be8b-db51879b9ff0
+[root@jwang-imagebuilder microshift-demo]# ls -lh
+total 1.1G
+-rw-------. 1 root root 1.1G Jun 30 21:57 2a6ac0ca-1237-4d45-be8b-db51879b9ff0-container.tar
+-rw-r--r--. 1 root root 1.1K Jun 30 21:24 blueprint.toml
+-rw-r--r--. 1 root root  204 Jun 30 21:22 microshift.toml
+-rw-r--r--. 1 root root  212 Jun 30 21:23 openshiftcli.toml
+-rw-r--r--. 1 root root  200 Jun 30 21:24 openshiftools.toml
+
+### 加载 container 镜像
+imageid=$(cat "./2a6ac0ca-1237-4d45-be8b-db51879b9ff0-container.tar" | sudo podman load | grep -o -P '(?<=[@:])[a-z0-9]*')
+### 另外一种加载镜像的方法
+skopeo copy oci-archive:2a6ac0ca-1237-4d45-be8b-db51879b9ff0-container.tar containers-storage:localhost/microshift:0.0.1
+
+### 为镜像打 tag
+podman tag "${imageid}" "localhost/microshift:0.0.1"
+### 启动镜像 - edge-container 镜像运行起来是个 nginx 服务
+podman run -d --name="microshift-server" -p 8080:8080 "localhost/microshift:0.0.1"
+
+### 创建 installer.toml 
+cat > installer.toml <<EOF
+name = "installer"
+
+description = ""
+version = "0.0.0"
+modules = []
+groups = []
+packages = []
+EOF
+
+### 添加 blueprint 
+composer-cli blueprints push installer.toml
+composer-cli blueprints list
+
+### 删除自定义 repos
+rm -f /etc/osbuild-composer/repositories/rhel-8*.json
+systemctl restart osbuild-composer.service
+
+### 删除自定义 sources
+composer-cli sources delete oc-cli-tools
+composer-cli sources delete oc-tools
+composer-cli sources delete microshift
+
+### 触发类型为 edge-installer 的 compose 
+### 这个新的 compose 基于前面的 edge-container 的 rpm-ostree
+### rpm-ostree 通过 podman 运行在容器里，并通过 http://localhost:8080/repo 可访问
+composer-cli compose start-ostree --ref "rhel/edge/example" --url http://localhost:8080/repo/ installer edge-installer
+
+### 获取 edge-installer iso
+### 首先通过 composer-cli compose status 获取 edge-installer 类型的 compose id
+composer-cli compose status
+### 然后通过 compose id 获取 edge-installer iso
+composer-cli compose iso a0cea186-a5a7-47bc-be4f-693df0410683
+
+### 用 iso 启动虚拟机
+### 启动报错: virt-manager/QEMU: Could not read from CDROM (code 0009) on booting image
+### https://github.com/symmetryinvestments/zfs-on-root-installer/issues/1
+### https://ostechnix.com/enable-uefi-support-for-kvm-virtual-machines-in-linux/
+### https://fedoraproject.org/wiki/Using_UEFI_with_QEMU
+### https://www.kraxel.org/repos/
+### http://www.linux-kvm.org/downloads/lersek/ovmf-whitepaper-c770f8c.txt
+### https://www.server-world.info/en/note?os=CentOS_7&p=kvm&f=11
+
+### 生成 kickstart 文件
+# pwd
+/root/microshift-demo
+cat > edge.ks << EOF
+lang en_US
+keyboard us
+timezone America/Vancouver --isUtc
+rootpw --lock
+#platform x86_64
+reboot
+text
+ostreesetup --osname=rhel --url=http://192.168.122.203:8080/repo --ref=rhel/edge/example --nogpg
+bootloader --append="rhgb quiet crashkernel=auto"
+zerombr
+clearpart --all --initlabel
+autopart
+firstboot --disable
+EOF
+### 重新创建 edge-container，包含 edge.ks 
+podman stop microshift-server
+podman rm microshift-server
+podman run -d --rm -v /root/microshift-demo/edge.ks:/usr/share/nginx/html/edge.ks:z --name="microshift-server" -p 8080:8080 "localhost/microshift:0.0.1"
+
+### 用 bootiso 启动虚拟机
+### 添加启动参数 ip=192.168.122.204::192.168.122.1:255.255.255.0:edge1.example.com:ens3:none nameserver=192.168.122.1 inst.ks=http://192.168.122.203:8080/edge.ks
+
+### 创建更新的 rpm-ostree 
+### blueprint 文件内容参考
+### https://raw.githubusercontent.com/redhat-cop/rhel-edge-automation-arch/blueprints/microshift/blueprint.toml
+### https://github.com/redhat-et/microshift-demos/tree/main/ostree-demo
+### https://www.osbuild.org/guides/user-guide/edge-container+installer.html
+
+
+### 更新 microshift blueprints
+### 解决 microshift blueprints 的依赖关系
+composer-cli blueprints show microshift
+composer-cli blueprints depsolve microshift
+
+### 重新发布 microshift 0.0.2 edge-container
+### 按照目前的测试情况
+### 需要以下 sources 
+### appstream
+### baseos
+### microshift
+### oc-cli-tools
+### oc-tools
+### 不需要以下的 sources
+### curl -L https://raw.githubusercontent.com/wangjun1974/tips/master/ocp/edge/microshift/demo/rhel-86.json -o /etc/osbuild-composer/repositories/rhel-86.json
+### curl -L https://raw.githubusercontent.com/wangjun1974/tips/master/ocp/edge/microshift/demo/rhel-8.json -o /etc/osbuild-composer/repositories/rhel-8.json
+systemctl restart osbuild-composer.service 
+
+composer-cli sources add microshift.toml
+composer-cli sources add openshiftcli.toml
+composer-cli sources add openshiftools.toml
+
+### 启动 edge-container 0.0.2 compose
+composer-cli compose start-ostree --ref "rhel/edge/example" microshift edge-container
+
+### 下载镜像
+composer-cli compose status
+composer-cli compose image xxx
+
+### 更新镜像
+skopeo copy oci-archive:xxx-container.tar containers-storage:localhost/microshift:0.0.2
+
+### 重新启动 0.0.2 edge-container 
+podman stop microshift-server
+podman rm microshift-server
+podman run -d --rm -v /root/microshift-demo/edge.ks:/usr/share/nginx/html/edge.ks:z --name="microshift-server" -p 8080:8080 "localhost/microshift:0.0.2"
+
+### 登陆 rhel-for-edge 服务器检查更新，下载更新，安装更新
+ssh redhat@192.168.122.204
+rpm-ostree upgrade check
+
+### 检查 rpm-ostree 状态
+rpm-ostree status
+
+### 重启系统
+systemctl reboot
+
+### 登陆 rhel-for-edge 服务器，检查 rpm-ostree 状态
+ssh redhat@192.168.122.204
+rpm-ostree status
+
+### 在安装好的 RHEL Edge 系统里记录着在什么位置查看更新
+[root@edge1 etc]# cat /etc/ostree/remotes.d/rhel.conf
+[remote "rhel"]
+url=http://192.168.122.203:8080/repo
+gpg-verify=false
+```

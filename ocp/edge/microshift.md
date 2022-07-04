@@ -1719,6 +1719,9 @@ composer-cli compose types
 
 ### 触发类型为 edge-container 的 compose 
 ### 如果希望构建 rhel for edge 的镜像，也就是 rpm-ostree 格式的镜像，类型需要为 edge-container
+### 这种类型的 image 构建完成后，会生成一个 oci-archive 格式的镜像
+### 镜像运行后，会启动一个 nginx web 服务器，把 rpm-ostree 在 web 服务器的 repo 目录上发布出来供客户端访问
+### 客户端可以从这个位置获取更新
 composer-cli compose start-ostree --ref "rhel/edge/example" microshift edge-container
 ### 用 journalctl 观察 compose 是否完成
 ### 创建时间大概15分钟

@@ -1729,8 +1729,12 @@ journalctl -f
 ### 等到消息出现
 Jun 30 22:31:49 jwang-imagebuilder.example.com osbuild-worker[16129]: time="2022-06-30T22:31:49-04:00" level=info msg="Job '56665cb3-7c68-4668-83fb-9342d07d6566' (osbuild) finished"
 
+### 查看 compose 状态 
 composer-cli compose status 
+
+### 检查日志
 composer-cli compose log 2a6ac0ca-1237-4d45-be8b-db51879b9ff0
+
 ### 保存日志
 composer-cli compose logs 2a6ac0ca-1237-4d45-be8b-db51879b9ff0
 
@@ -1739,9 +1743,10 @@ composer-cli compose logs 2a6ac0ca-1237-4d45-be8b-db51879b9ff0
 
 ### 获取 compose image 文件
 ### 在获取前建议获取 compose 对应的 logs 和 metadata
-composer-cli compose log 2a6ac0ca-1237-4d45-be8b-db51879b9ff0
+composer-cli compose logs 2a6ac0ca-1237-4d45-be8b-db51879b9ff0
 composer-cli compose metadata 2a6ac0ca-1237-4d45-be8b-db51879b9ff0
 composer-cli compose image 2a6ac0ca-1237-4d45-be8b-db51879b9ff0
+
 [root@jwang-imagebuilder microshift-demo]# ls -lh
 total 1.1G
 -rw-------. 1 root root 1.1G Jun 30 21:57 2a6ac0ca-1237-4d45-be8b-db51879b9ff0-container.tar
@@ -1752,7 +1757,8 @@ total 1.1G
 
 ### 加载 container 镜像
 imageid=$(cat "./2a6ac0ca-1237-4d45-be8b-db51879b9ff0-container.tar" | sudo podman load | grep -o -P '(?<=[@:])[a-z0-9]*')
-### 另外一种加载镜像的方法
+
+### 另外一种加载镜像的方法 - 推荐
 skopeo copy oci-archive:2a6ac0ca-1237-4d45-be8b-db51879b9ff0-container.tar containers-storage:localhost/microshift:0.0.1
 
 ### 为镜像打 tag
@@ -1786,8 +1792,10 @@ composer-cli sources delete microshift
 
 ### 触发类型为 edge-installer 的 compose 
 ### 这个新的 compose 基于前面的 edge-container 的 rpm-ostree
-### rpm-ostree 通过 podman 运行在容器里，并通过 http://localhost:8080/repo 可访问
-composer-cli compose start-ostree --ref "rhel/edge/example" --url http://localhost:8080/repo/ installer edge-installer
+### rpm-ostree 通过 podman 运行在容器里，并通过 http://192.168.122.203:8080/repo 可访问
+### 我的测试环境下，虚拟机不支持 UEFI 启动
+### 未能测试 edge-installer 格式的 ISO
+composer-cli compose start-ostree --ref "rhel/edge/example" --url http://192.168.122.203:8080/repo/ installer edge-installer
 
 ### 获取 edge-installer iso
 ### 首先通过 composer-cli compose status 获取 edge-installer 类型的 compose id

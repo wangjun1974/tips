@@ -1917,5 +1917,31 @@ gpg-verify=false
 https://kubevirt.io/2022/Virtual-Machines-with-MetalLB.html
 ```
 # TODO try MetalLB and microshift
+# https://metallb.universe.tf/installation/
+# 参考这种安装方式
+kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.13.4/config/manifests/metallb-native.yaml
+
+# 查看 controller 日志
+$ oc -n metallb-system logs $(oc -n metallb-system get pods -l component='controller' -o name) 
+
+# 查看 speaker 日志
+$ oc -n metallb-system logs $(oc -n metallb-system get pods -l component='speaker' -o name) 
+
+# 配置 metallb addresspool
+cat <<EOF | kubectl apply -f -
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: metallb-system
+  name: config
+data:
+  config: |
+    address-pools:
+    - name: addresspool-sample1
+      protocol: layer2
+      addresses:
+      - 172.18.1.1-172.18.1.16
+EOF
+
 
 ```

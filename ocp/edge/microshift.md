@@ -1596,6 +1596,11 @@ oc --kubeconfig=./kubeconfig -n open-cluster-management-agent-addon create secre
 oc --kubeconfig=./kubeconfig -n open-cluster-management-agent-addon create sa klusterlet-addon-operator
 oc --kubeconfig=./kubeconfig -n open-cluster-management-agent-addon patch sa klusterlet-addon-operator -p '{"imagePullSecrets": [{"name": "rhacm"}]}'
 
+### 对于 microshift 4.10 版本开始 api 上删除了 project
+### oc new-project 换成 oc create namespace
+oc --kubeconfig=./kubeconfig create namespace open-cluster-management-agent
+oc --kubeconfig=./kubeconfig create namespace open-cluster-management-agent-addon
+
 oc --kubeconfig=./kubeconfig project open-cluster-management-agent
 echo $CRDS | base64 -d | oc --kubeconfig=./kubeconfig apply -f -
 echo $IMPORT | base64 -d | oc --kubeconfig=./kubeconfig apply -f -

@@ -1927,21 +1927,17 @@ $ oc -n metallb-system logs $(oc -n metallb-system get pods -l component='contro
 # 查看 speaker 日志
 $ oc -n metallb-system logs $(oc -n metallb-system get pods -l component='speaker' -o name) 
 
-# 配置 metallb addresspool
-cat <<EOF | kubectl apply -f -
-apiVersion: v1
-kind: ConfigMap
+# 配置 address pool
+# https://deploy-preview-41167--osdocs.netlify.app/openshift-enterprise/latest/networking/metallb/about-metallb.html
+cat <<EOF | oc apply -f -
+apiVersion: metallb.io/v1beta1
+kind: AddressPool
 metadata:
+  name: addresspool-sample1
   namespace: metallb-system
-  name: config
-data:
-  config: |
-    address-pools:
-    - name: addresspool-sample1
-      protocol: layer2
-      addresses:
-      - 172.18.1.1-172.18.1.16
+spec:
+  protocol: layer2
+  addresses:
+    - 192.168.1.100-192.168.1.255
 EOF
-
-
 ```

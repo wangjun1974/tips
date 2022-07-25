@@ -794,6 +794,11 @@ $ oc -n open-cluster-management-agent-addon logs $(oc -n open-cluster-management
 
 # 查看 klusterlet-addon-workmgr pod 日志
 $ oc -n open-cluster-management-agent-addon logs $(oc -n open-cluster-management-agent-addon get pods -l app=work-manager -o name)
+
+### ACM - 2.5.1
+# 查看 klusterlet-addon-workmgr pod 日志
+$ oc -n open-cluster-management-agent-addon logs $(oc -n open-cluster-management-agent-addon get pods -l component=work-manager -o name)
+
 ```
 
 ### 测试实例
@@ -1906,4 +1911,11 @@ rpm-ostree status
 [remote "rhel"]
 url=http://192.168.122.203:8080/repo
 gpg-verify=false
+```
+
+### MetalLB and Kubevirt
+https://kubevirt.io/2022/Virtual-Machines-with-MetalLB.html
+```
+# try MetalLB and microshift
+
 ```

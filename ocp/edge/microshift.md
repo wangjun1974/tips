@@ -1998,3 +1998,17 @@ curl: (51) SSL: no alternative certificate subject name matches target host name
 # 删除 stackrox namespace
 oc delete namespace stackrox 
 ```
+
+### 安装 ACS - Sensor - microshift
+```
+# 创建 Cluster
+# DOWNLOAD YAML FILES AND KEYS
+# 拷贝 sensor-<clustername>.zip 到 microshift
+rm -rf /tmp/sensor
+mkdir /tmp/sensor
+cd /tmp/sensor
+mv <path>/sensor-<clustername>.zip .
+
+# 执行 ACS Sensor 安装
+SKIP_ORCHESTRATOR_CHECK=true sh -x sensor.sh
+```

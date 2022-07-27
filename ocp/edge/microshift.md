@@ -1940,4 +1940,61 @@ spec:
   addresses:
     - 192.168.1.100-192.168.1.255
 EOF
+
+# 生成证书信任
+openssl s_client -host 192.168.1.100 -port 443 -showcerts > trace < /dev/null
+cat trace | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' | tee /etc/pki/ca-trust/source/anchors/a.crt  
+update-ca-trust
+
+curl -v https://192.168.1.100:443
+...
+*  subjectAltName does not match 192.168.1.100
+
+# service 
+cat <<EOF | oc apply -f -
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    metallb.universe.tf/address-pool: addresspool-sample1
+  labels:
+    component: work-manager
+  name: klusterlet-addon-workmgr-metallb-test
+  namespace: open-cluster-management-agent-addon
+spec:
+  allocateLoadBalancerNodePorts: true
+  clusterIP: 
+  clusterIPs:
+  externalIPs:
+  - 10.66.208.164
+  externalTrafficPolicy: Cluster
+  internalTrafficPolicy: Cluster
+  ipFamilies:
+  - IPv4
+  ipFamilyPolicy: SingleStack
+  ports:
+  - name: app
+    port: 443
+    protocol: TCP
+    targetPort: 4443
+  selector:
+    component: work-manager
+  sessionAffinity: None
+  type: LoadBalancer
+EOF
+
+curl -v https://10.66.208.164:443
+...
+curl: (51) SSL: no alternative certificate subject name matches target host name '10.66.208.164'
+
+```
+
+### 清理 ACS 对象 
+```
+清理 microshift 上的 acs 内容
+# 如果 ACS Central 因为某种原因被删除了，
+# 需要手工清理 microshift 上遗留的对象
+
+# 删除 stackrox namespace
+oc delete namespace stackrox 
 ```

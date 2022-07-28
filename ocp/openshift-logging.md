@@ -26,11 +26,13 @@ oc -n openshift-logging get route kibana -ojsonpath='{"https://"}{.spec.host}{"\
 ### 测试 multus on microshift
 https://gist.github.com/usrbinkat/0f08e0600f9a9ff64bf46d1ec9251f23
 ```
+# 在 microshift 4.10 nightly 上测试这个功能可以工作
 cat <<EOF | kubectl apply -f -
 apiVersion: k8s.cni.cncf.io/v1
 kind: NetworkAttachmentDefinition
 metadata:
   name: nadbr1
+  namespace: nginx-test
 spec:
   config: '{"cniVersion":"0.3.1","name":"br1","plugins":[{"type":"bridge","bridge":"br1","ipam":{}},{"type":"tuning"}]}'
 EOF
@@ -48,5 +50,20 @@ spec:
   - name: samplepod
     command: ["/bin/ash", "-c", "trap : TERM INT; sleep infinity & wait"]
     image: alpine
+EOF
+
+cat <<EOF | kubectl create -f -
+apiVersion: v1
+kind: Pod
+metadata:
+  name: samplepod1
+  namespace: nginx-test
+  annotations:
+    k8s.v1.cni.cncf.io/networks: nadbr1
+spec:
+  containers:
+  - name: samplepod
+    command: ["/bin/sh", "-c", "trap : TERM INT; sleep infinity & wait"]
+    image: quay.io/submariner/nettest
 EOF
 ```

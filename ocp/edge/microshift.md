@@ -1113,6 +1113,11 @@ oc create secret generic multiclusterhub-operator-pull-secret \
 
 # 参考步骤配置 minio
 # https://github.com/wangjun1974/tips/blob/master/os/miscs.md#%E5%A4%87%E4%BB%BD-openshift-%E8%B5%84%E6%BA%90
+# 20220801
+# 最新的镜像创建 bucket 有问题
+# 测试确认正常的版本为
+# image: minio/minio:RELEASE.2022-07-24T01-54-52Z
+# image: minio/mc:RELEASE.2022-07-24T02-25-13Z
 aws --endpoint=$(oc -n velero get route minio -o jsonpath='{"http://"}{.spec.host}') s3 ls 
 aws --endpoint=$(oc -n velero get route minio -o jsonpath='{"http://"}{.spec.host}') s3 mb s3://observability
 aws --endpoint=$(oc -n velero get route minio -o jsonpath='{"http://"}{.spec.host}') s3 ls 

@@ -2120,3 +2120,6 @@ mv <path>/sensor-<clustername>.zip .
 # 执行 ACS Sensor 安装
 SKIP_ORCHESTRATOR_CHECK=true sh -x sensor.sh
 ```
+
+### microshift in openshift
+https://github.com/openshift/microshift

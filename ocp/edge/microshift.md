@@ -1219,6 +1219,109 @@ oc -n open-cluster-management-addon-observability logs $(oc -n open-cluster-mana
 # node-exporter
 oc -n open-cluster-management-addon-observability logs $(oc -n open-cluster-management-addon-observability get pods -l app.kubernetes.io/name='node-exporter' -o name) -c node-exporter
 
+# ACM Observability Hub logs - ACM 2.5.1
+# observatorium-operator
+$ oc -n open-cluster-management-observability logs $(oc -n open-cluster-management-observability get pods -l control-plane='observatorium-operator' -o name)
+
+# observatorium-api
+$ oc -n open-cluster-management-observability logs $(oc -n open-cluster-management-observability get pods -l app.kubernetes.io/name='observatorium-api' -o name | head -1)
+$ oc -n open-cluster-management-observability logs $(oc -n open-cluster-management-observability get pods -l app.kubernetes.io/name='observatorium-api' -o name | tail -1)
+
+# thanos-compact
+$ oc -n open-cluster-management-observability logs $(oc -n open-cluster-management-observability get pods -l app.kubernetes.io/name='thanos-compact' -o name)
+
+# thanos-store
+$ oc -n open-cluster-management-observability logs $(oc -n open-cluster-management-observability get pods -l app.kubernetes.io/name='thanos-store' -o name | head -1)
+$ oc -n open-cluster-management-observability logs $(oc -n open-cluster-management-observability get pods -l app.kubernetes.io/name='thanos-store' -o name | head -2 | tail -1)
+$ oc -n open-cluster-management-observability logs $(oc -n open-cluster-management-observability get pods -l app.kubernetes.io/name='thanos-store' -o name | tail -1)
+
+# thanos-store-memcached
+$ oc -n open-cluster-management-observability logs $(oc -n open-cluster-management-observability get pods -l app.kubernetes.io/name='memcached' -l app.kubernetes.io/component='store-cache' -o name | head -1) -c memcached
+$ oc -n open-cluster-management-observability logs $(oc -n open-cluster-management-observability get pods -l app.kubernetes.io/name='memcached' -l app.kubernetes.io/component='store-cache' -o name | head -1) -c exporter
+$ oc -n open-cluster-management-observability logs $(oc -n open-cluster-management-observability get pods -l app.kubernetes.io/name='memcached' -l app.kubernetes.io/component='store-cache' -o name | head -2 | tail -1) -c memcached
+$ oc -n open-cluster-management-observability logs $(oc -n open-cluster-management-observability get pods -l app.kubernetes.io/name='memcached' -l app.kubernetes.io/component='store-cache' -o name | head -2 | tail -1) -c exporter
+$ oc -n open-cluster-management-observability logs $(oc -n open-cluster-management-observability get pods -l app.kubernetes.io/name='memcached' -l app.kubernetes.io/component='store-cache' -o name | tail -1) -c memcached
+$ oc -n open-cluster-management-observability logs $(oc -n open-cluster-management-observability get pods -l app.kubernetes.io/name='memcached' -l app.kubernetes.io/component='store-cache' -o name | tail -1) -c exporter
+
+# thanos-rule
+$ oc -n open-cluster-management-observability logs $(oc -n open-cluster-management-observability get pods -l app.kubernetes.io/name='thanos-rule' -o name | head -1) -c thanos-rule 
+$ oc -n open-cluster-management-observability logs $(oc -n open-cluster-management-observability get pods -l app.kubernetes.io/name='thanos-rule' -o name | head -1) -c configmap-reloader
+$ oc -n open-cluster-management-observability logs $(oc -n open-cluster-management-observability get pods -l app.kubernetes.io/name='thanos-rule' -o name | head -2 | tail -1) -c thanos-rule 
+$ oc -n open-cluster-management-observability logs $(oc -n open-cluster-management-observability get pods -l app.kubernetes.io/name='thanos-rule' -o name | head -2 | tail -1) -c configmap-reloader
+$ oc -n open-cluster-management-observability logs $(oc -n open-cluster-management-observability get pods -l app.kubernetes.io/name='thanos-rule' -o name | tail -1) -c thanos-rule 
+$ oc -n open-cluster-management-observability logs $(oc -n open-cluster-management-observability get pods -l app.kubernetes.io/name='thanos-rule' -o name | tail -1) -c configmap-reloader
+
+# thanos-receive-controller
+$ oc -n open-cluster-management-observability logs $(oc -n open-cluster-management-observability get pods -l app.kubernetes.io/name='thanos-receive-controller' -o name)
+
+# thanos-receive
+$ oc -n open-cluster-management-observability logs $(oc -n open-cluster-management-observability get pods -l app.kubernetes.io/name='thanos-receive' -o name | head -1) 
+$ oc -n open-cluster-management-observability logs $(oc -n open-cluster-management-observability get pods -l app.kubernetes.io/name='thanos-receive' -o name | head -2 | tail -1) 
+$ oc -n open-cluster-management-observability logs $(oc -n open-cluster-management-observability get pods -l app.kubernetes.io/name='thanos-receive' -o name | tail -1) 
+
+# thanos-query
+$ oc -n open-cluster-management-observability logs $(oc -n open-cluster-management-observability get pods -l app.kubernetes.io/name='thanos-query' -o name | head -1) 
+$ oc -n open-cluster-management-observability logs $(oc -n open-cluster-management-observability get pods -l app.kubernetes.io/name='thanos-query' -o name | tail -1) 
+
+# thanos-query-frontend
+$ oc -n open-cluster-management-observability logs $(oc -n open-cluster-management-observability get pods -l app.kubernetes.io/name='thanos-query-frontend' -o name | head -1) 
+$ oc -n open-cluster-management-observability logs $(oc -n open-cluster-management-observability get pods -l app.kubernetes.io/name='thanos-query-frontend' -o name | tail -1) 
+
+# query-frontend-cache-memcached 
+$ oc -n open-cluster-management-observability logs $(oc -n open-cluster-management-observability get pods -l app.kubernetes.io/name='memcached' -l app.kubernetes.io/component='query-frontend-cache' -o name | head -1) -c memcached
+$ oc -n open-cluster-management-observability logs $(oc -n open-cluster-management-observability get pods -l app.kubernetes.io/name='memcached' -l app.kubernetes.io/component='query-frontend-cache' -o name | head -1) -c exporter
+
+# alertmanager
+$ oc -n open-cluster-management-observability logs $(oc -n open-cluster-management-observability get pods -l app='multicluster-observability-alertmanager' -o name | head -1) -c alertmanager
+$ oc -n open-cluster-management-observability logs $(oc -n open-cluster-management-observability get pods -l app='multicluster-observability-alertmanager' -o name | head -1) -c alertmanager-proxy
+$ oc -n open-cluster-management-observability logs $(oc -n open-cluster-management-observability get pods -l app='multicluster-observability-alertmanager' -o name | head -1) -c config-reloader
+$ oc -n open-cluster-management-observability logs $(oc -n open-cluster-management-observability get pods -l app='multicluster-observability-alertmanager' -o name | head -2 | tail -1) -c alertmanager
+$ oc -n open-cluster-management-observability logs $(oc -n open-cluster-management-observability get pods -l app='multicluster-observability-alertmanager' -o name | head -2 | tail -1) -c alertmanager-proxy
+$ oc -n open-cluster-management-observability logs $(oc -n open-cluster-management-observability get pods -l app='multicluster-observability-alertmanager' -o name | head -2 | tail -1) -c config-reloader
+$ oc -n open-cluster-management-observability logs $(oc -n open-cluster-management-observability get pods -l app='multicluster-observability-alertmanager' -o name | tail -1) -c alertmanager
+$ oc -n open-cluster-management-observability logs $(oc -n open-cluster-management-observability get pods -l app='multicluster-observability-alertmanager' -o name | tail -1) -c alertmanager-proxy
+$ oc -n open-cluster-management-observability logs $(oc -n open-cluster-management-observability get pods -l app='multicluster-observability-alertmanager' -o name | tail -1) -c config-reloader
+
+# grafana
+$ oc -n open-cluster-management-observability logs $(oc -n open-cluster-management-observability get pods -l app='multicluster-observability-grafana' -o name | head -1) -c grafana
+$ oc -n open-cluster-management-observability logs $(oc -n open-cluster-management-observability get pods -l app='multicluster-observability-grafana' -o name | head -1) -c grafana-dashboard-loader
+$ oc -n open-cluster-management-observability logs $(oc -n open-cluster-management-observability get pods -l app='multicluster-observability-grafana' -o name | tail -1) -c grafana
+$ oc -n open-cluster-management-observability logs $(oc -n open-cluster-management-observability get pods -l app='multicluster-observability-grafana' -o name | tail -1) -c grafana-dashboard-loader
+
+# oc get pods -n open-cluster-management-observability 
+NAME                                                      READY   STATUS    RESTARTS   AGE
+observability-alertmanager-0                              3/3     Running   0          2m54s
+observability-alertmanager-1                              3/3     Running   0          2m16s
+observability-alertmanager-2                              3/3     Running   0          115s
+observability-grafana-5479c77-9prbg                       2/2     Running   0          2m55s
+observability-grafana-5479c77-r6rm8                       2/2     Running   0          2m55s
+observability-observatorium-api-56764cb77c-9gvw7          1/1     Running   0          2m17s
+observability-observatorium-api-56764cb77c-ntldv          1/1     Running   0          2m17s
+observability-observatorium-operator-66d567cdd5-9m4bd     1/1     Running   0          2m55s
+observability-rbac-query-proxy-548b586fb-wlxd2            2/2     Running   0          2m53s
+observability-rbac-query-proxy-548b586fb-xhmbw            2/2     Running   0          2m53s
+observability-thanos-compact-0                            1/1     Running   0          2m17s
+observability-thanos-query-b6c875b95-nq4b8                1/1     Running   0          2m17s
+observability-thanos-query-b6c875b95-qbw2z                1/1     Running   0          2m16s
+observability-thanos-query-frontend-86db8c9f5b-b76td      1/1     Running   0          2m17s
+observability-thanos-query-frontend-86db8c9f5b-wqxnk      1/1     Running   0          2m17s
+observability-thanos-query-frontend-memcached-0           2/2     Running   0          2m16s
+observability-thanos-query-frontend-memcached-1           2/2     Running   0          115s
+observability-thanos-query-frontend-memcached-2           2/2     Running   0          108s
+observability-thanos-receive-controller-f47cb55d8-pz6c4   1/1     Running   0          2m17s
+observability-thanos-receive-default-0                    1/1     Running   0          2m17s
+observability-thanos-receive-default-1                    1/1     Running   0          112s
+observability-thanos-receive-default-2                    1/1     Running   0          90s
+observability-thanos-rule-0                               2/2     Running   0          2m17s
+observability-thanos-rule-1                               2/2     Running   0          105s
+observability-thanos-rule-2                               2/2     Running   0          79s
+observability-thanos-store-memcached-0                    2/2     Running   0          2m17s
+observability-thanos-store-memcached-1                    2/2     Running   0          2m4s
+observability-thanos-store-memcached-2                    2/2     Running   0          115s
+observability-thanos-store-shard-0-0                      1/1     Running   0          2m17s
+observability-thanos-store-shard-1-0                      1/1     Running   0          2m17s
+observability-thanos-store-shard-2-0                      1/1     Running   0          2m17s
+
 ```
 
 ### rpm based microshift

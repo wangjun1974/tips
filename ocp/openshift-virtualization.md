@@ -117,6 +117,9 @@ $ oc -n openshift-cnv logs $(oc -n openshift-cnv get pods -l cdi.kubevirt.io='' 
 # cdi-uploadproxy
 $ oc -n openshift-cnv logs $(oc -n openshift-cnv get pods -l cdi.kubevirt.io='cdi-uploadproxy' -o name)
 
+# cdi-upload-restore - 备份恢复时会创建
+$ oc -n openshift-cnv logs $(oc -n openshift-cnv get pods -l cdi.kubevirt.io='cdi-upload-server' -o name)
+
 # bridge-marker
 $ oc -n openshift-cnv logs $(oc -n openshift-cnv get pods -l app='bridge-marker' -o name | head -1)
 

@@ -246,4 +246,66 @@ $ oc -n openshift-cnv logs $(oc -n openshift-cnv get pods -l name='virt-template
 # kubevirt templates
 # https://github.com/kubevirt/common-templates
 
+# datasource
+$ oc get datasource -A 
+NAMESPACE                            NAME             AGE
+openshift-virtualization-os-images   centos-stream8   5h7m
+openshift-virtualization-os-images   centos-stream9   5h7m
+openshift-virtualization-os-images   centos7          5h7m
+openshift-virtualization-os-images   fedora           5h7m
+openshift-virtualization-os-images   rhel6            5h7m
+openshift-virtualization-os-images   rhel7            5h7m
+openshift-virtualization-os-images   rhel8            5h7m
+openshift-virtualization-os-images   rhel9            5h7m
+openshift-virtualization-os-images   win10            5h7m
+openshift-virtualization-os-images   win2k12r2        5h7m
+openshift-virtualization-os-images   win2k16          5h7m
+openshift-virtualization-os-images   win2k19          5h7m
+
+# rhel9 datasource
+apiVersion: cdi.kubevirt.io/v1beta1
+kind: DataSource
+metadata:
+  annotations:
+    operator-sdk/primary-resource: openshift-cnv/ssp-kubevirt-hyperconverged
+    operator-sdk/primary-resource-type: SSP.ssp.kubevirt.io
+  creationTimestamp: "2022-08-03T03:52:29Z"
+  generation: 4
+  labels:
+    app.kubernetes.io/component: storage
+    app.kubernetes.io/managed-by: cdi-controller
+    app.kubernetes.io/part-of: hyperconverged-cluster
+    app.kubernetes.io/version: 4.10.3
+    cdi.kubevirt.io/dataImportCron: rhel9-image-cron
+  name: rhel9
+  namespace: openshift-virtualization-os-images
+  resourceVersion: "104007"
+  uid: 21d8f277-2617-4969-9f33-01bde4b38808
+spec:
+  source:
+    pvc:
+      name: rhel9-e04dfadb2d71
+      namespace: openshift-virtualization-os-images
+status:
+  conditions:
+  - lastHeartbeatTime: "2022-08-03T03:54:53Z"
+    lastTransitionTime: "2022-08-03T03:54:53Z"
+    message: DataSource is ready to be consumed
+    reason: Ready
+    status: "True"
+    type: Ready
+
+# dataimportcron
+$ oc get dataimportcron -A 
+NAMESPACE                            NAME                        AGE
+openshift-virtualization-os-images   centos-7-image-cron         5h8m
+openshift-virtualization-os-images   centos-stream8-image-cron   5h8m
+openshift-virtualization-os-images   centos-stream9-image-cron   5h8m
+openshift-virtualization-os-images   fedora-image-cron           5h8m
+openshift-virtualization-os-images   rhel8-image-cron            5h8m
+openshift-virtualization-os-images   rhel9-image-cron            5h8m
+
+https://github.com/kubevirt/ssp-operator
+Operator that manages Scheduling, Scale and Performance addons for KubeVirt
+
 ```

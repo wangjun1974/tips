@@ -2145,3 +2145,90 @@ $ oc apply -f clusterImageSets/fast/
 ### 创建 Cluster Deployment
 
 ```
+
+### MCE 2.0 有哪些 pods 
+```
+$ oc -n multicluster-engine get pods 
+NAME                                                   READY   STATUS    RESTARTS   AGE
+cluster-curator-controller-864c5fcd47-d7v2j            1/1     Running   0          67s
+cluster-curator-controller-864c5fcd47-hxtpt            1/1     Running   0          67s
+cluster-manager-7b5df6b8cb-4b5nj                       1/1     Running   0          67s
+cluster-manager-7b5df6b8cb-bxntv                       1/1     Running   0          67s
+cluster-manager-7b5df6b8cb-v5hrd                       1/1     Running   0          67s
+clusterclaims-controller-5f8c678f9f-7rqg8              2/2     Running   0          68s
+clusterclaims-controller-5f8c678f9f-h82b6              2/2     Running   0          68s
+clusterlifecycle-state-metrics-v2-587c5978b9-vg8bz     1/1     Running   0          67s
+console-mce-console-7b46d86995-862sx                   1/1     Running   0          68s
+console-mce-console-7b46d86995-tb5dh                   1/1     Running   0          68s
+discovery-operator-7d7677c5b9-6zdgf                    1/1     Running   0          68s
+hive-operator-6cf774979-5p57b                          1/1     Running   0          68s
+infrastructure-operator-f5b48bcf8-9ld2w                1/1     Running   0          68s
+managedcluster-import-controller-v2-6695c74d89-gdmn8   1/1     Running   0          67s
+managedcluster-import-controller-v2-6695c74d89-htgjm   1/1     Running   0          66s
+multicluster-engine-operator-5967d987b5-nqsmk          1/1     Running   0          9m4s
+multicluster-engine-operator-5967d987b5-zgm6l          1/1     Running   0          9m4s
+ocm-controller-66544d4758-2qcsx                        1/1     Running   0          67s
+ocm-controller-66544d4758-5r8vc                        1/1     Running   0          67s
+ocm-proxyserver-57dcd75578-nl2xq                       1/1     Running   0          67s
+ocm-proxyserver-57dcd75578-z5nvm                       1/1     Running   0          67s
+ocm-webhook-77bc99cb75-pqq7s                           1/1     Running   0          67s
+ocm-webhook-77bc99cb75-xf5h9                           1/1     Running   0          67s
+provider-credential-controller-56966d95cb-bxl67        2/2     Running   0          68s
+
+### 查看日志
+
+### hive-operator
+$ oc -n multicluster-engine logs $(oc -n multicluster-engine get pods -l control-plane='hive-operator' -o name)
+
+### infrastructure-operator
+$ oc -n multicluster-engine logs $(oc -n multicluster-engine get pods -l control-plane='infrastructure-operator' -o name)
+
+### multicluster-engine-operator
+$ oc -n multicluster-engine logs $(oc -n multicluster-engine get pods -l control-plane='backplane-operator' -o name | head -1)
+$ oc -n multicluster-engine logs $(oc -n multicluster-engine get pods -l control-plane='backplane-operator' -o name | tail -1)
+
+### ocm-controller
+$ oc -n multicluster-engine logs $(oc -n multicluster-engine get pods -l control-plane='ocm-controller' -o name | head -1)
+$ oc -n multicluster-engine logs $(oc -n multicluster-engine get pods -l control-plane='ocm-controller' -o name | tail -1)
+
+### ocm-proxyserver
+$ oc -n multicluster-engine logs $(oc -n multicluster-engine get pods -l control-plane='ocm-proxyserver' -o name | head -1)
+$ oc -n multicluster-engine logs $(oc -n multicluster-engine get pods -l control-plane='ocm-proxyserver' -o name | tail -1)
+
+### ocm-webhook
+$ oc -n multicluster-engine logs $(oc -n multicluster-engine get pods -l control-plane='ocm-webhook' -o name | head -1)
+$ oc -n multicluster-engine logs $(oc -n multicluster-engine get pods -l control-plane='ocm-webhook' -o name | tail -1)
+
+### provider-credential-controller
+$ oc -n multicluster-engine logs $(oc -n multicluster-engine get pods -l name='provider-credential-controller' -o name) -c provider-credential-controller
+$ oc -n multicluster-engine logs $(oc -n multicluster-engine get pods -l name='provider-credential-controller' -o name) -c old-provider-connection
+
+### managedcluster-import-controller-v2
+$ oc -n multicluster-engine logs $(oc -n multicluster-engine get pods -l app='managedcluster-import-controller-v2' -o name | head -1) 
+$ oc -n multicluster-engine logs $(oc -n multicluster-engine get pods -l app='managedcluster-import-controller-v2' -o name | tail -1) 
+
+### discovery-operator
+$ oc -n multicluster-engine logs $(oc -n multicluster-engine get pods -l app='discovery-operator' -o name) 
+
+### cluster-manager
+$ oc -n multicluster-engine logs $(oc -n multicluster-engine get pods -l app='cluster-manager' -o name | head -1) 
+$ oc -n multicluster-engine logs $(oc -n multicluster-engine get pods -l app='cluster-manager' -o name | head -2 | tail -1) 
+$ oc -n multicluster-engine logs $(oc -n multicluster-engine get pods -l app='cluster-manager' -o name | tail -1) 
+
+### cluster-curator-controller
+$ oc -n multicluster-engine logs $(oc -n multicluster-engine get pods -l name='cluster-curator-controller' -o name | head -1) 
+$ oc -n multicluster-engine logs $(oc -n multicluster-engine get pods -l name='cluster-curator-controller' -o name | tail -1) 
+
+### clusterclaims-controller
+$ oc -n multicluster-engine logs $(oc -n multicluster-engine get pods -l name='clusterclaims-controller' -o name | head -1) -c clusterclaims-controller
+$ oc -n multicluster-engine logs $(oc -n multicluster-engine get pods -l name='clusterclaims-controller' -o name | head -1) -c clusterpools-delete-controller
+$ oc -n multicluster-engine logs $(oc -n multicluster-engine get pods -l name='clusterclaims-controller' -o name | tail -1) -c clusterclaims-controller
+$ oc -n multicluster-engine logs $(oc -n multicluster-engine get pods -l name='clusterclaims-controller' -o name | tail -1) -c clusterpools-delete-controller
+
+### clusterlifecycle-state-metrics-v2
+$ oc -n multicluster-engine logs $(oc -n multicluster-engine get pods -l app='clusterlifecycle-state-metrics-v2' -o name) 
+
+### console-mce-console
+$ oc -n multicluster-engine logs $(oc -n multicluster-engine get pods -l app='console-mce' -o name | head -1) 
+$ oc -n multicluster-engine logs $(oc -n multicluster-engine get pods -l app='console-mce' -o name | tail -1) 
+```

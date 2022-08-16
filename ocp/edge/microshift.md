@@ -2123,3 +2123,25 @@ SKIP_ORCHESTRATOR_CHECK=true sh -x sensor.sh
 
 ### microshift in openshift
 https://github.com/openshift/microshift
+
+### MCE 2.1 如何创建 Managed Cluster
+https://access.redhat.com/documentation/en-us/red_hat_advanced_cluster_management_for_kubernetes/2.5/html-single/multicluster_engine/index#create-a-cluster
+```
+### MCE 2.1 通过 Hive 创建 Cluster 
+
+### 1
+### 克隆仓库 git@github.com:stolostron/acm-hive-openshift-releases.git 
+### 选择 origin/release-2.5 分支
+$ git clone git@github.com:stolostron/acm-hive-openshift-releases.git
+$ cd acm-hive-openshift-releases
+$ git checkout origin/release-2.5
+
+### 2
+### 定义 ClusterImageSet
+$ oc apply -f clusterImageSets/fast/
+
+### 3
+### https://github.com/openshift/hive/blob/master/docs/using-hive.md#using-hive
+### 创建 Cluster Deployment
+
+```

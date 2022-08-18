@@ -2132,7 +2132,7 @@ https://access.redhat.com/documentation/en-us/red_hat_advanced_cluster_managemen
 ### 1
 ### 克隆仓库 git@github.com:stolostron/acm-hive-openshift-releases.git 
 ### 选择 origin/release-2.5 分支
-$ git clone git@github.com:stolostron/acm-hive-openshift-releases.git
+$ git clone https://github.com/stolostron/acm-hive-openshift-releases
 $ cd acm-hive-openshift-releases
 $ git checkout origin/release-2.5
 

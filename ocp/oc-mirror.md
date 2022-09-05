@@ -584,4 +584,7 @@ registry.redhat.io/redhat/redhat-marketplace-index:v4.10
 
 ### 列出 catalog registry.redhat.io/redhat/redhat-operator-index:v4.10 有哪些 operator
 # /usr/local/bin/oc-mirror list operators --catalog=registry.redhat.io/redhat/redhat-operator-index:v4.10
+### 列出 catalog registry.redhat.io/redhat/redhat-operator-index:v4.11 有哪些 operator
+# /usr/local/bin/oc-mirror list operators --catalog=registry.redhat.io/redhat/redhat-operator-index:v4.11
+
 ```

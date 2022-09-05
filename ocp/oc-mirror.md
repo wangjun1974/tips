@@ -565,5 +565,23 @@ skopeo copy --all --authfile /root/.docker/config.json docker://quay.io/jpacker/
 ### 4.11 GA Version
 https://console.redhat.com/openshift/downloads
 
+### https://github.com/openshift/oc-mirror#operators
+### 列出 OpenShift OperatorHub Catalog
+# /usr/local/bin/oc-mirror list operators --catalogs --version=4.11
+Available OpenShift OperatorHub catalogs:
+OpenShift 4.11:
+registry.redhat.io/redhat/redhat-operator-index:v4.11
+registry.redhat.io/redhat/certified-operator-index:v4.11
+registry.redhat.io/redhat/community-operator-index:v4.11
+registry.redhat.io/redhat/redhat-marketplace-index:v4.11
+# /usr/local/bin/oc-mirror list operators --catalogs --version=4.10
+Available OpenShift OperatorHub catalogs:
+OpenShift 4.10:
+registry.redhat.io/redhat/redhat-operator-index:v4.10
+registry.redhat.io/redhat/certified-operator-index:v4.10
+registry.redhat.io/redhat/community-operator-index:v4.10
+registry.redhat.io/redhat/redhat-marketplace-index:v4.10
 
+### 列出 catalog registry.redhat.io/redhat/redhat-operator-index:v4.10 有哪些 operator
+# /usr/local/bin/oc-mirror list operators --catalog=registry.redhat.io/redhat/redhat-operator-index:v4.10
 ```

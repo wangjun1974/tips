@@ -587,4 +587,93 @@ registry.redhat.io/redhat/redhat-marketplace-index:v4.10
 ### 列出 catalog registry.redhat.io/redhat/redhat-operator-index:v4.11 有哪些 operator
 # /usr/local/bin/oc-mirror list operators --catalog=registry.redhat.io/redhat/redhat-operator-index:v4.11
 
+
+### 同步 Software PLC 会用到的 Operator
+### 生成 image-config-release-local.yaml
+cat > image-config-realse-local.yaml <<EOF
+apiVersion: mirror.openshift.io/v1alpha2
+kind: ImageSetConfiguration
+mirror:
+  operators:
+    - catalog: registry.redhat.io/redhat/redhat-operator-index:v4.10
+      packages:
+        - name: kubevirt-hyperconverged
+          channels:
+            - name: 'stable'
+              minVersion: '4.10.4'
+              maxVersion: '4.10.4'            
+        - name: performance-addon-operator
+          channels:
+            - name: '4.10'
+              minVersion: '4.10.6'
+              maxVersion: '4.10.6'
+        - name: kubernetes-nmstate-operator
+          channels:
+            - name: 'stable'
+              minVersion: '4.10.0-202208150436'
+              maxVersion: '4.10.0-202208150436'
+        - name: sriov-network-operator
+          channels:
+            - name: 'stable'
+              minVersion: '4.10.0-202208150436'
+              maxVersion: '4.10.0-202208150436'                                      
+EOF
+
+# 同步定制化的 operator catalog redhat-operator-index 和 images 到本地
+$ /usr/local/bin/oc-mirror --config /root/image-config-realse-local.yaml --continue-on-error file://output-dir
+
+# 拷贝 output-dir/oc-mirror.tar.gz 到离线环境
+
+# 上传镜像
+$ /usr/local/bin/oc-mirror --from /tmp/mirror_seq1_000000.tar docker://registry.example.com:5000
+
+# 禁用默认 OperatorHub Sources
+$ oc patch OperatorHub cluster --type json -p '[{"op": "add", "path": "/spec/disableAllDefaultSources", "value": true}]'
+
+# 设置 CatalogSource 和 ImageContentSourcePolicy
+$ pwd
+/root/oc-mirror-workspace/results-1662455093
+
+# 查看 catalogSource-redhat-operator-index.yaml 文件内容
+$ cat catalogSource-redhat-operator-index.yaml
+apiVersion: operators.coreos.com/v1alpha1
+kind: CatalogSource
+metadata:
+  name: redhat-operator-index
+  namespace: openshift-marketplace
+spec:
+  image: registry.example.com:5000/redhat/redhat-operator-index:v4.10
+  sourceType: grpc
+# 设置 CatalogSource
+$ oc apply -f catalogSource-redhat-operator-index.yaml
+
+# 查看 imageContentSourcePolicy.yaml 内容
+$ cat imageContentSourcePolicy.yaml 
+---
+apiVersion: operator.openshift.io/v1alpha1
+kind: ImageContentSourcePolicy
+metadata:
+  labels:
+    operators.openshift.org/catalog: "true"
+  name: operator-0
+spec:
+  repositoryDigestMirrors:
+  - mirrors:
+    - registry.example.com:5000/container-native-virtualization
+    source: registry.redhat.io/container-native-virtualization
+  - mirrors:
+    - registry.example.com:5000/openshift4
+    source: registry.redhat.io/openshift4
+  - mirrors:
+    - registry.example.com:5000/redhat
+    source: registry.redhat.io/redhat
+
+# 设置 imageContentSourcePolicy 
+$ oc apply -f imageContentSourcePolicy.yaml
+
+### 拷贝 realtime 虚拟机磁盘到离线环境
+$ mkdir -p /tmp/skopeotest 
+$ skopeo copy --format v2s2 --authfile /path/auth.json --all docker://quay.io/jordigilh/rhel8-rt:qcow2 dir:/tmp/skopeotest 
+### 将 /tmp/skopeotest 拷贝到离线
+$ skopeo copy --format v2s2 --authfile /path/auth.json --all dir:/tmp/skopeotest docker://registry.example.com:5000/jordigilh/rhel8-rt:qcow2
 ```

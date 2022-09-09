@@ -616,7 +616,17 @@ mirror:
           channels:
             - name: 'stable'
               minVersion: '4.10.0-202208150436'
-              maxVersion: '4.10.0-202208150436'                                      
+              maxVersion: '4.10.0-202208150436'
+        - name: local-storage-operator
+          channels:
+            - name: 'stable'
+              minVersion: '4.10.0-202208150436'
+              maxVersion: '4.10.0-202208150436'
+        - name: odf-operator
+          channels:
+            - name: 'stable-4.10'
+              minVersion: '4.10.5'
+              maxVersion: '4.10.5'                                                   
 EOF
 
 # 同步定制化的 operator catalog redhat-operator-index 和 images 到本地

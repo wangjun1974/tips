@@ -686,4 +686,55 @@ $ mkdir -p /tmp/skopeotest
 $ skopeo copy --format v2s2 --authfile /path/auth.json --all docker://quay.io/jordigilh/rhel8-rt:qcow2 dir:/tmp/skopeotest 
 ### 将 /tmp/skopeotest 拷贝到离线
 $ skopeo copy --format v2s2 --authfile /path/auth.json --all dir:/tmp/skopeotest docker://registry.example.com:5000/jordigilh/rhel8-rt:qcow2
+
+
+### 测试一下带 OCP releases 和 operator catalog 的镜像同步配置
+cat > image-config-realse-local.yaml <<EOF
+apiVersion: mirror.openshift.io/v1alpha2
+kind: ImageSetConfiguration
+mirror:
+  platform:
+    channels:
+      - name: fast-4.10
+        minVersion: 4.10.30
+        maxVersion: 4.10.31
+        shortestPath: true
+    graph: true # Include Cincinnati upgrade graph image in imageset
+  operators:
+    - catalog: registry.redhat.io/redhat/redhat-operator-index:v4.10
+      packages:
+        - name: kubevirt-hyperconverged
+          channels:
+            - name: 'stable'
+              minVersion: '4.10.4'
+              maxVersion: '4.10.4'            
+        - name: performance-addon-operator
+          channels:
+            - name: '4.10'
+              minVersion: '4.10.6'
+              maxVersion: '4.10.6'
+        - name: kubernetes-nmstate-operator
+          channels:
+            - name: 'stable'
+              minVersion: '4.10.0-202208150436'
+              maxVersion: '4.10.0-202208150436'
+        - name: sriov-network-operator
+          channels:
+            - name: 'stable'
+              minVersion: '4.10.0-202208150436'
+              maxVersion: '4.10.0-202208150436'
+        - name: local-storage-operator
+          channels:
+            - name: 'stable'
+              minVersion: '4.10.0-202208150436'
+              maxVersion: '4.10.0-202208150436'
+        - name: odf-operator
+          channels:
+            - name: 'stable-4.10'
+              minVersion: '4.10.5'
+              maxVersion: '4.10.5'                                                   
+EOF
+
+# 同步定制化的 operator catalog redhat-operator-index 和 images 到本地
+$ /usr/local/bin/oc-mirror --config /root/image-config-realse-local.yaml --continue-on-error file://output-dir
 ```

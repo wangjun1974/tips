@@ -626,7 +626,12 @@ mirror:
           channels:
             - name: 'stable-4.10'
               minVersion: '4.10.5'
-              maxVersion: '4.10.5'                                                   
+              maxVersion: '4.10.5'
+        - name: cincinnati-operator
+          channels:
+            - name: v1
+              minVersion: '5.0.0'
+              maxVersion: '5.0.0'                                                             
 EOF
 
 # 同步定制化的 operator catalog redhat-operator-index 和 images 到本地
@@ -663,23 +668,70 @@ $ cat imageContentSourcePolicy.yaml
 apiVersion: operator.openshift.io/v1alpha1
 kind: ImageContentSourcePolicy
 metadata:
+  name: generic-0
+spec:
+  repositoryDigestMirrors:
+  - mirrors:
+    - registry.example.com:5000/ubi8
+    source: registry.access.redhat.com/ubi8
+---
+apiVersion: operator.openshift.io/v1alpha1
+kind: ImageContentSourcePolicy
+metadata:
   labels:
     operators.openshift.org/catalog: "true"
   name: operator-0
 spec:
   repositoryDigestMirrors:
   - mirrors:
-    - registry.example.com:5000/container-native-virtualization
-    source: registry.redhat.io/container-native-virtualization
+    - registry.example.com:5000/redhat
+    source: registry.redhat.io/redhat
   - mirrors:
     - registry.example.com:5000/openshift4
     source: registry.redhat.io/openshift4
   - mirrors:
-    - registry.example.com:5000/redhat
-    source: registry.redhat.io/redhat
+    - registry.example.com:5000/container-native-virtualization
+    source: registry.redhat.io/container-native-virtualization
+  - mirrors:
+    - registry.example.com:5000/odf4
+    source: registry.redhat.io/odf4
+  - mirrors:
+    - registry.example.com:5000/rhel8
+    source: registry.redhat.io/rhel8
+  - mirrors:
+    - registry.example.com:5000/rhceph
+    source: registry.redhat.io/rhceph
+---
+apiVersion: operator.openshift.io/v1alpha1
+kind: ImageContentSourcePolicy
+metadata:
+  name: release-0
+spec:
+  repositoryDigestMirrors:
+  - mirrors:
+    - registry.example.com:5000/openshift/release
+    source: quay.io/openshift-release-dev/ocp-v4.0-art-dev
+  - mirrors:
+    - registry.example.com:5000/openshift/release-images
+    source: quay.io/openshift-release-dev/ocp-release
 
 # 设置 imageContentSourcePolicy 
 $ oc apply -f imageContentSourcePolicy.yaml
+
+# 查看 UpdateService
+$ cat updateService.yaml 
+apiVersion: updateservice.operator.openshift.io/v1
+kind: UpdateService
+metadata:
+  name: update-service-oc-mirror
+spec:
+  graphDataImage: registry.example.com:5000/openshift/graph-image@sha256:f14ce7b35a718904fdba08ec6866a7b74eac8c161ed901a115dcd530125d8b8c
+  releases: registry.example.com:5000/openshift/release-images
+  replicas: 2
+
+# 设置 UpdateService
+$ oc apply -f 
+
 
 ### 拷贝 realtime 虚拟机磁盘到离线环境
 $ mkdir -p /tmp/skopeotest 
@@ -732,9 +784,33 @@ mirror:
           channels:
             - name: 'stable-4.10'
               minVersion: '4.10.5'
-              maxVersion: '4.10.5'                                                   
+              maxVersion: '4.10.5'
+        - name: cincinnati-operator
+          channels:
+            - name: v1
+              minVersion: '5.0.0'
+              maxVersion: '5.0.0'                                                   
 EOF
 
 # 同步定制化的 operator catalog redhat-operator-index 和 images 到本地
 $ /usr/local/bin/oc-mirror --config /root/image-config-realse-local.yaml --continue-on-error file://output-dir
+
+# 同步 cincinnati-operator
+$ cat > image-config-realse-local.yaml <<EOF
+apiVersion: mirror.openshift.io/v1alpha2
+kind: ImageSetConfiguration
+mirror:
+  operators:
+    - catalog: registry.redhat.io/redhat/redhat-operator-index:v4.10
+      packages:
+        - name: cincinnati-operator
+          channels:
+            - name: v1
+              minVersion: '5.0.0'
+              maxVersion: '5.0.0'                                                             
+EOF
+$ mkdir cincinnati-operator
+
+# 同步定制化的 operator catalog redhat-operator-index 和 images 到本地
+$ /usr/local/bin/oc-mirror --config /root/image-config-realse-local.yaml --continue-on-error file://cincinnati-operator
 ```

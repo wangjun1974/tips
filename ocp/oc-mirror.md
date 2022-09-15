@@ -795,6 +795,7 @@ EOF
 ### 首先安装 cincinnati-operator
 ### 然后添加 configmap，configmap 的 key 需要是 updateservice-registry
 ### https://coreos.slack.com/archives/CEGKQ43CP/p1624451445176500
+### https://wangzheng422.github.io/docker_env/ocp4/4.8/4.8.update.service.html
 $ CERTS_PATH="/data/registry/certs"
 $ oc -n openshift-config create configmap trusted-ca --from-file=updateservice-registry=${CERTS_PATH}/registry.crt
 $ oc patch image.config.openshift.io cluster --patch '{"spec":{"additionalTrustedCA":{"name":"trusted-ca"}}}' --type=merge
@@ -824,10 +825,8 @@ $ oc -n openshift-update-service delete $(oc get pods -n openshift-update-servic
 # 查看日志
 $ oc -n openshift-update-service logs $(oc get pods -n openshift-update-service -l app=update-service-oc-mirror -o name) -c graph-builder
 
-# 添加 trustedCA 
-$ oc patch proxy.config.openshift.io/cluster -p '{"spec":{"trustedCA":{"name":"user-ca-bundle"}}}'  --type=merge
-
-$ openssl s_client -host $(oc get route -n openshift-update-service update-service-oc-mirror-1-route -o jsonpath='{.spec.host}' ) -port 443 -showcerts > trace < /dev/null
+# 获取 route update-service 的 certificate
+$ openssl s_client -host $(oc get route -n openshift-update-service update-service-oc-mirror-route -o jsonpath='{.spec.host}' ) -port 443 -showcerts > trace < /dev/null
 $ cat trace | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' | tee update-service.crt  
 $ cat update-service.crt | sed -e 's|^|    |g'
     -----BEGIN CERTIFICATE-----
@@ -871,8 +870,11 @@ $ cat update-service.crt | sed -e 's|^|    |g'
     wKVBAtH4TPrKz5hnjCxztA==
     -----END CERTIFICATE-----
 
-# 将这部分内容添加到 openshift-config/user-ca-bundle 这个 configmap 里
+# 将这部分内容添加到 openshift-config namespace 下的 configmap user-ca-bundle 里
 $ oc -n openshift-config edit configmap user-ca-bundle
+
+# 添加 trustedCA 
+$ oc patch proxy.config.openshift.io/cluster -p '{"spec":{"trustedCA":{"name":"user-ca-bundle"}}}'  --type=merge
 
 # PATCH CVO 
 $ NAMESPACE=openshift-update-service
@@ -898,4 +900,30 @@ $ oc get clusterversion version -o yaml
 # 查看 channel upgrades graph 
 $ curl -s "https://api.openshift.com/api/upgrades_info/v1/graph?channel=stable-4.10" | jq -r 
 $ curl -s "https://update-service-oc-mirror-1-route-openshift-update-service.apps.ocp4-1.example.com/api/upgrades_info/v1/graph?channel=fast-4.10"
+
+# 查看本地 release info 
+$ oc adm release info registry.example.com:5000/openshift/release-images:4.10.30-x86_64
+$ oc adm release info registry.example.com:5000/openshift/release-images:4.10.31-x86_64
+
+# 通过命令更新
+# oc adm upgrade —allow-explicit-upgrade —to-image registry.example.com:5000/openshift/release-images@sha256:<sha>
+$ oc adm upgrade —allow-explicit-upgrade —to-image registry.example.com:5000/openshift/release-images@sha256:86f3b85645c613dc4a79d04c28b9bbd3519745f0862e30275acceadcbc409b42
+
+# 报错信息如下
+oc adm upgrade —allow-explicit-upgrade —to-image registry.example.com:5000/openshift/release-images@sha256:86f3b85645c613dc4a79d04c28b9bbd3519745f0862e30275acceadcbc409b42
+Cluster version is 4.10.30
+
+ReleaseAccepted=False
+
+  Reason: RetrievePayload
+  Message: Retrieving payload failed version="4.10.31" image="registry.example.com:5000/openshift/release-images@sha256:86f3b85645c613dc4a79d04c28b9bbd3519745f0862e30275acceadcbc409b42" failure=The update cannot be verified: unable to locate a valid signature for one or more sources
+
+Upstream: https://update-service-oc-mirror-1-route-openshift-update-service.apps.ocp4-1.example.com/api/upgrades_info/v1/graph
+Channel: fast-4.10 (available channels: candidate-4.10, candidate-4.11, eus-4.10, fast-4.10, fast-4.11, stable-4.10)
+
+Recommended updates:
+
+  VERSION     IMAGE
+  4.10.31     registry.example.com:5000/openshift/release-images@sha256:86f3b85645c613dc4a79d04c28b9bbd3519745f0862e30275acceadcbc409b42
+
 ```

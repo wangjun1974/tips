@@ -741,13 +741,15 @@ $ skopeo copy --format v2s2 --authfile /path/auth.json --all dir:/tmp/skopeotest
 
 
 ### 测试一下带 OCP releases 和 operator catalog 的镜像同步配置
+### 20220915
+### 4.10.30 和 4.10.31 在 fast-4.10 这个 channel 里
 cat > image-config-realse-local.yaml <<EOF
 apiVersion: mirror.openshift.io/v1alpha2
 kind: ImageSetConfiguration
 mirror:
   platform:
     channels:
-      - name: stable-4.10
+      - name: fast-4.10
         minVersion: 4.10.30
         maxVersion: 4.10.31
         shortestPath: true
@@ -926,4 +928,5 @@ Recommended updates:
   VERSION     IMAGE
   4.10.31     registry.example.com:5000/openshift/release-images@sha256:86f3b85645c613dc4a79d04c28b9bbd3519745f0862e30275acceadcbc409b42
 
+oc adm upgrade —allow-explicit-upgrade —to-image quay.io/openshift-release-dev/ocp-release@sha256:86f3b85645c613dc4a79d04c28b9bbd3519745f0862e30275acceadcbc409b42
 ```

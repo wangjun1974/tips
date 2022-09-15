@@ -895,4 +895,7 @@ $ oc get clusterversion version -o yaml
     status: "False"
     type: RetrievedUpdates
 
+# 查看 channel upgrades graph 
+$ curl -s "https://api.openshift.com/api/upgrades_info/v1/graph?channel=stable-4.10" | jq -r 
+$ curl -s "https://update-service-oc-mirror-1-route-openshift-update-service.apps.ocp4-1.example.com/api/upgrades_info/v1/graph?channel=fast-4.10"
 ```

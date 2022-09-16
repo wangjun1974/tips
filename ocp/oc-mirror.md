@@ -644,12 +644,14 @@ EOF
 # 同步定制化的 operator catalog redhat-operator-index 和 images 到本地
 $ /usr/local/bin/oc-mirror --config /root/image-config-realse-local.yaml --continue-on-error file://output-dir
 
-# 拷贝 output-dir/oc-mirror.tar.gz 到离线环境
+# 拷贝 output-dir/mirror_seq1_000000.tar 到离线环境
 
 # 上传镜像
 $ /usr/local/bin/oc-mirror --from /tmp/mirror_seq1_000000.tar docker://registry.example.com:5000
 
-# apply release-signatures 
+# 安装离线 OCP 集群
+
+# 安装完成后，在离线 OCP 集群下 apply release-signatures 
 # https://docs.openshift.com/container-platform/4.10/updating/updating-restricted-network-cluster.html#update-mirror-repository_updating-restricted-network-cluster
 # https://coreos.slack.com/archives/CEGKQ43CP/p1663229617076729
 # [root@support oc-mirror-workspace]# tree results-1663211170 
@@ -665,7 +667,7 @@ $ /usr/local/bin/oc-mirror --from /tmp/mirror_seq1_000000.tar docker://registry.
 $ oc apply -f results-1663211170/release-signatures/signature-sha256-7f543788330d4866.json
 $ oc apply -f results-1663211170/release-signatures/signature-sha256-86f3b85645c613dc.json
 
-# 禁用默认 OperatorHub Sources
+# 禁用默认 OperatorHub CatalogSources
 $ oc patch OperatorHub cluster --type json -p '[{"op": "add", "path": "/spec/disableAllDefaultSources", "value": true}]'
 
 # 设置 CatalogSource 和 ImageContentSourcePolicy
@@ -742,12 +744,13 @@ spec:
 $ oc apply -f imageContentSourcePolicy.yaml
 
 ### 首先安装 cincinnati-operator
-### 然后添加 configmap，configmap 的 key 需要是 updateservice-registry
-### additionalTrustedCA 为 trusted-ca
 ### https://coreos.slack.com/archives/CEGKQ43CP/p1624451445176500
 ### https://wangzheng422.github.io/docker_env/ocp4/4.8/4.8.update.service.html
+
+### 然后添加 configmap，configmap 的 key 需要是 updateservice-registry
 $ CERTS_PATH="/data/registry/certs"
 $ oc -n openshift-config create configmap trusted-ca --from-file=updateservice-registry=${CERTS_PATH}/registry.crt
+### 设置 image.config.openshift.io/cluster 的 spec.additionalTrustedCA
 $ oc patch image.config.openshift.io cluster --patch '{"spec":{"additionalTrustedCA":{"name":"trusted-ca"}}}' --type=merge
 $ oc get image.config.openshift.io -o json  | jq -r '.items[].spec'
 
@@ -770,13 +773,13 @@ $ cd ${OCP_PATH}/secret
 $ oc -n openshift-update-service create secret generic cincinnati --from-file=.dockerconfigjson=redhat-pull-secret.json --type=kubernetes.io/dockerconfigjson
 $ oc -n openshift-update-service patch sa default -p '{"imagePullSecrets": [{"name": "cincinnati"}]}'
 
-# 删除 pod
+# 删除并重建 update-service-oc-mirror pod
 $ oc -n openshift-update-service delete $(oc get pods -n openshift-update-service -l app=update-service-oc-mirror -o name)
 
 # 查看日志
 $ oc -n openshift-update-service logs $(oc get pods -n openshift-update-service -l app=update-service-oc-mirror -o name) -c graph-builder
 
-# 获取 route update-service 的 certificate
+# 获取 route/update-service-oc-mirror-route 的 certificate
 $ openssl s_client -host $(oc get route -n openshift-update-service update-service-oc-mirror-route -o jsonpath='{.spec.host}' ) -port 443 -showcerts > trace < /dev/null
 $ cat trace | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' | tee update-service.crt  
 $ cat update-service.crt | sed -e 's|^|    |g'
@@ -824,17 +827,17 @@ $ cat update-service.crt | sed -e 's|^|    |g'
 # 将这部分内容添加到 openshift-config namespace 下的 configmap user-ca-bundle 里
 $ oc -n openshift-config edit configmap user-ca-bundle
 
-# 添加 trustedCA 
+# 添加 proxy.config.openshift.io/cluster 的 spec.trustedCA 
 $ oc patch proxy.config.openshift.io/cluster -p '{"spec":{"trustedCA":{"name":"user-ca-bundle"}}}'  --type=merge
 
-# PATCH CVO 
+# 更新 clusterversion/version 的 spec.upstream
 $ NAMESPACE=openshift-update-service
 $ NAME=update-service-oc-mirror
 $ POLICY_ENGINE_GRAPH_URI="$(oc -n "${NAMESPACE}" get -o jsonpath='{.status.policyEngineURI}/api/upgrades_info/v1/graph{"\n"}' updateservice "${NAME}")"
 $ PATCH="{\"spec\":{\"upstream\":\"${POLICY_ENGINE_GRAPH_URI}\"}}"
 $ oc patch clusterversion version -p $PATCH --type merge
 
-# 改回默认的 GRAPH_URL
+# (如果想改回去的话) 改回默认的 GRAPH_URL
 $ POLICY_ENGINE_GRAPH_URI="https://api.openshift.com/api/upgrades_info/v1/graph"
 $ PATCH="{\"spec\":{\"upstream\":\"${POLICY_ENGINE_GRAPH_URI}\"}}"
 $ oc patch clusterversion version -p $PATCH --type merge
@@ -842,6 +845,10 @@ $ oc patch clusterversion version -p $PATCH --type merge
 # 查看 clusterversion 对象
 $ oc get clusterversion version -o yaml 
 
+# 如果上述命令输出无报错，这个时候就可以在界面执行更新了
+```
+
+```
 # 查看 channel upgrades graph 
 $ curl -s "https://api.openshift.com/api/upgrades_info/v1/graph?channel=stable-4.10" | jq -r 
 $ curl -s "https://update-service-oc-mirror-1-route-openshift-update-service.apps.ocp4-1.example.com/api/upgrades_info/v1/graph?channel=fast-4.10"

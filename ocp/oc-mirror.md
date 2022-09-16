@@ -741,13 +741,6 @@ spec:
 # 设置 imageContentSourcePolicy 
 $ oc apply -f imageContentSourcePolicy.yaml
 
-
-### 拷贝 realtime 虚拟机磁盘到离线环境
-$ mkdir -p /tmp/skopeotest 
-$ skopeo copy --format v2s2 --authfile /path/auth.json --all docker://quay.io/jordigilh/rhel8-rt:qcow2 dir:/tmp/skopeotest 
-### 将 /tmp/skopeotest 拷贝到离线
-$ skopeo copy --format v2s2 --authfile /path/auth.json --all dir:/tmp/skopeotest docker://registry.example.com:5000/jordigilh/rhel8-rt:qcow2
-
 ### 首先安装 cincinnati-operator
 ### 然后添加 configmap，configmap 的 key 需要是 updateservice-registry
 ### additionalTrustedCA 为 trusted-ca
@@ -848,12 +841,6 @@ $ oc patch clusterversion version -p $PATCH --type merge
 
 # 查看 clusterversion 对象
 $ oc get clusterversion version -o yaml 
-  - lastTransitionTime: "2022-09-14T07:29:22Z"
-    message: 'Unable to retrieve available updates: Get "https://update-service-oc-mirror-1-route-openshift-update-service.apps.ocp4-1.example.com/api/upgrades_info/v1/graph?arch=amd64&channel=fast-4.10&id=bccf97f0-f837-4978-bb44-ab4b29ad73e6&version=4.10.30":
-      x509: certificate signed by unknown authority'
-    reason: RemoteFailed
-    status: "False"
-    type: RetrievedUpdates
 
 # 查看 channel upgrades graph 
 $ curl -s "https://api.openshift.com/api/upgrades_info/v1/graph?channel=stable-4.10" | jq -r 
@@ -867,22 +854,9 @@ $ oc adm release info registry.example.com:5000/openshift/release-images:4.10.31
 # oc adm upgrade —allow-explicit-upgrade —to-image registry.example.com:5000/openshift/release-images@sha256:<sha>
 $ oc adm upgrade —allow-explicit-upgrade —to-image registry.example.com:5000/openshift/release-images@sha256:86f3b85645c613dc4a79d04c28b9bbd3519745f0862e30275acceadcbc409b42
 
-# 报错信息如下
-oc adm upgrade —allow-explicit-upgrade —to-image registry.example.com:5000/openshift/release-images@sha256:86f3b85645c613dc4a79d04c28b9bbd3519745f0862e30275acceadcbc409b42
-Cluster version is 4.10.30
-
-ReleaseAccepted=False
-
-  Reason: RetrievePayload
-  Message: Retrieving payload failed version="4.10.31" image="registry.example.com:5000/openshift/release-images@sha256:86f3b85645c613dc4a79d04c28b9bbd3519745f0862e30275acceadcbc409b42" failure=The update cannot be verified: unable to locate a valid signature for one or more sources
-
-Upstream: https://update-service-oc-mirror-1-route-openshift-update-service.apps.ocp4-1.example.com/api/upgrades_info/v1/graph
-Channel: fast-4.10 (available channels: candidate-4.10, candidate-4.11, eus-4.10, fast-4.10, fast-4.11, stable-4.10)
-
-Recommended updates:
-
-  VERSION     IMAGE
-  4.10.31     registry.example.com:5000/openshift/release-images@sha256:86f3b85645c613dc4a79d04c28b9bbd3519745f0862e30275acceadcbc409b42
-
-oc adm upgrade —allow-explicit-upgrade —to-image quay.io/openshift-release-dev/ocp-release@sha256:86f3b85645c613dc4a79d04c28b9bbd3519745f0862e30275acceadcbc409b42
+### 拷贝 realtime 虚拟机磁盘到离线环境
+$ mkdir -p /tmp/skopeotest 
+$ skopeo copy --format v2s2 --authfile /path/auth.json --all docker://quay.io/jordigilh/rhel8-rt:qcow2 dir:/tmp/skopeotest 
+### 将 /tmp/skopeotest 拷贝到离线
+$ skopeo copy --format v2s2 --authfile /path/auth.json --all dir:/tmp/skopeotest docker://registry.example.com:5000/jordigilh/rhel8-rt:qcow2
 ```

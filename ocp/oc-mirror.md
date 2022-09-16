@@ -594,6 +594,13 @@ cat > image-config-realse-local.yaml <<EOF
 apiVersion: mirror.openshift.io/v1alpha2
 kind: ImageSetConfiguration
 mirror:
+  platform:
+    channels:
+      - name: fast-4.10
+        minVersion: 4.10.30
+        maxVersion: 4.10.31
+        shortestPath: true
+    graph: true # Include Cincinnati upgrade graph image in imageset
   operators:
     - catalog: registry.redhat.io/redhat/redhat-operator-index:v4.10
       packages:
@@ -631,7 +638,7 @@ mirror:
           channels:
             - name: v1
               minVersion: '5.0.0'
-              maxVersion: '5.0.0'                                                             
+              maxVersion: '5.0.0'                                                   
 EOF
 
 # 同步定制化的 operator catalog redhat-operator-index 和 images 到本地
@@ -641,6 +648,22 @@ $ /usr/local/bin/oc-mirror --config /root/image-config-realse-local.yaml --conti
 
 # 上传镜像
 $ /usr/local/bin/oc-mirror --from /tmp/mirror_seq1_000000.tar docker://registry.example.com:5000
+
+# apply release-signatures 
+# https://docs.openshift.com/container-platform/4.10/updating/updating-restricted-network-cluster.html#update-mirror-repository_updating-restricted-network-cluster
+# https://coreos.slack.com/archives/CEGKQ43CP/p1663229617076729
+# [root@support oc-mirror-workspace]# tree results-1663211170 
+# results-1663211170
+# ├── catalogSource-redhat-operator-index.yaml
+# ├── charts
+# ├── imageContentSourcePolicy.yaml
+# ├── mapping.txt
+# ├── release-signatures
+# │   ├── signature-sha256-7f543788330d4866.json
+# │   └── signature-sha256-86f3b85645c613dc.json
+# └── updateService.yaml
+$ oc apply -f results-1663211170/release-signatures/signature-sha256-7f543788330d4866.json
+$ oc apply -f results-1663211170/release-signatures/signature-sha256-86f3b85645c613dc.json
 
 # 禁用默认 OperatorHub Sources
 $ oc patch OperatorHub cluster --type json -p '[{"op": "add", "path": "/spec/disableAllDefaultSources", "value": true}]'
@@ -718,20 +741,6 @@ spec:
 # 设置 imageContentSourcePolicy 
 $ oc apply -f imageContentSourcePolicy.yaml
 
-# 查看 UpdateService
-$ cat updateService.yaml 
-apiVersion: updateservice.operator.openshift.io/v1
-kind: UpdateService
-metadata:
-  name: update-service-oc-mirror
-spec:
-  graphDataImage: registry.example.com:5000/openshift/graph-image@sha256:f14ce7b35a718904fdba08ec6866a7b74eac8c161ed901a115dcd530125d8b8c
-  releases: registry.example.com:5000/openshift/release-images
-  replicas: 2
-
-# 设置 UpdateService
-$ oc apply -f 
-
 
 ### 拷贝 realtime 虚拟机磁盘到离线环境
 $ mkdir -p /tmp/skopeotest 
@@ -739,63 +748,9 @@ $ skopeo copy --format v2s2 --authfile /path/auth.json --all docker://quay.io/jo
 ### 将 /tmp/skopeotest 拷贝到离线
 $ skopeo copy --format v2s2 --authfile /path/auth.json --all dir:/tmp/skopeotest docker://registry.example.com:5000/jordigilh/rhel8-rt:qcow2
 
-
-### 测试一下带 OCP releases 和 operator catalog 的镜像同步配置
-### 20220915
-### 4.10.30 和 4.10.31 在 fast-4.10 这个 channel 里
-cat > image-config-realse-local.yaml <<EOF
-apiVersion: mirror.openshift.io/v1alpha2
-kind: ImageSetConfiguration
-mirror:
-  platform:
-    channels:
-      - name: fast-4.10
-        minVersion: 4.10.30
-        maxVersion: 4.10.31
-        shortestPath: true
-    graph: true # Include Cincinnati upgrade graph image in imageset
-  operators:
-    - catalog: registry.redhat.io/redhat/redhat-operator-index:v4.10
-      packages:
-        - name: kubevirt-hyperconverged
-          channels:
-            - name: 'stable'
-              minVersion: '4.10.4'
-              maxVersion: '4.10.4'            
-        - name: performance-addon-operator
-          channels:
-            - name: '4.10'
-              minVersion: '4.10.6'
-              maxVersion: '4.10.6'
-        - name: kubernetes-nmstate-operator
-          channels:
-            - name: 'stable'
-              minVersion: '4.10.0-202208150436'
-              maxVersion: '4.10.0-202208150436'
-        - name: sriov-network-operator
-          channels:
-            - name: 'stable'
-              minVersion: '4.10.0-202208150436'
-              maxVersion: '4.10.0-202208150436'
-        - name: local-storage-operator
-          channels:
-            - name: 'stable'
-              minVersion: '4.10.0-202208150436'
-              maxVersion: '4.10.0-202208150436'
-        - name: odf-operator
-          channels:
-            - name: 'stable-4.10'
-              minVersion: '4.10.5'
-              maxVersion: '4.10.5'
-        - name: cincinnati-operator
-          channels:
-            - name: v1
-              minVersion: '5.0.0'
-              maxVersion: '5.0.0'                                                   
-EOF
-
 ### 首先安装 cincinnati-operator
 ### 然后添加 configmap，configmap 的 key 需要是 updateservice-registry
+### additionalTrustedCA 为 trusted-ca
 ### https://coreos.slack.com/archives/CEGKQ43CP/p1624451445176500
 ### https://wangzheng422.github.io/docker_env/ocp4/4.8/4.8.update.service.html
 $ CERTS_PATH="/data/registry/certs"
@@ -803,6 +758,7 @@ $ oc -n openshift-config create configmap trusted-ca --from-file=updateservice-r
 $ oc patch image.config.openshift.io cluster --patch '{"spec":{"additionalTrustedCA":{"name":"trusted-ca"}}}' --type=merge
 $ oc get image.config.openshift.io -o json  | jq -r '.items[].spec'
 
+# 查看 updateService.yaml 
 $ cat updateService.yaml
 apiVersion: updateservice.operator.openshift.io/v1
 kind: UpdateService
@@ -812,7 +768,7 @@ metadata:
 spec:
   graphDataImage: registry.example.com:5000/openshift/graph-image@sha256:ce648ec0aac3bbd61ed6229564fbba01851bbdde3987ab6cdaec7951d8202ca6
   releases: registry.example.com:5000/openshift/release-images
-  replicas: 1
+  replicas: 1 # 默认为2，SNO 改为 1
 
 $ oc apply -f updateService.yaml
 

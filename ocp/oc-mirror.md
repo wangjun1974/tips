@@ -590,13 +590,19 @@ registry.redhat.io/redhat/redhat-marketplace-index:v4.10
 
 ### 同步 Software PLC 会用到的 Operator
 ### 生成 image-config-release-local.yaml
-cat > image-config-realse-local.yaml <<EOF
+### metadata 保存在 /root/oc-mirror/oc-history 里
+$ mkdir -p /root/oc-mirror/oc-history
+$ cat > image-config-realse-local.yaml <<EOF
 apiVersion: mirror.openshift.io/v1alpha2
 kind: ImageSetConfiguration
+storageConfig:
+  local:
+    path: /root/oc-mirror/oc-history
+archiveSize: 4
 mirror:
   platform:
     channels:
-      - name: fast-4.10
+      - name: stable-4.10
         minVersion: 4.10.30
         maxVersion: 4.10.31
         shortestPath: true

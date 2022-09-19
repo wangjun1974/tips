@@ -591,6 +591,7 @@ registry.redhat.io/redhat/redhat-marketplace-index:v4.10
 ### 同步 Software PLC 会用到的 Operator
 ### 生成 image-config-release-local.yaml
 ### metadata 保存在 /root/oc-mirror/oc-history 里
+### 不使用 archiveSize
 $ mkdir -p /root/oc-mirror/oc-history
 $ cat > image-config-realse-local.yaml <<EOF
 apiVersion: mirror.openshift.io/v1alpha2
@@ -598,7 +599,6 @@ kind: ImageSetConfiguration
 storageConfig:
   local:
     path: /root/oc-mirror/oc-history
-archiveSize: 4
 mirror:
   platform:
     channels:
@@ -654,6 +654,8 @@ $ /usr/local/bin/oc-mirror --config /root/image-config-realse-local.yaml --conti
 
 # 上传镜像
 $ /usr/local/bin/oc-mirror --from /tmp/mirror_seq1_000000.tar docker://registry.example.com:5000
+...
+
 
 # 安装离线 OCP 集群
 

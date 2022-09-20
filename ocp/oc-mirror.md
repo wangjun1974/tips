@@ -592,13 +592,14 @@ registry.redhat.io/redhat/redhat-marketplace-index:v4.10
 ### 生成 image-config-release-local.yaml
 ### metadata 保存在 /root/oc-mirror/oc-history 里
 ### 不使用 archiveSize
+### 不使用 storageConfig
+### storageConfig:
+###  local:
+###    path: /root/oc-mirror/oc-history
 $ mkdir -p /root/oc-mirror/oc-history
 $ cat > image-config-realse-local.yaml <<EOF
 apiVersion: mirror.openshift.io/v1alpha2
 kind: ImageSetConfiguration
-storageConfig:
-  local:
-    path: /root/oc-mirror/oc-history
 mirror:
   platform:
     channels:

@@ -586,7 +586,16 @@ registry.redhat.io/redhat/redhat-marketplace-index:v4.10
 # /usr/local/bin/oc-mirror list operators --catalog=registry.redhat.io/redhat/redhat-operator-index:v4.10
 ### 列出 catalog registry.redhat.io/redhat/redhat-operator-index:v4.11 有哪些 operator
 # /usr/local/bin/oc-mirror list operators --catalog=registry.redhat.io/redhat/redhat-operator-index:v4.11
-
+### 列出 catalog registry.redhat.io/redhat/redhat-operator-index:v4.10 package advanced-cluster-management channel release-2.4
+# /usr/local/bin/oc-mirror list operators --package=advanced-cluster-management --catalog=registry.redhat.io/redhat/redhat-operator-index:v4.10 --channel=release-2.6
+# 列出 catalog registry.redhat.io/redhat/redhat-operator-index:v4.10 package openshift-gitops-operator
+# /usr/local/bin/oc-mirror list operators --package=openshift-gitops-operator --catalog=registry.redhat.io/redhat/redhat-operator-index:v4.10 
+# 列出 catalog registry.redhat.io/redhat/redhat-operator-index:v4.10 package advanced-cluster-management
+# /usr/local/bin/oc-mirror list operators --package=advanced-cluster-management --catalog=registry.redhat.io/redhat/redhat-operator-index:v4.10
+# 列出 catalog registry.redhat.io/redhat/redhat-operator-index:v4.10 package performance-addon-operator 
+# /usr/local/bin/oc-mirror list operators --package=performance-addon-operator  --catalog=registry.redhat.io/redhat/redhat-operator-index:v4.10
+# 列出 catalog registry.redhat.io/redhat/redhat-operator-index:v4.10 package kubernetes-nmstate-operator 
+# /usr/local/bin/oc-mirror list operators --catalog=registry.redhat.io/redhat/redhat-operator-index:v4.10 --package=kubernetes-nmstate-operator
 
 ### 同步 Software PLC 会用到的 Operator
 ### 生成 image-config-release-local.yaml
@@ -619,23 +628,23 @@ mirror:
         - name: performance-addon-operator
           channels:
             - name: '4.10'
-              minVersion: '4.10.6'
-              maxVersion: '4.10.6'
+              minVersion: '4.10.8'
+              maxVersion: '4.10.8'
         - name: kubernetes-nmstate-operator
           channels:
             - name: 'stable'
-              minVersion: '4.10.0-202208150436'
-              maxVersion: '4.10.0-202208150436'
+              minVersion: '4.10.0-202209050827'
+              maxVersion: '4.10.0-202209050827'
         - name: sriov-network-operator
           channels:
             - name: 'stable'
-              minVersion: '4.10.0-202208150436'
-              maxVersion: '4.10.0-202208150436'
+              minVersion: '4.10.0-202209141528'
+              maxVersion: '4.10.0-202209141528'
         - name: local-storage-operator
           channels:
             - name: 'stable'
-              minVersion: '4.10.0-202208150436'
-              maxVersion: '4.10.0-202208150436'
+              minVersion: '4.10.0-202209080237'
+              maxVersion: '4.10.0-202209080237'
         - name: odf-operator
           channels:
             - name: 'stable-4.10'
@@ -645,11 +654,23 @@ mirror:
           channels:
             - name: v1
               minVersion: '5.0.0'
-              maxVersion: '5.0.0'                                                   
+              maxVersion: '5.0.0'
+        - name: advanced-cluster-management
+          channels:
+            - name: release-2.6
+              minVersion: 'v2.4.5'
+              maxVersion: 'v2.4.5'
+        - name: openshift-gitops-operator
+          channels:
+            - name: latest
+              minVersion: 'v1.5.6'
+              maxVersion: 'v1.5.6'
 EOF
 
 # 同步定制化的 operator catalog redhat-operator-index 和 images 到本地
+# 检查输出，处理所有错误
 $ /usr/local/bin/oc-mirror --config /root/image-config-realse-local.yaml --continue-on-error file://output-dir
+
 
 # 拷贝 output-dir/mirror_seq1_000000.tar 到离线环境
 

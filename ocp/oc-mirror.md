@@ -896,4 +896,29 @@ $ mkdir -p /tmp/skopeotest
 $ skopeo copy --format v2s2 --authfile /path/auth.json --all docker://quay.io/jordigilh/rhel8-rt:qcow2 dir:/tmp/skopeotest 
 ### 将 /tmp/skopeotest 拷贝到离线
 $ skopeo copy --format v2s2 --authfile /path/auth.json --all dir:/tmp/skopeotest docker://registry.example.com:5000/jordigilh/rhel8-rt:qcow2
+
+
+$ cd /tmp
+$ /usr/local/bin/oc-mirror list operators --catalog=registry.redhat.io/redhat/redhat-operator-index:v4.10 --package=advanced-cluster-management
+$ cat > image-config-realse-local.yaml <<EOF
+apiVersion: mirror.openshift.io/v1alpha2
+kind: ImageSetConfiguration
+mirror:
+  operators:
+    - catalog: registry.redhat.io/redhat/redhat-operator-index:v4.10
+      packages:
+        - name: advanced-cluster-management
+          channels:
+            - name: release-2.6
+              minVersion: 'v2.6.1'
+              maxVersion: 'v2.6.1'            
+            - name: release-2.5
+              minVersion: 'v2.5.2'
+              maxVersion: 'v2.5.2'                      
+            - name: release-2.4
+              minVersion: 'v2.4.5'
+              maxVersion: 'v2.4.5'
+EOF
+
+$ /usr/local/bin/oc-mirror --config ./image-config-realse-local.yaml --continue-on-error file://output-dir
 ```

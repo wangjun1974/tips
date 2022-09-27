@@ -925,4 +925,18 @@ mirror:
 EOF
 
 $ /usr/local/bin/oc-mirror --config ./image-config-realse-local.yaml --continue-on-error file://output-dir 2>&1 | tee /tmp/err 
+
+### 这种方法同步镜像，在目标上传镜像会报
+### uploading: registry.example.com:5000/kubevirt/hostpath-provisioner sha256:1718b0b7de8d2e193728b50312d98a1cab1efe401a14caf8ebaa701dd38e2c33 45.55MiB
+### error: unable to push manifest to registry.example.com:5000/kubevirt/hostpath-provisioner: manifest invalid: manifest invalid
+$ cat > image-config-realse-local.yaml <<EOF
+apiVersion: mirror.openshift.io/v1alpha2
+kind: ImageSetConfiguration
+mirror:
+  additionalImages: # List of additional images to be included in imageset
+    - name: quay.io/kubevirt/hostpath-provisioner:latest
+EOF
+$ /usr/local/bin/oc-mirror --config ./image-config-realse-local.yaml --continue-on-error file://output-dir 2>&1 | tee /tmp/err 
+
+
 ```

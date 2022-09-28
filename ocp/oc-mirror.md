@@ -926,6 +926,28 @@ EOF
 
 $ /usr/local/bin/oc-mirror --config ./image-config-realse-local.yaml --continue-on-error file://output-dir 2>&1 | tee /tmp/err 
 
+
+### 获取 odf-lvm-operator 
+$ /usr/local/bin/oc-mirror list operators --catalog=registry.redhat.io/redhat/redhat-operator-index:v4.10 --package=odf-lvm-operator
+PACKAGE           CHANNEL      HEAD
+odf-lvm-operator  stable-4.10  odf-lvm-operator.v4.10.6
+$ cat > image-config-realse-local.yaml <<EOF
+apiVersion: mirror.openshift.io/v1alpha2
+kind: ImageSetConfiguration
+mirror:
+  operators:
+    - catalog: registry.redhat.io/redhat/redhat-operator-index:v4.10
+      packages:
+        - name: odf-lvm-operator
+          channels:
+            - name: stable-4.10
+              minVersion: 'v4.10.6'
+              maxVersion: 'v4.10.6'
+EOF
+
+$ /usr/local/bin/oc-mirror --config ./image-config-realse-local.yaml --continue-on-error file://output-dir 2>&1 | tee /tmp/err 
+
+
 ### 这种方法同步镜像，在目标上传镜像会报
 ### uploading: registry.example.com:5000/kubevirt/hostpath-provisioner sha256:1718b0b7de8d2e193728b50312d98a1cab1efe401a14caf8ebaa701dd38e2c33 45.55MiB
 ### error: unable to push manifest to registry.example.com:5000/kubevirt/hostpath-provisioner: manifest invalid: manifest invalid
@@ -939,4 +961,18 @@ EOF
 $ /usr/local/bin/oc-mirror --config ./image-config-realse-local.yaml --continue-on-error file://output-dir 2>&1 | tee /tmp/err 
 
 
+$ mkdir -p /tmp/skopeotest 
+$ skopeo copy --format v2s2 --authfile /path/auth.json --all docker://quay.io/kubevirt/hostpath-provisioner dir:/tmp/skopeotest 
+### 将 /tmp/skopeotest 拷贝到离线
+$ skopeo copy --format v2s2 --authfile /path/auth.json --all dir:/tmp/skopeotest docker://registry.example.com:5000/kubevirt/hostpath-provisioner
+
+$ mkdir -p /tmp/minio 
+$ skopeo copy --format v2s2 --authfile /path/auth.json --all docker://docker.io/minio/minio:RELEASE.2022-07-24T01-54-52Z dir:/tmp/minio 
+### 将 /tmp/skopeotest 拷贝到离线
+$ skopeo copy --format v2s2 --authfile /path/auth.json --all dir:/tmp/minio docker://registry.example.com:5000/minio/minio:RELEASE.2022-07-24T01-54-52Z
+
+$ mkdir -p /tmp/mc 
+$ skopeo copy --format v2s2 --authfile /path/auth.json --all docker://docker.io/minio/mc:RELEASE.2022-07-24T02-25-13Z dir:/tmp/mc 
+### 将 /tmp/skopeotest 拷贝到离线
+$ skopeo copy --format v2s2 --authfile /path/auth.json --all dir:/tmp/mc docker://registry.example.com:5000/minio/mc:RELEASE.2022-07-24T02-25-13Z
 ```

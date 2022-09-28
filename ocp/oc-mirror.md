@@ -623,8 +623,8 @@ mirror:
         - name: kubevirt-hyperconverged
           channels:
             - name: 'stable'
-              minVersion: '4.10.4'
-              maxVersion: '4.10.4'            
+              minVersion: '4.10.5'
+              maxVersion: '4.10.5'            
         - name: performance-addon-operator
           channels:
             - name: '4.10'
@@ -648,23 +648,37 @@ mirror:
         - name: odf-operator
           channels:
             - name: 'stable-4.10'
-              minVersion: '4.10.5'
-              maxVersion: '4.10.5'
+              minVersion: 'v4.10.6'
+              maxVersion: 'v4.10.6'
         - name: cincinnati-operator
           channels:
             - name: v1
-              minVersion: '5.0.0'
-              maxVersion: '5.0.0'
+              minVersion: 'v5.0.0'
+              maxVersion: 'v5.0.0'
         - name: advanced-cluster-management
           channels:
             - name: release-2.6
+              minVersion: 'v2.6.1'
+              maxVersion: 'v2.6.1'
+            - name: release-2.5
+              minVersion: 'v2.5.2'
+              maxVersion: 'v2.5.2'
+            - name: release-2.4
               minVersion: 'v2.4.5'
-              maxVersion: 'v2.4.5'
+              maxVersion: 'v2.4.5'             
         - name: openshift-gitops-operator
           channels:
             - name: latest
+              minVersion: 'v1.6.1'
+              maxVersion: 'v1.6.1'
+            - name: stable
               minVersion: 'v1.5.6'
-              maxVersion: 'v1.5.6'
+              maxVersion: 'v1.5.6'            
+        - name: odf-lvm-operator
+          channels:
+            - name: stable-4.10
+              minVersion: 'v4.10.6'
+              maxVersion: 'v4.10.6'
 EOF
 
 # 同步定制化的 operator catalog redhat-operator-index 和 images 到本地

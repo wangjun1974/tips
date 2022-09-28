@@ -623,8 +623,8 @@ mirror:
         - name: kubevirt-hyperconverged
           channels:
             - name: 'stable'
-              minVersion: '4.10.5'
-              maxVersion: '4.10.5'            
+              minVersion: '4.10.4'
+              maxVersion: '4.10.4'            
         - name: performance-addon-operator
           channels:
             - name: '4.10'

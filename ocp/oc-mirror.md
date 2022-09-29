@@ -489,7 +489,7 @@ EOF
 mkdir -p output-dir/gitea-catalog/latest
 
 OPERATOR_NAME='gitea-operator'
-OPERATOR_VERSION='1.3.0'
+OPERATOR_VERSION='v1.3.0'
 OPERATOR_CHANNEL='stable'
 cat > image-config-realse-local.yaml <<EOF
 apiVersion: mirror.openshift.io/v1alpha1
@@ -504,8 +504,8 @@ mirror:
           channels:
             - name: ${OPERATOR_CHANNEL}
 EOF
-/usr/local/bin/oc-mirror --config /root/image-config-realse-local.yaml file://output-dir
-mv output-dir/mirror_seq1_000000.tar output-dir/gitea-catalog/latest/gitea-catalog_latest_${OPERATOR_NAME}_${OPERATOR_VERSION}.tar 
+/usr/local/bin/oc-mirror --config ./image-config-realse-local.yaml file://output-dir
+mv output-dir/mirror_seq1_000000.tar output-dir/gitea-catalog_latest_${OPERATOR_NAME}_${OPERATOR_VERSION}.tar 
 BaiduPCS-Go upload output-dir/gitea-catalog/latest/gitea-catalog_latest_${OPERATOR_NAME}_${OPERATOR_VERSION}.tar /ocp4/oc-mirror
 
 # 添加 catalogsources gitea-catalog

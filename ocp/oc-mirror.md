@@ -596,6 +596,8 @@ registry.redhat.io/redhat/redhat-marketplace-index:v4.10
 # /usr/local/bin/oc-mirror list operators --package=performance-addon-operator  --catalog=registry.redhat.io/redhat/redhat-operator-index:v4.10
 # 列出 catalog registry.redhat.io/redhat/redhat-operator-index:v4.10 package kubernetes-nmstate-operator 
 # /usr/local/bin/oc-mirror list operators --catalog=registry.redhat.io/redhat/redhat-operator-index:v4.10 --package=kubernetes-nmstate-operator
+# 列出 catalog registry.redhat.io/redhat/redhat-operator-index:v4.10 package multicluster-engine 
+# /usr/local/bin/oc-mirror list operators --catalog=registry.redhat.io/redhat/redhat-operator-index:v4.10 --package=multicluster-engine
 
 ### 同步 Software PLC 会用到的 Operator
 ### 生成 image-config-release-local.yaml
@@ -679,6 +681,14 @@ mirror:
             - name: stable-4.10
               minVersion: 'v4.10.6'
               maxVersion: 'v4.10.6'
+        - name: multicluster-engine
+          channels:
+            - name: stable-2.1
+              minVersion: 'v2.1.1'
+              maxVersion: 'v2.1.1'
+            - name: stable-2.0
+              minVersion: 'v2.0.2'
+              maxVersion: 'v2.0.2'
 EOF
 
 # 同步定制化的 operator catalog redhat-operator-index 和 images 到本地

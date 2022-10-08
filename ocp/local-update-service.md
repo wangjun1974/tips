@@ -3,6 +3,7 @@
 ### https://coreos.slack.com/archives/CEGKQ43CP/p1624451445176500
 ### https://wangzheng422.github.io/docker_env/ocp4/4.8/4.8.update.service.html
 
+### 添加本地 registry 证书信任
 ### 然后添加 configmap，configmap 的 key 需要是 updateservice-registry
 $ CERTS_PATH="/data/registry/certs"
 $ oc -n openshift-config create configmap trusted-ca --from-file=updateservice-registry=${CERTS_PATH}/registry.crt

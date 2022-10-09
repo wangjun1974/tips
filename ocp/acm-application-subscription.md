@@ -72,7 +72,7 @@ spec:
     namespace: openshift-gitops
 EOF
 
-# 手工为 local-cluster 添加 Lable Name 'gitops' Value 'test'
+# 手工为 local-cluster 添加 Lable: Name 'gitops' Value 'test'
 
 # ACM UI 创建类型为 Argo CD ApplicationSet 的 Application
 # Applications -> Create application -> Argo CD ApplicationSet -> Create Argo CD ApplicationSet

@@ -613,6 +613,7 @@ done
 ### storageConfig:
 ###  local:
 ###    path: /root/oc-mirror/oc-history
+### 20221009
 $ mkdir -p /root/oc-mirror/oc-history
 $ cat > image-config-realse-local.yaml <<EOF
 apiVersion: mirror.openshift.io/v1alpha2
@@ -620,9 +621,9 @@ kind: ImageSetConfiguration
 mirror:
   platform:
     channels:
-      - name: stable-4.10
+      - name: fast-4.11
         minVersion: 4.10.30
-        maxVersion: 4.10.31
+        maxVersion: 4.11.5
         shortestPath: true
     graph: true # Include Cincinnati upgrade graph image in imageset
   operators:
@@ -631,33 +632,45 @@ mirror:
         - name: kubevirt-hyperconverged
           channels:
             - name: 'stable'
-              minVersion: '4.10.5'
-              maxVersion: '4.10.5'            
+              minVersion: 'v4.10.5'
+              maxVersion: 'v4.10.5'            
         - name: performance-addon-operator
           channels:
             - name: '4.10'
-              minVersion: '4.10.8'
-              maxVersion: '4.10.8'
+              minVersion: 'v4.10.8'
+              maxVersion: 'v4.10.8'
         - name: kubernetes-nmstate-operator
           channels:
             - name: 'stable'
-              minVersion: '4.10.0-202209050827'
-              maxVersion: '4.10.0-202209050827'
+              minVersion: '4.10.0-202209220918'
+              maxVersion: '4.10.0-202209220918'
+            - name: '4.10'
+              minVersion: '4.10.0-202209220918'
+              maxVersion: '4.10.0-202209220918'              
         - name: sriov-network-operator
           channels:
             - name: 'stable'
-              minVersion: '4.10.0-202209141528'
-              maxVersion: '4.10.0-202209141528'
+              minVersion: '4.10.0-202209231817'
+              maxVersion: '4.10.0-202209231817'
+            - name: '4.10'
+              minVersion: '4.10.0-202209231817'
+              maxVersion: '4.10.0-202209231817'              
         - name: local-storage-operator
           channels:
             - name: 'stable'
               minVersion: '4.10.0-202209080237'
               maxVersion: '4.10.0-202209080237'
+            - name: '4.10'
+              minVersion: '4.10.0-202209080237'
+              maxVersion: '4.10.0-202209080237'              
         - name: odf-operator
           channels:
             - name: 'stable-4.10'
               minVersion: 'v4.10.6'
               maxVersion: 'v4.10.6'
+            - name: 'stable-4.9'
+              minVersion: 'v4.9.11'
+              maxVersion: 'v4.9.11'
         - name: cincinnati-operator
           channels:
             - name: v1
@@ -672,8 +685,8 @@ mirror:
               minVersion: 'v2.5.2'
               maxVersion: 'v2.5.2'
             - name: release-2.4
-              minVersion: 'v2.4.5'
-              maxVersion: 'v2.4.5'             
+              minVersion: 'v2.4.7'
+              maxVersion: 'v2.4.7'             
         - name: openshift-gitops-operator
           channels:
             - name: latest

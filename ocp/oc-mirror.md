@@ -599,6 +599,12 @@ registry.redhat.io/redhat/redhat-marketplace-index:v4.10
 # 列出 catalog registry.redhat.io/redhat/redhat-operator-index:v4.10 package multicluster-engine 
 # /usr/local/bin/oc-mirror list operators --catalog=registry.redhat.io/redhat/redhat-operator-index:v4.10 --package=multicluster-engine
 
+# 列出 catalog registry.redhat.io/redhat/redhat-operator-index:v4.10 package kubevirt-hyperconverged performance-addon-operator kubernetes-nmstate-operator sriov-network-operator local-storage-operator odf-operator cincinnati-operator advanced-cluster-management openshift-gitops-operator odf-lvm-operator multicluster-engine
+for packagename in kubevirt-hyperconverged performance-addon-operator kubernetes-nmstate-operator sriov-network-operator local-storage-operator odf-operator cincinnati-operator advanced-cluster-management openshift-gitops-operator odf-lvm-operator multicluster-engine
+do 
+  /usr/local/bin/oc-mirror list operators --catalog=registry.redhat.io/redhat/redhat-operator-index:v4.10 --package=${packagename}
+done
+
 ### 同步 Software PLC 会用到的 Operator
 ### 生成 image-config-release-local.yaml
 ### metadata 保存在 /root/oc-mirror/oc-history 里

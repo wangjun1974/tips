@@ -22,6 +22,7 @@ skopeo copy --format v2s2 --all dir:/tmp/gitea/gitea docker://registry.example.c
 
 ### 生成 /etc/containers/registries.conf.d/99-master-mirror-by-digest-registries.conf 的 machineconfig
 ### 同时把 book-import 的镜像也考虑进去
+### 同时把 gitops-wordpress 的镜像也考虑进去
 cd /tmp
 cat > my_registry.conf <<EOF
 [[registry]]
@@ -55,6 +56,14 @@ cat > my_registry.conf <<EOF
 
   [[registry.mirror]]
     location = "registry.example.com:5000/jpacker"
+
+[[registry]]
+  prefix = ""
+  location = "docker.io/bitnami"
+  mirror-by-digest-only = false
+
+  [[registry.mirror]]
+    location = "registry.example.com:5000/bitnami"
 EOF
 
 cat <<EOF | oc apply -f -
@@ -120,12 +129,6 @@ tar xf /tmp/book-import.tar -C /
 
 skopeo copy --format v2s2 --all dir:/tmp/book-import/hugo-nginx docker://registry.example.com:5000/jpacker/hugo-nginx:latest
 
-# 克隆仓库或者直接使用网盘上的文件 git-book-import.tar.gz
-# 链接: https://pan.baidu.com/s/1FEi8xBzBqBzGd4-yNSy94w?pwd=ieba 提取码: ieba
-# git clone https://github.com/wangjun1974/book-import
-# 传输 book-import 到离线环境
-# 进入到 book-import 目录
-
 # 处理证书信任
 cd /tmp
 openssl s_client -host gitea-with-admin-openshift-operators.apps.ocp4-1.example.com -port 443 -showcerts > trace < /dev/null
@@ -133,10 +136,43 @@ cat trace | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' | tee /etc/pki/
 update-ca-trust
 cd -
 
+# 克隆仓库或者直接使用网盘上的文件 git-book-import.tar.gz
+# 链接: https://pan.baidu.com/s/1FEi8xBzBqBzGd4-yNSy94w?pwd=ieba 提取码: ieba
+# git clone https://github.com/wangjun1974/book-import
+# 传输 book-import 到离线环境
+# 进入到 book-import 目录
+
 # 在 Gitea UI 上以 lab-user-2 身份登陆 https://gitea-with-admin-openshift-operators.apps.ocp4-1.example.com 创建 book-import 仓库
 # 在 book-import 目录内添加 neworigin
 # git remote add neworigin https://gitea-with-admin-openshift-operators.apps.ocp4-1.example.com/lab-user-2/book-import.git
 
+# 将 repo 从文件系统同步到 gitea
+# git push neworigin --all
+# git push neworigin --tags
+
+# gitops-wordpress 镜像
+# 拷贝 docker.io/bitnami/mysql:8.0 镜像
+# 拷贝 docker.io/bitnami/wordpress:6 镜像
+mkdir -p /tmp/bitnami
+skopeo copy --format v2s2 --all docker://docker.io/bitnami/mysql:8.0 dir:/tmp/bitnami/mysql
+skopeo copy --format v2s2 --all docker://docker.io/bitnami/wordpress:6 dir:/tmp/bitnami/wordpress
+
+tar cf /tmp/bitnami-wordpress.tar /tmp/bitnami
+scp /tmp/bitnami-wordpress.tar <dest>:/tmp
+tar xf /tmp/bitnami-wordpress.tar -C /
+
+skopeo copy --format v2s2 --all dir:/tmp/bitnami/mysql docker://registry.example.com:5000/bitnami/mysql:8.0
+skopeo copy --format v2s2 --all dir:/tmp/bitnami/wordpress docker://registry.example.com:5000/bitnami/wordpress:6
+
+# 克隆仓库或者直接使用网盘上的文件 git-gitops-wordpress.tar.gz
+# 链接: 链接: https://pan.baidu.com/s/1lf0ROH921cSIqzAXYuYqKw?pwd=kge5 提取码: kge5
+# git clone https://github.com/wangjun1974/gitops-wordpress
+# 传输 gitops-wordpress 到离线环境
+# 进入到 gitops-wordpress 目录
+
+# 在 Gitea UI 上以 lab-user-2 身份登陆 https://gitea-with-admin-openshift-operators.apps.ocp4-1.example.com 创建 gitops-wordpress 仓库
+# 在 gitops-wordpress 目录内添加 neworigin
+# git remote add neworigin https://gitea-with-admin-openshift-operators.apps.ocp4-1.example.com/lab-user-2/gitops-wordpress.git
 # 将 repo 从文件系统同步到 gitea
 # git push neworigin --all
 # git push neworigin --tags

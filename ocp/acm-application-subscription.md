@@ -83,4 +83,15 @@ EOF
 # 或者
 # Step4 - Placement -> 'Select an existing placement configuration'; Placement resource 'gitops-openshift-clusters'
 # Step5 - Review -> Create
+
+
+# ACM UI 创建类型为 Argo CD ApplicationSet 的 Application
+# Applications -> Create application -> Argo CD ApplicationSet -> Create Argo CD ApplicationSet
+# Step1 - General -> Argo CD Application Set Name 'applicationset2' ; Argo Server 'openshift-gitops'
+# Step2 - Template -> Repository Type 'Git' ; URL 'https://gitea-with-admin-openshift-operators.apps.ocp4-1.example.com/lab-user-2/gitops-wordpress.git' ; Revision Type 'Branches' ; Revision 'main' ; Path 'apps' ; Remote namespace 'wordpress'
+# Step3 - Sync policy -> 根据需要选择 ; 未选择 'Replace resource instead ...', 'Disable kubectl validation', 'Prune properagation policy'
+# Step4 - Placement -> 'Deployment application resource only on clusters matching specified labels', Cluster labels Lable 'gitops' Value 'test'
+# 或者
+# Step4 - Placement -> 'Select an existing placement configuration'; Placement resource 'gitops-openshift-clusters'
+# Step5 - Review -> Create
 ```

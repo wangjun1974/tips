@@ -49,9 +49,6 @@ EOF
 # 添加 gitea 证书到 Argo CD
 # 获取 gitea 证书参见 https://github.com/wangjun1974/tips/blob/master/ocp/gitea.md
 # Argo CD UI -> Settings -> Certificates -> ADD TLS CERTIFICATE
-# 
-
-
 
 # 创建 GitOpsCluster CRDs，将 Placement 选择的 Cluster 注册到 ArgoCD cluster 里
 # GitOpsCluster CRDs 的 version 为 v1beta1
@@ -83,5 +80,7 @@ EOF
 # Step2 - Template -> Repository Type 'Git' ; URL 'https://gitea-with-admin-openshift-operators.apps.ocp4-1.example.com/lab-user-2/book-import.git' ; Revision Type 'Branches' ; Revision 'master-no-pre-post' ; Path 'book-import' ; Remote namespace 'book-import'
 # Step3 - Sync policy -> 根据需要选择 ; 未选择 'Replace resource instead ...', 'Disable kubectl validation', 'Prune properagation policy'
 # Step4 - Placement -> 'Deployment application resource only on clusters matching specified labels', Cluster labels Lable 'gitops' Value 'test'
+# 或者
+# Step4 - Placement -> 'Select an existing placement configuration'; Placement resource 'gitops-openshift-clusters'
 # Step5 - Review -> Create
 ```

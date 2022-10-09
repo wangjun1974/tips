@@ -40,10 +40,10 @@ spec:
   - requiredClusterSelector:
       labelSelector:
         matchExpressions:
-        - key: vendor
+        - key: gitops
           operator: "In"
           values:
-          - OpenShift
+          - test
 EOF
 
 # 添加 gitea 证书到 Argo CD
@@ -75,11 +75,13 @@ spec:
     namespace: openshift-gitops
 EOF
 
+# 手工为 local-cluster 添加 Lable Name 'gitops' Value 'test'
+
 # ACM UI 创建类型为 Argo CD ApplicationSet 的 Application
 # Applications -> Create application -> Argo CD ApplicationSet -> Create Argo CD ApplicationSet
 # Step1 - General -> Argo CD Application Set Name 'applicationset1' ; Argo Server 'openshift-gitops'
-# Step2 - Template -> Repository Type 'Git' ; URL 'https://gitea-with-admin-openshift-operators.apps.ocp4-1.example.com/lab-user-2/book-import.git' ; Revision Type 'Branches' ; Revision 'master-no-pre-post' ; Path '/book-import' ; Remote namespace 'book-import'
+# Step2 - Template -> Repository Type 'Git' ; URL 'https://gitea-with-admin-openshift-operators.apps.ocp4-1.example.com/lab-user-2/book-import.git' ; Revision Type 'Branches' ; Revision 'master-no-pre-post' ; Path 'book-import' ; Remote namespace 'book-import'
 # Step3 - Sync policy -> 根据需要选择 ; 未选择 'Replace resource instead ...', 'Disable kubectl validation', 'Prune properagation policy'
-# Step4 - Placement -> 'Select an existing placement configuration', Placement resource 'gitops-openshift-clusters'
+# Step4 - Placement -> 'Deployment application resource only on clusters matching specified labels', Cluster labels Lable 'gitops' Value 'test'
 # Step5 - Review -> Create
 ```

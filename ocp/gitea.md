@@ -21,6 +21,7 @@ skopeo copy --format v2s2 --all dir:/tmp/gitea/postgresql-12 docker://registry.e
 skopeo copy --format v2s2 --all dir:/tmp/gitea/gitea docker://registry.example.com:5000/gpte-devops-automation/gitea:latest
 
 ### 生成 /etc/containers/registries.conf.d/99-master-mirror-by-digest-registries.conf 的 machineconfig
+### 同时把 book-import 的镜像也考虑进去
 cd /tmp
 cat > my_registry.conf <<EOF
 [[registry]]
@@ -46,6 +47,14 @@ cat > my_registry.conf <<EOF
 
   [[registry.mirror]]
     location = "registry.example.com:5000/rhel8"
+
+[[registry]]
+  prefix = ""
+  location = "quay.io/jpacker"
+  mirror-by-digest-only = false
+
+  [[registry.mirror]]
+    location = "registry.example.com:5000/jpacker"
 EOF
 
 cat <<EOF | oc apply -f -
@@ -100,9 +109,6 @@ EOF
 # 查看 Gitea 日志
 oc -n openshift-operators logs $(oc -n openshift-operators get pods -l control-plane=controller-manager -o name | grep gitea) -c manager 
 
-# 克隆
-git clone https://github.com/wangjun1974/book-import
-
 # 拷贝 quay.io/jpacker/hugo-nginx:latest 镜像
 ### 链接: https://pan.baidu.com/s/1fYPQv76D9WKvlyHa-KcrlQ?pwd=j9gx 提取码: j9gx
 mkdir -p /tmp/book-import
@@ -114,34 +120,24 @@ tar xf /tmp/book-import.tar -C /
 
 skopeo copy --format v2s2 --all dir:/tmp/book-import/hugo-nginx docker://registry.example.com:5000/jpacker/hugo-nginx:latest
 
-# 克隆
-git clone https://github.com/wangjun1974/book-import
+# 克隆仓库或者直接使用网盘上的文件 git-book-import.tar.gz
+# 链接: https://pan.baidu.com/s/1FEi8xBzBqBzGd4-yNSy94w?pwd=ieba 提取码: ieba
+# git clone https://github.com/wangjun1974/book-import
 # 传输 book-import 到离线环境
 # 进入到 book-import 目录
 
-# 处理一下证书
+# 处理证书信任
 cd /tmp
 openssl s_client -host gitea-with-admin-openshift-operators.apps.ocp4-1.example.com -port 443 -showcerts > trace < /dev/null
 cat trace | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' | tee /etc/pki/ca-trust/source/anchors/gitea.crt  
 update-ca-trust
 cd -
 
-# 以 lab-user-2 身份登陆 https://gitea-with-admin-openshift-operators.apps.ocp4-1.example.com 创建 book-import 仓库
+# 在 UI 上以 lab-user-2 身份登陆 https://gitea-with-admin-openshift-operators.apps.ocp4-1.example.com 创建 book-import 仓库
+# 在 book-import 目录内添加 neworigin
 # git remote add neworigin https://gitea-with-admin-openshift-operators.apps.ocp4-1.example.com/lab-user-2/book-import.git
 
 # 将 repo 从文件系统同步到 gitea
 # git push neworigin --all
 # git push neworigin --tags
-
-# 拷贝 quay.io/jpacker/hugo-nginx:latest 镜像
-mkdir -p /tmp/book-import
-skopeo copy --format v2s2 --all docker://quay.io/jpacker/hugo-nginx:latest dir:/tmp/book-import/hugo-nginx
-
-tar cf /tmp/book-import.tar /tmp/book-import
-scp /tmp/book-import.tar <dest>:/tmp
-tar xf /tmp/book-import.tar -C /
-
-skopeo copy --format v2s2 --all dir:/tmp/book-import/hugo-nginx docker://registry.example.com:5000/jpacker/hugo-nginx:latest
-
-
 ```

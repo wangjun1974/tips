@@ -11,6 +11,6 @@ ghift-operatorsappsocp4-1examplecom-lab-user-2-book-impor-ns   ghift-operatorsap
 open-cluster-management                                        acm-hive-openshift-releases-chn-0                           Git        https://github.com/stolostron/acm-hive-openshift-releases.git                                     40m
 open-cluster-management                                        charts-v1                                                   HelmRepo   http://multiclusterhub-repo.open-cluster-management.svc.cluster.local:3000/charts                 51m
 
-# 增加 Channel 的 spec.insecureSkipVerify 为 true
+# 设置 Channel 的 spec.insecureSkipVerify 为 true
 oc -n ghift-operatorsappsocp4-1examplecom-lab-user-2-book-impor-ns patch Channel ghift-operatorsappsocp4-1examplecom-lab-user-2-book-impor --type json -p '[{"op": "add", "path": "/spec/insecureSkipVerify", "value": true}]'
 ```

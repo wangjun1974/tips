@@ -133,7 +133,7 @@ cat trace | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' | tee /etc/pki/
 update-ca-trust
 cd -
 
-# 在 UI 上以 lab-user-2 身份登陆 https://gitea-with-admin-openshift-operators.apps.ocp4-1.example.com 创建 book-import 仓库
+# 在 Gitea UI 上以 lab-user-2 身份登陆 https://gitea-with-admin-openshift-operators.apps.ocp4-1.example.com 创建 book-import 仓库
 # 在 book-import 目录内添加 neworigin
 # git remote add neworigin https://gitea-with-admin-openshift-operators.apps.ocp4-1.example.com/lab-user-2/book-import.git
 

@@ -631,8 +631,8 @@ mirror:
         - name: kubevirt-hyperconverged
           channels:
             - name: 'stable'
-              minVersion: '4.10.4'
-              maxVersion: '4.10.4'            
+              minVersion: '4.10.5'
+              maxVersion: '4.10.5'            
         - name: performance-addon-operator
           channels:
             - name: '4.10'
@@ -681,7 +681,10 @@ mirror:
               maxVersion: 'v1.6.1'
             - name: stable
               minVersion: 'v1.5.6'
-              maxVersion: 'v1.5.6'            
+              maxVersion: 'v1.5.6'
+            - name: preview
+              minVersion: 'v1.4.8'
+              maxVersion: 'v1.4.8'                          
         - name: odf-lvm-operator
           channels:
             - name: stable-4.10

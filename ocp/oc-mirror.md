@@ -600,7 +600,7 @@ registry.redhat.io/redhat/redhat-marketplace-index:v4.10
 # /usr/local/bin/oc-mirror list operators --catalog=registry.redhat.io/redhat/redhat-operator-index:v4.10 --package=multicluster-engine
 
 # 列出 catalog registry.redhat.io/redhat/redhat-operator-index:v4.10 package kubevirt-hyperconverged performance-addon-operator kubernetes-nmstate-operator sriov-network-operator local-storage-operator odf-operator cincinnati-operator advanced-cluster-management openshift-gitops-operator odf-lvm-operator multicluster-engine
-$ for packagename in kubevirt-hyperconverged performance-addon-operator kubernetes-nmstate-operator sriov-network-operator local-storage-operator odf-operator cincinnati-operator advanced-cluster-management openshift-gitops-operator odf-lvm-operator multicluster-engine
+$ for packagename in kubevirt-hyperconverged performance-addon-operator kubernetes-nmstate-operator sriov-network-operator local-storage-operator odf-operator cincinnati-operator advanced-cluster-management openshift-gitops-operator odf-lvm-operator multicluster-engine rhacs-operator
 do 
   /usr/local/bin/oc-mirror list operators --catalog=registry.redhat.io/redhat/redhat-operator-index:v4.10 --package=${packagename}
 done
@@ -681,9 +681,6 @@ mirror:
             - name: release-2.6
               minVersion: 'v2.6.1'
               maxVersion: 'v2.6.1'
-            - name: release-2.5
-              minVersion: 'v2.5.2'
-              maxVersion: 'v2.5.2'
             - name: release-2.4
               minVersion: 'v2.4.7'
               maxVersion: 'v2.4.7'             
@@ -695,9 +692,6 @@ mirror:
             - name: stable
               minVersion: 'v1.5.6'
               maxVersion: 'v1.5.6'
-            - name: preview
-              minVersion: 'v1.4.8'
-              maxVersion: 'v1.4.8'                          
         - name: odf-lvm-operator
           channels:
             - name: stable-4.10
@@ -1021,4 +1015,37 @@ $ mkdir -p /tmp/mc
 $ skopeo copy --format v2s2 --authfile /path/auth.json --all docker://docker.io/minio/mc:RELEASE.2022-07-24T02-25-13Z dir:/tmp/mc 
 ### 将 /tmp/skopeotest 拷贝到离线
 $ skopeo copy --format v2s2 --authfile /path/auth.json --all dir:/tmp/mc docker://registry.example.com:5000/minio/mc:RELEASE.2022-07-24T02-25-13Z
+
+
+
+### 新的思路是把 openshift release images 的同步与 operator 的同步分成两个阶段做
+### 
+### 第一阶段
+### 同步 openshift/release
+### 生成 image-config-release-local.yaml
+### 不保存 metadata
+### 不使用 archiveSize
+### 不使用 storageConfig
+### 20221010
+cat > image-config-realse-local.yaml <<EOF
+apiVersion: mirror.openshift.io/v1alpha2
+kind: ImageSetConfiguration
+mirror:
+  platform:
+    channels:
+      - name: fast-4.11
+        minVersion: 4.10.30
+        maxVersion: 4.11.5
+        shortestPath: true
+    graph: true # Include Cincinnati upgrade graph image in imageset
+EOF
+
+# 同步 openshift/release images 到本地
+# 检查输出，处理所有错误
+$ /usr/local/bin/oc-mirror --config /root/image-config-realse-local.yaml --continue-on-error file://output-dir
+
+# 拷贝 output-dir/mirror_seq1_000000.tar 到离线环境
+
+# 上传镜像
+$ /usr/local/bin/oc-mirror --from /tmp/mirror_seq1_000000.tar docker://registry.example.com:5000
 ```

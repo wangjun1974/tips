@@ -921,7 +921,7 @@ $ oc get clusterversion version -o yaml
 ```
 # 查看 channel upgrades graph 
 $ curl -s "https://api.openshift.com/api/upgrades_info/v1/graph?channel=stable-4.10" | jq -r 
-$ curl -s "https://update-service-oc-mirror-1-route-openshift-update-service.apps.ocp4-1.example.com/api/upgrades_info/v1/graph?channel=fast-4.10"
+$ curl -s "https://update-service-oc-mirror-route-openshift-update-service.apps.ocp4-1.example.com/api/upgrades_info/v1/graph?channel=fast-4.10"
 
 # 查看本地 release info 
 $ oc adm release info registry.example.com:5000/openshift/release-images:4.10.30-x86_64
@@ -1047,5 +1047,138 @@ $ /usr/local/bin/oc-mirror --config /root/image-config-realse-local.yaml --conti
 # 拷贝 output-dir/mirror_seq1_000000.tar 到离线环境
 
 # 上传镜像
-$ /usr/local/bin/oc-mirror --from /tmp/mirror_seq1_000000.tar docker://registry.example.com:5000
+$ /usr/local/bin/oc-mirror --from /tmp/mirror_seq1_000000.tar docker://registry.example.com:5000 --continue-on-error
+
+# 如果没有报错，就可以 apply imageContentSourcePolicy.yaml, updateService.yaml 和 release-signatures
+$ pwd
+/root/oc-mirror-workspace
+$ tree results-1665368269 
+results-1665368269
+├── charts
+├── imageContentSourcePolicy.yaml
+├── mapping.txt
+├── release-signatures
+│   ├── signature-sha256-7f543788330d4866.json
+│   └── signature-sha256-fe4d499ac9fc7d12.json
+└── updateService.yaml
+$ cd results-1665368269
+$ oc apply -f imageContentSourcePolicy.yaml
+$ oc project openshift-update-service
+$ oc apply -f updateService.yaml
+$ oc apply -f release-signatures/signature-sha256-7f543788330d4866.json
+$ oc apply -f release-signatures/signature-sha256-fe4d499ac9fc7d12.json
+
+### 第二阶段
+### 同步 operator
+### 生成 image-config-release-local.yaml
+### 不保存 metadata
+### 不使用 archiveSize
+### 不使用 storageConfig
+### 20221010
+### 检查 operator 的情况
+### for packagename in kubevirt-hyperconverged performance-addon-operator kubernetes-nmstate-operator sriov-network-operator local-storage-operator odf-operator cincinnati-operator advanced-cluster-management openshift-gitops-operator odf-lvm-operator multicluster-engine rhacs-operator
+### do 
+###  /usr/local/bin/oc-mirror list operators --catalog=registry.redhat.io/redhat/redhat-operator-index:v4.10 --package=${packagename}
+### done
+
+### 同步 operator 
+### catalog 是 registry.redhat.io/redhat/redhat-operator-index:v4.10
+$ cat > image-config-realse-local.yaml <<EOF
+apiVersion: mirror.openshift.io/v1alpha2
+kind: ImageSetConfiguration
+mirror:
+  operators:
+    - catalog: registry.redhat.io/redhat/redhat-operator-index:v4.10
+      packages:
+        - name: kubevirt-hyperconverged
+          channels:
+            - name: 'stable'
+              minVersion: 'v4.10.5'
+              maxVersion: 'v4.10.5'            
+        - name: performance-addon-operator
+          channels:
+            - name: '4.10'
+              minVersion: 'v4.10.8'
+              maxVersion: 'v4.10.8'
+        - name: kubernetes-nmstate-operator
+          channels:
+            - name: 'stable'
+              minVersion: '4.10.0-202209220918'
+              maxVersion: '4.10.0-202209220918'
+            - name: '4.10'
+              minVersion: '4.10.0-202209220918'
+              maxVersion: '4.10.0-202209220918'              
+        - name: sriov-network-operator
+          channels:
+            - name: 'stable'
+              minVersion: '4.10.0-202209231817'
+              maxVersion: '4.10.0-202209231817'
+            - name: '4.10'
+              minVersion: '4.10.0-202209231817'
+              maxVersion: '4.10.0-202209231817'              
+        - name: local-storage-operator
+          channels:
+            - name: 'stable'
+              minVersion: '4.10.0-202209080237'
+              maxVersion: '4.10.0-202209080237'
+            - name: '4.10'
+              minVersion: '4.10.0-202209080237'
+              maxVersion: '4.10.0-202209080237'              
+        - name: odf-operator
+          channels:
+            - name: 'stable-4.10'
+              minVersion: 'v4.10.6'
+              maxVersion: 'v4.10.6'
+            - name: 'stable-4.9'
+              minVersion: 'v4.9.11'
+              maxVersion: 'v4.9.11'
+        - name: cincinnati-operator
+          channels:
+            - name: v1
+              minVersion: 'v5.0.0'
+              maxVersion: 'v5.0.0'
+        - name: advanced-cluster-management
+          channels:
+            - name: release-2.6
+              minVersion: 'v2.6.1'
+              maxVersion: 'v2.6.1'
+            - name: release-2.5
+              minVersion: 'v2.5.2'
+              maxVersion: 'v2.5.2'
+            - name: release-2.4
+              minVersion: 'v2.4.7'
+              maxVersion: 'v2.4.7'             
+        - name: openshift-gitops-operator
+          channels:
+            - name: latest
+              minVersion: 'v1.6.1'
+              maxVersion: 'v1.6.1'
+            - name: stable
+              minVersion: 'v1.5.6'
+              maxVersion: 'v1.5.6'
+        - name: odf-lvm-operator
+          channels:
+            - name: stable-4.10
+              minVersion: 'v4.10.6'
+              maxVersion: 'v4.10.6'
+        - name: multicluster-engine
+          channels:
+            - name: stable-2.1
+              minVersion: 'v2.1.1'
+              maxVersion: 'v2.1.1'
+            - name: stable-2.0
+              minVersion: 'v2.0.2'
+              maxVersion: 'v2.0.2'
+        - name: rhacs-operator
+          channels:
+            - name: latest
+              minVersion: 'v3.72.0'
+              maxVersion: 'v3.72.0'
+EOF
+
+# 同步 operator 到本地
+# 检查输出，处理所有错误
+# https://www.ibm.com/docs/en/cloud-paks/cp-management/2.1.x?topic=installation-preparing-by-using-portable-compute-device
+# 根据上面链接里的提示：如果出现 'connect reset by peer' 的消息，需要重新执行同步
+$ /usr/local/bin/oc-mirror --config /root/image-config-realse-local.yaml --continue-on-error file://output-dir
 ```

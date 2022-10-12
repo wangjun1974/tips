@@ -41,6 +41,28 @@ sudo firewall-cmd --zone=public --permanent --add-port=6443/tcp
 sudo firewall-cmd --zone=public --permanent --add-port=30000-32767/tcp
 sudo firewall-cmd --reload
 
+# 忽略离线镜像仓库 ‘reistry.access.redhat.com' 和 'registry.redhat.io' 的证书签名检查
+# crictl pull registry.redhat.io/rhacm2/registration-rhel8-operator@sha256:3c5d2c6d885a6a03b10952fb12002ac160f859bec0d6fe6f1cc58c545dd3aa9b
+# FATA[0010] pulling image: rpc error: code = Unknown desc = Source image rejected: A signature was required, but no signature exists
+cat > /etc/containers/policy.json <<EOF
+{
+    "default": [
+        {
+            "type": "insecureAcceptAnything"
+        }
+    ],
+    "transports": {
+        "docker-daemon": {
+            "": [
+                {
+                    "type": "insecureAcceptAnything"
+                }
+            ]
+        }
+    }
+}
+EOF
+
 # 将镜像同步到本地，离线环境需同步镜像到本地，在线环境无需执行
 LOCAL_SECRET_JSON=/data/OCP-4.9.9/ocp/secret/redhat-pull-secret.json
 

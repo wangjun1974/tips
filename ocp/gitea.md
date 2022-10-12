@@ -64,6 +64,14 @@ cat > my_registry.conf <<EOF
 
   [[registry.mirror]]
     location = "registry.example.com:5000/bitnami"
+
+[[registry]]
+  prefix = ""
+  location = "docker.io/minio"
+  mirror-by-digest-only = false
+
+  [[registry.mirror]]
+    location = "registry.example.com:5000/minio"
 EOF
 
 cat <<EOF | oc apply -f -

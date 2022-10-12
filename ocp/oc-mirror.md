@@ -1181,4 +1181,20 @@ EOF
 # https://www.ibm.com/docs/en/cloud-paks/cp-management/2.1.x?topic=installation-preparing-by-using-portable-compute-device
 # 根据上面链接里的提示：如果出现 'connect reset by peer' 的消息，需要重新执行同步
 $ /usr/local/bin/oc-mirror --config /root/image-config-realse-local.yaml --continue-on-error file://output-dir
+
+
+```
+
+```
+# 同步 minio 镜像
+mkdir -p /tmp/minio
+skopeo copy --format v2s2 --all docker://docker.io/minio/minio:RELEASE.2022-07-24T01-54-52Z dir:/tmp/minio/minio
+skopeo copy --format v2s2 --all docker://docker.io/minio/mc:RELEASE.2022-07-24T02-25-13Z dir:/tmp/minio/mc
+
+tar cf /tmp/minio-images.tar /tmp/minio
+scp /tmp/minio-images.tar <dst>:/tmp
+tar xf /tmp/minio-images.tar -C /
+
+skopeo copy --format v2s2 --all dir:/tmp/minio/minio docker://registry.example.com:5000/minio/minio:RELEASE.2022-07-24T01-54-52Z
+skopeo copy --format v2s2 --all dir:/tmp/minio/mc docker://registry.example.com:5000/minio/mc:RELEASE.2022-07-24T02-25-13Z
 ```

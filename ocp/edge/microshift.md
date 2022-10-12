@@ -2254,3 +2254,9 @@ $ oc -n multicluster-engine logs $(oc -n multicluster-engine get pods -l app='cl
 $ oc -n multicluster-engine logs $(oc -n multicluster-engine get pods -l app='console-mce' -o name | head -1) 
 $ oc -n multicluster-engine logs $(oc -n multicluster-engine get pods -l app='console-mce' -o name | tail -1) 
 ```
+
+### 设置域名
+```
+oc -n openshift-ingress set env deployment/router-default ROUTER_SUBDOMAIN="\${name}-\${namespace}.apps.edge1.example.com" ROUTER_ALLOW_WILDCARD_ROUTES="true" ROUTER_OVERRIDE_HOSTNAME="true"
+
+```

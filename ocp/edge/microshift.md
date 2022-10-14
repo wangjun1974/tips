@@ -2260,3 +2260,17 @@ $ oc -n multicluster-engine logs $(oc -n multicluster-engine get pods -l app='co
 oc -n openshift-ingress set env deployment/router-default ROUTER_SUBDOMAIN="\${name}-\${namespace}.apps.edge1.example.com" ROUTER_ALLOW_WILDCARD_ROUTES="true" ROUTER_OVERRIDE_HOSTNAME="true"
 
 ```
+
+### ACM 2.6.1 离线安装创建 mch 时需要 annotation 设置 'installer.open-cluster-management.io/mce-subscription-spec' 指定离线环境下 MCE Operator 的 catalogSource
+```
+cat <<EOF | oc apply -f -
+apiVersion: operator.open-cluster-management.io/v1
+kind: MultiClusterHub
+metadata:
+  annotations:
+    installer.open-cluster-management.io/mce-subscription-spec: '{"source": "redhat-operator-index"}'
+  name: multiclusterhub
+  namespace: open-cluster-management
+spec: {}
+EOF
+```

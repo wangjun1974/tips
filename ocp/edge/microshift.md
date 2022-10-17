@@ -343,6 +343,9 @@ Hello ::ffff:10.42.0.1 from hello-bc68c5c66-94g7r
 # https://microshift.io/docs/user-documentation/how-tos/acm-with-microshift/
 ### Hub
 
+### 导入 cluster 之前请先检查集群时间是否同步
+### Hub and Managed Cluster
+
 # 创建 edge-1 cluster
 export CLUSTER_NAME=edge-1
 oc --kubeconfig=<hub-kubeconfig> new-project ${CLUSTER_NAME}
@@ -2293,4 +2296,6 @@ registry.redhat.io/openshift4/ose-csi-node-driver-registrar@sha256:3babcf2193710
 
 除了上述这些镜像外，还需要
 registry.k8s.io/pause:3.6
+
+
 ```

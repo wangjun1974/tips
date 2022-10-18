@@ -732,6 +732,8 @@ oc -n openshift-dns rsh $(oc -n openshift-dns get pods -l dns.operator.openshift
 
 # 查看 application-manager 的日志
 oc --kubeconfig=./kubeconfig  -n open-cluster-management-agent-addon logs $(oc --kubeconfig=./kubeconfig -n open-cluster-management-agent-addon get pods -l app=application-manager -o name) 
+2.6
+oc --kubeconfig=./kubeconfig  -n open-cluster-management-agent-addon logs $(oc --kubeconfig=./kubeconfig -n open-cluster-management-agent-addon get pods -l component=application-manager -o name) 
 
 # 删除 dns-default pod
 $ oc -n openshift-dns delete $(oc -n openshift-dns get pods -l dns.operator.openshift.io/daemonset-dns=default -o name) 

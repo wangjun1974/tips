@@ -601,7 +601,7 @@ registry.redhat.io/redhat/redhat-marketplace-index:v4.10
 # /usr/local/bin/oc-mirror list operators --catalog=registry.redhat.io/redhat/redhat-operator-index:v4.10 --package=multicluster-engine
 
 # 列出 catalog registry.redhat.io/redhat/redhat-operator-index:v4.10 package kubevirt-hyperconverged performance-addon-operator kubernetes-nmstate-operator sriov-network-operator local-storage-operator odf-operator cincinnati-operator advanced-cluster-management openshift-gitops-operator odf-lvm-operator multicluster-engine
-$ for packagename in kubevirt-hyperconverged performance-addon-operator kubernetes-nmstate-operator sriov-network-operator local-storage-operator odf-operator cincinnati-operator advanced-cluster-management openshift-gitops-operator odf-lvm-operator multicluster-engine rhacs-operator
+$ for packagename in kubevirt-hyperconverged performance-addon-operator kubernetes-nmstate-operator sriov-network-operator local-storage-operator odf-operator cincinnati-operator advanced-cluster-management openshift-gitops-operator odf-lvm-operator multicluster-engine rhacs-operator ansible-automation-platform-operator
 do 
   /usr/local/bin/oc-mirror list operators --catalog=registry.redhat.io/redhat/redhat-operator-index:v4.10 --package=${packagename}
 done
@@ -1077,7 +1077,7 @@ $ oc apply -f release-signatures/signature-sha256-fe4d499ac9fc7d12.json
 ### 不使用 storageConfig
 ### 20221010
 ### 检查 operator 的情况
-### for packagename in kubevirt-hyperconverged performance-addon-operator kubernetes-nmstate-operator sriov-network-operator local-storage-operator odf-operator cincinnati-operator advanced-cluster-management openshift-gitops-operator odf-lvm-operator multicluster-engine rhacs-operator
+### for packagename in kubevirt-hyperconverged performance-addon-operator kubernetes-nmstate-operator sriov-network-operator local-storage-operator odf-operator cincinnati-operator advanced-cluster-management openshift-gitops-operator odf-lvm-operator multicluster-engine rhacs-operator ansible-automation-platform-operator
 ### do 
 ###  /usr/local/bin/oc-mirror list operators --catalog=registry.redhat.io/redhat/redhat-operator-index:v4.10 --package=${packagename}
 ### done
@@ -1104,32 +1104,32 @@ mirror:
         - name: kubernetes-nmstate-operator
           channels:
             - name: 'stable'
-              minVersion: '4.10.0-202209220918'
-              maxVersion: '4.10.0-202209220918'
+              minVersion: '4.10.0-202210061437'
+              maxVersion: '4.10.0-202210061437'
             - name: '4.10'
-              minVersion: '4.10.0-202209220918'
-              maxVersion: '4.10.0-202209220918'              
+              minVersion: '4.10.0-202210061437'
+              maxVersion: '4.10.0-202210061437'              
         - name: sriov-network-operator
           channels:
             - name: 'stable'
-              minVersion: '4.10.0-202209231817'
-              maxVersion: '4.10.0-202209231817'
+              minVersion: '4.10.0-202210061437'
+              maxVersion: '4.10.0-202210061437'
             - name: '4.10'
-              minVersion: '4.10.0-202209231817'
-              maxVersion: '4.10.0-202209231817'              
+              minVersion: '4.10.0-202210061437'
+              maxVersion: '4.10.0-202210061437'              
         - name: local-storage-operator
           channels:
             - name: 'stable'
-              minVersion: '4.10.0-202209080237'
-              maxVersion: '4.10.0-202209080237'
+              minVersion: '4.10.0-202210061437'
+              maxVersion: '4.10.0-202210061437'
             - name: '4.10'
-              minVersion: '4.10.0-202209080237'
-              maxVersion: '4.10.0-202209080237'              
+              minVersion: '4.10.0-202210061437'
+              maxVersion: '4.10.0-202210061437'              
         - name: odf-operator
           channels:
             - name: 'stable-4.10'
-              minVersion: 'v4.10.6'
-              maxVersion: 'v4.10.6'
+              minVersion: 'v4.10.7'
+              maxVersion: 'v4.10.7'
             - name: 'stable-4.9'
               minVersion: 'v4.9.11'
               maxVersion: 'v4.9.11'
@@ -1144,8 +1144,8 @@ mirror:
               minVersion: 'v2.6.1'
               maxVersion: 'v2.6.1'
             - name: release-2.5
-              minVersion: 'v2.5.2'
-              maxVersion: 'v2.5.2'
+              minVersion: 'v2.5.3'
+              maxVersion: 'v2.5.3'
             - name: release-2.4
               minVersion: 'v2.4.7'
               maxVersion: 'v2.4.7'             
@@ -1160,28 +1160,33 @@ mirror:
         - name: odf-lvm-operator
           channels:
             - name: stable-4.10
-              minVersion: 'v4.10.6'
-              maxVersion: 'v4.10.6'
+              minVersion: 'v4.10.7'
+              maxVersion: 'v4.10.7'
         - name: multicluster-engine
           channels:
             - name: stable-2.1
               minVersion: 'v2.1.1'
               maxVersion: 'v2.1.1'
             - name: stable-2.0
-              minVersion: 'v2.0.2'
-              maxVersion: 'v2.0.2'
+              minVersion: 'v2.0.3'
+              maxVersion: 'v2.0.3'
         - name: rhacs-operator
           channels:
             - name: latest
-              minVersion: 'v3.72.0'
-              maxVersion: 'v3.72.0'
+              minVersion: 'v3.72.1'
+              maxVersion: 'v3.72.1'
+        - name: ansible-automation-platform-operator
+          channels:
+            - name: stable-2.2-cluster-scoped
+              minVersion: 'v2.2.1-0.1665471668'
+              maxVersion: 'v2.2.1-0.1665471668'
 EOF
 
 # 同步 operator 到本地
 # 检查输出，处理所有错误
 # https://www.ibm.com/docs/en/cloud-paks/cp-management/2.1.x?topic=installation-preparing-by-using-portable-compute-device
 # 根据上面链接里的提示：如果出现 'connect reset by peer' 的消息，需要重新执行同步
-$ /usr/local/bin/oc-mirror --config /root/image-config-realse-local.yaml --continue-on-error file://output-dir
+$ /usr/local/bin/oc-mirror --config /root/image-config-realse-local.yaml file://output-dir
 
 
 ```

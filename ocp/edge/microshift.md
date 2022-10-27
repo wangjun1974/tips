@@ -2301,3 +2301,9 @@ registry.k8s.io/pause:3.6
 
 
 ```
+
+### 如何查看 Hub Subscription 日志
+```
+# 在 Hub 上可以检查日志，查看是否生成 AnsibleJob
+$ oc -n open-cluster-management logs $(oc -n open-cluster-management get pods -l app=multicluster-operators-hub-subscription -o name)
+```

@@ -1094,13 +1094,13 @@ mirror:
         - name: kubevirt-hyperconverged
           channels:
             - name: 'stable'
-              minVersion: 'v4.10.5'
-              maxVersion: 'v4.10.5'            
+              minVersion: 'v4.10.6'
+              maxVersion: 'v4.10.6'            
         - name: performance-addon-operator
           channels:
             - name: '4.10'
-              minVersion: 'v4.10.8'
-              maxVersion: 'v4.10.8'
+              minVersion: 'v4.10.9'
+              maxVersion: 'v4.10.9'
         - name: kubernetes-nmstate-operator
           channels:
             - name: 'stable'
@@ -1144,8 +1144,8 @@ mirror:
               minVersion: 'v2.6.1'
               maxVersion: 'v2.6.1'
             - name: release-2.5
-              minVersion: 'v2.5.3'
-              maxVersion: 'v2.5.3'
+              minVersion: 'v2.5.4'
+              maxVersion: 'v2.5.4'
             - name: release-2.4
               minVersion: 'v2.4.7'
               maxVersion: 'v2.4.7'             
@@ -1155,8 +1155,8 @@ mirror:
               minVersion: 'v1.6.1'
               maxVersion: 'v1.6.1'
             - name: stable
-              minVersion: 'v1.5.6'
-              maxVersion: 'v1.5.6'
+              minVersion: 'v1.5.7'
+              maxVersion: 'v1.5.7'
         - name: odf-lvm-operator
           channels:
             - name: stable-4.10
@@ -1168,8 +1168,8 @@ mirror:
               minVersion: 'v2.1.1'
               maxVersion: 'v2.1.1'
             - name: stable-2.0
-              minVersion: 'v2.0.3'
-              maxVersion: 'v2.0.3'
+              minVersion: 'v2.0.4'
+              maxVersion: 'v2.0.4'
         - name: rhacs-operator
           channels:
             - name: latest
@@ -1180,6 +1180,9 @@ mirror:
             - name: stable-2.2-cluster-scoped
               minVersion: 'v2.2.1-0.1665471668'
               maxVersion: 'v2.2.1-0.1665471668'
+            - name: stable-2.1-cluster-scoped
+              minVersion: 'v2.1.3-0.1665688695'
+              maxVersion: 'v2.1.3-0.1665688695'
 EOF
 
 # 同步 operator 到本地

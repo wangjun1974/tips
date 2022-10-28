@@ -2306,4 +2306,18 @@ registry.k8s.io/pause:3.6
 ```
 # 在 Hub 上可以检查日志，查看是否生成 AnsibleJob
 $ oc -n open-cluster-management logs $(oc -n open-cluster-management get pods -l app=multicluster-operators-hub-subscription -o name)
+
+# 手工创建 AnsibleJob
+
+cat <<EOF | oc apply -f -
+---
+apiVersion: tower.ansible.com/v1alpha1
+kind: AnsibleJob
+metadata:
+  name: prejob-test
+spec:
+  tower_auth_secret: ansible-controller
+  job_template_name: Logger
+  extra_vars: {}
+EOF
 ```

@@ -1676,6 +1676,7 @@ oc get appliedmanifestworks.work.open-cluster-management.io -A -o name | while r
 # 在 ACM Hub 上执行
 export CLUSTER_NAME=edge-1
 oc new-project ${CLUSTER_NAME}
+# 可选，在 ACM 2.6 上不执行这条命令
 oc label namespace ${CLUSTER_NAME} cluster.open-cluster-management.io/managedCluster=${CLUSTER_NAME}
 
 # 尝试设置 

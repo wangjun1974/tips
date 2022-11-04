@@ -20,6 +20,7 @@ rm -rf /var/lib/kubelet/pods/${POD_UUID}/volumes/kubernetes.io~csi/pvc-bbbbbbbb-
 
 ### 在 ACM Search 功能不好用的情况下，删除 statefulset search-redisgraph
 https://access.redhat.com/documentation/en-us/red_hat_advanced_cluster_management_for_kubernetes/2.2/html/troubleshooting/troubleshooting
+https://bugzilla.redhat.com/show_bug.cgi?id=2042210
 ```
 # 首先确认 search pod 是否处于 Pending 状态
 

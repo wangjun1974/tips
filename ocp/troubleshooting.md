@@ -17,3 +17,14 @@ rm -rf /var/lib/kubelet/pods/${POD_UUID}/volumes/kubernetes.io~csi/pvc-bbbbbbbb-
 ### 找到 vol_data.json
 ### 删除 vol_data.json 及目录
 ```
+
+### 在 ACM Search 功能不好用的情况下，删除 statefulset search-redisgraph
+https://access.redhat.com/documentation/en-us/red_hat_advanced_cluster_management_for_kubernetes/2.2/html/troubleshooting/troubleshooting
+```
+# 首先确认 search pod 是否处于 Pending 状态
+
+# 如果 search pod 处于 Pending 状态，再检查 pvc search-redisgraph-pvc-0 是否存在
+
+# 如果 pvc search-redisgraph-pvc-0 不存在就删除 statefulset search-redisgraph
+oc delete statefulset search-redisgraph -n open-cluster-management
+```

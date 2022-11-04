@@ -28,4 +28,6 @@ https://bugzilla.redhat.com/show_bug.cgi?id=2042210
 
 # 如果 pvc search-redisgraph-pvc-0 不存在就删除 statefulset search-redisgraph
 oc delete statefulset search-redisgraph -n open-cluster-management
+
+# 如果问题仍未得到解决，可以删除并重建 open-cluster-management 下的 search-api, search-collector, search-controller 和 search-aggregator
 ```

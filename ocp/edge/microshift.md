@@ -2322,3 +2322,23 @@ spec:
   extra_vars: {}
 EOF
 ```
+
+### 获取 ACM search 组件状态及日志
+```
+# 获取 search 组件
+$ oc -n open-cluster-management get pods | grep search 
+
+# 查看 search-api 日志
+$ oc -n open-cluster-management logs $(oc -n open-cluster-management get pods -l component=search-api -o name | head -1)
+$ oc -n open-cluster-management logs $(oc -n open-cluster-management get pods -l component=search-api -o name | tail -1)
+
+# 查看 search-collector 日志
+$ oc -n open-cluster-management logs $(oc -n open-cluster-management get pods -l component=search-collector -o name)
+
+# 查看 search-aggregator 日志
+$ oc -n open-cluster-management logs $(oc -n open-cluster-management get pods -l component=search-aggregator -o name)
+
+# 查看 redisgraph 日志
+$ oc -n open-cluster-management logs $(oc -n open-cluster-management get pods -l component=redisgraph -o name)
+
+```

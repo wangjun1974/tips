@@ -2342,3 +2342,30 @@ $ oc -n open-cluster-management logs $(oc -n open-cluster-management get pods -l
 $ oc -n open-cluster-management logs $(oc -n open-cluster-management get pods -l component=redisgraph -o name)
 
 ```
+
+### Hypershift 有哪些 namespace
+```
+[junwang@JundeMacBook-Pro ~]$ oc get project | grep -Ev "^openshift" 
+NAME                                               DISPLAY NAME   STATUS
+clusters                                                          Active
+clusters-development                                              Active
+default                                                           Active
+default-broker                                                    Active
+development                                                       Active
+gitea                                                             Active
+hive                                                              Active
+hypershift                                                        Active
+klusterlet-development                                            Active
+kube-node-lease                                                   Active
+kube-public                                                       Active
+kube-system                                                       Active
+local-cluster                                                     Active
+multicluster-engine                                               Active
+open-cluster-management                                           Active
+open-cluster-management-agent                                     Active
+open-cluster-management-agent-addon                               Active
+open-cluster-management-global-set                                Active
+open-cluster-management-hub                                       Active
+
+
+```

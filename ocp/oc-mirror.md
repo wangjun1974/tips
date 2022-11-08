@@ -1282,4 +1282,17 @@ mirror:
 EOF
 /usr/local/bin/oc-mirror --config ./imageset-config.yaml file://output-dir
 
+# 尝试同步 demo vm image 
+# Operator 已经用 oc-mirror 的手段同步到离线 registry 里了
+# docker.io/kubevirt/cirros-registry-disk-demo:latest
+# docker.io/kubevirt/fedora-cloud-registry-disk-demo:latest
+$ cat > image-config-realse-local.yaml <<EOF
+apiVersion: mirror.openshift.io/v1alpha2
+kind: ImageSetConfiguration
+mirror:
+  additionalImages: # List of additional images to be included in imageset
+    - name: docker.io/kubevirt/cirros-registry-disk-demo:latest
+    - name: docker.io/kubevirt/fedora-cloud-registry-disk-demo:latest
+EOF
+$ /usr/local/bin/oc-mirror --config ./image-config-realse-local.yaml file://output-dir 2>&1 | tee /tmp/err 
 ```

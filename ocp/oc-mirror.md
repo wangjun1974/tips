@@ -1295,4 +1295,7 @@ mirror:
     - name: docker.io/kubevirt/fedora-cloud-registry-disk-demo:latest
 EOF
 $ /usr/local/bin/oc-mirror --config ./image-config-realse-local.yaml file://output-dir 2>&1 | tee /tmp/err 
+# 拷贝 output-dir/mirror_seq1_000000.tar 到离线环境并上传到离线 registry
+$ /usr/local/bin/oc-mirror --from /tmp/mirror_seq1_000000.tar docker://registry.example.com:5000
+
 ```

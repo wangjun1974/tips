@@ -1077,7 +1077,7 @@ $ oc apply -f release-signatures/signature-sha256-fe4d499ac9fc7d12.json
 ### 不使用 storageConfig
 ### 20221010
 ### 检查 operator 的情况
-### for packagename in kubevirt-hyperconverged performance-addon-operator kubernetes-nmstate-operator sriov-network-operator local-storage-operator odf-operator cincinnati-operator advanced-cluster-management openshift-gitops-operator odf-lvm-operator multicluster-engine rhacs-operator ansible-automation-platform-operator
+### for packagename in kubevirt-hyperconverged performance-addon-operator kubernetes-nmstate-operator sriov-network-operator local-storage-operator odf-operator cincinnati-operator advanced-cluster-management openshift-gitops-operator odf-lvm-operator multicluster-engine rhacs-operator ansible-automation-platform-operator nfd node-healthcheck-operator metallb-operator sandboxed-containers-operator 
 ### do 
 ###  /usr/local/bin/oc-mirror list operators --catalog=registry.redhat.io/redhat/redhat-operator-index:v4.10 --package=${packagename}
 ### done
@@ -1104,27 +1104,27 @@ mirror:
         - name: kubernetes-nmstate-operator
           channels:
             - name: 'stable'
-              minVersion: '4.10.0-202210061437'
-              maxVersion: '4.10.0-202210061437'
+              minVersion: '4.10.0-202210211005'
+              maxVersion: '4.10.0-202210211005'
             - name: '4.10'
-              minVersion: '4.10.0-202210061437'
-              maxVersion: '4.10.0-202210061437'              
+              minVersion: '4.10.0-202210211005'
+              maxVersion: '4.10.0-202210211005'              
         - name: sriov-network-operator
           channels:
             - name: 'stable'
-              minVersion: '4.10.0-202210061437'
-              maxVersion: '4.10.0-202210061437'
+              minVersion: '4.10.0-202210250828'
+              maxVersion: '4.10.0-202210250828'
             - name: '4.10'
-              minVersion: '4.10.0-202210061437'
-              maxVersion: '4.10.0-202210061437'              
+              minVersion: '4.10.0-202210250828'
+              maxVersion: '4.10.0-202210250828'              
         - name: local-storage-operator
           channels:
             - name: 'stable'
-              minVersion: '4.10.0-202210061437'
-              maxVersion: '4.10.0-202210061437'
+              minVersion: '4.10.0-202210211005'
+              maxVersion: '4.10.0-202210211005'
             - name: '4.10'
-              minVersion: '4.10.0-202210061437'
-              maxVersion: '4.10.0-202210061437'              
+              minVersion: '4.10.0-202210211005'
+              maxVersion: '4.10.0-202210211005'              
         - name: odf-operator
           channels:
             - name: 'stable-4.10'
@@ -1141,19 +1141,19 @@ mirror:
         - name: advanced-cluster-management
           channels:
             - name: release-2.6
-              minVersion: 'v2.6.1'
-              maxVersion: 'v2.6.1'
+              minVersion: 'v2.6.2'
+              maxVersion: 'v2.6.2'
             - name: release-2.5
               minVersion: 'v2.5.4'
               maxVersion: 'v2.5.4'
             - name: release-2.4
-              minVersion: 'v2.4.7'
-              maxVersion: 'v2.4.7'             
+              minVersion: 'v2.4.8'
+              maxVersion: 'v2.4.8'             
         - name: openshift-gitops-operator
           channels:
             - name: latest
-              minVersion: 'v1.6.1'
-              maxVersion: 'v1.6.1'
+              minVersion: 'v1.6.2'
+              maxVersion: 'v1.6.2'
             - name: stable
               minVersion: 'v1.5.7'
               maxVersion: 'v1.5.7'
@@ -1165,8 +1165,8 @@ mirror:
         - name: multicluster-engine
           channels:
             - name: stable-2.1
-              minVersion: 'v2.1.1'
-              maxVersion: 'v2.1.1'
+              minVersion: 'v2.1.2'
+              maxVersion: 'v2.1.2'
             - name: stable-2.0
               minVersion: 'v2.0.4'
               maxVersion: 'v2.0.4'
@@ -1178,11 +1178,31 @@ mirror:
         - name: ansible-automation-platform-operator
           channels:
             - name: stable-2.2-cluster-scoped
-              minVersion: 'v2.2.1-0.1665471668'
-              maxVersion: 'v2.2.1-0.1665471668'
+              minVersion: 'v2.2.1-0.1665697003'
+              maxVersion: 'v2.2.1-0.1665697003'
             - name: stable-2.1-cluster-scoped
               minVersion: 'v2.1.3-0.1665688695'
               maxVersion: 'v2.1.3-0.1665688695'
+        - name: nfd
+          channels:
+            - name: stable
+              minVersion: '4.10.0-202210211005'
+              maxVersion: '4.10.0-202210211005'
+        - name: node-healthcheck-operator
+          channels:
+            - name: candidate
+              minVersion: 'v0.2.0'
+              maxVersion: 'v0.2.0'
+        - name: metallb-operator
+          channels:
+            - name: stable
+              minVersion: '4.10.0-202210211005'
+              maxVersion: '4.10.0-202210211005'
+        - name: sandboxed-containers-operator
+          channels:
+            - name: stable-1.3
+              minVersion: 'v1.3.1'
+              maxVersion: 'v1.3.1'
 EOF
 
 # 同步 operator 到本地

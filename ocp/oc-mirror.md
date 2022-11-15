@@ -1178,11 +1178,11 @@ mirror:
         - name: ansible-automation-platform-operator
           channels:
             - name: stable-2.2-cluster-scoped
-              minVersion: 'v2.2.1-0.1665697003'
-              maxVersion: 'v2.2.1-0.1665697003'
+              minVersion: 'v2.2.1-0.1667857587'
+              maxVersion: 'v2.2.1-0.1667857587'
             - name: stable-2.1-cluster-scoped
-              minVersion: 'v2.1.3-0.1665688695'
-              maxVersion: 'v2.1.3-0.1665688695'
+              minVersion: 'v2.1.3-0.1667853004'
+              maxVersion: 'v2.1.3-0.1667853004'
         - name: nfd
           channels:
             - name: stable

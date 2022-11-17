@@ -393,3 +393,18 @@ $ cat /var/named/168.192.in-addr.arpa.zone
 111.122.168.192.in-addr.arpa.    IN PTR      master-0.ocp4-2.example.com.
 
 ```
+
+### 考虑测试将 Assisted Service 与 Metal3 集成起来 
+```
+# 如果 BMC VirtualMedia 不支持 https 需要调整 Provisioning 的 spec.disableVirtualMediaTLS
+$ cat <<EOF | oc apply -f -
+apiVersion: metal3.io/v1alpha1
+kind: Provisioning
+metadata:
+  name: provisioning-configuration
+spec:
+  disableVirtualMediaTLS: true  <------------------ This flag downgrades to http on the bmc (virtual media mount)
+  provisioningNetwork: Disabled
+  watchAllNamespaces: true
+EOF
+```

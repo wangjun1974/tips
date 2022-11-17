@@ -408,3 +408,245 @@ spec:
   watchAllNamespaces: true
 EOF
 ```
+
+### 试试 BMC 与 Assisted Service 一起如何工作
+```
+# 创建 namespace
+$ cat <<EOF | oc apply -f -
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ocp4-3 
+  labels:
+    name: ocp4-3
+EOF
+
+# 创建 NMStateConfig
+# ip - SNO ip
+# mac-address - SNO mac address
+# labels - 用来选择 NMStateConfig 的 label，未来 LableSelector 会根据它来找到所需对象
+$ cat <<EOF | oc apply -f -
+apiVersion: agent-install.openshift.io/v1beta1
+kind: NMStateConfig
+metadata:
+  name: ocp4-3
+  namespace: ocp4-3
+  labels:
+    cluster-name: ocp4-3
+spec:
+  config:
+    interfaces:
+      - name: enp1s0
+        type: ethernet
+        state: up
+        ethernet:
+          auto-negotiation: true
+          duplex: full
+          speed: 10000
+        ipv4:
+          address:
+          - ip: 192.168.122.131
+            prefix-length: 24
+          enabled: true
+        mtu: 1500
+        mac-address: 52:54:00:d7:42:ac
+    dns-resolver:
+      config:
+        server:
+        - 192.168.122.12
+    routes:
+      config:
+      - destination: 192.168.122.0/24
+        next-hop-address: 192.168.122.1
+        next-hop-interface: ens3
+      - destination: 0.0.0.0/0
+        next-hop-address: 192.168.122.1
+        next-hop-interface: ens3
+        table-id: 254
+  interfaces:
+    - name: ens3
+      macAddress: "52:54:00:d7:42:ac"
+EOF
+
+# 创建 ssh private key secret
+$ cat <<EOF | oc apply -f -
+apiVersion: v1
+kind: Secret
+metadata:
+  name: assisted-deployment-ssh-private-key
+  namespace: ocp4-3
+stringData:
+  ssh-privatekey: |-
+$( cat /data/ocp-cluster/ocp4-3/ssh-key/id_rsa | sed -e 's/^/    /g' )
+type: Opaque
+EOF
+
+# 创建 pullsecret secret
+$ PULL_SECRET_FILE=/data/OCP-4.10.30/ocp/secret/pull-secret.json
+$ PULL_SECRET_STR=$( cat ${PULL_SECRET_FILE} )
+$ cat <<EOF | oc apply -f -
+apiVersion: v1
+kind: Secret
+metadata:
+  name: assisted-deployment-pull-secret
+  namespace: ocp4-3
+stringData: 
+  .dockerconfigjson: '${PULL_SECRET_STR}'
+EOF
+
+# 创建 AgentClusterInstall
+# 注意选择合法的 clusterNetwork
+$ SSH_PUBLIC_KEY_STR=$( cat /data/ocp-cluster/ocp4-3/ssh-key/id_rsa.pub )
+$ cat <<EOF | oc apply -f -
+apiVersion: extensions.hive.openshift.io/v1beta1
+kind: AgentClusterInstall
+metadata:
+  name: ocp4-3
+  namespace: ocp4-3
+spec:
+  clusterDeploymentRef:
+    name: ocp4-3
+  imageSetRef:
+    name: openshift-4.10.30
+  networking:
+    clusterNetwork:
+      - cidr: "10.128.0.0/14"
+        hostPrefix: 23
+    serviceNetwork:
+      - "172.31.0.0/16"
+    machineNetwork:
+      - cidr: "192.168.122.0/24"
+  provisionRequirements:
+    controlPlaneAgents: 1
+  sshPublicKey: '${SSH_PUBLIC_KEY_STR}'
+EOF
+
+# 创建 ClusterDeployment
+$ cat <<EOF | oc apply -f -
+apiVersion: hive.openshift.io/v1
+kind: ClusterDeployment
+metadata:
+  name: ocp4-3
+  namespace: ocp4-3
+spec:
+  baseDomain: example.com
+  clusterName: ocp4-3
+  installed: false
+  clusterInstallRef:
+    group: extensions.hive.openshift.io
+    kind: AgentClusterInstall
+    name: ocp4-3
+    version: v1beta1
+  platform:
+    agentBareMetal:
+      agentSelector:
+        matchLabels:
+          cluster-name: "ocp4-3"
+  pullSecretRef:
+    name: assisted-deployment-pull-secret
+EOF
+
+# 创建 KlusterletAddonConfig
+$ cat <<EOF | oc apply -f -
+apiVersion: agent.open-cluster-management.io/v1
+kind: KlusterletAddonConfig
+metadata:
+  name: ocp4-3
+  namespace: ocp4-3
+spec:
+  clusterName: ocp4-3
+  clusterNamespace: ocp4-3
+  clusterLabels:
+    cloud: auto-detect
+    vendor: auto-detect
+  applicationManager:
+    enabled: true
+  certPolicyController:
+    enabled: false
+  iamPolicyController:
+    enabled: false
+  policyController:
+    enabled: true
+  searchCollector:
+    enabled: false 
+EOF
+
+# 创建 ManagedCluster
+$ cat <<EOF | oc apply -f -
+apiVersion: cluster.open-cluster-management.io/v1
+kind: ManagedCluster
+metadata:
+  name: ocp4-3
+spec:
+  hubAcceptsClient: true
+EOF
+
+# 创建 InfraEnv
+# 在 SNO ZTP 流程里是否不需要 AgentSelector?
+# https://access.redhat.com/documentation/en-us/openshift_container_platform/4.11/html/scalability_and_performance/ztp-deploying-disconnected#ztp-manually-install-a-single-managed-cluster_ztp-deploying-disconnected
+$ SSH_PUBLIC_KEY_STR=$( cat /data/ocp-cluster/ocp4-3/ssh-key/id_rsa.pub )
+$ cat <<EOF | oc apply -f -
+apiVersion: agent-install.openshift.io/v1beta1
+kind: InfraEnv
+metadata:
+  name: ocp4-3
+  namespace: ocp4-3
+spec:
+  additionalNTPSources:
+    - ntp.example.com  
+  clusterRef:
+    name: ocp4-3
+    namespace: ocp4-3
+  sshAuthorizedKey: '${SSH_PUBLIC_KEY_STR}'
+  agentLabelSelector:
+    matchLabels:
+      cluster-name: "ocp4-3"
+  pullSecretRef:
+    name: assisted-deployment-pull-secret
+  ignitionConfigOverride: '{"ignition":{"version":"3.1.0"},"storage":{"files":[{"contents":{"source":"data:text/plain;charset=utf-8;base64,$(cat /tmp/registry.conf | base64 -w0)","verification":{}},"filesystem":"root","mode":420,"overwrite":true,"path":"/etc/containers/registries.conf"},{"contents":{"source":"data:text/plain;charset=utf-8;base64,$(cat /etc/pki/ca-trust/source/anchors/registry.crt | base64 -w0)","verification":{}},"filesystem":"root","mode":420,"overwrite":true,"path":"/etc/pki/ca-trust/source/anchors/registry.crt"}]}}'
+  nmStateConfigLabelSelector:
+    matchLabels:
+      cluster-name: ocp4-3
+EOF
+
+# 创建 bmc secret 
+$ cat <<EOF | oc apply -f -
+apiVersion: v1
+kind: Secret
+metadata:
+  name: ocp4-3-bmc-secret
+  namespace: ocp4-3
+type: Opaque
+data:
+  username: "YWRtaW4K"
+  password: "cmVkaGF0Cg=="
+EOF
+
+# 创建 BareMetalHost
+$ cat <<'EOF' | oc apply -f -
+apiVersion: metal3.io/v1alpha1
+kind: BareMetalHost
+metadata:
+  name: ocp4-3
+  namespace: ocp4-3
+  annotations:
+    inspect.metal3.io: disabled
+    bmac.agent-install.openshift.io/role: "master"
+  labels:
+    infraenvs.agent-install.openshift.io: "ocp4-3"
+spec:
+  bootMode: "UEFI"
+  bmc:
+    address: redfish-virtualmedia+http://192.168.122.1:8000/redfish/v1/Systems/d5c8e4f6-f5b6-4c31-a85b-4d6f9237d3a7
+    credentialsName: ocp4-3-bmc-secret
+    disableCertificateVerification: true
+  bootMACAddress: "52:54:00:d7:42:ac"
+  automatedCleaningMode: disabled
+  online: true
+EOF
+
+# 查看 metal3 日志
+$ oc -n openshift-machine-api logs $( oc get pods -n openshift-machine-api -l baremetal.openshift.io/cluster-baremetal-operator='metal3-state' -o name ) -c metal3-baremetal-operator
+$ oc -n openshift-machine-api logs $( oc get pods -n openshift-machine-api -l baremetal.openshift.io/cluster-baremetal-operator='metal3-state' -o name ) -c metal3-ironic-conductor 
+
+```

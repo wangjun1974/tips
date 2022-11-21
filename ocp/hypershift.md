@@ -1,5 +1,5 @@
 ### 启用 Hosted control planes 这个 Technical Preview 的功能
-
+https://access.redhat.com/documentation/en-us/red_hat_advanced_cluster_management_for_kubernetes/2.6/html-single/multicluster_engine/index#hosted-control-planes-intro<br>
 ```
 # 首先获取 mce 实例
 $ oc get mce 
@@ -31,11 +31,6 @@ https://hypershift-docs.netlify.app/how-to/agent/create-agent-cluster/
 # 测试一下 HyperShift with Agent CAPI
 
 # 获取 HyperShift Client
-export HYPERSHIFT_RELEASE=4.10
-
-podman cp $(podman create --name hypershift --rm --pull always quay.io/hypershift/hypershift-operator:${HYPERSHIFT_RELEASE}):/usr/bin/hypershift /tmp/hypershift && podman rm -f hypershift
-
-sudo install -m 0755 -o root -g root /tmp/hypershift /usr/local/bin/hypershift
 
 # 1. 启用 Agent Installer (Assisted Service)
 # 创建 Provisioning 对象
@@ -172,6 +167,28 @@ spec:
       url: "http://yum.example.com:8080/ocp/rhcos/rhcos-4.10.16-x86_64-live.x86_64.iso"
       cpuArchitecture: "x86_64"
 EOF
+
+# 检查一下 structure-operator 日志
+$ oc -n multicluster-engine logs $( oc get pods -n multicluster-engine -l control-plane='infrastructure-operator' -o name )
+
+# 正常创建之后会有 agent 相关的 pod 被创建出来
+$ oc get pods -n multicluster-engine 
+
+# 创建 ClusterImageSet 
+$ cat <<EOF | oc apply -f -
+apiVersion: hive.openshift.io/v1
+kind: ClusterImageSet
+metadata:
+  name: openshift-4.10.30
+  namespace: multicluster-engine
+spec:
+   releaseImage: registry.example.com:5000/openshift/release-images:4.10.30-x86_64
+EOF
+
+# 获取 HyperShift Client
+$ export HYPERSHIFT_RELEASE=4.10
+$ podman cp $(podman create --name hypershift --rm --pull always quay.io/hypershift/hypershift-operator:${HYPERSHIFT_RELEASE}):/usr/bin/hypershift /tmp/hypershift && podman rm -f hypershift
+$ sudo install -m 0755 -o root -g root /tmp/hypershift /usr/local/bin/hypershift
 
 
 ```

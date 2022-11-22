@@ -176,14 +176,24 @@ spec:
 EOF
 
 # 安装 hypershift client
+# 我想安装 4.10.30 的 HostedCluster，因此需要用较旧版本的 hypershift-client，尝试这个步骤
+# 用 oc-mirror 同步 quay.io/openshifttest/hypershift-client:4.10 到离线 registry
+$ export HYPERSHIFT_RELEASE=4.10
+$ podman cp $(podman create --name hypershift --rm --pull always quay.io/hypershift/hypershift-operator:${HYPERSHIFT_RELEASE}):/usr/bin/hypershift /tmp/hypershift && podman rm -f hypershift
+$ sudo install -m 0755 -o root -g root /tmp/hypershift /usr/local/bin/hypershift
+
+
+# 如果考虑用更新版本，可以用以下步骤
 # 用 oc-mirror 同步 quay.io/openshifttest/hypershift-client:latest 到离线 registry
 $ cd /tmp
 $ oc image extract registry.example.com:5000/openshifttest/hypershift-client:latest --file=/hypershift
 $ sudo install -m 0755 -o root -g root /tmp/hypershift /usr/local/bin/hypershift
 
+
 # 安装 hypershift operator
 # 用 oc-mirror 同步 quay.io/hypershift/hypershift-operator:latest 到离线 registry
-$ hypershift install --hypershift-image "quay.io/hypershift/hypershift-operator:latest"
+$ export ADDITIONAL_TRUST_BUNDLE=/etc/pki/ca-trust/source/anchors/registry.crt
+$ hypershift install --hypershift-image "quay.io/hypershift/hypershift-operator:4.10" --additional-trust-bundle=/etc/pki/ca-trust/source/anchors/registry.crt
 $ oc get pods -n hypershift
 NAME                        READY   STATUS    RESTARTS   AGE
 operator-666765c55f-bm556   1/1     Running   0          3m43s
@@ -239,22 +249,36 @@ spec:
 EOF
 
 # 创建 hosted cluster
-export CLUSTERS_NAMESPACE="clusters"
-export HOSTED_CLUSTER_NAME="ocp4-3"
-export HOSTED_CONTROL_PLANE_NAMESPACE="${HOSTED_CLUSTER_NAME}"
-export BASEDOMAIN="example.com"
-export PULL_SECRET_FILE=/data/OCP-4.10.30/ocp/secret/redhat-pull-secret.json
-export OCP_RELEASE=4.10.30-x86_64
-export MACHINE_CIDR=192.168.122.0/24
-export ADDITIONAL_TRUST_BUNDLE=/etc/pki/ca-trust/source/anchors/registry.crt
+$ export CLUSTERS_NAMESPACE="clusters"
+$ export HOSTED_CLUSTER_NAME="ocp4-3"
+$ export HOSTED_CONTROL_PLANE_NAMESPACE="${HOSTED_CLUSTER_NAME}"
+$ export BASEDOMAIN="example.com"
+$ export PULL_SECRET_FILE=/data/OCP-4.10.30/ocp/secret/redhat-pull-secret.json
+$ export OCP_RELEASE=4.10.30-x86_64
+$ export MACHINE_CIDR=192.168.122.0/24
 
+# 4.10 版 hypershift
+$ hypershift create cluster agent \
+    --name=${HOSTED_CLUSTER_NAME} \
+    --pull-secret=${PULL_SECRET_FILE} \
+    --agent-namespace=${HOSTED_CONTROL_PLANE_NAMESPACE} \
+    --base-domain=${BASEDOMAIN} \
+    --release-image=registry.example.com:5000/openshift/release-images:${OCP_RELEASE}
+
+# 4.11 版 hypershift 支持 --api-server-address 参数
 $ hypershift create cluster agent \
     --name=${HOSTED_CLUSTER_NAME} \
     --pull-secret=${PULL_SECRET_FILE} \
     --agent-namespace=${HOSTED_CONTROL_PLANE_NAMESPACE} \
     --base-domain=${BASEDOMAIN} \
     --api-server-address=api.${HOSTED_CLUSTER_NAME}.${BASEDOMAIN} \
-    --additional-trust-bundle=${ADDITIONAL_TRUST_BUNDLE} \
+    --release-image=registry.example.com:5000/openshift/release-images:${OCP_RELEASE}
+
+$ hypershift create cluster agent \
+    --name=${HOSTED_CLUSTER_NAME} \
+    --pull-secret=${PULL_SECRET_FILE} \
+    --agent-namespace=${HOSTED_CONTROL_PLANE_NAMESPACE} \
+    --base-domain=${BASEDOMAIN} \
     --release-image=registry.example.com:5000/openshift/release-images:${OCP_RELEASE}
 
 

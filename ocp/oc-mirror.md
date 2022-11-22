@@ -1344,7 +1344,7 @@ $ /usr/local/bin/oc-mirror --config ./image-config-realse-local.yaml file://outp
 # 拷贝 output-dir/mirror_seq1_000000.tar 到离线环境并上传到离线 registry
 $ /usr/local/bin/oc-mirror --from /tmp/mirror_seq1_000000.tar docker://registry.example.com:5000
 
-# 同步一下
+# 同步一下 4.11 release image
 $ cat > image-config-realse-local.yaml <<EOF
 apiVersion: mirror.openshift.io/v1alpha2
 kind: ImageSetConfiguration
@@ -1358,5 +1358,108 @@ mirror:
     graph: true # Include Cincinnati upgrade graph image in imageset
 EOF
 $ /usr/local/bin/oc-mirror --config ./image-config-realse-local.yaml file://output-dir 2>&1 | tee /tmp/err 
+# 拷贝 output-dir/mirror_seq1_000000.tar 到离线环境并上传到离线 registry
+$ /usr/local/bin/oc-mirror --from /tmp/mirror_seq1_000000.tar docker://registry.example.com:5000
+
+
+### 检查 operator 的情况
+### for packagename in kubevirt-hyperconverged performance-addon-operator kubernetes-nmstate-operator sriov-network-operator local-storage-operator odf-operator cincinnati-operator advanced-cluster-management openshift-gitops-operator odf-lvm-operator multicluster-engine rhacs-operator ansible-automation-platform-operator nfd node-healthcheck-operator metallb-operator sandboxed-containers-operator 
+### do 
+###  /usr/local/bin/oc-mirror list operators --catalog=registry.redhat.io/redhat/redhat-operator-index:v4.11 --package=${packagename}
+### done
+### 同步 operator 
+### catalog 是 registry.redhat.io/redhat/redhat-operator-index:v4.11
+$ cat > image-config-realse-local.yaml <<EOF
+apiVersion: mirror.openshift.io/v1alpha2
+kind: ImageSetConfiguration
+mirror:
+  operators:
+    - catalog: registry.redhat.io/redhat/redhat-operator-index:v4.11
+      packages:
+        - name: kubevirt-hyperconverged
+          channels:
+            - name: 'stable'
+              minVersion: 'v4.11.0'
+              maxVersion: 'v4.11.0'            
+        - name: kubernetes-nmstate-operator
+          channels:
+            - name: 'stable'
+              minVersion: '4.11.0-202210262118'
+              maxVersion: '4.11.0-202210262118'              
+        - name: sriov-network-operator
+          channels:
+            - name: 'stable'
+              minVersion: '4.11.0-202210262118'
+              maxVersion: '4.11.0-202210262118'            
+        - name: local-storage-operator
+          channels:
+            - name: 'stable'
+              minVersion: '4.11.0-202210262118'
+              maxVersion: '4.11.0-202210262118'            
+        - name: odf-operator
+          channels:
+            - name: 'stable-4.11'
+              minVersion: 'v4.11.3'
+              maxVersion: 'v4.11.3'
+        - name: cincinnati-operator
+          channels:
+            - name: v1
+              minVersion: 'v5.0.0'
+              maxVersion: 'v5.0.0'
+        - name: advanced-cluster-management
+          channels:
+            - name: release-2.6
+              minVersion: 'v2.6.2'
+              maxVersion: 'v2.6.2'         
+        - name: openshift-gitops-operator
+          channels:
+            - name: latest
+              minVersion: 'v1.6.2'
+              maxVersion: 'v1.6.2'
+        - name: odf-lvm-operator
+          channels:
+            - name: stable-4.11
+              minVersion: 'v4.11.3'
+              maxVersion: 'v4.11.3'
+        - name: multicluster-engine
+          channels:
+            - name: stable-2.1
+              minVersion: 'v2.1.2'
+              maxVersion: 'v2.1.2'
+        - name: rhacs-operator
+          channels:
+            - name: latest
+              minVersion: 'v3.72.1'
+              maxVersion: 'v3.72.1'
+        - name: ansible-automation-platform-operator
+          channels:
+            - name: stable-2.2-cluster-scoped
+              minVersion: 'v2.2.1-0.1667857587'
+              maxVersion: 'v2.2.1-0.1667857587'
+        - name: nfd
+          channels:
+            - name: stable
+              minVersion: '4.11.0-202210262118'
+              maxVersion: '4.11.0-202210262118'
+        - name: node-healthcheck-operator
+          channels:
+            - name: stable
+              minVersion: 'v0.3.1'
+              maxVersion: 'v0.3.1'
+        - name: metallb-operator
+          channels:
+            - name: stable
+              minVersion: '4.11.0-202210262118'
+              maxVersion: '4.11.0-202210262118'
+        - name: sandboxed-containers-operator
+          channels:
+            - name: stable-1.3
+              minVersion: 'v1.3.1'
+              maxVersion: 'v1.3.1'
+EOF
+$ /usr/local/bin/oc-mirror --config ./image-config-realse-local.yaml file://output-dir 2>&1 | tee /tmp/err 
+# 拷贝 output-dir/mirror_seq1_000000.tar 到离线环境并上传到离线 registry
+$ /usr/local/bin/oc-mirror --from /tmp/mirror_seq1_000000.tar docker://registry.example.com:5000
+
 
 ```

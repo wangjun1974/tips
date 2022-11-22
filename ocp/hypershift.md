@@ -13,22 +13,12 @@ $ oc patch mce multiclusterengine --type=merge -p '{"spec":{"overrides":{"compon
 $ oc get pods -n multicluster-engine | grep hypershift
 hypershift-addon-manager-7c6b79bb77-sd9dr              1/1     Running   0             86s
 hypershift-deployment-controller-dcd744745-s79fm       1/1     Running   0             86s
-
-
 ```
 
-### 如何检查 hypershift 相关的日志
-```
-# 查看 hypershift-addon-manager 的日志
-$ oc -n multicluster-engine logs $( oc -n multicluster-engine get pods -l app=hypershift-addon-manager -o name )
-
-# 查看 hypershift-addon-manager 的日志
-```
-
-### HyperShift with Agent CAPI
+### HyperShift with Agent CAPI + BareMetalHost + StaticIP
 https://hypershift-docs.netlify.app/how-to/agent/create-agent-cluster/ 
 ```
-# 测试一下 HyperShift with Agent CAPI
+# 测试一下 HyperShift with Agent CAPI + BareMetalHost + StaticIP
 
 # 获取 HyperShift Client
 
@@ -168,7 +158,7 @@ spec:
       cpuArchitecture: "x86_64"
 EOF
 
-# 检查一下 structure-operator 日志
+# 检查一下 infrastructure-operator 日志
 $ oc -n multicluster-engine logs $( oc get pods -n multicluster-engine -l control-plane='infrastructure-operator' -o name )
 
 # 正常创建之后会有 agent 相关的 pod 被创建出来
@@ -185,10 +175,173 @@ spec:
    releaseImage: registry.example.com:5000/openshift/release-images:4.10.30-x86_64
 EOF
 
-# 获取 HyperShift Client
-$ export HYPERSHIFT_RELEASE=4.10
-$ podman cp $(podman create --name hypershift --rm --pull always quay.io/hypershift/hypershift-operator:${HYPERSHIFT_RELEASE}):/usr/bin/hypershift /tmp/hypershift && podman rm -f hypershift
+# 安装 hypershift client
+# 用 oc-mirror 同步 quay.io/openshifttest/hypershift-client:latest 到离线 registry
+$ cd /tmp
+$ oc image extract registry.example.com:5000/openshifttest/hypershift-client:latest --file=/hypershift
 $ sudo install -m 0755 -o root -g root /tmp/hypershift /usr/local/bin/hypershift
 
+# 安装 hypershift operator
+# 用 oc-mirror 同步 quay.io/hypershift/hypershift-operator:latest 到离线 registry
+$ hypershift install --hypershift-image "quay.io/hypershift/hypershift-operator:latest"
+$ oc get pods -n hypershift
+NAME                        READY   STATUS    RESTARTS   AGE
+operator-666765c55f-bm556   1/1     Running   0          3m43s
 
+# 创建 namespace
+$ oc create ns ${HOSTED_CONTROL_PLANE_NAMESPACE}
+
+# 创建 NMStateConfig
+# ip - worker ip
+# mac-address - worker mac address
+# labels - 用来选择 NMStateConfig 的 label，未来 InfraEnv 会根据 LabelSelector 来找到所需的 NMStateConfig 对象
+$ cat <<EOF | oc apply -f -
+apiVersion: agent-install.openshift.io/v1beta1
+kind: NMStateConfig
+metadata:
+  name: worker-0
+  namespace: ocp4-3
+  labels:
+    cluster-name: ocp4-3
+spec:
+  config:
+    interfaces:
+      - name: enp1s0
+        type: ethernet
+        state: up
+        ethernet:
+          auto-negotiation: true
+          duplex: full
+          speed: 10000
+        ipv4:
+          address:
+          - ip: 192.168.122.131
+            prefix-length: 24
+          enabled: true
+        mtu: 1500
+        mac-address: 52:54:00:d7:42:ac
+    dns-resolver:
+      config:
+        server:
+        - 192.168.122.12
+    routes:
+      config:
+      - destination: 192.168.122.0/24
+        next-hop-address: 192.168.122.1
+        next-hop-interface: enp1s0
+      - destination: 0.0.0.0/0
+        next-hop-address: 192.168.122.1
+        next-hop-interface: enp1s0
+        table-id: 254
+  interfaces:
+    - name: enp1s0
+      macAddress: "52:54:00:d7:42:ac"
+EOF
+
+# 创建 hosted cluster
+export CLUSTERS_NAMESPACE="clusters"
+export HOSTED_CLUSTER_NAME="ocp4-3"
+export HOSTED_CONTROL_PLANE_NAMESPACE="${HOSTED_CLUSTER_NAME}"
+export BASEDOMAIN="example.com"
+export PULL_SECRET_FILE=/data/OCP-4.10.30/ocp/secret/redhat-pull-secret.json
+export OCP_RELEASE=4.10.30-x86_64
+export MACHINE_CIDR=192.168.122.0/24
+export ADDITIONAL_TRUST_BUNDLE=/etc/pki/ca-trust/source/anchors/registry.crt
+
+$ hypershift create cluster agent \
+    --name=${HOSTED_CLUSTER_NAME} \
+    --pull-secret=${PULL_SECRET_FILE} \
+    --agent-namespace=${HOSTED_CONTROL_PLANE_NAMESPACE} \
+    --base-domain=${BASEDOMAIN} \
+    --api-server-address=api.${HOSTED_CLUSTER_NAME}.${BASEDOMAIN} \
+    --additional-trust-bundle=${ADDITIONAL_TRUST_BUNDLE} \
+    --release-image=registry.example.com:5000/openshift/release-images:${OCP_RELEASE}
+
+
+$ PULL_SECRET_STR=$( cat ${PULL_SECRET_FILE} )
+$ cat <<EOF | oc apply -f -
+apiVersion: v1
+kind: Secret
+metadata:
+  name: assisted-deployment-pull-secret
+  namespace: ocp4-3
+stringData: 
+  .dockerconfigjson: '${PULL_SECRET_STR}'
+EOF
+
+$ SSH_PUBLIC_KEY_STR=$( cat /data/ocp-cluster/ocp4-3/ssh-key/id_rsa.pub )
+$ cat <<EOF | oc apply -f -
+apiVersion: agent-install.openshift.io/v1beta1
+kind: InfraEnv
+metadata:
+  name: ocp4-3
+  namespace: ocp4-3
+spec:
+  additionalNTPSources:
+    - ntp.example.com  
+  sshAuthorizedKey: '${SSH_PUBLIC_KEY_STR}'
+  agentLabelSelector:
+    matchLabels:
+      cluster-name: "ocp4-3"
+  pullSecretRef:
+    name: assisted-deployment-pull-secret
+  ignitionConfigOverride: '{"ignition":{"version":"3.1.0"},"storage":{"files":[{"contents":{"source":"data:text/plain;charset=utf-8;base64,$(cat /tmp/registry.conf | base64 -w0)","verification":{}},"filesystem":"root","mode":420,"overwrite":true,"path":"/etc/containers/registries.conf"},{"contents":{"source":"data:text/plain;charset=utf-8;base64,$(cat /etc/pki/ca-trust/source/anchors/registry.crt | base64 -w0)","verification":{}},"filesystem":"root","mode":420,"overwrite":true,"path":"/etc/pki/ca-trust/source/anchors/registry.crt"}]}}'
+  nmStateConfigLabelSelector:
+    matchLabels:
+      cluster-name: ocp4-3
+EOF
+
+$ oc -n ${HOSTED_CONTROL_PLANE_NAMESPACE} get InfraEnv ${HOSTED_CLUSTER_NAME} -ojsonpath="{.status.isoDownloadURL}"
+
+$ cat <<EOF | oc apply -f -
+apiVersion: v1
+kind: Secret
+metadata:
+  name: worker-0-bmc-secret
+  namespace: ocp4-3
+type: Opaque
+data:
+  username: "YWRtaW4K"
+  password: "cmVkaGF0Cg=="
+EOF
+
+$ WORKER_NAME="worker-0"
+$ envsubst <<"EOF" | oc apply -f -
+apiVersion: metal3.io/v1alpha1
+kind: BareMetalHost
+metadata:
+  name: worker-0
+  namespace: ocp4-3
+  annotations:
+    inspect.metal3.io: disabled
+    bmac.agent-install.openshift.io/hostname: ${WORKER_NAME}
+  labels:
+    infraenvs.agent-install.openshift.io: "ocp4-3"
+spec:
+  bootMode: "UEFI"
+  bmc:
+    address: redfish-virtualmedia+http://192.168.122.1:8000/redfish/v1/Systems/d5c8e4f6-f5b6-4c31-a85b-4d6f9237d3a7
+    credentialsName: worker-0-bmc-secret
+    disableCertificateVerification: true
+  bootMACAddress: "52:54:00:d7:42:ac"
+  automatedCleaningMode: disabled
+  online: true
+EOF
+
+$ oc -n ${HOSTED_CONTROL_PLANE_NAMESPACE} get bmh
+NAME     STATE         CONSUMER   ONLINE   ERROR   AGE
+ocp4-3   provisioned              true             70s
+
+$ oc -n ${HOSTED_CONTROL_PLANE_NAMESPACE} get agent
+
+
+```
+
+### 查看日志
+```
+# 查看 hypershift operator 的日志
+$ oc -n hypershift logs $( oc get pods -n hypershift -l app='operator' -o name )
+
+# 查看 hypershift-addon-manager 的日志
+$ oc -n multicluster-engine logs $( oc -n multicluster-engine get pods -l app=hypershift-addon-manager -o name )
 ```

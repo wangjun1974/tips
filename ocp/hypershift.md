@@ -1,3 +1,7 @@
+### 状态：Pending
+目前看按照链接 `https://hypershift-docs.netlify.app/how-to/agent/create-agent-cluster/` 里的步骤，需要 4.11，因此开始同步 ocp 4.11 release image 到离线 registry
+ 
+
 ### 启用 Hosted control planes 这个 Technical Preview 的功能
 https://access.redhat.com/documentation/en-us/red_hat_advanced_cluster_management_for_kubernetes/2.6/html-single/multicluster_engine/index#hosted-control-planes-intro<br>
 ```

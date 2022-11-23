@@ -1332,17 +1332,17 @@ $ /usr/local/bin/oc-mirror --config ./image-config-realse-local.yaml file://outp
 $ /usr/local/bin/oc-mirror --from /tmp/mirror_seq1_000000.tar docker://registry.example.com:5000
 
 # 尝试同步 hypershift-operator
-# quay.io/hypershift/hypershift-operator:4.10
+# quay.io/hypershift/hypershift-operator:latest
 $ cat > image-config-realse-local.yaml <<EOF
 apiVersion: mirror.openshift.io/v1alpha2
 kind: ImageSetConfiguration
 mirror:
   additionalImages: # List of additional images to be included in imageset
-    - name: quay.io/hypershift/hypershift-operator:4.10
+    - name: quay.io/hypershift/hypershift-operator:latest
 EOF
 $ /usr/local/bin/oc-mirror --config ./image-config-realse-local.yaml file://output-dir 2>&1 | tee /tmp/err 
 # 拷贝 output-dir/mirror_seq1_000000.tar 到离线环境并上传到离线 registry
-$ /usr/local/bin/oc-mirror --from /tmp/mirror_seq1_000000.tar docker://registry.example.com:5000
+$ /usr/local/bin/oc-mirror --from ./mirror_seq1_000000.tar docker://registry.example.com:5000
 
 # 同步一下 4.11 release image
 $ cat > image-config-realse-local.yaml <<EOF

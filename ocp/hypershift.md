@@ -1,10 +1,10 @@
 ### 状态：Progressing
 ```
 # 目前看按照链接 "https://hypershift-docs.netlify.app/how-to/agent/create-agent-cluster/" 里的步骤，需要 Hub Cluster 和 Hosted Cluster 为 4.11
-# 同步 OCP 4.11.5 release image 到离线 registry
-# 同步 registry.redhat.io/redhat/redhat-operator-index:v4.11 的部分 operator 到离线 registry
-# 安装 Hub OCP 4.11.5
-# 安装 ACM 2.6.2 和 MCE 2.1.2
+# Done: 同步 OCP 4.11.5 release image 到离线 registry 
+# Done: 同步 registry.redhat.io/redhat/redhat-operator-index:v4.11 的部分 operator 到离线 registry
+# Done: 安装 Hub OCP 4.11.5
+# Done: 安装 ACM 2.6.2 和 MCE 2.1.2
 ```
  
 

@@ -7,6 +7,7 @@ kind: Provisioning
 metadata:
   name: provisioning-configuration
 spec:
+  disableVirtualMediaTLS: true
   provisioningNetwork: Disabled
   watchAllNamespaces: true
 EOF

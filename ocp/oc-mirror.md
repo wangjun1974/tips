@@ -1333,12 +1333,14 @@ $ /usr/local/bin/oc-mirror --from /tmp/mirror_seq1_000000.tar docker://registry.
 
 # 尝试同步 hypershift-operator
 # quay.io/hypershift/hypershift-operator:latest
+# quay.io/hypershift/hypershift-operator:4.11
 $ cat > image-config-realse-local.yaml <<EOF
 apiVersion: mirror.openshift.io/v1alpha2
 kind: ImageSetConfiguration
 mirror:
   additionalImages: # List of additional images to be included in imageset
     - name: quay.io/hypershift/hypershift-operator:latest
+    - name: quay.io/hypershift/hypershift-operator:4.11
 EOF
 $ /usr/local/bin/oc-mirror --config ./image-config-realse-local.yaml file://output-dir 2>&1 | tee /tmp/err 
 # 拷贝 output-dir/mirror_seq1_000000.tar 到离线环境并上传到离线 registry
@@ -1474,8 +1476,8 @@ mirror:
   platform:
     channels:
       - name: candidate-4.12
-        minVersion: 4.12.0-rc1
-        maxVersion: 4.12.0-rc1
+        minVersion: 4.12.0-rc.1
+        maxVersion: 4.12.0-rc.1
         shortestPath: true
     graph: true # Include Cincinnati upgrade graph image in imageset
 EOF

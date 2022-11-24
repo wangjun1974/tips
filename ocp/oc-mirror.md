@@ -1466,6 +1466,24 @@ $ /usr/local/bin/oc-mirror --config ./image-config-realse-local.yaml file://outp
 # 拷贝 output-dir/mirror_seq1_000000.tar 到离线环境并上传到离线 registry
 $ /usr/local/bin/oc-mirror --from /tmp/mirror_seq1_000000.tar docker://registry.example.com:5000
 
+# 同步一下 4.12 release image
+$ cat > image-config-realse-local.yaml <<EOF
+apiVersion: mirror.openshift.io/v1alpha2
+kind: ImageSetConfiguration
+mirror:
+  platform:
+    channels:
+      - name: candidate-4.12
+        minVersion: 4.12.0-rc1
+        maxVersion: 4.12.0-rc1
+        shortestPath: true
+    graph: true # Include Cincinnati upgrade graph image in imageset
+EOF
+$ /usr/local/bin/oc-mirror --config ./image-config-realse-local.yaml file://output-dir 2>&1 | tee /tmp/err 
+# 拷贝 output-dir/mirror_seq1_000000.tar 到离线环境并上传到离线 registry
+$ /usr/local/bin/oc-mirror --from ./mirror_seq1_000000.tar docker://registry.example.com:5000
+
+
 ### 检查 operator 的情况
 ### for packagename in kubevirt-hyperconverged performance-addon-operator kubernetes-nmstate-operator sriov-network-operator local-storage-operator odf-operator cincinnati-operator advanced-cluster-management openshift-gitops-operator odf-lvm-operator multicluster-engine rhacs-operator ansible-automation-platform-operator nfd node-healthcheck-operator metallb-operator sandboxed-containers-operator openshift-special-resource-operator 
 ### do 

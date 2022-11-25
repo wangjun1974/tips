@@ -459,13 +459,13 @@ spec:
       config:
       - destination: 192.168.122.0/24
         next-hop-address: 192.168.122.1
-        next-hop-interface: ens3
+        next-hop-interface: enp1s0
       - destination: 0.0.0.0/0
         next-hop-address: 192.168.122.1
-        next-hop-interface: ens3
+        next-hop-interface: enp1s0
         table-id: 254
   interfaces:
-    - name: ens3
+    - name: enp1s0
       macAddress: "52:54:00:d7:42:ac"
 EOF
 

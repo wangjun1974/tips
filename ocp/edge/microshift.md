@@ -2369,3 +2369,15 @@ open-cluster-management-hub                                       Active
 
 
 ```
+
+### ACM/MCE 相关的 console plugin
+```
+# 确认 plugin 存在
+$ oc get consoleplugin
+NAME   AGE
+acm    4d15h
+mce    4d15h
+# 确认 plugin 启用
+$ oc get consoles.operator.openshift.io cluster -o jsonpath='{.spec.plugins}'
+["mce","acm"]
+```

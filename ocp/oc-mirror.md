@@ -1365,7 +1365,7 @@ $ /usr/local/bin/oc-mirror --from /tmp/mirror_seq1_000000.tar docker://registry.
 
 
 ### 检查 operator 的情况
-### for packagename in kubevirt-hyperconverged performance-addon-operator kubernetes-nmstate-operator sriov-network-operator local-storage-operator odf-operator cincinnati-operator advanced-cluster-management openshift-gitops-operator odf-lvm-operator multicluster-engine rhacs-operator ansible-automation-platform-operator nfd node-healthcheck-operator metallb-operator sandboxed-containers-operator openshift-special-resource-operator 
+### for packagename in kubevirt-hyperconverged performance-addon-operator kubernetes-nmstate-operator sriov-network-operator local-storage-operator odf-operator ocs-operator mcg-operator cincinnati-operator advanced-cluster-management openshift-gitops-operator odf-lvm-operator multicluster-engine rhacs-operator ansible-automation-platform-operator nfd node-healthcheck-operator metallb-operator sandboxed-containers-operator openshift-special-resource-operator web-terminal
 ### do 
 ###  /usr/local/bin/oc-mirror list operators --catalog=registry.redhat.io/redhat/redhat-operator-index:v4.11 --package=${packagename}
 ### done
@@ -1403,6 +1403,16 @@ mirror:
             - name: 'stable-4.11'
               minVersion: 'v4.11.3'
               maxVersion: 'v4.11.3'
+        - name: ocs-operator
+          channels:
+            - name: 'stable-4.11'
+              minVersion: 'v4.11.3'
+              maxVersion: 'v4.11.3'
+        - name: mcg-operator
+          channels:
+            - name: 'stable-4.11'
+              minVersion: 'v4.11.3'
+              maxVersion: 'v4.11.3'              
         - name: cincinnati-operator
           channels:
             - name: v1
@@ -1463,10 +1473,15 @@ mirror:
             - name: stable
               minVersion: '4.11.0-202211072116'
               maxVersion: '4.11.0-202211072116'
+        - name: web-terminal
+          channels:
+            - name: fast
+              minVersion: 'v1.6.0'
+              maxVersion: 'v1.6.0'
 EOF
 $ /usr/local/bin/oc-mirror --config ./image-config-realse-local.yaml file://output-dir 2>&1 | tee /tmp/err 
 # 拷贝 output-dir/mirror_seq1_000000.tar 到离线环境并上传到离线 registry
-$ /usr/local/bin/oc-mirror --from /tmp/mirror_seq1_000000.tar docker://registry.example.com:5000
+$ /usr/local/bin/oc-mirror --from ./mirror_seq1_000000.tar docker://registry.example.com:5000
 
 # 同步一下 4.12 release image
 $ cat > image-config-realse-local.yaml <<EOF

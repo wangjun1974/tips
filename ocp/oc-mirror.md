@@ -1012,12 +1012,18 @@ $ skopeo copy --format v2s2 --authfile /path/auth.json --all docker://docker.io/
 ### 将 /tmp/skopeotest 拷贝到离线
 $ skopeo copy --format v2s2 --authfile /path/auth.json --all dir:/tmp/minio docker://registry.example.com:5000/minio/minio:RELEASE.2022-07-24T01-54-52Z
 
+# https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2-docker.html
 $ mkdir -p /tmp/mc 
 $ skopeo copy --format v2s2 --authfile /path/auth.json --all docker://docker.io/minio/mc:RELEASE.2022-07-24T02-25-13Z dir:/tmp/mc 
 ### 将 /tmp/skopeotest 拷贝到离线
 $ skopeo copy --format v2s2 --authfile /path/auth.json --all dir:/tmp/mc docker://registry.example.com:5000/minio/mc:RELEASE.2022-07-24T02-25-13Z
 
-
+$ mkdir -p /tmp/amazon
+$ skopeo copy --format v2s2 --all docker://docker.io/amazon/aws-cli:latest dir:/tmp/amazon
+$ tar cf /tmp/awscli.tar /tmp/amazon
+$ scp /tmp/awscli.tar <dest>:/tmp
+$ tar xf /tmp/awscli.tar -C /
+$ skopeo copy --format v2s2 --all dir:/tmp/amazon docker://registry.example.com:5000/amazon/aws-cli:latest
 
 ### 新的思路是把 openshift release images 的同步与 operator 的同步分成两个阶段做
 ### 

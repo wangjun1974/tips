@@ -651,3 +651,309 @@ $ oc -n openshift-machine-api logs $( oc get pods -n openshift-machine-api -l ba
 $ oc -n openshift-machine-api logs $( oc get pods -n openshift-machine-api -l baremetal.openshift.io/cluster-baremetal-operator='metal3-state' -o name ) -c metal3-ironic-conductor 
 
 ```
+
+### 创建 SNO 之后添加 worker
+```
+$ cat <<EOF | oc apply -f -
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ocp4-3 
+  labels:
+    name: ocp4-3
+EOF
+
+$ cat <<EOF | oc apply -f -
+apiVersion: agent-install.openshift.io/v1beta1
+kind: NMStateConfig
+metadata:
+  name: master-0
+  namespace: ocp4-3
+  labels:
+    cluster-name: ocp4-3
+spec:
+  config:
+    interfaces:
+      - name: enp1s0
+        type: ethernet
+        state: up
+        ethernet:
+          auto-negotiation: true
+          duplex: full
+          speed: 10000
+        ipv4:
+          address:
+          - ip: 192.168.122.131
+            prefix-length: 24
+          enabled: true
+        mtu: 1500
+        mac-address: 52:54:00:3d:7f:67
+    dns-resolver:
+      config:
+        server:
+        - 192.168.122.12
+    routes:
+      config:
+      - destination: 192.168.122.0/24
+        next-hop-address: 192.168.122.1
+        next-hop-interface: enp1s0
+      - destination: 0.0.0.0/0
+        next-hop-address: 192.168.122.1
+        next-hop-interface: enp1s0
+        table-id: 254
+  interfaces:
+    - name: enp1s0
+      macAddress: "52:54:00:3d:7f:67"
+EOF
+
+$ cat <<EOF | oc apply -f -
+apiVersion: v1
+kind: Secret
+metadata:
+  name: assisted-deployment-ssh-private-key
+  namespace: ocp4-3
+stringData:
+  ssh-privatekey: |-
+$( cat /data/ocp-cluster/ocp4-3/ssh-key/id_rsa | sed -e 's/^/    /g' )
+type: Opaque
+EOF
+
+$ PULL_SECRET_FILE=/data/OCP-4.10.30/ocp/secret/redhat-pull-secret.json
+$ PULL_SECRET_STR=$( cat ${PULL_SECRET_FILE} )
+$ cat <<EOF | oc apply -f -
+apiVersion: v1
+kind: Secret
+metadata:
+  name: assisted-deployment-pull-secret
+  namespace: ocp4-3
+stringData: 
+  .dockerconfigjson: '${PULL_SECRET_STR}'
+EOF
+
+
+$ SSH_PUBLIC_KEY_STR=$( cat /data/ocp-cluster/ocp4-3/ssh-key/id_rsa.pub )
+$ cat <<EOF | oc apply -f -
+apiVersion: extensions.hive.openshift.io/v1beta1
+kind: AgentClusterInstall
+metadata:
+  name: ocp4-3
+  namespace: ocp4-3
+spec:
+  clusterDeploymentRef:
+    name: ocp4-3
+  imageSetRef:
+    name: openshift-4.11.5
+  networking:
+    clusterNetwork:
+      - cidr: "10.128.0.0/14"
+        hostPrefix: 23
+    serviceNetwork:
+      - "172.31.0.0/16"
+    machineNetwork:
+      - cidr: "192.168.122.0/24"
+  provisionRequirements:
+    controlPlaneAgents: 1
+  sshPublicKey: '${SSH_PUBLIC_KEY_STR}'
+EOF
+
+$ cat <<EOF | oc apply -f -
+apiVersion: hive.openshift.io/v1
+kind: ClusterDeployment
+metadata:
+  name: ocp4-3
+  namespace: ocp4-3
+spec:
+  baseDomain: example.com
+  clusterName: ocp4-3
+  installed: false
+  clusterInstallRef:
+    group: extensions.hive.openshift.io
+    kind: AgentClusterInstall
+    name: ocp4-3
+    version: v1beta1
+  platform:
+    agentBareMetal:
+      agentSelector:
+        matchLabels:
+          cluster-name: "ocp4-3"
+  pullSecretRef:
+    name: assisted-deployment-pull-secret
+EOF
+
+$ cat <<EOF | oc apply -f -
+apiVersion: agent.open-cluster-management.io/v1
+kind: KlusterletAddonConfig
+metadata:
+  name: ocp4-3
+  namespace: ocp4-3
+spec:
+  clusterName: ocp4-3
+  clusterNamespace: ocp4-3
+  clusterLabels:
+    cloud: auto-detect
+    vendor: auto-detect
+  applicationManager:
+    enabled: true
+  certPolicyController:
+    enabled: false
+  iamPolicyController:
+    enabled: false
+  policyController:
+    enabled: true
+  searchCollector:
+    enabled: false 
+EOF
+
+$ cat <<EOF | oc apply -f -
+apiVersion: cluster.open-cluster-management.io/v1
+kind: ManagedCluster
+metadata:
+  name: ocp4-3
+spec:
+  hubAcceptsClient: true
+EOF
+
+$ SSH_PUBLIC_KEY_STR=$( cat /data/ocp-cluster/ocp4-3/ssh-key/id_rsa.pub )
+$ cat <<EOF | oc apply -f -
+apiVersion: agent-install.openshift.io/v1beta1
+kind: InfraEnv
+metadata:
+  name: ocp4-3
+  namespace: ocp4-3
+spec:
+  additionalNTPSources:
+    - ntp.example.com  
+  clusterRef:
+    name: ocp4-3
+    namespace: ocp4-3
+  sshAuthorizedKey: '${SSH_PUBLIC_KEY_STR}'
+  agentLabelSelector:
+    matchLabels:
+      cluster-name: "ocp4-3"
+  pullSecretRef:
+    name: assisted-deployment-pull-secret
+  ignitionConfigOverride: '{"ignition":{"version":"3.1.0"},"storage":{"files":[{"contents":{"source":"data:text/plain;charset=utf-8;base64,$(cat /tmp/registry.conf | base64 -w0)","verification":{}},"filesystem":"root","mode":420,"overwrite":true,"path":"/etc/containers/registries.conf"},{"contents":{"source":"data:text/plain;charset=utf-8;base64,$(cat /etc/pki/ca-trust/source/anchors/registry.crt | base64 -w0)","verification":{}},"filesystem":"root","mode":420,"overwrite":true,"path":"/etc/pki/ca-trust/source/anchors/registry.crt"}]}}'
+  nmStateConfigLabelSelector:
+    matchLabels:
+      cluster-name: ocp4-3
+EOF
+
+$ cat <<EOF | oc apply -f -
+apiVersion: v1
+kind: Secret
+metadata:
+  name: master-0-bmc-secret
+  namespace: ocp4-3
+type: Opaque
+data:
+  username: "YWRtaW4K"
+  password: "cmVkaGF0Cg=="
+EOF
+
+$ cat <<'EOF' | oc apply -f -
+apiVersion: metal3.io/v1alpha1
+kind: BareMetalHost
+metadata:
+  name: master-0
+  namespace: ocp4-3
+  annotations:
+    inspect.metal3.io: disabled
+    bmac.agent-install.openshift.io/hostname: 'master-0.ocp4-3.example.com'
+    bmac.agent-install.openshift.io/role: "master"
+  labels:
+    infraenvs.agent-install.openshift.io: "ocp4-3"
+spec:
+  bootMode: "UEFI"
+  bmc:
+    address: redfish-virtualmedia+http://192.168.122.1:8000/redfish/v1/Systems/963b4ca3-c3b1-4580-bddb-a2f77b1bb7c1
+    credentialsName: master-0-bmc-secret
+    disableCertificateVerification: true
+  bootMACAddress: "52:54:00:3d:7f:67"
+  automatedCleaningMode: disabled
+  online: true
+EOF
+
+# 等待 SNO Cluster 安装完毕后可以添加 worker
+# 添加 worker 时创建 NMStateConfig，BMC Secret，BareMetalHost 3个对象
+# 添加 worker 是可能会遇到启动顺序相关的错误
+# 需手工 approve csr
+# https://issues.redhat.com/browse/MGMT-11230
+# https://github.com/openshift/assisted-service/pull/4380
+$ cat <<EOF | oc apply -f -
+apiVersion: agent-install.openshift.io/v1beta1
+kind: NMStateConfig
+metadata:
+  name: worker-0
+  namespace: ocp4-3
+  labels:
+    cluster-name: ocp4-3
+spec:
+  config:
+    interfaces:
+      - name: enp1s0
+        type: ethernet
+        state: up
+        ethernet:
+          auto-negotiation: true
+          duplex: full
+          speed: 10000
+        ipv4:
+          address:
+          - ip: 192.168.122.134
+            prefix-length: 24
+          enabled: true
+        mtu: 1500
+        mac-address: 52:54:00:d5:bb:43
+    dns-resolver:
+      config:
+        server:
+        - 192.168.122.12
+    routes:
+      config:
+      - destination: 192.168.122.0/24
+        next-hop-address: 192.168.122.1
+        next-hop-interface: enp1s0
+      - destination: 0.0.0.0/0
+        next-hop-address: 192.168.122.1
+        next-hop-interface: enp1s0
+        table-id: 254
+  interfaces:
+    - name: enp1s0
+      macAddress: "52:54:00:d5:bb:43"
+EOF
+
+$ cat <<EOF | oc apply -f -
+apiVersion: v1
+kind: Secret
+metadata:
+  name: worker-0-bmc-secret
+  namespace: ocp4-3
+type: Opaque
+data:
+  username: "YWRtaW4K"
+  password: "cmVkaGF0Cg=="
+EOF
+
+$ cat <<'EOF' | oc apply -f -
+apiVersion: metal3.io/v1alpha1
+kind: BareMetalHost
+metadata:
+  name: worker-0
+  namespace: ocp4-3
+  annotations:
+    inspect.metal3.io: disabled
+    bmac.agent-install.openshift.io/hostname: 'worker-0.ocp4-3.example.com'
+    bmac.agent-install.openshift.io/role: "worker"
+  labels:
+    infraenvs.agent-install.openshift.io: "ocp4-3"
+spec:
+  bootMode: "UEFI"
+  bmc:
+    address: redfish-virtualmedia+http://192.168.122.1:8000/redfish/v1/Systems/e83cf466-80ae-4fbb-aacb-09075aabcee8
+    credentialsName: worker-0-bmc-secret
+    disableCertificateVerification: true
+  bootMACAddress: "52:54:00:d5:bb:43"
+  automatedCleaningMode: disabled
+  online: true
+EOF
+```

@@ -1,0 +1,228 @@
+---
+apiVersion: agent-install.openshift.io/v1beta1
+kind: NMStateConfig
+metadata:
+  name: master-0
+  namespace: ocp4-3
+  labels:
+    cluster-name: ocp4-3
+spec:
+  config:
+    interfaces:
+      - name: enp1s0
+        type: ethernet
+        state: up
+        ethernet:
+          auto-negotiation: true
+          duplex: full
+          speed: 10000
+        ipv4:
+          address:
+          - ip: 192.168.122.131
+            prefix-length: 24
+          enabled: true
+        mtu: 1500
+        mac-address: 52:54:00:3d:7f:67
+    dns-resolver:
+      config:
+        server:
+        - 192.168.122.12
+    routes:
+      config:
+      - destination: 0.0.0.0/0
+        next-hop-address: 192.168.122.1
+        next-hop-interface: enp1s0
+        table-id: 254
+  interfaces:
+    - name: enp1s0
+      macAddress: "52:54:00:3d:7f:67"
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: assisted-deployment-ssh-private-key
+  namespace: ocp4-3
+stringData:
+  ssh-privatekey: |-
+    -----BEGIN OPENSSH PRIVATE KEY-----
+    b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAABlwAAAAdzc2gtcn
+    NhAAAAAwEAAQAAAYEAsdbLNuvMei+cQ/yZbhCUTww7weYUWxvTJR4VEIf0Z6NtiZVtx0Tr
+    130PatYA2RqlK9WWi7qGMVtlX5GVtXKslFjhXTS1yV2bZb1RYX7yuJQbKbFMNDeuM6Q2wj
+    bzZPZeU1Zlemh0qpen6QZOXv0wF/M1ACttkKra2GHIOOXfvDwyuXXV3ohBBf8MujZO8vw0
+    8wA9Lx0GhZVmDWelppIfI79K/2YHoKnkMiIg3cym1YCYRNRAMnjBocRCWDV7C6MJSh4HgC
+    YEx9GAohmk3YFLOZhk0k0IWcOKJAG3x1iqe+0rfnE5voViKqA+JmQhH9xYLmB35srBBqez
+    vDUA69yIPWmM23Wy+LuScdkLluSdaNQ0c5sgycIXwHlEHv3tBQ4/ZEaoGTwTKUjvNBE8/I
+    zJ9cnm58Sjh/6PowxHChUZkO5qSKGEHLvBpTzY50Hp1KNKCmO7qzlgtNA7tJmusPG0xjrs
+    pjz/gyF1PTIeomh6h9Igpa2qAkrenmHkRqtywTVNAAAFkFdKqppXSqqaAAAAB3NzaC1yc2
+    EAAAGBALHWyzbrzHovnEP8mW4QlE8MO8HmFFsb0yUeFRCH9GejbYmVbcdE69d9D2rWANka
+    pSvVlou6hjFbZV+RlbVyrJRY4V00tcldm2W9UWF+8riUGymxTDQ3rjOkNsI282T2XlNWZX
+    podKqXp+kGTl79MBfzNQArbZCq2thhyDjl37w8Mrl11d6IQQX/DLo2TvL8NPMAPS8dBoWV
+    Zg1npaaSHyO/Sv9mB6Cp5DIiIN3MptWAmETUQDJ4waHEQlg1ewujCUoeB4AmBMfRgKIZpN
+    2BSzmYZNJNCFnDiiQBt8dYqnvtK35xOb6FYiqgPiZkIR/cWC5gd+bKwQans7w1AOvciD1p
+    jNt1svi7knHZC5bknWjUNHObIMnCF8B5RB797QUOP2RGqBk8EylI7zQRPPyMyfXJ5ufEo4
+    f+j6MMRwoVGZDuakihhBy7waU82OdB6dSjSgpju6s5YLTQO7SZrrDxtMY67KY8/4MhdT0y
+    HqJoeofSIKWtqgJK3p5h5EarcsE1TQAAAAMBAAEAAAGABgQXIcd+Rk/gAGjGI/QJoFbwmp
+    GW9LIPRX0sB0AiI3Ni3Dmi2g/ZzpNbdyjAJJgDKGV0T0vDCF5oIoCBSP8VGXucPBPxZlt1
+    S07JNvwdZ+MSvClUQ5vyl6qhc5Z6S1sOO9F7Y1WvRKoWswpUkmAMRXMjwtq1PSSafKFqLY
+    qRNAPxT1bOIlYHpRVIr+/wYcXoYKQMbdCUjOZN6nwsHWNqDEKHXfZsoaG9p3iCFh67MhPE
+    kud/OHXfTwKdn/BHNlCQjGqPdCucdzinvo2PA9QbbZGJSJiJPsH1dCB5bUS0Q6/J/l8vWq
+    9AyklZOyq8aLYXTO9ULEl8152d0xIGf0qHu96MkVg+OOarHVtYmhSzmMW2ZaF/nVOg4MOr
+    pH7Ya5ed44XGLrBC8VwBs5XESSE4eG5I09MLQhkmhi8irH7Wgs4Cohs6OEvNrH59K1Y72P
+    RMKHi3ZwoBi4zUpBuBwaFuWcm16kNLVlznkQ0NzjyOxgCnXgEYvLD+GReun4BcPqqdAAAA
+    wD0DtH4Byc/3zaO9H0E5bKMLBEffpWaJtMkvq3tSJxqrm+AF9y5SP2KogK7hpBsj/QQurN
+    /Z+NZybJNsuNbeuxbm32FL1qb8I5XXNdOeA3WaK1Yn7NSP7qcyT+dIsvgSt5bb4PxT3+Cf
+    cE8qU1hy6Ftzm+kY/RDROP8ah9H5rKA5IcCxNdptW/SeQBoqMuJJAxGu3P5irpw/Klxwqc
+    ik2w3uqpDJt8ThYECaMtCpuk50mTWWHWSMk0is+AxNJFCNjwAAAMEA4/4pPYSdscu3nTu7
+    t4tt21KggwDHuHwfNhCFXhCA4MnRxNA1I6pjmRmeozN2iyFPnGgyuEE6O48K4eBDrkgUp1
+    bzY3iRcNqaZDPv9FMEqoNHbn986qDuvzZKpIeqrIalr0BCROIkJxYniRcCEq/fdWmjNbwE
+    pfrFKIreNyRjn2ATZEmW3ME3rwv5DOA9wlGHZKajxLjplyZQL1x3ONV14CsqsYHTSZpnhf
+    shrEyp+XAyy8NNghfCQ9OSq7ogzs/HAAAAwQDHr2oC/43JzCtC1whH5Rd84GZqkeZptrUq
+    61wCumrq7DEtFGfPUyUwZgAaOv4D3yy1sXlNwPAXXrMqfEfFBk2qXOmeO034ednpkI8OnW
+    l1/s5hYbPxOwCLauFw79w39mW6m0ZAnLf492uvMiIZYPIpr3KuAcxctrMdXANeBjAJvqvd
+    i/d3ZvhRZP2qLvV9WDa5CW85mBHIhJnGHfCNzBxY8s8B3uZJ5YRs5SKv3DBVLMUDjA0Uuh
+    7/77Gn/iqu+ksAAAAYcm9vdEBzdXBwb3J0LmV4YW1wbGUuY29tAQID
+    -----END OPENSSH PRIVATE KEY-----
+type: Opaque
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: assisted-deployment-pull-secret
+  namespace: ocp4-3
+stringData: 
+  .dockerconfigjson: '{"auths":{"quay.io":{"auth":"b3BlbnNoaWZ0LXJlbGVhc2UtZGV2K3dhbmdqdW4xOTc0MWV5cmtoYTJvMzNpd3dncnV2eThub3d0M2lhOjBISTQxTUpISDAyS0tGQjhJSjhQOThPS0pDU1ZSODdaMjYwWDRWWFVTTlBaNjVFVTVFUUFITExIUzhKVzVEQ0s="},"registry.connect.redhat.com":{"auth":"NjM0MjU0OXx1aGMtMUV5UktoQTJPMzNJd3dHUnV2WThOT3dUM0lBOmV5SmhiR2NpT2lKU1V6VXhNaUo5LmV5SnpkV0lpT2lJMFltRm1NV0V6Tm1Sa05qQTBOakV4WWpFMFpHRmpaRFZpWW1ZMU1EUmtPQ0o5Lm1tdG5qRnhaNHVRZGNpM3pJWGJJTEc5UVZVWTV5WVkwem56TXBtZzRNWHhQcWdWMy1XSTJEZkJjaGpEaldWMC1xYkVYQTBDTEE1Z2F3ZHlPWllOSUFVUjAyek44Q3ZSamNQbHowdWJnLWdwZTZsVWxzZE5ydEh0cnFPVXhZTGgxdjg5WFFTX0RpY2gtR3ZkLTZNdFZsVWx0NFExVER0LW5YU0dEQURMVklQYl9LcENtb1lUVmNWaXljVFJ1bFMwSnhMSUxCQ0JlQm5ueXdyblc2Y0ZiSjRhMnkyVmlsa0F3enpLeFB6dHpPQnhJTk80RkpqU3QxRlBSLW1ubjJsZVZIU0NCYTlyN2lhUXNYUHNhSUw2cE12ZmVPcXhidEM2UUZmcVhnT0NpNkhYYXFOX3dUZVdNemZXTV9LY2lwOTM5QlNjblNFcGVmRUFldWRvRTZwZUFkbGRGbEpUNUxsdThTZVg4bmY5NXc3U1JkdTNPeWw0VW1JSGRIbWx4b2d1N3JBQXhiNnlkZXVqcndLOFBKbjdJTU0xajc4TVBrTWpnN256ZllUdHQ0MnN6RHF2QnJMS0ZrTnV3OEFBVV92TDk4WjUwZG5tUUNuOWlKNlNIcmtFYnhWUURSUno5dS1nelQ3a05pV0ZZWTJUM0tjelhidXhrdm9iUmNhalAzN0lIdG1qdTh4NGhaQVhjWnhNS0NhcWdjT2dJbzlTTXI3VXNLQkxSalFQOUpvLUlzbW9ZZHBXX25aeE1Ib0NPbUppT19MclJaRnVUS0FMOFQ1QXJEZnY3ZWZnNTBfTkItRkp1MEtVVXZfeUVvZF83VlgzNlFMVTc3UFBTQkR2RnpFUkRLdlJ6V25nTy0zSjJManZ0YkF6NW9SdFhheGtEVFZqVThxTzJhU0lRZ1ZV"},"registry.example.com:5000":{"auth":"b3BlbnNoaWZ0OnJlZGhhdA=="},"registry.redhat.io":{"auth":"NjM0MjU0OXx1aGMtMUV5UktoQTJPMzNJd3dHUnV2WThOT3dUM0lBOmV5SmhiR2NpT2lKU1V6VXhNaUo5LmV5SnpkV0lpT2lJMFltRm1NV0V6Tm1Sa05qQTBOakV4WWpFMFpHRmpaRFZpWW1ZMU1EUmtPQ0o5Lm1tdG5qRnhaNHVRZGNpM3pJWGJJTEc5UVZVWTV5WVkwem56TXBtZzRNWHhQcWdWMy1XSTJEZkJjaGpEaldWMC1xYkVYQTBDTEE1Z2F3ZHlPWllOSUFVUjAyek44Q3ZSamNQbHowdWJnLWdwZTZsVWxzZE5ydEh0cnFPVXhZTGgxdjg5WFFTX0RpY2gtR3ZkLTZNdFZsVWx0NFExVER0LW5YU0dEQURMVklQYl9LcENtb1lUVmNWaXljVFJ1bFMwSnhMSUxCQ0JlQm5ueXdyblc2Y0ZiSjRhMnkyVmlsa0F3enpLeFB6dHpPQnhJTk80RkpqU3QxRlBSLW1ubjJsZVZIU0NCYTlyN2lhUXNYUHNhSUw2cE12ZmVPcXhidEM2UUZmcVhnT0NpNkhYYXFOX3dUZVdNemZXTV9LY2lwOTM5QlNjblNFcGVmRUFldWRvRTZwZUFkbGRGbEpUNUxsdThTZVg4bmY5NXc3U1JkdTNPeWw0VW1JSGRIbWx4b2d1N3JBQXhiNnlkZXVqcndLOFBKbjdJTU0xajc4TVBrTWpnN256ZllUdHQ0MnN6RHF2QnJMS0ZrTnV3OEFBVV92TDk4WjUwZG5tUUNuOWlKNlNIcmtFYnhWUURSUno5dS1nelQ3a05pV0ZZWTJUM0tjelhidXhrdm9iUmNhalAzN0lIdG1qdTh4NGhaQVhjWnhNS0NhcWdjT2dJbzlTTXI3VXNLQkxSalFQOUpvLUlzbW9ZZHBXX25aeE1Ib0NPbUppT19MclJaRnVUS0FMOFQ1QXJEZnY3ZWZnNTBfTkItRkp1MEtVVXZfeUVvZF83VlgzNlFMVTc3UFBTQkR2RnpFUkRLdlJ6V25nTy0zSjJManZ0YkF6NW9SdFhheGtEVFZqVThxTzJhU0lRZ1ZV"}}}'
+
+---
+apiVersion: extensions.hive.openshift.io/v1beta1
+kind: AgentClusterInstall
+metadata:
+  name: ocp4-3
+  namespace: ocp4-3
+spec:
+  clusterDeploymentRef:
+    name: ocp4-3
+  imageSetRef:
+    name: openshift-4.11.5
+  networking:
+    clusterNetwork:
+      - cidr: "10.128.0.0/14"
+        hostPrefix: 23
+    serviceNetwork:
+      - "172.31.0.0/16"
+    machineNetwork:
+      - cidr: "192.168.122.0/24"
+  provisionRequirements:
+    controlPlaneAgents: 1
+  sshPublicKey: 'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCx1ss268x6L5xD/JluEJRPDDvB5hRbG9MlHhUQh/Rno22JlW3HROvXfQ9q1gDZGqUr1ZaLuoYxW2VfkZW1cqyUWOFdNLXJXZtlvVFhfvK4lBspsUw0N64zpDbCNvNk9l5TVmV6aHSql6fpBk5e/TAX8zUAK22QqtrYYcg45d+8PDK5ddXeiEEF/wy6Nk7y/DTzAD0vHQaFlWYNZ6Wmkh8jv0r/ZgegqeQyIiDdzKbVgJhE1EAyeMGhxEJYNXsLowlKHgeAJgTH0YCiGaTdgUs5mGTSTQhZw4okAbfHWKp77St+cTm+hWIqoD4mZCEf3FguYHfmysEGp7O8NQDr3Ig9aYzbdbL4u5Jx2QuW5J1o1DRzmyDJwhfAeUQe/e0FDj9kRqgZPBMpSO80ETz8jMn1yebnxKOH/o+jDEcKFRmQ7mpIoYQcu8GlPNjnQenUo0oKY7urOWC00Du0ma6w8bTGOuymPP+DIXU9Mh6iaHqH0iClraoCSt6eYeRGq3LBNU0= root@support.example.com'
+
+---
+apiVersion: hive.openshift.io/v1
+kind: ClusterDeployment
+metadata:
+  name: ocp4-3
+  namespace: ocp4-3
+spec:
+  baseDomain: example.com
+  clusterName: ocp4-3
+  installed: false
+  clusterInstallRef:
+    group: extensions.hive.openshift.io
+    kind: AgentClusterInstall
+    name: ocp4-3
+    version: v1beta1
+  platform:
+    agentBareMetal:
+      agentSelector:
+        matchLabels:
+          cluster-name: "ocp4-3"
+  pullSecretRef:
+    name: assisted-deployment-pull-secret
+
+---
+apiVersion: agent.open-cluster-management.io/v1
+kind: KlusterletAddonConfig
+metadata:
+  name: ocp4-3
+  namespace: ocp4-3
+spec:
+  clusterName: ocp4-3
+  clusterNamespace: ocp4-3
+  clusterLabels:
+    cloud: auto-detect
+    vendor: auto-detect
+  applicationManager:
+    enabled: true
+  certPolicyController:
+    enabled: false
+  iamPolicyController:
+    enabled: false
+  policyController:
+    enabled: true
+  searchCollector:
+    enabled: false 
+
+---
+apiVersion: cluster.open-cluster-management.io/v1
+kind: ManagedCluster
+metadata:
+  name: ocp4-3
+spec:
+  hubAcceptsClient: true
+
+---
+apiVersion: agent-install.openshift.io/v1beta1
+kind: InfraEnv
+metadata:
+  name: ocp4-3
+  namespace: ocp4-3
+spec:
+  additionalNTPSources:
+    - ntp.example.com  
+  clusterRef:
+    name: ocp4-3
+    namespace: ocp4-3
+  sshAuthorizedKey: 'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCx1ss268x6L5xD/JluEJRPDDvB5hRbG9MlHhUQh/Rno22JlW3HROvXfQ9q1gDZGqUr1ZaLuoYxW2VfkZW1cqyUWOFdNLXJXZtlvVFhfvK4lBspsUw0N64zpDbCNvNk9l5TVmV6aHSql6fpBk5e/TAX8zUAK22QqtrYYcg45d+8PDK5ddXeiEEF/wy6Nk7y/DTzAD0vHQaFlWYNZ6Wmkh8jv0r/ZgegqeQyIiDdzKbVgJhE1EAyeMGhxEJYNXsLowlKHgeAJgTH0YCiGaTdgUs5mGTSTQhZw4okAbfHWKp77St+cTm+hWIqoD4mZCEf3FguYHfmysEGp7O8NQDr3Ig9aYzbdbL4u5Jx2QuW5J1o1DRzmyDJwhfAeUQe/e0FDj9kRqgZPBMpSO80ETz8jMn1yebnxKOH/o+jDEcKFRmQ7mpIoYQcu8GlPNjnQenUo0oKY7urOWC00Du0ma6w8bTGOuymPP+DIXU9Mh6iaHqH0iClraoCSt6eYeRGq3LBNU0= root@support.example.com'
+  agentLabelSelector:
+    matchLabels:
+      cluster-name: "ocp4-3"
+  pullSecretRef:
+    name: assisted-deployment-pull-secret
+  ignitionConfigOverride: '{"ignition":{"version":"3.1.0"},"storage":{"files":[{"contents":{"source":"data:text/plain;charset=utf-8;base64,dW5xdWFsaWZpZWQtc2VhcmNoLXJlZ2lzdHJpZXMgPSBbInJlZ2lzdHJ5LmFjY2Vzcy5yZWRoYXQuY29tIiwgImRvY2tlci5pbyJdCnNob3J0LW5hbWUtbW9kZSA9ICIiCgpbW3JlZ2lzdHJ5XV0KICBwcmVmaXggPSAiIgogIGxvY2F0aW9uID0gInF1YXkuaW8vb3BlbnNoaWZ0LXJlbGVhc2UtZGV2L29jcC1yZWxlYXNlIgogIG1pcnJvci1ieS1kaWdlc3Qtb25seSA9IHRydWUKCiAgW1tyZWdpc3RyeS5taXJyb3JdXQogICAgbG9jYXRpb24gPSAicmVnaXN0cnkuZXhhbXBsZS5jb206NTAwMC9vcGVuc2hpZnQvcmVsZWFzZS1pbWFnZXMiCgpbW3JlZ2lzdHJ5XV0KICBwcmVmaXggPSAiIgogIGxvY2F0aW9uID0gInF1YXkuaW8vb3BlbnNoaWZ0LXJlbGVhc2UtZGV2L29jcC12NC4wLWFydC1kZXYiCiAgbWlycm9yLWJ5LWRpZ2VzdC1vbmx5ID0gdHJ1ZQoKICBbW3JlZ2lzdHJ5Lm1pcnJvcl1dCiAgICBsb2NhdGlvbiA9ICJyZWdpc3RyeS5leGFtcGxlLmNvbTo1MDAwL29wZW5zaGlmdC9yZWxlYXNlIgoKW1tyZWdpc3RyeV1dCiAgcHJlZml4ID0gIiIKICBsb2NhdGlvbiA9ICJyZWdpc3RyeS5hY2Nlc3MucmVkaGF0LmNvbSIKICBtaXJyb3ItYnktZGlnZXN0LW9ubHkgPSB0cnVlCgogIFtbcmVnaXN0cnkubWlycm9yXV0KICAgIGxvY2F0aW9uID0gInJlZ2lzdHJ5LmV4YW1wbGUuY29tOjUwMDAiCgpbW3JlZ2lzdHJ5XV0KICBwcmVmaXggPSAiIgogIGxvY2F0aW9uID0gInJlZ2lzdHJ5LnJlZGhhdC5pbyIKICBtaXJyb3ItYnktZGlnZXN0LW9ubHkgPSB0cnVlCgogIFtbcmVnaXN0cnkubWlycm9yXV0KICAgIGxvY2F0aW9uID0gInJlZ2lzdHJ5LmV4YW1wbGUuY29tOjUwMDAiCg==","verification":{}},"filesystem":"root","mode":420,"overwrite":true,"path":"/etc/containers/registries.conf"},{"contents":{"source":"data:text/plain;charset=utf-8;base64,LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUdHakNDQkFLZ0F3SUJBZ0lVSFFOZWNNTUYrcUhCUTNYclJGVXV2aGNPS0lNd0RRWUpLb1pJaHZjTkFRRUwKQlFBd2dZc3hDekFKQmdOVkJBWVRBa05PTVJBd0RnWURWUVFJREFkQ1JVbEtTVTVITVFzd0NRWURWUVFIREFKQwpTakVQTUEwR0ExVUVDZ3dHVWtWRVNFRlVNUXN3Q1FZRFZRUUxEQUpKVkRFZE1Cc0dBMVVFQXd3VWNtVm5hWE4wCmNua3VaWGhoYlhCc1pTNWpiMjB4SURBZUJna3Foa2lHOXcwQkNRRVdFV0ZrYldsdVFHVjRZVzF3YkdVdVkyOXQKTUI0WERUSXlNRGt6TURBMk5UTXhOVm9YRFRNeU1Ea3lOekEyTlRNeE5Wb3dnWXN4Q3pBSkJnTlZCQVlUQWtOTwpNUkF3RGdZRFZRUUlEQWRDUlVsS1NVNUhNUXN3Q1FZRFZRUUhEQUpDU2pFUE1BMEdBMVVFQ2d3R1VrVkVTRUZVCk1Rc3dDUVlEVlFRTERBSkpWREVkTUJzR0ExVUVBd3dVY21WbmFYTjBjbmt1WlhoaGJYQnNaUzVqYjIweElEQWUKQmdrcWhraUc5dzBCQ1FFV0VXRmtiV2x1UUdWNFlXMXdiR1V1WTI5dE1JSUNJakFOQmdrcWhraUc5dzBCQVFFRgpBQU9DQWc4QU1JSUNDZ0tDQWdFQTloQTE3Ymo2d1JqVjM3dHMvQy9VaUNRT0FhOWRua3FoVTZnZUg1bXY5OEVJCmFrZHR3c0IxbHlRTml3OUg4eHlYWUdHZEd4VFFoVGxVYU56MjZSLzNqQ21sUVF6ZllmRGZ0TjE5RDNDMXo1Y24KUlJnVnlNaGUrZjdja3pLMUh4ZVlIci91bFdSRkhncHo4MlBCM1p0YlpZM1diMk5udkJVTTQ3UHU3dHgyNU5ITgpDbXlodnNsYWkwTHQvNHRvSXJwUHBJUVVGNDZWeGtNZUd3OVdTaUdKUDMzaUNaUzlKYlh5VloyUjh2VDNXeHp4CllSNWRzbFF3anZiVGdNbFNUN2UrWVkyTDlZRkJtWnhSYys3MitNcFlyTnlMS1NFNWthUUVpaUM3aE1kNkNyT3IKZ0c1QWUrd1hva3RrTHViWW9zNU5lVGRDZjdmcGM5MFZ2UUx2aEcwMlY3dU94ek1Yb3diVEtyQUdkbjdWWWV1RwpTRUdPOERPUWd0bmljS2EzbTlLOVNucDFWa2RNRTJWUHFZdExPOHJUQ1lVN1BLekh5SCtadFo3QTFpTjhQVjFxCmFHdGRjNUZkY1ZLK2lRY2wvQXQ2Mm1HTDFDYkpBeGwvcmFDNDlIczI1bExEbTFxUzVwamxnbHpFcXFtUlZ5LzYKZk1yU0F5c2JVT1pjZDF6UWhHSmdDMXRDeElhWW5LWDNrWWM0WUplVkhLTTkrUllQY2Jaa2hhNDYvT0NLNkdmcgpmS0lFbVFVazJnUUdyT0Z0a0tOeUcyaVNlM3ZoQzRsU0RGSW1HbFN6UVNKeU5uejNkbXZRYmRoWnZ6RDU3WXpsCnAyY0l4VmF3R1ZTMkw4cEFBcnNBaWo5dEFDa0hlQ05xbE5ORHRCMnhjTnBVUlUzQmJYMDhxaFVTM2RhRUZka0MKQXdFQUFhTjBNSEl3SFFZRFZSME9CQllFRkQ5ZFBQcC9uMUh0a2FMU1hqeWlETUdHcUVwb01COEdBMVVkSXdRWQpNQmFBRkQ5ZFBQcC9uMUh0a2FMU1hqeWlETUdHcUVwb01BOEdBMVVkRXdFQi93UUZNQU1CQWY4d0h3WURWUjBSCkJCZ3dGb0lVY21WbmFYTjBjbmt1WlhoaGJYQnNaUzVqYjIwd0RRWUpLb1pJaHZjTkFRRUxCUUFEZ2dJQkFHdlAKNkxwVE5jd1VBQnlHb1ZURDRJdkk4cHBsREJYRk9DSXVNdWhYZHNCUUZLZU1KYjFXMTczcDZmeVlUVVVpTzdEQQp0QUNET0FwMC9iaG54ZnMyTmxoMHFKRkVWbVVBU25aMnNraG52L1FKelNOaHlyQURzUzR3S3Q1M3dLZjBDdW9qCjk0VGdOMFl6RWtWRFZsbjZtRHowN0NJUmFubmF0dFJ5anEvV2N1NHNNRWdzdlpka3AxazlvQWhpbTd5UEZKRWcKUUVrUk9JVmcrTVdTaVp0eUFWcHJqbW80Mlo3R3VlRjJLbURQUmgvVmtRUW1rT0pVMDcyb3JySkxFelB6bXYxbgpUL1V5QTZZMWxxaVNhbFBhVDJPRjMwWEtzQ1NpTzJhakc5bFNSVzZLVjhOakpXRitsb2VKVkdhN2FHTVFsbDcrCkJQRWRNam5FTXJGUHNOU044OFhIdUJqWDN6OUVDUTkzNjQ3WHhYZ0ZnMGM3Z3FaQWwzOVFyckx6Nmx3RlA5U0QKSVJNR3NSMUsxU2xORmF2UDVQWXhIMUIrOVB2dUE2OU41dytkQzgxMjJUdlVqSEFnSXIzYVpMWDJ0UnYyLzRIRwp2MXliS25pbWpXNHorWkJ3KzVTd0RBeVhzNHM4M0ZabnRQQUtIZWdFUDRRbzkzT3pldnFwY2xMVFYvQjdhK1RqClFTRHpIYjNlTFI5SzZhM1VEZFc1bXpwa1Q5dFVnRmF1ZndJMnhFRHhOa2xXSUpmeHNyblJSOU0vM3ExT3ovNEUKTTdhRVQ3SFpIOUFLeVZOUWczYUJMTGpvOG1YSk15VmJTSnd0RnVwWkxOVjNwS1lCN3g5dkR0aXp1UkNWdTJEawppOEtPUXRDdkZHMG9EYmxRT0RoMHpoYnNNOUwySS9XWnZNNXBZVnpvCi0tLS0tRU5EIENFUlRJRklDQVRFLS0tLS0K","verification":{}},"filesystem":"root","mode":420,"overwrite":true,"path":"/etc/pki/ca-trust/source/anchors/registry.crt"}]}}'
+  nmStateConfigLabelSelector:
+    matchLabels:
+      cluster-name: ocp4-3
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: master-0-bmc-secret
+  namespace: ocp4-3
+type: Opaque
+data:
+  username: "YWRtaW4K"
+  password: "cmVkaGF0Cg=="
+
+---
+apiVersion: metal3.io/v1alpha1
+kind: BareMetalHost
+metadata:
+  name: master-0
+  namespace: ocp4-3
+  annotations:
+    inspect.metal3.io: disabled
+    bmac.agent-install.openshift.io/hostname: 'master-0.ocp4-3.example.com'
+    bmac.agent-install.openshift.io/role: "master"
+  labels:
+    infraenvs.agent-install.openshift.io: "ocp4-3"
+spec:
+  bootMode: "UEFI"
+  bmc:
+    address: redfish-virtualmedia+http://192.168.122.1:8000/redfish/v1/Systems/963b4ca3-c3b1-4580-bddb-a2f77b1bb7c1
+    credentialsName: master-0-bmc-secret
+    disableCertificateVerification: true
+  bootMACAddress: "52:54:00:3d:7f:67"
+  automatedCleaningMode: disabled
+  online: true

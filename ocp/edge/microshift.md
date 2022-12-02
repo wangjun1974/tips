@@ -2381,3 +2381,13 @@ mce    4d15h
 $ oc get consoles.operator.openshift.io cluster -o jsonpath='{.spec.plugins}'
 ["mce","acm"]
 ```
+
+### 配置 ACM Git App/Sub Channel 使用 insecure HTTPS connection to a Git server
+https://access.redhat.com/documentation/en-us/red_hat_advanced_cluster_management_for_kubernetes/2.6/html-single/applications/index#configuring-git-channel
+```
+$ oc get channel -A 
+NAMESPACE                                                      NAME                                                        TYPE       PATHNAME                                                                                          AGE
+ghift-operatorsappsocp4-1examplecom-lab-user-2-book-impor-ns   ghift-operatorsappsocp4-1examplecom-lab-user-2-book-impor   Git        https://gitea-with-admin-openshift-operators.apps.ocp4-1.example.com/lab-user-2/book-import.git   15m
+
+$ oc patch channel ghift-operatorsappsocp4-1examplecom-lab-user-2-book-impor -n ghift-operatorsappsocp4-1examplecom-lab-user-2-book-impor-ns --type json -p '[{"op": "add", "path": "/spec/insecureSkipVerify", "value": true}]'
+```

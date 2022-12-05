@@ -2390,4 +2390,10 @@ NAMESPACE                                                      NAME             
 ghift-operatorsappsocp4-1examplecom-lab-user-2-book-impor-ns   ghift-operatorsappsocp4-1examplecom-lab-user-2-book-impor   Git        https://gitea-with-admin-openshift-operators.apps.ocp4-1.example.com/lab-user-2/book-import.git   15m
 
 $ oc patch channel ghift-operatorsappsocp4-1examplecom-lab-user-2-book-impor -n ghift-operatorsappsocp4-1examplecom-lab-user-2-book-impor-ns --type json -p '[{"op": "add", "path": "/spec/insecureSkipVerify", "value": true}]'
+
+$ oc get channel -A
+... 
+gperatorsappsocp4-1examplecom-lab-user-2-gitops-wordpress-ns   gperatorsappsocp4-1examplecom-lab-user-2-gitops-wordpress   Git        https://gitea-with-admin-openshift-operators.apps.ocp4-1.example.com/lab-user-2/gitops-wordpress.git   25s
+
+$ oc patch channel ghift-operatorsappsocp4-1examplecom-lab-user-2-book-impor -n ghift-operatorsappsocp4-1examplecom-lab-user-2-book-impor-ns --type json -p '[{"op": "add", "path": "/spec/insecureSkipVerify", "value": true}]'
 ```

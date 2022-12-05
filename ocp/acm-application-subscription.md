@@ -19,7 +19,10 @@ oc -n ghift-operatorsappsocp4-1examplecom-lab-user-2-book-impor-ns patch Channel
 ```
 # 安装 OpenShift GitOps Operator
 
-# 创建 ManagedClusterSet
+# 为用户添加 clusterrole open-cluster-management:subscription-admin （待完善）
+# oc adm policy add-cluster-role-to-user subscription-admin admin
+
+# 以 system:admin 用户创建 ManagedClusterSet
 # Clusters -> Cluster sets -> Create cluster set -> clusterset1 -> Manage resource assignments
 
 # 创建 ManagedClusterSetBinding

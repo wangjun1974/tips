@@ -19,11 +19,12 @@ oc -n ghift-operatorsappsocp4-1examplecom-lab-user-2-book-impor-ns patch Channel
 ```
 # 安装 OpenShift GitOps Operator
 
-# 为用户添加 clusterrole open-cluster-management:subscription-admin （待完善）
-# oc adm policy add-cluster-role-to-user subscription-admin admin
+# 为用户添加 clusterrole cluster-admin
+$ oc login -u system:admin
+$ oc adm policy add-cluster-role-to-user cluster-admin admin
 
-# 以 system:admin 用户创建 ManagedClusterSet
-# Clusters -> Cluster sets -> Create cluster set -> clusterset1 -> Manage resource assignments
+# 以有 cluster-admin role 的用户创建 ManagedClusterSet
+# Clusters -> Cluster sets -> Create cluster set -> gitops-openshift-clusters -> Manage resource assignments
 
 # 创建 ManagedClusterSetBinding
 # namespace 选择 openshift-gitops
@@ -33,7 +34,7 @@ oc -n ghift-operatorsappsocp4-1examplecom-lab-user-2-book-impor-ns patch Channel
 # 在 namespace 'openshift-gitops' 下创建 Placement
 # Placement 和 ManagedClusterSetBinding 需要在一个 namespace 下
 cat <<EOF | oc apply -f -
-apiVersion: cluster.open-cluster-management.io/v1alpha1
+apiVersion: cluster.open-cluster-management.io/v1beta1
 kind: Placement
 metadata:
   name: gitops-openshift-clusters
@@ -70,12 +71,16 @@ spec:
     argoNamespace: openshift-gitops
   placementRef:
     kind: Placement
-    apiVersion: cluster.open-cluster-management.io/v1alpha1
+    apiVersion: cluster.open-cluster-management.io/v1beta1
     name: gitops-openshift-clusters
     namespace: openshift-gitops
 EOF
 
 # 手工为 local-cluster 添加 Lable: Name 'gitops' Value 'test'
+oc label managedclusters local-cluster gitops="test"
+oc label managedclusters ocp4-3 gitops="test"
+
+
 
 # ACM UI 创建类型为 Argo CD ApplicationSet 的 Application
 # Applications -> Create application -> Argo CD ApplicationSet -> Create Argo CD ApplicationSet

@@ -2397,3 +2397,38 @@ gperatorsappsocp4-1examplecom-lab-user-2-gitops-wordpress-ns   gperatorsappsocp4
 
 $ oc patch channel ghift-operatorsappsocp4-1examplecom-lab-user-2-book-impor -n ghift-operatorsappsocp4-1examplecom-lab-user-2-book-impor-ns --type json -p '[{"op": "add", "path": "/spec/insecureSkipVerify", "value": true}]'
 ```
+
+### 开发环境搭建
+https://github.com/openshift/microshift<br>
+https://github.com/openshift/microshift/blob/main/docs/devenv_rhel8.md<br>
+```
+# 启用 repo
+$ sudo yum repolist
+Updating Subscription Management repositories.
+repo id                                                     repo name
+fast-datapath-for-rhel-8-x86_64-rpms                        Fast Datapath for RHEL 8 x86_64 (RPMs)
+rhel-8-for-x86_64-appstream-rpms                            Red Hat Enterprise Linux 8 for x86_64 - AppStream (RPMs)
+rhel-8-for-x86_64-baseos-rpms                               Red Hat Enterprise Linux 8 for x86_64 - BaseOS (RPMs)
+rhocp-4.12-el8-beta-x86_64-rpms                             Beta rhocp-4.12 RPMs for RHEL8
+
+$ pwd
+/home/microshift/microshift
+
+# scripts/image-builder/configure.sh 脚本安装的软件包
+$ cat scripts/image-builder/configure.sh 
+...
+sudo dnf install -y git osbuild-composer composer-cli ostree rpm-ostree \
+    cockpit-composer cockpit-machines bash-completion podman genisoimage \
+    createrepo yum-utils selinux-policy-devel jq wget lorax rpm-build
+sudo systemctl enable osbuild-composer.socket --now
+sudo systemctl enable cockpit.socket --now
+sudo firewall-cmd --add-service=cockpit --permanent
+
+# The mock utility comes from the EPEL repository
+sudo dnf install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm
+sudo dnf install -y mock 
+sudo usermod -a -G mock $(whoami)
+...
+
+
+```

@@ -2430,5 +2430,12 @@ sudo dnf install -y mock
 sudo usermod -a -G mock $(whoami)
 ...
 
+# 执行环境配置，检查是否有报错。如果有报错先修复报错
+$ sh -x scripts/image-builder/configure.sh
+
+# 将 pull-secret 保存在 ~/.pull-secret.json 里
+
+# 构建
+$ sh -x ~/microshift/scripts/image-builder/build.sh -pull_secret_file ~/.pull-secret.json
 
 ```

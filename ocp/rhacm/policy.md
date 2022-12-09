@@ -6,7 +6,7 @@ cat > policy-ocp4-3.yaml <<EOF
 apiVersion: policy.open-cluster-management.io/v1
 kind: Policy
 metadata:
-  name: add-registrymirror
+  name: add-snobaseline
   annotations:
     policy.open-cluster-management.io/standards: NIST SP 800-53
     policy.open-cluster-management.io/categories: CM Configuration Management
@@ -18,10 +18,18 @@ spec:
         apiVersion: policy.open-cluster-management.io/v1
         kind: ConfigurationPolicy
         metadata:
-          name: add-registrymirror
+          name: add-snobaseline
         spec:
           object-templates:
-            - complianceType: musthave
+            - complianceType: mustonlyhave
+              objectDefinition:
+                apiVersion: config.openshift.io/v1
+                kind: OperatorHub
+                metadata:
+                  name: cluster
+                spec:
+                  disableAllDefaultSources: true
+            - complianceType: mustonlyhave
               objectDefinition:
                 apiVersion: machineconfiguration.openshift.io/v1
                 kind: MachineConfig
@@ -47,20 +55,20 @@ spec:
 apiVersion: policy.open-cluster-management.io/v1
 kind: PlacementBinding
 metadata:
-  name: binding-add-registrymirror
+  name: binding-add-snobaseline
 placementRef:
-  name: placement-add-registrymirror
+  name: placement-add-snobaseline
   kind: PlacementRule
   apiGroup: apps.open-cluster-management.io
 subjects:
-- name: add-registrymirror
+- name: add-snobaseline
   kind: Policy
   apiGroup: policy.open-cluster-management.io
 ---
 apiVersion: apps.open-cluster-management.io/v1
 kind: PlacementRule
 metadata:
-  name: placement-add-registrymirror
+  name: placement-add-snobaseline
 spec:
   clusterConditions:
   - status: "True"

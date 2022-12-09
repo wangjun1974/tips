@@ -2439,3 +2439,6 @@ $ sh -x scripts/image-builder/configure.sh
 $ sh -x ~/microshift/scripts/image-builder/build.sh -pull_secret_file ~/.pull-secret.json
 
 ```
+
+### ACM Config Policy for Images
+https://gitlab.consulting.redhat.com/tbonds/acm-policies/-/blob/main/policy-images.yaml

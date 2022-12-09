@@ -31,6 +31,50 @@ spec:
                   disableAllDefaultSources: true
             - complianceType: mustonlyhave
               objectDefinition:
+                apiVersion: operators.coreos.com/v1alpha1
+                kind: CatalogSource
+                metadata:
+                  name: redhat-operator-index
+                  namespace: openshift-marketplace
+                spec:
+                  image: registry.example.com:5000/redhat/redhat-operator-index:v4.11
+                  sourceType: grpc
+            - complianceType: mustonlyhave
+              objectDefinition:
+                apiVersion: operators.coreos.com/v1alpha1
+                kind: CatalogSource
+                metadata:
+                  name: gitea-catalog
+                  namespace: openshift-marketplace
+                spec:
+                  image: registry.example.com:5000/gpte-devops-automation/gitea-catalog:latest
+                  sourceType: grpc
+            - complianceType: mustonlyhave
+              objectDefinition:
+                apiVersion: v1
+                data:
+                  htpasswd: YWRtaW46JDJ5JDA1JHhvVnd0NkE1VVd0bVZJSGV5ZG82Li5qWWNWNGl3T3ZPL2lRVTB0LzdpZEd0VEdVTHpPemhXCnVzZXIwMTokYXByMSRRT3VVVGtpUiRhMmFWb1B0OVJlV0ZFSG9TanMuNm4vCnVzZXIwMjokYXByMSRjS2dTdDdpcyRZMkN2NTQ3eUhMNEp6UnZZVjR5ODYuCg==
+                kind: Secret
+                metadata:
+                  name: htpass-secret
+                  namespace: openshift-config
+                type: Opaque
+            - complianceType: mustonlyhave
+              objectDefinition:
+                apiVersion: config.openshift.io/v1
+                kind: OAuth
+                metadata:
+                  name: cluster
+                spec:
+                  identityProviders:
+                  - name: htpasswd_provider
+                    mappingMethod: claim
+                    type: HTPasswd
+                    htpasswd:
+                      fileData:
+                        name: htpass-secret
+            - complianceType: mustonlyhave
+              objectDefinition:
                 apiVersion: machineconfiguration.openshift.io/v1
                 kind: MachineConfig
                 metadata:

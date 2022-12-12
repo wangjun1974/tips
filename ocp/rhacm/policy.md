@@ -1,4 +1,6 @@
 ### ACM Policy ConfigurationPolicy 
+https://cloud.redhat.com/blog/generating-governance-policies-using-kustomize-and-gitops<br>
+https://github.com/stolostron/policy-collection/blob/main/community/CM-Configuration-Management/policy-machineconfig-chrony.yaml<br>
 ```
 # 定义 ACM Policy - ConfigurationPolicy - 配置 machineconfig 
 cat > policy-ocp4-3.yaml <<EOF

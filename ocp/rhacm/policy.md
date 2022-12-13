@@ -138,3 +138,119 @@ spec:
       - {key: name, operator: In, values: ["ocp4-3"]}
 EOF
 ```
+
+### 用 ACM Config Policy 结合 RBAC 限制某个用户可以访问 application 
+https://cloud.redhat.com/blog/generating-governance-policies-using-kustomize-and-gitops<br>
+https://github.com/stolostron/policy-collection/blob/main/community/CM-Configuration-Management/policy-machineconfig-chrony.yaml<br>
+```
+# 定义 ACM Policy - ConfigurationPolicy - 配置 machineconfig 
+cat > policy-rbac-hub.yaml <<EOF
+---
+apiVersion: policy.open-cluster-management.io/v1
+kind: Policy
+metadata:
+  name: add-rbachub
+  annotations:
+    policy.open-cluster-management.io/standards: NIST SP 800-53
+    policy.open-cluster-management.io/categories: CM Configuration Management
+    policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
+spec:
+  disabled: false
+  policy-templates:
+    - objectDefinition:
+        apiVersion: policy.open-cluster-management.io/v1
+        kind: ConfigurationPolicy
+        metadata:
+          name: add-rbachub
+        spec:
+          object-templates:
+            - complianceType: mustonlyhave
+              objectDefinition:
+                apiVersion: rbac.authorization.k8s.io/v1
+                kind: ClusterRoleBinding
+                metadata:
+                  name: clusterrolebinding-application-open-cluster-management-ocp4-3
+                roleRef:
+                  apiGroup: rbac.authorization.k8s.io
+                  kind: ClusterRole
+                  name: open-cluster-management:view:ocp4-3
+                subjects:
+                - apiGroup: rbac.authorization.k8s.io
+                  kind: User
+                  name: user01
+            - complianceType: mustonlyhave
+              objectDefinition:
+                apiVersion: rbac.authorization.k8s.io/v1
+                kind: RoleBinding
+                metadata:
+                  name: rolebinding-application-open-cluster-management-ocp4-3
+                  namespace: ocp4-3
+                roleRef:
+                  apiGroup: rbac.authorization.k8s.io
+                  kind: ClusterRole
+                  name: view
+                subjects:
+                - apiGroup: rbac.authorization.k8s.io
+                  kind: User
+                  name: user01
+            - complianceType: mustonlyhave
+              objectDefinition:
+                apiVersion: rbac.authorization.k8s.io/v1
+                kind: Role
+                metadata:
+                  name: role-view-book-import
+                  namespace: book-import
+                rules:
+                - apiGroups:
+                  - '*'
+                  resources:
+                  - '*'
+                  verbs:
+                  - get
+                  - watch
+                  - list
+            - complianceType: mustonlyhave
+              objectDefinition:
+                apiVersion: rbac.authorization.k8s.io/v1
+                kind: RoleBinding
+                metadata:
+                  name: rolebinding-application-open-cluster-management-book-import
+                  namespace: book-import
+                roleRef:
+                  apiGroup: rbac.authorization.k8s.io
+                  kind: Role
+                  name: role-view-book-import
+                subjects:
+                - apiGroup: rbac.authorization.k8s.io
+                  kind: User
+                  name: user01
+          remediationAction: enforce
+          severity: low
+  remediationAction: enforce
+---
+apiVersion: policy.open-cluster-management.io/v1
+kind: PlacementBinding
+metadata:
+  name: binding-add-rbachub
+placementRef:
+  name: placement-add-rbachub
+  kind: PlacementRule
+  apiGroup: apps.open-cluster-management.io
+subjects:
+- name: add-rbachub
+  kind: Policy
+  apiGroup: policy.open-cluster-management.io
+---
+apiVersion: apps.open-cluster-management.io/v1
+kind: PlacementRule
+metadata:
+  name: placement-add-rbachub
+spec:
+  clusterConditions:
+  - status: "True"
+    type: ManagedClusterConditionAvailable
+  clusterSelector:
+    matchExpressions:
+      - {key: name, operator: In, values: ["local-cluster"]}
+EOF
+```

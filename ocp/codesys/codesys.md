@@ -17,3 +17,12 @@ $ /etc/init.d/codesyscontrol status
 # 选择工具栏'启动‘，下发程序到下位机
 # 双击 'Visualization' - 可以在可视化界面里查看
 ```
+
+### CODESYS 安装 Addon
+https://blog.csdn.net/goo__gle/article/details/117018937<br>
+```
+# 运行 CODESYS Installer 
+# 选择 Change
+# 选择 Install File
+# 选择扩展名为 package 的 Addon
+```

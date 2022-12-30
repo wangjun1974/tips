@@ -1514,4 +1514,54 @@ $ /usr/local/bin/oc-mirror --from ./mirror_seq1_000000.tar docker://registry.exa
 ### done
 ### 同步 operator 
 ### catalog 是 registry.redhat.io/redhat/redhat-operator-index:v4.12
+$ cat > image-config-realse-local.yaml <<EOF
+apiVersion: mirror.openshift.io/v1alpha2
+kind: ImageSetConfiguration
+mirror:
+  operators:
+    - catalog: registry.redhat.io/redhat/redhat-operator-index:v4.12
+      packages:
+        - name: kubevirt-hyperconverged
+          channels:
+            - name: 'stable'
+              minVersion: 'v4.11.1'
+              maxVersion: 'v4.11.1'                      
+        - name: cincinnati-operator
+          channels:
+            - name: v1
+              minVersion: 'v5.0.0'
+              maxVersion: 'v5.0.0'
+        - name: advanced-cluster-management
+          channels:
+            - name: release-2.6
+              minVersion: 'v2.6.3'
+              maxVersion: 'v2.6.3'         
+        - name: openshift-gitops-operator
+          channels:
+            - name: latest
+              minVersion: 'v1.7.0'
+              maxVersion: 'v1.7.0'
+        - name: odf-lvm-operator
+          channels:
+            - name: stable-4.11
+              minVersion: 'v4.11.4'
+              maxVersion: 'v4.11.4'
+        - name: multicluster-engine
+          channels:
+            - name: stable-2.1
+              minVersion: 'v2.1.4'
+              maxVersion: 'v2.1.4'
+        - name: rhacs-operator
+          channels:
+            - name: latest
+              minVersion: 'v3.73.1'
+              maxVersion: 'v3.73.1'
+        - name: ansible-automation-platform-operator
+          channels:
+            - name: stable-2.3-cluster-scoped
+              minVersion: 'v2.3.0-0.1670543780'
+              maxVersion: 'v2.3.0-0.1670543780'
+EOF
+$ /usr/local/bin/oc-mirror --config ./image-config-realse-local.yaml file://output-dir 2>&1 | tee /tmp/err 
+$ /usr/local/bin/oc-mirror --from ./mirror_seq1_000000.tar docker://registry.example.com:5000
 ```

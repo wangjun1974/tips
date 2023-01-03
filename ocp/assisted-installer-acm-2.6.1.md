@@ -123,7 +123,7 @@ spec:
       cpuArchitecture: "x86_64"
 EOF
 
-# 检查一下 structure-operator 日志
+# 检查一下 infrastructure-operator 日志
 $ oc -n multicluster-engine logs $( oc get pods -n multicluster-engine -l control-plane='infrastructure-operator' -o name )
 
 # 正常创建之后会有 agent 相关的 pod 被创建出来

@@ -1521,11 +1521,42 @@ mirror:
   operators:
     - catalog: registry.redhat.io/redhat/redhat-operator-index:v4.12
       packages:
+      packages:
         - name: kubevirt-hyperconverged
           channels:
             - name: 'stable'
               minVersion: 'v4.11.1'
-              maxVersion: 'v4.11.1'                      
+              maxVersion: 'v4.11.1'            
+        - name: kubernetes-nmstate-operator
+          channels:
+            - name: 'stable'
+              minVersion: '4.12.0-202301091615'
+              maxVersion: '4.12.0-202301091615'              
+        - name: sriov-network-operator
+          channels:
+            - name: 'stable'
+              minVersion: 'v4.12.0-202301062016'
+              maxVersion: 'v4.12.0-202301062016'            
+        - name: local-storage-operator
+          channels:
+            - name: 'stable'
+              minVersion: 'v4.12.0-202301042354'
+              maxVersion: 'v4.12.0-202301042354'            
+        - name: odf-operator
+          channels:
+            - name: 'stable-4.11'
+              minVersion: 'v4.11.4'
+              maxVersion: 'v4.11.4'
+        - name: ocs-operator
+          channels:
+            - name: 'stable-4.11'
+              minVersion: 'v4.11.4'
+              maxVersion: 'v4.11.4'
+        - name: mcg-operator
+          channels:
+            - name: 'stable-4.11'
+              minVersion: 'v4.11.4'
+              maxVersion: 'v4.11.4'              
         - name: cincinnati-operator
           channels:
             - name: v1
@@ -1561,6 +1592,31 @@ mirror:
             - name: stable-2.3-cluster-scoped
               minVersion: 'v2.3.0-0.1670543780'
               maxVersion: 'v2.3.0-0.1670543780'
+        - name: nfd
+          channels:
+            - name: stable
+              minVersion: '4.12.0-202301042354'
+              maxVersion: '4.12.0-202301042354'
+        - name: node-healthcheck-operator
+          channels:
+            - name: stable
+              minVersion: 'v0.4.0'
+              maxVersion: 'v0.4.0'
+        - name: metallb-operator
+          channels:
+            - name: stable
+              minVersion: '4.12.0-202301042354'
+              maxVersion: '4.12.0-202301042354'
+        - name: sandboxed-containers-operator
+          channels:
+            - name: stable-1.3
+              minVersion: 'v1.3.1'
+              maxVersion: 'v1.3.1'
+        - name: web-terminal
+          channels:
+            - name: fast
+              minVersion: 'v1.6.0'
+              maxVersion: 'v1.6.0'
 EOF
 $ /usr/local/bin/oc-mirror --config ./image-config-realse-local.yaml file://output-dir 2>&1 | tee /tmp/err 
 $ /usr/local/bin/oc-mirror --from ./mirror_seq1_000000.tar docker://registry.example.com:5000

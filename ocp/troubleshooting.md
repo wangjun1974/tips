@@ -16,6 +16,13 @@ rm -rf /var/lib/kubelet/pods/${POD_UUID}/volumes/kubernetes.io~csi/pvc-bbbbbbbb-
 
 ### 找到 vol_data.json
 ### 删除 vol_data.json 及目录
+
+1. 另外如果 kube-api-server 启动很短时间如几分钟后自动停止
+2. 可考虑将 kube-api-server 按照上述方法启动起来
+3. 在 kube-api-server 启动起来以后，查找 STATUS 非 'Running' 或者 'Complete' 的 pods，删除找到的 Pods
+$ oc get pods -A | grep -Ev "Running|Complete" 
+
+
 ```
 
 ### 在 ACM Search 功能不好用的情况下，删除 statefulset search-redisgraph

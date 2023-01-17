@@ -26,3 +26,53 @@ https://blog.csdn.net/goo__gle/article/details/117018937<br>
 # 选择 Install File
 # 选择扩展名为 package 的 Addon
 ```
+
+### 在 RHEL 8.6 上安装 codesyscontrol 与 codesysedge
+```
+1. 最小化安装 RHEL 8.6
+2. 挂载 RHEL 8.6 iso
+3. 创建本地软件仓库
+cat > /etc/yum.repos.d/local.repo <<EOF
+[BaseOS]
+name=BaseOS
+baseurl=file:///mnt/BaseOS/
+enabled=1
+gpgcheck=0
+
+[AppStream]
+name=AppStream
+baseurl=file:///mnt/AppStream/
+enabled=1
+gpgcheck=0
+
+EOF
+
+4. 安装 codesyscontrol 与 codesysedge
+$ ll /root/codesys_runtime/
+total 17864
+-rw-r--r--. 1 root root 10793015 Jan 17 09:13 codemeter-lite-7.20.4402.501-2.x86_64.rpm
+-rw-r--r--. 1 root root  5510340 Jan 17 09:13 codesyscontrol-4.1.0.0-2.x86_64.rpm
+-rw-r--r--. 1 root root  1980059 Jan 17 09:13 codesysedge-4.1.0.0-2.x86_64.rpm
+
+# 安装依赖软件包 libpciaccess
+# codesyscontrol 依赖 libpciaccess
+$ yum install -y libpciaccess
+
+# 安装 codesyscontrol 与 codesysedge
+# 软件包有冲突，需强制安装
+# Verifying...                          ################################# [100%]
+# Preparing...                          ################################# [100%]
+#        file / from install of codesysedge-4.1.0.0-2.x86_64 conflicts with file from package filesystem-3.8-6.el8.x86_64
+#        file /etc/init.d from install of codesysedge-4.1.0.0-2.x86_64 conflicts with file from package chkconfig-1.19.1-1.el8.x86_64
+#        file / from install of codesyscontrol-4.1.0.0-2.x86_64 conflicts with file from package filesystem-3.8-6.el8.x86_64
+#        file /etc/init.d from install of codesyscontrol-4.1.0.0-2.x86_64 conflicts with file from package chkconfig-1.19.1-1.el8.x86_64
+$ rpm -ivh codesyscontrol-4.1.0.0-2.x86_64.rpm codesysedge-4.1.0.0-2.x86_64.rpm --force
+
+5. 制作 codesyscontrol 和 codesysedge 容器
+# 尝试 UBI + codesyscontrol
+# 尝试 UBI + codesysedge
+$ mkdir -p ~/.config/containers
+# 拷贝包含 pull secret 的 auth.json 到这个目录下
+
+
+```

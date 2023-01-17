@@ -74,5 +74,7 @@ $ rpm -ivh codesyscontrol-4.1.0.0-2.x86_64.rpm codesysedge-4.1.0.0-2.x86_64.rpm 
 $ mkdir -p ~/.config/containers
 # 拷贝包含 pull secret 的 auth.json 到这个目录下
 
+# 在 ubi 里安装 libpciaccess
+# https://access.redhat.com/solutions/5558771
 
 ```

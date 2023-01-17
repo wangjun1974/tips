@@ -76,5 +76,13 @@ $ mkdir -p ~/.config/containers
 
 # 在 ubi 里安装 libpciaccess
 # https://access.redhat.com/solutions/5558771
+# https://developers.redhat.com/blog/2019/05/31/working-with-red-hat-enterprise-linux-universal-base-images-ubi#exploring_the_ubi_container_image
+FROM registry.access.redhat.com/ubi8/ubi:latest
+RUN SMDEV_CONTAINER_OFF=1 subscription-manager register --org=XXXXXX --activationkey=container_builds && \
+    yum install -y openssh-server && \
+    SMDEV_CONTAINER_OFF=1 subscription-manager unregister && \
+    yum clean all && \
+    echo -e '[main]\nenabled=0' >  /etc/yum/pluginconf.d/subscription-manager.conf
 
+podman run -it registry.redhat.io/ubi8/ubi bash
 ```

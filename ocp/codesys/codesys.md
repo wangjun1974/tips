@@ -85,4 +85,44 @@ RUN SMDEV_CONTAINER_OFF=1 subscription-manager register --org=XXXXXX --activatio
     echo -e '[main]\nenabled=0' >  /etc/yum/pluginconf.d/subscription-manager.conf
 
 podman run -it registry.redhat.io/ubi8/ubi bash
+
+# codesyscontrol
+Dockerfile
+cat > Dockerfile <<EOF
+FROM registry.access.redhat.com/ubi8/ubi:latest
+RUN dnf install -y libpciaccess && \
+    dnf clean all 
+COPY codesyscontrol-4.1.0.0-2.x86_64.rpm /tmp/codesyscontrol-4.1.0.0-2.x86_64.rpm
+RUN rpm -ivh /tmp/codesyscontrol-4.1.0.0-2.x86_64.rpm --force
+RUN rm -f /tmp/codesyscontrol-4.1.0.0-2.x86_64.rpm
+EXPOSE 4840/tcp
+EXPOSE 11740/tcp
+EXPOSE 1740/udp
+
+ENTRYPOINT ["/opt/codesys/bin/codesyscontrol.bin"]
+CMD ["/etc/CODESYSControl.cfg"]
+EOF
+
+podman build -f Dockerfile  -t registry.example.com:5000/codesys/codesyscontrol 
+
+podman run --name codesyscontrol -d -t --network host --privileged registry.example.com:5000/codesys/codesyscontrol 
+
+# codesysedge
+$ mkdir codesysedge
+$ cd codesysedge
+$ cat > Dockerfile <<EOF
+FROM registry.access.redhat.com/ubi8/ubi:latest
+COPY codesysedge-4.1.0.0-2.x86_64.rpm /tmp/codesysedge-4.1.0.0-2.x86_64.rpm
+RUN rpm -ivh /tmp/codesysedge-4.1.0.0-2.x86_64.rpm --force
+RUN rm -f /tmp/codesysedge-4.1.0.0-2.x86_64.rpm
+EXPOSE 1217/tcp
+EXPOSE 1743/udp
+
+ENTRYPOINT ["/opt/codesysedge/bin/codesysedge.bin"]
+CMD ["/etc/Gateway.cfg"]
+EOF
+
+$ podman build -f Dockerfile  -t registry.example.com:5000/codesys/codesysedge 
+$ podman run --name codesysedge -d -t --network host --privileged registry.example.com:5000/codesys/codesysedge 
+
 ```

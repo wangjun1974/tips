@@ -126,3 +126,98 @@ $ podman build -f Dockerfile  -t registry.example.com:5000/codesys/codesysedge
 $ podman run --name codesysedge -d -t --network host --privileged registry.example.com:5000/codesys/codesysedge 
 
 ```
+
+
+### OCP migration
+https://ics-cert.kaspersky.com/publications/reports/2019/09/18/security-research-codesys-runtime-a-plc-control-framework-part-1/<br>
+```
+mkdir codesyscontrol
+cd codesyscontrol
+cat > deployment.yaml <<EOF
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: codesyscontrol
+  labels:
+    app: codesyscontrol
+spec:
+  selector:
+    matchLabels:
+      app: codesyscontrol
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: codesyscontrol
+    spec:
+      containers:
+      - image: registry.example.com:5000/codesys/codesyscontrol:latest
+        name: codesyscontrol
+        ports:
+        - containerPort: 4840
+          name: upcua
+          protocol: TCP
+        - containerPort: 11740
+          name: runtimetcp
+          protocol: TCP
+        - containerPort: 1740
+          name: runtimeudp
+          protocol: UDP
+        volumeMounts:
+        - name: codesyscontrol-persistent-storage
+          mountPath: /var/opt/codesys
+      volumes:
+      - name: codesyscontrol-persistent-storage
+        persistentVolumeClaim:
+          claimName: codesyscontrol-pv-claim
+EOF
+
+cat > service.yaml <<EOF
+apiVersion: v1
+kind: Service
+metadata:
+  name: codesyscontrol
+  labels:
+    app: codesyscontrol
+spec:
+  type: NodePort
+  ports:
+    - port: 4840
+      name: upcua
+      protocol: TCP
+      nodePort: 30840
+    - port: 11740
+      name: runtimetcp
+      protocol: TCP
+      nodePort: 31740
+    - port: 1740
+      name: runtimeudp
+      protocol: UDP
+      nodePort: 32740
+  selector:
+    app: codesyscontrol
+EOF
+
+cat > pvc.yaml <<EOF
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: codesyscontrol-pv-claim
+  labels:
+    app: codesyscontrol
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+EOF
+
+cat > kustomization.yaml <<EOF
+resources:
+- pvc.yaml
+- deployment.yaml
+- service.yaml
+EOF
+```

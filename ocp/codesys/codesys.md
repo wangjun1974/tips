@@ -125,6 +125,14 @@ EOF
 $ podman build -f Dockerfile  -t registry.example.com:5000/codesys/codesysedge 
 $ podman run --name codesysedge -d -t --network host --privileged registry.example.com:5000/codesys/codesysedge 
 
+
+# 开放防火墙端口
+firewall-cmd --add-port=1217/tcp --zone=public --permanent
+firewall-cmd --add-port=1743/udp --zone=public --permanent
+firewall-cmd --add-port=11740/tcp --zone=public --permanent
+firewall-cmd --add-port=1740/udp --zone=public --permanent
+firewall-cmd --add-port=4840/tcp --zone=public --permanent
+firewall-cmd --reload
 ```
 
 
@@ -132,6 +140,68 @@ $ podman run --name codesysedge -d -t --network host --privileged registry.examp
 https://ics-cert.kaspersky.com/publications/reports/2019/09/18/security-research-codesys-runtime-a-plc-control-framework-part-1/<br>
 https://forge.codesys.com/forge/talk/Runtime/thread/4078a2ed28/<br>
 ```
+mkdir codesysedge
+cd codesysedge
+oc new-project codesys
+oc adm policy add-scc-to-user privileged -z default -n codesys
+
+cat > deployment.yaml <<EOF
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: codesysedge
+  labels:
+    app: codesysedge
+spec:
+  selector:
+    matchLabels:
+      app: codesysedge
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: codesysedge
+    spec:
+      containers:
+      - image: registry.example.com:5000/codesys/codesysedge:latest
+        name: codesysedge
+        ports:
+        - containerPort: 1217
+          name: gateway
+          protocol: TCP
+          hostPort: 1217
+        - containerPort: 1743
+          name: gatewayudp
+          protocol: UDP
+EOF
+
+cat > service.yaml <<EOF
+apiVersion: v1
+kind: Service
+metadata:
+  name: codesysedge
+  labels:
+    app: codesysedge
+spec:
+  ports:
+    - port: 1217
+      name: gateway
+      protocol: TCP
+    - port: 1743
+      name: gatewayudp
+      protocol: UDP
+  selector:
+    app: codesysedge
+EOF
+
+cat > kustomization.yaml <<EOF
+resources:
+- deployment.yaml
+- service.yaml
+EOF
+
+### codesyscontrol 
 mkdir codesyscontrol
 cd codesyscontrol
 cat > deployment.yaml <<EOF

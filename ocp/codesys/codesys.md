@@ -130,6 +130,7 @@ $ podman run --name codesysedge -d -t --network host --privileged registry.examp
 
 ### OCP migration
 https://ics-cert.kaspersky.com/publications/reports/2019/09/18/security-research-codesys-runtime-a-plc-control-framework-part-1/<br>
+https://forge.codesys.com/forge/talk/Runtime/thread/4078a2ed28/<br>
 ```
 mkdir codesyscontrol
 cd codesyscontrol

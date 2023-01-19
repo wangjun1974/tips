@@ -152,8 +152,10 @@ $ mkdir base
 $ cd base
 # 
 # https://www.adminsub.net/ipv4-subnet-calculator/192.168.122.128/30
-# Network 192.168.122.128/30
-# Broadcast: 192.168.122.131
+# Network 192.168.122.140/30
+# Broadcast: 192.168.122.143
+# FirstIP: 192.168.122.141
+# LastIP: 192.168.122.142
 cat > net-attach-def.yaml <<EOF
 apiVersion: "k8s.cni.cncf.io/v1"
 kind: NetworkAttachmentDefinition
@@ -168,7 +170,7 @@ spec:
       "mode": "bridge",
       "ipam": {
             "type": "whereabouts",
-            "range": "192.168.122.128/30"
+            "range": "192.168.122.140/30"
       }
   }'
 EOF

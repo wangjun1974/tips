@@ -139,11 +139,42 @@ firewall-cmd --reload
 ### OCP migration
 https://ics-cert.kaspersky.com/publications/reports/2019/09/18/security-research-codesys-runtime-a-plc-control-framework-part-1/<br>
 https://forge.codesys.com/forge/talk/Runtime/thread/4078a2ed28/<br>
+https://www.cnblogs.com/ericnie/p/16301269.html<br>
 ```
-mkdir codesysedge
-cd codesysedge
-oc new-project codesys
-oc adm policy add-scc-to-user privileged -z default -n codesys
+# 安装 kubernetes-nmstate-operator
+# 创建 codesys namespace
+$ oc new-project codesys
+
+# 为 serviceaccount default 添加 privileged scc
+$ oc adm policy add-scc-to-user privileged -z default -n codesys
+
+$ mkdir base
+$ cd base
+# 
+# https://www.adminsub.net/ipv4-subnet-calculator/192.168.122.128/30
+# Network 192.168.122.128/30
+# Broadcast: 192.168.122.131
+cat > net-attach-def.yaml <<EOF
+apiVersion: "k8s.cni.cncf.io/v1"
+kind: NetworkAttachmentDefinition
+metadata:
+  name: codesys
+  namespace: codesys
+spec:
+  config: '{
+      "cniVersion": "0.3.1",
+      "type": "macvlan",
+      "master": "ens10",
+      "mode": "bridge",
+      "ipam": {
+            "type": "whereabouts",
+            "range": "192.168.122.128/30"
+      }
+  }'
+EOF
+
+$ mkdir codesysedge
+$ cd codesysedge
 
 cat > deployment.yaml <<EOF
 apiVersion: apps/v1
@@ -162,10 +193,14 @@ spec:
     metadata:
       labels:
         app: codesysedge
+      annotations:
+        k8s.v1.cni.cncf.io/networks: codesys
     spec:
       containers:
       - image: registry.example.com:5000/codesys/codesysedge:latest
         name: codesysedge
+        securityContext:
+          privileged: true        
         ports:
         - containerPort: 1217
           name: gateway
@@ -174,6 +209,7 @@ spec:
         - containerPort: 1743
           name: gatewayudp
           protocol: UDP
+          hostPort: 1743
 EOF
 
 cat > service.yaml <<EOF
@@ -182,7 +218,10 @@ kind: Service
 metadata:
   name: codesysedge
   labels:
+    service.kubernetes.io/service-proxy-name: multus-proxy
     app: codesysedge
+  annotations:
+    k8s.v1.cni.cncf.io/service-network: codesys
 spec:
   ports:
     - port: 1217
@@ -204,6 +243,7 @@ EOF
 ### codesyscontrol 
 mkdir codesyscontrol
 cd codesyscontrol
+
 cat > deployment.yaml <<EOF
 apiVersion: apps/v1
 kind: Deployment
@@ -211,6 +251,8 @@ metadata:
   name: codesyscontrol
   labels:
     app: codesyscontrol
+  annotations:
+    k8s.v1.cni.cncf.io/networks: codesys
 spec:
   selector:
     matchLabels:
@@ -225,16 +267,21 @@ spec:
       containers:
       - image: registry.example.com:5000/codesys/codesyscontrol:latest
         name: codesyscontrol
+        securityContext:
+          privileged: true         
         ports:
         - containerPort: 4840
           name: upcua
           protocol: TCP
+          hostPort: 4840
         - containerPort: 11740
           name: runtimetcp
           protocol: TCP
+          hostPort: 11740
         - containerPort: 1740
           name: runtimeudp
           protocol: UDP
+          hostPort: 1740
         volumeMounts:
         - name: codesyscontrol-persistent-storage
           mountPath: /var/opt/codesys
@@ -250,22 +297,21 @@ kind: Service
 metadata:
   name: codesyscontrol
   labels:
+    service.kubernetes.io/service-proxy-name: multus-proxy
     app: codesyscontrol
+  annotations:
+    k8s.v1.cni.cncf.io/service-network: codesys
 spec:
-  type: NodePort
   ports:
     - port: 4840
       name: upcua
       protocol: TCP
-      nodePort: 30840
     - port: 11740
       name: runtimetcp
       protocol: TCP
-      nodePort: 31740
     - port: 1740
       name: runtimeudp
       protocol: UDP
-      nodePort: 32740
   selector:
     app: codesyscontrol
 EOF

@@ -175,6 +175,11 @@ spec:
   }'
 EOF
 
+cat > kustomization.yaml <<EOF
+resources:
+- net-attach-def.yaml
+EOF
+
 $ mkdir codesysedge
 $ cd codesysedge
 
@@ -253,8 +258,6 @@ metadata:
   name: codesyscontrol
   labels:
     app: codesyscontrol
-  annotations:
-    k8s.v1.cni.cncf.io/networks: codesys
 spec:
   selector:
     matchLabels:
@@ -265,6 +268,8 @@ spec:
     metadata:
       labels:
         app: codesyscontrol
+      annotations:
+        k8s.v1.cni.cncf.io/networks: codesys          
     spec:
       containers:
       - image: registry.example.com:5000/codesys/codesyscontrol:latest

@@ -112,6 +112,8 @@ $ mkdir codesysedge
 $ cd codesysedge
 $ cat > Dockerfile <<EOF
 FROM registry.access.redhat.com/ubi8/ubi:latest
+RUN dnf install -y iproute net-tools && \
+    dnf clean all 
 COPY codesysedge-4.1.0.0-2.x86_64.rpm /tmp/codesysedge-4.1.0.0-2.x86_64.rpm
 RUN rpm -ivh /tmp/codesysedge-4.1.0.0-2.x86_64.rpm --force
 RUN rm -f /tmp/codesysedge-4.1.0.0-2.x86_64.rpm
@@ -183,11 +185,12 @@ EOF
 $ mkdir codesysedge
 $ cd codesysedge
 
-cat > deployment.yaml <<EOF
+$ cat > deployment.yaml <<EOF
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: codesysedge
+  namespace: codesys
   labels:
     app: codesysedge
 spec:
@@ -219,11 +222,12 @@ spec:
           hostPort: 1743
 EOF
 
-cat > service.yaml <<EOF
+$ cat > service.yaml <<EOF
 apiVersion: v1
 kind: Service
 metadata:
   name: codesysedge
+  namespace: codesys
   labels:
     service.kubernetes.io/service-proxy-name: multus-proxy
     app: codesysedge
@@ -241,7 +245,7 @@ spec:
     app: codesysedge
 EOF
 
-cat > kustomization.yaml <<EOF
+$ cat > kustomization.yaml <<EOF
 resources:
 - deployment.yaml
 - service.yaml
@@ -256,6 +260,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: codesyscontrol
+  namespace:codesys
   labels:
     app: codesyscontrol
 spec:
@@ -344,4 +349,33 @@ resources:
 - deployment.yaml
 - service.yaml
 EOF
+```
+
+### CodeSys Runtime + Application
+```
+### 从 podman 容器拷贝应用程序到本地
+cd codesyscontrol
+podman cp codesyscontrol:/PlcLogic .
+
+mv Dockerfile Dockerfile.bak
+
+### Dockerfile - 拷贝带 Application 内容的 PlcLogic 目录到 Runtime Container 内
+cat > Dockerfile <<EOF
+FROM registry.access.redhat.com/ubi8/ubi:latest
+RUN dnf install -y libpciaccess && dnf clean all 
+COPY codesyscontrol-4.1.0.0-2.x86_64.rpm /tmp/codesyscontrol-4.1.0.0-2.x86_64.rpm
+RUN rpm -ivh /tmp/codesyscontrol-4.1.0.0-2.x86_64.rpm --force && rm -f /tmp/codesyscontrol-4.1.0.0-2.x86_64.rpm
+COPY PlcLogic/ /PlcLogic/
+EXPOSE 4840/tcp
+EXPOSE 11740/tcp
+EXPOSE 1740/udp
+
+ENTRYPOINT ["/opt/codesys/bin/codesyscontrol.bin"]
+CMD ["/etc/CODESYSControl.cfg"]
+EOF
+
+podman build -f Dockerfile  -t registry.example.com:5000/codesys/codesyscontroldemoapp:v1
+podman push registry.example.com:5000/codesys/codesyscontroldemoapp:v1 
+podman run --name codesyscontroldemoapp -d -t --network host --privileged registry.example.com:5000/codesys/codesyscontroldemoapp:v1 
+
 ```

@@ -442,7 +442,21 @@ spec:
     # dockerfilePath: dockerfile
   output:
     to:
-      kind: ImageStreamTag
-      name: 'codesyscontrolwithapp:latest'
+      kind: "DockerImage"
+      name: "registry.example.com:5000/codesys/codesyscontrolwithapp:latest"
 EOF
+
+$ oc apply -f buildconfig.yaml
+$ oc get buildconfig
+$ oc start-build bc/codesyscontrolwithapp-build
+
+### Build 包含以下报错
+$ oc get build codesyscontrolwithapp-build-3 -o yaml
+...
+  logSnippet: |-
+    Cloning "https://gitea-with-admin-openshift-operators.apps...example.com/lab-user-2/codesyscontrolwithapp-image.git" ...
+    error: fatal: unable to access 'https://gitea-with-admin-o...icate problem: self signed certificate in certificate chain
+  message: Failed to fetch the input source.
+
+
 ```

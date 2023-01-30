@@ -379,3 +379,70 @@ podman push registry.example.com:5000/codesys/codesyscontroldemoapp:v1
 podman run --name codesyscontroldemoapp -d -t --network host --privileged registry.example.com:5000/codesys/codesyscontroldemoapp:v1 
 
 ```
+
+### 创建 Docker Build 的 BuildConfig
+```
+### codesyscontrol image
+### 在 gitea 上创建 codesyscontrolwithapp-image git repo
+### clone codesyscontrolwithapp-image git repo
+$ git clone https://gitea-with-admin-openshift-operators.apps.ocp4-1.example.com/lab-user-2/codesyscontrolwithapp-image.git
+$ cd codesyscontrolwithapp-image
+$ ls -al 
+drwxr-xr-x. 4 root root  36 Jan 30 09:55 .
+drwxr-xr-x. 7 root root  95 Jan 30 09:54 ..
+drwxr-xr-x. 7 root root 119 Jan 30 09:55 .git 
+
+### 创建 dockerfile 目录
+$ mkdir -p dockerfile
+$ cd dockerfile
+
+### 准备 Artifacts - Dockerfile
+$ cat > Dockerfile <<EOF
+FROM registry.example.com:5000/codesys/codesyscontrol:latest
+COPY PlcLogic/ /PlcLogic/
+EXPOSE 4840/tcp
+EXPOSE 11740/tcp
+EXPOSE 1740/udp
+
+ENTRYPOINT ["/opt/codesys/bin/codesyscontrol.bin"]
+CMD ["/etc/CODESYSControl.cfg"]
+EOF
+
+### 拷贝 Artifacts - PlcLogic 目录
+$ ls -al 
+total 4
+drwxr-xr-x. 3 root root  40 Jan 30 10:21 .
+drwxr-xr-x. 4 root root  36 Jan 30 10:17 ..
+-rw-r--r--. 1 root root 220 Jan 30 10:20 Dockerfile
+drwxr-xr-x. 8 root root  98 Jan 30 10:21 PlcLogic
+
+### 回到 codesyscontrol 目录
+$ cd ../codesyscontrol
+
+### 创建 Buildconfig
+$ cat > buildconfig.yaml <<EOF
+apiVersion: build.openshift.io/v1
+kind: BuildConfig
+metadata:
+  name: codesyscontrolwithapp-build
+  namespace: codesys
+  label:
+    app: codesyscontrol
+spec:
+  source:
+    type: Git
+    git:
+      uri: 'https://gitea-with-admin-openshift-operators.apps.ocp4-1.example.com/lab-user-2/codesyscontrolwithapp-image.git'
+      ref: master
+    contextDir: dockerfile
+  strategy:
+    type: Docker
+    #With this you can set a path to the docker file
+    #dockerStrategy:
+    # dockerfilePath: dockerfile
+  output:
+    to:
+      kind: ImageStreamTag
+      name: 'codesyscontrolwithapp:latest'
+EOF
+```

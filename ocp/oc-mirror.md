@@ -1525,8 +1525,8 @@ mirror:
         - name: kubevirt-hyperconverged
           channels:
             - name: 'stable'
-              minVersion: 'v4.11.1'
-              maxVersion: 'v4.11.1'            
+              minVersion: 'v4.12.0'
+              maxVersion: 'v4.12.0'            
         - name: kubernetes-nmstate-operator
           channels:
             - name: 'stable'
@@ -1570,8 +1570,8 @@ mirror:
         - name: openshift-gitops-operator
           channels:
             - name: latest
-              minVersion: 'v1.7.0'
-              maxVersion: 'v1.7.0'
+              minVersion: 'v1.7.1'
+              maxVersion: 'v1.7.1'
         - name: odf-lvm-operator
           channels:
             - name: stable-4.11
@@ -1590,8 +1590,8 @@ mirror:
         - name: ansible-automation-platform-operator
           channels:
             - name: stable-2.3-cluster-scoped
-              minVersion: 'v2.3.0-0.1670543780'
-              maxVersion: 'v2.3.0-0.1670543780'
+              minVersion: 'v2.3.0-0.1673541471'
+              maxVersion: 'v2.3.0-0.1673541471'
         - name: nfd
           channels:
             - name: stable
@@ -1610,15 +1610,20 @@ mirror:
         - name: sandboxed-containers-operator
           channels:
             - name: stable-1.3
-              minVersion: 'v1.3.1'
-              maxVersion: 'v1.3.1'
+              minVersion: 'v1.3.2'
+              maxVersion: 'v1.3.2'
         - name: web-terminal
           channels:
             - name: fast
               minVersion: 'v1.6.0'
               maxVersion: 'v1.6.0'
+        - name: openshift-pipelines-operator-rh
+          channels:
+            - name: latest
+              minVersion: 'v1.9.0'
+              maxVersion: 'v1.9.0'
 EOF
-$ /usr/local/bin/oc-mirror --config ./image-config-realse-local.yaml file://output-dir 2>&1 | tee /tmp/err 
+$ /usr/local/bin/oc-mirror --config ./image-config-realse-local.yaml file://output-dir 2>&1 | tee ./err 
 $ /usr/local/bin/oc-mirror --from ./mirror_seq1_000000.tar docker://registry.example.com:5000
 
 ### 检查 operator 的情况

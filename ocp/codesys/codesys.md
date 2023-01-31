@@ -485,4 +485,139 @@ $ podman push registry.example.com:5000/codesys/codemeter-lite:v7.51
 ### CodeSys Control 报错
 ...
 **** ERROR: CodeMCreateInitialSoftcontainer: ERROR: $Firmware$/.SoftContainer_CmRuntime.wbb file missing
+
+### 再次迭代 CodesysControl 
+$ cp ../CodeMeter-lite-7.51.5429-500.x86_64.rpm . 
+$ cat > bootstrap.sh <<EOF
+#!/bin/bash
+
+# Start the first process
+/usr/sbin/CodeMeterLin -f &   
+
+# Start the second process
+/opt/codesys/bin/codesyscontrol.bin /etc/CODESYSControl.cfg &
+  
+# Wait for any process to exit
+wait -n
+  
+# Exit with status of process that exited first
+exit $?
+EOF
+
+$ cat > Dockerfile <<EOF
+FROM registry.access.redhat.com/ubi8/ubi:latest
+COPY codesyscontrol-4.1.0.0-2.x86_64.rpm /tmp/codesyscontrol-4.1.0.0-2.x86_64.rpm
+COPY CodeMeter-lite-7.51.5429-500.x86_64.rpm /tmp/CodeMeter-lite-7.51.5429-500.x86_64.rpm
+COPY bootstrap.sh /
+RUN dnf install -y libpciaccess iproute net-tools /tmp/CodeMeter-lite-7.51.5429-500.x86_64.rpm && dnf clean all && rm -f /tmp/CodeMeter-lite-7.51.5429-500.x86_64.rpm && rpm -ivh /tmp/codesyscontrol-4.1.0.0-2.x86_64.rpm --force && rm -f /tmp/codesyscontrol-4.1.0.0-2.x86_64.rpm
+COPY PlcLogic/ /PlcLogic/
+EXPOSE 4840/tcp
+EXPOSE 11740/tcp
+EXPOSE 22350/tcp
+EXPOSE 1740/udp
+ENTRYPOINT ["/bin/bash"]
+CMD ["/bootstrap.sh"]
+EOF
+
+$ podman build -f Dockerfile  -t registry.example.com:5000/codesys/codesyscontroldemoapp
+$ podman run --name codesyscontroldemoapp -d -t --network host --privileged registry.example.com:5000/codesys/codesyscontroldemoapp 
+
+$ mkdir -p Application
+$ podman cp codesyscontroldemoapp:/PlcLogic/Application/Application.app Application
+$ podman cp codesyscontroldemoapp:/PlcLogic/Application/Application.crc Application
+$ cat > Dockerfile.app <<EOF
+FROM registry.example.com:5000/codesys/codesyscontroldemoapp:v2
+COPY Application/* /PlcLogic/Application/
+EXPOSE 4840/tcp
+EXPOSE 11740/tcp
+EXPOSE 22350/tcp
+EXPOSE 1740/udp
+ENTRYPOINT ["/bin/bash"]
+CMD ["/bootstrap.sh"]
+EOF
+
+$ podman build -f Dockerfile.app  -t registry.example.com:5000/codesys/codesyscontroldemoapp:v3
+$ podman run --name codesyscontroldemoapp-v3 -d -t --network host --privileged registry.example.com:5000/codesys/codesyscontroldemoapp:v3 
+
+$ cat Dockerfile.app-v4
+FROM registry.example.com:5000/codesys/codesyscontroldemoapp:v3
+RUN rm -f /PlcLogic/Application/Application.app && rm -f /PlcLogic/Application/Application.crc
+COPY Test/Application.app /PlcLogic/Application/
+COPY Test/Application.crc /PlcLogic/Application/
+EXPOSE 4840/tcp
+EXPOSE 11740/tcp
+EXPOSE 22350/tcp
+EXPOSE 1740/udp
+ENTRYPOINT ["/bin/bash"]
+CMD ["/bootstrap.sh"]
+
+$ podman build -f Dockerfile.app-v4  -t registry.example.com:5000/codesys/codesyscontroldemoapp:v4
+$ podman stop codesyscontroldemoapp-v3
+$ podman run --name codesyscontroldemoapp-v4 -d -t --network host --privileged registry.example.com:5000/codesys/codesyscontroldemoapp:v4
+
+
+$ cat > Dockerfile.app-v5 <<EOF
+FROM registry.example.com:5000/codesys/codesyscontroldemoapp:v3
+RUN rm -f /PlcLogic/Application/Application.app && rm -f /PlcLogic/Application/Application.crc
+COPY Demo2/Application.app /PlcLogic/Application/
+COPY Demo2/Application.crc /PlcLogic/Application/
+EXPOSE 4840/tcp
+EXPOSE 11740/tcp
+EXPOSE 22350/tcp
+EXPOSE 1740/udp
+ENTRYPOINT ["/bin/bash"]
+CMD ["/bootstrap.sh"]
+EOF
+
+$ podman build -f Dockerfile.app-v5  -t registry.example.com:5000/codesys/codesyscontroldemoapp:v5
+$ podman stop codesyscontroldemoapp-v4
+$ podman run --name codesyscontroldemoapp-v5 -d -t --network host --privileged registry.example.com:5000/codesys/codesyscontroldemoapp:v5
+
+$ cat > CODESYSControl_User.cfg <<EOF
+;linux
+[ComponentManager]
+;Component.1=CmpGateway                 ; enable when using Gateway
+;Component.2=CmpGwCommDrvTcp    ; enable when using Gateway
+;Component.3=CmpGwCommDrvShm    ; enable when using Gateway
+;Component.1=SysPci                             ; enable when using Hilscher CIFX
+;Component.2=CmpHilscherCIFX    ; enable when using Hilscher CIFX
+
+[CmpApp]
+Bootproject.RetainMismatch.Init=1
+;RetainType.Applications=InSRAM
+Application.1=Application
+
+[CmpRedundancyConnectionIP]
+
+[CmpRedundancy]
+
+[CmpSrv]
+
+[IoDrvEtherCAT]
+
+[CmpUserMgr]
+AsymmetricAuthKey=61ba1b30a4686f09483c0d87ba2adabe13ffeec0
+SECURITY.UserMgmtEnforce=NO
+
+[CmpSecureChannel]
+CertificateHash=367fa4f5ec80190fa323db7996d4203dc39c85cb
+EOF
+
+$ cat > Dockerfile.app-v6 <<EOF
+FROM registry.example.com:5000/codesys/codesyscontroldemoapp:v3
+RUN rm -f /PlcLogic/Application/Application.app && rm -f /PlcLogic/Application/Application.crc
+COPY Demo2/Application.app /PlcLogic/Application/
+COPY Demo2/Application.crc /PlcLogic/Application/
+COPY CODESYSControl_User.cfg /etc
+EXPOSE 4840/tcp
+EXPOSE 11740/tcp
+EXPOSE 22350/tcp
+EXPOSE 1740/udp
+ENTRYPOINT ["/bin/bash"]
+CMD ["/bootstrap.sh"]
+EOF
+
+$ podman build -f Dockerfile.app-v6  -t registry.example.com:5000/codesys/codesyscontroldemoapp:v6
+$ podman stop codesyscontroldemoapp-v5
+$ podman run --name codesyscontroldemoapp-v6 -d -t --network host --privileged registry.example.com:5000/codesys/codesyscontroldemoapp:v6
 ```

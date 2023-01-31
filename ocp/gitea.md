@@ -188,11 +188,12 @@ skopeo copy --format v2s2 --all dir:/tmp/bitnami/wordpress docker://registry.exa
 
 ### 将 gitea 的证书添加到 additionalTrustBundle 中
 $ openssl s_client -host gitea-with-admin-openshift-operators.apps.ocp4-1.example.com -port 443 -showcerts > trace < /dev/null
-$ cat trace | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' | tee /etc/pki/ca-trust/source/anchors/gitea.crt  
-$ oc create configmap gitea-custom-ca \
-     --from-file=ca-bundle.crt=/etc/pki/ca-trust/source/anchors/gitea.crt \
+$ cat trace | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' | tee /etc/pki/ca-trust/source/anchors/gitea.crt 
+$ cat /etc/pki/ca-trust/source/anchors/registry.crt /etc/pki/ca-trust/source/anchors/gitea.crt > /etc/pki/ca-trust/source/anchors/ca.crt
+$ oc create configmap custom-ca \
+     --from-file=ca-bundle.crt=/etc/pki/ca-trust/source/anchors/ca.crt \
      -n openshift-config
-$ oc patch proxy.config.openshift.io/cluster -p '{"spec":{"trustedCA":{"name":"gitea-custom-ca"}}}'  --type=merge
+$ oc patch proxy.config.openshift.io/cluster -p '{"spec":{"trustedCA":{"name":"custom-ca"}}}'  --type=merge
 ### 改为默认的 trustedCA 
 $ oc patch proxy.config.openshift.io/cluster -p '{"spec":{"trustedCA":{"name":""}}}'  --type=merge
 

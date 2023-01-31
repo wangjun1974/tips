@@ -90,8 +90,7 @@ podman run -it registry.redhat.io/ubi8/ubi bash
 Dockerfile
 cat > Dockerfile <<EOF
 FROM registry.access.redhat.com/ubi8/ubi:latest
-RUN dnf install -y libpciaccess && \
-    dnf clean all 
+RUN dnf install -y libpciaccess iproute net-tools && dnf clean all 
 COPY codesyscontrol-4.1.0.0-2.x86_64.rpm /tmp/codesyscontrol-4.1.0.0-2.x86_64.rpm
 RUN rpm -ivh /tmp/codesyscontrol-4.1.0.0-2.x86_64.rpm --force
 RUN rm -f /tmp/codesyscontrol-4.1.0.0-2.x86_64.rpm
@@ -112,11 +111,9 @@ $ mkdir codesysedge
 $ cd codesysedge
 $ cat > Dockerfile <<EOF
 FROM registry.access.redhat.com/ubi8/ubi:latest
-RUN dnf install -y iproute net-tools && \
-    dnf clean all 
+RUN dnf install -y iproute net-tools && dnf clean all 
 COPY codesysedge-4.1.0.0-2.x86_64.rpm /tmp/codesysedge-4.1.0.0-2.x86_64.rpm
-RUN rpm -ivh /tmp/codesysedge-4.1.0.0-2.x86_64.rpm --force
-RUN rm -f /tmp/codesysedge-4.1.0.0-2.x86_64.rpm
+RUN rpm -ivh /tmp/codesysedge-4.1.0.0-2.x86_64.rpm --force && rm -f /tmp/codesysedge-4.1.0.0-2.x86_64.rpm
 EXPOSE 1217/tcp
 EXPOSE 1743/udp
 
@@ -457,6 +454,35 @@ $ oc get build codesyscontrolwithapp-build-3 -o yaml
     Cloning "https://gitea-with-admin-openshift-operators.apps...example.com/lab-user-2/codesyscontrolwithapp-image.git" ...
     error: fatal: unable to access 'https://gitea-with-admin-o...icate problem: self signed certificate in certificate chain
   message: Failed to fetch the input source.
+### 参考 将 gitea 的证书添加到 additionalTrustBundle 中 
+$ openssl s_client -host gitea-with-admin-openshift-operators.apps.ocp4-1.example.com -port 443 -showcerts > trace < /dev/null
+$ cat trace | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' | tee /etc/pki/ca-trust/source/anchors/gitea.crt 
+$ cat /etc/pki/ca-trust/source/anchors/registry.crt /etc/pki/ca-trust/source/anchors/gitea.crt > /etc/pki/ca-trust/source/anchors/ca.crt
+$ oc create configmap custom-ca \
+     --from-file=ca-bundle.crt=/etc/pki/ca-trust/source/anchors/ca.crt \
+     -n openshift-config
+$ oc patch proxy.config.openshift.io/cluster -p '{"spec":{"trustedCA":{"name":"custom-ca"}}}'  --type=merge
+
+### CodeMeter
+### 下载 CodeMeter https://www.wibu.com/support/user/user-software/file/download/9794.html 
+$ mkdir codemeter
+$ cp ../CodeMeter-lite-7.51.5429-500.x86_64.rpm . 
+$ cat > Dockerfile <<EOF
+FROM registry.access.redhat.com/ubi8/ubi:latest
+COPY CodeMeter-lite-7.51.5429-500.x86_64.rpm /tmp/CodeMeter-lite-7.51.5429-500.x86_64.rpm
+RUN dnf install -y /tmp/CodeMeter-lite-7.51.5429-500.x86_64.rpm && rm -f /tmp/CodeMeter-lite-7.51.5429-500.x86_64.rpm
+EXPOSE 22350/tcp
+
+ENTRYPOINT ["/usr/sbin/CodeMeterLin"]
+CMD ["-f"]
+EOF
+
+$ podman build -f Dockerfile  -t registry.example.com:5000/codesys/codemeter-lite:v7.51
+$ podman run --name codemeter-lite -d -t --network host --privileged registry.example.com:5000/codesys/codemeter-lite:v7.51
+$ podman push registry.example.com:5000/codesys/codemeter-lite:v7.51
 
 
+### CodeSys Control 报错
+...
+**** ERROR: CodeMCreateInitialSoftcontainer: ERROR: $Firmware$/.SoftContainer_CmRuntime.wbb file missing
 ```

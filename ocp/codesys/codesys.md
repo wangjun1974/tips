@@ -900,9 +900,15 @@ spec:
       "mode": "bridge",
       "ipam": {
             "type": "whereabouts",
-            "range": "192.168.122.140/30"
+            "range": "192.168.122.144/29"
       }
   }'
+# 6 个 ip 地址
+# https://www.adminsub.net/ipv4-subnet-calculator/192.168.122.144/29
+# Network 192.168.122.144/29
+# Broadcast: 192.168.122.151
+# FirstIP: 192.168.122.145
+# LastIP: 192.168.122.150
 
 $ cat base/net-attach-def-net2.yaml 
 apiVersion: "k8s.cni.cncf.io/v1"
@@ -981,19 +987,23 @@ spec:
   selector:
     app: codesysedge
 
+### 启动两个 codesyscontrol 实例
 $ cat codesyscontrol/kustomization.yaml 
 resources:
-- pvc.yaml
-- deployment.yaml
-- service.yaml
+- pvc1.yaml
+- deployment1.yaml
+- service1.yaml
+- pvc2.yaml
+- deployment2.yaml
+- service2.yaml
 
-$ cat codesyscontrol/pvc.yaml 
+$ cat codesyscontrol/pvc1.yaml 
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: codesyscontrol-pv-claim
+  name: codesyscontrol-pv-claim-1
   labels:
-    app: codesyscontrol
+    app: codesyscontrol1
 spec:
   accessModes:
     - ReadWriteOnce
@@ -1001,23 +1011,23 @@ spec:
     requests:
       storage: 1Gi
 
-$ cat codesyscontrol/deployment.yaml
+$ cat codesyscontrol/deployment1.yaml 
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: codesyscontrol
+  name: codesyscontrol1
   labels:
-    app: codesyscontrol
+    app: codesyscontrol1
 spec:
   selector:
     matchLabels:
-      app: codesyscontrol
+      app: codesyscontrol1
   strategy:
     type: Recreate
   template:
     metadata:
       labels:
-        app: codesyscontrol
+        app: codesyscontrol1
       annotations:
         k8s.v1.cni.cncf.io/networks: codesys-management, codesys-ethercat
     spec:
@@ -1026,7 +1036,7 @@ spec:
         #image: registry.example.com:5000/codesys/codesyscontrol:latest
         name: codesyscontrol
         securityContext:
-          privileged: true
+          privileged: true         
         ports:
         - containerPort: 4840
           name: upcua
@@ -1046,16 +1056,16 @@ spec:
       volumes:
       - name: codesyscontrol-persistent-storage
         persistentVolumeClaim:
-          claimName: codesyscontrol-pv-claim
+          claimName: codesyscontrol-pv-claim-1
 
-$ cat codesyscontrol/service.yaml 
+$ cat codesyscontrol/service1.yaml 
 apiVersion: v1
 kind: Service
 metadata:
-  name: codesyscontrol
+  name: codesyscontrol1
   labels:
     service.kubernetes.io/service-proxy-name: multus-proxy
-    app: codesyscontrol
+    app: codesyscontrol1
   annotations:
     k8s.v1.cni.cncf.io/service-network: codesys-management
 spec:
@@ -1070,8 +1080,88 @@ spec:
       name: runtimeudp
       protocol: UDP
   selector:
-    app: codesyscontrol
+    app: codesyscontrol1
+
+$ cat codesyscontrol/pvc2.yaml 
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: codesyscontrol-pv-claim-2
+  labels:
+    app: codesyscontrol2
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+
+$ cat codesyscontrol/deployment2.yaml 
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: codesyscontrol2
+  labels:
+    app: codesyscontrol2
+spec:
+  selector:
+    matchLabels:
+      app: codesyscontrol2
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: codesyscontrol2
+      annotations:
+        k8s.v1.cni.cncf.io/networks: codesys-management, codesys-ethercat
+    spec:
+      containers:
+      - image: registry.example.com:5000/codesys/codesyscontroldemoapp:latest
+        #image: registry.example.com:5000/codesys/codesyscontrol:latest
+        name: codesyscontrol
+        securityContext:
+          privileged: true         
+        ports:
+        - containerPort: 11741
+          name: runtimetcp
+          protocol: TCP
+          hostPort: 11741
+        - containerPort: 1741
+          name: runtimeudp
+          protocol: UDP
+          hostPort: 1741
+        volumeMounts:
+        - name: codesyscontrol-persistent-storage
+          mountPath: /var/opt/codesys
+      volumes:
+      - name: codesyscontrol-persistent-storage
+        persistentVolumeClaim:
+          claimName: codesyscontrol-pv-claim-2
+
+$ cat codesyscontrol/service2.yaml 
+apiVersion: v1
+kind: Service
+metadata:
+  name: codesyscontrol2
+  labels:
+    service.kubernetes.io/service-proxy-name: multus-proxy
+    app: codesyscontrol2
+  annotations:
+    k8s.v1.cni.cncf.io/service-network: codesys-management
+spec:
+  ports:
+    - port: 11741
+      name: runtimetcp
+      protocol: TCP
+    - port: 1741
+      name: runtimeudp
+      protocol: UDP
+  selector:
+    app: codesyscontrol2
+
 
 
 
 ```
+

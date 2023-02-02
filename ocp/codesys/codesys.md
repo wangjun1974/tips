@@ -876,4 +876,202 @@ spec:
       protocol: UDP
   selector:
     app: codesyscontrol
+
+
+### 定义多个 multus 接口
+### net1 是 management，配置 ip 
+### net2 是 ethercat，不配置 ip
+$ cat base/kustomization.yaml 
+resources:
+- net-attach-def-net1.yaml
+- net-attach-def-net2.yaml
+
+$ cat base/net-attach-def-net1.yaml 
+apiVersion: "k8s.cni.cncf.io/v1"
+kind: NetworkAttachmentDefinition
+metadata:
+  name: codesys-management
+  namespace: codesys
+spec:
+  config: '{
+      "cniVersion": "0.3.1",
+      "type": "macvlan",
+      "master": "ens10",
+      "mode": "bridge",
+      "ipam": {
+            "type": "whereabouts",
+            "range": "192.168.122.140/30"
+      }
+  }'
+
+$ cat base/net-attach-def-net2.yaml 
+apiVersion: "k8s.cni.cncf.io/v1"
+kind: NetworkAttachmentDefinition
+metadata:
+  name: codesys-ethercat
+  namespace: codesys
+spec:
+  config: '{
+      "cniVersion": "0.3.1",
+      "type": "macvlan",
+      "master": "ens11",
+      "mode": "bridge"
+  }'
+
+$ cat codesysedge/kustomization.yaml 
+resources:
+- deployment.yaml
+- service.yaml
+
+$ cat codesysedge/deployment.yaml 
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: codesysedge
+  namespace: codesys
+  labels:
+    app: codesysedge
+spec:
+  selector:
+    matchLabels:
+      app: codesysedge
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: codesysedge
+      annotations:
+        k8s.v1.cni.cncf.io/networks: codesys-management
+    spec:
+      containers:
+      - image: registry.example.com:5000/codesys/codesysedge:latest
+        name: codesysedge
+        securityContext:
+          privileged: true        
+        ports:
+        - containerPort: 1217
+          name: gateway
+          protocol: TCP
+          hostPort: 1217
+        - containerPort: 1743
+          name: gatewayudp
+          protocol: UDP
+          hostPort: 1743
+
+$ cat codesysedge/service.yaml 
+apiVersion: v1
+kind: Service
+metadata:
+  name: codesysedge
+  namespace: codesys
+  labels:
+    service.kubernetes.io/service-proxy-name: multus-proxy
+    app: codesysedge
+  annotations:
+    k8s.v1.cni.cncf.io/service-network: codesys-management
+spec:
+  ports:
+    - port: 1217
+      name: gateway
+      protocol: TCP
+    - port: 1743
+      name: gatewayudp
+      protocol: UDP
+  selector:
+    app: codesysedge
+
+$ cat codesyscontrol/kustomization.yaml 
+resources:
+- pvc.yaml
+- deployment.yaml
+- service.yaml
+
+$ cat codesyscontrol/pvc.yaml 
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: codesyscontrol-pv-claim
+  labels:
+    app: codesyscontrol
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+
+$ cat codesyscontrol/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: codesyscontrol
+  labels:
+    app: codesyscontrol
+spec:
+  selector:
+    matchLabels:
+      app: codesyscontrol
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: codesyscontrol
+      annotations:
+        k8s.v1.cni.cncf.io/networks: codesys-management, codesys-ethercat
+    spec:
+      containers:
+      - image: registry.example.com:5000/codesys/codesyscontroldemoapp:latest
+        #image: registry.example.com:5000/codesys/codesyscontrol:latest
+        name: codesyscontrol
+        securityContext:
+          privileged: true
+        ports:
+        - containerPort: 4840
+          name: upcua
+          protocol: TCP
+          hostPort: 4840
+        - containerPort: 11740
+          name: runtimetcp
+          protocol: TCP
+          hostPort: 11740
+        - containerPort: 1740
+          name: runtimeudp
+          protocol: UDP
+          hostPort: 1740
+        volumeMounts:
+        - name: codesyscontrol-persistent-storage
+          mountPath: /var/opt/codesys
+      volumes:
+      - name: codesyscontrol-persistent-storage
+        persistentVolumeClaim:
+          claimName: codesyscontrol-pv-claim
+
+$ cat codesyscontrol/service.yaml 
+apiVersion: v1
+kind: Service
+metadata:
+  name: codesyscontrol
+  labels:
+    service.kubernetes.io/service-proxy-name: multus-proxy
+    app: codesyscontrol
+  annotations:
+    k8s.v1.cni.cncf.io/service-network: codesys-management
+spec:
+  ports:
+    - port: 4840
+      name: upcua
+      protocol: TCP
+    - port: 11740
+      name: runtimetcp
+      protocol: TCP
+    - port: 1740
+      name: runtimeudp
+      protocol: UDP
+  selector:
+    app: codesyscontrol
+
+
+
 ```

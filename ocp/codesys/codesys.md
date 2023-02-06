@@ -1161,7 +1161,102 @@ spec:
     app: codesyscontrol2
 
 
+### 生成 CodeMeter 配置文件
+### Server.ini
+cat > Server.ini <<EOF
+[Backup]
+Interval=24
+Path=/var/lib/CodeMeter/Backup
+UpdateCertifiedTime=0
 
+[General]
+ActionTimeIntervall=10
+ApiCommunicationMode=1
+BindAddress=0.0.0.0
+CleanUpTimeOut=120
+CmInstanceUid=2137353165
+CmWANPort=22351
+EnabledContainerTypes=4294967295
+ExePath=/usr/sbin
+HelpFile=/usr/share/doc/CodeMeter
+IsCmWANServer=1
+IsNetworkServer=0
+LogCleanupTimeout=336
+LogCmActDiag=1
+LogLicenseTracking=0
+LogLicenseTrackingPath=/var/log/CodeMeter
+Logging=1
+LogPath=/var/log/CodeMeter
+MaxMessageLen=67108864
+NetworkAccessFsb=0
+NetworkPort=22350
+NetworkTimeout=40
+ProxyPort=0
+ProxyServer=
+ProxyUser=
+UseSystemProxy=1
+StartDaemon=1
+TimeServerTimeout=20
+TimeServerURL1=cmtime.codemeter.com
+TimeServerURL2=cmtime.codemeter.us
+TimeServerURL3=cmtime.codemeter.de
+UDPCachingTime=20
+UDPWaitingTime=1000
+DiagnoseLevel=0
+ApiCommunicationModeServer=1
+HostNameResolveTimeout=10
+
+[BorrowClient]
+
+[BorrowServer]
+
+[BorrowManage]
+
+[CmAct\ErrorLogger]
+
+[CmAct\PSNs]
+
+[HTTP]
+DigestAuthentication=0
+RemoteRead=0
+Port=22352
+ReadAuthenticationEnabled=0
+ReadPassword=
+WritePassword=
+PreparedBorrowingConfiguration=0
+
+[TripleModeRedundancy]
+TmrEnabled=0
+
+[HTTPS]
+Port=22353
+Enabled=0
+CertificateChainFile=
+PrivateKeyFile=
+EOF
+
+$ cat > Dockerfile.app-deb <<EOF
+FROM ubuntu:focal-20230126
+ENV DEBIAN_FRONTEND=noninteractive
+COPY codesyscontrol_linux_4.1.0.0_amd64.deb /tmp/codesyscontrol_linux_4.1.0.0_amd64.deb
+COPY codemeter-lite_7.20.4402.501_amd64.deb /tmp/codemeter-lite_7.20.4402.501_amd64.deb
+COPY bootstrap.sh /
+RUN apt update && apt install -y libpciaccess0 iproute2 bash-completion vim && apt install -y /tmp/codemeter-lite_7.20.4402.501_amd64.deb && rm -f /tmp/codemeter-lite_7.20.4402.501_amd64.deb && apt install -y /tmp/codesyscontrol_linux_4.1.0.0_amd64.deb && rm -f /tmp/codesyscontrol_linux_4.1.0.0_amd64.deb && rm -rf /var/lib/apt/lists/*
+COPY Demo2/Application.app /PlcLogic/Application/
+COPY Demo2/Application.crc /PlcLogic/Application/
+COPY CODESYSControl_User.cfg /etc
+EXPOSE 4840/tcp
+EXPOSE 11740/tcp
+EXPOSE 22350/tcp
+EXPOSE 1740/udp
+ENTRYPOINT ["/bin/bash"]
+CMD ["/bootstrap.sh"]
+EOF
+
+$ podman build -f Dockerfile.app-deb -t registry.example.com:5000/codesys/codesyscontrol-ubuntu-demoapp:latest
+$ podman stop codesyscontrol
+$ podman run --name codesyscontrol-ubuntu-demoapp -d -t --network host --privileged registry.example.com:5000/codesys/codesyscontrol-ubuntu-demoapp:latest
 
 ```
+
 

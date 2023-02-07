@@ -1259,4 +1259,336 @@ $ podman run --name codesyscontrol-ubuntu-demoapp -d -t --network host --privile
 
 ```
 
+### GitOps - codesys
+```
+$ git remote -v
+origin  https://gitea-with-admin-openshift-operators.apps.ocp4-1.example.com/lab-user-2/codesys.git (fetch)
+origin  https://gitea-with-admin-openshift-operators.apps.ocp4-1.example.com/lab-user-2/codesys.git (push)
+
+[root@support codesys]# tree -L 3 .
+.
+└── apps
+    ├── base
+    │   ├── kustomization.yaml
+    │   ├── net-attach-def-net1.yaml
+    │   ├── net-attach-def-net2.yaml
+    │   └── rolebinding.yaml
+    ├── codesyscontrol
+    │   ├── deployment1.yaml
+    │   ├── deployment2.yaml
+    │   ├── kustomization.yaml
+    │   ├── pvc1.yaml
+    │   ├── pvc2.yaml
+    │   ├── service1.yaml
+    │   └── service2.yaml
+    ├── codesysedge
+    │   ├── deployment.yaml
+    │   ├── kustomization.yaml
+    │   └── service.yaml
+    └── kustomization.yaml
+
+4 directories, 15 files
+
+$ cat apps/kustomization.yaml 
+bases:
+  - base
+  - codesysedge
+  - codesyscontrol
+
+$ cat apps/base/kustomization.yaml 
+resources:
+- rolebinding.yaml
+- net-attach-def-net1.yaml
+- net-attach-def-net2.yaml
+
+$ cat apps/codesysedge/kustomization.yaml 
+resources:
+- deployment.yaml
+- service.yaml
+
+$ cat apps/codesyscontrol/kustomization.yaml 
+resources:
+- pvc1.yaml
+- deployment1.yaml
+- service1.yaml
+- pvc2.yaml
+- deployment2.yaml
+- service2.yaml
+
+### apps/base
+$ cat apps/base/rolebinding.yaml 
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: system:openshift:scc:privileged
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: system:openshift:scc:privileged
+subjects:
+- kind: ServiceAccount
+  name: default
+  namespace: codesysdemo
+
+$ cat apps/base/net-attach-def-net1.yaml 
+apiVersion: "k8s.cni.cncf.io/v1"
+kind: NetworkAttachmentDefinition
+metadata:
+  name: codesys-management
+spec:
+  config: '{
+      "cniVersion": "0.3.1",
+      "type": "macvlan",
+      "master": "ens10",
+      "mode": "bridge",
+      "ipam": {
+            "type": "whereabouts",
+            "range": "192.168.122.144/29"
+      }
+  }'
+
+$ cat apps/base/net-attach-def-net2.yaml 
+apiVersion: "k8s.cni.cncf.io/v1"
+kind: NetworkAttachmentDefinition
+metadata:
+  name: codesys-ethercat
+spec:
+  config: '{
+      "cniVersion": "0.3.1",
+      "type": "macvlan",
+      "master": "ens11",
+      "mode": "bridge"
+  }'
+
+### apps/codesysedge
+cat apps/codesysedge/deployment.yaml 
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: codesysedge
+  labels:
+    app: codesysedge
+spec:
+  selector:
+    matchLabels:
+      app: codesysedge
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: codesysedge
+      annotations:
+        k8s.v1.cni.cncf.io/networks: codesys-management
+    spec:
+      containers:
+      - image: registry.example.com:5000/codesys/codesysedge:latest
+        name: codesysedge
+        securityContext:
+          privileged: true        
+        ports:
+        - containerPort: 1217
+          name: gateway
+          protocol: TCP
+          hostPort: 1217
+        - containerPort: 1743
+          name: gatewayudp
+          protocol: UDP
+          hostPort: 1743
+
+$ cat apps/codesysedge/service.yaml 
+apiVersion: v1
+kind: Service
+metadata:
+  name: codesysedge
+  labels:
+    service.kubernetes.io/service-proxy-name: multus-proxy
+    app: codesysedge
+  annotations:
+    k8s.v1.cni.cncf.io/service-network: codesys-management
+spec:
+  ports:
+    - port: 1217
+      name: gateway
+      protocol: TCP
+    - port: 1743
+      name: gatewayudp
+      protocol: UDP
+  selector:
+    app: codesysedge
+
+### apps/codesyscontrol
+$ cat apps/codesyscontrol/pvc1.yaml 
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: codesyscontrol-pv-claim-1
+  labels:
+    app: codesyscontrol1
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+
+$ cat apps/codesyscontrol/deployment1.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: codesyscontrol1
+  labels:
+    app: codesyscontrol1
+spec:
+  selector:
+    matchLabels:
+      app: codesyscontrol1
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: codesyscontrol1
+      annotations:
+        k8s.v1.cni.cncf.io/networks: codesys-management, codesys-ethercat
+    spec:
+      containers:
+      - image: registry.example.com:5000/codesys/codesyscontroldemoapp:latest
+        #image: registry.example.com:5000/codesys/codesyscontrol:latest
+        name: codesyscontrol
+        securityContext:
+          privileged: true
+        ports:
+        - containerPort: 4840
+          name: upcua
+          protocol: TCP
+          hostPort: 4840
+        - containerPort: 11740
+          name: runtimetcp
+          protocol: TCP
+          hostPort: 11740
+        - containerPort: 1740
+          name: runtimeudp
+          protocol: UDP
+          hostPort: 1740
+        volumeMounts:
+        - name: codesyscontrol-persistent-storage
+          mountPath: /var/opt/codesys
+      volumes:
+      - name: codesyscontrol-persistent-storage
+        persistentVolumeClaim:
+          claimName: codesyscontrol-pv-claim-1
+
+$ cat apps/codesyscontrol/service1.yaml 
+apiVersion: v1
+kind: Service
+metadata:
+  name: codesyscontrol1
+  labels:
+    service.kubernetes.io/service-proxy-name: multus-proxy
+    app: codesyscontrol1
+  annotations:
+    k8s.v1.cni.cncf.io/service-network: codesys-management
+spec:
+  ports:
+    - port: 4840
+      name: upcua
+      protocol: TCP
+    - port: 11740
+      name: runtimetcp
+      protocol: TCP
+    - port: 1740
+      name: runtimeudp
+      protocol: UDP
+  selector:
+    app: codesyscontrol1
+
+$ cat apps/codesyscontrol/pvc2.yaml 
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: codesyscontrol-pv-claim-2
+  labels:
+    app: codesyscontrol2
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+
+$ cat apps/codesyscontrol/deployment2.yaml 
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: codesyscontrol2
+  labels:
+    app: codesyscontrol2
+spec:
+  selector:
+    matchLabels:
+      app: codesyscontrol2
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: codesyscontrol2
+      annotations:
+        k8s.v1.cni.cncf.io/networks: codesys-management, codesys-ethercat          
+    spec:
+      containers:
+      - image: registry.example.com:5000/codesys/codesyscontroldemoapp:latest
+        #image: registry.example.com:5000/codesys/codesyscontrol:latest
+        name: codesyscontrol
+        securityContext:
+          privileged: true         
+        ports:
+        - containerPort: 4841
+          name: upcua
+          protocol: TCP
+          hostPort: 4841
+        - containerPort: 11741
+          name: runtimetcp
+          protocol: TCP
+          hostPort: 11741
+        - containerPort: 1741
+          name: runtimeudp
+          protocol: UDP
+          hostPort: 1741
+        volumeMounts:
+        - name: codesyscontrol-persistent-storage
+          mountPath: /var/opt/codesys
+      volumes:
+      - name: codesyscontrol-persistent-storage
+        persistentVolumeClaim:
+          claimName: codesyscontrol-pv-claim-2
+
+$ cat apps/codesyscontrol/service2.yaml 
+apiVersion: v1
+kind: Service
+metadata:
+  name: codesyscontrol2
+  labels:
+    service.kubernetes.io/service-proxy-name: multus-proxy
+    app: codesyscontrol2
+  annotations:
+    k8s.v1.cni.cncf.io/service-network: codesys-management
+spec:
+  ports:
+    - port: 4841
+      name: upcua
+      protocol: TCP
+    - port: 11741
+      name: runtimetcp
+      protocol: TCP
+    - port: 1741
+      name: runtimeudp
+      protocol: UDP
+  selector:
+    app: codesyscontrol2
+
+
+```
+
 

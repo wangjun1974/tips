@@ -1498,7 +1498,7 @@ mirror:
     channels:
       - name: candidate-4.12
         minVersion: 4.11.5
-        maxVersion: 4.12.0-rc.6
+        maxVersion: 4.12.2
         shortestPath: true
     graph: true # Include Cincinnati upgrade graph image in imageset
 EOF

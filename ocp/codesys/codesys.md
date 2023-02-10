@@ -1588,7 +1588,36 @@ spec:
   selector:
     app: codesyscontrol2
 
-
 ```
 
+### 清理 whereabouts 遗留资源 
+https://access.redhat.com/solutions/5841121<br>
+```
+
+# 在创建 pods 时遇到报错
+# 10m         Warning   FailedCreatePodSandBox   pod/codesysedge-65fd7b9558-z7g24                  Failed to create pod sandbox: rpc error: code = Unknown desc = failed to create pod network sandbox k8s_codesysedge-65fd7b9558-z7g24_codesysdemo_033a21ed-e98b-4386-b44f-bf81acf7e3d0_0(53563970bd1a6fe2aa647664adf6dd54c1d2fecd72e32c1784785cd6f8c6c9f4): error adding pod codesysdemo_codesysedge-65fd7b9558-z7g24 to CNI network "multus-cni-network": plugin type="multus" name="multus-cni-network" failed (add): [codesysdemo/codesysedge-65fd7b9558-z7g24/033a21ed-e98b-4386-b44f-bf81acf7e3d0:codesys-management]: error adding container to network "codesys-management": Error at storage engine: Could not allocate IP in range: ip: 192.168.122.145 / - 192.168.122.150 / range: net.IPNet{IP:net.IP {0xc0, 0xa8, 0x7a, 0x90}, Mask:net.IPMask{0xff, 0xff, 0xff, 0xf8}}
+
+[root@support ~]# oc get pods -A | grep where
+[root@support ~]# oc get ippools.whereabouts.cni.cncf.io -A
+NAMESPACE          NAME                 AGE
+openshift-multus   192.168.122.140-30   22d
+openshift-multus   192.168.122.144-29   7d22h
+[root@support ~]# oc get overlappingrangeipreservations.whereabouts.cni.cncf.io -A
+NAMESPACE          NAME              AGE
+openshift-multus   192.168.122.145   26h
+openshift-multus   192.168.122.146   26h
+openshift-multus   192.168.122.147   26h
+openshift-multus   192.168.122.148   23h
+openshift-multus   192.168.122.149   22h
+openshift-multus   192.168.122.150   22h
+
+### 清理 ippools.whereabouts.cni.cncf.io
+$ oc delete ippools.whereabouts.cni.cncf.io 192.168.122.144-29 -n openshift-multus
+
+### 清理 overlappingrangeipreservations.whereabouts.cni.cncf.io 
+$ oc delete overlappingrangeipreservations.whereabouts.cni.cncf.io 192.168.122.145 -n openshift-multus
+...
+$ oc delete overlappingrangeipreservations.whereabouts.cni.cncf.io 192.168.122.150 -n openshift-multus
+
+```
 

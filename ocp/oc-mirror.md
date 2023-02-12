@@ -1674,4 +1674,8 @@ EOF
 $ /usr/local/bin/oc-mirror --config ./image-config-realse-local.yaml file://output-dir 2>&1 | tee /tmp/err 
 $ /usr/local/bin/oc-mirror --from ./mirror_seq1_000000.tar docker://registry.example.com:5000
 
+### 4.12 operator 离线时遇到的问题
+### https://issues.redhat.com/projects/CLOUDDST/issues/CLOUDDST-17020?filter=allopenissues
+# unsupported: Not Found, or unsupported. V2 schema 1 manifest digest are no longer supported for image pulls.
+
 ```

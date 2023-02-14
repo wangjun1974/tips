@@ -131,6 +131,9 @@ firewall-cmd --add-port=1743/udp --zone=public --permanent
 firewall-cmd --add-port=11740/tcp --zone=public --permanent
 firewall-cmd --add-port=1740/udp --zone=public --permanent
 firewall-cmd --add-port=4840/tcp --zone=public --permanent
+firewall-cmd --add-port=11741/tcp --zone=public --permanent
+firewall-cmd --add-port=1741/udp --zone=public --permanent
+firewall-cmd --add-port=4841/tcp --zone=public --permanent
 firewall-cmd --reload
 ```
 
@@ -1653,6 +1656,30 @@ $ systemctl start podman.socket
 # 检查 socket endpoint Restful API 工作正常
 $ curl -H "Content-Type: application/json" --unix-socket /var/run/docker.sock http://localhost/_ping
 
-
+### run docker compose version of codesys runtime and codesys gateway 
+$ cat > compose.yaml <<EOF
+version: '1'
+services:
+  codesysedge:
+    image: registry.example.com:5000/codesys/codesysedge:latest
+    restart: always
+    ports:
+      - "1217:1217/tcp"
+      - "1743:1743/udp" 
+  codesyscontrol1withdemoapp:
+    image: registry.example.com:5000/codesys/codesyscontroldemoapp:v6
+    restart: always
+    ports:
+      - "4840:4840/tcp"
+      - "11740:11740/tcp"
+      - "1740:1740/udp"
+  codesyscontrol2withdemoapp:
+    image: registry.example.com:5000/codesys/codesyscontroldemoapp:v6
+    restart: always
+    ports:
+      - "4841:4841/tcp"
+      - "11741:11741/tcp"
+      - "1741:1741/udp"
+EOF
 ```
 

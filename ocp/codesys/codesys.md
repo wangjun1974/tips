@@ -1619,5 +1619,25 @@ $ oc delete overlappingrangeipreservations.whereabouts.cni.cncf.io 192.168.122.1
 ...
 $ oc delete overlappingrangeipreservations.whereabouts.cni.cncf.io 192.168.122.150 -n openshift-multus
 
+
+
+### 启动多具有多网络的 podman container
+# 用参数 --network=host 启动容器，这个时候容器内能看到所有的主机上的网卡
+[root@eci0 ~]# podman exec -it codesyscontroldemoapp-v5 /bin/bash
+[root@eci0 /]# ip a s 
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+       valid_lft forever preferred_lft forever
+    inet6 ::1/128 scope host 
+       valid_lft forever preferred_lft forever
+2: enp1s0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP group default qlen 1000
+    link/ether 52:54:00:26:27:3f brd ff:ff:ff:ff:ff:ff
+    inet 192.168.122.131/24 brd 192.168.122.255 scope global noprefixroute enp1s0
+       valid_lft forever preferred_lft forever
+    inet6 fe80::5054:ff:fe26:273f/64 scope link noprefixroute 
+       valid_lft forever preferred_lft forever
+3: enp2s0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP group default qlen 1000
+    link/ether 52:54:00:ec:f8:13 brd ff:ff:ff:ff:ff:ff
 ```
 

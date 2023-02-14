@@ -1639,5 +1639,13 @@ $ oc delete overlappingrangeipreservations.whereabouts.cni.cncf.io 192.168.122.1
        valid_lft forever preferred_lft forever
 3: enp2s0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP group default qlen 1000
     link/ether 52:54:00:ec:f8:13 brd ff:ff:ff:ff:ff:ff
+
+### 基于 docker-compose 运行 codesys
+### 安装 podman-docker，下载 docker-compose
+$ yum install -y podman-docker
+$ curl -L https://github.com/docker/compose/releases/download/v2.16.0/docker-compose-linux-x86_64 -o /usr/local/bin/docker-compose
+$ chmod +x /usr/local/bin/docker-compose
+
+
 ```
 

@@ -1642,9 +1642,16 @@ $ oc delete overlappingrangeipreservations.whereabouts.cni.cncf.io 192.168.122.1
 
 ### 基于 docker-compose 运行 codesys
 ### 安装 podman-docker，下载 docker-compose
+### 参考链接: https://bytexd.com/how-to-install-docker-compose-on-rhel-8-almalinux-rocky-linux/
+### 参考链接: https://www.redhat.com/sysadmin/podman-docker-compose
 $ yum install -y podman-docker
 $ curl -L https://github.com/docker/compose/releases/download/v2.16.0/docker-compose-linux-x86_64 -o /usr/local/bin/docker-compose
 $ chmod +x /usr/local/bin/docker-compose
+
+# 启动 podman.socket endpoint
+$ systemctl start podman.socket
+# 检查 socket endpoint Restful API 工作正常
+$ curl -H "Content-Type: application/json" --unix-socket /var/run/docker.sock http://localhost/_ping
 
 
 ```

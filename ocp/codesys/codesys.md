@@ -1658,16 +1658,18 @@ $ curl -H "Content-Type: application/json" --unix-socket /var/run/docker.sock ht
 
 ### run docker compose version of codesys runtime and codesys gateway 
 $ cat > compose.yaml <<EOF
-version: '1'
+version: '2'
 services:
   codesysedge:
     image: registry.example.com:5000/codesys/codesysedge:latest
+    network_mode: "host"
     restart: always
     ports:
       - "1217:1217/tcp"
       - "1743:1743/udp" 
   codesyscontrol1withdemoapp:
     image: registry.example.com:5000/codesys/codesyscontroldemoapp:v6
+    network_mode: "host"
     restart: always
     ports:
       - "4840:4840/tcp"
@@ -1675,6 +1677,7 @@ services:
       - "1740:1740/udp"
   codesyscontrol2withdemoapp:
     image: registry.example.com:5000/codesys/codesyscontroldemoapp:v6
+    network_mode: "host"
     restart: always
     ports:
       - "4841:4841/tcp"

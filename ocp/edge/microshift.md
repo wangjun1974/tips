@@ -2442,3 +2442,53 @@ $ sh -x ~/microshift/scripts/image-builder/build.sh -pull_secret_file ~/.pull-se
 
 ### ACM Config Policy for Images
 https://gitlab.consulting.redhat.com/tbonds/acm-policies/-/blob/main/policy-images.yaml
+
+### RHEL for Edge + microshift kickstart template 定制
+```
+$ cat ./scripts/image-builder/config/kickstart.ks.template
+...
+# 配置网络，使用 NetworkManager keyfile plugins
+network --activate --device=enp1s0 --type=ethernet --bootproto=none --ip=192.168.122.123 --netmask=255.255.255.0 --hostname=edge-3.example.com --nameserver=192.168.122.12 --connectiontype=ethernet --nmkeyfile=yes
+
+# 配置 container registry certificate
+# config registry certificate
+cat > /etc/pki/ca-trust/source/anchors/registry.crt <<EOF
+...
+EOF
+
+# config /etc/containers/registries.conf.d/99-miroshift-mirror-by-digest-registries.conf
+cat > /etc/containers/registries.conf.d/99-miroshift-mirror-by-digest-registries.conf << EOF
+[[registry]]
+  prefix = ""
+  location = "quay.io/openshift-release-dev"
+  mirror-by-digest-only = true
+ 
+  [[registry.mirror]]
+    location = "registry.example.com:5000/openshift-release-dev"
+
+[[registry]]
+  prefix = ""
+  location = "quay.io/rh-storage-partners"
+  mirror-by-digest-only = true
+ 
+  [[registry.mirror]]
+    location = "registry.example.com:5000/rh-storage-partners"
+
+[[registry]]
+  prefix = ""
+  location = "registry.access.redhat.com/ubi8"
+  mirror-by-digest-only = true
+ 
+  [[registry.mirror]]
+    location = "registry.example.com:5000/ubi8"
+
+[[registry]]
+  prefix = ""
+  location = "registry.redhat.io/rhacm2"
+  mirror-by-digest-only = true
+ 
+  [[registry.mirror]]
+    location = "registry.example.com:5000/rhacm2"
+EOF
+...
+```

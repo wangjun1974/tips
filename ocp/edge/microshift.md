@@ -2448,7 +2448,7 @@ https://gitlab.consulting.redhat.com/tbonds/acm-policies/-/blob/main/policy-imag
 $ cat ./scripts/image-builder/config/kickstart.ks.template
 ...
 # 配置网络，使用 NetworkManager keyfile plugins
-network --activate --device=enp1s0 --type=ethernet --bootproto=none --ip=192.168.122.123 --netmask=255.255.255.0 --hostname=edge-3.example.com --nameserver=192.168.122.12 --connectiontype=ethernet --nmkeyfile=yes
+network --activate --device=enp1s0 --bootproto=static --ip=192.168.122.123 --netmask=255.255.255.0 --hostname=edge-3.example.com --nameserver=192.168.122.12
 
 # 配置 container registry certificate
 # config registry certificate

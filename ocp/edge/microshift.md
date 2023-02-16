@@ -2450,6 +2450,27 @@ $ cat ./scripts/image-builder/config/kickstart.ks.template
 # 配置网络，使用 NetworkManager keyfile plugins
 network --activate --device=enp1s0 --bootproto=static --ip=192.168.122.123 --netmask=255.255.255.0 --hostname=edge-3.example.com --nameserver=192.168.122.12
 
+# %post 通过 systemd oneshot type service 配置网络
+cat > /etc/systemd/system/first-boot-network-config.service <<EOF
+[Unit]
+Description=First Boot Service Config Network Connection
+Wants=network-online.target
+After=network-online.target
+Before=crio.service openvswitch.service microshift-ovs-init.service
+
+[Service]
+Type=oneshot
+ExecStart=/bin/nmcli con modify 'Wired connection 1' ipv4.method 'manual' ipv4.addresses '192.168.122.123/24' ipv4.gateway '192.168.122.1' ipv4.dns '192.168.122.12'
+ExecStart=/bin/nmcli con down 'Wired connection 1'
+ExecStart=/bin/nmcli con up 'Wired connection 1'
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+systemctl daemon-reload
+systemctl enable first-boot-network-config.service
+
 # 配置 container registry certificate
 # config registry certificate
 cat > /etc/pki/ca-trust/source/anchors/registry.crt <<EOF

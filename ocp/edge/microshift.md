@@ -2451,12 +2451,13 @@ $ cat ./scripts/image-builder/config/kickstart.ks.template
 network --activate --device=enp1s0 --bootproto=static --ip=192.168.122.123 --netmask=255.255.255.0 --hostname=edge-3.example.com --nameserver=192.168.122.12
 
 # %post 通过 systemd oneshot type service 配置网络
+# config first boot service
 cat > /etc/systemd/system/first-boot-network-config.service <<EOF
 [Unit]
 Description=First Boot Service Config Network Connection
 Wants=network-online.target
 After=network-online.target
-Before=crio.service openvswitch.service microshift-ovs-init.service
+Before=microshift-ovs-init.service microshift.service
 
 [Service]
 Type=oneshot
@@ -2468,8 +2469,7 @@ ExecStart=/bin/nmcli con up 'Wired connection 1'
 WantedBy=multi-user.target
 EOF
 
-systemctl daemon-reload
-systemctl enable first-boot-network-config.service
+systemctl enable first-boot-network-config
 
 # 配置 container registry certificate
 # config registry certificate
@@ -2512,4 +2512,19 @@ cat > /etc/containers/registries.conf.d/99-miroshift-mirror-by-digest-registries
     location = "registry.example.com:5000/rhacm2"
 EOF
 ...
+
+
+$ build.sh 一些处理阶段
+$ cat scripts/image-builder/build-local.sh
+# Checking available disk space
+# Downloading local OpenShift and MicroShift repositories
+# Loading sources for OpenShift and MicroShift
+# Preparing blueprints
+# Loading microshift-container blueprint v0.0.1
+# Building edge-container for microshift-container v0.0.1
+# Loading microshift-installer blueprint v0.0.0
+# Serving microshift-container v0.0.1 container locally
+# Building edge-installer for microshift-installer v0.0.0, parent microshift-container v0.0.1
+# Embedding kickstart in the installer image
+# Done
 ```

@@ -624,6 +624,28 @@ $ podman build -f Dockerfile.app-v6  -t registry.example.com:5000/codesys/codesy
 $ podman stop codesyscontroldemoapp-v5
 $ podman run --name codesyscontroldemoapp-v6 -d -t --network host --privileged registry.example.com:5000/codesys/codesyscontroldemoapp:v6
 
+
+$ cat > Dockerfile.app-v7 <<EOF
+FROM registry.access.redhat.com/ubi8/ubi:latest
+COPY codesyscontrol-4.1.0.0-2.x86_64.rpm /tmp/codesyscontrol-4.1.0.0-2.x86_64.rpm
+COPY CodeMeter-lite-7.51.5429-500.x86_64.rpm /tmp/CodeMeter-lite-7.51.5429-500.x86_64.rpm
+COPY bootstrap.sh /
+RUN dnf install -y libpciaccess iproute net-tools /tmp/CodeMeter-lite-7.51.5429-500.x86_64.rpm && dnf clean all && rm -f /tmp/CodeMeter-lite-7.51.5429-500.x86_64.rpm && rpm -ivh /tmp/codesyscontrol-4.1.0.0-2.x86_64.rpm --force && rm -f /tmp/codesyscontrol-4.1.0.0-2.x86_64.rpm
+COPY Test/Application.app /PlcLogic/Application/
+COPY Test/Application.crc /PlcLogic/Application/
+COPY CODESYSControl_User.cfg /etc
+EXPOSE 4840/tcp
+EXPOSE 11740/tcp
+EXPOSE 22350/tcp
+EXPOSE 1740/udp
+ENTRYPOINT ["/bin/bash"]
+CMD ["/bootstrap.sh"]
+EOF
+
+$ podman build -f Dockerfile.app-v7  -t registry.example.com:5000/codesys/codesyscontroldemoapp:v7
+$ podman stop codesyscontroldemoapp-v5
+$ podman run --name codesyscontroldemoapp-v7 -d -t --network host --privileged registry.example.com:5000/codesys/codesyscontroldemoapp:v7
+
 ### 演示1
 1. 在环境里启动 gateway 容器和 runtime 容器
 $ podman run --name codesysedge -d -t --network host --privileged registry.example.com:5000/codesys/codesysedge
@@ -1618,10 +1640,7 @@ openshift-multus   192.168.122.150   22h
 $ oc delete ippools.whereabouts.cni.cncf.io 192.168.122.144-29 -n openshift-multus
 
 ### 清理 overlappingrangeipreservations.whereabouts.cni.cncf.io 
-$ oc delete overlappingrangeipreservations.whereabouts.cni.cncf.io 192.168.122.145 -n openshift-multus
-...
-$ oc delete overlappingrangeipreservations.whereabouts.cni.cncf.io 192.168.122.150 -n openshift-multus
-
+$ for i in $(seq 145 150) ; do oc delete overlappingrangeipreservations.whereabouts.cni.cncf.io 192.168.122.${i} -n openshift-multus ; done
 
 
 ### 启动多具有多网络的 podman container

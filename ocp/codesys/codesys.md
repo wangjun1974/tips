@@ -934,7 +934,11 @@ spec:
 # Broadcast: 192.168.122.151
 # FirstIP: 192.168.122.145
 # LastIP: 192.168.122.150
-
+# https://www.adminsub.net/ipv4-subnet-calculator/192.168.122.144/28
+# Network 192.168.122.144/28
+# Broadcast: 192.168.122.159
+# FirstIP: 192.168.122.145
+# LastIP: 192.168.122.158
 $ cat base/net-attach-def-net2.yaml 
 apiVersion: "k8s.cni.cncf.io/v1"
 kind: NetworkAttachmentDefinition

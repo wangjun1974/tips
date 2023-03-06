@@ -18,6 +18,13 @@ $ /etc/init.d/codesyscontrol status
 # 双击 'Visualization' - 可以在可视化界面里查看
 ```
 
+### CODESYS Missing Library 下载
+```
+# Device -> PLCLogic -> Application 
+# 双击 "Library Manager"
+# Download Missing Librarys
+```
+
 ### CODESYS 安装 Addon
 https://blog.csdn.net/goo__gle/article/details/117018937<br>
 ```
@@ -1641,10 +1648,12 @@ openshift-multus   192.168.122.149   22h
 openshift-multus   192.168.122.150   22h
 
 ### 清理 ippools.whereabouts.cni.cncf.io
+$ oc delete ippools.whereabouts.cni.cncf.io 192.168.122.140-30 -n openshift-multus
 $ oc delete ippools.whereabouts.cni.cncf.io 192.168.122.144-29 -n openshift-multus
+$ oc delete ippools.whereabouts.cni.cncf.io 192.168.122.144-28 -n openshift-multus
 
 ### 清理 overlappingrangeipreservations.whereabouts.cni.cncf.io 
-$ for i in $(seq 145 150) ; do oc delete overlappingrangeipreservations.whereabouts.cni.cncf.io 192.168.122.${i} -n openshift-multus ; done
+$ for i in $(seq 145 158) ; do oc delete overlappingrangeipreservations.whereabouts.cni.cncf.io 192.168.122.${i} -n openshift-multus ; done
 
 
 ### 启动多具有多网络的 podman container

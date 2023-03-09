@@ -2527,4 +2527,9 @@ $ cat scripts/image-builder/build-local.sh
 # Building edge-installer for microshift-installer v0.0.0, parent microshift-container v0.0.1
 # Embedding kickstart in the installer image
 # Done
+
+参考：https://git.jharmison.com/james/microshift-ansible-pull
+$ ls      
+LICENSE  README.md  ansible-navigator.yml  ansible.cfg  app  deploy  inventory  playbooks
+$ sed -i 's|10.1.1.11|192.168.122.123|' inventory/hosts 
 ```

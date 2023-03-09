@@ -1718,3 +1718,10 @@ services:
 EOF
 ```
 
+### 安装 Depictor 
+```
+### CodeSys Installer -> Installations -> Change
+### Browse - Search 输入 'Depictor'
+### 选中 CodeSys Depictor，双击
+### Install
+```

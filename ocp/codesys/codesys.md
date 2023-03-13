@@ -1919,4 +1919,13 @@ EOF
 ### https://access.redhat.com/solutions/5676801
 ### ssh 到 host
 $ hostnamectl set-hostname b2-ocp4test.ocp4.example.com
+$ nmcli c mod 'Wired connection 1' ipv4.method 'disabled' 
+$ nmcli c mod 'Wired connection 1' ipv6.method 'disabled' 
+$ nmcli c mod 'Wired connection 2' ipv4.method 'disabled' 
+$ nmcli c mod 'Wired connection 2' ipv6.method 'disabled' 
+$ nmcli c down 'Wired connection 1' && nmcli c up 'Wired connection 1'
+$ nmcli c down 'Wired connection 2' && nmcli c up 'Wired connection 2'
+
+### 设置所有进程绑定 core 0
+ps axf  | grep -Ev "6492" | awk '{print $1}' | while read i ; do taskset -p $i 2>&1 | grep -E "mask: f" | awk '{print $2}'| sed -e "s|'s||" ; done  | while read i ; do echo taskset -cp 0 $i ;done
 ```

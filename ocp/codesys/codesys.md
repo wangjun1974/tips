@@ -1293,6 +1293,24 @@ $ podman build -f Dockerfile.app-deb -t registry.example.com:5000/codesys/codesy
 $ podman stop codesyscontrol
 $ podman run --name codesyscontrol-ubuntu-demoapp -d -t --network host --privileged registry.example.com:5000/codesys/codesyscontrol-ubuntu-demoapp:latest
 
+$ cat > Dockerfile.app-v9 <<EOF
+FROM registry.access.redhat.com/ubi8/ubi:latest
+COPY codesyscontrol-4.1.0.0-2.x86_64.rpm /tmp/codesyscontrol-4.1.0.0-2.x86_64.rpm
+RUN dnf install -y libpciaccess iproute net-tools procps-ng && dnf clean all && rpm -ivh /tmp/codesyscontrol-4.1.0.0-2.x86_64.rpm --force && rm -f /tmp/codesyscontrol-4.1.0.0-2.x86_64.rpm
+COPY Test/Application.app /PlcLogic/Application/
+COPY Test/Application.crc /PlcLogic/Application/
+COPY CODESYSControl_User.cfg /etc
+EXPOSE 4840/tcp
+EXPOSE 11740/tcp
+EXPOSE 22350/tcp
+EXPOSE 1740/udp
+ENTRYPOINT ["/opt/codesys/bin/codesyscontrol.bin"]
+CMD ["/etc/CODESYSControl.cfg"]
+EOF
+
+$ podman build -f Dockerfile.app-v9 -t registry.example.com:5000/codesys/codesyscontroldemoapp:v9
+$ podman stop codesyscontroldemoapp-v8
+$ podman run --name codesyscontroldemoapp-v9 -d -t --network host --privileged registry.example.com:5000/codesys/codesyscontroldemoapp:v9
 ```
 
 ### GitOps - codesys
@@ -1724,4 +1742,181 @@ EOF
 ### Browse - Search 输入 'Depictor'
 ### 选中 CodeSys Depictor，双击
 ### Install
+```
+
+### taskset 设置 cpu 绑定
+```
+sh-4.4# ps axf
+...
+2548207 ?        Ssl    0:00 /usr/bin/conmon -b /run/containers/storage/overlay-containers/162d7a88757cb6fd4b42baa5ac7994c0d43d184d316af8a281458114753d17f8/us
+2548218 ?        Ssl    0:26  \_ /opt/codesys/bin/codesyscontrol.bin /etc/CODESYSControl.cfg
+
+sh-4.4# taskset -cp 3 2548218
+
+### 用 taskset 设置 cpu 绑定的原因是 
+### 如果设置了 codesys runtime 的 container resource memory requests/limits 
+### 将会触发 OOM 
+### https://komodor.com/learn/how-to-fix-oomkilled-exit-code-137/#:~:text=What%20is%20OOMKilled%20(exit%20code,utilize%20on%20the%20host%20machine
+### 
+    spec:
+      nodeSelector:
+        node-role.kubernetes.io/worker-rt: ''
+      containers:
+      - image: registry.ocp4.example.com:5000/codesys/codesyscontroldemoapp:v8
+        name: codesyscontrol
+        runtimeClassName: performance-rt
+        resources:
+          limits:
+            # memory: "2Gi"
+            cpu: "1"
+          requests:
+            # memory: "2Gi"
+            cpu: "1"
+```
+
+
+### 尝试将 runtime 的内存锁定
+```
+$ cat > CODESYSControl.cfg <<EOF
+;linux
+[SysFile]
+FilePath.1=/etc/, 3S.dat
+PlcLogicPrefix=1
+
+[SysTarget]
+TargetVersionMask=0
+TargetVersionCompatibilityMask=0xFFFF0000
+
+[CmpSocketCanDrv]
+ScriptPath=/opt/codesys/scripts/
+ScriptName=rts_set_baud.sh
+
+[CmpSettings]
+IsWriteProtected=1
+FileReference.0=SysFileMap.cfg, SysFileMap
+FileReference.1=/etc/CODESYSControl_User.cfg
+
+[SysExcept]
+Linux.DisableFpuOverflowException=1
+Linux.DisableFpuUnderflowException=1
+Linux.DisableFpuInvalidOperationException=1
+
+[CmpOpenSSL] 
+WebServer.Cert=server.cer 
+WebServer.PrivateKey=server.key 
+WebServer.CipherList=HIGH
+
+[CmpLog]
+Logger.0.Name=/tmp/codesyscontrol.log
+Logger.0.Filter=0x0000000F
+Logger.0.Enable=1
+Logger.0.MaxEntries=1000
+Logger.0.MaxFileSize=1000000
+Logger.0.MaxFiles=1
+Logger.0.Backend.0.ClassId=0x00000104 ;writes logger messages in a file
+Logger.0.Type=0x314 ;Set the timestamp to RTC
+
+[SysMem]
+Linux.Memlock=1
+
+[SysEthernet]
+Linux.ProtocolFilter=3 
+
+[CmpSchedule]
+SchedulerInterval=4000
+ProcessorLoad.Enable=1
+ProcessorLoad.Maximum=95
+ProcessorLoad.Interval=5000
+DisableOmittedCycleWatchdog=1
+EOF
+
+$ cat > Dockerfile.app-v10 <<EOF
+FROM registry.access.redhat.com/ubi8/ubi:latest
+COPY codesyscontrol-4.1.0.0-2.x86_64.rpm /tmp/codesyscontrol-4.1.0.0-2.x86_64.rpm
+RUN dnf install -y libpciaccess iproute net-tools procps-ng && dnf clean all && rpm -ivh /tmp/codesyscontrol-4.1.0.0-2.x86_64.rpm --force && rm -f /tmp/codesyscontrol-4.1.0.0-2.x86_64.rpm
+COPY Test/Application.app /PlcLogic/Application/
+COPY Test/Application.crc /PlcLogic/Application/
+COPY CODESYSControl_User.cfg /etc
+COPY CODESYSControl.cfg /etc
+EXPOSE 4840/tcp
+EXPOSE 11740/tcp
+EXPOSE 22350/tcp
+EXPOSE 1740/udp
+ENTRYPOINT ["/opt/codesys/bin/codesyscontrol.bin"]
+CMD ["/etc/CODESYSControl.cfg"]
+EOF
+
+$ podman build -f Dockerfile.app-v10 -t registry.example.com:5000/codesys/codesyscontroldemoapp:v10
+$ podman stop codesyscontroldemoapp-v9
+$ podman run --name codesyscontroldemoapp-v10 -d -t --network host --privileged registry.example.com:5000/codesys/codesyscontroldemoapp:v10
+```
+
+### Performance Profile rt
+```
+### 创建 PerformanceProfile rt 
+### 参考配置
+cat <<EOF | oc apply -f -
+apiVersion: performance.openshift.io/v2
+kind: PerformanceProfile
+metadata:
+  name: rt
+spec:
+  additionalKernelArgs:
+  - "audit=0"  
+  - "idle=poll"
+  - "intel_idle.max_cstate=0"
+  - "processor.max_cstate=0"
+  - "mce=off"
+  - "numa=off"
+  cpu:
+    isolated: '1-3'
+    reserved: '0'
+  hugepages:
+    pages:
+      - count: 1024
+        node: 0
+        size: 2M
+    defaultHugepagesSize: 2M
+  realTimeKernel:
+    enabled: true
+  numa:
+    topologyPolicy: "best-effort"
+  nodeSelector:
+    node-role.kubernetes.io/worker-rt: ""
+  machineConfigPoolSelector:
+    machineconfiguration.openshift.io/role: worker-rt
+EOF
+
+### 实际配置
+### 去掉 numa=off 和 hugepages
+cat <<EOF | oc apply -f -
+apiVersion: performance.openshift.io/v2
+kind: PerformanceProfile
+metadata:
+  name: rt
+spec:
+  additionalKernelArgs:
+  - "audit=0"  
+  - "idle=poll"
+  - "intel_idle.max_cstate=0"
+  - "processor.max_cstate=0"
+  - "mce=off"
+  - "i915.force_probe=*"
+  cpu:
+    isolated: '1-3'
+    reserved: '0'
+  realTimeKernel:
+    enabled: true
+  numa:
+    topologyPolicy: "best-effort"
+  nodeSelector:
+    node-role.kubernetes.io/worker-rt: ""
+  machineConfigPoolSelector:
+    machineconfiguration.openshift.io/role: worker-rt
+EOF
+
+### 参考KCS设置主机名
+### https://access.redhat.com/solutions/5676801
+### ssh 到 host
+$ hostnamectl set-hostname b2-ocp4test.ocp4.example.com
 ```

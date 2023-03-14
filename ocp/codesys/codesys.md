@@ -1889,12 +1889,15 @@ EOF
 
 ### 实际配置
 ### 去掉 numa=off 和 hugepages
+### 全局禁用 globallyDisableIrqLoadBalancing
+### https://docs.openshift.com/container-platform/4.9/scalability_and_performance/cnf-performance-addon-operator-for-low-latency-nodes.html#managing-device-interrupt-processing-for-guaranteed-pod-isolated-cpus_cnf-master
 cat <<EOF | oc apply -f -
 apiVersion: performance.openshift.io/v2
 kind: PerformanceProfile
 metadata:
   name: rt
 spec:
+  globallyDisableIrqLoadBalancing: true
   additionalKernelArgs:
   - "audit=0"  
   - "idle=poll"
@@ -1927,5 +1930,8 @@ $ nmcli c down 'Wired connection 1' && nmcli c up 'Wired connection 1'
 $ nmcli c down 'Wired connection 2' && nmcli c up 'Wired connection 2'
 
 ### 设置所有进程绑定 core 0
-ps axf  | grep -Ev "6492" | awk '{print $1}' | while read i ; do taskset -p $i 2>&1 | grep -E "mask: f" | awk '{print $2}'| sed -e "s|'s||" ; done  | while read i ; do echo taskset -cp 0 $i ;done
+ps axf  | grep -Ev "6492" | awk '{print $1}' | while read i ; do taskset -p $i 2>&1 | grep -E "mask: f" | awk '{print $2}'| sed -e "s|'s||" ; done  | while read i ; do taskset -cp 0 $i ;done
+
+### 设置 irq cpu affinity from 0-3 to core 0-2
+$ find /proc/irq/ -name smp_affinity_list -exec sh -c 'i="$1"; mask=$(cat $i); file=$(echo $i); echo $file: $mask' _ {} \; | grep "0-3" | awk -F '/' '{print $4}' | while read i ;do echo "07" > /proc/irq/$i/smp_affinity ; done 
 ```

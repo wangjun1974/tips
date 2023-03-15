@@ -1849,6 +1849,71 @@ EOF
 $ podman build -f Dockerfile.app-v10 -t registry.example.com:5000/codesys/codesyscontroldemoapp:v10
 $ podman stop codesyscontroldemoapp-v9
 $ podman run --name codesyscontroldemoapp-v10 -d -t --network host --privileged registry.example.com:5000/codesys/codesyscontroldemoapp:v10
+
+$ cat > bootstrap.sh <<EOF
+#!/bin/bash
+
+# Start the first process
+/opt/codesysedge/bin/codesysedge.bin /etc/Gateway.cfg &   
+
+# Start the second process
+/opt/codesys/bin/codesyscontrol.bin /etc/CODESYSControl.cfg &
+  
+# Wait for any process to exit
+wait -n
+  
+# Exit with status of process that exited first
+exit $?
+EOF
+
+$ cat > Dockerfile.app-v11 <<EOF
+FROM registry.access.redhat.com/ubi8/ubi:latest
+COPY codesysedge-4.1.0.0-2.x86_64.rpm /tmp/codesysedge-4.1.0.0-2.x86_64.rpm
+COPY codesyscontrol-4.1.0.0-2.x86_64.rpm /tmp/codesyscontrol-4.1.0.0-2.x86_64.rpm
+RUN dnf install -y libpciaccess iproute net-tools procps-ng && dnf clean all && rpm -ivh /tmp/codesysedge-4.1.0.0-2.x86_64.rpm --force && rm -f /tmp/codesysedge-4.1.0.0-2.x86_64.rpm && rpm -ivh /tmp/codesyscontrol-4.1.0.0-2.x86_64.rpm --force && rm -f /tmp/codesyscontrol-4.1.0.0-2.x86_64.rpm
+COPY bootstrap.sh /
+COPY Test/Application.app /PlcLogic/Application/
+COPY Test/Application.crc /PlcLogic/Application/
+COPY CODESYSControl_User.cfg /etc
+COPY CODESYSControl.cfg /etc
+EXPOSE 1217/tcp
+EXPOSE 1743/udp
+EXPOSE 4840/tcp
+EXPOSE 11740/tcp
+EXPOSE 22350/tcp
+EXPOSE 1740/udp
+ENTRYPOINT ["/bin/bash"]
+CMD ["/bootstrap.sh"]
+EOF
+
+$ podman build -f Dockerfile.app-v11 -t registry.example.com:5000/codesys/codesyscontroldemoapp:v11
+$ podman stop codesyscontroldemoapp-v10
+$ podman run --name codesyscontroldemoapp-v11 -d -t --network host --privileged registry.example.com:5000/codesys/codesyscontroldemoapp:v11
+
+### run podman fifo
+podman run --cpuset-cpus=3 --device=/dev/cpu_dma_latency --name codesysedgecontrol -d -t --network host --privileged registry.example.com:5000/codesys/codesysedgecontrol:latest
+
+podman run --cpuset-cpus=2 --name codesysedge -d -t --network host --privileged registry.example.com:5000/codesys/codesysedge 
+podman run --name codesyscontrol -d -t --network host --privileged registry.example.com:5000/codesys/codesyscontrol
+
+podman run --name codesyscontrol --cpuset-cpus=3 --device=/dev/cpu_dma_latency --cap-add ipc_lock --cap-add sys_nice --cap-add sys_rawio --cap-add net_admin --cap-add sys_time --cap-add net_bind_service -d -t --network host registry.example.com:5000/codesys/codesyscontrol
+
+podman run --name codesyscontrol --cpuset-cpus=0-3 --device=/dev/cpu_dma_latency --cap-add ipc_lock --cap-add sys_nice --cap-add sys_rawio --cap-add net_admin --cap-add sys_time --cap-add net_bind_service -d -t --network host registry.example.com:5000/codesys/codesyscontrol
+
+capsh --print
+Current: =ep
+Bounding set =cap_chown,cap_dac_override,cap_dac_read_search,cap_fowner,cap_fsetid,cap_kill,cap_setgid,cap_setuid,cap_setpcap,cap_linux_immutable,cap_net_bind_service,cap_net_broadcast,cap_net_admin,cap_net_raw,cap_ipc_lock,cap_ipc_owner,cap_sys_module,cap_sys_rawio,cap_sys_chroot,cap_sys_ptrace,cap_sys_pacct,cap_sys_admin,cap_sys_boot,cap_sys_nice,cap_sys_resource,cap_sys_time,cap_sys_tty_config,cap_mknod,cap_lease,cap_audit_write,cap_audit_control,cap_setfcap,cap_mac_override,cap_mac_admin,cap_syslog,cap_wake_alarm,cap_block_suspend,cap_audit_read,cap_perfmon,cap_bpf,cap_checkpoint_restore
+Ambient set =
+Current IAB: 
+Securebits: 00/0x0/1'b0 (no-new-privs=0)
+ secure-noroot: no (unlocked)
+ secure-no-suid-fixup: no (unlocked)
+ secure-keep-caps: no (unlocked)
+ secure-no-ambient-raise: no (unlocked)
+uid=0(root) euid=0(root)
+gid=0(root)
+groups=0(root)
+Guessed mode: UNCERTAIN (0)
 ```
 
 ### Performance Profile rt

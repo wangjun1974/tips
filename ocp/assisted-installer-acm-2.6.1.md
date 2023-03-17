@@ -620,7 +620,7 @@ metadata:
 type: Opaque
 data:
   username: "YWRtaW4K"
-  password: "cmVkaGF0Cg=="
+  password: "NOT_REAL_PASSWORD"
 EOF
 
 # 创建 BareMetalHost
@@ -847,7 +847,7 @@ metadata:
 type: Opaque
 data:
   username: "YWRtaW4K"
-  password: "cmVkaGF0Cg=="
+  password: "NOT_REAL_PASSWORD"
 EOF
 
 $ cat <<'EOF' | oc apply -f -
@@ -931,7 +931,7 @@ metadata:
 type: Opaque
 data:
   username: "YWRtaW4K"
-  password: "cmVkaGF0Cg=="
+  password: "NOT_REAL_PASSWORD"
 EOF
 
 $ cat <<'EOF' | oc apply -f -

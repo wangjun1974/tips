@@ -203,7 +203,7 @@ metadata:
 type: Opaque
 data:
   username: "YWRtaW4K"
-  password: "cmVkaGF0Cg=="
+  password: "NOT_REAL_PASSWORD"
 
 ---
 apiVersion: metal3.io/v1alpha1

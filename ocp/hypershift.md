@@ -441,7 +441,7 @@ metadata:
 type: Opaque
 data:
   username: "YWRtaW4K"
-  password: "cmVkaGF0Cg=="
+  password: "NOT_REAL_PASSWORD"
 EOF
 
 $ WORKER_NAME="worker-0"

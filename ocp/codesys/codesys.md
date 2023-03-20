@@ -2001,4 +2001,54 @@ spec:
     node-role.kubernetes.io/worker-rt: ""
 EOF
 
+### 在容器里执行压力程序
+$ oc -n default rsh cyclictest
+sh-4.4# mkdir -p /tmp/stress-ng
+sh-4.4# cd /tmp/stress-ng
+sh-4.4# /usr/bin/nohup /usr/bin/stress-ng --cpu 1 --io 4 --vm 2 --vm-bytes 128M --fork 4 --timeout 0 &
+sh-4.4# mkdir -p /tmp/cyclictest
+sh-4.4# cd /tmp/cyclictest
+sh-4.4# /usr/bin/nohup /usr/bin/cyclictest --priority 1 --policy fifo -h 10 -a 1 -t 1 -m -q -i 200 -D 1h &
+
+
+### 这些 stress-ng 进程是上面的命令所施加的压力
+sh-4.4# ps axf
+    PID TTY      STAT   TIME COMMAND
+    151 pts/0    Ss     0:00 /bin/sh
+   6736 pts/0    SL     0:00  \_ /usr/bin/stress-ng --cpu 1 --io 4 --vm 2 --vm-bytes 128M --fork 4 --timeout 0
+   6737 pts/0    R      0:39  |   \_ /usr/bin/stress-ng --cpu 1 --io 4 --vm 2 --vm-bytes 128M --fork 4 --timeout 0
+   6738 pts/0    D      0:39  |   \_ /usr/bin/stress-ng --cpu 1 --io 4 --vm 2 --vm-bytes 128M --fork 4 --timeout 0
+   6739 pts/0    R      0:39  |   \_ /usr/bin/stress-ng --cpu 1 --io 4 --vm 2 --vm-bytes 128M --fork 4 --timeout 0
+   6740 pts/0    D      0:39  |   \_ /usr/bin/stress-ng --cpu 1 --io 4 --vm 2 --vm-bytes 128M --fork 4 --timeout 0
+   6741 pts/0    D      0:39  |   \_ /usr/bin/stress-ng --cpu 1 --io 4 --vm 2 --vm-bytes 128M --fork 4 --timeout 0
+   6742 pts/0    S      0:00  |   \_ /usr/bin/stress-ng --cpu 1 --io 4 --vm 2 --vm-bytes 128M --fork 4 --timeout 0
+   6748 pts/0    R      0:39  |   |   \_ /usr/bin/stress-ng --cpu 1 --io 4 --vm 2 --vm-bytes 128M --fork 4 --timeout 0
+   6743 pts/0    S      0:00  |   \_ /usr/bin/stress-ng --cpu 1 --io 4 --vm 2 --vm-bytes 128M --fork 4 --timeout 0
+   6749 pts/0    R      0:39  |   |   \_ /usr/bin/stress-ng --cpu 1 --io 4 --vm 2 --vm-bytes 128M --fork 4 --timeout 0
+   6744 pts/0    S      0:00  |   \_ /usr/bin/stress-ng --cpu 1 --io 4 --vm 2 --vm-bytes 128M --fork 4 --timeout 0
+  18614 pts/0    R      0:00  |   |   \_ /usr/bin/stress-ng --cpu 1 --io 4 --vm 2 --vm-bytes 128M --fork 4 --timeout 0
+   6745 pts/0    S      0:00  |   \_ /usr/bin/stress-ng --cpu 1 --io 4 --vm 2 --vm-bytes 128M --fork 4 --timeout 0
+  18613 ?        Rs     0:00  |   |   \_ /usr/bin/stress-ng --cpu 1 --io 4 --vm 2 --vm-bytes 128M --fork 4 --timeout 0
+   6746 pts/0    S      0:00  |   \_ /usr/bin/stress-ng --cpu 1 --io 4 --vm 2 --vm-bytes 128M --fork 4 --timeout 0
+  18615 pts/0    R      0:00  |   |   \_ /usr/bin/stress-ng --cpu 1 --io 4 --vm 2 --vm-bytes 128M --fork 4 --timeout 0
+   6747 pts/0    S      0:00  |   \_ /usr/bin/stress-ng --cpu 1 --io 4 --vm 2 --vm-bytes 128M --fork 4 --timeout 0
+  10855 pts/0    SLl    0:02  \_ /usr/bin/cyclictest --priority 1 --policy fifo -h 10 -a 1 -t 1 -m -q -i 200 -D 1h
+  18612 pts/0    R+     0:00  \_ ps axf
+      1 ?        Ss     0:00 /bin/sh -ec while :; do echo '.'; sleep 5 ; done
+  18576 ?        S      0:00 /usr/bin/coreutils --coreutils-prog-shebang=sleep /usr/bin/sleep 5
+
+### cyclictest 进程绑定的 core 是 1
+sh-4.4# taskset -cp 10855 
+pid 10855's current affinity list: 1
+
+### core 1 的 cpu 被 stress-ng 压到 idle 为 0 的状态
+sh-4.4# top -b 1 
+top - 02:36:46 up 6 days, 17:39,  0 users,  load average: 13.91, 10.70, 6.02
+Tasks:  23 total,   9 running,  14 sleeping,   0 stopped,   0 zombie
+%Cpu0  :  6.2 us,  0.0 sy,  0.0 ni, 93.8 id,  0.0 wa,  0.0 hi,  0.0 si,  0.0 st
+%Cpu1  : 46.7 us, 53.3 sy,  0.0 ni,  0.0 id,  0.0 wa,  0.0 hi,  0.0 si,  0.0 st
+%Cpu2  :  0.0 us,  0.0 sy,  0.0 ni,100.0 id,  0.0 wa,  0.0 hi,  0.0 si,  0.0 st
+%Cpu3  :  0.0 us,  0.0 sy,  0.0 ni,100.0 id,  0.0 wa,  0.0 hi,  0.0 si,  0.0 st
+MiB Mem :   7447.9 total,   3225.4 free,   1016.2 used,   3206.4 buff/cache
+MiB Swap:      0.0 total,      0.0 free,      0.0 used.   6229.3 avail Mem 
 ```

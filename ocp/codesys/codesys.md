@@ -1935,3 +1935,70 @@ ps axf  | grep -Ev "6492" | awk '{print $1}' | while read i ; do taskset -p $i 2
 ### 设置 irq cpu affinity from 0-3 to core 0-2
 $ find /proc/irq/ -name smp_affinity_list -exec sh -c 'i="$1"; mask=$(cat $i); file=$(echo $i); echo $file: $mask' _ {} \; | grep "0-3" | awk -F '/' '{print $4}' | while read i ;do echo "07" > /proc/irq/$i/smp_affinity ; done 
 ```
+
+### 创建 cyclictest 和 stress-ng 的镜像
+```
+$ cat > Dockerfile <<EOF
+FROM registry.access.redhat.com/ubi8/ubi:latest
+COPY numactl-libs-2.0.12-13.el8.x86_64.rpm /tmp/numactl-libs-2.0.12-13.el8.x86_64.rpm
+COPY Judy-1.0.5-18.module_el8.5.0+728+80681c81.x86_64.rpm /tmp/Judy-1.0.5-18.module_el8.5.0+728+80681c81.x86_64.rpm
+COPY stress-ng-0.13.00-5.el8.x86_64.rpm /tmp/stress-ng-0.13.00-5.el8.x86_64.rpm
+COPY rt-tests-2.5-1.el8.x86_64.rpm /tmp/rt-tests-2.5-1.el8.x86_64.rpm
+RUN dnf install -y libpciaccess iproute net-tools procps-ng /tmp/rt-tests-2.5-1.el8.x86_64.rpm /tmp/stress-ng-0.13.00-5.el8.x86_64.rpm /tmp/Judy-1.0.5-18.module_el8.5.0+728+80681c81.x86_64.rpm /tmp/numactl-libs-2.0.12-13.el8.x86_64.rpm && dnf clean all
+
+CMD ["/bin/bash", "-c", "exec /bin/bash -c 'trap : TERM INT; sleep 9999999999d & wait'"]
+EOF
+$ podman build -f Dockerfile  -t registry.example.com:5000/codesys/cyclictest:v1
+$ podman run --name cyclictest-v1 -d -t --network host --privileged registry.example.com:5000/codesys/cyclictest:v1
+
+$ cat > pod.yaml <<EOF
+apiVersion: v1
+kind: Pod
+metadata:
+  name: cyclictest
+  namespace: default
+  # Disable CPU balance with CRIO (yes this is disabling it)
+  # cpu-load-balancing.crio.io: "true"
+spec:
+  # Map to the correct performance class in the cluster (from PAO)
+  # runtimeClassName: performance-custom-class
+  restartPolicy: Never
+  containers:
+  - name: cyclictest
+    image: registry.ocp4.example.com:5000/codesys/cyclictest:v1
+    imagePullPolicy: IfNotPresent
+    # Request and Limits must be identical for the Pod to be assigned to the QoS Guarantee
+    command: ["/bin/sh", "-ec", "while :; do echo '.'; sleep 5 ; done"]
+    resources:
+      requests:
+        memory: "200Mi"
+        cpu: "1"
+      limits:
+        memory: "200Mi"
+        cpu: "1"
+    env:
+    - name: DURATION
+      value: "1m"
+    # # Following setting not required in OCP4.6+
+    # - name: DISABLE_CPU_BALANCE
+    #   value: "y"
+    #   # DISABLE_CPU_BALANCE requires privileged=true
+    securityContext:
+      privileged: true
+      #capabilities:
+      #  add:
+      #    - SYS_NICE
+      #    - IPC_LOCK
+      #    - SYS_RAWIO
+    volumeMounts:
+    - mountPath: /dev/cpu_dma_latency
+      name: cstate
+  volumes:
+  - name: cstate
+    hostPath:
+      path: /dev/cpu_dma_latency
+  nodeSelector:
+    node-role.kubernetes.io/worker-rt: ""
+EOF
+
+```

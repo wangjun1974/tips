@@ -2055,3 +2055,22 @@ MiB Swap:      0.0 total,      0.0 free,      0.0 used.   6229.3 avail Mem
 
 ### codesys 的脚本功能
 https://content.helpme-codesys.com/en/CODESYS%20Scripting/_cds_access_cds_func_in_python_scripts.html
+https://help.codesys.com/webapp/_cds_commandline;product=codesys;version=3.5.16.0#option-runscript-execute-script
+https://help.codesys.com/webapp/ScriptApplication;product=ScriptEngine;version=3.5.16.0
+
+### CodeSys 如何在命令行编译
+```
+# script engine
+start /b /wait "C:\Program Files (x86)\CODESYS V3.5 SP16\CODESYS\Common\CODESYS.exe" --profile="CODESYS V3.5 SP16" --runscript="build.py" --noUI
+
+# build.py
+import scriptengine
+
+project = projects.open(r"CodesysProject.project", primary = True)
+application = project.active_application
+application.generate_code()
+messages = system.get_messages("97f48d64-a2a3-4856-b640-75c046e37ea9")
+// check messages
+
+
+```

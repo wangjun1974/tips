@@ -2533,3 +2533,23 @@ $ ls
 LICENSE  README.md  ansible-navigator.yml  ansible.cfg  app  deploy  inventory  playbooks
 $ sed -i 's|10.1.1.11|192.168.122.123|' inventory/hosts 
 ```
+
+### 查看 microshift 有哪些 images
+```
+[microshift@edge-2 microshift]$ cat /usr/share/microshift/release/release-x86_64.json | grep sha256 | awk -F": " '{print $2}' | sed -e 's|"||g' -e 's|,$||' | sort -u
+quay.io/openshift-release-dev/ocp-v4.0-art-dev@sha256:1638cbed9207a1cc2f84af5e0c4f70f47140028c7d0154fbdc9d594dedf29062
+quay.io/openshift-release-dev/ocp-v4.0-art-dev@sha256:3c2eaa88d1aab0565dfc3ab001c6a829a04b591dbb0265702813a9f0c22d99fd
+quay.io/openshift-release-dev/ocp-v4.0-art-dev@sha256:5ab6561dbe5a00a9b96e1c29818d8376c8e871e6757875c9cf7f48e333425065
+quay.io/openshift-release-dev/ocp-v4.0-art-dev@sha256:6d241d09890258c810937d8013f31ce3405412161c51b7723a590a37303862bb
+quay.io/openshift-release-dev/ocp-v4.0-art-dev@sha256:98ab12770309ac075fbfa617028d5ba800294309b8ec64f9ab9a2170cb90e17a
+quay.io/openshift-release-dev/ocp-v4.0-art-dev@sha256:adcdbff7f3bf4c5b27557d9b74401be60a771d691f723857da8fe34fcb016f21
+quay.io/openshift-release-dev/ocp-v4.0-art-dev@sha256:f3a21964b446ad1febcdb5e8469938a42a6036baa529cc24b670b839b4c2edc7
+registry.access.redhat.com/ubi8/openssl@sha256:9e743d947be073808f7f1750a791a3dbd81e694e37161e8c6c6057c2c342d671
+registry.redhat.io/lvms4/topolvm-rhel8@sha256:10bffded5317da9de6c45ba74f0bb10e0a08ddb2bfef23b11ac61287a37f10a1
+registry.redhat.io/openshift4/ose-csi-external-provisioner@sha256:199eac2ba4c8390daa511b040315e415cfbcfa80aa7af978a33624445b96c17c
+registry.redhat.io/openshift4/ose-csi-external-resizer@sha256:9d486daffd348664c00d8b80bd0da973b902f3650acdef37e1b813278ed6c107
+registry.redhat.io/openshift4/ose-csi-livenessprobe@sha256:9df24be671271f5ea9414bfd08e58bc2fa3dc4bc68075002f3db0fd020b58be0
+registry.redhat.io/openshift4/ose-csi-node-driver-registrar@sha256:a4319ff7c736ca9fe20500dc3e5862d6bb446f2428ea2eadfb5f042195f4f860
+
+
+```

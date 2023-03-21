@@ -2052,3 +2052,6 @@ Tasks:  23 total,   9 running,  14 sleeping,   0 stopped,   0 zombie
 MiB Mem :   7447.9 total,   3225.4 free,   1016.2 used,   3206.4 buff/cache
 MiB Swap:      0.0 total,      0.0 free,      0.0 used.   6229.3 avail Mem 
 ```
+
+### codesys 的脚本功能
+https://content.helpme-codesys.com/en/CODESYS%20Scripting/_cds_access_cds_func_in_python_scripts.html

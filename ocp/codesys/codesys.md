@@ -1958,10 +1958,12 @@ metadata:
   name: cyclictest
   namespace: default
   # Disable CPU balance with CRIO (yes this is disabling it)
-  # cpu-load-balancing.crio.io: "true"
+  annotations:
+    cpu-load-balancing.crio.io: "true"
 spec:
   # Map to the correct performance class in the cluster (from PAO)
   # runtimeClassName: performance-custom-class
+  runtimeClassName: performance-rt
   restartPolicy: Never
   containers:
   - name: cyclictest
@@ -1969,6 +1971,58 @@ spec:
     imagePullPolicy: IfNotPresent
     # Request and Limits must be identical for the Pod to be assigned to the QoS Guarantee
     command: ["/bin/sh", "-ec", "while :; do echo '.'; sleep 5 ; done"]
+    resources:
+      requests:
+        memory: "200Mi"
+        cpu: "1"
+      limits:
+        memory: "200Mi"
+        cpu: "1"
+    env:
+    - name: DURATION
+      value: "1m"
+    # # Following setting not required in OCP4.6+
+    # - name: DISABLE_CPU_BALANCE
+    #   value: "y"
+    #   # DISABLE_CPU_BALANCE requires privileged=true
+    securityContext:
+      privileged: true
+      #capabilities:
+      #  add:
+      #    - SYS_NICE
+      #    - IPC_LOCK
+      #    - SYS_RAWIO
+    volumeMounts:
+    - mountPath: /dev/cpu_dma_latency
+      name: cstate
+  volumes:
+  - name: cstate
+    hostPath:
+      path: /dev/cpu_dma_latency
+  nodeSelector:
+    node-role.kubernetes.io/worker-rt: ""
+EOF
+
+$ cat > pod.yaml <<EOF
+apiVersion: v1
+kind: Pod
+metadata:
+  name: cyclictest
+  namespace: default
+  # Disable CPU balance with CRIO (yes this is disabling it)
+  annotations:
+    cpu-load-balancing.crio.io: "true"
+spec:
+  # Map to the correct performance class in the cluster (from PAO)
+  # runtimeClassName: performance-custom-class
+  runtimeClassName: performance-rt
+  restartPolicy: Never
+  containers:
+  - name: cyclictest
+    image: registry.ocp4.example.com:5000/codesys/cyclictest:v1
+    imagePullPolicy: IfNotPresent
+    # Request and Limits must be identical for the Pod to be assigned to the QoS Guarantee
+    command: ["/usr/bin/cyclictest", "--priority 1 --policy fifo -h 10 -a 1 -t 1 -m -q -i 200 -D 1h"]
     resources:
       requests:
         memory: "200Mi"
@@ -2141,12 +2195,61 @@ EOF
 
 # ansible-rulebook -r webhook-example.yml -i inventory.yml -v
 
-
 # curl -H 'Content-Type: application/json' -d "{\"message\": \"Ansible is alright\"}" 192.168.122.131:5000/endpoint
-
 # curl -H 'Content-Type: application/json' -d "{\"message\": \"Ansible is super cool\"}" 192.168.122.131:5000/endpoint
-
-
-
-
 ```
+
+### real time deployment for codesys runtime 
+```
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: codesyscontrol1
+  labels:
+    app: codesyscontrol1
+spec:
+  selector:
+    matchLabels:
+      app: codesyscontrol1
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: codesyscontrol1
+      annotations:
+        k8s.v1.cni.cncf.io/networks: codesys-management, codesys-ethercat
+        cpu-quota.crio.io: "disable"
+    spec:
+      nodeSelector:
+        node-role.kubernetes.io/worker-rt: ''
+      containers:
+      - image: registry.ocp4.example.com:5000/codesys/codesyscontroldemoapp:v8
+        name: codesyscontrol
+        runtimeClassName: performance-rt
+        resources:
+          limits:
+            #memory: "1Gi"
+            cpu: "1"
+          requests:
+            #memory: "1Gi"
+            cpu: "1"
+        securityContext:
+          privileged: true
+        ports:
+        - containerPort: 4840
+          name: upcua
+          protocol: TCP
+          hostPort: 4840
+        - containerPort: 11740
+          name: runtimetcp
+          protocol: TCP
+          hostPort: 11740
+        - containerPort: 1740
+          name: runtimeudp
+          protocol: UDP
+          hostPort: 1740
+```
+
+### performance team 使用的 pod spec 
+https://github.com/redhat-nfvpe/container-perf-tools/blob/master/sample-yamls/pod_cyclictest.yaml

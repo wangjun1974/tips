@@ -2077,3 +2077,76 @@ messages = system.get_messages("97f48d64-a2a3-4856-b640-75c046e37ea9")
 
 ### Manage Codesys Projects with Git
 https://www.youtube.com/watch?v=MoBZ3g3f7Bo
+
+### event driven ansible demo
+https://www.techbeatly.com/introducing-the-event-driven-ansible-demo/
+```
+$ sudo firewall-cmd --zone=public --add-port=5000/tcp --permanent
+$ sudo firewall-cmd --reload
+$ cat > Dockerfile <<EOF
+FROM registry.access.redhat.com/ubi9/ubi:latest
+ENV JDK_HOME /usr/lib/jvm/java-17-openjdk
+ENV JAVA_HOME /usr/lib/jvm/java-17-openjdk
+RUN dnf --assumeyes install gcc java-17-openjdk maven python3-devel python3-pip && pip3 install -U Jinja2 && pip3 install ansible ansible-rulebook ansible-runner wheel && pip3 install aiokafka && ansible-galaxy collection install community.general ansible.eda 
+
+CMD ["/bin/bash", "-c", "exec /bin/bash -c 'trap : TERM INT; sleep 9999999999d & wait'"]
+EOF
+$ podman build -f Dockerfile -t registry.example.com:5000/codesys/ansiblerulebook:latest 
+$ podman run --name ansiblerulebook -d -t --network host --privileged registry.example.com:5000/codesys/ansiblerulebook:latest
+
+$ cat > Dockerfile.v2 <<EOF
+FROM registry.example.com:5000/codesys/ansiblerulebook:v1
+RUN dnf --assumeyes install libpciaccess iproute net-tools procps-ng && dnf clean all
+
+CMD ["/bin/bash", "-c", "exec /bin/bash -c 'trap : TERM INT; sleep 9999999999d & wait'"]
+EOF
+
+$ podman build -f Dockerfile.v2 -t registry.example.com:5000/codesys/ansiblerulebook:v2
+$ podman run --name ansiblerulebook -d -t --network host --privileged registry.example.com:5000/codesys/ansiblerulebook:v2
+
+$ podman exec -it ansiblerulebook bash
+# cd /root
+# cat > inventory.yml <<EOF
+localhost
+EOF
+
+# cat > webhook-example.yml <<EOF
+---
+- name: Listen for events on a webhook
+  hosts: all
+  ## Define our source for events
+  sources:
+    - ansible.eda.webhook:
+        host: 0.0.0.0
+        port: 5000
+  ## Define the conditions we are looking for
+  rules:
+    - name: Say Hello
+      condition: event.payload.message == "Ansible is super cool"
+  ## Define the action we should take should the condition be met
+      action:
+        run_playbook:
+          name: say-what.yml
+EOF
+
+# cat > say-what.yml <<EOF
+---
+- name: say thanks
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - debug:
+        msg: "Thank you, {{ event.sender | default('my friend') }}!"
+EOF
+
+# ansible-rulebook -r webhook-example.yml -i inventory.yml -v
+
+
+# curl -H 'Content-Type: application/json' -d "{\"message\": \"Ansible is alright\"}" 192.168.122.131:5000/endpoint
+
+# curl -H 'Content-Type: application/json' -d "{\"message\": \"Ansible is super cool\"}" 192.168.122.131:5000/endpoint
+
+
+
+
+```

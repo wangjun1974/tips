@@ -2353,4 +2353,19 @@ EOF
 $ podman build -f Dockerfile -t registry.example.com:5000/codesys/perf-tools:latest 
 $ podman run --name perf-tools -d -t --network host --privileged registry.example.com:5000/codesys/perf-tools:latest 
 $ podman push registry.example.com:5000/codesys/perf-tools:latest
+
+### 查看 cyclictest 的 main thread 和 child thread 的 scheduler policy
+sh-4.4# ps axf
+ 603120 ?        Ssl    0:00 /usr/bin/conmon -b /run/containers/storage/overlay-containers/12258eff63ab396d5c451854f42b1ff400c9ae571a36b884fd3
+ 603130 ?        Ss     0:00  \_ /root/dumb-init -- /root/run.sh
+ 603184 ?        Ss     0:00      \_ /root/dumb-init -- /root/container-tools/cyclictest/cmd.sh
+ 603187 ?        Ss     0:00          \_ /bin/bash /root/container-tools/cyclictest/cmd.sh
+ 603219 ?        SLl    0:05              \_ cyclictest -q -D 1h -p 95 -t 1 -a -h 30 -i 1000 -m
+### 获取进程的线程
+sh-4.4# pstree -p -t 603219
+cyclictest(603219)---{cyclictest}(603220)
+### 查看线程的调度策略和调度优先级
+sh-4.4# chrt -p 603220 
+pid 603220's current scheduling policy: SCHED_FIFO
+pid 603220's current scheduling priority: 95
 ```

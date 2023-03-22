@@ -2252,4 +2252,105 @@ spec:
 ```
 
 ### performance team 使用的 pod spec 
-https://github.com/redhat-nfvpe/container-perf-tools/blob/master/sample-yamls/pod_cyclictest.yaml
+https://github.com/redhat-nfvpe/container-perf-tools/blob/master/sample-yamls/pod_cyclictest.yaml<br>
+https://docs.openshift.com/container-platform/4.12/scalability_and_performance/cnf-performing-platform-verification-latency-tests.html<br>
+```
+### 获取 performance team 测试用的镜像
+$ mkdir -p /tmp/perf-tools
+$ skopeo copy --format v2s2 --all docker://quay.io/jianzzha/perf-tools:latest dir:/tmp/perf-tools/perf-tools
+
+$ tar cf /tmp/perf-tools.tar /tmp/perf-tools
+
+$ scp /tmp/perf-tools.tar <dst>:/tmp
+
+$ tar xf /tmp/perf-tools.tar -C /
+$ skopeo copy --format v2s2 --all dir:/tmp/perf-tools/perf-tools docker://registry.ocp4.example.com:5000/jianzzha/perf-tools:latest
+
+### 生成 performance team 测试用的 pod.yaml 
+cat > pod.yaml <<EOF
+apiVersion: v1 
+kind: Pod 
+metadata:
+  name: cyclictest 
+  annotations:
+    cpu-load-balancing.crio.io: "disable"
+    irq-load-balancing.crio.io: "disable"
+    cpu-quota.crio.io: "disable"
+spec:
+  # Map to the correct performance class in the cluster (from PAO)
+  # Identify class names with "oc get runtimeclass"
+  runtimeClassName: performance-rt
+  restartPolicy: Never 
+  containers:
+  - name: container-perf-tools 
+    image: registry.ocp4.example.com:5000/jianzzha/perf-tools
+    imagePullPolicy: IfNotPresent
+    # Request and Limits must be identical for the Pod to be assigned to the QoS Guarantee
+    resources:
+      requests:
+        memory: "200Mi"
+        cpu: "1"
+      limits:
+        memory: "200Mi"
+        cpu: "1"
+    env:
+    - name: tool
+      value: "cyclictest"
+    - name: DURATION
+      value: "1h"
+    # cyclictest should run with an RT Priority of 95 when testing for RAN DU
+    - name: rt_priority
+      value: "95"
+    - name: INTERVAL
+      value: "1000"
+    - name: delay
+      value: "0"
+    # # Following setting not required in OCP4.6+
+    # - name: DISABLE_CPU_BALANCE
+    #   value: "y"
+    #   # DISABLE_CPU_BALANCE requires privileged=true
+    securityContext:
+      privileged: true
+      #capabilities:
+      #  add:
+      #    - SYS_NICE
+      #    - IPC_LOCK
+      #    - SYS_RAWIO
+    volumeMounts:
+    - mountPath: /dev/cpu_dma_latency
+      name: cstate
+  volumes:
+  - name: cstate
+    hostPath:
+      path: /dev/cpu_dma_latency
+  nodeSelector:
+    node-role.kubernetes.io/worker-rt: ""
+EOF
+
+
+### 创建可在离线环境里运行的 perf-tools 容器镜像
+$ podman run --name cyclictest -d -t --network host --privileged quay.io/jianzzha/perf-tools 
+$ mkdir -p /tmp/cyclictest
+$ podman cp cyclictest:/root/container-tools . 
+$ podman cp cyclictest:/root/run.sh . 
+$ podman cp cyclictest:/root/dumb-init . 
+
+### 编辑 run.sh
+### 注释或者删除这些行，container-tools 目录内容直接从本地拷贝进去
+### [ -n "${GIT_URL}" ] || GIT_URL="https://github.com/redhat-nfvpe/container-perf-tools.git"
+### echo "git clone ${GIT_URL}"
+### git clone ${GIT_URL} /root/container-tools
+
+$ cat > Dockerfile <<EOF
+FROM quay.io/jianzzha/perf-tools:latest
+COPY run.sh /root/run.sh
+COPY dumb-init /root/dumb-init
+RUN mkdir -p /root/container-tools
+COPY container-tools /root/container-tools
+ENTRYPOINT ["/root/dumb-init","--"]
+CMD ["/root/run.sh"]
+EOF
+$ podman build -f Dockerfile -t registry.example.com:5000/codesys/perf-tools:latest 
+$ podman run --name perf-tools -d -t --network host --privileged registry.example.com:5000/codesys/perf-tools:latest 
+$ podman push registry.example.com:5000/codesys/perf-tools:latest
+```

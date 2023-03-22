@@ -2341,6 +2341,12 @@ $ podman cp cyclictest:/root/dumb-init .
 ### echo "git clone ${GIT_URL}"
 ### git clone ${GIT_URL} /root/container-tools
 
+### 编辑 container-tools/cyclictest/cmd.sh
+### 注释 yum install -y stress-ng 所在的行
+###     # yum install -y stress-ng 2>&1 || { echo >&2 "stress-ng required but install failed. Aborting"; sleep infinity; }
+### 将 stress-ng 的命令改为 --cpu 1 --io 4 --vm 2 --vm-bytes 128M --fork 4 --timeout 0
+###        tmux new-window -t stress -n $w "taskset -c ${cpus[$(($w-1))]} stress-ng --cpu 1 --io 4 --vm 2 --vm-bytes 128M --fork 4 --timeout 0"
+
 $ cat > Dockerfile <<EOF
 FROM quay.io/jianzzha/perf-tools:latest
 COPY run.sh /root/run.sh

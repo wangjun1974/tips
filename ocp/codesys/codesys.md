@@ -2158,7 +2158,18 @@ EOF
 $ podman build -f Dockerfile.v2 -t registry.example.com:5000/codesys/ansiblerulebook:v2
 $ podman run --name ansiblerulebook -d -t --network host --privileged registry.example.com:5000/codesys/ansiblerulebook:v2
 
-$ podman exec -it ansiblerulebook bash
+$ cat > Dockerfile.v3 <<EOF
+FROM registry.example.com:5000/codesys/ansiblerulebook:v2
+RUN ansible-galaxy collection install community.okd
+COPY oc /root
+COPY kubeconfig /root
+
+CMD ["/bin/bash", "-c", "exec /bin/bash -c 'trap : TERM INT; sleep 9999999999d & wait'"]
+EOF
+$ podman build -f Dockerfile.v3 -t registry.example.com:5000/codesys/ansiblerulebook:v3
+$ podman run --name ansiblerulebook-v3 -d -t --network host --privileged registry.example.com:5000/codesys/ansiblerulebook:v3
+
+$ podman exec -it ansiblerulebook-v3 bash
 # cd /root
 # cat > inventory.yml <<EOF
 localhost
@@ -2173,14 +2184,20 @@ EOF
     - ansible.eda.webhook:
         host: 0.0.0.0
         port: 5000
+      filters:
+        - ansible.eda.dashes_to_underscores:
   ## Define the conditions we are looking for
   rules:
-    - name: Say Hello
-      condition: event.payload.message == "Ansible is super cool"
+  ##  - name: Say Hello
+  ##    condition: event.payload.message == "Ansible is super cool"
   ## Define the action we should take should the condition be met
+  ##    action:
+  ##      run_playbook:
+  ##        name: say-what.yml
+    - name: Update repo
+      condition: event.payload is defined
       action:
-        run_playbook:
-          name: say-what.yml
+        debug:
 EOF
 
 # cat > say-what.yml <<EOF
@@ -2374,4 +2391,79 @@ cyclictest(603219)---{cyclictest}(603220)
 sh-4.4# chrt -p 603220 
 pid 603220's current scheduling policy: SCHED_FIFO
 pid 603220's current scheduling priority: 95
+
+### 在环境里用 container image 运行一个 gitlab 实例
+mkdir -p /root/gitlab/{config,logs,data}
+export GITLAB_HOME=/root/gitlab
+
+$ podman run -d -t \
+  --hostname eci0.example.com \
+  --publish 192.168.122.131:443:443 \
+  --name gitlab \
+  --restart always \
+  --volume $GITLAB_HOME/config:/etc/gitlab:Z \
+  --volume $GITLAB_HOME/logs:/var/log/gitlab:Z \
+  --volume $GITLAB_HOME/data:/var/opt/gitlab:Z \
+  --shm-size 256m \
+  registry.example.com:5000/gitlab/gitlab-ce:latest
+
+# 检查口令
+$ podman exec -it gitlab grep 'Password:' /etc/gitlab/initial_root_password 
+
+# 启用 local request
+https://gitlab.com/gitlab-org/gitlab/-/issues/26845
+Admin -> Settings -> Network -> Outbound Requests -> Allow requests to the local network from hooks and services
+
+# cat > .gitconfig <<EOF
+[http]
+        sslVerify=false
+EOF
+
+# oc -n codesysdemo create secret generic mygitconfig --from-file=.gitconfig
+
+# cat <<EOF | oc apply -f - 
+apiVersion: build.openshift.io/v1
+kind: BuildConfig
+metadata:
+  name: codesyscontroldemoapp-build
+  namespace: codesysdemo
+spec:
+  source:
+    type: Git
+    git:
+      uri: 'https://eci0.example.com/user1/codesyscontrolwithapp-image.git'
+      ref: master
+    contextDir: dockerfile
+    sourceSecret:
+      name: mygitconfig
+  strategy:
+    type: Docker
+    #With this you can set a path to the docker file
+    #dockerStrategy:
+    # dockerfilePath: dockerfile
+  output:
+    to:
+      kind: "DockerImage"
+      name: "registry.example.com:5000/codesys/codesyscontroldemoapp:latest"
+EOF
+
+# 配置 gitlab https
+# https://docs.gitlab.com/omnibus/settings/ssl/
+# Configure HTTPS manually
+# gitlab container 内配置证书
+mkdir -p /etc/gitlab/ssl
+chmod 755 /etc/gitlab/ssl
+cd /etc/gitlab/ssl
+openssl req -newkey rsa:4096 -nodes -sha256 -keyout eci0.example.com.key -x509 -days 3650 \
+  -out eci0.example.com.crt \
+  -subj "/C=CN/ST=BEIJING/L=BJ/O=REDHAT/OU=IT/CN=eci0.example.com/emailAddress=admin@example.com"
+
+编辑 /etc/gitlab/gitlab.rb 文件
+external_url "https://eci0.example.com"
+letsencrypt['enable'] = false
+
+### 在 oc client 添加证书信任
+openssl s_client -host eci0.example.com -port 443 -showcerts > trace < /dev/null
+cat trace | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' | tee /etc/pki/ca-trust/source/anchors/eci0.example.com.crt  
+update-ca-trust extract
 ```

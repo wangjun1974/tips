@@ -1674,8 +1674,45 @@ EOF
 $ /usr/local/bin/oc-mirror --config ./image-config-realse-local.yaml file://output-dir 2>&1 | tee /tmp/err 
 $ /usr/local/bin/oc-mirror --from ./mirror_seq1_000000.tar docker://registry.example.com:5000
 
+
+### 检查 operator 的情况
+### for packagename in gitlab-operator-kubernetes gitlab-runner-operator 
+### do 
+###  /usr/local/bin/oc-mirror list operators --catalog=registry.redhat.io/redhat/community-operator-index:v4.11 --package=${packagename}
+### done
+### 同步 operator 
+### catalog 是 registry.redhat.io/redhat/community-operator-index:v4.11
+$ cat > image-config-realse-local.yaml <<EOF
+apiVersion: mirror.openshift.io/v1alpha2
+kind: ImageSetConfiguration
+mirror:
+  operators:
+    - catalog: registry.redhat.io/redhat/community-operator-index:v4.11
+      packages:
+        - name: gitlab-operator-kubernetes
+          channels:
+            - name: 'stable'
+              minVersion: 'v0.17.3'
+              maxVersion: 'v0.17.3'
+        - name: gitlab-runner-operator
+          channels:
+            - name: 'stable'
+              minVersion: 'v1.12.0'
+              maxVersion: 'v1.12.0'
+        - name: cert-manager
+          channels:
+            - name: 'stable'
+              minVersion: 'v1.11.0'
+              maxVersion: 'v1.11.0'              
+EOF
+$ /usr/local/bin/oc-mirror --config ./image-config-realse-local.yaml file://output-dir 2>&1 | tee /tmp/err 
+$ /usr/local/bin/oc-mirror --from ./mirror_seq1_000000.tar docker://registry.example.com:5000
+
+
 ### 4.12 operator 离线时遇到的问题
 ### https://issues.redhat.com/projects/CLOUDDST/issues/CLOUDDST-17020?filter=allopenissues
 # unsupported: Not Found, or unsupported. V2 schema 1 manifest digest are no longer supported for image pulls.
+
+
 
 ```

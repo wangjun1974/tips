@@ -2467,3 +2467,17 @@ openssl s_client -host eci0.example.com -port 443 -showcerts > trace < /dev/null
 cat trace | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' | tee /etc/pki/ca-trust/source/anchors/eci0.example.com.crt  
 update-ca-trust extract
 ```
+
+### 获取 codesyscontrol 线程 id
+```
+# 获取 codesyscontrol 线程 id 
+sh-4.4# ps -eLf | grep codesyscontrol | grep -v grep | grep -v conmon | awk '{print $4}' 
+# 设置 cpu core 绑定 和 fifo scheduler 
+sh-4.4# ps -eLf | grep codesyscontrol | grep -v grep | grep -v conmon | awk '{print $4}' | while read i ; do echo taskset -cp 3 $i; echo chrt -f -p 95 $i ; done 
+# 设置 cpu core 绑定 和 rr scheduler 
+sh-4.4# ps -eLf | grep codesyscontrol | grep -v grep | grep -v conmon | awk '{print $4}' | while read i ; do taskset -cp 3 $i; taskset -cp $i ;  chrt -r -p 50 $i ; chrt -p $i ; done 
+
+### 测试发现，在系统完成实时性调优后，将 codesys control 及其子线程绑定到 real time core 上会获得比较好的测试数据
+### Task Group 设置 Core - Free Floating
+sh-4.4# ps -eLf | grep codesyscontrol | grep -v grep | grep -v conmon | awk '{print $4}' | while read i ; do taskset -cp 1-3 $i; taskset -cp $i ; done
+```

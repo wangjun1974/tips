@@ -2479,5 +2479,38 @@ sh-4.4# ps -eLf | grep codesyscontrol | grep -v grep | grep -v conmon | awk '{pr
 
 ### 测试发现，在系统完成实时性调优后，将 codesys control 及其子线程绑定到 real time core 上会获得比较好的测试数据
 ### Task Group 设置 Core - Free Floating
-sh-4.4# ps -eLf | grep codesyscontrol | grep -v grep | grep -v conmon | awk '{print $4}' | while read i ; do taskset -cp 1-3 $i; taskset -cp $i ; done
+sh-4.4# ps -eLf | grep codesyscontrol | grep -v grep | grep -v conmon | awk '{print $4}' | while read i ; do taskset -cp 1,3 $i; taskset -cp $i ; done
+
+### 查看进程的线程
+$ ps -T -p <pid>
+```
+
+### gitlab merge request 模拟
+```
+# 创建新的 branch
+$ git checkout -b my-new-branch-1
+$ git status
+On branch my-new-branch-1
+nothing to commit, working tree clean
+
+$ ll dockerfile/PlcLogic/Application/
+total 108
+-rw-r--r--. 1 root root 105976 Mar 23 14:38 Application.app
+-rw-r--r--. 1 root root     20 Mar 23 14:38 Application.crc
+$ ll /tmp/Demo2/
+total 108
+-rw-r--r--. 1 root root 105864 Mar 24 15:41 Application.app
+-rw-r--r--. 1 root root     28 Mar 24 15:41 Application.crc
+
+$ cp /tmp/Demo2/* dockerfile/PlcLogic/Application/
+$ git status 
+On branch my-new-branch-1
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+        modified:   dockerfile/PlcLogic/Application/Application.app
+        modified:   dockerfile/PlcLogic/Application/Application.crc
+$ git commit -a -m 'update dockerfile/PlcLogic/Application/* on branch my-new-branch-1'
+
+$ git push origin my-new-branch-1
 ```

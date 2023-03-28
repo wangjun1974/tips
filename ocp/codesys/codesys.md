@@ -2558,3 +2558,200 @@ $ git commit -a -m 'update dockerfile/PlcLogic/Application/* on branch my-new-br
 
 $ git push origin my-new-branch-1
 ```
+
+### add config file into deployment
+```
+$ cat > kustomization.yaml <<EOF
+resources:
+- pvc1.yaml
+- configmap1-deployment1.yaml
+- configmap2-deployment1.yaml
+- deployment1.yaml
+- service1.yaml
+- pvc2.yaml
+- deployment2.yaml
+- service2.yaml
+EOF
+
+$ cat > configmap1-deployment1.yaml <<'EOF'
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: codesyscontrol1-plc1-cfg
+  namespace: codesysdemo
+  labels:
+    app: codesyscontrol1
+data:
+  plc1-cfg: |
+    ;linux
+    [SysFile]
+    FilePath.1=/etc/, 3S.dat
+    PlcLogicPrefix=1
+    
+    [SysTarget]
+    TargetVersionMask=0
+    TargetVersionCompatibilityMask=0xFFFF0000
+    
+    [CmpSocketCanDrv]
+    ScriptPath=/opt/codesys/scripts/
+    ScriptName=rts_set_baud.sh
+    
+    [CmpSettings]
+    IsWriteProtected=1
+    FileReference.0=SysFileMap.cfg, SysFileMap
+    FileReference.1=/etc/CODESYSControl_User.cfg
+    
+    [SysExcept]
+    Linux.DisableFpuOverflowException=1
+    Linux.DisableFpuUnderflowException=1
+    Linux.DisableFpuInvalidOperationException=1
+    
+    [CmpOpenSSL]
+    WebServer.Cert=server.cer
+    WebServer.PrivateKey=server.key
+    WebServer.CipherList=HIGH
+    
+    [CmpLog]
+    Logger.0.Name=/tmp/codesyscontrol.log
+    Logger.0.Filter=0x0000000F
+    Logger.0.Enable=1
+    Logger.0.MaxEntries=1000
+    Logger.0.MaxFileSize=1000000
+    Logger.0.MaxFiles=1
+    Logger.0.Backend.0.ClassId=0x00000104 ;writes logger messages in a file
+    Logger.0.Type=0x314 ;Set the timestamp to RTC
+    
+    [SysMem]
+    Linux.Memlock=1
+    
+    [SysEthernet]
+    QDISC_BYPASS=1
+    Linux.ProtocolFilter=3
+    
+    [SysSocket]
+    Adapter.0.Name="net2"
+    Adapter.0.EnableSetIpAndMask=1
+    
+    [CmpSchedule]
+    SchedulerInterval=4000
+    ProcessorLoad.Enable=1
+    ProcessorLoad.Maximum=95
+    ProcessorLoad.Interval=5000
+    DisableOmittedCycleWatchdog=1
+EOF
+
+$ cat > configmap2-deployment1.yaml <<'EOF'
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: codesyscontrol1-plc1-user-cfg
+  namespace: codesysdemo
+  labels:
+    app: codesyscontrol1
+data:
+  plc1-user-cfg: |
+    ;linux plc1
+    [ComponentManager]
+    ;Component.1=CmpGateway                 ; enable when using Gateway
+    ;Component.2=CmpGwCommDrvTcp    ; enable when using Gateway
+    ;Component.3=CmpGwCommDrvShm    ; enable when using Gateway
+    ;Component.1=SysPci                             ; enable when using Hilscher CIFX
+    ;Component.2=CmpHilscherCIFX    ; enable when using Hilscher CIFX
+    
+    [CmpApp]
+    Bootproject.RetainMismatch.Init=1
+    ;RetainType.Applications=InSRAM
+    Application.1=Application
+    
+    [CmpRedundancyConnectionIP]
+    Link1.IpAddressLocal=172.18.9.22
+    Link2.IpAddressLocal=0.0.0.0
+    Link1.IpAddressPeer=172.18.9.21
+    Link2.IpAddressPeer=0.0.0.0
+    Link1.Port=1205
+    Link2.Port=1205
+    
+    [CmpRedundancy]
+    BootupWaitTime=5000
+    TcpWaitTime=2000
+    StandbyWaitTime=50
+    SyncWaitTime=50
+    Bootproject=Application
+    RedundancyTaskName=MainTask
+    Ethercat=0
+    Profibus=0
+    PlcIdent=1
+    
+    [CmpSrv]
+    
+    [IoDrvEtherCAT]
+    
+    [CmpUserMgr]
+    SECURITY.UserMgmtEnforce=NO
+    AsymmetricAuthKey=2de9b07e5461c6d14577b4afeaebe6bf9792c887
+    
+    [CmpSecureChannel]
+    CertificateHash=3495c7af380b94ac0af2ad2ae8ddc7ce56870ef1
+EOF
+
+$ cat > deployment1.yaml <<EOF
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: codesyscontrol1
+  labels:
+    app: codesyscontrol1
+spec:
+  selector:
+    matchLabels:
+      app: codesyscontrol1
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: codesyscontrol1
+      annotations:
+        k8s.v1.cni.cncf.io/networks: codesys-management, codesys-ethercat
+    spec:
+      containers:
+      - image: registry.example.com:5000/codesys/codesyscontroldemoapp:v14
+        #image: registry.example.com:5000/codesys/codesyscontrol:latest
+        name: codesyscontrol
+        securityContext:
+          privileged: true         
+        ports:
+        - containerPort: 4840
+          name: upcua
+          protocol: TCP
+          hostPort: 4840
+        - containerPort: 11740
+          name: runtimetcp
+          protocol: TCP
+          hostPort: 11740
+        - containerPort: 1740
+          name: runtimeudp
+          protocol: UDP
+          hostPort: 1740
+        volumeMounts:
+        - name: codesyscontrol-persistent-storage
+          mountPath: /var/opt/codesys
+        - name: codesyscontrol-plc1-cfg
+          mountPath: /etc/CODESYSControl.cfg
+          subPath: plc1-cfg
+        - name: codesyscontrol-plc1-user-cfg
+          mountPath: /etc/CODESYSControl_User.cfg
+          subPath: plc1-user-cfg
+      volumes:
+      - name: codesyscontrol-persistent-storage
+        persistentVolumeClaim:
+          claimName: codesyscontrol-pv-claim-1
+      - name: codesyscontrol-plc1-cfg
+        configMap:
+          name: codesyscontrol1-plc1-cfg
+      - name: codesyscontrol-plc1-user-cfg
+        configMap:
+          name: codesyscontrol1-plc1-user-cfg
+EOF
+        
+```

@@ -1849,6 +1849,50 @@ EOF
 $ podman build -f Dockerfile.app-v10 -t registry.example.com:5000/codesys/codesyscontroldemoapp:v10
 $ podman stop codesyscontroldemoapp-v9
 $ podman run --name codesyscontroldemoapp-v10 -d -t --network host --privileged registry.example.com:5000/codesys/codesyscontroldemoapp:v10
+
+$ cat > Dockerfile.app-v13 <<EOF
+FROM registry.access.redhat.com/ubi8/ubi:latest
+COPY codesyscontrol-4.1.0.0-2.x86_64.rpm /tmp/codesyscontrol-4.1.0.0-2.x86_64.rpm
+RUN dnf install -y libpciaccess iproute net-tools procps-ng nmap-ncat iputils && dnf clean all && rpm -ivh /tmp/codesyscontrol-4.1.0.0-2.x86_64.rpm --force && rm -f /tmp/codesyscontrol-4.1.0.0-2.x86_64.rpm
+COPY Test/Application.app /PlcLogic/Application/
+COPY Test/Application.crc /PlcLogic/Application/
+COPY CODESYSControl_User.cfg /etc
+COPY CODESYSControl.cfg /etc
+EXPOSE 4840/tcp
+EXPOSE 11740/tcp
+EXPOSE 22350/tcp
+EXPOSE 1740/udp
+ENTRYPOINT ["/opt/codesys/bin/codesyscontrol.bin"]
+CMD ["/etc/CODESYSControl.cfg"]
+EOF
+$ podman build -f Dockerfile.app-v13 -t registry.example.com:5000/codesys/codesyscontroldemoapp:v13
+$ podman stop codesyscontroldemoapp-v9
+$ podman run --name codesyscontroldemoapp-v13 -d -t --network host --privileged registry.example.com:5000/codesys/codesyscontroldemoapp:v13
+
+$ podman save -o /tmp/codesyscontroldemoapp-v13.tar registry.example.com:5000/codesys/codesyscontroldemoapp:v13
+
+$ cat > Dockerfile.app-v14 <<EOF
+FROM registry.access.redhat.com/ubi8/ubi:latest
+COPY codesyscontrol-4.1.0.0-2.x86_64.rpm /tmp/codesyscontrol-4.1.0.0-2.x86_64.rpm
+RUN dnf install -y libpciaccess iproute net-tools procps-ng nmap-ncat iputils && dnf clean all && rpm -ivh /tmp/codesyscontrol-4.1.0.0-2.x86_64.rpm --force && rm -f /tmp/codesyscontrol-4.1.0.0-2.x86_64.rpm
+COPY Test/Application.app /PlcLogic/Application/
+COPY Test/Application.crc /PlcLogic/Application/
+COPY CODESYSControl_User.cfg /etc
+COPY CODESYSControl.cfg /etc
+EXPOSE 4840/tcp
+EXPOSE 11740/tcp
+EXPOSE 22350/tcp
+EXPOSE 1740/udp
+CMD ["/bin/bash", "-c", "exec /bin/bash -c 'trap : TERM INT; sleep 9999999999d & wait'"]
+EOF
+
+$ podman build -f Dockerfile.app-v14 -t registry.example.com:5000/codesys/codesyscontroldemoapp:v14
+$ podman stop codesyscontroldemoapp-v9
+$ podman run --name codesyscontroldemoapp-v14 -d -t --network host --privileged registry.example.com:5000/codesys/codesyscontroldemoapp:v14
+
+$ podman save -o /tmp/codesyscontroldemoapp-v14.tar registry.example.com:5000/codesys/codesyscontroldemoapp:v14
+
+
 ```
 
 ### Performance Profile rt

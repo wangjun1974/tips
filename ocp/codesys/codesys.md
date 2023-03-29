@@ -1892,6 +1892,28 @@ $ podman run --name codesyscontroldemoapp-v14 -d -t --network host --privileged 
 
 $ podman save -o /tmp/codesyscontroldemoapp-v14.tar registry.example.com:5000/codesys/codesyscontroldemoapp:v14
 
+$ cat > Dockerfile.app-v15 <<EOF
+COPY codesyscontrol-4.1.0.0-2.x86_64.rpm /tmp/codesyscontrol-4.1.0.0-2.x86_64.rpm
+RUN dnf install -y libpciaccess iproute net-tools procps-ng nmap-ncat iputils && dnf clean all && rpm -ivh /tmp/codesyscontrol-4.1.0.0-2.x86_64.rpm --force && rm -f /tmp/codesyscontrol-4.1.0.0-2.x86_64.rpm
+COPY Redundancy/Application.app /PlcLogic/Application/
+COPY Redundancy/Application.crc /PlcLogic/Application/
+COPY CODESYSControl_User.cfg /etc
+COPY CODESYSControl.cfg /etc
+EXPOSE 4840/tcp
+EXPOSE 11740/tcp
+EXPOSE 22350/tcp
+EXPOSE 1740/udp
+ENTRYPOINT ["/opt/codesys/bin/codesyscontrol.bin"]
+CMD ["/etc/CODESYSControl.cfg"]
+EOF
+
+$ podman build -f Dockerfile.app-v15 -t registry.example.com:5000/codesys/codesyscontroldemoapp:v15
+$ podman stop codesyscontroldemoapp-v9
+$ podman run --name codesyscontroldemoapp-v15 -d -t --network host --privileged registry.example.com:5000/codesys/codesyscontroldemoapp:v15
+
+$ podman save -o /tmp/codesyscontroldemoapp-v15.tar registry.example.com:5000/codesys/codesyscontroldemoapp:v15
+
+
 
 ```
 
@@ -2561,14 +2583,60 @@ $ git push origin my-new-branch-1
 
 ### add config file into deployment
 ```
+$ cat <<EOF | oc apply -f -
+apiVersion: "k8s.cni.cncf.io/v1"
+kind: NetworkAttachmentDefinition
+metadata:
+  name: codesys-management-plc1
+  namespace: codesysdemo
+spec:
+  config: '{
+      "cniVersion": "0.3.1",
+      "type": "macvlan",
+      "master": "enp2s0",
+      "mode": "bridge",
+      "ipam": {
+            "type": "static",
+            "addresses": [
+              {
+                "address": "192.168.57.151/24"
+              }
+            ]
+      }
+  }'
+EOF
+
+$ cat <<EOF | oc apply -f -
+apiVersion: "k8s.cni.cncf.io/v1"
+kind: NetworkAttachmentDefinition
+metadata:
+  name: codesys-management-plc2
+  namespace: codesysdemo
+spec:
+  config: '{
+      "cniVersion": "0.3.1",
+      "type": "macvlan",
+      "master": "enp2s0",
+      "mode": "bridge",
+      "ipam": {
+            "type": "static",
+            "addresses": [
+              {
+                "address": "192.168.57.152/24"
+              }
+            ]
+      }
+  }'
+EOF
+
 $ cat > kustomization.yaml <<EOF
 resources:
-- pvc1.yaml
 - configmap1-deployment1.yaml
 - configmap2-deployment1.yaml
 - deployment1.yaml
 - service1.yaml
-- pvc2.yaml
+- configmap1-deployment2.yaml
+- configmap2-deployment2.yaml
 - deployment2.yaml
 - service2.yaml
 EOF
@@ -2583,7 +2651,7 @@ metadata:
     app: codesyscontrol1
 data:
   plc1-cfg: |
-    ;linux
+    ;linux plc1
     [SysFile]
     FilePath.1=/etc/, 3S.dat
     PlcLogicPrefix=1
@@ -2664,9 +2732,9 @@ data:
     Application.1=Application
     
     [CmpRedundancyConnectionIP]
-    Link1.IpAddressLocal=172.18.9.22
+    Link1.IpAddressLocal=192.168.57.151
     Link2.IpAddressLocal=0.0.0.0
-    Link1.IpAddressPeer=172.18.9.21
+    Link1.IpAddressPeer=192.168.57.152
     Link2.IpAddressPeer=0.0.0.0
     Link1.Port=1205
     Link2.Port=1205
@@ -2694,6 +2762,7 @@ data:
     CertificateHash=3495c7af380b94ac0af2ad2ae8ddc7ce56870ef1
 EOF
 
+# 生成 deployment1.yaml 
 $ cat > deployment1.yaml <<EOF
 apiVersion: apps/v1
 kind: Deployment
@@ -2712,12 +2781,22 @@ spec:
       labels:
         app: codesyscontrol1
       annotations:
-        k8s.v1.cni.cncf.io/networks: codesys-management, codesys-ethercat
+        k8s.v1.cni.cncf.io/networks: codesys-management, codesys-ethercat, codesys-management-plc1          
+        cpu-quota.crio.io: "disable"
     spec:
+      nodeSelector:
+        node-role.kubernetes.io/worker-rt: ''
       containers:
-      - image: registry.example.com:5000/codesys/codesyscontroldemoapp:v14
-        #image: registry.example.com:5000/codesys/codesyscontrol:latest
+      - image: registry.ocp4.example.com:5000/codesys/codesyscontroldemoapp:v14
         name: codesyscontrol
+        runtimeClassName: performance-rt
+        resources:
+          limits:
+            #memory: "2Gi"
+            cpu: "1"
+          requests:
+            #memory: "2Gi"
+            cpu: "1"
         securityContext:
           privileged: true         
         ports:
@@ -2734,8 +2813,6 @@ spec:
           protocol: UDP
           hostPort: 1740
         volumeMounts:
-        - name: codesyscontrol-persistent-storage
-          mountPath: /var/opt/codesys
         - name: codesyscontrol-plc1-cfg
           mountPath: /etc/CODESYSControl.cfg
           subPath: plc1-cfg
@@ -2743,9 +2820,6 @@ spec:
           mountPath: /etc/CODESYSControl_User.cfg
           subPath: plc1-user-cfg
       volumes:
-      - name: codesyscontrol-persistent-storage
-        persistentVolumeClaim:
-          claimName: codesyscontrol-pv-claim-1
       - name: codesyscontrol-plc1-cfg
         configMap:
           name: codesyscontrol1-plc1-cfg
@@ -2753,5 +2827,191 @@ spec:
         configMap:
           name: codesyscontrol1-plc1-user-cfg
 EOF
-        
+
+$ cat > configmap1-deployment2.yaml <<'EOF'
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: codesyscontrol2-plc2-cfg
+  namespace: codesysdemo
+  labels:
+    app: codesyscontrol2
+data:
+  plc2-cfg: |
+    ;linux plc2
+    [SysFile]
+    FilePath.1=/etc/, 3S.dat
+    PlcLogicPrefix=1
+    
+    [SysTarget]
+    TargetVersionMask=0
+    TargetVersionCompatibilityMask=0xFFFF0000
+    
+    [CmpSocketCanDrv]
+    ScriptPath=/opt/codesys/scripts/
+    ScriptName=rts_set_baud.sh
+    
+    [CmpSettings]
+    IsWriteProtected=1
+    FileReference.0=SysFileMap.cfg, SysFileMap
+    FileReference.1=/etc/CODESYSControl_User.cfg
+    
+    [SysExcept]
+    Linux.DisableFpuOverflowException=1
+    Linux.DisableFpuUnderflowException=1
+    Linux.DisableFpuInvalidOperationException=1
+    
+    [CmpOpenSSL]
+    WebServer.Cert=server.cer
+    WebServer.PrivateKey=server.key
+    WebServer.CipherList=HIGH
+    
+    [CmpLog]
+    Logger.0.Name=/tmp/codesyscontrol.log
+    Logger.0.Filter=0x0000000F
+    Logger.0.Enable=1
+    Logger.0.MaxEntries=1000
+    Logger.0.MaxFileSize=1000000
+    Logger.0.MaxFiles=1
+    Logger.0.Backend.0.ClassId=0x00000104 ;writes logger messages in a file
+    Logger.0.Type=0x314 ;Set the timestamp to RTC
+    
+    [SysMem]
+    Linux.Memlock=1
+    
+    [SysEthernet]
+    QDISC_BYPASS=1
+    Linux.ProtocolFilter=3
+    
+    [SysSocket]
+    Adapter.0.Name="net2"
+    Adapter.0.EnableSetIpAndMask=1
+    
+    [CmpSchedule]
+    SchedulerInterval=4000
+    ProcessorLoad.Enable=1
+    ProcessorLoad.Maximum=95
+    ProcessorLoad.Interval=5000
+    DisableOmittedCycleWatchdog=1
+EOF
+
+$ cat > configmap2-deployment2.yaml <<'EOF'
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: codesyscontrol2-plc2-user-cfg
+  namespace: codesysdemo
+  labels:
+    app: codesyscontrol2
+data:
+  plc2-user-cfg: |
+    ;linux plc2
+    [ComponentManager]
+    ;Component.1=CmpGateway                 ; enable when using Gateway
+    ;Component.2=CmpGwCommDrvTcp    ; enable when using Gateway
+    ;Component.3=CmpGwCommDrvShm    ; enable when using Gateway
+    ;Component.1=SysPci                             ; enable when using Hilscher CIFX
+    ;Component.2=CmpHilscherCIFX    ; enable when using Hilscher CIFX
+    
+    [CmpApp]
+    Bootproject.RetainMismatch.Init=1
+    ;RetainType.Applications=InSRAM
+    Application.1=Application
+    
+    [CmpRedundancyConnectionIP]
+    Link1.IpAddressLocal=192.168.57.152
+    Link2.IpAddressLocal=0.0.0.0
+    Link1.IpAddressPeer=192.168.57.151
+    Link2.IpAddressPeer=0.0.0.0
+    Link1.Port=1205
+    Link2.Port=1205
+    
+    [CmpRedundancy]
+    BootupWaitTime=5000
+    TcpWaitTime=2000
+    StandbyWaitTime=50
+    SyncWaitTime=50
+    Bootproject=Application
+    RedundancyTaskName=MainTask
+    Ethercat=0
+    Profibus=0
+    PlcIdent=1
+    
+    [CmpSrv]
+    
+    [IoDrvEtherCAT]
+    
+    [CmpUserMgr]
+    SECURITY.UserMgmtEnforce=NO
+    AsymmetricAuthKey=2de9b07e5461c6d14577b4afeaebe6bf9792c887
+    
+    [CmpSecureChannel]
+    CertificateHash=3495c7af380b94ac0af2ad2ae8ddc7ce56870ef1
+EOF
+
+# 生成 deployment2.yaml 
+$ cat > deployment2.yaml <<EOF
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: codesyscontrol2
+  labels:
+    app: codesyscontrol2
+spec:
+  selector:
+    matchLabels:
+      app: codesyscontrol2
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: codesyscontrol2
+      annotations:
+        k8s.v1.cni.cncf.io/networks: codesys-management, codesys-ethercat, codesys-management-plc2
+        cpu-quota.crio.io: "disable"
+    spec:
+      nodeSelector:
+        node-role.kubernetes.io/worker-rt: ''
+      containers:
+      - image: registry.ocp4.example.com:5000/codesys/codesyscontroldemoapp:v14
+        name: codesyscontrol
+        runtimeClassName: performance-rt
+        resources:
+          limits:
+            #memory: "2Gi"
+            cpu: "1"
+          requests:
+            #memory: "2Gi"
+            cpu: "1"
+        securityContext:
+          privileged: true         
+        ports:
+        - containerPort: 4840
+          name: upcua
+          protocol: TCP
+          hostPort: 4841
+        - containerPort: 11740
+          name: runtimetcp
+          protocol: TCP
+          hostPort: 11741
+        - containerPort: 1740
+          name: runtimeudp
+          protocol: UDP
+          hostPort: 1741
+        volumeMounts:
+        - name: codesyscontrol-plc2-cfg
+          mountPath: /etc/CODESYSControl.cfg
+          subPath: plc2-cfg
+        - name: codesyscontrol-plc2-user-cfg
+          mountPath: /etc/CODESYSControl_User.cfg
+          subPath: plc2-user-cfg
+      volumes:
+      - name: codesyscontrol-plc2-cfg
+        configMap:
+          name: codesyscontrol2-plc2-cfg
+      - name: codesyscontrol-plc2-user-cfg
+        configMap:
+          name: codesyscontrol2-plc2-user-cfg
+EOF
 ```

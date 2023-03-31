@@ -3014,4 +3014,229 @@ spec:
         configMap:
           name: codesyscontrol2-plc2-user-cfg
 EOF
+
+### CodeSys Profinet Configuration
+https://help.codesys.com/webapp/_pnio_runtime_configuration_device;product=core_ProfinetIO_Configuration_Editor;version=3.5.16.0
+https://help.codesys.com/webapp/_pnio_runtime_configuration_device;product=core_ProfinetIO_Configuration_Editor;version=4.1.0.0
+https://content.helpme-codesys.com/en/CODESYS%20Control/_rtsl_virtualization_virtual_control.html
+
+
+cat <<EOF | oc apply -f -
+apiVersion: "k8s.cni.cncf.io/v1"
+kind: NetworkAttachmentDefinition
+metadata:
+  name: codesys-profinet-plc1
+  namespace: codesysdemo
+spec:
+  config: '{
+      "cniVersion": "0.3.1",
+      "type": "host-device",
+      "device": "enp4s0"
+  }'
+EOF
+
+cat <<EOF | oc apply -f -
+apiVersion: "k8s.cni.cncf.io/v1"
+kind: NetworkAttachmentDefinition
+metadata:
+  name: codesys-redundancy-plc1
+  namespace: codesysdemo
+spec:
+  config: '{
+      "cniVersion": "0.3.1",
+      "type": "macvlan",
+      "master": "eno1",
+      "mode": "bridge",
+      "ipam": {
+            "type": "static",
+            "addresses": [
+              {
+                "address": "192.168.57.151/24"
+              }
+            ]
+      }
+  }'
+EOF
+
+cat <<EOF | oc apply -f -
+apiVersion: "k8s.cni.cncf.io/v1"
+kind: NetworkAttachmentDefinition
+metadata:
+  name: codesys-redundancy-plc2
+  namespace: codesysdemo
+spec:
+  config: '{
+      "cniVersion": "0.3.1",
+      "type": "macvlan",
+      "master": "eno1",
+      "mode": "bridge",
+      "ipam": {
+            "type": "static",
+            "addresses": [
+              {
+                "address": "192.168.57.152/24"
+              }
+            ]
+      }
+  }'
+EOF
+```
+
+
+### net-attach-def for Codesys
+```
+[root@helper-ocp4test base]# tree . 
+.
+├── kustomization.yaml
+├── net-attach-def-management.yaml
+├── net-attach-def-profinet-plc1.yaml
+├── net-attach-def-profinet-plc2.yaml
+├── net-attach-def-redundancy-plc1.yaml
+├── net-attach-def-redundancy-plc2.yaml
+└── rolebinding.yaml
+
+0 directories, 7 files
+
+[root@helper-ocp4test base]# cat kustomization.yaml 
+resources:
+- rolebinding.yaml
+- net-attach-def-management.yaml
+- net-attach-def-profinet-plc1.yaml
+- net-attach-def-profinet-plc2.yaml
+- net-attach-def-redundancy-plc1.yaml
+- net-attach-def-redundancy-plc2.yaml
+
+[root@helper-ocp4test base]# cat net-attach-def-management.yaml 
+apiVersion: "k8s.cni.cncf.io/v1"
+kind: NetworkAttachmentDefinition
+metadata:
+  name: codesys-management
+  namespace: codesysdemo
+spec:
+  config: '{
+      "cniVersion": "0.3.1",
+      "type": "macvlan",
+      "master": "eno1",
+      "mode": "bridge",
+      "ipam": {
+            "type": "whereabouts",
+            "range": "192.168.56.144/29"
+      }
+  }'
+
+[root@helper-ocp4test base]# cat net-attach-def-profinet-plc1.yaml 
+apiVersion: "k8s.cni.cncf.io/v1"
+kind: NetworkAttachmentDefinition
+metadata:
+  name: codesys-profinet-plc1
+  namespace: codesysdemo
+spec:
+  config: '{
+      "cniVersion": "0.3.1",
+      "type": "host-device",
+      "device": "enp2s0",
+      "ipam": {
+            "type": "static",
+            "addresses": [
+              {
+                "address": "192.168.58.151/24"
+              }
+            ]
+      }
+  }'
+
+[root@helper-ocp4test base]# cat net-attach-def-profinet-plc2.yaml 
+apiVersion: "k8s.cni.cncf.io/v1"
+kind: NetworkAttachmentDefinition
+metadata:
+  name: codesys-profinet-plc2
+  namespace: codesysdemo
+spec:
+  config: '{
+      "cniVersion": "0.3.1",
+      "type": "host-device",
+      "device": "enp4s0",
+      "ipam": {
+            "type": "static",
+            "addresses": [
+              {
+                "address": "192.168.58.152/24"
+              }
+            ]
+      }
+  }'
+
+[root@helper-ocp4test base]# cat net-attach-def-redundancy-plc1.yaml
+apiVersion: "k8s.cni.cncf.io/v1"
+kind: NetworkAttachmentDefinition
+metadata:
+  name: codesys-redundancy-plc1
+  namespace: codesysdemo
+spec:
+  config: '{
+      "cniVersion": "0.3.1",
+      "type": "macvlan",
+      "master": "eno1",
+      "mode": "bridge",
+      "ipam": {
+            "type": "static",
+            "addresses": [
+              {
+                "address": "192.168.57.151/24"
+              }
+            ]
+      }
+  }'
+
+[root@helper-ocp4test base]# cat net-attach-def-redundancy-plc2.yaml
+apiVersion: "k8s.cni.cncf.io/v1"
+kind: NetworkAttachmentDefinition
+metadata:
+  name: codesys-redundancy-plc2
+  namespace: codesysdemo
+spec:
+  config: '{
+      "cniVersion": "0.3.1",
+      "type": "macvlan",
+      "master": "eno1",
+      "mode": "bridge",
+      "ipam": {
+            "type": "static",
+            "addresses": [
+              {
+                "address": "192.168.57.152/24"
+              }
+            ]
+      }
+  }'
+
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: codesyscontrol1
+  labels:
+    app: codesyscontrol1
+spec:
+  selector:
+    matchLabels:
+      app: codesyscontrol1
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: codesyscontrol1
+      annotations:
+        k8s.v1.cni.cncf.io/networks: codesys-management, codesys-redundancy-plc1, codesys-profinet-plc1  
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: codesyscontrol1
+  labels:
+    service.kubernetes.io/service-proxy-name: multus-proxy
+    app: codesyscontrol1
+  annotations:
+    k8s.v1.cni.cncf.io/service-network: codesys-management
 ```

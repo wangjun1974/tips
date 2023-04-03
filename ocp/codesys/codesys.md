@@ -3258,4 +3258,155 @@ $ ifconfig enp0s25 promisc up
 $ ip addr add 192.168.57.166/24 dev enp0s25 
 
 
+#### Profinet Controller - 确认开启防火墙端口 udp '34964' 和 '49152:65535'
+#### Profinet Device - 确认开启防火墙端口 udp '34964' 和 '49152:65535'
+$ sudo iptables -I INPUT 1 -p udp --dport 49152:65535 -j ACCEPT
+$ sudo iptables -I INPUT 1 -p udp --dport 34964 -j ACCEPT
+
+### Profinet Controller - 在 /etc/CODESYSControl.cfg 里添加 
+### Profinet Device - 在 /etc/CODESYSControl.cfg 里添加 
+[CmpBlkDrvUdp]
+itf.0.AdapterName=enp4s0
+itf.0.DoNotUse=1
+
+### Profinet Controller - 在 /etc/CODESYSControl.cfg 里添加 
+[SysEthernet]
+;QDISC_BYPASS=1
+;Linux.ProtocolFilter=3 
+Linux.PACKET_QDISC_BYPASS=1
+Linux.ProtocolFilter=3
+
+### Profinet Controller - 在 /etc/CODESYSControl.cfg 和 /etc/CODESYSControl_User.cfg 不包含 SysSocket 配置
+### Profinet Controller - 这个配置是 Profinet Device 需要的
+;[SysSocket]
+;Adapter.0.Name="net3"
+;Adapter.0.EnableSetIpAndMask=1
+
 ```
+
+
+### 使用 InitContainer 拷贝 Boot Application 到 Runtime
+https://forge.codesys.com/forge/talk/Runtime/thread/90ec9d8efe/<br>
+```
+$ mkdir -p /data/runtimeapp/{runtime1,runtime2}
+$ cat > /etc/httpd/conf.d/runtimeapp.conf <<EOF
+Alias /runtimeapp "/data/runtimeapp/"
+<Directory "/data/runtimeapp/">
+  Options +Indexes +FollowSymLinks
+  Require all granted
+</Directory>
+<Location /runtimeapp>
+  SetHandler None
+</Location>
+EOF
+
+### deployment2 会用到 codesyscontrol2-pv-claim-1.yaml 和 codesyscontrol2-pv-claim-2.yaml
+[root@support codesyscontrol]# cat kustomization.yaml 
+resources:
+- pvc1.yaml
+- configmap1-deployment1.yaml
+- configmap2-deployment1.yaml
+- deployment1.yaml
+- service1.yaml
+#- pvc2.yaml
+- codesyscontrol2-pv-claim-1.yaml
+- codesyscontrol2-pv-claim-2.yaml
+- deployment2.yaml
+- service2.yaml
+
+[root@support codesyscontrol]# cat codesyscontrol2-pv-claim-1.yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: codesyscontrol2-pv-claim-1
+  labels:
+    app: codesyscontrol2
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+
+[root@support codesyscontrol]# cat codesyscontrol2-pv-claim-2.yaml 
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: codesyscontrol2-pv-claim-2
+  labels:
+    app: codesyscontrol2
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+
+### initcontainer 挂载 codesyscontrol2-pv-claim-1
+### initcontainer 负责从 registry.example.com:8080 http server 上向 pvc 里拷贝 Application.app 和 Application.crc
+### http://registry.example.com:8080/runtimeapp/runtime2/Application.app
+### http://registry.example.com:8080/runtimeapp/runtime2/Application.crc
+### http://registry.example.com:8080/runtimeapp/runtime2/CODESYSControl.cfg
+### http://registry.example.com:8080/runtimeapp/runtime2/CODESYSControl_User.cfg
+### 可以用相同的思路拷贝 configfile /etc/CODESYSControl.cfg 和 /etc/CODESYSControl_User.cfg 
+[root@support codesyscontrol]# cat deployment2.yaml 
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: codesyscontrol2
+  labels:
+    app: codesyscontrol2
+spec:
+  selector:
+    matchLabels:
+      app: codesyscontrol2
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: codesyscontrol2
+      annotations:
+        k8s.v1.cni.cncf.io/networks: codesys-management, codesys-ethercat
+    spec:
+      initContainers:
+      - name: copy-application-init-1
+        image: registry.example.com:5000/codesys/initcontainer:v1
+        imagePullPolicy: IfNotPresent
+        command: ["/bin/sh"]
+        args: ["-c", 'mkdir -p /var/opt/codesys/PlcLogic/Application; if [ -f /var/opt/codesys/PlcLogic/Application/Application.app ]; then echo file Application.app exist; else curl -o /var/opt/codesys/PlcLogic/Application/Application.app http://registry.example.com:8080/runtimeapp/runtime2/Application.app; fi; if [ -f /var/opt/codesys/PlcLogic/Application/Application.crc ]; then echo file Application.crc exist; else curl -o /var/opt/codesys/PlcLogic/Application/Application.crc http://registry.example.com:8080/runtimeapp/runtime2/Application.crc; fi']
+        volumeMounts:
+        - name: codesyscontrol2-pv-claim-1
+          mountPath: /var/opt/codesys
+      containers:
+      - image: registry.example.com:5000/codesys/codesyscontroldemoapp:v14
+        #image: registry.example.com:5000/codesys/codesyscontrol:latest
+        name: codesyscontrol
+        securityContext:
+          privileged: true         
+        ports:
+        - containerPort: 11741
+          name: runtimetcp
+          protocol: TCP
+          hostPort: 11741
+        - containerPort: 1741
+          name: runtimeudp
+          protocol: UDP
+          hostPort: 1741
+        volumeMounts:
+        - name: codesyscontrol2-pv-claim-1
+          mountPath: /var/opt/codesys
+        - name: codesyscontrol2-pv-claim-2
+          mountPath: /PlcLogic/Application
+      volumes:
+      - name: codesyscontrol2-pv-claim-1
+        persistentVolumeClaim:
+          claimName: codesyscontrol2-pv-claim-1
+      - name: codesyscontrol2-pv-claim-2
+        persistentVolumeClaim:
+          claimName: codesyscontrol2-pv-claim-2
+
+
+```
+
+

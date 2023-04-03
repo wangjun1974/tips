@@ -1913,6 +1913,26 @@ $ podman run --name codesyscontroldemoapp-v15 -d -t --network host --privileged 
 
 $ podman save -o /tmp/codesyscontroldemoapp-v15.tar registry.example.com:5000/codesys/codesyscontroldemoapp:v15
 
+$ cat > Dockerfile.app-v16 <<EOF
+FROM registry.access.redhat.com/ubi8/ubi:latest
+COPY codesyscontrol-4.1.0.0-2.x86_64.rpm /tmp/codesyscontrol-4.1.0.0-2.x86_64.rpm
+RUN dnf install -y libpciaccess iproute net-tools procps-ng nmap-ncat iputils diffutils && dnf clean all && rpm -ivh /tmp/codesyscontrol-4.1.0.0-2.x86_64.rpm --force && rm -f /tmp/codesyscontrol-4.1.0.0-2.x86_64.rpm
+COPY Test/Application.app /PlcLogic/Application/
+COPY Test/Application.crc /PlcLogic/Application/
+COPY CODESYSControl_User.cfg /etc
+COPY CODESYSControl.cfg /etc
+EXPOSE 4840/tcp
+EXPOSE 11740/tcp
+EXPOSE 22350/tcp
+EXPOSE 1740/udp
+CMD ["/bin/bash", "-c", "exec /bin/bash -c 'trap : TERM INT; sleep 9999999999d & wait'"]
+EOF
+
+$ podman build -f Dockerfile.app-v16 -t registry.example.com:5000/codesys/codesyscontroldemoapp:v16
+$ podman stop codesyscontroldemoapp-v9
+$ podman run --name codesyscontroldemoapp-v16 -d -t --network host --privileged registry.example.com:5000/codesys/codesyscontroldemoapp:v16
+
+$ podman save -o /tmp/codesyscontroldemoapp-v16.tar registry.example.com:5000/codesys/codesyscontroldemoapp:v16
 
 
 ```
@@ -3374,7 +3394,7 @@ spec:
         image: registry.example.com:5000/codesys/initcontainer:v1
         imagePullPolicy: IfNotPresent
         command: ["/bin/sh"]
-        args: ["-c", 'mkdir -p /var/opt/codesys/PlcLogic/Application; if [ -f /var/opt/codesys/PlcLogic/Application/Application.app ]; then echo file Application.app exist; else curl -o /var/opt/codesys/PlcLogic/Application/Application.app http://registry.example.com:8080/runtimeapp/runtime2/Application.app; fi; if [ -f /var/opt/codesys/PlcLogic/Application/Application.crc ]; then echo file Application.crc exist; else curl -o /var/opt/codesys/PlcLogic/Application/Application.crc http://registry.example.com:8080/runtimeapp/runtime2/Application.crc; fi']
+        args: ["-c", 'mkdir -p /var/opt/codesys/PlcLogic/Application; if [ -f /var/opt/codesys/PlcLogic/Application/Application.app ]; then echo file Application.app exist; else curl -o /var/opt/codesys/PlcLogic/Application/Application.app http://registry.example.com:8080/runtimeapp/runtime2/Application.app; fi; if [ -f /var/opt/codesys/PlcLogic/Application/Application.crc ]; then echo file Application.crc exist; else curl -o /var/opt/codesys/PlcLogic/Application/Application.crc http://registry.example.com:8080/runtimeapp/runtime2/Application.crc; fi; if [ -f /var/opt/codesys/CODESYSControl.cfg ]; then echo file CODESYSControl.cfg exist; else curl -o /var/opt/codesys/CODESYSControl.cfg http://registry.example.com:8080/runtimeapp/runtime2/CODESYSControl.cfg; fi; if [ -f /var/opt/codesys/CODESYSControl_User.cfg ]; then echo file CODESYSControl_User.cfg exist; else curl -o /var/opt/codesys/CODESYSControl_User.cfg http://registry.example.com:8080/runtimeapp/runtime2/CODESYSControl_User.cfg; fi']
         volumeMounts:
         - name: codesyscontrol2-pv-claim-1
           mountPath: /var/opt/codesys
@@ -3382,6 +3402,8 @@ spec:
       - image: registry.example.com:5000/codesys/codesyscontroldemoapp:v14
         #image: registry.example.com:5000/codesys/codesyscontrol:latest
         name: codesyscontrol
+        command: ['/bin/sh']
+        args: ["-c", 'if [ -f /var/opt/codesys/CODESYSControl.cfg ]; then cp -fr /var/opt/codesys/CODESYSControl.cfg /etc/CODESYSControl.cfg; fi; if [ -f /var/opt/codesys/CODESYSControl_User.cfg ]; then cp -fr /var/opt/codesys/CODESYSControl_User.cfg /etc/CODESYSControl_User.cfg; fi; /etc/init.d/codesyscontrol start ; exec /bin/bash -c "trap : TERM INT; sleep 9999999999d & wait"']
         securityContext:
           privileged: true         
         ports:
@@ -3407,6 +3429,27 @@ spec:
           claimName: codesyscontrol2-pv-claim-2
 
 
+### 将 args 里 的 exec /bin/bash -c "trap : TERM INT; sleep 9999999999d & wait" 替换为 /opt/codesys/bin/codesyscontrol.bin /etc/CODESYSControl.cfg
+### 这样看是否能自动 Pod 
+        command: ['/bin/sh']
+        args: ["-c", 'if [ -f /var/opt/codesys/CODESYSControl.cfg ]; then cp -fr /var/opt/codesys/CODESYSControl.cfg /etc/CODESYSControl.cfg; fi; if [ -f /var/opt/codesys/CODESYSControl_User.cfg ]; then cp -fr /var/opt/codesys/CODESYSControl_User.cfg /etc/CODESYSControl_User.cfg; fi; /opt/codesys/bin/codesyscontrol.bin /etc/CODESYSControl.cfg']
 ```
 
+###
+```
+$ cat > Dockerfile.app-v16 <<EOF
+FROM registry.access.redhat.com/ubi8/ubi:latest
+COPY codesyscontrol-4.1.0.0-2.x86_64.rpm /tmp/codesyscontrol-4.1.0.0-2.x86_64.rpm
+RUN dnf install -y libpciaccess iproute net-tools procps-ng nmap-ncat iputils diffutils && dnf clean all && rpm -ivh /tmp/codesyscontrol-4.1.0.0-2.x86_64.rpm --force && rm -f /tmp/codesyscontrol-4.1.0.0-2.x86_64.rpm
+COPY Test/Application.app /PlcLogic/Application/
+COPY Test/Application.crc /PlcLogic/Application/
+COPY CODESYSControl_User.cfg /etc
+COPY CODESYSControl.cfg /etc
+EXPOSE 4840/tcp
+EXPOSE 11740/tcp
+EXPOSE 22350/tcp
+EXPOSE 1740/udp
+CMD ["/bin/bash", "-c", "exec /bin/bash -c 'trap : TERM INT; sleep 9999999999d & wait'"]
+EOF
+```
 

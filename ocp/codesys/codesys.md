@@ -3243,7 +3243,19 @@ metadata:
 
 
 ### PNIO Runtime Configuration Controller
-https://help.codesys.com/webapp/_pnio_runtime_configuration_controller;product=core_ProfinetIO_Configuration_Editor;version=4.1.0.0
+https://help.codesys.com/webapp/_pnio_runtime_configuration_controller;product=core_ProfinetIO_Configuration_Editor;version=4.1.0.0<br>
+https://help.codesys.com/webapp/_pnio_f_runtime_configuration;product=core_ProfinetIO_Configuration_Editor;version=4.1.0.0<br>
 ```
 https://help.codesys.com/webapp/_pnio_runtime_configuration_controller;product=core_ProfinetIO_Configuration_Editor;version=4.1.0.0
+
+1. 按照上述链接配置 runtime 系统 
+
+[SysEthernet]
+Linux.PACKET_QDISC_BYPASS=1
+Linux.ProtocolFilter=3
+
+$ ifconfig enp0s25 promisc up
+$ ip addr add 192.168.57.166/24 dev enp0s25 
+
+
 ```

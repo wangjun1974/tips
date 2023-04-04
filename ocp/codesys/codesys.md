@@ -3466,5 +3466,14 @@ https://cloud.redhat.com/blog/using-the-multus-cni-in-openshift
 ### 注意: codesysedge, codesyscontrol 的 deployment 里不要用 hostNetwork:true
 ```
 
-### 工业控制机器人
-https://blog.csdn.net/robinvista/article/details/88085020
+### PLC 相关
+工业控制机器人<br>
+https://blog.csdn.net/robinvista/article/details/88085020<br>
+PLC编程软件: KW multiprog 和 codesys<br>
+https://www.cnblogs.com/ecmangy/p/3265632.html<br>
+
+### 报错
+```
+Connection aborted: AR consumer DHT expired
+https://product-help.schneider-electric.com/Machine%20Expert/V1.1/en/core_ProfinetIO_Configuration_Editor/topics/_pnio_trouble_effects_and_causes.htm
+```

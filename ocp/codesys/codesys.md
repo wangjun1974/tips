@@ -3476,4 +3476,7 @@ https://www.cnblogs.com/ecmangy/p/3265632.html<br>
 ```
 Connection aborted: AR consumer DHT expired
 https://product-help.schneider-electric.com/Machine%20Expert/V1.1/en/core_ProfinetIO_Configuration_Editor/topics/_pnio_trouble_effects_and_causes.htm
+
+Profinet Device keeps abort connection with AR alarm.ind(err)
+https://forge.codesys.com/forge/talk/Runtime/thread/26c1967b5b/
 ```

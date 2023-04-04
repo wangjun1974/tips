@@ -3437,3 +3437,21 @@ spec:
         args: ["-c", 'if [ -f /var/opt/codesys/CODESYSControl.cfg ]; then cp -fr /var/opt/codesys/CODESYSControl.cfg /etc/CODESYSControl.cfg; fi; if [ -f /var/opt/codesys/CODESYSControl_User.cfg ]; then cp -fr /var/opt/codesys/CODESYSControl_User.cfg /etc/CODESYSControl_User.cfg; fi; /opt/codesys/bin/codesyscontrol.bin /etc/CODESYSControl.cfg']
 ```
 
+### 构建 alien container 镜像
+```
+$ cat > Dockerfile.v2 <<EOF
+FROM registry.example.com:5000/codesys/alien:v1
+COPY codesyscontrol_linux_4.1.0.0_amd64.deb /tmp/codesyscontrol_linux_4.1.0.0_amd64.deb
+CMD ["/bin/bash", "-c", "exec /bin/bash -c 'trap : TERM INT; sleep 9999999999d & wait'"]
+EOF
+$ podman build -f Dockerfile.v2 -t registry.example.com:5000/codesys/alien:v2
+$ podman run --name alien-v2 -d -t registry.example.com:5000/codesys/alien:v2
+```
+
+### 工业树莓派结合CODESYS配置EtherCAT主站
+https://blog.csdn.net/Hongke_IIOT/article/details/126153235
+```
+### 工业树莓派结合CODESYS配置EtherCAT主站
+### 如何将工业树莓派配置为EtherCAT主站
+### 与伺服驱动器通讯
+```

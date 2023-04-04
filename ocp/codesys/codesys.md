@@ -3290,17 +3290,17 @@ itf.0.AdapterName=enp4s0
 itf.0.DoNotUse=1
 
 ### Profinet Controller - 在 /etc/CODESYSControl.cfg 里添加 
+### Profinet Device -  在 /etc/CODESYSControl.cfg 里添加 
+
 [SysEthernet]
-;QDISC_BYPASS=1
-;Linux.ProtocolFilter=3 
 Linux.PACKET_QDISC_BYPASS=1
 Linux.ProtocolFilter=3
 
 ### Profinet Controller - 在 /etc/CODESYSControl.cfg 和 /etc/CODESYSControl_User.cfg 不包含 SysSocket 配置
-### Profinet Controller - 这个配置是 Profinet Device 需要的
-;[SysSocket]
-;Adapter.0.Name="net3"
-;Adapter.0.EnableSetIpAndMask=1
+### Profinet Device - 这个配置是 Profinet Device 需要的
+[SysSocket]
+Adapter.0.Name="net3"
+Adapter.0.EnableSetIpAndMask=1
 
 ```
 
@@ -3455,3 +3455,16 @@ https://blog.csdn.net/Hongke_IIOT/article/details/126153235
 ### 如何将工业树莓派配置为EtherCAT主站
 ### 与伺服驱动器通讯
 ```
+
+### multus 
+https://cloud.redhat.com/blog/using-the-multus-cni-in-openshift
+
+### 重要的注意事项
+```
+### 注意: codesysedge, codesyscontrol 的 deployment 里不要用 hostNetwork:true
+### 注意: codesysedge, codesyscontrol 的 deployment 里不要用 hostNetwork:true
+### 注意: codesysedge, codesyscontrol 的 deployment 里不要用 hostNetwork:true
+```
+
+### 工业控制机器人
+https://blog.csdn.net/robinvista/article/details/88085020

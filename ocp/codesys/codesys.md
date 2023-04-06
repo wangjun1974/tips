@@ -3537,14 +3537,71 @@ if [ -z "$1" ] || [ -z "$2" ]; then
 else
   COMMANDSTR=$1
   CPULIST=$2
-  ps -eLf | grep $(pstree -t -p $(ps axf | grep $COMMANDSTR | grep -v grep | awk '{print $1}') | grep "codesyscontrol" | sed -e 's|^.*codesyscontrol.(||' | awk -F"[().]" '{print $1}') | grep -v grep | awk '{print $4}' | while read i ; do taskset -cp $CPULIST $i; done
+  while true; do
+    ps -eLf | grep $(pstree -t -p $(ps axf | grep $COMMANDSTR | grep -v grep | awk '{print $1}') | grep "codesyscontrol" | sed -e 's|^.*codesyscontrol.(||' | awk -F"[().]" '{print $1}') | grep -v grep | awk '{print $4}' | while read i ; do taskset -cp $CPULIST $i; done
+    sleep 10
+  done
+fi
 EOF
 
-$ cat > Dockerfile <<EOF
+$ cat > Dockerfile.v1 <<EOF
 FROM registry.access.redhat.com/ubi8/ubi:latest
 COPY runtimetaskset.sh /runtimetaskset.sh
+RUN dnf install -y libpciaccess iproute net-tools procps-ng && dnf clean all && chmod 0755 /runtimetaskset.sh
 CMD ["/bin/bash", "-c", "exec /bin/bash -c 'trap : TERM INT; sleep 9999999999d & wait'"]
 EOF
 
+$ podman build -f Dockerfile.v1 -t registry.example.com:5000/codesys/runtimetaskset:v1
+$ podman run --name runtimetaskset-v1 -d -t registry.example.com:5000/codesys/runtimetaskset:v1
+
+### runtimetaskset pod 测试
+$ mkdir -p runtimetaskset
+$ cd runtimetaskset
+$ cat > pod.yaml <<EOF
+apiVersion: v1 
+kind: Pod 
+metadata:
+  name: runtimetaskset
+spec:
+  restartPolicy: Never
+  hostPID: true
+  containers:
+  - name: runtimetaskset
+    image: registry.ocp4.example.com:5000/codesys/runtimetaskset:v1
+    imagePullPolicy: Always
+    securityContext:
+      privileged: true
+  nodeSelector:
+    node-role.kubernetes.io/worker-rt: ""
+EOF
+$ oc apply -f ./pod.yaml 
+$ oc rsh runtimetaskset 
+### 用 script /runtimetaskset.sh 为 runtime1 设置 cpu core 绑定 1-3
+sh-4.4# /runtimetaskset.sh control1 1-3 
+
+$ cat > cronjob.yaml <<EOF
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: codesys-cronjob-runtimetaskset-runtime1
+spec:
+  concurrencyPolicy: 'Forbid'
+  schedule: "*/1 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: codesys-cronjob-runtimetaskset-control1
+            image: registry.ocp4.example.com:5000/codesys/runtimetaskset:v1
+            command: ["/bin/bash"]
+            args: ["-c", "/runtimetaskset.sh control1 1-3"]
+            securityContext:
+              privileged: true
+          restartPolicy: Never
+          hostPID: true
+          nodeSelector:
+            node-role.kubernetes.io/worker-rt: ''
+EOF
 
 ```

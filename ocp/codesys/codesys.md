@@ -3481,7 +3481,7 @@ Profinet Device keeps abort connection with AR alarm.ind(err)
 https://forge.codesys.com/forge/talk/Runtime/thread/26c1967b5b/
 ```
 
-### 
+### 将进程设置在 realtime core 上的方法
 ```
 ### 获取 codesyscontrol 进程 id 的方法
 sh-4.4# ps axf | grep control1 | grep -v grep | awk '{print $1}'
@@ -3521,6 +3521,8 @@ sh-4.4# pstree -t -p 2105732 | grep "codesyscontrol" | sed -e 's|^.*codesyscontr
 
 ### 设置 codesyscontrol 进程子线程的 cpu 绑定到 core 1-3 上
 sh-4.4# ps -eLf | grep $(pstree -t -p $(ps axf | grep control1 | grep -v grep | awk '{print $1}') | grep "codesyscontrol" | sed -e 's|^.*codesyscontrol.(||' | awk -F"[().]" '{print $1}') | grep -v grep | awk '{print $4}' | while read i ; do taskset -cp 1-3 $i; done
+
+### 仍在研究是否需要这么做
 ```
 
 ### cpu 绑定脚本和镜像

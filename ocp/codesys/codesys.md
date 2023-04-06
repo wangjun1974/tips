@@ -3522,3 +3522,29 @@ sh-4.4# pstree -t -p 2105732 | grep "codesyscontrol" | sed -e 's|^.*codesyscontr
 ### 设置 codesyscontrol 进程子线程的 cpu 绑定到 core 1-3 上
 sh-4.4# ps -eLf | grep $(pstree -t -p $(ps axf | grep control1 | grep -v grep | awk '{print $1}') | grep "codesyscontrol" | sed -e 's|^.*codesyscontrol.(||' | awk -F"[().]" '{print $1}') | grep -v grep | awk '{print $4}' | while read i ; do taskset -cp 1-3 $i; done
 ```
+
+### cpu 绑定脚本和镜像
+```
+$ mkdir -p /tmp/codesyscpubinding
+$ cd /tmp/codesyscpubinding
+$ cat > runtimetaskset.sh <<'EOF'
+#/bin/bash
+
+if [ -z "$1" ] || [ -z "$2" ]; then
+  echo "usage: $0 <commandstr> <tasksetcpulist>"
+  echo "   eg: $0 control1 1-3"
+  exit 0
+else
+  COMMANDSTR=$1
+  CPULIST=$2
+  ps -eLf | grep $(pstree -t -p $(ps axf | grep $COMMANDSTR | grep -v grep | awk '{print $1}') | grep "codesyscontrol" | sed -e 's|^.*codesyscontrol.(||' | awk -F"[().]" '{print $1}') | grep -v grep | awk '{print $4}' | while read i ; do taskset -cp $CPULIST $i; done
+EOF
+
+$ cat > Dockerfile <<EOF
+FROM registry.access.redhat.com/ubi8/ubi:latest
+COPY runtimetaskset.sh /runtimetaskset.sh
+CMD ["/bin/bash", "-c", "exec /bin/bash -c 'trap : TERM INT; sleep 9999999999d & wait'"]
+EOF
+
+
+```

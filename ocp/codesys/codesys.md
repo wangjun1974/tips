@@ -3480,3 +3480,45 @@ https://product-help.schneider-electric.com/Machine%20Expert/V1.1/en/core_Profin
 Profinet Device keeps abort connection with AR alarm.ind(err)
 https://forge.codesys.com/forge/talk/Runtime/thread/26c1967b5b/
 ```
+
+### 
+```
+### 获取 codesyscontrol 进程 id 的方法
+sh-4.4# ps axf | grep control1 | grep -v grep | awk '{print $1}'
+
+sh-4.4# pstree -t -p $(ps axf | grep control1 | grep -v grep | awk '{print $1}')
+conmon(2105732)-+-bash(2105742)-+-codesyscontrol.(3370021)-+-{BlkDrvTcp}(3370196)
+                |               |                          |-{BlkDrvUdp}(3370197)
+                |               |                          |-{CAAEventTask}(3370177)
+                |               |                          |-{CMHooksTask}(3370023)
+                |               |                          |-{CommCycleHook}(3370200)
+                |               |                          |-{IoMgrDiagTask}(3370185)
+                |               |                          |-{MainTask}(3370186)
+                |               |                          |-{OPCUAClient_Net}(3370198)
+                |               |                          |-{OPCUAServerSche}(3370194)
+                |               |                          |-{OPCUAServerWork}(3370189)
+                |               |                          |-{OPCUAServerWork}(3370190)
+                |               |                          |-{OPCUAServerWork}(3370191)
+                |               |                          |-{OPCUAServerWork}(3370192)
+                |               |                          |-{OPCUAServerWork}(3370193)
+                |               |                          |-{OPCUAServer}(3370199)
+                |               |                          |-{Profinet_Commun}(3370187)
+                |               |                          |-{Profinet_IOTask}(3370188)
+                |               |                          |-{SchedException}(3370182)
+                |               |                          |-{SchedProcessorL}(3370178)
+                |               |                          |-{SchedProcessorL}(3370179)
+                |               |                          |-{SchedProcessorL}(3370180)
+                |               |                          |-{SchedProcessorL}(3370181)
+                |               |                          |-{Schedule}(3370183)
+                |               |                          |-{TaskGapTask}(3370184)
+                |               |                          `-{WebServerCloseC}(3370195)
+                |               `-sleep(2105835)
+                `-{gmain}(2105734)
+
+### 获取 codesyscontrol 的进程 id
+sh-4.4# pstree -t -p 2105732 | grep "codesyscontrol" | sed -e 's|^.*codesyscontrol.(||' | awk -F"[().]" '{print $1}'
+3370021
+
+### 设置 codesyscontrol 进程子线程的 cpu 绑定到 core 1-3 上
+sh-4.4# ps -eLf | grep $(pstree -t -p $(ps axf | grep control1 | grep -v grep | awk '{print $1}') | grep "codesyscontrol" | sed -e 's|^.*codesyscontrol.(||' | awk -F"[().]" '{print $1}') | grep -v grep | awk '{print $4}' | while read i ; do taskset -cp 1-3 $i; done
+```

@@ -3607,3 +3607,6 @@ spec:
 EOF
 
 ```
+
+### 关于 CODESYS CODESYSControl.cfg 里的 CmpSchedule
+https://forge.codesys.com/forge/talk/Engineering/thread/0797bf9f3c/

@@ -3525,7 +3525,7 @@ sh-4.4# ps -eLf | grep $(pstree -t -p $(ps axf | grep control1 | grep -v grep | 
 ### 仍在研究是否需要这么做
 ```
 
-### cpu 绑定脚本和镜像
+### cpu 绑定脚本和镜像 - 这个步骤测试发现可以不使用
 ```
 $ mkdir -p /tmp/codesyscpubinding
 $ cd /tmp/codesyscpubinding

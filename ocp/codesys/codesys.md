@@ -3609,4 +3609,19 @@ EOF
 ```
 
 ### 关于 CODESYS CODESYSControl.cfg 里的 CmpSchedule
-https://forge.codesys.com/forge/talk/Engineering/thread/0797bf9f3c/
+https://forge.codesys.com/forge/talk/Engineering/thread/0797bf9f3c/<br>
+https://forge.codesys.com/forge/talk/Runtime/thread/dd3a2052c9/?limit=25<br>
+https://faq.codesys.com/display/CDSFAQ/Codesys+Taskkonfiguration+-+FAQ<br>
+```
+### CNC
+CNC stands for "Computer Numerical Control" and is a term used in the manufacturing industry to describe the automated control of machine tools using a computer program. In the context of CODESYS PLC, CNC typically refers to the use of a CODESYS-based programmable logic controller (PLC) to control the operation of a CNC machine.
+
+With a CODESYS CNC system, the PLC is responsible for controlling the motion and operation of the CNC machine based on a set of programmed instructions. This can include tasks such as tool selection, toolpath generation, and spindle speed control, among others. The use of a PLC-based CNC system offers several advantages over traditional hardware-based systems, including increased flexibility, improved accuracy, and easier integration with other automation systems.
+
+### KNX
+KNX is a standard for home and building automation that enables the integration and control of various devices and systems within a building, such as lighting, heating, ventilation, and security. In the context of CODESYS PLC, KNX typically refers to the use of a CODESYS-based programmable logic controller to control and monitor KNX devices within a building automation system.
+
+With a CODESYS KNX system, the PLC can communicate with KNX devices using the KNX communication protocol, allowing it to control and monitor their functions. This enables the creation of intelligent building automation systems that can be easily programmed and configured using CODESYS.
+
+The use of a CODESYS-based PLC for KNX automation offers several benefits, including the ability to integrate with other automation systems, the ability to create customized automation solutions, and the ease of use provided by the CODESYS development environment.
+```

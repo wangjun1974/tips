@@ -3625,3 +3625,88 @@ With a CODESYS KNX system, the PLC can communicate with KNX devices using the KN
 
 The use of a CODESYS-based PLC for KNX automation offers several benefits, including the ability to integrate with other automation systems, the ability to create customized automation solutions, and the ease of use provided by the CODESYS development environment.
 ```
+
+### kernel params - 
+```
+### I915 force_probe - kernel params
+https://github.com/torvalds/linux/blob/master/drivers/gpu/drm/i915/i915_pci.c
+
+### BIOS
+### HDC Control - Disabled
+https://www.manualslib.com/manual/1263032/Supero-C7z270-Cg-L.html?page=79
+
+### Config TDP Configurations
+https://community.acer.com/en/discussion/556179/how-to-edit-tdp-limit-in-bios
+
+
+```
+
+### 启动 perf-tools 
+```
+$ podman run --name perf-tools -dt --privileged --network host registry.ocp4.example.com:5000/codesys/perf-tools /bin/bash -c 'trap : TERM INT; sleep 9999999999d & wait'
+$ hwlatdetect --threshold=1us --duration=1h --window 10000000us --width 950000us
+```
+
+### rhcos node 如何修改 kernel args
+https://access.redhat.com/solutions/6891971
+```
+sh-4.4# rpm-ostree kargs 
+random.trust_cpu=on console=tty0 console=ttyS0,115200n8 $ignition_firstboot ostree=/ostree/boot.0/rhcos/f091a58d602b0ff6f321a708b882987c06a94130b435d2c181131f7a4ce21363/0 ignition.platform.id=aws root=UUID=cc8f9c42-13d5-42df-8da7-147a1c449cd3 rw rootflags=prjquota
+
+sh-4.4# rpm-ostree kargs --delete console=ttyS0,115200n8
+
+sh-4.4# rpm-ostree kargs --append='<key>=<value>'
+
+### 为节点打标签
+$ oc label node b5-ocp4test.ocp4.example.com node-role.kubernetes.io/worker-rt: ''
+$ oc label node b5-ocp4test.ocp4.example.com  node-role.kubernetes.io/worker-
+```
+
+### podman container 的测试数据
+```
+### podman 
+### 1h w/ stress 的测试结果
+### /usr/bin/nohup /usr/bin/cyclictest --priority 1 --policy fifo -h 10 -a 1 -t 1 -m -q -i 200 -D 1h &
+# /dev/cpu_dma_latency set to 0us
+# Histogram
+000000 000000
+000001 14362421
+000002 3531577
+000003 065794
+000004 040164
+000005 000024
+000006 000012
+000007 000005
+000008 000003
+000009 000000
+# Total: 018000000
+# Min Latencies: 00001
+# Avg Latencies: 00001
+# Max Latencies: 00008
+# Histogram Overflows: 00000
+# Histogram Overflow at cycle number:
+# Thread 0:
+
+### 1h w/ stress 的测试结果
+### stress-ng --cpu 1 --io 4 --vm 2 --vm-bytes 128M --fork 4 --timeout 0
+### /usr/bin/nohup /usr/bin/cyclictest --priority 1 --policy fifo -h 10 -a 1 -t 1 -m -q -i 200 -D 1h &
+# /dev/cpu_dma_latency set to 0us
+# Histogram
+000000 000000
+000001 16171582
+000002 1707750
+000003 073773
+000004 041681
+000005 003957
+000006 000625
+000007 000364
+000008 000190
+000009 000073
+# Total: 017999995
+# Min Latencies: 00001
+# Avg Latencies: 00001
+# Max Latencies: 00010
+# Histogram Overflows: 00005
+# Histogram Overflow at cycle number:
+# Thread 0: 3768505 4759600 4761473 6770320 14760162
+```

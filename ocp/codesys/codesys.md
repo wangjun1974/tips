@@ -3814,4 +3814,55 @@ running cmd: cyclictest -q -D 1h -p 95 -t 1 -a  -h 30 -i 1000 -m
 # Histogram Overflows: 00000
 # Histogram Overflow at cycle number:
 # Thread 0:
+
+### ocp rt worker 
+### 12h w/o stress 的测试结果
+########## container info ###########
+/proc/cmdline:
+BOOT_IMAGE=(hd0,gpt3)/ostree/rhcos-7f5b414cc0eec54b321c1523bf3b7f499d4ce4c6a5e86e34c61e07b7c2ba5904/vmlinuz-4.18.0-305.76.1.rt7.148.el8_4.x86_64 random.trust_cpu=on console=tty0 ignition.platform.id=metal ostree=/ostree/boot.1/rhcos/7f5b414cc0eec54b321c1523bf3b7f499d4ce4c6a5e86e34c61e07b7c2ba5904/0 root=UUID=187714fb-67ad-43d9-9f31-48b485005f53 rw rootflags=prjquota boot=UUID=5ef99b8f-b717-4f17-826a-4fe1f046eac4 skew_tick=1 nohz=on rcu_nocbs=1-3 tuned.non_isolcpus=00000001 intel_pstate=disable nosoftlockup tsc=nowatchdog intel_iommu=on iommu=pt isolcpus=managed_irq,1-3 systemd.cpu_affinity=0 audit=0 idle=poll intel_idle.max_cstate=0 processor.max_cstate=0 mce=off i915.force_probe=*
+#####################################
+**** uid: 0 ****
+allowed cpu list: 1
+cyclictest 4.18.0-305.76.1.rt7.148.el8_4.x86_64
+new cpu list:
+running cmd: cyclictest -q -D 12h -p 95 -t 1 -a  -h 30 -i 1000 -m
+# /dev/cpu_dma_latency set to 0us
+# Histogram
+000000 000000
+000001 1639268
+000002 40773387
+000003 334536
+000004 313208
+000005 081646
+000006 032597
+000007 019556
+000008 003927
+000009 001395
+000010 000368
+000011 000063
+000012 000017
+000013 000017
+000014 000010
+000015 000001
+000016 000003
+000017 000000
+000018 000001
+000019 000000
+000020 000000
+000021 000000
+000022 000000
+000023 000000
+000024 000000
+000025 000000
+000026 000000
+000027 000000
+000028 000000
+000029 000000
+# Total: 043200000
+# Min Latencies: 00001
+# Avg Latencies: 00001
+# Max Latencies: 00018
+# Histogram Overflows: 00000
+# Histogram Overflow at cycle number:
+# Thread 0:
 ```

@@ -3866,9 +3866,188 @@ running cmd: cyclictest -q -D 12h -p 95 -t 1 -a  -h 30 -i 1000 -m
 # Histogram Overflow at cycle number:
 # Thread 0:
 
+### 
+###     resources:
+###       requests:
+###         memory: "200Mi"
+###         cpu: "2"
+###       limits:
+###         memory: "200Mi"
+###         cpu: "2"
 ### ocp rt worker 
-### 12h w/ stress 的测试结果
+### 1h w/o stress 的测试结果
+########## container info ###########
+/proc/cmdline:
+BOOT_IMAGE=(hd0,gpt3)/ostree/rhcos-7f5b414cc0eec54b321c1523bf3b7f499d4ce4c6a5e86e34c61e07b7c2ba5904/vmlinuz-4.18.0-305.76.1.rt7.148.el8_4.x86_64 random.trust_cpu=on console=tty0 ignition.platform.id=metal ostree=/ostree/boot.1/rhcos/7f5b414cc0eec54b321c1523bf3b7f499d4ce4c6a5e86e34c61e07b7c2ba5904/0 root=UUID=187714fb-67ad-43d9-9f31-48b485005f53 rw rootflags=prjquota boot=UUID=5ef99b8f-b717-4f17-826a-4fe1f046eac4 skew_tick=1 nohz=on rcu_nocbs=1-3 tuned.non_isolcpus=00000001 intel_pstate=disable nosoftlockup tsc=nowatchdog intel_iommu=on iommu=pt isolcpus=managed_irq,1-3 systemd.cpu_affinity=0 audit=0 idle=poll intel_idle.max_cstate=0 processor.max_cstate=0 mce=off i915.force_probe=*
+#####################################
+**** uid: 0 ****
+allowed cpu list: 1-2
+cyclictest 4.18.0-305.76.1.rt7.148.el8_4.x86_64
+new cpu list: 2
+running cmd: cyclictest -q -D 1h -p 95 -t 1 -a 2 -h 30 -i 1000 -m
+# /dev/cpu_dma_latency set to 0us
+# Histogram
+000000 000000
+000001 1681089
+000002 1858324
+000003 034964
+000004 021590
+000005 001928
+000006 001024
+000007 000513
+000008 000304
+000009 000206
+000010 000049
+000011 000005
+000012 000003
+000013 000001
+000014 000000
+000015 000000
+000016 000000
+000017 000000
+000018 000000
+000019 000000
+000020 000000
+000021 000000
+000022 000000
+000023 000000
+000024 000000
+000025 000000
+000026 000000
+000027 000000
+000028 000000
+000029 000000
+# Total: 003600000
+# Min Latencies: 00001
+# Avg Latencies: 00001
+# Max Latencies: 00013
+# Histogram Overflows: 00000
+# Histogram Overflow at cycle number:
+# Thread 0:
 
+### 
+###     resources:
+###       requests:
+###         memory: "200Mi"
+###         cpu: "2"
+###       limits:
+###         memory: "200Mi"
+###         cpu: "2"
+### ocp rt worker 
+### 1h w/o stress 的测试结果
+########## container info ###########
+/proc/cmdline:
+BOOT_IMAGE=(hd0,gpt3)/ostree/rhcos-7f5b414cc0eec54b321c1523bf3b7f499d4ce4c6a5e86e34c61e07b7c2ba5904/vmlinuz-4.18.0-305.76.1.rt7.148.el8_4.x86_64 random.trust_cpu=on console=tty0 ignition.platform.id=metal ostree=/ostree/boot.1/rhcos/7f5b414cc0eec54b321c1523bf3b7f499d4ce4c6a5e86e34c61e07b7c2ba5904/0 root=UUID=187714fb-67ad-43d9-9f31-48b485005f53 rw rootflags=prjquota boot=UUID=5ef99b8f-b717-4f17-826a-4fe1f046eac4 skew_tick=1 nohz=on rcu_nocbs=1-3 tuned.non_isolcpus=00000001 intel_pstate=disable nosoftlockup tsc=nowatchdog intel_iommu=on iommu=pt isolcpus=managed_irq,1-3 systemd.cpu_affinity=0 audit=0 idle=poll intel_idle.max_cstate=0 processor.max_cstate=0 mce=off i915.force_probe=*
+#####################################
+**** uid: 0 ****
+allowed cpu list: 1-2
+cyclictest 4.18.0-305.76.1.rt7.148.el8_4.x86_64
+new cpu list: 2
+running cmd: cyclictest -q -D 1h -p 95 -t 1 -a 2 -h 30 -i 1000 -m 
+# /dev/cpu_dma_latency set to 0us
+# Histogram
+000000 000000
+000001 1598271
+000002 1936347
+000003 036348
+000004 024462
+000005 002216
+000006 001092
+000007 000591
+000008 000362
+000009 000210
+000010 000073
+000011 000016
+000012 000007
+000013 000002
+000014 000001
+000015 000000
+000016 000002
+000017 000000
+000018 000000
+000019 000000
+000020 000000
+000021 000000
+000022 000000
+000023 000000
+000024 000000
+000025 000000
+000026 000000
+000027 000000
+000028 000000
+000029 000000
+# Total: 003600000
+# Min Latencies: 00001
+# Avg Latencies: 00001
+# Max Latencies: 00016
+# Histogram Overflows: 00000
+# Histogram Overflow at cycle number:
+# Thread 0:
+# oc -n codesysdemo rsh cyclictest ps axf
+    PID TTY      STAT   TIME COMMAND
+     58 pts/0    Rs+    0:00 ps axf
+      1 ?        Ss     0:00 /root/dumb-init -- /root/run.sh
+      6 ?        Ss     0:00 /root/dumb-init -- /root/container-tools/cyclictest/cmd.sh
+      8 ?        Ss     0:00  \_ /bin/bash /root/container-tools/cyclictest/cmd.sh
+     57 ?        S      0:00      \_ /usr/bin/coreutils --coreutils-prog-shebang=sleep /usr/bin/sleep infinity
+
+
+### 
+###     resources:
+###       requests:
+###         memory: "200Mi"
+###         cpu: "2"
+###       limits:
+###         memory: "200Mi"
+###         cpu: "2"
+### ocp rt worker 
+### 1h w/ stress 的测试结果
+
+# oc -n codesysdemo rsh cyclictest ps axf
+    PID TTY      STAT   TIME COMMAND
+   2732 pts/3    Rs+    0:00 ps axf
+      1 ?        Ss     0:00 /root/dumb-init -- /root/run.sh
+      6 ?        Ss     0:00 /root/dumb-init -- /root/container-tools/cyclictest/cmd.sh
+      8 ?        Ss     0:00  \_ /bin/bash /root/container-tools/cyclictest/cmd.sh
+     56 ?        SLl    0:00      \_ cyclictest -q -D 1h -p 95 -t 1 -a 2 -h 30 -i 1000 -m
+     41 ?        Ss     0:00 tmux new-session -s stress -d
+     42 pts/0    Ss+    0:00  \_ -bash
+     48 pts/1    SLs+   0:00  \_ stress-ng --cpu 1 --io 4 --vm 2 --vm-bytes 128M --fork 4 --timeout 0
+     57 pts/1    R+     0:06  |   \_ stress-ng-cpu
+     58 pts/1    D+     0:00  |   \_ stress-ng-io
+     59 pts/1    D+     0:00  |   \_ stress-ng-io
+     60 pts/1    D+     0:00  |   \_ stress-ng-io
+     61 pts/1    D+     0:00  |   \_ stress-ng-io
+     63 pts/1    S+     0:00  |   \_ stress-ng-vm
+   2702 pts/1    R+     0:00  |   |   \_ stress-ng-vm
+     64 pts/1    S+     0:00  |   \_ stress-ng-vm
+   2659 pts/1    R+     0:00  |   |   \_ stress-ng-vm
+     65 pts/1    S+     0:00  |   \_ stress-ng-fork
+   2749 pts/1    R+     0:00  |   |   \_ stress-ng-fork
+     66 pts/1    S+     0:00  |   \_ stress-ng-fork
+   2750 pts/1    R+     0:00  |   |   \_ stress-ng-fork
+     67 pts/1    S+     0:00  |   \_ stress-ng-fork
+   2751 pts/1    R+     0:00  |   |   \_ stress-ng-fork
+     68 pts/1    S+     0:00  |   \_ stress-ng-fork
+   2753 pts/1    R+     0:00  |       \_ stress-ng-fork
+     51 pts/2    SLs+   0:00  \_ stress-ng --cpu 1 --io 4 --vm 2 --vm-bytes 128M --fork 4 --timeout 0
+     73 pts/2    R+     0:06      \_ stress-ng-cpu
+     74 pts/2    D+     0:00      \_ stress-ng-io
+     75 pts/2    D+     0:00      \_ stress-ng-io
+     76 pts/2    D+     0:00      \_ stress-ng-io
+     77 pts/2    D+     0:00      \_ stress-ng-io
+     78 pts/2    S+     0:00      \_ stress-ng-vm
+   2683 pts/2    R+     0:00      |   \_ stress-ng-vm
+     80 pts/2    S+     0:00      \_ stress-ng-vm
+   2756 pts/2    R+     0:00      |   \_ stress-ng-vm
+     81 pts/2    S+     0:00      \_ stress-ng-fork
+   2759 pts/2    R+     0:00      |   \_ stress-ng-fork
+     82 pts/2    S+     0:00      \_ stress-ng-fork
+   2758 pts/2    R+     0:00      |   \_ stress-ng-fork
+     84 pts/2    S+     0:00      \_ stress-ng-fork
+   2757 pts/2    R+     0:00      |   \_ stress-ng-fork
+     85 pts/2    S+     0:00      \_ stress-ng-fork
+   2760 pts/2    R+     0:00          \_ stress-ng-fork
 ```
 
 ### SIEMENS SIMATIC ET 200 SP IM155-6PN ST GSD 下载

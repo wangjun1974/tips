@@ -18385,3 +18385,8 @@ cat > /etc/containers/registries.conf.d/99-miroshift-mirror-by-digest-registries
     location = "registry.example.com:5000/rhacm2"
 EOF
 ```
+
+### 查看 OpenShift 网络配置情况
+```
+$ oc get network.operator.openshift.io cluster -o yaml
+```

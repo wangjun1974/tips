@@ -18390,3 +18390,9 @@ EOF
 ```
 $ oc get network.operator.openshift.io cluster -o yaml
 ```
+
+### Mac OS - Download full installer 
+https://github.com/scriptingosx/DownloadFullInstaller/releases
+```
+$ softwareupdate --fetch-full-installer --full-installer-version 13.3.1
+```

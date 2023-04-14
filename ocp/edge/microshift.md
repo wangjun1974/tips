@@ -2553,3 +2553,16 @@ registry.redhat.io/openshift4/ose-csi-node-driver-registrar@sha256:a4319ff7c736c
 
 
 ```
+
+### 在新版本 microshift 上安装 multus >= 4.12
+```
+### 安装前准备
+### 为创建 priviledged 容器，将 namespace 打上以下 label
+### pod-security.kubernetes.io/audit=privileged
+### pod-security.kubernetes.io/enforce=privileged 
+### pod-security.kubernetes.io/warn=privileged
+$ oc label namespace kube-system pod-security.kubernetes.io/audit=privileged pod-security.kubernetes.io/enforce=privileged pod-security.kubernetes.io/warn=privileged
+$ oc get namespace kube-system --show-labels
+
+### 打完 label 之后，继续安装
+```

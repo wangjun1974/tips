@@ -4052,3 +4052,30 @@ running cmd: cyclictest -q -D 1h -p 95 -t 1 -a 2 -h 30 -i 1000 -m
 
 ### SIEMENS SIMATIC ET 200 SP IM155-6PN ST GSD 下载
 https://support.industry.siemens.com/cs/document/57138621/profinet-gsd-files-i-o-et-200sp?dti=0&lc=en-US
+
+### 连接 DO 模块时 Runtime 日志里包含如下报错
+```
+报错
+2023-04-14T09:12:44Z, 0x000010a2, 1, 16777216, 1, Start Scan...
+2023-04-14T09:12:45Z, 0x000010a2, 1, 16777216, 1, Detected 1 PN-Devices:
+2023-04-14T09:12:45Z, 0x000010a2, 1, 16777216, 1, PN-Device AC:64:17:C0:BC:6D 'device'
+2023-04-14T09:12:45Z, 0x000010a2, 1, 16777216, 1, Scan finished
+2023-04-14T09:13:33Z, 0x000010a2, 1, 16777216, 1, Reset Configuration
+2023-04-14T09:13:34Z, 0x000010a2, 1, 16777216, 1, no remanent data  - use defaults
+2023-04-14T09:13:34Z, 0x000010a2, 1, 16777216, 1, No valid remanent data.
+2023-04-14T09:13:34Z, 0x000010a2, 1, 16777216, 1, Init Device: StationName = pn-controller
+2023-04-14T09:13:34Z, 0x000010a2, 1, 16777216, 1, Init Device: IP = 192.168.58.151 / 255.255.255.0 / 0.0.0.0
+2023-04-14T09:13:34Z, 0x0000100d, 4, 0, 0, **** ERROR: Demo mode for IO-Link started. Will expire and stop!
+2023-04-14T09:13:34Z, 0x00000002, 1, 0, 2, Application [<app>Application</app>] loaded via [Download]
+2023-04-14T09:13:56Z, 0x000010a2, 1, 16777216, 1, Ethernet Link-Status: Up
+2023-04-14T09:13:58Z, 0x000010a2, 1, 33554432, 0, Station 'device': Connecting...
+2023-04-14T09:13:58Z, 0x000010a2, 1, 33554432, 0, Station 'device': Received Connect Confirmation
+2023-04-14T09:13:58Z, 0x000010a2, 1, 33554432, 0, Station 'device': Received Prm-End Confirmation
+2023-04-14T09:13:58Z, 0x000010a2, 1, 33554432, 0, Station 'device': Received Application-Ready Indication
+2023-04-14T09:13:58Z, 0x000010a2, 2, 50331648, 0, !!!! Warning: Station 'device': Diagnosis Alarm (Slot 0x0001 / 0x0001): 
+2023-04-14T09:13:58Z, 0x000010a2, 2, 50331648, 0, !!!! Warning:  - Fault: 0x0602 - 0x0691
+2023-04-14T09:13:58Z, 0x000010a2, 1, 33554432, 0, Station 'device': Data Exchange
+2023-04-14T09:13:58Z, 0x000010a2, 2, 50331648, 0, !!!! Warning: Station 'device': Connected (Module-Diff available !)
+2023-04-14T09:13:58Z, 0x000010a2, 2, 50331648, 0, !!!! Warning: Station 'device': Diagnosis Alarm (Slot 0x0001 / 0x0001): 
+2023-04-14T09:13:58Z, 0x000010a2, 2, 50331648, 0, !!!! Warning:  - Fault: Parameterization fault. Wrong or too many parameters are written
+```

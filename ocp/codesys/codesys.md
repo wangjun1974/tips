@@ -4129,6 +4129,8 @@ $ cat > configfile <<EOF
   metricName: test_var3
 EOF
 
+### 启动 opcua_exporter
+$ ./opcua_exporter -endpoint opc.tcp://192.168.56.146:4840 -config ./configfile
 
 ### https://github.com/gopcua/opcua
 $ https://github.com/gopcua/opcua
@@ -4137,4 +4139,61 @@ $ https://github.com/gopcua/opcua
 ### https://mainflux.readthedocs.io/en/latest/opcua/#:~:text=By%20default%20the%20root%20node,specified%20in%20the%20HTTP%20query.
 $ go run examples/browse/browse.go -endpoint opc.tcp://192.168.56.146:4840 -node 'ns=0;i=84'
 
+```
+
+### 这个项目做了哪些改变来适配
+https://github.com/open-strateos/opcua_exporter<br>
+```
+### 1/opcua_exporter/main.go 是修改完的版本
+# diff -urN 2/opcua_exporter/main.go 1/opcua_exporter/main.go
+--- 2/opcua_exporter/main.go    2023-04-17 17:03:21.552000000 +0800
++++ 1/opcua_exporter/main.go    2023-04-17 15:56:03.896000000 +0800
+@@ -86,10 +86,10 @@
+        flag.Parse()
+        opcua_debug.Enable = *debug
+
+-       ctx, cancel := context.WithCancel(context.Background())
+-       defer cancel()
++       //ctx, cancel := context.WithCancel(context.Background())
++       //defer cancel()
+
+-       eventSummaryCounter.Start(ctx)
++       //eventSummaryCounter.Start(ctx)
+
+        var nodes []NodeConfig
+        var readError error
+@@ -107,14 +107,24 @@
+                log.Fatalf("Error reading config JSON: %v", readError)
+        }
+
+-       client := getClient(endpoint)
++        ctx := context.Background()
++        client := opcua.NewClient(*endpoint)
+        log.Printf("Connecting to OPCUA server at %s", *endpoint)
+-       if err := client.Connect(ctx); err != nil {
++        if err := client.Connect(ctx); err != nil {
+                log.Fatalf("Error connecting to OPC UA client: %v", err)
+        } else {
+                log.Print("Connected successfully")
+        }
+-       defer client.Close()
++        defer client.Close()
++
++       //client := getClient(endpoint)
++       //log.Printf("Connecting to OPCUA server at %s", *endpoint)
++       //if err := client.Connect(ctx); err != nil {
++       //      log.Fatalf("Error connecting to OPC UA client: %v", err)
++       //} else {
++       //      log.Print("Connected successfully")
++       //}
++       //defer client.Close()
+
+        metricMap := createMetrics(&nodes)
+        go setupMonitor(ctx, client, metricMap, *bufferSize)
+```
+
+
+### 另外一个项目
+https://github.com/skilld-labs/telemetry-opcua-exporter<br>
+```
 ```

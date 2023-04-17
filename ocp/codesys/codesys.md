@@ -4091,12 +4091,15 @@ $ git clone https://github.com/open-strateos/opcua_exporter
 $ cd opcua_exporter
 $ cat > Dockerfile.builder.v1 <<EOF
 FROM registry.access.redhat.com/ubi8/ubi:latest
-RUN dnf install -y libpciaccess iproute net-tools procps-ng && dnf clean all && chmod 0755 /runtimetaskset.sh
+RUN dnf install -y libpciaccess iproute net-tools procps-ng go-toolset && dnf clean all
 CMD ["/bin/bash", "-c", "exec /bin/bash -c 'trap : TERM INT; sleep 9999999999d & wait'"]
 EOF
 
+$ podman build -f Dockerfile.builder.v1 -t registry.example.com:5000/codesys/ubi-go-toolset:v1
+$ podman run --name ubi-go-toolset-v1 -d -t registry.example.com:5000/codesys/ubi-go-toolset:v1
+
 $ cat > Dockerfile.v1 <<EOF
-FROM registry.access.redhat.com/ubi8/ubi:latest as golang_image
+FROM registry.example.com:5000/codesys/ubi-go-toolset:v1 as golang_image
 
 FROM golang_image as tester
 COPY . /build
@@ -4105,11 +4108,11 @@ RUN go test
 
 FROM golang_image as builder
 COPY --from=tester /build /build
-COPY --from=tester /go /go
+#COPY --from=tester /go /go
 WORKDIR /build
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o opcua_exporter .
 
-FROM scratch
+FROM registry.example.com:5000/codesys/ubi-go-toolset:v1
 WORKDIR /
 COPY --from=builder /build/opcua_exporter /
 CMD ["/bin/bash", "-c", "exec /bin/bash -c 'trap : TERM INT; sleep 9999999999d & wait'"]
@@ -4117,5 +4120,21 @@ EOF
 
 $ podman build -f Dockerfile.v1 -t registry.example.com:5000/codesys/opcua_exporter:v1
 
-$ podman run --name opcua_exporter-v1 -dt --privileged --network host registry.example.com:5000/codesys/opcua_exporter:v1 /bin/sh -c 'trap : TERM INT; sleep 9999999999d & wait'
+$ podman run --name opcua_exporter-v1 -dt --privileged --network host registry.example.com:5000/codesys/opcua_exporter:v1 /bin/bash -c 'trap : TERM INT; sleep 9999999999d & wait'
+
+$ podman exec -it opcua_exporter-v1 bash
+
+$ cat > configfile <<EOF
+- nodeName: ns=4;s=|var|CODESYS Control for Linux SL.Application.PLC_PRG.var3
+  metricName: test_var3
+EOF
+
+
+### https://github.com/gopcua/opcua
+$ https://github.com/gopcua/opcua
+
+### 测试 opcua server 
+### https://mainflux.readthedocs.io/en/latest/opcua/#:~:text=By%20default%20the%20root%20node,specified%20in%20the%20HTTP%20query.
+$ go run examples/browse/browse.go -endpoint opc.tcp://192.168.56.146:4840 -node 'ns=0;i=84'
+
 ```

@@ -4196,4 +4196,115 @@ https://github.com/open-strateos/opcua_exporter<br>
 ### 另外一个项目
 https://github.com/skilld-labs/telemetry-opcua-exporter<br>
 ```
+$ cd /tmp
+$ git clone https://github.com/skilld-labs/telemetry-opcua-exporter
+$ cd telemetry-opcua-exporter
+$ cat > Dockerfile.v1 <<EOF
+FROM registry.example.com:5000/codesys/ubi-go-toolset:v1 as golang_image
+
+FROM golang_image as tester
+COPY . /build
+WORKDIR /build
+RUN go test
+
+FROM golang_image as builder
+COPY --from=tester /build /build
+WORKDIR /build
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o telemetry-opcua-exporter .
+
+FROM registry.example.com:5000/codesys/ubi-go-toolset:v1
+WORKDIR /
+COPY --from=builder /build/telemetry-opcua-exporter /
+CMD ["/bin/bash", "-c", "exec /bin/bash -c 'trap : TERM INT; sleep 9999999999d & wait'"]
+EOF
+
+$ podman build -f Dockerfile.v1 -t registry.example.com:5000/codesys/telemetry-opcua-exporter:v1
+
+$ podman run --name telemetry-opcua-exporter-v1 -dt --privileged --network host registry.example.com:5000/codesys/telemetry-opcua-exporter:v1 /bin/bash -c 'trap : TERM INT; sleep 9999999999d & wait'
+
+$ podman exec -it telemetry-opcua-exporter-v1 bash
+
+$ cat > /opcua.yaml <<EOF
+metrics:
+  - name: VAR1   # MANDATORY
+    help: get metrics for var1 # MANDATORY
+    nodeid: ns=4;s=|var|CODESYS Control for Linux SL.Application.PLC_PRG.var1 # MANDATORY and UNIQUE for each metric
+    labels: # if metrics share the same name they can be distinguis by labels
+      site: codesyscontrol1
+    type: gauge # MANDATORY metric type can be counter, gauge, Float, Double
+  - name: VAR2   # MANDATORY
+    help: get metrics for var2 # MANDATORY
+    nodeid: ns=4;s=|var|CODESYS Control for Linux SL.Application.PLC_PRG.var2 # MANDATORY and UNIQUE for each metric
+    labels: # if metrics share the same name they can be distinguis by labels
+      site: codesyscontrol1
+    type: gauge # MANDATORY metric type can be counter, gauge, Float, Double
+  - name: VAR3   # MANDATORY
+    help: get metrics for var3 # MANDATORY
+    nodeid: ns=4;s=|var|CODESYS Control for Linux SL.Application.PLC_PRG.var3 # MANDATORY and UNIQUE for each metric
+    labels: # if metrics share the same name they can be distinguis by labels
+      site: codesyscontrol1
+    type: gauge # MANDATORY metric type can be counter, gauge, Float, Double
+EOF
+
+$ /telemetry-opcua-exporter --help
+Usage of /telemetry-opcua-exporter:
+  -auth-mode string
+        Authentication Mode: one of Anonymous, UserName, Certificate (default "Anonymous")
+  -bindAddress string
+        Address to listen on for web interface (default ":4242")
+  -cert string
+        Path to certificate file
+  -config string
+        Path to configuration file (default "opcua.yaml")
+  -endpoint string
+        OPC UA Endpoint URL
+  -key string
+        Path to PEM Private Key file
+  -password string
+        Password to use in auth-mode UserName
+  -sec-mode string
+        Security Mode: one of None, Sign, SignAndEncrypt (default "auto")
+  -sec-policy string
+        Security Policy URL or one of None, Basic128Rsa15, Basic256, Basic256Sha256 (default "None")
+  -username string
+        Username to use in auth-mode UserName
+  -verbosity string
+        Log verbosity (debug/info/warn/error/fatal)
+
+$ /telemetry-opcua-exporter -endpoint opc.tcp://192.168.56.146:4840 -verbosity debug 
+
+$ curl 192.168.56.148:4242/metrics  | grep -i var
+...
+# HELP VAR1 get metrics for var1
+   # TYPE VAR1 gauge
+  VAR1{site="codesyscontrol1"} 0
+0# HELP VAR2 get metrics for var2
+ # TYPE VAR2 gauge
+-VAR2{site="codesyscontrol1"} 0
+-# HELP VAR3 get metrics for var3
+:# TYPE VAR3 gauge
+-VAR3{site="codesyscontrol1"} 0
+
+$ curl 192.168.56.148:4242/config
+metrics:
+- name: VAR1
+  help: get metrics for var1
+  nodeid: ns=4;s=|var|CODESYS Control for Linux SL.Application.PLC_PRG.var1
+  labels:
+    site: codesyscontrol1
+  type: gauge
+- name: VAR2
+  help: get metrics for var2
+  nodeid: ns=4;s=|var|CODESYS Control for Linux SL.Application.PLC_PRG.var2
+  labels:
+    site: codesyscontrol1
+  type: gauge
+- name: VAR3
+  help: get metrics for var3
+  nodeid: ns=4;s=|var|CODESYS Control for Linux SL.Application.PLC_PRG.var3
+  labels:
+    site: codesyscontrol1
+  type: gauge
+
+
 ```

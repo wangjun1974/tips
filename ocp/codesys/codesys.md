@@ -4079,3 +4079,43 @@ https://support.industry.siemens.com/cs/document/57138621/profinet-gsd-files-i-o
 2023-04-14T09:13:58Z, 0x000010a2, 2, 50331648, 0, !!!! Warning: Station 'device': Diagnosis Alarm (Slot 0x0001 / 0x0001): 
 2023-04-14T09:13:58Z, 0x000010a2, 2, 50331648, 0, !!!! Warning:  - Fault: Parameterization fault. Wrong or too many parameters are written
 ```
+
+### What are CPU "C-states" and how to disable them if needed
+https://gist.github.com/Brainiarc7/8dfd6bb189b8e6769bb5817421aec6d1
+
+### OPCUA exporter 
+https://developers.redhat.com/articles/2022/07/21/how-use-go-toolset-container-images#using_the_image_in_a_multistage_environment<br>
+```
+$ cd /tmp
+$ git clone https://github.com/open-strateos/opcua_exporter
+$ cd opcua_exporter
+$ cat > Dockerfile.builder.v1 <<EOF
+FROM registry.access.redhat.com/ubi8/ubi:latest
+RUN dnf install -y libpciaccess iproute net-tools procps-ng && dnf clean all && chmod 0755 /runtimetaskset.sh
+CMD ["/bin/bash", "-c", "exec /bin/bash -c 'trap : TERM INT; sleep 9999999999d & wait'"]
+EOF
+
+$ cat > Dockerfile.v1 <<EOF
+FROM registry.access.redhat.com/ubi8/ubi:latest as golang_image
+
+FROM golang_image as tester
+COPY . /build
+WORKDIR /build
+RUN go test
+
+FROM golang_image as builder
+COPY --from=tester /build /build
+COPY --from=tester /go /go
+WORKDIR /build
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o opcua_exporter .
+
+FROM scratch
+WORKDIR /
+COPY --from=builder /build/opcua_exporter /
+CMD ["/bin/bash", "-c", "exec /bin/bash -c 'trap : TERM INT; sleep 9999999999d & wait'"]
+EOF
+
+$ podman build -f Dockerfile.v1 -t registry.example.com:5000/codesys/opcua_exporter:v1
+
+$ podman run --name opcua_exporter-v1 -dt --privileged --network host registry.example.com:5000/codesys/opcua_exporter:v1 /bin/sh -c 'trap : TERM INT; sleep 9999999999d & wait'
+```

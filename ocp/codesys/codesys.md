@@ -4378,11 +4378,49 @@ $ curl -L https://github.com/thingsboard/thingsboard-gateway/releases/download/v
 $ cat > Dockerfile.v1 <<EOF
 FROM registry.access.redhat.com/ubi8/ubi:latest
 COPY python3-thingsboard-gateway.rpm /tmp
-RUN dnf install -y libpciaccess iproute net-tools procps-ng /tmp/python3-thingsboard-gateway.rpm && dnf clean all
+RUN dnf install -y libpciaccess iproute net-tools procps-ng python3-pip sudo && dnf clean all
 CMD ["/bin/bash", "-c", "exec /bin/bash -c 'trap : TERM INT; sleep 9999999999d & wait'"]
 EOF
 
 $ podman build -f Dockerfile.v1 -t registry.example.com:5000/codesys/thingsboard-gateway:v1
-$ 
+$ podman run --name thingsboard-gateway-v1 -d -t --network host --privileged registry.example.com:5000/codesys/thingsboard-gateway:v1
 
+$ podman exec -it thingsboard-gateway-v1 bash
+# rpm -i /tmp/python3-thingsboard-gateway.rpm 
+# cat > /etc/thingsboard-gateway/config/opcua.json <<EOF
+{
+    "OPC-UA": {
+        "devices": [
+            {
+                "name": "My OPC UA Server 192.168.56.146",
+                "url": "opc.tcp://192.168.56.146:4840/",
+                "securityPolicy": "None",
+                "identityProvider": "",
+                "username": "",
+                "password": "",
+                "nodes": [
+                    {
+                        "name": "test_var1",
+                        "nodeId": "ns=4;s=|var|CODESYS Control for Linux SL.Application.PLC_PRG.var1",
+                        "type": "attribute",
+                        "attribute": "Value",
+                        "interval": 1000,
+                        "converter": "StringConverter",
+                        "converterConfig": {}
+                    }
+                ]
+            }
+        ]
+    }
+}
+EOF
+
+### 访问 local-registry
+$ podman exec -it local-registry /bin/sh
+
+### 查看配置文件
+/ # cat /etc/docker/registry/config.yml
+
+### 查看 registry 有哪些镜像
+/ # find /var/lib/registry  | grep -Ev "blobs|_manifests|_layers|_uploads"
 ```

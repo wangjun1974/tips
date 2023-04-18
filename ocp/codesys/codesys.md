@@ -4084,6 +4084,7 @@ https://support.industry.siemens.com/cs/document/57138621/profinet-gsd-files-i-o
 https://gist.github.com/Brainiarc7/8dfd6bb189b8e6769bb5817421aec6d1
 
 ### OPCUA exporter 
+https://www.unified-automation.com/downloads/opc-ua-clients/uaexpert.html<br>
 https://developers.redhat.com/articles/2022/07/21/how-use-go-toolset-container-images#using_the_image_in_a_multistage_environment<br>
 ```
 $ cd /tmp
@@ -4138,6 +4139,17 @@ $ https://github.com/gopcua/opcua
 ### 测试 opcua server 
 ### https://mainflux.readthedocs.io/en/latest/opcua/#:~:text=By%20default%20the%20root%20node,specified%20in%20the%20HTTP%20query.
 $ go run examples/browse/browse.go -endpoint opc.tcp://192.168.56.146:4840 -node 'ns=0;i=84'
+
+
+### 为什么 metrics 不更新了呢
+$ go run examples/read/read.go -endpoint opc.tcp://192.168.56.146:4840 -node 'ns=4;s=|var|CODESYS Control for Linux SL.Application.PLC_PRG.var3' 
+150
+
+$ curl -v 192.168.56.148:9686/metrics | grep var3 
+...
+# HELP test_var3 From OPC UA
+# TYPE test_var3 gauge
+test_var3 50
 
 ```
 
@@ -4306,5 +4318,71 @@ metrics:
     site: codesyscontrol1
   type: gauge
 
+
+```
+
+
+### CodeSys gopcua
+```
+### https://github.com/gopcua
+### examples/browse/browse.go
+func main() {
+        endpoint := flag.String("endpoint", "opc.tcp://localhost:4840", "OPC UA Endpoint URL")
+        nodeID := flag.String("node", "", "node id for the root node")
+        flag.BoolVar(&debug.Enable, "debug", true, "enable debug logging")
+        flag.Parse()
+        log.SetFlags(0)
+
+        ctx := context.Background()
+
+        c := opcua.NewClient(*endpoint)
+        if err := c.Connect(ctx); err != nil {
+                log.Fatal(err)
+        }
+        defer c.CloseWithContext(ctx)
+
+
+
+
+
+
+        id, err := ua.ParseNodeID(*nodeID)
+        if err != nil {
+                log.Fatalf("invalid node id: %v", err)
+        }
+
+        req := &ua.ReadRequest{
+                MaxAge: 2000,
+                NodesToRead: []*ua.ReadValueID{
+                        {NodeID: id},
+                },
+                TimestampsToReturn: ua.TimestampsToReturnBoth,
+        }
+
+        resp, err := c.ReadWithContext(ctx, req)
+        if err != nil {
+                log.Fatalf("Read failed: %s", err)
+        }
+        if resp.Results[0].Status != ua.StatusOK {
+                log.Fatalf("Status not OK: %v", resp.Results[0].Status)
+        }
+        log.Printf("%#v", resp.Results[0].Value.Value())
+```
+
+
+### 实验一下 thingsboard gateway 
+```
+$ mkdir -p /tmp/thingsboard-gateway
+$ cd /tmp/thingsboard-gateway
+$ curl -L https://github.com/thingsboard/thingsboard-gateway/releases/download/v3.2/python3-thingsboard-gateway.rpm -o python3-thingsboard-gateway.rpm
+$ cat > Dockerfile.v1 <<EOF
+FROM registry.access.redhat.com/ubi8/ubi:latest
+COPY python3-thingsboard-gateway.rpm /tmp
+RUN dnf install -y libpciaccess iproute net-tools procps-ng /tmp/python3-thingsboard-gateway.rpm && dnf clean all
+CMD ["/bin/bash", "-c", "exec /bin/bash -c 'trap : TERM INT; sleep 9999999999d & wait'"]
+EOF
+
+$ podman build -f Dockerfile.v1 -t registry.example.com:5000/codesys/thingsboard-gateway:v1
+$ 
 
 ```

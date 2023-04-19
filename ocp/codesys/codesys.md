@@ -4532,3 +4532,128 @@ NetworkAdapter=net1
 NetworkPort=4841
 ```
 
+### 从 opcua 取值，持续向 mqtt publish 消息的例子程序
+```
+
+$ mkdir /tmp/opcua-to-mqtt 
+$ cat > /tmp/opcua-to-mqtt/main.go <<EOF
+package main
+
+import (
+        "context"
+        "flag"
+        "fmt"
+        "log"
+        "time"
+
+        mqtt "github.com/eclipse/paho.mqtt.golang"
+        "github.com/gopcua/opcua"
+        "github.com/gopcua/opcua/debug"
+        "github.com/gopcua/opcua/ua"
+)
+
+func main() {
+        var (   
+                endpoint = flag.String("endpoint", "opc.tcp://localhost:4840", "OPC UA Endpoint URL")
+                nodeID   = flag.String("node", "", "NodeID to read")
+        )
+        flag.BoolVar(&debug.Enable, "debug", false, "enable debug logging")
+        flag.Parse()
+        log.SetFlags(0)
+
+        // Connect to OPCUA server
+        //endpoint := "opc.tcp://192.168.56.147:4840"
+        ctx := context.Background()
+
+        c := opcua.NewClient(*endpoint)
+        if err := c.Connect(ctx); err != nil {
+                log.Fatal(err)
+        }
+        defer c.CloseWithContext(ctx)
+
+        // Connect to MQTT broker
+        opts := mqtt.NewClientOptions().AddBroker("tcp://192.168.56.148:1883")
+        client := mqtt.NewClient(opts)
+        token := client.Connect()
+        token.Wait()
+        if err := token.Error(); err != nil {
+                log.Fatal(err)
+        }
+
+        // Parse NodeID
+        id, err := ua.ParseNodeID(*nodeID)
+        if err != nil {
+                log.Fatalf("invalid node id: %v", err)
+        }
+
+        // Obtain node values periodically
+        ticker := time.NewTicker(5 * time.Second)
+        for range ticker.C {
+                req := &ua.ReadRequest{
+                        MaxAge: 2000,
+                        NodesToRead: []*ua.ReadValueID{
+                                {NodeID: id},
+                       },
+                        TimestampsToReturn: ua.TimestampsToReturnBoth,
+                }
+
+                resp, err := c.ReadWithContext(ctx, req)
+                if err != nil {
+                        log.Fatalf("Read failed: %s", err)
+                }
+                if resp.Results[0].Status != ua.StatusOK {
+                        log.Fatalf("Status not OK: %v", resp.Results[0].Status)
+                }
+
+                // Publish node values to MQTT topic
+                payload := fmt.Sprintf("Node 1: %v", resp.Results[0].Value.Value())
+                token := client.Publish("jwang/test", 0, false, payload)
+                token.Wait()
+                if err := token.Error(); err != nil {
+                        log.Println(err)
+                        continue
+                }
+        }
+}
+EOF
+
+$ go mod init example.com/opcua-to-mqtt
+$ go get github.com/eclipse/paho.mqtt.golang
+$ go get github.com/gopcua/opcua
+
+### 从 opcua endpoint 上获取 node 持续向 mqtt 发消息
+$ go run main.go -endpoint opc.tcp://192.168.56.146:4840 -node 'ns=4;s=|var|CODESYS Control for Linux SL.Application.PLC_PRG.var1'
+$ go run main.go -endpoint opc.tcp://192.168.56.146:4840 -node 'ns=4;s=|var|CODESYS Control for Linux SL.Application.PLC_PRG.var2'
+$ go run main.go -endpoint opc.tcp://192.168.56.146:4840 -node 'ns=4;s=|var|CODESYS Control for Linux SL.Application.PLC_PRG.var3' 
+$ 
+
+
+### 在 mqtt subscriber 上查看
+# mosquitto_sub -d -h 192.168.56.148 -t 'jwang/test'
+...
+Client (null) sending PINGREQ
+Client (null) received PINGRESP
+Client (null) received PUBLISH (d0, q0, r0, m0, 'jwang/test', ... (5 bytes))
+hello
+...
+Client (null) sending PINGREQ
+Client (null) received PINGRESP
+Client (null) received PUBLISH (d0, q0, r0, m0, 'jwang/test', ... (9 bytes))
+Node 1: 3
+Client (null) received PUBLISH (d0, q0, r0, m0, 'jwang/test', ... (9 bytes))
+Node 1: 2
+Client (null) received PUBLISH (d0, q0, r0, m0, 'jwang/test', ... (9 bytes))
+Node 1: 1
+Client (null) received PUBLISH (d0, q0, r0, m0, 'jwang/test', ... (9 bytes))
+Node 1: 3
+Client (null) received PUBLISH (d0, q0, r0, m0, 'jwang/test', ... (9 bytes))
+Node 1: 2
+Client (null) received PUBLISH (d0, q0, r0, m0, 'jwang/test', ... (9 bytes))
+Node 1: 1
+Client (null) received PUBLISH (d0, q0, r0, m0, 'jwang/test', ... (9 bytes))
+Node 1: 3
+Client (null) received PUBLISH (d0, q0, r0, m0, 'jwang/test', ... (9 bytes))
+Node 1: 2
+...
+
+```

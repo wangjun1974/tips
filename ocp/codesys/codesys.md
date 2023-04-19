@@ -4666,3 +4666,6 @@ done
 EOF
 $ /bin/bash /checkcodesyscontrol.sh &
 ```
+
+### Deploy Microshift on RHEL8 with Zigbee2MQTT Workload
+https://schmaustech.blogspot.com/2022/10/deploy-microshift-on-rhel8-with.html

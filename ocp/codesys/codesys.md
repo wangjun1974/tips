@@ -4455,11 +4455,31 @@ EOF
 $ podman build -f Dockerfile.v1 -t registry.example.com:5000/codesys/mosquitto:v1 
 
 ### 试试在 ubuntu 22.10 上构建一个 mosquitto 容器
+### https://blog.feabhas.com/2020/02/running-the-eclipse-mosquitto-mqtt-broker-in-a-docker-container/
+
+$ mkdir mosquitto
+$ mkdir mosquitto/config
+$ mkdir mosquitto/data
+$ mkdir mosquitto/log
+
+$ cat > mosquitto/config/mosquitto.conf <<EOF
+# following two lines required for > v2.0
+allow_anonymous true
+listener 1883
+persistence true
+persistence_location /mosquitto/data/
+log_dest file /mosquitto/log/mosquitto.log
+EOF
+
 $ cat > Dockerfile.v1 <<EOF
 FROM docker.io/ubuntu:22.10
-RUN apt update && apt install -y libpciaccess0 iproute2 procps mosquitto mosquitto-clients && rm -rf /var/lib/apt/lists/*
+COPY mosquitto/ /mosquitto/
+RUN apt update && apt install -y libpciaccess0 iproute2 procps mosquitto mosquitto-clients vim && rm -rf /var/lib/apt/lists/*
+EXPOSE 1883/tcp
 CMD ["/bin/bash", "-c", "exec /bin/bash -c 'trap : TERM INT; sleep 9999999999d & wait'"]
 EOF
 
+$ podman build -f Dockerfile.v1 -t registry.example.com:5000/codesys/ubuntu-mosquitto:v1 
 
+docker run -it --name mosquitto -p 1883:1883 -v $(pwd)/mosquitto:/mosquitto/ eclipse-mosquitto 
 ```

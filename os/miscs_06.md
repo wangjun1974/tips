@@ -18396,3 +18396,11 @@ https://github.com/scriptingosx/DownloadFullInstaller/releases
 ```
 $ softwareupdate --fetch-full-installer --full-installer-version 13.3.1
 ```
+
+### microshift 添加第二块网卡配置
+```
+### 设置网卡 enp8s0 kickstart
+### 这块网卡启用但是不设置 ipv4 和 ipv6
+network --activate --nodhcp --device=enp8s0 --bootproto=none --noipv4 --noipv6
+
+```

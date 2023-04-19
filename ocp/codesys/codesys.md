@@ -4461,6 +4461,8 @@ $ mkdir mosquitto
 $ mkdir mosquitto/config
 $ mkdir mosquitto/data
 $ mkdir mosquitto/log
+$ touch mosquitto/log/mosquitto.log
+$ chmod o+w mosquitto/log/mosquitto.log
 
 $ cat > mosquitto/config/mosquitto.conf <<EOF
 # following two lines required for > v2.0
@@ -4480,6 +4482,5 @@ CMD ["/bin/bash", "-c", "exec /bin/bash -c 'trap : TERM INT; sleep 9999999999d &
 EOF
 
 $ podman build -f Dockerfile.v1 -t registry.example.com:5000/codesys/ubuntu-mosquitto:v1 
-
-docker run -it --name mosquitto -p 1883:1883 -v $(pwd)/mosquitto:/mosquitto/ eclipse-mosquitto 
+$ podman run -dt --name ubuntu-mosquitto-v1 --network host -v $(pwd)/mosquitto:/mosquitto/ --privileged registry.example.com:5000/codesys/ubuntu-mosquitto:v1
 ```

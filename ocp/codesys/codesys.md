@@ -4456,7 +4456,7 @@ $ podman build -f Dockerfile.v1 -t registry.example.com:5000/codesys/mosquitto:v
 
 ### 试试在 ubuntu 22.10 上构建一个 mosquitto 容器
 ### https://blog.feabhas.com/2020/02/running-the-eclipse-mosquitto-mqtt-broker-in-a-docker-container/
-
+### http://www.steves-internet-guide.com/mosquitto_pub-sub-clients/
 $ mkdir mosquitto
 $ mkdir mosquitto/config
 $ mkdir mosquitto/data
@@ -4483,4 +4483,32 @@ EOF
 
 $ podman build -f Dockerfile.v1 -t registry.example.com:5000/codesys/ubuntu-mosquitto:v1 
 $ podman run -dt --name ubuntu-mosquitto-v1 --network host -v $(pwd)/mosquitto:/mosquitto/ --privileged registry.example.com:5000/codesys/ubuntu-mosquitto:v1
+
+$ podman exec -it ubuntu-mosquitto-v1 bash
+# mosquitto -c /mosquitto/config/mosquitto.conf
+
+### 订阅 topic 
+$ podman exec -it ubuntu-mosquitto-v1 bash
+# mosquitto_sub -d -h 192.168.56.148 -t 'jwang/test'
+Client (null) sending CONNECT
+Client (null) received CONNACK (0)
+Client (null) sending SUBSCRIBE (Mid: 1, Topic: jwang/test, QoS: 0, Options: 0x00)
+Client (null) received SUBACK
+Subscribed (mid: 1): 0
+
+### 向 topic 发送消息
+$ podman exec -it ubuntu-mosquitto-v1 bash
+# mosquitto_pub -d -h 192.168.56.148 -m 'hello' -t 'jwang/test'
+Client (null) sending CONNECT
+Client (null) received CONNACK (0)
+Client (null) sending PUBLISH (d0, q0, r0, m1, 'jwang/test', ... (5 bytes))
+Client (null) sending DISCONNECT
+
+### 接收到订阅 topic 上发送的消息
+# mosquitto_sub -d -h 192.168.56.148 -t 'jwang/test'
+...
+Client (null) sending PINGREQ
+Client (null) received PINGRESP
+Client (null) received PUBLISH (d0, q0, r0, m0, 'jwang/test', ... (5 bytes))
+hello
 ```

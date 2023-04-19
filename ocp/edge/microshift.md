@@ -2565,4 +2565,21 @@ $ oc label namespace kube-system pod-security.kubernetes.io/audit=privileged pod
 $ oc get namespace kube-system --show-labels
 
 ### 打完 label 之后，继续安装
+### 拷贝 multus image 和 multus deployment 相关内容到 microshift
+### 拷贝 multus cni git repo 
+$ scp -r multus-cni redhat@192.168.122.123:/tmp 
+### 拷贝 multus cni 的 image
+$ scp multus-cni-snapshot.tar redhat@192.168.122.123:/tmp
+### 加载 multus cni image
+$ podman load -i multus-cni-snapshot.tar
+### 部署 multus cni 
+$ cd /tmp/multus-cni
+$ oc apply -f deployments/multus-daemonset.yml
+customresourcedefinition.apiextensions.k8s.io/network-attachment-definitions.k8s.cni.cncf.io created
+clusterrole.rbac.authorization.k8s.io/multus created
+clusterrolebinding.rbac.authorization.k8s.io/multus created
+serviceaccount/multus created
+configmap/multus-cni-config created
+daemonset.apps/kube-multus-ds created
+
 ```

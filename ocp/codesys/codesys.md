@@ -4657,3 +4657,21 @@ Node 1: 2
 ...
 
 ```
+
+### check codesyscontrol.bin in backgroud
+```
+$ cat > checkcodesyscontrol.sh <<'EOF'
+#!/bin/bash
+for ((;;))
+do
+  command=$(ps axf | grep codesyscontrol.bin | grep -v grep | wc -l) 
+  if [ x$command == 'x1' ]; then 
+    :
+  else
+    /etc/init.d/codesyscontrol start
+  fi
+  sleep 30
+done
+EOF
+$ /bin/bash /checkcodesyscontrol.sh &
+```

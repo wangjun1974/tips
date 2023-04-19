@@ -4424,3 +4424,42 @@ $ podman exec -it local-registry /bin/sh
 ### 查看 registry 有哪些镜像
 / # find /var/lib/registry  | grep -Ev "blobs|_manifests|_layers|_uploads"
 ```
+
+### 安装 mosquitto 
+```
+mosquitto
+
+$ mkdir -p /tmp/mosquitto
+$ cd /tmp/mosquitto
+$ cat > local.repo <<EOF
+[centos8-stream-baseos]
+name = CentOS 8 Stream Base OS
+baseurl = http://mirror.web-ster.com/centos/8-stream/BaseOS/x86_64/os/
+gpgcheck = 0
+enabled = 0
+
+[centos8-stream-appstream]
+name = CentOS 8 Stream AppStream
+baseurl = http://mirror.web-ster.com/centos/8-stream/AppStream/x86_64/os/
+gpgcheck = 0
+enabled = 0
+EOF
+
+$ cat > Dockerfile.v1 <<EOF
+FROM registry.access.redhat.com/ubi8/ubi:latest
+COPY local.repo /etc/yum.repos.d/local.repo
+RUN dnf install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm && dnf install -y libpciaccess iproute net-tools procps-ng
+CMD ["/bin/bash", "-c", "exec /bin/bash -c 'trap : TERM INT; sleep 9999999999d & wait'"]
+EOF
+
+$ podman build -f Dockerfile.v1 -t registry.example.com:5000/codesys/mosquitto:v1 
+
+### 试试在 ubuntu 22.10 上构建一个 mosquitto 容器
+$ cat > Dockerfile.v1 <<EOF
+FROM docker.io/ubuntu:22.10
+RUN apt update && apt install -y libpciaccess0 iproute2 procps mosquitto mosquitto-clients && rm -rf /var/lib/apt/lists/*
+CMD ["/bin/bash", "-c", "exec /bin/bash -c 'trap : TERM INT; sleep 9999999999d & wait'"]
+EOF
+
+
+```

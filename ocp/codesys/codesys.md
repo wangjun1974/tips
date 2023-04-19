@@ -4513,15 +4513,6 @@ Client (null) received PUBLISH (d0, q0, r0, m0, 'jwang/test', ... (5 bytes))
 hello
 ```
 
-### 测试一下 OPCUA 到 MQTT 
-```
-$ mkdir -p /tmp/opcua-to-mqtt
-$ cd /tmp/opcua-to-mqtt
-$ 
-
-
-```
-
 ### CODESYS OPCUA 配置文件
 https://forge.codesys.com/forge/talk/Engineering/thread/6de22ff8ca/
 ```

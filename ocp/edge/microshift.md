@@ -2586,8 +2586,8 @@ $ mkdir -p ~/git/apps/codesys/base
 $ cd ~/git/apps/codesys/base
 $ cat > kustomization.yaml <<EOF
 resources:
-- rolebinding.yaml
 - namespace.yaml
+- rolebinding.yaml
 - net-attach-def-management-gateway.yaml
 EOF
 
@@ -2603,11 +2603,21 @@ metadata:
     security.openshift.io/scc.podSecurityLabelSync: "false"
 EOF
 
+# 这个文件不用生成，创建 namespace 时将自动创建 default serviceaccount
+$ cat > serviceaccount.yaml <<EOF
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: default
+  namespace: codesysdemo
+EOF
+
 $ cat > rolebinding.yaml <<EOF
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   name: system:openshift:scc:privileged
+  namespace: codesysdemo
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -2641,8 +2651,9 @@ spec:
   }'
 EOF
 
-$ oc create namespace codesysdemo
 $ oc apply -k . 
+
+$ oc get namespace codesysdemo --show-labels
 
 $ mkdir -p ~/git/apps/codesys/codesysedge
 $ cd ~/git/apps/codesys/codesysedge
@@ -2688,6 +2699,7 @@ spec:
           protocol: UDP
           hostPort: 1743
 EOF
+$ oc apply -k . 
 
 
 $ kubectl label --overwrite ns --all \

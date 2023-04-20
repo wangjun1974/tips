@@ -2582,4 +2582,116 @@ serviceaccount/multus created
 configmap/multus-cni-config created
 daemonset.apps/kube-multus-ds created
 
+$ mkdir -p ~/git/apps/codesys/base
+$ cd ~/git/apps/codesys/base
+$ cat > kustomization.yaml <<EOF
+resources:
+- rolebinding.yaml
+- namespace.yaml
+- net-attach-def-management-gateway.yaml
+EOF
+
+$ cat > namespace.yaml <<EOF
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: codesysdemo
+  labels:
+    pod-security.kubernetes.io/audit: privileged
+    pod-security.kubernetes.io/enforce: privileged
+    pod-security.kubernetes.io/warn: privileged
+    security.openshift.io/scc.podSecurityLabelSync: "false"
+EOF
+
+$ cat > rolebinding.yaml <<EOF
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: system:openshift:scc:privileged
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: system:openshift:scc:privileged
+subjects:
+- kind: ServiceAccount
+  name: default
+  namespace: codesysdemo
+EOF
+
+$ cat > net-attach-def-management-gateway.yaml <<EOF
+apiVersion: "k8s.cni.cncf.io/v1"
+kind: NetworkAttachmentDefinition
+metadata:
+  name: codesys-management-gateway
+  namespace: codesysdemo
+spec:
+  config: '{
+      "cniVersion": "0.3.1",
+      "type": "macvlan",
+      "master": "enp1s0",
+      "mode": "bridge",
+      "ipam": {
+            "type": "static",
+            "addresses": [
+              {
+                "address": "192.168.56.145/24"
+              }
+            ]
+      }
+  }'
+EOF
+
+$ oc create namespace codesysdemo
+$ oc apply -k . 
+
+$ mkdir -p ~/git/apps/codesys/codesysedge
+$ cd ~/git/apps/codesys/codesysedge
+
+$ cat > kustomization.yaml <<EOF
+resources:
+- deployment.yaml
+EOF
+
+$ cat > deployment.yaml <<EOF
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: codesysedge
+  namespace: codesysdemo
+  labels:
+    app: codesysedge
+spec:
+  selector:
+    matchLabels:
+      app: codesysedge
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: codesysedge
+      annotations:
+        k8s.v1.cni.cncf.io/networks: codesys-management-gateway
+    spec:
+      containers:
+      - image: registry.example.com:5000/codesys/codesysedge:latest
+        name: codesysedge
+        securityContext:
+          privileged: true        
+        ports:
+        - containerPort: 1217
+          name: gateway
+          protocol: TCP
+          hostPort: 1217
+        - containerPort: 1743
+          name: gatewayudp
+          protocol: UDP
+          hostPort: 1743
+EOF
+
+
+$ kubectl label --overwrite ns --all \
+pod-security.kubernetes.io/enforce=privileged
+$ oc label --overwrite namespace codesysdemo pod-security.kubernetes.io/audit=privileged pod-security.kubernetes.io/enforce=privileged pod-security.kubernetes.io/warn=privileged
+$ oc get namespace codesysdemo --show-labels
 ```

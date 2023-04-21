@@ -4672,3 +4672,6 @@ https://schmaustech.blogspot.com/2022/10/deploy-microshift-on-rhel8-with.html
 
 ### CODESYS Task Monitor
 https://help.codesys.com/webapp/_cds_obj_task_config_monitor;product=codesys;version=3.5.17.0
+
+### CODESYS Development Environment 下载
+http://store.codesys.cn/codesys/store/detail.html?productId=1377500968401494017<br>

@@ -4669,3 +4669,6 @@ $ /bin/bash /checkcodesyscontrol.sh &
 
 ### Deploy Microshift on RHEL8 with Zigbee2MQTT Workload
 https://schmaustech.blogspot.com/2022/10/deploy-microshift-on-rhel8-with.html
+
+### CODESYS Task Monitor
+https://help.codesys.com/webapp/_cds_obj_task_config_monitor;product=codesys;version=3.5.17.0

@@ -2582,6 +2582,18 @@ serviceaccount/multus created
 configmap/multus-cni-config created
 daemonset.apps/kube-multus-ds created
 
+# 编辑 /etc/crio/crio.conf.d/microshift-ovn.conf 
+# 注释 cni_default_network 行
+$ cat /etc/crio/crio.conf.d/microshift-ovn.conf | grep cni_default_network 
+# cni_default_network = "ovn-kubernetes"
+
+# 重启 crio 和 microshift 服务
+$ systemctl restart crio ; systemctl restart microshift
+
+# 添加网卡，删除网卡 networkmanager connection
+$ nmcli con show
+$ nmcli con delete 'Wired connection 1' 
+
 $ mkdir -p ~/git/apps/codesys/base
 $ cd ~/git/apps/codesys/base
 $ cat > kustomization.yaml <<EOF
@@ -2637,14 +2649,13 @@ metadata:
 spec:
   config: '{
       "cniVersion": "0.3.1",
-      "type": "macvlan",
-      "master": "enp1s0",
-      "mode": "bridge",
+      "type": "host-device",
+      "device": "enp8s0",
       "ipam": {
             "type": "static",
             "addresses": [
               {
-                "address": "192.168.56.145/24"
+                "address": "192.168.58.151/24"
               }
             ]
       }
@@ -2700,10 +2711,4 @@ spec:
           hostPort: 1743
 EOF
 $ oc apply -k . 
-
-
-$ kubectl label --overwrite ns --all \
-pod-security.kubernetes.io/enforce=privileged
-$ oc label --overwrite namespace codesysdemo pod-security.kubernetes.io/audit=privileged pod-security.kubernetes.io/enforce=privileged pod-security.kubernetes.io/warn=privileged
-$ oc get namespace codesysdemo --show-labels
 ```

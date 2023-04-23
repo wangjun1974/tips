@@ -2712,3 +2712,10 @@ spec:
 EOF
 $ oc apply -k . 
 ```
+
+### Microshift on Code Ready Container
+https://github.com/praveenkumar/simple-go-server
+
+### Zero-Touch Provisioning Of Edge Devices Using Microshift And RHEL For Edge
+https://github.com/openshift/microshift/blob/main/docs/rhel4edge_iso.md<br>
+https://shonpaz.medium.com/zero-touch-provisioning-of-edge-devices-using-microshift-and-rhel-for-edge-e122836fa888<br>

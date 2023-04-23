@@ -4675,3 +4675,10 @@ https://help.codesys.com/webapp/_cds_obj_task_config_monitor;product=codesys;ver
 
 ### CODESYS Development Environment 下载
 http://store.codesys.cn/codesys/store/detail.html?productId=1377500968401494017<br>
+
+### CODESYS 变量持久化
+https://help.codesys.com/webapp/cds-vartypes-retain-persistent;product=codesys;version=3.5.11.0<br>
+https://help.codesys.com/webapp/_cds_f_setting_data_persistence;product=codesys;version=3.5.11.0<br>
+```
+POU - Program Organization Unit
+```

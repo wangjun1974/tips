@@ -4686,3 +4686,87 @@ POU - Program Organization Unit
 
 ### CODESYS Controller 更新应用
 https://help.codesys.com/webapp/_cds_struct_update_application_on_plc;product=codesys;version=3.5.17.0<br>
+
+### Intel ECI and microshift
+```
+### hwlatdetect 1h (podman)
+$ hwlatdetect --threshold=1us --duration=1h --window=1000ms --width=950ms
+hwlatdetect:  test duration 3600 seconds
+   detector: tracer
+   parameters:
+        Latency threshold: 1us
+        Sample window:     1000000us
+        Sample width:      950000us
+     Non-sampling period:  50000us
+        Output File:       None
+
+Starting test
+test finished
+Max Latency: 2us
+Samples recorded: 1
+Samples exceeding threshold: 1
+ts: 1682314864.058488209, inner:2, outer:0
+
+### cyclictest 1h w/o stress (podman)
+$ cyclictest -q -D 1h -p 95 -t 1 -a 2 -h 30 -i 1000 -m
+# /dev/cpu_dma_latency set to 0us
+# Histogram
+000000 000000
+000001 000002
+000002 3563675
+000003 033415
+000004 001549
+000005 001007
+000006 000232
+000007 000080
+000008 000023
+000009 000012
+000010 000003
+000011 000002
+000012 000000
+000013 000000
+000014 000000
+000015 000000
+000016 000000
+000017 000000
+000018 000000
+000019 000000
+000020 000000
+000021 000000
+000022 000000
+000023 000000
+000024 000000
+000025 000000
+000026 000000
+000027 000000
+000028 000000
+000029 000000
+# Total: 003600000
+# Min Latencies: 00001 
+# Avg Latencies: 00002 
+# Max Latencies: 00011 
+# Histogram Overflows: 00000
+# Histogram Overflow at cycle number:
+# Thread 0:
+
+### cyclictest 1h w/ stress (podman)
+### stress command: stress-ng --cpu 1 --io 4 --vm 2 --vm-bytes 128M --fork 4 --timeout 0 
+     27 pts/2    SLs+   0:00 stress-ng --cpu 1 --io 4 --vm 2 --vm-bytes 128M --fork 4 --timeout 0
+     28 pts/2    R+     0:00  \_ stress-ng-cpu
+     29 pts/2    D+     0:00  \_ stress-ng-io
+     30 pts/2    D+     0:00  \_ stress-ng-io
+     31 pts/2    D+     0:00  \_ stress-ng-io
+     32 pts/2    D+     0:00  \_ stress-ng-io
+     33 pts/2    S+     0:00  \_ stress-ng-vm
+     39 pts/2    R+     0:00  |   \_ stress-ng-vm
+     34 pts/2    S+     0:00  \_ stress-ng-vm
+     40 pts/2    R+     0:00  |   \_ stress-ng-vm
+     35 pts/2    S+     0:00  \_ stress-ng-fork
+    873 pts/2    R+     0:00  |   \_ stress-ng-fork
+     36 pts/2    S+     0:00  \_ stress-ng-fork
+     37 pts/2    S+     0:00  \_ stress-ng-fork
+     38 pts/2    S+     0:00  \_ stress-ng-fork
+$ cyclictest -q -D 1h -p 95 -t 1 -a 2 -h 30 -i 1000 -m
+# /dev/cpu_dma_latency set to 0us
+
+```

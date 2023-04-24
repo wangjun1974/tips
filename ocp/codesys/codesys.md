@@ -4682,3 +4682,6 @@ https://help.codesys.com/webapp/_cds_f_setting_data_persistence;product=codesys;
 ```
 POU - Program Organization Unit
 ```
+
+### CODESYS Controller 更新应用
+https://help.codesys.com/webapp/_cds_struct_update_application_on_plc;product=codesys;version=3.5.17.0<br>

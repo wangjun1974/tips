@@ -3645,6 +3645,7 @@ https://community.acer.com/en/discussion/556179/how-to-edit-tdp-limit-in-bios
 ```
 $ podman run --name perf-tools -dt --privileged --network host registry.ocp4.example.com:5000/codesys/perf-tools /bin/bash -c 'trap : TERM INT; sleep 9999999999d & wait'
 $ hwlatdetect --threshold=1us --duration=1h --window 10000000us --width 950000us
+$ hwlatdetect --threshold=1us --duration=1h --window=1000ms --width=950ms
 ```
 
 ### rhcos node 如何修改 kernel args

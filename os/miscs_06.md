@@ -18403,3 +18403,11 @@ $ softwareupdate --fetch-full-installer --full-installer-version 13.3.1
 ### 这块网卡启用但是不设置 ipv4 和 ipv6
 network --activate --device=enp8s0 --noipv4 --noipv6
 ```
+
+### microshift 其他网卡禁用 ipv4 和 ipv6
+```
+$ nmcli c mod 'Wired connection 1' ipv4.method 'disabled' 
+$ nmcli c mod 'Wired connection 1' ipv6.method 'disabled' 
+$ nmcli c mod 'Wired connection 2' ipv4.method 'disabled' 
+$ nmcli c mod 'Wired connection 2' ipv6.method 'disabled' 
+```

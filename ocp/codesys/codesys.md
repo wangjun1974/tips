@@ -4807,21 +4807,20 @@ $ cyclictest -q -D 1h -p 95 -t 1 -a 2 -h 30 -i 1000 -m
 # Histogram Overflow at cycle number:
 # Thread 0:
 
-[root@edge-3 tmp]# ls -ltr | grep tar | head -13| tail -12
--rw-r--r--.  1 root   root   169555968 Apr 24 05:27 8e26a9f9c6de.tar
--rw-r--r--.  1 root   root   441041408 Apr 24 05:27 d59633b70734.tar
--rw-r--r--.  1 root   root   351987712 Apr 24 05:27 ca91d6bbb228.tar
--rw-r--r--.  1 root   root   495397888 Apr 24 05:27 6c8594fdbef5.tar
--rw-r--r--.  1 root   root   403696640 Apr 24 05:28 16ed2b6971f3.tar
--rw-r--r--.  1 root   root   423650304 Apr 24 05:28 50d91cfc02fd.tar
--rw-r--r--.  1 root   root   428642816 Apr 24 05:28 17ff89caee1b.tar
--rw-r--r--.  1 root   root   688311808 Apr 24 05:28 deef701307a8.tar
--rw-r--r--.  1 root   root   254801920 Apr 24 05:28 b7523bdfd397.tar
--rw-r--r--.  1 root   root   196168704 Apr 24 05:28 2fb98da90714.tar
--rw-r--r--.  1 root   root   390255104 Apr 24 05:28 b86b65c9601a.tar
--rw-r--r--.  1 root   root   147689472 Apr 24 05:28 e00c8045676e.tar
+### hwlatdetect 1h (microshift)
+### microshift is installed on rhel
+$ hwlatdetect --threshold=1us --duration=1h --window=1000ms --width=950ms 
+hwlatdetect:  test duration 3600 seconds
+   detector: tracer
+   parameters:
+        Latency threshold: 1us
+        Sample window:     1000000us
+        Sample width:      950000us
+     Non-sampling period:  50000us
+        Output File:       None
 
-ls -ltr | grep -Ev 'root         0 Apr|multus|total' | awk '{print $9}' | tail -4 | while read i ; do scp $i microshift@10.66.208.80:/tmp/microshift/images; done 
+Starting test
+
 
 
 ```

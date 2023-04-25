@@ -2719,3 +2719,10 @@ https://github.com/praveenkumar/simple-go-server
 ### Zero-Touch Provisioning Of Edge Devices Using Microshift And RHEL For Edge
 https://github.com/openshift/microshift/blob/main/docs/rhel4edge_iso.md<br>
 https://shonpaz.medium.com/zero-touch-provisioning-of-edge-devices-using-microshift-and-rhel-for-edge-e122836fa888<br>
+
+### 在启动 microshift 服务时不要忘记开启 firewall
+```
+sudo firewall-cmd --zone=trusted --add-source=10.42.0.0/16 --permanent
+sudo firewall-cmd --zone=trusted --add-source=169.254.169.1 --permanent
+sudo firewall-cmd --reload
+```

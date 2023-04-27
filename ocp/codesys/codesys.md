@@ -4820,7 +4820,66 @@ hwlatdetect:  test duration 3600 seconds
         Output File:       None
 
 Starting test
+test finished
+Max Latency: 5us
+Samples recorded: 49
+Samples exceeding threshold: 49
+ts: 1682411769.520270012, inner:3, outer:0
+ts: 1682411841.099807672, inner:0, outer:2
+ts: 1682411870.511014626, inner:1, outer:3
+ts: 1682411940.227541418, inner:4, outer:0
+ts: 1682411980.429817625, inner:0, outer:5
+ts: 1682412054.547145965, inner:0, outer:2
+ts: 1682412069.855298574, inner:4, outer:0
+ts: 1682412074.106369556, inner:0, outer:5
+ts: 1682412167.133092293, inner:0, outer:4
+ts: 1682412260.306735895, inner:0, outer:5
+ts: 1682412274.796725667, inner:3, outer:0
+ts: 1682412380.017552724, inner:4, outer:0
+ts: 1682412448.844871158, inner:0, outer:4
+ts: 1682412497.798345600, inner:0, outer:5
+ts: 1682412557.208733508, inner:0, outer:4
+ts: 1682412570.048852593, inner:5, outer:0
+ts: 1682412601.659973621, inner:5, outer:0
+ts: 1682412629.936173457, inner:0, outer:5
+ts: 1682412707.482669411, inner:0, outer:3
+ts: 1682412732.452037777, inner:0, outer:3
+ts: 1682412811.104581342, inner:0, outer:3
+ts: 1682412860.890908855, inner:0, outer:4
+ts: 1682412984.818686440, inner:0, outer:3
+ts: 1682413141.046640140, inner:0, outer:4
+ts: 1682413179.195024982, inner:0, outer:3
+ts: 1682413220.056442069, inner:0, outer:5
+ts: 1682413377.281417195, inner:3, outer:0
+ts: 1682413413.313746043, inner:0, outer:4
+ts: 1682413589.499777989, inner:0, outer:3
+ts: 1682413598.259889830, inner:4, outer:0
+ts: 1682413630.021018787, inner:4, outer:0
+ts: 1682413689.480572407, inner:0, outer:3
+ts: 1682413691.034555943, inner:0, outer:3
+ts: 1682413741.743993782, inner:3, outer:4
+ts: 1682413776.498137742, inner:0, outer:4
+ts: 1682413835.475548044, inner:0, outer:5
+ts: 1682413879.532012092, inner:0, outer:2
+ts: 1682413884.500800825, inner:0, outer:3
+ts: 1682413900.059094459, inner:4, outer:0
+ts: 1682413915.980035166, inner:0, outer:5
+ts: 1682413950.047466843, inner:0, outer:4
+ts: 1682414005.368683056, inner:3, outer:0
+ts: 1682414042.156943733, inner:0, outer:3
+ts: 1682414209.590184951, inner:3, outer:0
+ts: 1682414229.572354991, inner:0, outer:5
+ts: 1682414340.240102329, inner:3, outer:0
+ts: 1682414391.506559855, inner:4, outer:0
+ts: 1682414581.198768305, inner:0, outer:4
+ts: 1682414599.196891193, inner:4, outer:0
 
+
+podman build -f Dockerfile.app-v17 -t registry.example.com:5000/codesys/codesyscontrol:v17
+podman run --name codesyscontrol-v17 -d -t --network host --privileged registry.example.com:5000/codesys/codesyscontrol:v17
+
+podman build -f Dockerfile.app-v18 -t registry.example.com:5000/codesys/codesyscontrol:v18
+podman run --name codesyscontrol-v18 -d -t --network host --privileged registry.example.com:5000/codesys/codesyscontrol:v18
 
 
 ```

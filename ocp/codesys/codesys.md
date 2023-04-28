@@ -3644,7 +3644,7 @@ https://community.acer.com/en/discussion/556179/how-to-edit-tdp-limit-in-bios
 ### 启动 perf-tools 
 ```
 $ podman run --name perf-tools -dt --privileged --network host registry.ocp4.example.com:5000/codesys/perf-tools /bin/bash -c 'trap : TERM INT; sleep 9999999999d & wait'
-$ hwlatdetect --threshold=1us --duration=1h --window 10000000us --width 950000us
+$ hwlatdetect --threshold=1us --duration=1h --window 10000000us --width 9500000us
 $ hwlatdetect --threshold=1us --duration=1h --window=1000ms --width=950ms
 ```
 
@@ -4883,3 +4883,9 @@ podman run --name codesyscontrol-v18 -d -t --network host --privileged registry.
 
 
 ```
+
+### 施耐德 EAE 
+https://blog.csdn.net/yaojiawan/article/details/111467338<br>
+https://blog.csdn.net/yaojiawan/article/details/124787492<br>
+https://blog.csdn.net/yaojiawan/article/details/124276040<br>
+https://blog.csdn.net/yaojiawan/article/details/117172251<br>

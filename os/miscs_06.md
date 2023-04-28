@@ -18411,3 +18411,12 @@ $ nmcli c mod 'Wired connection 1' ipv6.method 'disabled'
 $ nmcli c mod 'Wired connection 2' ipv4.method 'disabled' 
 $ nmcli c mod 'Wired connection 2' ipv6.method 'disabled' 
 ```
+
+### 执行 podman 容器的安全建议 
+```
+### 基本参数
+podman run --userns=auto 
+### 增强参数
+--cap-drop=all --no-new-privs
+
+```

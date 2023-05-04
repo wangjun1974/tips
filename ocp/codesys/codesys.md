@@ -4886,7 +4886,7 @@ FROM registry.access.redhat.com/ubi9/ubi:latest
 COPY codesyscontrol-4.1.0.0-2.x86_64.rpm /tmp/codesyscontrol-4.1.0.0-2.x86_64.rpm
 COPY tcpdump-4.99.0-6.el9.x86_64.rpm /tmp/tcpdump-4.99.0-6.el9.x86_64.rpm
 COPY ethtool-5.16-1.el9.x86_64.rpm /tmp/ethtool-5.16-1.el9.x86_64.rpm
-RUN dnf install -y libpciaccess iproute net-tools procps-ng nmap-ncat iputils diffutils /tmp/tcpdump-4.99.0-6.el9.x86_64.rpm /tmp/ethtool-5.16-1.el9.x86_64.rpm && dnf clean all && rpm -ivh /tmp/codesyscontrol-4.1.0.0-2.x86_64.rpm --force && rm -f /tmp/codesyscontrol-4.1.0.0-2.x86_64.rpm /tmp/tcpdump-4.99.0-6.el9.x86_64.rpm /tmp/ethtool-5.16-1.el9.x86_64.rpm
+RUN dnf install -y libpciaccess iproute net-tools procps-ng nmap-ncat iputils diffutils net-tools /tmp/tcpdump-4.99.0-6.el9.x86_64.rpm /tmp/ethtool-5.16-1.el9.x86_64.rpm && dnf clean all && rpm -ivh /tmp/codesyscontrol-4.1.0.0-2.x86_64.rpm --force && rm -f /tmp/codesyscontrol-4.1.0.0-2.x86_64.rpm /tmp/tcpdump-4.99.0-6.el9.x86_64.rpm /tmp/ethtool-5.16-1.el9.x86_64.rpm
 COPY codesyscontrolForBMW /opt/codesys/bin/codesyscontrol.bin
 COPY releaseControl/3S.dat /etc
 COPY CODESYSControl_User.cfg /etc
@@ -4911,6 +4911,7 @@ https://blog.csdn.net/yaojiawan/article/details/110958878<br>
 
 
 ### 设置 RX/TX buffer size 
+https://optiver.com/working-at-optiver/career-hub/searching-for-the-cause-of-dropped-packets-on-linux/
 ```
 ### 登录 worker node
 $ oc debug node/b2-ocp4test.ocp4.example.com 

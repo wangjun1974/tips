@@ -3546,7 +3546,7 @@ else
 fi
 EOF
 
-$ cat > Dockerfile.v1 <<EOF
+$ cat > Dockerfile.app-v18 <<EOF
 FROM registry.access.redhat.com/ubi8/ubi:latest
 COPY runtimetaskset.sh /runtimetaskset.sh
 RUN dnf install -y libpciaccess iproute net-tools procps-ng && dnf clean all && chmod 0755 /runtimetaskset.sh
@@ -4881,7 +4881,25 @@ podman run --name codesyscontrol-v17 -d -t --network host --privileged registry.
 podman build -f Dockerfile.app-v18 -t registry.example.com:5000/codesys/codesyscontrol:v18
 podman run --name codesyscontrol-v18 -d -t --network host --privileged registry.example.com:5000/codesys/codesyscontrol:v18
 
+cat > Dockerfile.app-v19 <<EOF
+FROM registry.access.redhat.com/ubi9/ubi:latest
+COPY codesyscontrol-4.1.0.0-2.x86_64.rpm /tmp/codesyscontrol-4.1.0.0-2.x86_64.rpm
+COPY tcpdump-4.99.0-6.el9.x86_64.rpm /tmp/tcpdump-4.99.0-6.el9.x86_64.rpm
+COPY ethtool-5.16-1.el9.x86_64.rpm /tmp/ethtool-5.16-1.el9.x86_64.rpm
+RUN dnf install -y libpciaccess iproute net-tools procps-ng nmap-ncat iputils diffutils /tmp/tcpdump-4.99.0-6.el9.x86_64.rpm /tmp/ethtool-5.16-1.el9.x86_64.rpm && dnf clean all && rpm -ivh /tmp/codesyscontrol-4.1.0.0-2.x86_64.rpm --force && rm -f /tmp/codesyscontrol-4.1.0.0-2.x86_64.rpm /tmp/tcpdump-4.99.0-6.el9.x86_64.rpm /tmp/ethtool-5.16-1.el9.x86_64.rpm
+COPY codesyscontrolForBMW /opt/codesys/bin/codesyscontrol.bin
+COPY releaseControl/3S.dat /etc
+COPY CODESYSControl_User.cfg /etc
+COPY CODESYSControl.cfg /etc
+EXPOSE 4840/tcp
+EXPOSE 11740/tcp
+EXPOSE 22350/tcp
+EXPOSE 1740/udp
+CMD ["/bin/bash", "-c", "exec /bin/bash -c 'trap : TERM INT; sleep 9999999999d & wait'"]
+EOF
 
+podman build -f Dockerfile.app-v19 -t registry.example.com:5000/codesys/codesyscontrol:v19
+podman run --name codesyscontrol-v19 -d -t --network host --privileged registry.example.com:5000/codesys/codesyscontrol:v19
 ```
 
 ### 施耐德 EAE 
@@ -4889,3 +4907,41 @@ https://blog.csdn.net/yaojiawan/article/details/111467338<br>
 https://blog.csdn.net/yaojiawan/article/details/124787492<br>
 https://blog.csdn.net/yaojiawan/article/details/124276040<br>
 https://blog.csdn.net/yaojiawan/article/details/117172251<br>
+https://blog.csdn.net/yaojiawan/article/details/110958878<br>
+
+
+### 设置 RX/TX buffer size 
+```
+### 登录 worker node
+$ oc debug node/b2-ocp4test.ocp4.example.com 
+...
+sh-4.4# chroot /host
+### 获取 RX/TX buffer size 和驱动支持的最大的 RX/TX buffer size
+### 设置 RX/TX buffer size
+sh-4.4# ethtool -g enp4s0 ; ethtool -G enp4s0 rx 4096 tx 4096 
+Ring parameters for enp4s0:
+Pre-set maximums:
+RX:             4096
+RX Mini:        n/a
+RX Jumbo:       n/a
+TX:             4096
+Current hardware settings:
+RX:             256
+RX Mini:        n/a
+RX Jumbo:       n/a
+TX:             256
+sh-4.4# ethtool -g enp4s0 
+Ring parameters for enp4s0:
+Pre-set maximums:
+RX:             4096
+RX Mini:        n/a
+RX Jumbo:       n/a
+TX:             4096
+Current hardware settings:
+RX:             4096
+RX Mini:        n/a
+RX Jumbo:       n/a
+TX:             4096
+
+
+```

@@ -18420,3 +18420,6 @@ podman run --userns=auto
 --cap-drop=all --no-new-privs
 
 ```
+
+### GCloud in macos
+https://jansutris10.medium.com/install-google-cloud-sdk-using-homebrew-on-mac-2952c9c7b5a1

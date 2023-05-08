@@ -18423,3 +18423,11 @@ podman run --userns=auto
 
 ### GCloud in macos
 https://jansutris10.medium.com/install-google-cloud-sdk-using-homebrew-on-mac-2952c9c7b5a1
+
+### 登录 master 节点，签名证书
+```
+$ oc --kubeconfig=/etc/kubernetes/static-pod-resources/kube-apiserver-certs/secrets/node-kubeconfigs/lb-int.kubeconfig get csr -o name | xargs oc --kubeconfig=/etc/kubernetes/static-pod-resources/kube-apiserver-certs/secrets/node-kubeconfigs/lb-int.kubeconfig adm certificate approve 
+
+### 参考 solutions 里的步骤清理存储
+### https://access.redhat.com/solutions/5350721
+```

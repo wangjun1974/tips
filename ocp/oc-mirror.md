@@ -1508,7 +1508,7 @@ $ /usr/local/bin/oc-mirror --from ./mirror_seq1_000000.tar docker://registry.exa
 
 
 ### 检查 operator 的情况
-### for packagename in kubevirt-hyperconverged performance-addon-operator kubernetes-nmstate-operator sriov-network-operator local-storage-operator odf-operator cincinnati-operator advanced-cluster-management openshift-gitops-operator odf-lvm-operator multicluster-engine rhacs-operator ansible-automation-platform-operator nfd node-healthcheck-operator metallb-operator sandboxed-containers-operator openshift-special-resource-operator 
+### for packagename in kubevirt-hyperconverged performance-addon-operator kubernetes-nmstate-operator sriov-network-operator local-storage-operator odf-operator ocs-operator mcg-operator cincinnati-operator advanced-cluster-management openshift-gitops-operator lvms-operator multicluster-engine rhacs-operator ansible-automation-platform-operator nfd node-healthcheck-operator metallb-operator sandboxed-containers-operator openshift-special-resource-operator 
 ### do 
 ###  /usr/local/bin/oc-mirror list operators --catalog=registry.redhat.io/redhat/redhat-operator-index:v4.12 --package=${packagename}
 ### done
@@ -1525,103 +1525,98 @@ mirror:
         - name: kubevirt-hyperconverged
           channels:
             - name: 'stable'
-              minVersion: 'v4.12.0'
-              maxVersion: 'v4.12.0'            
+              minVersion: 'v4.12.2'
+              maxVersion: 'v4.12.2'            
         - name: kubernetes-nmstate-operator
           channels:
             - name: 'stable'
-              minVersion: '4.12.0-202301091615'
-              maxVersion: '4.12.0-202301091615'              
+              minVersion: '4.12.0-202304190215'
+              maxVersion: '4.12.0-202304190215'              
         - name: sriov-network-operator
           channels:
             - name: 'stable'
-              minVersion: 'v4.12.0-202301062016'
-              maxVersion: 'v4.12.0-202301062016'            
+              minVersion: 'v4.12.0-202304190215'
+              maxVersion: 'v4.12.0-202304190215'            
         - name: local-storage-operator
           channels:
             - name: 'stable'
-              minVersion: 'v4.12.0-202301042354'
-              maxVersion: 'v4.12.0-202301042354'            
+              minVersion: 'v4.12.0-202304190215'
+              maxVersion: 'v4.12.0-202304190215'            
         - name: odf-operator
           channels:
-            - name: 'stable-4.11'
-              minVersion: 'v4.11.4'
-              maxVersion: 'v4.11.4'
+            - name: 'stable-4.12'
+              minVersion: 'v4.12.2-rhodf'
+              maxVersion: 'v4.12.2-rhodf'
         - name: ocs-operator
           channels:
-            - name: 'stable-4.11'
-              minVersion: 'v4.11.4'
-              maxVersion: 'v4.11.4'
+            - name: 'stable-4.12'
+              minVersion: 'v4.12.2-rhodf'
+              maxVersion: 'v4.12.2-rhodf'
         - name: mcg-operator
           channels:
-            - name: 'stable-4.11'
-              minVersion: 'v4.11.4'
-              maxVersion: 'v4.11.4'              
+            - name: 'stable-4.12'
+              minVersion: 'v4.12.2-rhodf'
+              maxVersion: 'v4.12.2-rhodf'              
         - name: cincinnati-operator
           channels:
             - name: v1
-              minVersion: 'v5.0.0'
-              maxVersion: 'v5.0.0'
+              minVersion: 'v5.0.1'
+              maxVersion: 'v5.0.1'
         - name: advanced-cluster-management
           channels:
-            - name: release-2.6
-              minVersion: 'v2.6.3'
-              maxVersion: 'v2.6.3'         
+            - name: release-2.7
+              minVersion: 'v2.7.3'
+              maxVersion: 'v2.7.3'         
         - name: openshift-gitops-operator
           channels:
             - name: latest
-              minVersion: 'v1.7.1'
-              maxVersion: 'v1.7.1'
-        - name: odf-lvm-operator
+              minVersion: 'v1.8.2'
+              maxVersion: 'v1.8.2'
+        - name: lvms-operator
           channels:
-            - name: stable-4.11
-              minVersion: 'v4.11.4'
-              maxVersion: 'v4.11.4'
+            - name: stable-4.13
+              minVersion: 'v4.13.0'
+              maxVersion: 'v4.13.0'
         - name: multicluster-engine
           channels:
-            - name: stable-2.1
-              minVersion: 'v2.1.4'
-              maxVersion: 'v2.1.4'
+            - name: stable-2.2
+              minVersion: 'v2.2.3'
+              maxVersion: 'v2.2.3'
         - name: rhacs-operator
           channels:
-            - name: latest
-              minVersion: 'v3.73.1'
-              maxVersion: 'v3.73.1'
+            - name: stable
+              minVersion: 'v4.0.0'
+              maxVersion: 'v4.0.0'
         - name: ansible-automation-platform-operator
           channels:
             - name: stable-2.3-cluster-scoped
-              minVersion: 'v2.3.0-0.1673541471'
-              maxVersion: 'v2.3.0-0.1673541471'
+              minVersion: 'v2.3.0-0.1681368991'
+              maxVersion: 'v2.3.0-0.1681368991'
         - name: nfd
           channels:
             - name: stable
-              minVersion: '4.12.0-202301042354'
-              maxVersion: '4.12.0-202301042354'
+              minVersion: '4.12.0-202304190215'
+              maxVersion: '4.12.0-202304190215'
         - name: node-healthcheck-operator
           channels:
             - name: stable
-              minVersion: 'v0.4.0'
-              maxVersion: 'v0.4.0'
+              minVersion: 'v0.5.0'
+              maxVersion: 'v0.5.0'
         - name: metallb-operator
           channels:
             - name: stable
-              minVersion: '4.12.0-202301042354'
-              maxVersion: '4.12.0-202301042354'
+              minVersion: '4.12.0-202304190215'
+              maxVersion: '4.12.0-202304190215'
         - name: sandboxed-containers-operator
           channels:
             - name: stable-1.3
-              minVersion: 'v1.3.2'
-              maxVersion: 'v1.3.2'
-        - name: web-terminal
-          channels:
-            - name: fast
-              minVersion: 'v1.6.0'
-              maxVersion: 'v1.6.0'
+              minVersion: 'v1.3.3'
+              maxVersion: 'v1.3.3'
         - name: openshift-pipelines-operator-rh
           channels:
             - name: latest
-              minVersion: 'v1.9.0'
-              maxVersion: 'v1.9.0'
+              minVersion: 'v1.10.0'
+              maxVersion: 'v1.10.0'
 EOF
 $ /usr/local/bin/oc-mirror --config ./image-config-realse-local.yaml file://output-dir 2>&1 | tee ./err 
 $ /usr/local/bin/oc-mirror --from ./mirror_seq1_000000.tar docker://registry.example.com:5000

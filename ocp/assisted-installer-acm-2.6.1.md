@@ -957,3 +957,15 @@ spec:
   online: true
 EOF
 ```
+
+### 检查 Assisted Service 日志
+```
+$ oc -n multicluster-engine logs $(oc get pods -n multicluster-engine -l app=assisted-service -o name)
+$ oc -n multicluster-engine logs $(oc get pods -n multicluster-engine -l app=assisted-service -o name) | grep -Ev "level=debug"
+
+### 检查 agentclusterinstall 的状态
+$ oc get agentclusterinstall -n ocp4-3 -o yaml 
+
+### 在重新安装前注意清理磁盘
+$ sudo sgdisk --zap-all /dev/vda
+```

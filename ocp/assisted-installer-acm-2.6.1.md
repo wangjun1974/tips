@@ -968,4 +968,9 @@ $ oc get agentclusterinstall -n ocp4-3 -o yaml
 
 ### 在重新安装前注意清理磁盘
 $ sudo sgdisk --zap-all /dev/vda
+
+### 虚拟机设置允许从 disk 和 cdrom 启动
+### UEFI 里设置机器启动顺序为 
+1. disk
+2. cdrom 
 ```

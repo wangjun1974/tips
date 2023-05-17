@@ -18431,3 +18431,11 @@ $ oc --kubeconfig=/etc/kubernetes/static-pod-resources/kube-apiserver-certs/secr
 ### 参考 solutions 里的步骤清理存储
 ### https://access.redhat.com/solutions/5350721
 ```
+
+### ocp 测试程序
+```
+$ oc new-project test
+$ oc new-app nodejs~https://github.com/vrutkovs/DuckHunt-JS
+
+
+```

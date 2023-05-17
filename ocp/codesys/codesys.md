@@ -4946,3 +4946,20 @@ TX:             4096
 
 
 ```
+
+### TwinCat/BSD - TC/BSD
+https://cookncode.com/twincat/2022/08/11/twincat-bsd.html<br>
+https://github.com/fbarresi/SoftBeckhoff<br>
+```
+# Soft Beckhoff
+https://github.com/fbarresi/SoftBeckhoff
+
+# TwinCat Development 
+https://github.com/fbarresi/TwincatAdsTool
+
+# an unofficial TwinCAT function for HTTP requests
+https://github.com/fbarresi/BeckhoffHttpClient
+
+# an unofficial TwinCAT function for S7 communication
+https://github.com/fbarresi/BeckhoffS7Client
+```

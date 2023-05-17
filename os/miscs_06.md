@@ -18878,4 +18878,111 @@ $ oc get svc/fc34-service
 $ oc create route edge --service=fc34-service
 $ oc get routes
 
+$ oc project openshift-virtualization-os-images
+$ cat <<EOF | oc apply -f -
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: "centos8"
+  labels:
+    app: containerized-data-importer
+  annotations:
+    cdi.kubevirt.io/storage.import.endpoint: "http://192.168.123.100:81/rhel8-kvm.img"
+spec:
+  volumeMode: Block
+  storageClassName: ocs-storagecluster-ceph-rbd
+  accessModes:
+  - ReadWriteMany
+  resources:
+    requests:
+      storage: 20Gi
+EOF
+
+
+[/tmp] $ oc -n openshift-cnv logs virt-controller-8b759d65-2ms9f | grep -Ev "info"
+...
+{"component":"virt-controller","kind":"","level":"error","msg":"Updating api version annotation
+s failed","name":"mongodb-nationalparks","namespace":"parksmap-demo","pos":"vm.go:254","reason"
+:"Operation cannot be fulfilled on virtualmachines.kubevirt.io \"mongodb-nationalparks\": the o
+bject has been modified; please apply your changes to the latest version and try again","timest
+amp":"2023-05-17T07:34:49.050997Z","uid":"051bee5d-2807-492f-87a5-2bf8ff9d1347"}
+{"component":"virt-controller","kind":"","level":"error","msg":"Updating api version annotation
+s failed","name":"mongodb-nationalparks","namespace":"parksmap-demo","pos":"vm.go:254","reason"
+:"Operation cannot be fulfilled on virtualmachines.kubevirt.io \"mongodb-nationalparks\": the o
+bject has been modified; please apply your changes to the latest version and try again","timest
+amp":"2023-05-17T07:34:49.105350Z","uid":"051bee5d-2807-492f-87a5-2bf8ff9d1347"}
+...
+
+{"component":"virt-controller","kind":"","level":"error","msg":"Updating api version annotation
+s failed","name":"mongodb-nationalparks","namespace":"parksmap-demo","pos":"vm.go:254","reason"
+:"Operation cannot be fulfilled on virtualmachines.kubevirt.io \"mongodb-nationalparks\": the o
+bject has been modified; please apply your changes to the latest version and try again","timest
+amp":"2023-05-17T07:34:49.050997Z","uid":"051bee5d-2807-492f-87a5-2bf8ff9d1347"}
+{"component":"virt-controller","kind":"","level":"error","msg":"Updating api version annotation
+s failed","name":"mongodb-nationalparks","namespace":"parksmap-demo","pos":"vm.go:254","reason"
+:"Operation cannot be fulfilled on virtualmachines.kubevirt.io \"mongodb-nationalparks\": the o
+bject has been modified; please apply your changes to the latest version and try again","timest
+amp":"2023-05-17T07:34:49.105350Z","uid":"051bee5d-2807-492f-87a5-2bf8ff9d1347"}
+
+[/tmp] $ oc get datavolume mongodb-mlbparks-rootdisk -o yaml
+apiVersion: cdi.kubevirt.io/v1beta1
+kind: DataVolume
+metadata:
+  annotations:
+    cdi.kubevirt.io/cloneType: ""
+    cdi.kubevirt.io/storage.clone.token: eyJhbGciOiJQUzI1NiJ9.eyJleHAiOjE2ODQzMTA2MjgsImlhdCI6M
+TY4NDMxMDMyOCwiaXNzIjoiY2RpLWFwaXNlcnZlciIsIm5hbWUiOiJjZW50b3M4IiwibmFtZXNwYWNlIjoib3BlbnNoaWZ0
+LXZpcnR1YWxpemF0aW9uLW9zLWltYWdlcyIsIm5iZiI6MTY4NDMxMDMyOCwib3BlcnRhdGlvbiI6IkNsb25lIiwicGFyYW1
+zIjp7InRhcmdldE5hbWUiOiJtb25nb2RiLW1sYnBhcmtzLXJvb3RkaXNrIiwidGFyZ2V0TmFtZXNwYWNlIjoicGFya3NtYX
+AtZGVtbyJ9LCJyZXNvdXJjZSI6eyJncm91cCI6IiIsInJlc291cmNlIjoicGVyc2lzdGVudHZvbHVtZWNsYWltcyIsInZlc
+nNpb24iOiJ2MSJ9fQ.mjXueZFnTSmW3FORjVBpNwYsPAsfqED5v1h1356SXkzIaQQweZ12ZPiNre7j6XWVo-rw4rQELXLDM
+mQz5b-7_QPnVhLQc_gA33BUaBNng6q7wWi8wxusWIbqOmM5DOYDiSjA8LpXtMSgXEbv0K-3Odw3UyYC9iLN8fT49Xah4cgJ
+DrMNZXovD4cKakWGW7rz8GSW6o-VU6cB-0YGrP4w0shUwMnSPQZw-5F1cwojgr8EjVbcsgMhJDSAFGINy-fv5rjJjD9_Cu1
+4xXI8vTvEj_aJIhWgrvwlwornCWXvdrSwwnWt2lsvFXWSq5P87GQ0fA1FXXYt-bedx1gRUeO4zA
+    cdi.kubevirt.io/storage.deleteAfterCompletion: "true"
+  creationTimestamp: "2023-05-17T07:58:48Z"
+  generation: 2
+  labels:
+    kubevirt.io/created-by: dbae7168-483e-4b3b-877f-fffed28b6724
+  name: mongodb-mlbparks-rootdisk
+  namespace: parksmap-demo
+  ownerReferences:
+  - apiVersion: kubevirt.io/v1
+    blockOwnerDeletion: true
+    controller: true
+    kind: VirtualMachine
+    name: mongodb-mlbparks
+    uid: dbae7168-483e-4b3b-877f-fffed28b6724
+  resourceVersion: "1638388"
+  uid: bf88fca3-1742-439c-a6b4-ac08b0aa500d
+spec:
+  pvc:
+    accessModes:
+    - ReadWriteMany
+    resources:
+      requests:
+        storage: 20Gi
+    storageClassName: ocs-storagecluster-ceph-rbd
+    volumeMode: Block
+  source:
+    pvc:
+      name: centos8
+      namespace: openshift-virtualization-os-images
+status:
+  conditions:
+  - lastHeartbeatTime: "2023-05-17T07:58:48Z"
+    lastTransitionTime: "2023-05-17T07:58:48Z"
+    message: No PVC found
+    reason: CloneWithoutSource
+    status: Unknown
+    type: Bound
+  - lastHeartbeatTime: "2023-05-17T07:58:48Z"
+    lastTransitionTime: "2023-05-17T07:58:48Z"
+    reason: CloneWithoutSource
+    status: "False"
+    type: Ready
+  - lastHeartbeatTime: "2023-05-17T07:58:48Z"
+    lastTransitionTime: "2023-05-17T07:58:48Z"
+    status: "False"
+    type: Running
 ``` 

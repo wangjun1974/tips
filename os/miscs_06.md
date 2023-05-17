@@ -18550,4 +18550,332 @@ EOF
 $ oc get vm
 $ oc get vmi
 $ oc exec -it virt-launcher-rhel8-server-ocs-krz4q -- virsh list --all
-```
+$ oc exec -it virt-launcher-rhel8-server-ocs-krz4q -- virsh domblklist default_rhel8-server-ocs
+$ oc exec -it virt-launcher-rhel8-server-ocs-krz4q -- lsblk /dev/rhel8-ocs
+$ oc exec -it virt-launcher-rhel8-server-ocs-krz4q -- virsh domiflist default_rhel8-server-ocs
+$ oc exec -it virt-launcher-rhel8-server-ocs-krz4q -- ip link show dev tap1
+$ oc exec -it virt-launcher-rhel8-server-ocs-krz4q -- ip link | grep -A2 k6t-net1
+$ oc exec -it virt-launcher-rhel8-server-ocs-krz4q -- virsh dumpxml default_rhel8-server-ocs | grep -A8 "interface type"
+
+$ oc debug node/ocp4-worker1.aio.example.com
+$ oc exec -it virt-launcher-rhel8-server-ocs-krz4q -- ip -o link | grep ^174: | sed -n -e 's/.*\(veth[[:alnum:]]*@if[[:digit:]]*\).*/\1/p'
+
+
+[~] $ ip link | grep -A2 k6t-net1
+[~] $ oc exec -it virt-launcher-rhel8-server-ocs-krz4q -- ip link | grep -A2 k6t-net1
+4: net1@if174: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue master k6t-net1 state U
+P mode DEFAULT group default
+    link/ether 7e:61:49:7d:a5:cf brd ff:ff:ff:ff:ff:ff link-netnsid 0
+5: k6t-net1: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP mode DEFAULT gro
+up default
+    link/ether 2a:fb:cb:4f:12:af brd ff:ff:ff:ff:ff:ff
+6: tap1: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel master k6t-net1 state UP mod
+e DEFAULT group default qlen 1000
+    link/ether 2a:fb:cb:4f:12:af brd ff:ff:ff:ff:ff:ff
+[~] $ oc exec -it virt-launcher-rhel8-server-ocs-krz4q -- virsh dumpxml default_rhel8-server-oc
+s | grep -A8 "interface type"
+    <interface type='ethernet'>
+      <mac address='02:b4:ab:00:00:00'/>
+      <target dev='tap1' managed='no'/>
+      <model type='e1000'/>
+      <mtu size='1500'/>
+      <alias name='ua-tuning-bridge-fixed'/>
+      <rom enabled='no'/>
+      <address type='pci' domain='0x0000' bus='0x02' slot='0x01' function='0x0'/>
+    </interface>
+
+[~] $ oc get vmi
+NAME               AGE    PHASE     IP               NODENAME                       READY
+rhel8-server-ocs   106m   Running   192.168.123.64   ocp4-worker1.aio.example.com   True
+[~] $ oc debug node/ocp4-worker1.aio.example.com
+Temporary namespace openshift-debug-69t67 is created for debugging node...
+Starting pod/ocp4-worker1aioexamplecom-debug ...
+To use host binaries, run `chroot /host`
+Pod IP: 192.168.123.104
+If you don't see a command prompt, try pressing enter.
+sh-4.4# chroot /host
+sh-4.4# export ifindex=174
+sh-4.4# ip -o link | grep ^$ifindex: | sed -n -e 's/.*\(veth[[:alnum:]]*@if[[:digit:]]*\).*/\1/
+''
+veth66ff3281@if4
+sh-4.4# ip link show veth66ff3281
+174: veth66ff3281@if4: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue master br1 stat
+e UP mode DEFAULT group default
+    link/ether 62:14:f4:eb:34:47 brd ff:ff:ff:ff:ff:ff link-netns 433a64e1-85df-40be-9c7e-8ed1c
+0d707b2
+
+$ oc describe vmi rhel8-server-ocs | egrep '(Eviction|Migration)'
+$ cat << EOF | oc apply -f -
+apiVersion: kubevirt.io/v1alpha3
+kind: VirtualMachineInstanceMigration
+metadata:
+  name: migration-job
+spec:
+  vmiName: rhel8-server-ocs
+EOF
+
+$ oc get virtualmachineinstancemigration/migration-job -o yaml
+
+$ cat << EOF | oc apply -f -
+apiVersion: nodemaintenance.medik8s.io/v1beta1
+kind: NodeMaintenance
+metadata:
+  name: worker-maintenance
+spec:
+  nodeName: ocp4-worker3.aio.example.com
+  reason: "Worker Maintenance"
+EOF
+
+$ virt-customize -a /var/www/html/Fedora-Cloud-Base-34-1.2.x86_64.raw --uninstall=cloud-init --root-password password:NOT_REAL_PASSWORD --ssh-inject root:file:/root/.ssh/id_rsa.pub
+
+$ cat << EOF | oc apply -f -
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: "fc34-original"
+  labels:
+    app: containerized-data-importer
+  annotations:
+    cdi.kubevirt.io/storage.import.endpoint: "http://192.168.123.100:81/Fedora-Cloud-Base-34-1.2.x86_64.raw"
+spec:
+  volumeMode: Block
+  storageClassName: ocs-storagecluster-ceph-rbd
+  accessModes:
+  - ReadWriteMany
+  resources:
+    requests:
+      storage: 40Gi
+EOF
+
+$ cat << EOF | oc apply -f -
+apiVersion: kubevirt.io/v1alpha3
+kind: VirtualMachine
+metadata:
+  name: fc34-original
+  labels:
+    app: fc34-original
+    os.template.kubevirt.io/fedora34: 'true'
+    vm.kubevirt.io/template-namespace: openshift
+    workload.template.kubevirt.io/server: 'true'
+spec:
+  running: true
+  template:
+    metadata:
+      labels:
+        vm.kubevirt.io/name: fc34-original
+    spec:
+      domain:
+        cpu:
+          cores: 1
+          sockets: 1
+          threads: 1
+        devices:
+          disks:
+            - bootOrder: 1
+              disk:
+                bus: virtio
+              name: disk0
+          interfaces:
+            - bridge: {}
+              model: virtio
+              name: nic0
+          networkInterfaceMultiqueue: true
+          rng: {}
+        machine:
+          type: pc-q35-rhel8.1.0
+        resources:
+          requests:
+            memory: 1024M
+      evictionStrategy: LiveMigrate
+      hostname: fc34-original
+      networks:
+        - multus:
+            networkName: tuning-bridge-fixed
+          name: nic0
+      terminationGracePeriodSeconds: 0
+      volumes:
+        - name: disk0
+          persistentVolumeClaim:
+            claimName: fc34-original
+EOF
+
+$ dnf install podman -y
+
+$ cat >> /etc/systemd/system/nginx.service << EOF
+[Unit]
+Description=Nginx Podman container
+Wants=syslog.service
+[Service]
+ExecStart=/usr/bin/podman run --net=host quay.io/roxenham/nginxdemos:plain-text
+ExecStop=/usr/bin/podman stop --all
+[Install]
+WantedBy=multi-user.target
+EOF
+
+$ systemctl daemon-reload && systemctl enable --now nginx
+$ systemctl status nginx
+
+$ logout
+$ oc whoami
+$ curl http://192.168.123.65
+
+$ oc get vm ; oc get vmi
+$ virtctl stop fc34-original
+$ oc get vm
+
+$ cat << EOF | oc apply -f -
+apiVersion: cdi.kubevirt.io/v1alpha1
+kind: DataVolume
+metadata:
+  name: fc34-clone
+spec:
+  source:
+    pvc:
+      namespace: default
+      name: fc34-original
+  pvc:
+    volumeMode: Block
+    storageClassName: ocs-storagecluster-ceph-rbd
+    accessModes:
+      - ReadWriteMany
+    resources:
+      requests:
+        storage: 40Gi
+EOF
+
+[~] $ oc get datavolume fc34-clone
+NAME         PHASE                             PROGRESS   RESTARTS   AGE
+fc34-clone   SnapshotForSmartCloneInProgress                         19s
+
+[~] $ oc get pvc/fc34-clone
+NAME         STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STOR
+AGECLASS                  AGE
+fc34-clone   Bound    pvc-07c1ec4c-48db-4d4c-920b-89b19625ffbe   40Gi       RWX            ocs-
+storagecluster-ceph-rbd   30s
+
+$ cat << EOF | oc apply -f -
+apiVersion: kubevirt.io/v1alpha3
+kind: VirtualMachine
+metadata:
+  name: fc34-clone
+  labels:
+    app: fc34-clone
+    os.template.kubevirt.io/fedora34: 'true'
+    vm.kubevirt.io/template-namespace: openshift
+    workload.template.kubevirt.io/server: 'true'
+spec:
+spec:
+  running: true
+  template:
+    metadata:
+      labels:
+        vm.kubevirt.io/name: fc34-clone
+    spec:
+      domain:
+        cpu:
+          cores: 1
+          sockets: 1
+          threads: 1
+        devices:
+          disks:
+            - bootOrder: 1
+              disk:
+                bus: virtio
+              name: disk0
+          interfaces:
+            - bridge: {}
+              model: virtio
+              name: nic0
+          networkInterfaceMultiqueue: true
+          rng: {}
+        machine:
+          type: pc-q35-rhel8.1.0
+        resources:
+          requests:
+            memory: 2Gi
+      evictionStrategy: LiveMigrate
+      hostname: fc34-clone
+      networks:
+        - multus:
+            networkName: tuning-bridge-fixed
+          name: nic0
+      terminationGracePeriodSeconds: 0
+      volumes:
+        - name: disk0
+          persistentVolumeClaim:
+            claimName: fc34-clone
+EOF
+
+$ oc delete vm/fc34-clone pvc/fc34-clone
+
+$ cat << EOF | oc apply -f -
+apiVersion: kubevirt.io/v1alpha3
+kind: VirtualMachine
+metadata:
+  name: fc34-podnet
+  labels:
+    app: fc34-podnet
+    os.template.kubevirt.io/fedora34: 'true'
+    vm.kubevirt.io/template-namespace: openshift
+    workload.template.kubevirt.io/server: 'true'
+spec:
+  running: true
+  template:
+    metadata:
+      labels:
+        vm.kubevirt.io/name: fc34-podnet
+        flavor.template.kubevirt.io/small: 'true'
+        kubevirt.io/size: small
+    spec:
+      domain:
+        cpu:
+          cores: 1
+          sockets: 1
+          threads: 1
+        devices:
+          disks:
+            - bootOrder: 1
+              disk:
+                bus: virtio
+              name: disk0
+          interfaces:
+            - name: nic0
+              model: virtio
+              masquerade: {}
+          networkInterfaceMultiqueue: true
+          rng: {}
+        machine:
+          type: pc-q35-rhel8.1.0
+        resources:
+          requests:
+            memory: 2Gi
+      evictionStrategy: LiveMigrate
+      hostname: fc34-podnet
+      networks:
+        - name: nic0
+          pod: {}
+      terminationGracePeriodSeconds: 0
+      volumes:
+        - name: disk0
+          persistentVolumeClaim:
+            claimName: fc34-original
+EOF
+
+$ oc describe pod/virt-launcher-fc34-podnet-tf5f2 | grep -A 9 networks-status
+                  k8s.v1.cni.cncf.io/networks-status:
+                    [{
+                        "name": "openshift-sdn",
+                        "interface": "eth0",
+                        "ips": [
+                            "10.129.2.62"
+                        ],
+                        "default": true,
+                        "dns": {}
+                    }]
+
+$ virtctl expose virtualmachineinstance fc34-podnet --name fc34-service --port 80
+$ oc get svc/fc34-service
+$ oc create route edge --service=fc34-service
+$ oc get routes
+
+``` 

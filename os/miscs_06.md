@@ -18437,5 +18437,117 @@ $ oc --kubeconfig=/etc/kubernetes/static-pod-resources/kube-apiserver-certs/secr
 $ oc new-project test
 $ oc new-app nodejs~https://github.com/vrutkovs/DuckHunt-JS
 
+### 创建虚拟化用的 NNCP 
+### NNCP - NodeNetworkConfigurationPolicy
+$ cat << EOF | oc apply -f -
+apiVersion: nmstate.io/v1
+kind: NodeNetworkConfigurationPolicy
+metadata:
+  name: br1-enp3s0-policy-workers
+spec:
+  nodeSelector:
+    node-role.kubernetes.io/worker: ""
+  desiredState:
+    interfaces:
+      - name: br1
+        description: Linux bridge with enp3s0 as a port
+        type: linux-bridge
+        state: up
+        ipv4:
+          enabled: false
+        bridge:
+          options:
+            stp:
+              enabled: false
+          port:
+            - name: enp3s0
+EOF
 
+$ oc get nncp -A
+$ oc get nnce -A
+
+$ oc debug node/ocp4-worker1.aio.example.com -- chroot /host ip link show dev enp3s0
+$ oc debug node/ocp4-worker1.aio.example.com -- chroot /host nmcli conn show
+
+# 创建 net-attach-def tuning-bridge-fixed 
+$ cat << EOF | oc apply -f -
+apiVersion: "k8s.cni.cncf.io/v1"
+kind: NetworkAttachmentDefinition
+metadata:
+  name: tuning-bridge-fixed
+  annotations:
+    k8s.v1.cni.cncf.io/resourceName: bridge.network.kubevirt.io/br1
+spec:
+  config: '{
+    "cniVersion": "0.3.1",
+    "name": "groot",
+    "plugins": [
+      {
+        "type": "cnv-bridge",
+        "bridge": "br1"
+      },
+      {
+        "type": "tuning"
+      }
+    ]
+  }'
+EOF
+
+$ cat << EOF | oc apply -f -
+apiVersion: kubevirt.io/v1alpha3
+kind: VirtualMachine
+metadata:
+  annotations:
+    name.os.template.kubevirt.io/rhel8: Red Hat Enterprise Linux 8.0
+  labels:
+    app: rhel8-server-ocs
+    kubevirt.io/os: rhel8
+    os.template.kubevirt.io/rhel8: 'true'
+    template.kubevirt.ui: openshift_rhel8-generic-small
+    vm.kubevirt.io/template: openshift_rhel8-generic-small
+    workload.template.kubevirt.io/generic: 'true'
+  name: rhel8-server-ocs
+spec:
+  running: true
+  template:
+    metadata:
+      labels:
+        vm.kubevirt.io/name: rhel8-server-ocs
+    spec:
+      domain:
+        cpu:
+          cores: 1
+          sockets: 1
+          threads: 1
+        devices:
+          disks:
+          - disk:
+              bus: sata
+            name: rhel8-ocs
+          interfaces:
+          - bridge: {}
+            model: e1000
+            name: tuning-bridge-fixed
+        firmware:
+          uuid: 5d307ca9-b3ef-428c-8861-06e72d69f223
+        machine:
+          type: q35
+        resources:
+          requests:
+            memory: 1024M
+      evictionStrategy: LiveMigrate
+      networks:
+        - multus:
+            networkName: tuning-bridge-fixed
+          name: tuning-bridge-fixed
+      terminationGracePeriodSeconds: 0
+      volumes:
+      - name: rhel8-ocs
+        persistentVolumeClaim:
+          claimName: rhel8-ocs
+EOF
+
+$ oc get vm
+$ oc get vmi
+$ oc exec -it virt-launcher-rhel8-server-ocs-krz4q -- virsh list --all
 ```

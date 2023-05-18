@@ -18985,4 +18985,33 @@ status:
     lastTransitionTime: "2023-05-17T07:58:48Z"
     status: "False"
     type: Running
+
+
+cat <<EOF | oc apply -f -
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: "centos8"
+  labels:
+    app: containerized-data-importer
+  annotations:
+    cdi.kubevirt.io/storage.import.endpoint: "http://192.168.123.100:81/rhel8-kvm.img"
+spec:
+  volumeMode: Block
+  storageClassName: ocs-storagecluster-ceph-rbd
+  accessModes:
+  - ReadWriteMany
+  resources:
+    requests:
+      storage: 20Gi
+EOF
+
 ``` 
+
+### FreeBSD 文件系统 ZFS resize
+https://help.ovhcloud.com/csm/en-ie-public-cloud-compute-freebsd-resize-file-system?id=kb_article_view&sysparm_article=KB0051099<br>
+https://docs.openstack.org/image-guide/freebsd-image.html<br>
+```
+### FreeBSD 下载地址
+http://ftp.freebsd.org/pub/FreeBSD/releases/amd64/amd64/ISO-IMAGES/12.4/
+```

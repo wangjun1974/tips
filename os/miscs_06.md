@@ -19014,4 +19014,79 @@ https://docs.openstack.org/image-guide/freebsd-image.html<br>
 ```
 ### FreeBSD 下载地址
 http://ftp.freebsd.org/pub/FreeBSD/releases/amd64/amd64/ISO-IMAGES/12.4/
+
+
+cat <<EOF | oc apply -f -
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: "freebsd"
+  labels:
+    app: containerized-data-importer
+  annotations:
+    cdi.kubevirt.io/storage.import.endpoint: "http://192.168.123.100:81/freebsd-disk0.raw"
+spec:
+  volumeMode: Block
+  storageClassName: ocs-storagecluster-ceph-rbd
+  accessModes:
+  - ReadWriteMany
+  resources:
+    requests:
+      storage: 10Gi
+EOF
+
+### https://kubevirt.io/user-guide/virtual_machines/interfaces_and_networks/
+$ cat << EOF | oc apply -f -
+apiVersion: kubevirt.io/v1alpha3
+kind: VirtualMachine
+metadata:
+  labels:
+    app: freebsd
+    workload.template.kubevirt.io/generic: 'true'
+  name: freebsd
+spec:
+  running: true
+  template:
+    metadata:
+      labels:
+        vm.kubevirt.io/name: freebsd
+    spec:
+      domain:
+        cpu:
+          cores: 1
+          sockets: 1
+          threads: 1
+        devices:
+          disks:
+          - disk:
+              bus: sata
+            name: freebsd
+          interfaces:
+            - name: nic0
+              model: rtl8139
+              masquerade: {}
+        firmware:
+          uuid: 5d307ca9-b3ef-428c-8861-06e72d69f223
+        machine:
+          type: q35
+        resources:
+          requests:
+            memory: 1024M
+      evictionStrategy: LiveMigrate
+      networks:
+        - name: nic0
+          pod: {}
+      terminationGracePeriodSeconds: 0
+      volumes:
+      - name: freebsd
+        persistentVolumeClaim:
+          claimName: freebsd
+EOF
+
+### PCI-Passthrough
+### https://docs.openshift.com/container-platform/4.12/virt/virtual_machines/advanced_vm_management/virt-configuring-pci-passthrough.html
+
+### Config DHCP in FreeBSD
+https://www.serverlab.ca/tutorials/unix/how-to-set-static-ip-and-dhcp-in-freebsd/
+
 ```

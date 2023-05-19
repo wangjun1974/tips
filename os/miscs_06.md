@@ -19120,4 +19120,7 @@ $ sh ./installer.sh
 $ pkg install sudo
 $ echo 'freebsd ALL=(ALL) NOPASSWD: ALL' > /usr/local/etc/sudoers.d/10-cloudinit
 $ shutdown -h now
+
+### freebsd 检查内核模块
+https://unixdesk.wordpress.com/2006/01/25/loading-kernel-modules-in-freebsd/
 ```

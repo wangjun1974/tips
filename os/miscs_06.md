@@ -19088,5 +19088,16 @@ EOF
 
 ### Config DHCP in FreeBSD
 https://www.serverlab.ca/tutorials/unix/how-to-set-static-ip-and-dhcp-in-freebsd/
+https://github.com/kubevirt/kubevirt/issues/2942
 
+cat > /etc/rc.conf <<EOF
+...
+ifconfig_vtnet0="inet 192.168.1.60 netmask 255.255.255.0"
+defaultrouter="192.168.1.101"
+...
+EOF
+
+cat > /etc/resolv.conf <<EOF
+nameserver 172.30.0.10
+EOF
 ```

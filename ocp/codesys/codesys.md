@@ -4967,3 +4967,77 @@ https://www.beckhoff.com/en-en/products/ipc/software-and-tools/operating-systems
 https://www.beckhoff.com/en-us/search-results/?q=bsd
 https://cookncode.com/twincat/2022/08/11/twincat-bsd.html
 ```
+
+### 定义 CNV 对象
+```
+### 定义 freebsd PVC
+### 使用 CDI 导入 raw 格式的 cloud image 到 PVC
+$ cat <<EOF | oc apply -f -
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: "freebsd"
+  labels:
+    app: containerized-data-importer
+  annotations:
+    cdi.kubevirt.io/storage.import.endpoint: "http://192.168.123.100:81/freebsd-disk0.raw"
+spec:
+  volumeMode: Block
+  storageClassName: ocs-storagecluster-ceph-rbd
+  accessModes:
+  - ReadWriteMany
+  resources:
+    requests:
+      storage: 10Gi
+EOF
+
+### 定义虚拟机 
+### 虚拟机采用 pod 网络
+### 网卡型号 rt8139
+$ cat << EOF | oc apply -f -
+apiVersion: kubevirt.io/v1alpha3
+kind: VirtualMachine
+metadata:
+  labels:
+    app: freebsd
+    workload.template.kubevirt.io/generic: 'true'
+  name: freebsd
+spec:
+  running: true
+  template:
+    metadata:
+      labels:
+        vm.kubevirt.io/name: freebsd
+    spec:
+      domain:
+        cpu:
+          cores: 1
+          sockets: 1
+          threads: 1
+        devices:
+          disks:
+          - disk:
+              bus: sata
+            name: freebsd
+          interfaces:
+            - name: nic0
+              model: rtl8139
+              masquerade: {}
+        firmware:
+          uuid: 5d307ca9-b3ef-428c-8861-06e72d69f223
+        machine:
+          type: q35
+        resources:
+          requests:
+            memory: 1024M
+      evictionStrategy: LiveMigrate
+      networks:
+        - name: nic0
+          pod: {}
+      terminationGracePeriodSeconds: 0
+      volumes:
+      - name: freebsd
+        persistentVolumeClaim:
+          claimName: freebsd
+EOF
+```

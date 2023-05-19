@@ -4993,7 +4993,8 @@ EOF
 
 ### 定义虚拟机 
 ### 虚拟机采用 pod 网络
-### 网卡型号 rt8139
+### 网卡型号 rtl8139
+### https://kubevirt.io/user-guide/virtual_machines/interfaces_and_networks/
 $ cat << EOF | oc apply -f -
 apiVersion: kubevirt.io/v1alpha3
 kind: VirtualMachine

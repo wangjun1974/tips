@@ -4966,6 +4966,10 @@ https://github.com/r9guy/TwinCAT-BSD-VM-creator
 https://www.beckhoff.com/en-en/products/ipc/software-and-tools/operating-systems/c9900-s60x-cxxxxx-0185.html
 https://www.beckhoff.com/en-us/search-results/?q=bsd
 https://cookncode.com/twincat/2022/08/11/twincat-bsd.html
+
+### 创建 Beckhoff ISO
+https://www.top-password.com/blog/create-iso-image-from-cd-dvd-usb-in-mac-os-x/
+$ hdiutil makehybrid -iso -joliet -o ~/Documents/BHF-PREOP.iso ~/Documents/BHF-PREOP.dmg
 ```
 
 ### 定义 CNV 对象

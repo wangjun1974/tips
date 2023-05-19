@@ -19123,4 +19123,18 @@ $ shutdown -h now
 
 ### freebsd 检查内核模块
 https://unixdesk.wordpress.com/2006/01/25/loading-kernel-modules-in-freebsd/
+
+### freebsd 添加 virtio 驱动支持
+### 编辑 /boot/loader.conf 文件添加
+
+virtio_load="YES"
+virtio_pci_load="YES"
+virtio_blk_load="YES"
+if_vtnet_load="YES"
+virtio_balloon_load="YES" 
+
+### 增加 pc-i440fx-rhel7.6.0 机器格式支持
+https://github.com/RHsyseng/cnv-supplemental-templates/tree/main/templates/pc-i440fx
+$ oc annotate --overwrite -n openshift-cnv hco kubevirt-hyperconverged kubevirt.kubevirt.io/jsonpatch='[{"op": "add", "path": "/spec/configuration/emulatedMachines", "value": ["q35*", "pc-q35*", "pc-i440fx-rhel7.6.0"] }]'
+
 ```

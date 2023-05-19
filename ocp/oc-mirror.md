@@ -1508,7 +1508,7 @@ $ /usr/local/bin/oc-mirror --from ./mirror_seq1_000000.tar docker://registry.exa
 
 
 ### 检查 operator 的情况
-### for packagename in kubevirt-hyperconverged performance-addon-operator kubernetes-nmstate-operator sriov-network-operator local-storage-operator odf-operator ocs-operator mcg-operator cincinnati-operator advanced-cluster-management openshift-gitops-operator lvms-operator multicluster-engine rhacs-operator ansible-automation-platform-operator nfd node-healthcheck-operator metallb-operator sandboxed-containers-operator openshift-special-resource-operator 
+### for packagename in kubevirt-hyperconverged performance-addon-operator kubernetes-nmstate-operator sriov-network-operator local-storage-operator odf-operator cincinnati-operator advanced-cluster-management openshift-gitops-operator odf-lvm-operator multicluster-engine rhacs-operator ansible-automation-platform-operator nfd node-healthcheck-operator metallb-operator sandboxed-containers-operator openshift-special-resource-operator  lvms-operator ocs-operator mcg-operator web-terminal openshift-pipelines-operator-rh devworkspace-operator web-terminal
 ### do 
 ###  /usr/local/bin/oc-mirror list operators --catalog=registry.redhat.io/redhat/redhat-operator-index:v4.12 --package=${packagename}
 ### done
@@ -1574,9 +1574,9 @@ mirror:
               maxVersion: 'v1.8.2'
         - name: lvms-operator
           channels:
-            - name: stable-4.13
-              minVersion: 'v4.13.0'
-              maxVersion: 'v4.13.0'
+            - name: stable-4.12
+              minVersion: 'v4.12.1'
+              maxVersion: 'v4.12.1'
         - name: multicluster-engine
           channels:
             - name: stable-2.2
@@ -1617,6 +1617,16 @@ mirror:
             - name: latest
               minVersion: 'v1.10.0'
               maxVersion: 'v1.10.0'
+        - name: devworkspace-operator
+          channels:
+            - name: fast
+              minVersion: 'v0.20.0'
+              maxVersion: 'v0.20.0'
+        - name: web-terminal
+          channels:
+            - name: fast
+              minVersion: 'v1.7.0-0.1682321121.p'
+              maxVersion: 'v1.7.0-0.1682321121.p'
 EOF
 $ /usr/local/bin/oc-mirror --config ./image-config-realse-local.yaml file://output-dir 2>&1 | tee ./err 
 $ /usr/local/bin/oc-mirror --from ./mirror_seq1_000000.tar docker://registry.example.com:5000

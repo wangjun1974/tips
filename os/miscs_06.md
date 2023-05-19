@@ -19090,14 +19090,34 @@ EOF
 https://www.serverlab.ca/tutorials/unix/how-to-set-static-ip-and-dhcp-in-freebsd/
 https://github.com/kubevirt/kubevirt/issues/2942
 
-cat > /etc/rc.conf <<EOF
+### 重新配置网络
+
+$ cat > /etc/rc.conf <<EOF
 ...
 ifconfig_vtnet0="inet 192.168.1.60 netmask 255.255.255.0"
 defaultrouter="192.168.1.101"
 ...
 EOF
 
-cat > /etc/resolv.conf <<EOF
+$ cat > /etc/resolv.conf <<EOF
 nameserver 172.30.0.10
 EOF
+
+### 重启网络
+$ service netif restart
+$ service routing restart
+
+### 添加 bsd-cloudinit
+https://community.ops.io/jmarhee/preparing-a-freebsd-cloud-image-with-cloud-init-22lh
+https://docs.openstack.org/image-guide/freebsd-image.html
+https://www.cyberciti.biz/faq/how-to-add-delete-grant-sudo-privileges-to-users-on-freebsd-unix-server/
+https://bsd-cloud-image.org/
+
+$ pkg install ca_root_nss
+$ fetch --ca-cert=/usr/local/share/certs/ca-root-nss.crt \
+  https://raw.github.com/pellaeon/bsd-cloudinit-installer/master/installer.sh
+$ sh ./installer.sh
+$ pkg install sudo
+$ echo 'freebsd ALL=(ALL) NOPASSWD: ALL' > /usr/local/etc/sudoers.d/10-cloudinit
+$ shutdown -h now
 ```

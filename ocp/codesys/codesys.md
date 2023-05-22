@@ -5060,3 +5060,82 @@ https://cookncode.com/twincat/2022/08/11/twincat-bsd.html#what-is-twincatbsd<br>
 $ VBoxManage convertfromraw "TCBSD-x64-13-92446.iso" "TCBSD-x64-13-92446-installer.vmdk" --format VMDK
 $ qemu-img convert -p -f vmdk -O raw TCBSD-x64-13-92446-installer.vmdk TCBSD-x64-13-92446-installer.raw
 ```
+
+### 测试 TC/BSD
+```
+### 定义 tcbsd PVC
+### 使用 CDI 导入 raw 格式的 cloud image 到 PVC
+$ cat <<EOF | oc apply -f -
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: "tcbsd"
+  labels:
+    app: containerized-data-importer
+  annotations:
+    cdi.kubevirt.io/storage.import.endpoint: "http://192.168.123.100:81/tcbsd-disk0.raw"
+spec:
+  volumeMode: Block
+  storageClassName: ocs-storagecluster-ceph-rbd
+  accessModes:
+  - ReadWriteMany
+  resources:
+    requests:
+      storage: 10Gi
+EOF
+
+### 定义虚拟机 
+### 虚拟机采用 pod 网络
+### 网卡型号 rtl8139
+### https://kubevirt.io/user-guide/virtual_machines/interfaces_and_networks/
+### 增加 pc-i440fx-rhel7.6.0 机器格式支持
+https://github.com/RHsyseng/cnv-supplemental-templates/tree/main/templates/pc-i440fx
+$ oc annotate --overwrite -n openshift-cnv hco kubevirt-hyperconverged kubevirt.kubevirt.io/jsonpatch='[{"op": "add", "path": "/spec/configuration/emulatedMachines", "value": ["q35*", "pc-q35*", "pc-i440fx-rhel7.6.0"] }]'
+
+$ cat << EOF | oc apply -f -
+apiVersion: kubevirt.io/v1alpha3
+kind: VirtualMachine
+metadata:
+  labels:
+    app: tcbsd
+    workload.template.kubevirt.io/generic: 'true'
+  name: tcbsd
+spec:
+  running: true
+  template:
+    metadata:
+      labels:
+        vm.kubevirt.io/name: tcbsd
+    spec:
+      domain:
+        cpu:
+          cores: 4
+          sockets: 1
+          threads: 1
+        devices:
+          disks:
+          - disk:
+              bus: sata
+            name: tcbsd
+          interfaces:
+            - name: nic0
+              model: rtl8139
+              masquerade: {}
+        firmware:
+          uuid: 5d307ca9-b3ef-428c-8861-06e72d69f223
+        machine:
+          type: q35
+        resources:
+          requests:
+            memory: 4096M
+      evictionStrategy: LiveMigrate
+      networks:
+        - name: nic0
+          pod: {}
+      terminationGracePeriodSeconds: 0
+      volumes:
+      - name: tcbsd
+        persistentVolumeClaim:
+          claimName: tcbsd
+EOF
+```

@@ -5124,7 +5124,7 @@ spec:
         firmware:
           uuid: 5d307ca9-b3ef-428c-8861-06e72d69f223
         machine:
-          type: q35
+          type: pc-i440fx-rhel7.6.0
         resources:
           requests:
             memory: 4096M

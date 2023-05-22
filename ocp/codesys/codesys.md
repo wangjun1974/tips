@@ -5053,7 +5053,8 @@ EOF
 ```
 
 ### 转化 TC/BSD 安装介质磁盘格式
-https://docs.oracle.com/en/virtualization/virtualbox/6.0/user/vboxmanage-convertfromraw.html
+https://docs.oracle.com/en/virtualization/virtualbox/6.0/user/vboxmanage-convertfromraw.html<br>
+https://cookncode.com/twincat/2022/08/11/twincat-bsd.html#what-is-twincatbsd<br>
 ```
 ### 用 VBoxManage 命令转化格式
 $ VBoxManage convertfromraw "TCBSD-x64-13-92446.iso" "TCBSD-x64-13-92446-installer.vmdk" --format VMDK

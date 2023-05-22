@@ -5051,3 +5051,10 @@ spec:
           claimName: freebsd
 EOF
 ```
+
+### 转化磁盘格式
+```
+### 用 VBoxManage 命令转化格式
+$ VBoxManage convertfromraw "TCBSD-x64-13-92446.iso" "TCBSD-x64-13-92446-installer.vmdk" --format VMDK
+$ qemu-img convert -p -f vmdk -O raw TCBSD-x64-13-92446-installer.vmdk TCBSD-x64-13-92446-installer.raw
+```

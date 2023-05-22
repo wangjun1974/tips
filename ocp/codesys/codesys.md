@@ -4970,6 +4970,11 @@ https://cookncode.com/twincat/2022/08/11/twincat-bsd.html
 ### 创建 Beckhoff ISO
 https://www.top-password.com/blog/create-iso-image-from-cd-dvd-usb-in-mac-os-x/
 $ hdiutil makehybrid -iso -joliet -o ~/Documents/BHF-PREOP.iso ~/Documents/BHF-PREOP.dmg
+
+### 创建 bootable iso
+$ sudo dd if=/dev/disk2 of=TCBSD-x64-13-92446-boot.iso bs=1m
+### 将创建的 bootable iso 重新生成合适的大小
+https://linuxconfig.org/how-to-shrink-usb-clone-dd-file-image-output
 ```
 
 ### 定义 CNV 对象

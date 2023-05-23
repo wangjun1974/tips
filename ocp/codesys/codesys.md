@@ -5069,11 +5069,26 @@ $ cat <<EOF | oc apply -f -
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: "tcbsd"
+  name: "tcbsd-cdrom"
   labels:
     app: containerized-data-importer
   annotations:
-    cdi.kubevirt.io/storage.import.endpoint: "http://192.168.123.100:81/tcbsd-disk0.raw"
+    cdi.kubevirt.io/storage.import.endpoint: "http://192.168.123.100:81/TCBSD-x64-13-92446-installer.raw"
+spec:
+  volumeMode: Block
+  storageClassName: ocs-storagecluster-ceph-rbd
+  accessModes:
+  - ReadWriteMany
+  resources:
+    requests:
+      storage: 5Gi
+EOF
+### 创建安装目标 PVC
+$ cat <<EOF | oc apply -f -
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: "tcbsd-hd"
 spec:
   volumeMode: Block
   storageClassName: ocs-storagecluster-ceph-rbd
@@ -5092,6 +5107,8 @@ EOF
 https://github.com/RHsyseng/cnv-supplemental-templates/tree/main/templates/pc-i440fx
 $ oc annotate --overwrite -n openshift-cnv hco kubevirt-hyperconverged kubevirt.kubevirt.io/jsonpatch='[{"op": "add", "path": "/spec/configuration/emulatedMachines", "value": ["q35*", "pc-q35*", "pc-i440fx-rhel7.6.0"] }]'
 
+### https://kubevirt.io/user-guide/virtual_machines/virtual_hardware/
+### 定义 firmware 类型为 UEFI
 $ cat << EOF | oc apply -f -
 apiVersion: kubevirt.io/v1alpha3
 kind: VirtualMachine
@@ -5114,17 +5131,23 @@ spec:
           threads: 1
         devices:
           disks:
+          - bootOrder: 1
+            disk:
+              bus: sata
+            name: tcbsd-cdrom
           - disk:
               bus: sata
-            name: tcbsd
+            name: tcbsd-hd          
           interfaces:
             - name: nic0
               model: rtl8139
               masquerade: {}
         firmware:
-          uuid: 5d307ca9-b3ef-428c-8861-06e72d69f223
+          bootloader:
+            efi:
+              secureBoot: false
         machine:
-          type: pc-i440fx-rhel7.6.0
+          type: q35
         resources:
           requests:
             memory: 4096M
@@ -5134,8 +5157,63 @@ spec:
           pod: {}
       terminationGracePeriodSeconds: 0
       volumes:
-      - name: tcbsd
+      - name: tcbsd-cdrom
         persistentVolumeClaim:
-          claimName: tcbsd
+          claimName: tcbsd-cdrom
+      - name: tcbsd-hd
+        persistentVolumeClaim:
+          claimName: tcbsd-hd
+EOF
+
+### 安装完后，重建 VM 
+### 只保留 tcbsd-hd
+$ cat << EOF | oc apply -f -
+apiVersion: kubevirt.io/v1alpha3
+kind: VirtualMachine
+metadata:
+  labels:
+    app: tcbsd
+    workload.template.kubevirt.io/generic: 'true'
+  name: tcbsd
+spec:
+  running: true
+  template:
+    metadata:
+      labels:
+        vm.kubevirt.io/name: tcbsd
+    spec:
+      domain:
+        cpu:
+          cores: 4
+          sockets: 1
+          threads: 1
+        devices:
+          disks:
+          - bootOrder: 1
+            disk:
+              bus: sata
+            name: tcbsd-hd          
+          interfaces:
+            - name: nic0
+              model: rtl8139
+              masquerade: {}
+        firmware:
+          bootloader:
+            efi:
+              secureBoot: false
+        machine:
+          type: q35
+        resources:
+          requests:
+            memory: 4096M
+      evictionStrategy: LiveMigrate
+      networks:
+        - name: nic0
+          pod: {}
+      terminationGracePeriodSeconds: 0
+      volumes:
+      - name: tcbsd-hd
+        persistentVolumeClaim:
+          claimName: tcbsd-hd
 EOF
 ```

@@ -5242,3 +5242,62 @@ Password:
     3 |    03    |  shared  |    isolated
 $ 
 ```
+
+### AMD CPU 设置 PCI passthrough
+https://wiki.archlinux.org/title/PCI_passthrough_via_OVMF
+
+```
+$ oc debug node/ocp4-worker1.aio.example.com
+...
+sh-4.4# lspci -nn | grep 03:00.0
+03:00.0 Ethernet controller [0200]: Red Hat, Inc. Virtio network device [1af4:1041] (rev 01)
+
+sh-4.4# lspci -nnk -d 1af4:1041
+
+### /etc/modprobe.d/vfio.conf
+$ cat << EOF | base64 -w 0
+options vfio-pci ids=1af4:1041
+EOF
+$ export VFIO_CONF="b3B0aW9ucyB2ZmlvLXBjaSBpZHM9MWFmNDoxMDQxCg=="
+
+### /etc/modules-load.d/vfio-pci.conf
+$ cat << EOF | base64 -w 0
+vfio-pci
+EOF
+$ export VFIO_PCI_CONF="dmZpby1wY2kK"
+
+$ cat << EOF > 100-worker-vfiopci-configuration.yaml
+apiVersion: machineconfiguration.openshift.io/v1
+kind: MachineConfig
+metadata:
+  labels:
+    machineconfiguration.openshift.io/role: worker
+  name: 100-worker-vfiopci-configuration
+spec:
+  config:
+    ignition:
+      config: {}
+      security:
+        tls: {}
+      timeouts: {}
+      version: 3.1.0
+    networkd: {}
+    passwd: {}
+    storage:
+      files:
+      - contents:
+          source: data:text/plain;charset=utf-8;base64,${VFIO_CONF}
+        mode: 420
+        overwrite: true
+        path: /etc/modprobe.d/vfio.conf
+      - contents:
+          source: data:text/plain;charset=utf-8;base64,${VFIO_PCI_CONF}
+        mode: 420
+        overwrite: true
+        path: /etc/modules-load.d/vfio-pci.conf
+  osImageURL: ""
+EOF
+
+$ oc apply -f 100-worker-vfiopci-configuration.yaml
+$ oc get mcp
+```

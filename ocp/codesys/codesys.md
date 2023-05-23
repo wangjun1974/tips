@@ -5217,3 +5217,11 @@ spec:
           claimName: tcbsd-hd
 EOF
 ```
+
+### TC/BSD 设置 cpu isolated
+https://infosys.beckhoff.com/english.php?content=../content/1033/twincat_bsd/5735307787.html&id=
+设置 cpu isolated  
+```
+$ doas TcCoreConf –s 1
+$ doas shutdown -r now
+```

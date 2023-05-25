@@ -5300,4 +5300,12 @@ EOF
 
 $ oc apply -f 100-worker-vfiopci-configuration.yaml
 $ oc get mcp
+
+
+### 根据 PCI Bus Info 设置 pci passthrough
+https://kubevirt.io/user-guide/virtual_machines/host-devices/
+$ echo "0000:03:00.0" > /sys/bus/pci/drivers/virtio-pci/unbind
+$ echo "vfio-pci" > /sys/bus/pci/devices/0000\:03\:00.0/driver_override
+$ echo 0000:03:00.0 > /sys/bus/pci/drivers/vfio-pci/bind
+
 ```

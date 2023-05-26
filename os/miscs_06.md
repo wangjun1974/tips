@@ -19138,3 +19138,9 @@ https://github.com/RHsyseng/cnv-supplemental-templates/tree/main/templates/pc-i4
 $ oc annotate --overwrite -n openshift-cnv hco kubevirt-hyperconverged kubevirt.kubevirt.io/jsonpatch='[{"op": "add", "path": "/spec/configuration/emulatedMachines", "value": ["q35*", "pc-q35*", "pc-i440fx-rhel7.6.0"] }]'
 
 ```
+
+### TPM and Trusted Boot
+https://fedoraproject.org/wiki/Tboot
+```
+
+```

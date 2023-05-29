@@ -19097,6 +19097,9 @@ $ cat > /etc/rc.conf <<EOF
 ifconfig_vtnet0="inet 192.168.1.60 netmask 255.255.255.0"
 defaultrouter="192.168.1.101"
 ...
+ifconfig_re0="inet 192.168.122.161 netmask 255.255.255.0"
+defaultrouter="192.168.122.1"
+...
 EOF
 
 $ cat > /etc/resolv.conf <<EOF
@@ -19106,6 +19109,11 @@ EOF
 ### 重启网络
 $ service netif restart
 $ service routing restart
+
+### 手工设置 default route
+$ route del default
+$ route add default 192.168.122.1
+
 
 ### 添加 bsd-cloudinit
 https://community.ops.io/jmarhee/preparing-a-freebsd-cloud-image-with-cloud-init-22lh
@@ -19140,7 +19148,10 @@ $ oc annotate --overwrite -n openshift-cnv hco kubevirt-hyperconverged kubevirt.
 ```
 
 ### TPM and Trusted Boot
-https://fedoraproject.org/wiki/Tboot
+https://fedoraproject.org/wiki/Tboot<br>
+https://next.redhat.com/2021/05/13/what-can-you-do-with-a-tpm/<br>
+https://www.intel.com/content/www/us/en/developer/articles/tool/intel-trusted-execution-technology.html<br>
+https://lenovopress.lenovo.com/lp0599.pdf<br>
 ```
 
 ```

@@ -19176,4 +19176,50 @@ https://lenovopress.lenovo.com/lp0599.pdf<br>
 https://github.com/openshift-helm-charts/charts<br>
 ```
 $ helm repo add openshift-helm-charts https://charts.openshift.io/
+$ helm search repo openshift-helm-charts
+$ helm repo add bitnami https://charts.bitnami.com/bitnami
+$ helm search repo bitnami
+
+### 创建 test project，设置 rolebinding
+$ oc new-project test
+$ helm install wordpress bitnami/wordpress 
+$ helm list
+
+$ cat <<EOF | oc apply -f -
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: system:openshift:scc:privileged
+  namespace: test
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: system:openshift:scc:privileged
+subjects:
+- kind: ServiceAccount
+  name: wordpress-mariadb
+  namespace: test
+EOF
+
+$ cat <<EOF | oc apply -f -
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: system:openshift:scc:privileged
+  namespace: test
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: system:openshift:scc:privileged
+subjects:
+- kind: ServiceAccount
+  name: default
+  namespace: test
+EOF
+
+$ oc patch statefulset/wordpress-mariadb --patch \
+   "{\"spec\":{\"template\":{\"metadata\":{\"annotations\":{\"last-restart\":\"`date +'%s'`\"}}}}}"  
+
+$ oc patch deployment/wordpress --patch \
+   "{\"spec\":{\"template\":{\"metadata\":{\"annotations\":{\"last-restart\":\"`date +'%s'`\"}}}}}"  
 ```

@@ -19114,6 +19114,22 @@ $ service routing restart
 $ route del default
 $ route add default 192.168.122.1
 
+### install freebsd ports
+https://docs.freebsd.org/en/books/handbook/ports/#ports-using-git-method
+$ pkg install git
+$ git clone https://git.FreeBSD.org/ports.git /usr/ports
+or 
+$ git clone https://git.FreeBSD.org/ports.git -b 2023Q1 /usr/ports
+$ git -C /usr/ports pull
+or
+$ git -C /usr/ports switch 2023Q1
+
+$ cd /usr/ports/sysutils/sysinfo
+$ make install 
+
+### 安装 sysinfo package
+$ pkg install sysinfo
+$ pkg info -l sysinfo
 
 ### 添加 bsd-cloudinit
 https://community.ops.io/jmarhee/preparing-a-freebsd-cloud-image-with-cloud-init-22lh
@@ -19154,4 +19170,10 @@ https://www.intel.com/content/www/us/en/developer/articles/tool/intel-trusted-ex
 https://lenovopress.lenovo.com/lp0599.pdf<br>
 ```
 
+```
+
+### OpenShift Helm Charts
+https://github.com/openshift-helm-charts/charts<br>
+```
+$ helm repo add openshift-helm-charts https://charts.openshift.io/
 ```

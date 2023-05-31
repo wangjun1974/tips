@@ -1508,7 +1508,7 @@ $ /usr/local/bin/oc-mirror --from ./mirror_seq1_000000.tar docker://registry.exa
 
 
 ### 检查 operator 的情况
-### for packagename in kubevirt-hyperconverged performance-addon-operator kubernetes-nmstate-operator sriov-network-operator local-storage-operator odf-operator cincinnati-operator advanced-cluster-management openshift-gitops-operator odf-lvm-operator multicluster-engine rhacs-operator ansible-automation-platform-operator nfd node-healthcheck-operator metallb-operator sandboxed-containers-operator openshift-special-resource-operator  lvms-operator ocs-operator mcg-operator web-terminal openshift-pipelines-operator-rh devworkspace-operator web-terminal
+### for packagename in kubevirt-hyperconverged performance-addon-operator kubernetes-nmstate-operator sriov-network-operator local-storage-operator odf-operator cincinnati-operator advanced-cluster-management openshift-gitops-operator odf-lvm-operator multicluster-engine rhacs-operator ansible-automation-platform-operator nfd node-healthcheck-operator metallb-operator sandboxed-containers-operator openshift-special-resource-operator  lvms-operator ocs-operator mcg-operator web-terminal openshift-pipelines-operator-rh devworkspace-operator web-terminal rhods-operator rhods-prometheus-operator
 ### do 
 ###  /usr/local/bin/oc-mirror list operators --catalog=registry.redhat.io/redhat/redhat-operator-index:v4.12 --package=${packagename}
 ### done
@@ -1625,6 +1625,16 @@ mirror:
         - name: web-terminal
           channels:
             - name: fast
+              minVersion: 'v1.7.0-0.1682321121.p'
+              maxVersion: 'v1.7.0-0.1682321121.p'
+        - name: rhods-operator
+          channels:
+            - name: stable
+              minVersion: 'v1.7.0-0.1682321121.p'
+              maxVersion: 'v1.7.0-0.1682321121.p'
+        - name: rhods-prometheus-operator
+          channels:
+            - name: beta
               minVersion: 'v1.7.0-0.1682321121.p'
               maxVersion: 'v1.7.0-0.1682321121.p'
 EOF

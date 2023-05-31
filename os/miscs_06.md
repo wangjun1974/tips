@@ -19217,9 +19217,30 @@ subjects:
   namespace: test
 EOF
 
+$ cat > value.yaml <<EOF
+containerSecurityContext:
+  enabled: false
+mariadb:
+  primary:
+    containerSecurityContext:
+      enabled: false
+    podSecurityContext:
+      enabled: false
+  serviceAccount:
+    create: false
+memcached:
+  containerSecurityContext:
+    enabled: false
+  podSecurityContext:
+    enabled: false
+podSecurityContext:
+  enabled: false
+wordpressPassword: S39BKWjSkh
+EOF
+
 $ oc patch statefulset/wordpress-mariadb --patch \
    "{\"spec\":{\"template\":{\"metadata\":{\"annotations\":{\"last-restart\":\"`date +'%s'`\"}}}}}"  
 
 $ oc patch deployment/wordpress --patch \
-   "{\"spec\":{\"template\":{\"metadata\":{\"annotations\":{\"last-restart\":\"`date +'%s'`\"}}}}}"  
+   "{\"spec\":{\"template\":{\"metadata\":{\"annotations\":{\"last-restart\":\"`date +'%s'`\"}}}}}" 
 ```

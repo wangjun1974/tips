@@ -1508,7 +1508,7 @@ $ /usr/local/bin/oc-mirror --from ./mirror_seq1_000000.tar docker://registry.exa
 
 
 ### 检查 operator 的情况
-### for packagename in kubevirt-hyperconverged performance-addon-operator kubernetes-nmstate-operator sriov-network-operator local-storage-operator odf-operator cincinnati-operator advanced-cluster-management openshift-gitops-operator lvms-operator multicluster-engine rhacs-operator ansible-automation-platform-operator nfd node-healthcheck-operator metallb-operator sandboxed-containers-operator openshift-special-resource-operator  lvms-operator ocs-operator mcg-operator web-terminal openshift-pipelines-operator-rh devworkspace-operator web-terminal rhods-operator rhods-prometheus-operator
+### for packagename in kubevirt-hyperconverged performance-addon-operator kubernetes-nmstate-operator sriov-network-operator local-storage-operator odf-operator cincinnati-operator advanced-cluster-management openshift-gitops-operator lvms-operator multicluster-engine rhacs-operator ansible-automation-platform-operator nfd node-healthcheck-operator metallb-operator sandboxed-containers-operator openshift-special-resource-operator  lvms-operator ocs-operator mcg-operator web-terminal openshift-pipelines-operator-rh devworkspace-operator web-terminal rhods-operator rhods-prometheus-operator nfd
 ### do 
 ###  /usr/local/bin/oc-mirror list operators --catalog=registry.redhat.io/redhat/redhat-operator-index:v4.12 --package=${packagename}
 ### done
@@ -1637,9 +1637,38 @@ mirror:
             - name: beta
               minVersion: '4.10.0'
               maxVersion: '4.10.0'
+        - name: nfd
+          channels:
+            - name: stable
+              minVersion: '4.12.0-202305101515'
+              maxVersion: '4.12.0-202305101515'              
 EOF
 $ /usr/local/bin/oc-mirror --config ./image-config-realse-local.yaml file://output-dir 2>&1 | tee ./err 
 $ /usr/local/bin/oc-mirror --from ./mirror_seq1_000000.tar docker://registry.example.com:5000
+
+### 检查 operator 的情况
+### for packagename in gpu-operator-certified 
+### do 
+###  /usr/local/bin/oc-mirror list operators --catalog=registry.redhat.io/redhat/certified-operator-index:v4.12 --package=${packagename}
+### done
+### 同步 operator 
+### catalog 是 registry.redhat.io/redhat/certified-operator-index:v4.12
+$ cat > image-config-realse-local.yaml <<EOF
+apiVersion: mirror.openshift.io/v1alpha2
+kind: ImageSetConfiguration
+mirror:
+  operators:
+    - catalog: registry.redhat.io/redhat/certified-operator-index:v4.12
+      packages:
+        - name: gpu-operator-certified
+          channels:
+            - name: 'v23.3'
+              minVersion: 'v23.3.2'
+              maxVersion: 'v23.3.2'
+EOF
+$ /usr/local/bin/oc-mirror --config ./image-config-realse-local.yaml file://output-dir 2>&1 | tee /tmp/err 
+$ /usr/local/bin/oc-mirror --from ./mirror_seq1_000000.tar docker://registry.example.com:5000
+
 
 ### 检查 operator 的情况
 ### for packagename in prometheus 
@@ -1648,6 +1677,8 @@ $ /usr/local/bin/oc-mirror --from ./mirror_seq1_000000.tar docker://registry.exa
 ### done
 ### 同步 operator 
 ### catalog 是 registry.redhat.io/redhat/community-operator-index:v4.12
+$ /usr/local/bin/oc-mirror --config ./image-config-realse-local.yaml file://output-dir 2>&1 | tee /tmp/err 
+$ /usr/local/bin/oc-mirror --from ./mirror_seq1_000000.tar docker://registry.example.com:5000
 
 $ cat > image-config-realse-local.yaml <<EOF
 apiVersion: mirror.openshift.io/v1alpha2

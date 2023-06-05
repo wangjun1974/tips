@@ -1388,10 +1388,16 @@ listen ceph_rgw
 [stack@overcloud-controller-0 ~]$ sudo podman exec -it ceph-rgw-overcloud-controller-0-rgw0 radosgw-admin user create --uid='admin' --display-name='admin' --access-key='admin' --secret-key='admin123'
 
 # 安装 aws cli
+# Linux
 # https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html
 (overcloud) [stack@undercloud ~]$ curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
 (overcloud) [stack@undercloud ~]$ unzip awscliv2.zip
 (overcloud) [stack@undercloud ~]$ sudo ./aws/install
+# MacOS 安装注意参考 MacOS 部分 
+# https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html
+$ curl "https://awscli.amazonaws.com/AWSCLIV2.pkg" -o "AWSCLIV2.pkg"
+$ sudo installer -pkg AWSCLIV2.pkg -target /
+$ aws --version
 
 # 配置一下 aws s3 client
 # 设置 access key

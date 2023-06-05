@@ -1653,6 +1653,8 @@ $ /usr/local/bin/oc-mirror --from ./mirror_seq1_000000.tar docker://registry.exa
 ### done
 ### 同步 operator 
 ### catalog 是 registry.redhat.io/redhat/certified-operator-index:v4.12
+$ mkdir -p ~/4.12/certified-operator-index
+$ cd ~/4.12/certified-operator-index
 $ cat > image-config-realse-local.yaml <<EOF
 apiVersion: mirror.openshift.io/v1alpha2
 kind: ImageSetConfiguration

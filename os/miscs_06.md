@@ -19250,3 +19250,17 @@ $ oc patch statefulset/wordpress-mariadb --patch \
 $ oc patch deployment/wordpress --patch \
    "{\"spec\":{\"template\":{\"metadata\":{\"annotations\":{\"last-restart\":\"`date +'%s'`\"}}}}}" 
 ```
+
+### 运行 FastChat
+https://github.com/lm-sys/FastChat
+```
+### 探索运行 FastChat
+$ cat > Dockerfile <<EOF
+FROM registry.access.redhat.com/ubi8/ubi:latest
+RUN dnf install -y python3 libpciaccess iproute net-tools procps-ng nmap-ncat iputils diffutils git && dnf clean all 
+CMD ["/bin/bash", "-c", "exec /bin/bash -c 'trap : TERM INT; sleep 9999999999d & wait'"]
+EOF
+$ podman build -f Dockerfile -t registry.example.com:5000/fastchat/fastchat:v1
+$ podman run -d -t --name fastchat-v1 --network host --privileged registry.example.com:5000/fastchat/fastchat:v1
+
+```

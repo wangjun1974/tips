@@ -19252,12 +19252,22 @@ $ oc patch deployment/wordpress --patch \
 ```
 
 ### 运行 FastChat
-https://github.com/lm-sys/FastChat
+https://github.com/lm-sys/FastChat<br>
+https://www.linkedin.com/pulse/step-by-step-guide-running-vicuna-13b-large-language-nischal/<br>
 ```
+### 如何在本地运行 FastChat
+### https://www.linkedin.com/pulse/step-by-step-guide-running-vicuna-13b-large-language-nischal/
+
+### 别人做好的镜像
+### https://blog.csdn.net/u010095372/article/details/130376651
+$ conda activate vinuca
+$ python -m fastchat.serve.cli --model-name anon8231489123/vicuna-13b-GPTQ-4bit-128g --wbits 4 --groupsize 128 --low-cpu-mem
+$ python -m fastchat.serve.cli --model-name anon8231489123/vicuna-13b-GPTQ-4bit-128g --wbits 4 --groupsize 128
+
 ### 探索运行 FastChat
 $ cat > Dockerfile <<EOF
 FROM registry.access.redhat.com/ubi8/ubi:latest
-RUN dnf install -y python3 libpciaccess iproute net-tools procps-ng nmap-ncat iputils diffutils git && dnf clean all 
+RUN dnf install -y python39 libpciaccess iproute net-tools procps-ng nmap-ncat iputils diffutils git && dnf clean all 
 CMD ["/bin/bash", "-c", "exec /bin/bash -c 'trap : TERM INT; sleep 9999999999d & wait'"]
 EOF
 $ podman build -f Dockerfile -t registry.example.com:5000/fastchat/fastchat:v1

@@ -19289,6 +19289,23 @@ LLaMA/
 ### 在容器外执行
 $ podman cp LLaMA fastchat-v1:/code/model
 ### 回到容器内
+$ cd ~
+$ git clone https://github.com/lm-sys/FastChat
+
+### 
+$ git clone https://huggingface.co/lmsys/vicuna-7b-delta-v1.1
+
+### 从 llama weights 转换为 huggingface 格式
 $ git clone https://github.com/huggingface/transformers.git
+$ cd transformers
+### 需要设置参数 PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python
+$ PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python python3 ./src/transformers/models/llama/convert_llama_weights_to_hf.py  --input_dir /code/model/LLaMA --model_size 7B --output_dir /code/model/transformer_model_7b
+dir /code/model/transformer_model_7b
+Fetching all parameters from the checkpoint at /code/model/LLaMA/7B.
+Loading the checkpoint in a Llama model.
+Loading checkpoint shards: 100%|██████████████████████████████████████████████████████████████████████████████████████████████| 33/33 [00:17<00:00,  1.92it/s]
+Saving in the Transformers format.
+Saving a LlamaTokenizerFast to /code/model/transformer_model_7b.
+
 
 ```

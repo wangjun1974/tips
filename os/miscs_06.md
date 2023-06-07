@@ -19307,6 +19307,8 @@ Saving a LlamaTokenizerFast to /code/model/transformer_model_7b.
 
 ### 克隆 vicuna-7b-delta-v1.1
 $ cd ~
+### 在 fastchat.model.apply_delta 时遇到报错
+### 参考：https://github.com/THUDM/ChatGLM-6B/issues/770
 ### https://git-lfs.com/
 ### 首先安装 git-lfs 
 ### 尝试解决 sha256 不一致的问题

@@ -19316,5 +19316,28 @@ $ curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.rpm
 $ yum install git-lfs
 $ git lfs install
 $ git clone https://huggingface.co/lmsys/vicuna-7b-delta-v1.1
-$ PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python python3 -m fastchat.model.apply_delta --base-model-path /code/model/transformer_model_7b --target-model-path /code/model/vicuna_7b --delta-path /root/vicuna-7b-delta-v1.1
+### 需要在一个内存大机器上运行
+### 测试环境下，内存不足
+### 用 podman-export, podman-import 的方式将容器从一台机器迁移到另外一台机器上
+### $ cd /tmp; podman export -o fastchat-v1.tar fastchat-v1 ; scp /tmp/fastchat-v1.tar <dst>:/tmp
+### 在目标机器上
+### $ cd /tmp; cat fastchat-v1.tar | podman import -
+### $ podman images
+REPOSITORY                      TAG      IMAGE ID       CREATED             SIZE
+<none>                          <none>   78d372e369d2   About an hour ago   61.8 GB
+### $ podman tag 78d372e369d2 registry.example.com:5000/fastchat/fastchat:v1
+### $ podman images
+REPOSITORY                                    TAG      IMAGE ID       CREATED             SIZE
+registry.example.com:5000/fastchat/fastchat   v1       78d372e369d2   About an hour ago   61.8 GB
+### $ podman run --name fastchat-v1 -dt --network host --privileged registry.example.com:5000/fastchat/fastchat:v1 /bin/bash -c 'trap : TERM INT; sleep 9999999999d & wait'
+$ python3 -m fastchat.model.apply_delta --base-model-path /code/model/transformer_model_7b --target-model-path /code/model/vicuna_7b --delta-path /root/vicuna-7b-delta-v1.1
+Loading the delta weights from /root/vicuna-7b-delta-v1.1
+Loading checkpoint shards: 100%|████████████████████████████████████████████████████████████████████████████████████████████████| 2/2 [00:11<00:00,  5.84s/it]
+Loading the base model from /code/model/transformer_model_7b
+Loading checkpoint shards: 100%|████████████████████████████████████████████████████████████████████████████████████████████████| 2/2 [00:12<00:00,  6.44s/it]
+Applying the delta
+Applying delta: 100%|███████████████████████████████████████████████████████████████████████████████████████████████████████| 323/323 [00:04<00:00, 64.98it/s]
+Saving the target model to /code/model/vicuna_7b
+### 用 cpu 跑一下模型 
+$ python3 -m fastchat.serve.cli --model-path /code/model/vicuna_7b --device cpu 
 ```

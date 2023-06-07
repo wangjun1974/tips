@@ -19292,8 +19292,6 @@ $ podman cp LLaMA fastchat-v1:/code/model
 $ cd ~
 $ git clone https://github.com/lm-sys/FastChat
 
-### 
-$ git clone https://huggingface.co/lmsys/vicuna-7b-delta-v1.1
 
 ### 从 llama weights 转换为 huggingface 格式
 $ git clone https://github.com/huggingface/transformers.git
@@ -19307,5 +19305,14 @@ Loading checkpoint shards: 100%|████████████████
 Saving in the Transformers format.
 Saving a LlamaTokenizerFast to /code/model/transformer_model_7b.
 
-
+### 克隆 vicuna-7b-delta-v1.1
+$ cd ~
+### https://git-lfs.com/
+### 首先安装 git-lfs 
+### 尝试解决 sha256 不一致的问题
+$ curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.rpm.sh | bash
+$ yum install git-lfs
+$ git lfs install
+$ git clone https://huggingface.co/lmsys/vicuna-7b-delta-v1.1
+$ PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python python3 -m fastchat.model.apply_delta --base-model-path /code/model/transformer_model_7b --target-model-path /code/model/vicuna_7b --delta-path /root/vicuna-7b-delta-v1.1
 ```

@@ -19275,8 +19275,9 @@ $ podman run -d -t --name fastchat-v1 --network host --privileged registry.examp
 
 $ podman exec -it fastchat-v1 bash
 $ pip install fastchat
-### 拷贝 LLaMA 到容器中
-### 文件内容
+$ mkdir -p /code/model
+### 拷贝 LLaMA weights 到容器中
+### LLaMA 7B weights 文件内容
 LLaMA/
 ├── 7B
 │   ├── checklist.chk
@@ -19285,7 +19286,9 @@ LLaMA/
 ├── llama.sh
 ├── tokenizer_checklist.chk
 └── tokenizer.model
-$ podman cp LLaMA 
+### 在容器外执行
+$ podman cp LLaMA fastchat-v1:/code/model
+### 回到容器内
 $ git clone https://github.com/huggingface/transformers.git
 
 ```

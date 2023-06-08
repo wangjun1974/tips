@@ -19340,4 +19340,23 @@ Applying delta: 100%|███████████████████�
 Saving the target model to /code/model/vicuna_7b
 ### 用 cpu 跑一下模型 
 $ python3 -m fastchat.serve.cli --model-path /code/model/vicuna_7b --device cpu 
+
+### 克隆 FastChat
+### https://github.com/lm-sys/FastChat
+$ cd ~
+$ git clone https://github.com/lm-sys/FastChat
+$ cd FastChat
+### 补充运行 Web 的缺失依赖
+$ pip3 install --upgrade pip
+$ pip3 install -e .
+
+### 启动 controller
+$ cd ~
+$ python3 -m fastchat.serve.controller & 
+### 启动 worker
+$ python3 -m fastchat.serve.model_worker --model-path /code/model/vicuna_7b --device cpu &
+### 启动 webserver
+$ python3 -m fastchat.serve.gradio_web_server &
+
+### 访问 <ip>:7860 端口
 ```

@@ -19347,6 +19347,7 @@ $ cd ~
 $ git clone https://github.com/lm-sys/FastChat
 $ cd FastChat
 ### 补充运行 Web 的缺失依赖
+### gradio_web_server 'ModuleNotFoundError: Linkify enabled but not installed'
 $ pip3 install --upgrade pip
 $ pip3 install -e .
 

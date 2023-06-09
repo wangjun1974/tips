@@ -19377,4 +19377,7 @@ $ python3 -m fastchat.serve.gradio_web_server &
 ### 还是 LangChain 与 VectorDB 相关的话题
 ### Building an LLM open source search engine in 100 lines using LangChain and Ray
 ### https://www.anyscale.com/blog/llm-open-source-search-engine-langchain-ray
+
+### LangChain 与 Chroma Vector DB 
+### https://blog.langchain.dev/langchain-chroma/
 ```

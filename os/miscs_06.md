@@ -19254,6 +19254,7 @@ $ oc patch deployment/wordpress --patch \
 ### 运行 FastChat
 https://github.com/lm-sys/FastChat<br>
 https://www.linkedin.com/pulse/step-by-step-guide-running-vicuna-13b-large-language-nischal/<br>
+https://aistudio.baidu.com/aistudio/index<br>
 ```
 ### 如何在本地运行 FastChat
 ### https://www.linkedin.com/pulse/step-by-step-guide-running-vicuna-13b-large-language-nischal/

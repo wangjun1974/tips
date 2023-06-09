@@ -19371,4 +19371,6 @@ $ python3 -m fastchat.serve.gradio_web_server &
 ### https://github.com/RedTopper/Text-Generation-Webui-Podman
 
 
+### 在 RHEL8 上如何支持 NVIDIA GPU
+### https://www.redhat.com/en/blog/how-use-gpus-containers-bare-metal-rhel-8
 ```

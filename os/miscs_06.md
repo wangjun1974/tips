@@ -19364,4 +19364,11 @@ $ python3 -m fastchat.serve.gradio_web_server &
 
 ### vicuna + langchain-MRKL
 ### https://github.com/rinnakk/vicuna-13b-delta-finetuned-langchain-MRKL/blob/main/demo.ipynb
+
+### Oobabooga on Fedora 38
+### 来自 Doug Smith 的文章
+### https://hackmd.io/@dougbtv/ry5kSSqV3
+### https://github.com/RedTopper/Text-Generation-Webui-Podman
+
+
 ```

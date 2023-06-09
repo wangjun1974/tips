@@ -19373,4 +19373,8 @@ $ python3 -m fastchat.serve.gradio_web_server &
 
 ### 在 RHEL8 上如何支持 NVIDIA GPU
 ### https://www.redhat.com/en/blog/how-use-gpus-containers-bare-metal-rhel-8
+
+### 还是 LangChain 与 VectorDB 相关的话题
+### Building an LLM open source search engine in 100 lines using LangChain and Ray
+### https://www.anyscale.com/blog/llm-open-source-search-engine-langchain-ray
 ```

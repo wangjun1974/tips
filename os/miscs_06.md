@@ -19380,4 +19380,14 @@ $ python3 -m fastchat.serve.gradio_web_server &
 
 ### LangChain 与 Chroma Vector DB 
 ### https://blog.langchain.dev/langchain-chroma/
+
+### 向量数据库
+### embeddings - 文本数据的数字化表达
+### https://js.langchain.com/docs/modules/indexes/vector_stores/
+### https://github.com/chroma-core/chroma
+
+### LLAMA GPT4ALL
+### https://towardsai.net/p/machine-learning/llama-gpt4all-simplified-local-chatgpt
+### https://www.together.xyz/blog/redpajama-7b
+
 ```

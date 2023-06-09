@@ -19361,4 +19361,7 @@ $ python3 -m fastchat.serve.model_worker --model-path /code/model/vicuna_7b --de
 $ python3 -m fastchat.serve.gradio_web_server &
 
 ### 访问 <ip>:7860 端口
+
+### vicuna + langchain-MRKL
+### https://github.com/rinnakk/vicuna-13b-delta-finetuned-langchain-MRKL/blob/main/demo.ipynb
 ```

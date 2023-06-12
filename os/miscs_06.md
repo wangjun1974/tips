@@ -19390,4 +19390,8 @@ $ python3 -m fastchat.serve.gradio_web_server &
 ### https://towardsai.net/p/machine-learning/llama-gpt4all-simplified-local-chatgpt
 ### https://www.together.xyz/blog/redpajama-7b
 
+### 什么是Prompt
+### https://blog.csdn.net/weixin_41429382/article/details/129964279
+
+
 ```

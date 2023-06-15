@@ -19393,5 +19393,10 @@ $ python3 -m fastchat.serve.gradio_web_server &
 ### 什么是Prompt
 ### https://blog.csdn.net/weixin_41429382/article/details/129964279
 
-
+### 查询 node 可分配资源
+$ oc get node/$node -o jsonpath='{.status.allocatable}'
+### 查询 NVIDIA GPU 
+$ kubectl exec -n nvidia-gpu-operator nvidia-driver-daemonset-xxxxxxx -- nvidia-smi
+### PromQL - 查询哪些 pod 申请 GPU 资源
+kube_pod_container_resource_requests{job="kube-state-metrics", cluster="", resource="nvidia_com_gpu"}
 ```

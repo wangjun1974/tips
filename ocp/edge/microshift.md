@@ -2726,3 +2726,31 @@ sudo firewall-cmd --zone=trusted --add-source=10.42.0.0/16 --permanent
 sudo firewall-cmd --zone=trusted --add-source=169.254.169.1 --permanent
 sudo firewall-cmd --reload
 ```
+
+### 尝试一下 Node-Red
+https://nodered.org/
+```
+### 老的习惯，先基于 ubi8 做一下 node-red 的镜像
+$ cat > Dockerfile.app-v1 <<EOF
+FROM registry.access.redhat.com/ubi8/ubi:latest
+RUN dnf install -y libpciaccess iproute net-tools procps-ng nmap-ncat iputils diffutils && dnf module install -y nodejs:12 && dnf clean all && npm install -g node-red
+
+EXPOSE 1880/tcp
+
+CMD ["/bin/bash", "-c", "exec /bin/bash -c 'trap : TERM INT; sleep 9999999999d & wait'"]
+EOF
+
+$ podman build -f Dockerfile.app-v1 -t registry.example.com:5000/codesys/nodered:v1
+$ podman run --name nodered-v1 -d -t --privileged --network=host registry.example.com:5000/codesys/nodered:v1
+
+### 凌一PLC模拟器
+### http://www.ly-plc.com/downloads
+
+### 三菱 PLC 软件
+### https://blog.csdn.net/CHUXUEZHE8210/article/details/128733804
+### GX Developer
+### GX Works2 
+### GX Works3
+
+
+```

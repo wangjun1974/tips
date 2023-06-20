@@ -19399,4 +19399,26 @@ $ oc get node/$node -o jsonpath='{.status.allocatable}'
 $ kubectl exec -n nvidia-gpu-operator nvidia-driver-daemonset-xxxxxxx -- nvidia-smi
 ### PromQL - 查询哪些 pod 申请 GPU 资源
 kube_pod_container_resource_requests{job="kube-state-metrics", cluster="", resource="nvidia_com_gpu"}
+
+### 如何将 openshift project 设置为 RHODS project 
+$ oc login with user with admin permissions (needed to add labels)
+$ oc new-project test-sample-enabled
+### RHODS Dashboard 检查这个 label
+$ oc label namespace test-sample-enabled opendatahub.io/dashboard=true
+### ModelMesh Controller 检查这个 label
+$ oc label namespace test-sample-enabled modelmesh-enabled=true
+
+### 拷贝 aliyun-2 的磁盘
+$ qemu-img convert -p -f qcow2 -O qcow2 aliyun_2_1903_x64_20G_nocloud_alibase_20230103.qcow2 jwang-aliyun2-1.qcow2
+### 设置口令
+### $ virt-customize -a jwang-aliyun2-1.qcow2 --root-password password:xxxxxxxx --uninstall cloud-init
+$ virt-install --name jwang-aliyun2-1 \
+    --ram 8192 --vcpus 4 --os-variant rhel7 \
+    --cpu host,+vmx \
+    --network network:default \
+    --boot cdrom,hd,network,menu=on \
+    --noautoconsole --vnc \
+    --disk path=/data/kvm/jwang-aliyun2-1.qcow2,device=disk,bus=virtio,format=qcow2 \
+    --dry-run --print-xml > /tmp/jwang-aliyun2-1.xml;
+$ virsh define /tmp/jwang-aliyun2-1.xml
 ```

@@ -19429,6 +19429,9 @@ $ yum install -y cloud-utils-growpart
 
 ### 禁用 cloud-init
 ### https://cloudinit.readthedocs.io/en/latest/howto/disable_cloud_init.html
+### 如果不禁用 cloud-init
+### 可以用 cloud-utils 生成 seed.img
+### 为 cloud-init 提供所需的 meta-data 和 user-data
 $ guest-fish -a jwang-aliyun2-1.qcow2
 > run
 > list-filesystem

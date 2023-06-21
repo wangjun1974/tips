@@ -19408,6 +19408,8 @@ $ oc label namespace test-sample-enabled opendatahub.io/dashboard=true
 ### ModelMesh Controller 检查这个 label
 $ oc label namespace test-sample-enabled modelmesh-enabled=true
 
+### End of Life Date 
+### https://endoflife.date/
 ### 拷贝 aliyun-2 的磁盘
 $ qemu-img convert -p -f qcow2 -O qcow2 aliyun_2_1903_x64_20G_nocloud_alibase_20230103.qcow2 jwang-aliyun2-1.qcow2
 ### 设置口令

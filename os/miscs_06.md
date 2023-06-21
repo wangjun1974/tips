@@ -19423,4 +19423,31 @@ $ virt-install --name jwang-aliyun2-1 \
     --disk path=/data/kvm/jwang-aliyun2-1.qcow2,device=disk,bus=virtio,format=qcow2 \
     --dry-run --print-xml > /tmp/jwang-aliyun2-1.xml;
 $ virsh define /tmp/jwang-aliyun2-1.xml
+
+### 启用 epel - 安装 cloud-utils 软件包
+$ yum install -y cloud-utils-growpart
+
+### 禁用 cloud-init
+### https://cloudinit.readthedocs.io/en/latest/howto/disable_cloud_init.html
+$ guest-fish -a jwang-aliyun2-1.qcow2
+> run
+> list-filesystem
+> mount /dev/sda1 /
+> touch /etc/cloud/cloud-init.disable
+
+### 启动虚拟机
+### 配置静态 ip 地址
+$ cat > ifcfg-eth0 <<EOF
+TYPE=Ethernet
+IPADDR=192.168.122.171
+PREFIX=24
+GATEWAY=192.168.122.1
+DNS1=192.168.122.1
+DEFROUTE=yes
+IPV4_FAILURE_FATAL=no
+IPV6INIT=no
+NAME=eth0
+DEVICE=eth0
+ONBOOT=yes
+EOF
 ```

@@ -19453,4 +19453,66 @@ NAME=eth0
 DEVICE=eth0
 ONBOOT=yes
 EOF
+
+### convert2RHEL
+### https://www.redhat.com/en/blog/introduction-convert2rhel-now-officially-supported-convert-rhel-systems-rhel
+### https://access.redhat.com/articles/5941531
+### https://access.redhat.com/articles/2360841
+$ curl -o /etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release https://www.redhat.com/security/data/fd431d51.txt
+$ curl --create-dirs -o /etc/rhsm/ca/redhat-uep.pem https://ftp.redhat.com/redhat/convert2rhel/redhat-uep.pem
+$ curl -o /etc/yum.repos.d/convert2rhel.repo https://ftp.redhat.com/redhat/convert2rhel/7/convert2rhel.repo
+$ yum install -y convert2rhel
+
+### 生成新的 /etc/os-release 和 /etc/alinux-release
+$ cp /etc/os-release /etc/os-release.sav
+$ cp /etc/alinux-release /etc/alinux-release.sav
+
+$ cat > /etc/os-release <<EOF
+NAME="CentOS Linux"
+VERSION="7.9 (Core)"
+ID="centos"
+ID_LIKE="rhel fedora"
+VERSION_ID="7.9"
+PRETTY_NAME="CentOS Linux release 7.9 (Core)"
+ANSI_COLOR="0;31"
+EOF
+
+$ cat > /etc/alinux-release <<EOF
+CentOS Linux release 7.9.2009 (Core)
+EOF
+
+### 备份并移除其他 repo 
+$ mkdir -p /etc/yum.repos.d/backup
+$ mv /etc/yum.repos.d/* /etc/yum.repos.d
+
+$ mkdir -p /repo
+### 安装 CentOS Linux 7.9 kernel 
+### 挂载 CentOS Linux 7.9 ISO 
+$ mount /dev/sr0 /repo
+$ cat > /etc/yum.repos.d/local.repo <<EOF
+[rhel-7-rpms]
+name=rhel-7-rpms
+baseurl=file:///repo
+enabled=1
+gpgcheck=1
+sslcacert=/etc/rhsm/ca/redhat-uep.pem
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
+EOF
+### 安装 kernel
+$ yum install -y kernel 
+$ reboot 
+
+### 挂载 RHEL 7.9 ISO
+$ mount /dev/sr0 /repo
+
+### 删除 geoipupdate 包
+$ yum remove -y geoipupdate
+### 等待未来再安装
+
+### 按需处理一些第三方软件包
+### 
+### $ mkdir -p /var/lib/convert2rhel 
+
+### 执行 convert2rhel 
+$ convert2rhel --no-rhsm --enablerepo rhel-7-rpms 
 ```

@@ -19434,15 +19434,8 @@ $ yum install -y cloud-utils-growpart
 ### 为 cloud-init 提供所需的 meta-data 和 user-data
 ### guestfish 的用法参见
 ### https://rwmj.wordpress.com/2011/01/06/tip-replace-text-strings-in-a-file-using-guestfish/
-$ guestfish -a jwang-aliyun2-1.qcow2
-> run
-> list-filesystem
-> mount /dev/sda1 /
-> touch /etc/cloud/cloud-init.disable
-
-### 启动虚拟机
-### 配置静态 ip 地址
-$ cat > ifcfg-eth0 <<EOF
+### Hypervisor 上配置静态 ip 地址
+$ cat > /tmp/ifcfg-eth0 <<EOF
 TYPE=Ethernet
 IPADDR=192.168.122.171
 PREFIX=24
@@ -19455,6 +19448,17 @@ NAME=eth0
 DEVICE=eth0
 ONBOOT=yes
 EOF
+
+$ guestfish -a jwang-aliyun2-1.qcow2
+><fs> run
+><fs> list-filesystem
+><fs> mount /dev/sda1 /
+><fs> touch /etc/cloud/cloud-init.disabled
+><fs> ! sed 's/^PasswordAuthentication no/PasswordAuthentication yes/' /tmp/sshd_config > /tmp/sshd_config.new
+><fs> upload /tmp/sshd_config.new /etc/ssh/sshd_config
+><fs> upload /tmp/ifcfg-eth0 /etc/sysconfig/network-scripts/ifcfg-eth0
+><fs> umount /
+><fs> exit
 
 ### convert2RHEL
 ### https://www.redhat.com/en/blog/introduction-convert2rhel-now-officially-supported-convert-rhel-systems-rhel
@@ -19522,8 +19526,7 @@ $ yum remove -y geoipupdate
 ### 等待未来再安装
 
 ### 按需处理一些第三方软件包
-### 
-### $ mkdir -p /var/lib/convert2rhel 
+$ mkdir -p /var/lib/convert2rhel 
 
 ### 执行 convert2rhel 替换内核
 $ CONVERT2RHEL_DISABLE_TELEMETRY=1 convert2rhel --no-rhsm --enablerepo rhel-7-rpms --no-rpm-va --debug -y 2>&1 | tee /tmp/err 
@@ -19588,23 +19591,16 @@ $ yum remove -y abrt-retrace-client
 ### 添加 gcc dracut-network  
 $ yum downgrade -y zlib zip yum-utils yum-plugin-releasever-adapter yum-plugin-fastestmirror yum-metadata-parser yum-langpacks yum yajl xz-libs xz xmlrpc-c-client xmlrpc-c xfsprogs xfsdump xdg-utils words which wget virt-what util-linux ustr usermode usbutils usb_modeswitch-data usb_modeswitch update-motd unzip tzdata tuned time teamd tcsh sysvinit-tools systemtap-runtime system-lsb-submod-security system-lsb-core systemd-sysv systemd-python systemd-libs systemd sysstat sudo strace sssd-client sshpass sqlite spax sos socat snappy slang shared-mime-info sgpio setuptool setup setserial selinux-policy-targeted selinux-policy sed scl-utils satyr rsyslog rsync rpm-python rpm-libs rpm-build-libs rpm rpcbind rootfiles rng-tools rfkill readline rdate qrencode-libs PyYAML pyxattr python-urllib3 python-urlgrabber python-srpm-macros python-slip-dbus python-slip python-six python-setuptools python-schedutils python-rpm-macros python-requests python-repoze-lru python-pyudev python-pycurl python-pycparser python-ply python-perf python-markupsafe python-linux-procfs python-libs python-kitchen python-jwcrypto python-jsonpointer python-jsonpatch python-jinja2 python-ipaddress python-iniparse python-idna python-gobject-base python-firewall python-enum34 python-devel python-decorator python-configobj python-chardet python-cffi python-backports-ssl_match_hostname python-backports python-babel python-augeas python3-setuptools python3-pip python3-libs python3 python2-rpm-macros python2-pyasn1 python2-oauthlib python2-jsonschema python2-futures python2-cryptography python pyliblzma pygpgme pygobject2 pth psmisc psacct procps-ng popt polkit-pkla-compat polkit policycoreutils pm-utils plymouth-scripts plymouth-core-libs plymouth pixman pinfo pinentry pigz pexpect perl-Time-Local perl-threads-shared perl-threads perl-Text-ParseWords perl-Storable perl-Socket perl-Scalar-List-Utils perl-Pod-Usage perl-Pod-Perldoc perl-podlators perl-PathTools perl-HTTP-Tiny perl-Getopt-Long perl-Filter perl-File-Temp perl-File-Path perl-Exporter perl-Encode perl-constant perl-Carp pcre pciutils-libs pciutils patch passwd parted pam p11-kit-trust p11-kit os-prober openssh-server openssh-clients openssh openldap numactl-libs ntsysv ntpdate ntp nss-util nss-tools nss-sysinit nss-softokn-freebl nss-softokn nss-pem nss nspr newt-python newt net-tools ncurses-libs ncurses-base ncurses nano mpfr mozjs17 mlocate mdadm man-pages-overrides man-pages man-db mailx m4 lzo lz4 lua lsscsi lsof logrotate lm_sensors-libs linux-firmware libyaml libxml2-python libxml2 libverto-libevent libverto libuuid libutempter libuser libusbx libunistring libtool-ltdl-devel libtool-ltdl libtirpc libteam libtasn1 libtar libsysfs libstoragemgmt-python-clibs libstoragemgmt-python libstoragemgmt libstdc++ libsss_nss_idmap libsss_idmap libssh2 libss libsmartcols libsepol libsemanage libselinux-utils libselinux-python libselinux libseccomp libreport-web libreport-rhel libreport-python libreport-plugin-ureport libreport-plugin-rhtsupport libreport-plugin-mailx libreport-filesystem libreport-cli libreport libref_array libpwquality libproxy libpipeline libpciaccess libpath_utils libnl3-cli libnl3 libnl libnfsidmap libnfnetlink libnetfilter_queue libnetfilter_cttimeout libnetfilter_cthelper libnetfilter_conntrack libndp libmpc libmount libmodman libmnl libini_config libidn libgpg-error libgomp libgcrypt libgcc libfprint libffi libfastjson libevent libestr libedit libdwarf libdrm libdb-utils libdb libdaemon libcurl libcroco libconfig libcom_err libcollection libcap-ng libcap libblkid libbasicobjects libattr libassuan libaio libacl less ledmon langtable-python langtable-data langtable krb5-libs kpatch kpartx kmod-libs kmod keyutils-libs keyutils kernel kbd-misc kbd-legacy kbd json-c jansson iwl7260-firmware iwl6050-firmware iwl6000g2b-firmware iwl6000g2a-firmware iwl6000-firmware iwl5150-firmware iwl5000-firmware iwl4965-firmware iwl3945-firmware iwl3160-firmware iwl2030-firmware iwl2000-firmware iwl135-firmware iwl105-firmware iwl100-firmware iw iputils iptables ipset-libs ipset iprutils iproute initscripts info hwdata hunspell-en-US hunspell-en-GB hunspell-en hunspell hostname hdparm gzip gssproxy grubby groff-base grep gpm-libs gpgme gobject-introspection gnupg2 glib2 gettext-libs gettext gdbm gdb gawk fxload fuse-libs fuse freetype fprintd-pam fprintd firewalld-filesystem firewalld fipscheck-lib fipscheck filesystem file-libs file expat elfutils-libs elfutils-libelf elfutils-default-yama-scope elfutils efivar-libs efibootmgr ed ebtables e2fsprogs-libs e2fsprogs dyninst dracut-config-rescue dracut dosfstools diffutils desktop-file-utils deltarpm dbus-python dbus-glib cyrus-sasl-plain cyrus-sasl-lib curl cryptsetup-libs cryptsetup crontabs cronie-anacron cronie crda cracklib-dicts cracklib cpp cpio coreutils conntrack-tools cloud-utils-growpart cloud-init chrony chkconfig ca-certificates bzip2-libs bzip2 btrfs-progs bridge-utils boost-thread boost-system boost-date-time blktrace biosdevname binutils bc bash basesystem avahi-libs autogen-libopts authconfig augeas-libs audit-libs audit attr at alsa-tools-firmware alsa-lib alsa-firmware aic94xx-firmware acl abrt-tui abrt-python abrt-libs abrt-dbus abrt-addon-xorg abrt-addon-python abrt-addon-pstoreoops abrt-addon-kerneloops abrt-addon-vmcore abrt gcc dracut-network 
 
-### 最后的软件包
+### 最后一部分软件包处理
 $ N=''; rpm -qa | grep -Ev "el7.x86_64|el7.noarch" | grep al7 | while read i  ; do echo $i ; PACKAGENAME=$(rpm --queryformat=%{NAME} -q $i | grep -v 'not installed' ); N=${PACKAGENAME}" "${N}; if [ $? -eq 0 ]; then echo ; echo ; echo -n $N ; fi ;done
 
-$ yum remove -y yum-plugin-fastestmirror.noarch
-$ yum remove -y python-repoze-lru 
-$ yum remove -y pigz
-$ yum remove -y system-lsb-submod-security
-$ yum remove -y sshpass
-$ yum remove -y epel-aliyuncs-release
+$ yum remove -y yum-plugin-fastestmirror.noarch python-repoze-lru pigz system-lsb-submod-security sshpass epel-aliyuncs-release aliyun_assist yum-plugin-releasever-adapter
 
-$ yum upgrade -y iproute
-$ yum upgrade -y strace
-$ yum downgrade -y dmraid-events dmraid --exclude dmraid.i686
+$ yum upgrade -y iproute strace
+
+$ yum downgrade -y dmraid-events dmraid device-mapper-persistent-data kexec-tools
+
 $ mv /etc/yum/protected.d/systemd.conf.backup /etc/yum/protected.d/systemd.conf
-$ yum remove -y aliyun_assist yum-plugin-releasever-adapter
-$ yum downgrade -y device-mapper-persistent-data
-$ yum downgrade -y kexec-tools
 
 
 ### 删除阿里云盾

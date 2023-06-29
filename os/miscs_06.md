@@ -19600,5 +19600,8 @@ if [ -d /usr/local/aegis ];then
 fi
 }
 
+### alicloud linux 2 image 里有 geoipupdate 
+### 使用 geoipupdate 自动更新 GeoIP 数据库
+### https://vickey.fun/2022/04/17/using-geoipupdate-to-auto-update-maxmind-database/
 
 ```

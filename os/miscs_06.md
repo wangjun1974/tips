@@ -19574,4 +19574,31 @@ $ yum upgrade -y iproute
 $ yum upgrade -y strace
 
 $ mv /etc/yum/protected.d/systemd.conf.backup /etc/yum/protected.d/systemd.conf
+
+$ yum remove -y kernel-4.19.91-27.4.al7
+$ yum remove -y aliyun_assist yum-plugin-releasever-adapter
+
+
+### 删除阿里云盾
+### https://hughsite.com/post/aliyun-remove-monitor.html
+stop_aegis(){
+	killall -9 aegis_cli >/dev/null 2>&1
+	killall -9 aegis_update >/dev/null 2>&1
+	killall -9 aegis_cli >/dev/null 2>&1
+	killall -9 AliYunDun >/dev/null 2>&1
+	killall -9 AliHids >/dev/null 2>&1
+	killall -9 AliHips >/dev/null 2>&1
+	killall -9 AliYunDunUpdate >/dev/null 2>&1
+    printf "%-40s %40s\n" "Stopping aegis" "[  OK  ]"
+}
+
+remove_aegis(){
+if [ -d /usr/local/aegis ];then
+    rm -rf /usr/local/aegis/aegis_client
+    rm -rf /usr/local/aegis/aegis_update
+	rm -rf /usr/local/aegis/alihids
+fi
+}
+
+
 ```

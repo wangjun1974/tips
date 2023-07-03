@@ -19629,4 +19629,8 @@ rm -rf /usr/local/aegis
 ### 使用 geoipupdate 自动更新 GeoIP 数据库
 ### https://vickey.fun/2022/04/17/using-geoipupdate-to-auto-update-maxmind-database/
 
+
+### alicloud linux 3 image 
+$ qemu-img convert -p -f qcow2 -O qcow2 aliyun_3_x64_20G_nocloud_alibase_20230110.qcow2 jwang-aliyun2-2.qcow2
+$ virt-customize -a jwang-aliyun2-2.qcow2 --root-password password:NOT_REAL_PASSWORD
 ```

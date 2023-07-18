@@ -9577,7 +9577,35 @@ operatorgroup.operators.coreos.com/codeready-workspaces created
 subscription.operators.coreos.com/codeready-workspaces created
 ```
 
+### RHEL9 kickstart file
+可以从网址生成
+https://access.redhat.com/labsinfo/kickstartconfig
 
+RHEL9 minimal kickstart file
+```
+cat > /tmp/ks.cfg <<'EOF'
+lang en_US
+keyboard --xlayouts='us'
+timezone Asia/Shanghai --utc
+rootpw $2b$10$d5aP7dR9gDuIqXi7AkEDV.adI07uBf9En0AhsujCCrk9CLYtxhQcy --iscrypted
+reboot
+text
+cdrom
+bootloader --append="rhgb quiet crashkernel=auto"
+zerombr
+clearpart --all --initlabel
+autopart
+network --device=ens3 --hostname=undercloud.example.com --bootproto=static --ip=192.168.122.2 --netmask=255.255.255.0 --gateway=192.168.122.1 --nameserver=192.168.122.1
+skipx
+firstboot --disable
+selinux --enforcing
+firewall --enabled --ssh
+%packages
+@^minimal-environment
+kexec-tools
+%end
+EOF
+```
 
 ### RHEL8 kickstart file
 可以从网址生成

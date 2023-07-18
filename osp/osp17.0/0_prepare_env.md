@@ -291,29 +291,86 @@ EOF
 
 
 # 安装 helper 服务器
-virt-install --name=jwang-rhel84-helper-undercloud --vcpus=4 --ram=32768 \
---disk path=/data/kvm/jwang-rhel84-helper-undercloud.qcow2,bus=virtio,size=100 \
+qemu-img create -f qcow2 -o preallocation=metadata /data/kvm/jwang-rhel90-helper-undercloud.qcow2 120G
+virt-install --name=jwang-rhel90-helper-undercloud --vcpus=4 --ram=32768 \
+--disk path=/data/kvm/jwang-rhel90-helper-undercloud.qcow2,bus=virtio,size=100 \
 --os-variant rhel8.0 --network network=default,model=virtio \
---boot menu=on --location /root/jwang/isos/rhel-8.4-x86_64-dvd.iso \
+--boot menu=on --location /root/jwang/isos/rhel-9.0-x86_64-dvd.iso \
 --initrd-inject /tmp/ks-helper.cfg \
 --extra-args='ks=file:/ks-helper.cfg'
 
 # 配置 yum 源
 # 根据现场实际情况配置
 # 这里用 undercloud 提供的 yum 源
+# 这部分会稍后更新，使用 helper 提供的源
 
-cat > /etc/yum.repos.d/w.repo << EOF
-[rhel-8-for-x86_64-baseos-eus-rpms]
-name=rhel-8-for-x86_64-baseos-eus-rpms
-baseurl=http://192.168.8.21:8787/repos/osp16.2/rhel-8-for-x86_64-baseos-eus-rpms/
+$ mkdir -p /repo
+$ mount /dev/sr0 /repo
+$ cat > /etc/yum.repos.d/local.repo << EOF
+[rhel-9-for-x86_64-baseos]
+name=rhel-9-for-x86_64-baseos
+baseurl=file:///repo/BaseOS/
 enabled=1
 gpgcheck=0
 
-[rhel-8-for-x86_64-appstream-eus-rpms]
-name=rhel-8-for-x86_64-appstream-eus-rpms
-baseurl=http://192.168.8.21:8787/repos/osp16.2/rhel-8-for-x86_64-appstream-eus-rpms/
+[rhel-9-for-x86_64-appstream]
+name=rhel-9-for-x86_64-appstream
+baseurl=file:///repo/AppStream/
 enabled=1
 gpgcheck=0
 EOF
-
 ```
+
+注意：在下载服务器上执行，订阅所需软件频道，如果已经有下载好的 repo 压缩包，可以直接使用下载好的 repo 压缩包
+注意：ansible-core 包含在 rhel-9-for-x86_64-appstream-eus-rpms 中
+```
+# 安装 reposync 工具
+dnf install -y yum-utils 
+
+subscription-manager release --set=9.0
+subscription-manager repos --disable=*
+subscription-manager repos --enable=rhel-9-for-x86_64-baseos-eus-rpms --enable=rhel-9-for-x86_64-appstream-eus-rpms --enable=rhel-9-for-x86_64-highavailability-eus-rpms --enable=openstack-17-for-rhel-9-x86_64-rpms --enable=openstack-17-tools-for-rhel-9-x86_64-rpms --enable=fast-datapath-for-rhel-9-x86_64-rpms --enable=rhceph-5-tools-for-rhel-9-x86_64-rpms
+```
+
+在下载服务器上，生成同步软件频道的脚本
+```
+$ yum install -y httpd 
+
+mkdir -p /var/www/html/repos/osp17.0
+pushd /var/www/html/repos/osp17.0
+
+cat > ./OSP17_0_repo_sync_up.sh <<'EOF'
+#!/bin/bash
+
+localPath="/var/www/html/repos/osp17.0/"
+fileConn="/getPackage/"
+
+## sync following yum repos 
+# rhel-9-for-x86_64-baseos-eus-rpms
+# rhel-9-for-x86_64-appstream-eus-rpms
+# rhel-9-for-x86_64-highavailability-eus-rpms
+# openstack-17-for-rhel-8-x86_64-rpms
+# openstack-17-tools-for-rhel-9-x86_64-rpms
+# fast-datapath-for-rhel-9-x86_64-rpms
+# rhceph-5-tools-for-rhel-9-x86_64-rpms
+
+for i in rhel-9-for-x86_64-baseos-eus-rpms rhel-9-for-x86_64-appstream-eus-rpms rhel-9-for-x86_64-highavailability-eus-rpms openstack-17-for-rhel-8-x86_64-rpms openstack-17-tools-for-rhel-9-x86_64-rpms fast-datapath-for-rhel-9-x86_64-rpms rhceph-5-tools-for-rhel-9-x86_64-rpms
+do
+
+  rm -rf "$localPath"$i/repodata
+  echo "sync channel $i..."
+  reposync -n --delete --download-path="$localPath" --repoid $i --download-metadata
+
+done
+
+exit 0
+EOF
+
+# 同步软件仓库
+/usr/bin/nohup /bin/bash OSP17_0_repo_sync_up.sh &
+
+# 同步完之后把 /var/www/html/repos/osp17.0 目录打包，下载作为离线时使用的软件仓库
+$ tar zcvf /tmp/osp17.0-yum-repos-$(date -I).tar.gz /var/www/html/repos/osp17.0
+```
+
+

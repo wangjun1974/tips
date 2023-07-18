@@ -447,10 +447,6 @@ podman generate systemd poc-registry >> /etc/systemd/system/podman.poc-registry.
 systemctl enable podman.poc-registry.service
 systemctl restart podman.poc-registry.service
 curl https://helper.example.com:5000/v2/_catalog
-
-
-
-
 ```
 
 准备离线镜像
@@ -504,5 +500,49 @@ for rhosp_image in $(podman search ${rhosp_namespace} --limit 1000 --format "{{ 
   ((i=i%FORK)); ((i++==0)) && wait
   copyimg ${rhosp_image} ${rhosp_tag} &
 done
+EOF
+
+### ceph-6
+cat > /root/syncimgs-ceph-6 <<'EOF'
+#!/bin/env bash
+
+PUSHREGISTRY=helper.example.com:5000
+FORK=4
+
+rhosp_namespace=registry.redhat.io/rhosp-rhel9
+rhosp_tag=17.0
+ceph_namespace=registry.redhat.io/rhceph
+ceph_image=rhceph-6-rhel9
+ceph_tag=latest
+ceph_alertmanager_namespace=registry.redhat.io/openshift4
+ceph_alertmanager_image=ose-prometheus-alertmanager
+ceph_alertmanager_tag=v4.12
+ceph_grafana_namespace=registry.redhat.io/rhceph
+ceph_grafana_image=rhceph-6-dashboard-rhel9
+ceph_grafana_tag=6
+ceph_node_exporter_namespace=registry.redhat.io/openshift4
+ceph_node_exporter_image=ose-prometheus-node-exporter
+ceph_node_exporter_tag=v4.12
+ceph_prometheus_namespace=registry.redhat.io/openshift4
+ceph_prometheus_image=ose-prometheus
+ceph_prometheus_tag=v4.12
+
+function copyimg() {
+  image=${1}
+  version=${2}
+
+  release=$(skopeo inspect docker://${image}:${version} | jq -r '.Labels | (.version + "-" + .release)')
+  dest="${PUSHREGISTRY}/${image#*\/}"
+  echo Copying ${image} to ${dest}
+  skopeo copy docker://${image}:${release} docker://${dest}:${release} --quiet
+  skopeo copy docker://${image}:${version} docker://${dest}:${version} --quiet
+}
+
+copyimg "${ceph_namespace}/${ceph_image}" ${ceph_tag} &
+copyimg "${ceph_alertmanager_namespace}/${ceph_alertmanager_image}" ${ceph_alertmanager_tag} &
+copyimg "${ceph_grafana_namespace}/${ceph_grafana_image}" ${ceph_grafana_tag} &
+copyimg "${ceph_node_exporter_namespace}/${ceph_node_exporter_image}" ${ceph_node_exporter_tag} &
+copyimg "${ceph_prometheus_namespace}/${ceph_prometheus_image}" ${ceph_prometheus_tag} &
+wait
 EOF
 ```

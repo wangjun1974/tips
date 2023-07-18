@@ -371,6 +371,138 @@ EOF
 
 # 同步完之后把 /var/www/html/repos/osp17.0 目录打包，下载作为离线时使用的软件仓库
 $ tar zcvf /tmp/osp17.0-yum-repos-$(date -I).tar.gz /var/www/html/repos/osp17.0
+
+# 重设 selinux context
+[root@helper repos]# chcon --recursive --reference=/var/www/html /var/www/html/repos
+
+# 开启防火墙 http 端口，启动 httpd 服务器
+[root@helper repos]# firewall-cmd --add-service=http
+[root@helper repos]# firewall-cmd --add-service=http --permanent
+[root@helper repos]# firewall-cmd --reload
+
+# 启动 httpd 服务
+[root@helper repos]# systemctl enable httpd && systemctl start httpd
 ```
 
 
+离线镜像仓库准备 (新)
+```
+cat >> /etc/hosts <<EOF
+192.168.122.3 helper.example.com
+EOF
+
+安装 registry 基础软件
+yum install -y podman httpd httpd-tools wget jq
+
+创建目录
+mkdir -p /opt/registry/{certs,data}
+
+生成 registry 证书，如果是解压缩 registry 压缩包，这个步骤可以跳过
+cd /opt/registry/certs
+openssl req -newkey rsa:4096 -nodes -sha256 -keyout domain.key -x509 -days 3650 -out domain.crt     -addext "subjectAltName = DNS:helper.example.com" -subj "/C=CN/ST=BJ/L=BJ/O=Global Security/OU=IT Department/CN=helper.example.com"
+
+更新本地证书信任
+cp /opt/registry/certs/domain.crt /etc/pki/ca-trust/source/anchors/
+update-ca-trust extract
+
+更新防火墙
+firewall-cmd --add-port=5000/tcp --zone=internal --permanent
+firewall-cmd --add-port=5000/tcp --zone=public   --permanent
+firewall-cmd --reload
+
+生成脚本
+cat > /usr/local/bin/localregistry.sh << 'EOF'
+#!/bin/bash
+podman run --name poc-registry -d -p 5000:5000 \
+-v /opt/registry/data:/var/lib/registry:z \
+-v /opt/registry/certs:/certs:z \
+-e REGISTRY_HTTP_TLS_CERTIFICATE=/certs/domain.crt \
+-e REGISTRY_HTTP_TLS_KEY=/certs/domain.key \
+docker.io/library/registry:latest
+EOF
+
+如果是离线导入时，脚本为 
+cat > /usr/local/bin/localregistry.sh << 'EOF'
+#!/bin/bash
+podman run --name poc-registry -d -p 5000:5000 \
+-v /opt/registry/data:/var/lib/registry:z \
+-v /opt/registry/certs:/certs:z \
+-e REGISTRY_HTTP_TLS_CERTIFICATE=/certs/domain.crt \
+-e REGISTRY_HTTP_TLS_KEY=/certs/domain.key \
+localhost/docker-registry:latest
+EOF
+
+设置脚本可执行
+chmod +x /usr/local/bin/localregistry.sh
+
+启动镜像服务
+/usr/local/bin/localregistry.sh
+
+验证镜像服务可访问
+curl https://helper.example.com:5000/v2/_catalog
+cd /root
+
+生成容器对应的 systemd 服务
+podman generate systemd poc-registry >> /etc/systemd/system/podman.poc-registry.service
+systemctl enable podman.poc-registry.service
+systemctl restart podman.poc-registry.service
+curl https://helper.example.com:5000/v2/_catalog
+
+
+
+
+```
+
+准备离线镜像
+```
+
+yum install -y skopeo 
+
+cat > /root/syncimgs <<'EOF'
+#!/bin/env bash
+
+PUSHREGISTRY=helper.example.com:5000
+FORK=4
+
+rhosp_namespace=registry.redhat.io/rhosp-rhel9
+rhosp_tag=17.0
+ceph_namespace=registry.redhat.io/rhceph
+ceph_image=rhceph-5-rhel8
+ceph_tag=latest
+ceph_alertmanager_namespace=registry.redhat.io/openshift4
+ceph_alertmanager_image=ose-prometheus-alertmanager
+ceph_alertmanager_tag=v4.12
+ceph_grafana_namespace=registry.redhat.io/rhceph
+ceph_grafana_image=rhceph-5-dashboard-rhel8
+ceph_grafana_tag=5
+ceph_node_exporter_namespace=registry.redhat.io/openshift4
+ceph_node_exporter_image=ose-prometheus-node-exporter
+ceph_node_exporter_tag=v4.12
+ceph_prometheus_namespace=registry.redhat.io/openshift4
+ceph_prometheus_image=ose-prometheus
+ceph_prometheus_tag=v4.12
+
+function copyimg() {
+  image=${1}
+  version=${2}
+
+  release=$(skopeo inspect docker://${image}:${version} | jq -r '.Labels | (.version + "-" + .release)')
+  dest="${PUSHREGISTRY}/${image#*\/}"
+  echo Copying ${image} to ${dest}
+  skopeo copy docker://${image}:${release} docker://${dest}:${release} --quiet
+  skopeo copy docker://${image}:${version} docker://${dest}:${version} --quiet
+}
+
+copyimg "${ceph_namespace}/${ceph_image}" ${ceph_tag} &
+copyimg "${ceph_alertmanager_namespace}/${ceph_alertmanager_image}" ${ceph_alertmanager_tag} &
+copyimg "${ceph_grafana_namespace}/${ceph_grafana_image}" ${ceph_grafana_tag} &
+copyimg "${ceph_node_exporter_namespace}/${ceph_node_exporter_image}" ${ceph_node_exporter_tag} &
+copyimg "${ceph_prometheus_namespace}/${ceph_prometheus_image}" ${ceph_prometheus_tag} &
+wait
+
+for rhosp_image in $(podman search ${rhosp_namespace} --limit 1000 --format "{{ .Name }}"); do
+  ((i=i%FORK)); ((i++==0)) && wait
+  copyimg ${rhosp_image} ${rhosp_tag} &
+done
+EOF
+```

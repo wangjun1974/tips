@@ -21,7 +21,11 @@
 (undercloud) [stack@undercloud ~]$ openstack overcloud image upload --image-path ~/images
 
 # 2.1 查看 overcloud 相关的镜像已上传到 undercloud registry
-(undercloud) [stack@undercloud ~]$ openstack image list
+(undercloud) [stack@undercloud ~]$ ls -l /var/lib/ironic/images/
+total 2959996
+-rw-r--r--. 1 root 42422   66047069 Jul 19 14:57 overcloud-full.initrd
+-rw-r--r--. 1 root 42422 3309502464 Jul 19 14:58 overcloud-full.raw
+-rw-r--r--. 1 root 42422   11486096 Jul 19 14:57 overcloud-full.vmlinuz
 
 # 2.2 查看 ironic 相关的 kernel 和 agent 以及 introspection 的 启动配置文件
 # 这些文件用于 introspection 阶段远程系统启动及信息收集

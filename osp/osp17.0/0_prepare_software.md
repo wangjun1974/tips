@@ -111,33 +111,24 @@ EOF
 
 # 禁用远程 yum 源，设置本地 yum 源
 [root@undercloud repos]# subscription-manager repos --disable=*
+[root@undercloud repos]# mkdir -p /etc/yum.repos.d/backup
 [root@undercloud repos]# echo y | mv /etc/yum.repos.d/redhat.repo /etc/yum.repos.d/backup
 [root@undercloud repos]# sed -ie 's|enabled=1|enabled=0|' /etc/yum/pluginconf.d/subscription-manager.conf
 
 [root@undercloud repos]# > /etc/yum.repos.d/osp.repo 
-[root@undercloud repos]# for i in rhel-8-for-x86_64-baseos-eus-rpms rhel-8-for-x86_64-appstream-eus-rpms rhel-8-for-x86_64-highavailability-eus-rpms ansible-2.9-for-rhel-8-x86_64-rpms openstack-16.2-for-rhel-8-x86_64-rpms fast-datapath-for-rhel-8-x86_64-rpms rhceph-4-tools-for-rhel-8-x86_64-rpms advanced-virt-for-rhel-8-x86_64-rpms rhel-8-for-x86_64-nfv-rpms
+[root@undercloud repos]# for i in rhel-9-for-x86_64-baseos-eus-rpms rhel-9-for-x86_64-appstream-eus-rpms rhel-9-for-x86_64-highavailability-eus-rpms openstack-17-for-rhel-9-x86_64-rpms fast-datapath-for-rhel-9-x86_64-rpms
 do
 cat >> /etc/yum.repos.d/osp.repo << EOF
 [$i]
 name=$i
-baseurl=file:///var/www/html/repos/osp16.2/$i/
+baseurl=http://192.168.122.3/repos/osp17.0/$i/
 enabled=1
 gpgcheck=0
 
 EOF
 done
-[root@undercloud repos]# yum install -y httpd httpd-tools
-[root@undercloud repos]# exit
 
-# 5.12 设置 container-tools 模块为版本 3.0
-[stack@undercloud ~]$ sudo dnf module disable -y container-tools:rhel8
-[stack@undercloud ~]$ sudo dnf module enable -y container-tools:3.0
-
-# 5.13 设置 virt 模块版本为 av
-[stack@undercloud ~]$ sudo dnf module disable -y virt:rhel
-[stack@undercloud ~]$ sudo dnf module enable -y virt:av
-
-# 5.14 更新并且重启
+# 更新并且重启
 [stack@undercloud ~]$ sudo dnf update -y
 [stack@undercloud ~]$ sudo reboot
 

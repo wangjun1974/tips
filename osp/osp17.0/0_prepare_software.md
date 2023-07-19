@@ -69,10 +69,8 @@ RHEL 9.0 的 kickstart 文件语法有改变，
 
 
 ### Yum 仓库和镜像仓库准备
-
 OSP 在部署时需要访问镜像仓库，在一般的部署下，这个镜像仓库会部署在 helper 上
 
-```
 # 1. 安装时需使用 rhel-9.0-x86_64-dvd.iso 作为操作系统的安装介质
 # 这个 ISO 可在红帽官网下载
 # https://access.redhat.com/downloads/content/479/ver=/rhel---9/9.0/x86_64/product-software

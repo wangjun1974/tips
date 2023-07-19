@@ -132,13 +132,10 @@ done
 [stack@undercloud ~]$ sudo dnf update -y
 [stack@undercloud ~]$ sudo reboot
 
-# 6 安装 director
+# director
 [stack@undercloud ~]$ sudo dnf install -y python3-tripleoclient
 
-# 7 安装 ceph-ansible
-[stack@undercloud ~]$ sudo dnf install -y ceph-ansible
-
-# 8 创建 undercloud.conf 文件
+# 创建 undercloud.conf 文件
 # 参数详情参见：https://github.com/wangjun1974/tips/blob/master/osp/digitalchina/1_undercloud_conf.md
 cat > undercloud.conf << EOF
 [DEFAULT]
@@ -194,31 +191,52 @@ parameter_defaults:
   ContainerImagePrepare:
   - push_destination: true
     set:
+      ceph_namespace: helper.example.com:5000/rhceph
+      ceph_image: rhceph-5-rhel8
+      ceph_tag: latest
+      ceph_grafana_image: rhceph-5-dashboard-rhel8
+      ceph_grafana_namespace: helper.example.com:5000/rhceph
+      ceph_grafana_tag: 5
       ceph_alertmanager_image: ose-prometheus-alertmanager
       ceph_alertmanager_namespace: helper.example.com:5000/openshift4
-      ceph_alertmanager_tag: v4.6
-      ceph_grafana_image: rhceph-4-dashboard-rhel8
-      ceph_grafana_namespace: helper.example.com:5000/rhceph
-      ceph_grafana_tag: 4
-      ceph_image: rhceph-4-rhel8
-      ceph_namespace: helper.example.com:5000/rhceph
+      ceph_alertmanager_tag: v4.12
       ceph_node_exporter_image: ose-prometheus-node-exporter
       ceph_node_exporter_namespace: helper.example.com:5000/openshift4
-      ceph_node_exporter_tag: v4.6
+      ceph_node_exporter_tag: v4.12
       ceph_prometheus_image: ose-prometheus
       ceph_prometheus_namespace: helper.example.com:5000/openshift4
-      ceph_prometheus_tag: v4.6
-      ceph_tag: latest
+      ceph_prometheus_tag: v4.12
       name_prefix: openstack-
       name_suffix: ''
-      namespace: helper.example.com:5000/rhosp-rhel8
+      namespace: helper.example.com:5000/rhosp-rhel9
       neutron_driver: ovn
       rhel_containers: false
-      tag: '16.2'
+      tag: '17.0'
     tag_from_label: '{version}-{release}'
 EOF
 
-# 10. 安装 undercloud
+# 修改 /usr/share/ansible/roles/chrony/defaults/main.yml 文件
+# 添加本地 chrony_ntp_servers
+---
+chrony_debug: False
+chrony_role_action: all
+chrony_global_server_settings: iburst
+chrony_ntp_servers: 
+    - 192.168.122.1
+chrony_ntp_pools: []
+chrony_ntp_peers: []
+chrony_bind_addresses:
+    - 127.0.0.1
+    - ::1
+chrony_acl_rules: []
+chrony_service_name: chronyd
+chrony_manage_service: True
+chrony_manage_package: True
+chrony_service_state: started
+chrony_extra_options: []
+
+
+# 安装 undercloud
 [stack@undercloud ~]$ time openstack undercloud install
 
 # 在安装完 undercloud 之后，设置 chronyd 服务

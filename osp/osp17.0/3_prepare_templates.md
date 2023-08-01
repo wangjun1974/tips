@@ -128,8 +128,12 @@ overcloud 网络<br>
 # 拷贝/usr/share/ansible/roles/tripleo_network_config/templates/* 到 ~/templates/
 (undercloud) [stack@undercloud rendered]$ cp -r /usr/share/ansible/roles/tripleo_network_config/templates/* ~/templates/
 
-# 执行 openstack overcloud network provision - network provision
+# 执行 openstack overcloud cprovision - network provision
 (undercloud) [stack@undercloud rendered]$ openstack overcloud network provision --output /home/stack/templates/overcloud-networks-deployed.yaml /home/stack/templates/network_data.yaml
+
+# 执行 openstack overcloud network vip provision - network vip provision
+(undercloud) [stack@undercloud rendered]$ cp /usr/share/openstack-tripleo-heat-templates/network-data-samples/vip-data-default-network-isolation.yaml /home/stack/templates/vip_data.yaml
+(undercloud) [stack@undercloud rendered]$ openstack overcloud network vip provision --stack overcloud --output /home/stack/templates/overcloud-vip-deployed.yaml /home/stack/templates/vip_data.yaml
 
 # 设置 baremetal node property capabilities boot_mode:bios
 (undercloud) [stack@undercloud rendered]$ openstack baremetal node list -f value -c UUID| while read NODE; do openstack baremetal node set --property capabilities="boot_mode:bios,$(openstack baremetal node show $NODE -f json -c properties | jq -r .properties.capabilities | sed "s/boot_mode:[^,]*,//g")" $NODE;done

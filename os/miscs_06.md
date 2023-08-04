@@ -19633,4 +19633,41 @@ rm -rf /usr/local/aegis
 ### alicloud linux 3 image 
 $ qemu-img convert -p -f qcow2 -O qcow2 aliyun_3_x64_20G_nocloud_alibase_20230110.qcow2 jwang-aliyun2-2.qcow2
 $ virt-customize -a jwang-aliyun2-2.qcow2 --root-password password:NOT_REAL_PASSWORD
+
+### 
+$ oc get nodes
+...
+Events:
+  Type     Reason            Age                    From               Message
+  ----     ------            ----                   ----               -------
+  Warning  FailedScheduling  7m29s (x573 over 47h)  default-scheduler  0/1 nodes are available: 1 node(s) had untolerated taint {node.kubernetes.io/unreachable: }. preemption: 0/1 nodes are available: 1 Preemption is not helpful for scheduling.
+  Warning  FailedScheduling  7m19s                  default-scheduler  0/1 nodes are available: 1 Too many pods. preemption: 0/1 nodes are available: 1 No preemption victims found for incoming pod.
+
+
+cat <<EOF | oc apply -f -
+apiVersion: performance.openshift.io/v2
+kind: PerformanceProfile
+metadata:
+  name: rt
+spec:
+  machineConfigPoolSelector:
+    machineconfiguration.openshift.io/role: worker
+  nodeSelector:
+    node-role.kubernetes.io/worker: ""
+EOF
+
+### 增加 maxPods
+### https://docs.openshift.com/container-platform/4.8/nodes/nodes/nodes-nodes-managing-max-pods.html
+cat <<EOF | oc apply -f -
+apiVersion: machineconfiguration.openshift.io/v1
+kind: KubeletConfig
+metadata:
+  name: set-max-pods 
+spec:
+  machineConfigPoolSelector:
+    matchLabels:
+      pools.operator.machineconfiguration.openshift.io/master: "" 
+  kubeletConfig:
+    maxPods: 500
+EOF
 ```

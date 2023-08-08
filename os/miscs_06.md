@@ -19670,4 +19670,8 @@ spec:
   kubeletConfig:
     maxPods: 500
 EOF
+
+### 下载视频
+### yt-dlp 参数 --no-geo-bypass --cookies-from-browser
+$ yt-dlp --no-geo-bypass --cookies-from-browser chrome https://youtu.be/3sjBb7sTVtE
 ```

@@ -19674,4 +19674,9 @@ EOF
 ### 下载视频
 ### yt-dlp 参数 --no-geo-bypass --cookies-from-browser
 $ yt-dlp --no-geo-bypass --cookies-from-browser chrome https://youtu.be/3sjBb7sTVtE
+
+### RHPDS/DEMO system 证书问题修复
+$ oc get csr -o go-template='{{range .items}}{{if not .status}}{{.metadata.name}}{{"\n"}}{{end}}{{end}}' | xargs oc adm certificate approve
+$ watch -n 1 oc get csr
+$ watch -n 1 oc get co
 ```

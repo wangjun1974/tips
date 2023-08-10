@@ -19679,4 +19679,16 @@ $ yt-dlp --no-geo-bypass --cookies-from-browser chrome https://youtu.be/3sjBb7sT
 $ oc get csr -o go-template='{{range .items}}{{if not .status}}{{.metadata.name}}{{"\n"}}{{end}}{{end}}' | xargs oc adm certificate approve
 $ watch -n 1 oc get csr
 $ watch -n 1 oc get co
+
+### hosted-engine - 更新 rhv manager 证书 - rhv 4.1
+### https://access.redhat.com/documentation/en-us/red_hat_virtualization/4.1/html/self-hosted_engine_guide/chap-maintenance_and_upgrading_resources
+### https://lists.ovirt.org/archives/list/users@ovirt.org/thread/3S3XZX6RVXJCU5F2E6466UPG36QAIYGL/
+### 登陆到 rhv node 上
+### 设置维护模式为 global 
+# hosted-engine --set-maintenance --mode=global
+### 登陆到 rhv manager 上
+### 执行 engine-setup --offline 更新 rhv manager 证书
+$ engine-setup --offline
+
+
 ```

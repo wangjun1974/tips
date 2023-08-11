@@ -19682,6 +19682,7 @@ $ watch -n 1 oc get co
 
 ### hosted-engine - 更新 rhv manager 证书 - rhv 4.1
 ### https://access.redhat.com/documentation/en-us/red_hat_virtualization/4.1/html/self-hosted_engine_guide/chap-maintenance_and_upgrading_resources
+### https://access.redhat.com/solutions/3532921
 ### https://lists.ovirt.org/archives/list/users@ovirt.org/thread/3S3XZX6RVXJCU5F2E6466UPG36QAIYGL/
 ### 登陆到 rhv node 上
 ### 设置维护模式为 global 
@@ -19690,5 +19691,22 @@ $ watch -n 1 oc get co
 ### 执行 engine-setup --offline 更新 rhv manager 证书
 $ engine-setup --offline
 
+openssl req -new -key /tmp/vdsmkey.pem -out /tmp/test_host_vdsm.csr -passin "pass:mypass" -passout "pass:mypass" -batch -subj "/"
 
+# openssl x509 -in /etc/pki/vdsm/certs/vdsmcert.pem -noout -subject
+subject= /O=rhcnsa.org/CN=node1.rhcnsa.org
+subject= /O=rhcnsa.org/CN=node3.rhcnsa.org
+
+### rhv manager 为 rhv hypervisor 生成新证书
+[MANAGER]# cd /etc/pki/ovirt-engine/
+$ openssl ca -batch -policy policy_match -config openssl.conf -cert ca.pem -keyfile  private/ca.pem -days +3650 -in  /tmp/test_host_vdsm.csr -out /tmp/test_host_vdsm.cer -startdate "$(date --utc --date "now -1 days" +"%y%m%d%H%M%SZ")" -subj "/O=rhcnsa.org/CN=node1.rhcnsa.org" -utf8
+$ openssl ca -batch -policy policy_match -config openssl.conf -cert ca.pem -keyfile  private/ca.pem -days +3650 -in  /tmp/test_host_vdsm.csr -out /tmp/test_host_vdsm.cer -startdate "$(date --utc --date "now -1 days" +"%y%m%d%H%M%SZ")" -subj "/O=rhcnsa.org/CN=node3.rhcnsa.org" -utf8
+
+### 拷贝证书到 rhv hypervisor - 4.1
+$ scp root@<RHV-M FQDN OR IP>:/tmp/test_host_vdsm.cer /etc/pki/vdsm/certs/vdsmcert.pem
+
+### 更新 rhv hypervisor 证书 - 4.1
+[HOST]# cp /etc/pki/vdsm/certs/vdsmcert.pem /etc/pki/vdsm/libvirt-spice/server-cert.pem
+[HOST]# cp /etc/pki/vdsm/certs/vdsmcert.pem /etc/pki/libvirt/clientcert.pem
+[HOST]# systemctl restart libvirtd
 ```

@@ -19726,5 +19726,6 @@ podman run -d -t --name text-generation-webui-v1 --network host --privileged reg
 ### hypershift labs 
 ### https://github.com/redhat-cop/openshift-lab-origin/blob/master/HyperShift_Lab/Introduction.adoc
 
-
+### ACM App/Sub demo github repo
+### https://github.com/HichamMourad/book-import
 ```

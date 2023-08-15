@@ -19709,4 +19709,22 @@ $ scp root@<RHV-M FQDN OR IP>:/tmp/test_host_vdsm.cer /etc/pki/vdsm/certs/vdsmce
 [HOST]# cp /etc/pki/vdsm/certs/vdsmcert.pem /etc/pki/vdsm/libvirt-spice/server-cert.pem
 [HOST]# cp /etc/pki/vdsm/certs/vdsmcert.pem /etc/pki/libvirt/clientcert.pem
 [HOST]# systemctl restart libvirtd
+
+### 尝试 oobabooga 与 text-generation-webui
+### https://github.com/oobabooga/text-generation-webui
+
+cat > Dockerfile <<EOF
+FROM registry.access.redhat.com/ubi8/ubi:latest
+RUN dnf install -y libpciaccess iproute net-tools procps-ng nmap-ncat iputils diffutils git unzip && dnf groupinstall -y "Development Tools" && dnf clean all && curl -LO 'https://github.com/oobabooga/text-generation-webui/releases/download/installers/oobabooga_linux.zip' && unzip oobabooga_linux.zip
+CMD ["/bin/bash", "-c", "exec /bin/bash -c 'trap : TERM INT; sleep 9999999999d & wait'"]
+EOF
+
+podman build -f Dockerfile -t registry.example.com:5000/oobabooga/text-generation-webui:v1
+podman run -d -t --name text-generation-webui-v1 --network host --privileged registry.example.com:5000/oobabooga/text-generation-webui:v1
+
+
+### hypershift labs 
+### https://github.com/redhat-cop/openshift-lab-origin/blob/master/HyperShift_Lab/Introduction.adoc
+
+
 ```

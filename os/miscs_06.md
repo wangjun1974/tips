@@ -19920,6 +19920,7 @@ EOF
 
 ### try fedora vm
 ### source http url
+### add cloudInitNoCloud.userData.ssh_authorized_keys
 cat <<EOF | oc apply -f -
 apiVersion: kubevirt.io/v1
 kind: VirtualMachine
@@ -19990,6 +19991,8 @@ spec:
             #cloud-config
             user: fedora
             password: 'XXXXXXXX'
+            ssh_authorized_keys:
+              - ssh-rsa AAAAB3Nza.....
             chpasswd: { expire: False }
         name: cloudinitdisk
 EOF

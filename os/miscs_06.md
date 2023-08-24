@@ -19869,7 +19869,7 @@ spec:
   template:
     metadata:
       labels:
-        kubevirt.io/domain: centos7-1
+        kubevirt.io/domain: cirros-1
     spec:
       domain:
         cpu:

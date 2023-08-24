@@ -19728,4 +19728,193 @@ podman run -d -t --name text-generation-webui-v1 --network host --privileged reg
 
 ### ACM App/Sub demo github repo
 ### https://github.com/HichamMourad/book-import
+
+### 
+cat <<EOF > pvc_cirros.yml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: "cirros"
+  labels:
+    app: containerized-data-importer
+  annotations:
+    cdi.kubevirt.io/storage.import.endpoint: "http://10.66.208.115/utils/vm/cirros-0.4.0-x86_64-disk.img"
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+EOF
+
+cat <<EOF | oc apply -f -
+apiVersion: cdi.kubevirt.io/v1beta1
+kind: DataVolume
+metadata:
+  name: "cirros-import-dv"
+spec:
+  source:
+      http:
+         url: "http://10.66.208.115/utils/vm/cirros-0.4.0-x86_64-disk.img"
+  pvc:
+    accessModes:
+      - ReadWriteOnce
+    resources:
+      requests:
+        storage: "1Gi"
+EOF
+
+
+### 创建 vm centos7-1
+### DataVolumeTemplate
+cat <<EOF | oc apply -f -
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  labels:
+    app: centos7-1
+  name: centos7-1
+spec:
+  dataVolumeTemplates:
+  - apiVersion: cdi.kubevirt.io/v1beta1
+    kind: DataVolume
+    metadata:
+      name: centos7-1
+    spec:
+      sourceRef:
+        kind: DataSource
+        name: centos7
+        namespace: openshift-virtualization-os-images
+      storage:
+        resources:
+          requests:
+            storage: 30Gi
+  running: false
+  template:
+    metadata:
+      labels:
+        kubevirt.io/domain: centos7-1
+    spec:
+      domain:
+        cpu:
+          cores: 1
+          sockets: 1
+          threads: 1
+        devices:
+          disks:
+          - disk:
+              bus: virtio
+            name: rootdisk
+          - disk:
+              bus: virtio
+            name: cloudinitdisk
+          interfaces:
+          - masquerade: {}
+            name: default
+          rng: {}
+        firmware:
+          bootloader:
+            bios: {}
+        resources:
+          requests:
+            memory: 1Gi
+      readinessProbe:
+        initialDelaySeconds: 120
+        periodSeconds: 20
+        timeoutSeconds: 10
+        failureThreshold: 3
+        successThreshold: 3
+        guestAgentPing: {}
+      evictionStrategy: LiveMigrate
+      networks:
+      - name: default
+        pod: {}
+      volumes:
+      - dataVolume:
+          name: centos7-1
+        name: rootdisk
+      - cloudInitNoCloud:
+          userData: |-
+            #cloud-config
+            user: centos
+            password: 'XXXXXXXX' 
+            chpasswd: { expire: False }
+        name: cloudinitdisk
+EOF
+
+### 创建 vm cirros
+### DataVolumeTemplate
+cat <<EOF | oc apply -f -
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  labels:
+    app: cirros-1
+  name: cirros-1
+spec:
+  dataVolumeTemplates:
+  - apiVersion: cdi.kubevirt.io/v1beta1
+    kind: DataVolume
+    metadata:
+      name: cirros-1
+    spec:
+      source:
+        http:
+          url: http://xxx.xxx.xxx.xxx/utils/vm/cirros-0.4.0-x86_64-disk.img
+      storage:
+        resources:
+          requests:
+            storage: 1Gi
+  running: false
+  template:
+    metadata:
+      labels:
+        kubevirt.io/domain: centos7-1
+    spec:
+      domain:
+        cpu:
+          cores: 1
+          sockets: 1
+          threads: 1
+        devices:
+          disks:
+          - disk:
+              bus: virtio
+            name: rootdisk
+          - disk:
+              bus: virtio
+            name: cloudinitdisk
+          interfaces:
+          - masquerade: {}
+            name: default
+          rng: {}
+        firmware:
+          bootloader:
+            bios: {}
+        resources:
+          requests:
+            memory: 256Mi
+      readinessProbe:
+        initialDelaySeconds: 120
+        periodSeconds: 20
+        timeoutSeconds: 10
+        failureThreshold: 3
+        successThreshold: 3
+        guestAgentPing: {}
+      evictionStrategy: LiveMigrate
+      networks:
+      - name: default
+        pod: {}
+      volumes:
+      - dataVolume:
+          name: cirros-1
+        name: rootdisk
+      - cloudInitNoCloud:
+          userData: |-
+            #cloud-config
+            user: cirros
+            password: 'XXXXXXXX' 
+            chpasswd: { expire: False }
+        name: cloudinitdisk
+EOF
 ```

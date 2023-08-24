@@ -19917,4 +19917,80 @@ spec:
             chpasswd: { expire: False }
         name: cloudinitdisk
 EOF
+
+### try fedora vm
+### source http url
+cat <<EOF | oc apply -f -
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  labels:
+    app: fedora-1
+  name: fedora-1
+spec:
+  dataVolumeTemplates:
+  - apiVersion: cdi.kubevirt.io/v1beta1
+    kind: DataVolume
+    metadata:
+      name: fedora-1
+    spec:
+      source:
+        http:
+          url: http://XXX.XXX.XXX.XXX/utils/vm/Fedora-Cloud-Base-38-1.6.x86_64.raw.xz
+      storage:
+        resources:
+          requests:
+            storage: 10Gi
+  running: false
+  template:
+    metadata:
+      labels:
+        kubevirt.io/domain: fedora-1
+    spec:
+      domain:
+        cpu:
+          cores: 1
+          sockets: 1
+          threads: 1
+        devices:
+          disks:
+          - disk:
+              bus: virtio
+            name: rootdisk
+          - disk:
+              bus: virtio
+            name: cloudinitdisk
+          interfaces:
+          - masquerade: {}
+            name: default
+          rng: {}
+        firmware:
+          bootloader:
+            bios: {}
+        resources:
+          requests:
+            memory: 1024Mi
+      readinessProbe:
+        initialDelaySeconds: 120
+        periodSeconds: 20
+        timeoutSeconds: 10
+        failureThreshold: 3
+        successThreshold: 3
+        guestAgentPing: {}
+      evictionStrategy: LiveMigrate
+      networks:
+      - name: default
+        pod: {}
+      volumes:
+      - dataVolume:
+          name: fedora-1
+        name: rootdisk
+      - cloudInitNoCloud:
+          userData: |-
+            #cloud-config
+            user: fedora
+            password: 'XXXXXXXX'
+            chpasswd: { expire: False }
+        name: cloudinitdisk
+EOF
 ```

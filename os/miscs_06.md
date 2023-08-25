@@ -20171,4 +20171,9 @@ spec:
     image: quay.io/openshift-release-dev/ocp-release:4.12.5-x86_64
   replicas: 2
 EOF
+
+(hub)$ oc logs $(oc get pods -n hypershift -l app=operator -o name|head -1) -n hypershift
+(hub)$ oc logs $(oc get pods -n hypershift -l app=operator -o name|tail -1) -n hypershift
+
+
 ```

@@ -19996,4 +19996,179 @@ spec:
             chpasswd: { expire: False }
         name: cloudinitdisk
 EOF
+
+### HyperShift with Kubevirt
+### https://medium.com/@ben.swinney_ce/hypershift-with-kubevirt-564bd1f850ce
+### 安装 ACM
+### 安装 ODF
+### 安装 OpenShift Virtualization
+### 安装 MetalLB
+#### 启用 multiclusterengine 的 components hypershift-preview
+(hub)$ oc get mce multiclusterengine -o json | jq '.spec.overrides.components' 
+...
+  {
+    "enabled": false,
+    "name": "hypershift-preview"
+  },
+...
+(hub)$ oc patch mce multiclusterengine --type=merge -p '{"spec":{"overrides":{"components":[{"name":"hypershift-preview","enabled":true}]}}}'
+
+(hub)$ cat <<EOF | oc apply -f -
+apiVersion: addon.open-cluster-management.io/v1alpha1
+kind: ManagedClusterAddOn
+metadata:
+  name: hypershift-addon
+  namespace: local-cluster
+spec:
+  installNamespace: open-cluster-management-agent-addon
+EOF
+
+(hub)$ oc get pods -n hypershift
+
+(hub)$ cat <<EOF | oc apply -f -
+apiVersion: metallb.io/v1beta1
+kind: MetalLB
+metadata:
+  name: metallb
+  namespace: metallb-system
+EOF
+
+(hub)$ cat <<EOF | oc apply -f -
+apiVersion: metallb.io/v1beta1
+kind: IPAddressPool
+metadata:
+  name: ip-addresspool
+  namespace: metallb-system
+spec:
+  addresses:
+  - 10.39.127.20-10.39.127.26
+  autoAssign: true
+  avoidBuggyIPs: false
+EOF
+
+(hub)$ cat <<EOF | oc apply -f -
+apiVersion: metallb.io/v1beta1
+kind: L2Advertisement
+metadata:
+  name: l2-adv
+  namespace: metallb-system
+spec:
+  ipAddressPools:
+    - ip-addresspool
+EOF
+
+(hub)$ oc patch ingresscontroller -n openshift-ingress-operator default --type=json -p '[{ "op": "add", "path": "/spec/routeAdmission", "value": {wildcardPolicy: "WildcardsAllowed"}}]'
+
+(hub)$ cat <<EOF | oc apply -f -
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: clusters
+EOF
+
+(hub)$ cat <<EOF | oc apply -f -
+apiVersion: v1
+kind: Secret
+metadata:
+  name: jwang-hosted-pull-secret
+  namespace: clusters
+data:
+  .dockerconfigjson: PULL_SECRET_HERE_IN_BASE_64
+EOF
+
+(hub)$ cat <<EOF | oc apply -f -
+apiVersion: v1
+kind: Secret
+metadata:
+  name: jwang-hosted-etcd-encryption-key
+  namespace: clusters
+type: Opaque
+data:
+  key: ETCD_ENCRYPTION_KEY_HERE_IN_BASE_64
+EOF
+
+(hub)$ cat <<EOF | oc apply -f -
+apiVersion: hypershift.openshift.io/v1beta1
+kind: HostedCluster
+metadata:
+  name: jwang-hosted
+  namespace: clusters
+spec:
+  autoscaling: {}
+  controllerAvailabilityPolicy: SingleReplica
+  dns:
+    baseDomain: ""
+  etcd:
+    managed:
+      storage:
+        persistentVolume:
+          size: 4Gi
+        restoreSnapshotURL: null
+        type: PersistentVolume
+    managementType: Managed
+  fips: false
+  networking:
+    clusterNetwork:
+    - cidr: 10.132.0.0/14
+    networkType: OVNKubernetes
+    serviceNetwork:
+    - cidr: 172.31.0.0/16
+  platform:
+    kubevirt:
+      baseDomainPassthrough: true
+    type: KubeVirt
+  pullSecret:
+    name: jwang-hosted-pull-secret
+  release:
+    image: quay.io/openshift-release-dev/ocp-release:4.12.5-x86_64
+  secretEncryption:
+    aescbc:
+      activeKey:
+        name: jwang-hosted-etcd-encryption-key
+    type: aescbc
+  services:
+  - service: APIServer
+    servicePublishingStrategy:
+      type: LoadBalancer
+  - service: OAuthServer
+    servicePublishingStrategy:
+      type: Route
+  - service: Konnectivity
+    servicePublishingStrategy:
+      type: Route
+  - service: Ignition
+    servicePublishingStrategy:
+      type: Route
+  - service: OVNSbDb
+    servicePublishingStrategy:
+      type: Route
+  sshKey: {}
+EOF
+
+(hub)$ cat <<EOF | oc apply -f -
+apiVersion: hypershift.openshift.io/v1beta1
+kind: NodePool
+metadata:
+  name: jwang-hosted
+  namespace: clusters
+spec:
+  clusterName: jwang-hosted
+  management:
+    autoRepair: false
+    upgradeType: Replace
+  nodeDrainTimeout: 0s
+  platform:
+    kubevirt:
+      compute:
+        cores: 8
+        memory: 16Gi
+      rootVolume:
+        persistent:
+          size: 50Gi
+        type: Persistent
+    type: KubeVirt
+  release:
+    image: quay.io/openshift-release-dev/ocp-release:4.12.5-x86_64
+  replicas: 2
+EOF
 ```

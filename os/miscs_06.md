@@ -19999,6 +19999,15 @@ EOF
 
 ### HyperShift with Kubevirt
 ### https://medium.com/@ben.swinney_ce/hypershift-with-kubevirt-564bd1f850ce
+### 准备工作
+### 如果 CNI 是 OpenShiftSDN，首先将 CNI 迁移为 OVNKubernetes
+#### hypershift support OVNKubernetes as CNI
+#### 需要将 CNI 从 OpenShiftSDN 转换为 OVNKubernetes
+(hub)$ oc get Network.config.openshift.io cluster -o yaml > cluster-openshift-sdn.yaml
+(hub)$ oc patch Network.operator.openshift.io cluster --type='merge' \
+  --patch '{ "spec": { "migration": { "networkType": "OVNKubernetes" } } }'
+(hub)$ watch 'oc get mcp' 
+
 ### 安装 ACM
 ### 安装 ODF
 ### 安装 OpenShift Virtualization
@@ -20175,5 +20184,11 @@ EOF
 (hub)$ oc logs $(oc get pods -n hypershift -l app=operator -o name|head -1) -n hypershift
 (hub)$ oc logs $(oc get pods -n hypershift -l app=operator -o name|tail -1) -n hypershift
 
+#### hypershift support OVNKubernetes as CNI
+#### 需要将 CNI 从 OpenShiftSDN 转换为 OVNKubernetes
+(hub)$ oc get Network.config.openshift.io cluster -o yaml > cluster-openshift-sdn.yaml
+(hub)$ oc patch Network.operator.openshift.io cluster --type='merge' \
+  --patch '{ "spec": { "migration": { "networkType": "OVNKubernetes" } } }'
+(hub)$ watch 'oc get mcp' 
 
 ```

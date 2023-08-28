@@ -20105,6 +20105,11 @@ data:
   .dockerconfigjson: PULL_SECRET_HERE_IN_BASE_64
 EOF
 
+
+#### key 所对应的字符串需要为 15/23/31 个字符
+#### 否则 kube-apiserver 会有报错
+#### $ oc logs kube-apiserver-694fbcd7-d8prr -c kube-apiserver
+#### E0828 05:14:01.718269       1 run.go:74] "command failed" err="error while parsing file: resources[0].providers[0].aescbc.keys[0].secret: Invalid value: \"REDACTED\": secret is not of the expected length, got 10, expected one of [16 24 32]"
 (hub)$ cat <<EOF | oc apply -f -
 apiVersion: v1
 kind: Secret
@@ -20149,7 +20154,7 @@ spec:
   pullSecret:
     name: jwang-hosted-pull-secret
   release:
-    image: quay.io/openshift-release-dev/ocp-release:4.12.5-x86_64
+    image: quay.io/openshift-release-dev/ocp-release:4.13.6-x86_64
   secretEncryption:
     aescbc:
       activeKey:
@@ -20197,18 +20202,13 @@ spec:
         type: Persistent
     type: KubeVirt
   release:
-    image: quay.io/openshift-release-dev/ocp-release:4.12.5-x86_64
+    image: quay.io/openshift-release-dev/ocp-release:4.13.6-x86_64
   replicas: 2
 EOF
 
 (hub)$ oc logs $(oc get pods -n hypershift -l app=operator -o name|head -1) -n hypershift
 (hub)$ oc logs $(oc get pods -n hypershift -l app=operator -o name|tail -1) -n hypershift
 
-#### hypershift support OVNKubernetes as CNI
-#### 需要将 CNI 从 OpenShiftSDN 转换为 OVNKubernetes
-(hub)$ oc get Network.config.openshift.io cluster -o yaml > cluster-openshift-sdn.yaml
-(hub)$ oc patch Network.operator.openshift.io cluster --type='merge' \
-  --patch '{ "spec": { "migration": { "networkType": "OVNKubernetes" } } }'
-(hub)$ watch 'oc get mcp' 
+
 
 ```

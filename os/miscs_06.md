@@ -20025,7 +20025,7 @@ daemon set "multus" successfully rolled out
 (hub)$ oc patch Network.operator.openshift.io cluster --type='merge' \
   --patch '{ "spec": { "migration": null } }'
 (hub)$ oc patch Network.operator.openshift.io cluster --type='merge' \
-  --patch '{ "spec": { "defaultNetwork": { "openshiftSDNConfig": null }
+  --patch '{ "spec": { "defaultNetwork": { "openshiftSDNConfig": null }}}'
 (hub)$ oc delete namespace openshift-sdn    
  
 ### 安装 ACM

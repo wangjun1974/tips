@@ -20003,11 +20003,31 @@ EOF
 ### 如果 CNI 是 OpenShiftSDN，首先将 CNI 迁移为 OVNKubernetes
 #### hypershift support OVNKubernetes as CNI
 #### 需要将 CNI 从 OpenShiftSDN 转换为 OVNKubernetes
+#### https://docs.openshift.com/container-platform/4.13/networking/ovn_kubernetes_network_provider/migrate-from-openshift-sdn.html
 (hub)$ oc get Network.config.openshift.io cluster -o yaml > cluster-openshift-sdn.yaml
 (hub)$ oc patch Network.operator.openshift.io cluster --type='merge' \
   --patch '{ "spec": { "migration": { "networkType": "OVNKubernetes" } } }'
 (hub)$ watch 'oc get mcp' 
-
+(hub)$ oc describe node | egrep "hostname|machineconfig"
+(hub)$ oc get machineconfig <config_name> -o yaml | grep ExecStart
+(hub)$ oc patch Network.config.openshift.io cluster \
+  --type='merge' --patch '{ "spec": { "networkType": "OVNKubernetes" } }'
+(hub)$ oc -n openshift-multus rollout status daemonset/multus
+...
+daemon set "multus" successfully rolled out
+### reboot nodes one by one
+#### 检查 status.networkType 为 OVNKubernetes
+(hub)$ oc get network.config/cluster -o jsonpath='{.status.networkType}{"\n"}'
+(hub)$ oc get nodes
+(hub)$ oc get pods -A | grep -Ev "Complete|Running"
+(hub)$ oc get co
+#### 当前面的检查内容没有问题时，执行以下命令，移除 OpenShiftSDN 相关配置和资源
+(hub)$ oc patch Network.operator.openshift.io cluster --type='merge' \
+  --patch '{ "spec": { "migration": null } }'
+(hub)$ oc patch Network.operator.openshift.io cluster --type='merge' \
+  --patch '{ "spec": { "defaultNetwork": { "openshiftSDNConfig": null }
+(hub)$ oc delete namespace openshift-sdn    
+ 
 ### 安装 ACM
 ### 安装 ODF
 ### 安装 OpenShift Virtualization

@@ -20195,7 +20195,7 @@ spec:
     kubevirt:
       compute:
         cores: 8
-        memory: 16Gi
+        memory: 8Gi
       rootVolume:
         persistent:
           size: 50Gi
@@ -20209,6 +20209,7 @@ EOF
 (hub)$ oc logs $(oc get pods -n hypershift -l app=operator -o name|head -1) -n hypershift
 (hub)$ oc logs $(oc get pods -n hypershift -l app=operator -o name|tail -1) -n hypershift
 
-
+#### HyperShift with BareMetal
+#### https://labs.sysdeseng.com/hypershift-baremetal-lab/4.13/index.html
 
 ```

@@ -20213,8 +20213,15 @@ EOF
 #### https://labs.sysdeseng.com/hypershift-baremetal-lab/4.13/index.html
 
 
-#### OpenShift Virtualization NetworkAttachmentDefinition 的例子
+#### OpenShift Virtualization NetworkAttachmentDefinition and NodeNetworkConfigurationPolicy 的例子
 #### cnv-bridge 与 vlan
+#### 详细的配置参考 https://kubevirt.io/2020/Multiple-Network-Attachments-with-bridge-CNI.html
+#### 思路是用 NodeNetworkConfigurationPolicy 配置节点 Bridge
+#### 用 NetworkAttachmentDefinition 配置 KubeVirt VM 可用的 Network Attachment 
+#### 在创建 VM 时在 network 定义时引用 Network Attachment
+####       - name: br0-100
+####         multus:
+####           networkName: br0-100-l2
 oc apply -f - <<EOF
 ---
 apiVersion: "k8s.cni.cncf.io/v1"
@@ -20233,5 +20240,31 @@ spec:
     "macspoofchk": true,
     "vlan": 4
   }'
+EOF
+
+oc apply -f - <<EOF
+---
+apiVersion: nmstate.io/v1
+kind: NodeNetworkConfigurationPolicy
+metadata:
+  name: br1-ens1f1-policy-masters
+  namespace: jinkit-vms
+spec:
+  nodeSelector:
+    node-role.kubernetes.io/master: ""
+  desiredState:
+    interfaces:
+      - name: e810-25g-br1
+        description: Standard Linux Brige ens1f1 on E810-25G
+        type: linux-bridge
+        state: up
+        ipv4:
+          enabled: false
+        bridge:
+          options:
+            stp:
+              enabled: false
+            port:
+              - name: ens1f1
 EOF
 ```

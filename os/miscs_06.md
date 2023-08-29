@@ -20212,4 +20212,26 @@ EOF
 #### HyperShift with BareMetal
 #### https://labs.sysdeseng.com/hypershift-baremetal-lab/4.13/index.html
 
+
+#### OpenShift Virtualization NetworkAttachmentDefinition 的例子
+#### cnv-bridge 与 vlan
+oc apply -f - <<EOF
+---
+apiVersion: "k8s.cni.cncf.io/v1"
+kind: NetworkAttachmentDefinition
+  metadata:  
+  name: network-attachment-vlan4-access
+  namespace: jinkit-vms
+  annotations:    
+    k8s.v1.cni.cncf.io/resourceName: bridge.network.kubevirt.io/e810-25g-br1
+spec:
+  config: '{
+    "cniVersion": "0.3.1",
+    "name": "network-attachment-vlan4-access",
+    "type": "cnv-bridge",
+    "bridge": "e810-25g-br1",
+    "macspoofchk": true,
+    "vlan": 4
+  }'
+EOF
 ```

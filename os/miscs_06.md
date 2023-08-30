@@ -20267,4 +20267,8 @@ spec:
             port:
               - name: ens1f1
 EOF
+
+
+#### 修改 VM Termination 时间
+$ virtctl stop <vm-name> --force --grace-period=0
 ```

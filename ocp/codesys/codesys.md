@@ -5308,4 +5308,6 @@ $ echo "0000:03:00.0" > /sys/bus/pci/drivers/virtio-pci/unbind
 $ echo "vfio-pci" > /sys/bus/pci/devices/0000\:03\:00.0/driver_override
 $ echo 0000:03:00.0 > /sys/bus/pci/drivers/vfio-pci/bind
 
+### FieldBus 配置参考
+### https://help.codesys.com/webapp/_ecat_general;product=core_EtherCAT_Configuration_Editor;version=4.1.0.0
 ```

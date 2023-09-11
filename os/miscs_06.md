@@ -20271,4 +20271,7 @@ EOF
 
 #### 修改 VM Termination 时间
 $ virtctl stop <vm-name> --force --grace-period=0
+
+### 支持 Access Token 的 git clone，提供 http.extraHeader 
+$ git clone -c http.extraHeader='Authorization: Bearer <MY_PERSONAL_ACCESSTOKEN>' https://<server>/scm/infiac/aof2-inventories.git
 ```

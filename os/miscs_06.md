@@ -20279,6 +20279,7 @@ $ git clone -c http.extraHeader='Authorization: Bearer <MY_PERSONAL_ACCESSTOKEN>
 #### 参考 https://www.cpweb.top/1644 
 #### https://www.iamlightsmile.com/articles/CentOS8%E5%AE%89%E8%A3%85%E9%85%8D%E7%BD%AEkubernetes%EF%BC%88K8S%EF%BC%89/
 #### https://blog.csdn.net/u013164931/article/details/105548102
+#### https://segmentfault.com/a/1190000040155015
 ### 最小化安装
 $ systemctl disable firewalld
 $ systemctl stop firewalld
@@ -20326,7 +20327,7 @@ $ docker info | grep Cgroup
  Cgroup Driver: systemd
  Cgroup Version: 1
 
-$ yum install -y kubeadm kubectl kubelet 
+$ yum -y install kubectl-1.18.18 kubelet-1.18.18 kubeadm-1.18.18
 $ systemctl enable kubelet && systemctl start kubelet
 
 $ kubeadm config print init-defaults > init.default.yaml 
@@ -20341,6 +20342,7 @@ $ kubeadm config print init-defaults > init.default.yaml
 ### disabled_plugins = [""]
 $ systemctl enable --now containerd.service
 
+
 $ kubeadm config images list --config init.default.yaml
 $ kubeadm config images pull --config init.default.yaml
 
@@ -20349,7 +20351,7 @@ $ swapoff -a
 $ systemctl restart kubelet
 ### 配置文件做参考
 ### $ kubeadm init --config=init.default.yaml --ignore-preflight-errors=all
-$ kubeadm init --image-repository=registry.aliyuncs.com/google_containers --kubernetes-version=v1.28.0 --service-cidr=10.96.0.0/12 --pod-network-cidr=10.244.0.0/16
+$ kubeadm init --image-repository=registry.aliyuncs.com/google_containers --kubernetes-version=v1.18.18 --service-cidr=10.96.0.0/12 --pod-network-cidr=10.244.0.0/16
 
 $ mkdir -p $HOME/.kube
 $ cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
@@ -20375,7 +20377,79 @@ $ kubeadm reset
 $ rm -f ~/.kube/config
 $ rm -f /etc/cni/net.d/*
 $ iptables -F 
-$ ip address delete 10.128.0.1/24 dev cni0 
+### 删除 cni0 上的 ip 地址
+$ ip address delete 10.244.0.1/24 dev cni0 
+### 删除 kubeadm kubectl kubelet
+$ yum remove -y kubeadm kubectl kubelet
+### 重新安装特定版本 kubeadm kubectl kubelet
+$ yum -y install kubectl-1.18.18 kubelet-1.18.18 kubeadm-1.18.18
 
+### 删除节点 taint
+$ kubectl taint nodes edge-3.example.com node-role.kubernetes.io/master-
+$ kubectl describe nodes edge-3.example.com | grep -i taints
+#### 在 ACM Hub 上导入 edge-3
+$ export CLUSTER_NAME=edge-3
+$ oc new-project ${CLUSTER_NAME}
+
+$ cat <<EOF | oc apply -f -
+apiVersion: agent.open-cluster-management.io/v1
+kind: KlusterletAddonConfig
+metadata:
+  name: ${CLUSTER_NAME}
+  namespace: ${CLUSTER_NAME}
+spec:
+  clusterName: ${CLUSTER_NAME}
+  clusterNamespace: ${CLUSTER_NAME}
+  applicationManager:
+    enabled: true
+  certPolicyController:
+    enabled: true
+  clusterLabels:
+    cloud: auto-detect
+    vendor: auto-detect
+  iamPolicyController:
+    enabled: true
+  policyController:
+    enabled: true
+  searchCollector:
+    enabled: true
+  version: 2.2.0
+EOF
+
+$ cat <<EOF | oc apply -f -
+apiVersion: cluster.open-cluster-management.io/v1
+kind: ManagedCluster
+metadata:
+  name: ${CLUSTER_NAME}
+spec:
+  hubAcceptsClient: true
+EOF
+
+# 上面的命令在 ${CLUSTER_NAME} namespace 下生成 secret ${CLUSTER_NAME}-import 
+# 导出 import.yaml 和 crds.yaml 
+IMPORT=$(oc get -n ${CLUSTER_NAME} secret ${CLUSTER_NAME}-import -o jsonpath='{.data.import\.yaml}')
+CRDS=$(oc get -n ${CLUSTER_NAME} secret ${CLUSTER_NAME}-import -o jsonpath='{.data.crds\.yaml}')
+
+
+cd /root/kubeconfig/edge/edge-3
+
+oc --kubeconfig=./kubeconfig create namespace open-cluster-management-agent
+
+
+oc --kubeconfig=./kubeconfig -n open-cluster-management-agent create secret generic rhacm --from-file=.dockerconfigjson=auth.json --type=kubernetes.io/dockerconfigjson
+oc --kubeconfig=./kubeconfig -n open-cluster-management-agent create sa klusterlet
+oc --kubeconfig=./kubeconfig -n open-cluster-management-agent patch sa klusterlet -p '{"imagePullSecrets": [{"name": "rhacm"}]}'
+oc --kubeconfig=./kubeconfig -n open-cluster-management-agent create sa klusterlet-registration-sa
+oc --kubeconfig=./kubeconfig -n open-cluster-management-agent patch sa klusterlet-registration-sa -p '{"imagePullSecrets": [{"name": "rhacm"}]}'
+oc --kubeconfig=./kubeconfig -n open-cluster-management-agent create sa klusterlet-work-sa
+oc --kubeconfig=./kubeconfig -n open-cluster-management-agent patch sa klusterlet-work-sa -p '{"imagePullSecrets": [{"name": "rhacm"}]}'
+
+oc --kubeconfig=./kubeconfig create namespace open-cluster-management-agent-addon
+oc --kubeconfig=./kubeconfig -n open-cluster-management-agent-addon create secret generic rhacm --from-file=.dockerconfigjson=auth.json --type=kubernetes.io/dockerconfigjson
+oc --kubeconfig=./kubeconfig -n open-cluster-management-agent-addon create sa klusterlet-addon-operator
+oc --kubeconfig=./kubeconfig -n open-cluster-management-agent-addon patch sa klusterlet-addon-operator -p '{"imagePullSecrets": [{"name": "rhacm"}]}'
+
+echo $CRDS | base64 -d | oc --kubeconfig=./kubeconfig apply -f -
+echo $IMPORT | base64 -d | oc --kubeconfig=./kubeconfig apply -f -
 
 ```

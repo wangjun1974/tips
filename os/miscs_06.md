@@ -20274,4 +20274,108 @@ $ virtctl stop <vm-name> --force --grace-period=0
 
 ### 支持 Access Token 的 git clone，提供 http.extraHeader 
 $ git clone -c http.extraHeader='Authorization: Bearer <MY_PERSONAL_ACCESSTOKEN>' https://<server>/scm/infiac/aof2-inventories.git
+
+#### RHEL8.6 - 安装 k8s v1.18
+#### 参考 https://www.cpweb.top/1644 
+#### https://www.iamlightsmile.com/articles/CentOS8%E5%AE%89%E8%A3%85%E9%85%8D%E7%BD%AEkubernetes%EF%BC%88K8S%EF%BC%89/
+#### https://blog.csdn.net/u013164931/article/details/105548102
+### 最小化安装
+$ systemctl disable firewalld
+$ systemctl stop firewalld
+$ setenforce 0
+$ sed -i 's/^SELINUX=enforcing$/SELINUX=permissive/' /etc/selinux/config
+$ mount /dev/sr0 /mnt
+$ cat > /etc/yum.repos.d/local.repo << 'EOF'
+[baseos]
+name=baseos
+baseurl=file:///mnt/BaseOS
+enabled=1
+gpgcheck=0
+
+[appstream]
+name=appstream
+baseurl=file:///mnt/AppStream
+enabled=1
+gpgcheck=0
+EOF
+
+### 设置国内的 k8s 安装源
+$ cat <<EOF > /etc/yum.repos.d/kubernetes.repo
+[kubernetes]
+name=Kubernetes
+baseurl=https://mirrors.aliyun.com/kubernetes/yum/repos/kubernetes-el7-x86_64/
+enabled=1
+gpgcheck=1
+repo_gpgcheck=1
+gpgkey=https://mirrors.aliyun.com/kubernetes/yum/doc/yum-key.gpg https://mirrors.aliyun.com/kubernetes/yum/doc/rpm-package-key.gpg
+EOF
+
+$ yum install -y yum-utils device-mapper-persistent-data lvm2
+
+### 安装 docker
+$ yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+$ yum install -y containerd.io docker-ce
+### 编辑 /usr/lib/systemd/system/docker.service
+### ExecStart 添加 --exec-opt native.cgroupdriver=systemd
+### ExecStart=/usr/bin/dockerd -H fd:// --containerd=/run/containerd/containerd.sock --exec-opt native.cgroupdriver=systemd
+$ systemctl daemon-reload
+$ systemctl enable --now docker.service
+$ systemctl restart docker
+### 检查 Cgroup Driver 为 systemd 
+$ docker info | grep Cgroup
+ Cgroup Driver: systemd
+ Cgroup Version: 1
+
+$ yum install -y kubeadm kubectl kubelet 
+$ systemctl enable kubelet && systemctl start kubelet
+
+$ kubeadm config print init-defaults > init.default.yaml 
+### 编辑 init.default.yaml
+### 修改 
+### advertiseAddress: 192.168.122.123
+### imageRepository: registry.aliyuncs.com/google_containers
+### 添加
+### podSubnet: 10.244.0.0/16
+
+### 编辑 /etc/containerd/config.toml  
+### disabled_plugins = [""]
+$ systemctl enable --now containerd.service
+
+$ kubeadm config images list --config init.default.yaml
+$ kubeadm config images pull --config init.default.yaml
+
+### 禁用 swap 
+$ swapoff -a 
+$ systemctl restart kubelet
+### 配置文件做参考
+### $ kubeadm init --config=init.default.yaml --ignore-preflight-errors=all
+$ kubeadm init --image-repository=registry.aliyuncs.com/google_containers --kubernetes-version=v1.28.0 --service-cidr=10.96.0.0/12 --pod-network-cidr=10.244.0.0/16
+
+$ mkdir -p $HOME/.kube
+$ cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+$ chown $(id -u):$(id -g) $HOME/.kube/config
+
+### 创建文件
+$ mkdir -p /run/flannel
+$ cat > /run/flannel/subnet.env <<EOF
+FLANNEL_NETWORK=10.244.0.0/16
+FLANNEL_SUBNET=10.244.0.0/24
+FLANNEL_MTU=1450
+FLANNEL_IPMASQ=true
+EOF
+
+### 安装 CNI
+$ kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
+
+$ kubectl get nodes
+$ kubectl get pods -A
+
+#### 删除节点及清理工作
+$ kubeadm reset 
+$ rm -f ~/.kube/config
+$ rm -f /etc/cni/net.d/*
+$ iptables -F 
+$ ip address delete 10.128.0.1/24 dev cni0 
+
+
 ```

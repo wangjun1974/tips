@@ -20452,4 +20452,11 @@ oc --kubeconfig=./kubeconfig -n open-cluster-management-agent-addon patch sa klu
 echo $CRDS | base64 -d | oc --kubeconfig=./kubeconfig apply -f -
 echo $IMPORT | base64 -d | oc --kubeconfig=./kubeconfig apply -f -
 
+
+### https://medium.com/@hillayamir/adding-a-trusted-ca-config-the-ingress-certificate-in-ocp-4-50bafbacd168
+### 替换集群 CA 和 ingress certs
+### https://thesecmaster.com/how-to-generate-a-csr-for-multi-domain-ssl-certificates-using-openssl/
+### https://www.baeldung.com/openssl-self-signed-cert
+
+
 ```

@@ -1,3 +1,25 @@
+### 将用户或者ServiceAccount添加到 open-cluster-management:subscription-admin ClusterRoleBinding 里
+https://access.redhat.com/documentation/en-us/red_hat_advanced_cluster_management_for_kubernetes/2.8/html/applications/managing-applications#granting-subscription-admin-privilege
+### 添加 subjects 来把用户和 ServiceAccount 添加到 ClusterRoleBinding open-cluster-management:subscription-admin 中
+```
+$ oc get clusterrolebinding open-cluster-management:subscription-admin
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  creationTimestamp: "2023-05-11T02:25:50Z"
+  name: open-cluster-management:subscription-admin
+  resourceVersion: "129576888"
+  uid: 15da88af-b9db-419c-be12-95dd8bc1997f
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: open-cluster-management:subscription-admin
+subjects:
+- apiGroup: rbac.authorization.k8s.io
+  kind: User
+  name: admin
+```
+
 ### ACM Policy ConfigurationPolicy 
 https://cloud.redhat.com/blog/generating-governance-policies-using-kustomize-and-gitops<br>
 https://github.com/stolostron/policy-collection/blob/main/community/CM-Configuration-Management/policy-machineconfig-chrony.yaml<br>

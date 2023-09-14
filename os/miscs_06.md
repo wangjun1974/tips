@@ -20432,6 +20432,11 @@ CRDS=$(oc get -n ${CLUSTER_NAME} secret ${CLUSTER_NAME}-import -o jsonpath='{.da
 
 
 cd /root/kubeconfig/edge/edge-3
+### 编辑 kubeconfig
+### server: https://edge-3.example.com:6443
+openssl s_client -host edge-3.example.com -port 6443 -showcerts > trace < /dev/null
+cat trace | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' | tee /etc/pki/ca-trust/source/anchors/edge-3.crt
+update-ca-trust extract  
 
 oc --kubeconfig=./kubeconfig create namespace open-cluster-management-agent
 

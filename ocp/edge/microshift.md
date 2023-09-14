@@ -2771,5 +2771,83 @@ $ oc -n openshift-ovn-kubernetes logs $(oc get pods -n openshift-ovn-kubernetes 
 ### 如果报错
 $ oc -n openshift-ovn-kubernetes delete $(oc get pods -n openshift-ovn-kubernetes -l app=ovnkube-node -o name)
 
+### microshift on rhel 9.2  
+### 报错 ACM Observability 
+$ oc -n open-cluster-management-agent-addon get events -w
+...
+5m51s       Warning   FailedCreate        replicaset/klusterlet-addon-workmgr-5867cbc6c9      Error creating: pods "klusterlet-addon-workmgr-5867cbc6c9-kd64d" is forbidden: violates PodSecurity "restricted:latest": seccompProfile (pod or container "acm-agent" must set securityContext.seccompProfile.type to "RuntimeDefault" or "Localhost")
 
+# 为 namespace open-cluster-management-agent-addon 添加 pod-security 相关 label
+### pod-security.kubernetes.io/audit=privileged
+### pod-security.kubernetes.io/enforce=privileged 
+### pod-security.kubernetes.io/warn=privileged
+$ oc label namespace open-cluster-management-agent-addon pod-security.kubernetes.io/audit=privileged pod-security.kubernetes.io/enforce=privileged pod-security.kubernetes.io/warn=privileged
+$ oc get namespace open-cluster-management-agent-addon --show-labels
+
+# 触发 deployment 重新部署
+$ oc -n open-cluster-management-agent-addon patch deployment/application-manager --patch \
+   "{\"spec\":{\"template\":{\"metadata\":{\"annotations\":{\"last-restart\":\"`date +'%s'`\"}}}}}"
+
+$ oc -n open-cluster-management-agent-addon patch deployment/config-policy-controller --patch \
+   "{\"spec\":{\"template\":{\"metadata\":{\"annotations\":{\"last-restart\":\"`date +'%s'`\"}}}}}"
+
+$ oc -n open-cluster-management-agent-addon patch deployment/klusterlet-addon-workmgr --patch \
+   "{\"spec\":{\"template\":{\"metadata\":{\"annotations\":{\"last-restart\":\"`date +'%s'`\"}}}}}"
+
+# 为 namespace open-cluster-management-agent-addon-observability 添加 pod-security 相关 label
+$ oc label namespace open-cluster-management-addon-observability pod-security.kubernetes.io/audit=privileged --overwrite
+$ oc label namespace open-cluster-management-addon-observability pod-security.kubernetes.io/enforce=privileged --overwrite
+$ oc label namespace open-cluster-management-addon-observability pod-security.kubernetes.io/warn=privileged --overwrite
+$ oc get namespace open-cluster-management-addon-observability --show-labels
+
+# 在 Hub 上删除 label 
+(hub)$ oc label managedcluster edge-3 openshiftVersion-
+(hub)$ oc get managedcluster edge-3 --show-labels
+
+# 在 microshift cluster 上 添加 ClusterRole endpoint-observability-operator-clusterrole 和 ClusterRoleBinding endpoint-observability-operator-clusterrolebinding
+(edge-3)$ cat << EOF | oc apply -f -
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  creationTimestamp: null
+  name: endpoint-observability-operator-clusterrole
+rules:
+- apiGroups:
+  - observability.open-cluster-management.io
+  resources:
+  - observabilityaddons/finalizers
+  verbs:
+  - get
+  - update
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: endpoint-observability-operator-clusterrolebinding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: endpoint-observability-operator-clusterrole
+subjects:
+- kind: ServiceAccount
+  name: endpoint-observability-operator-sa
+  namespace: open-cluster-management-addon-observability
+EOF
+
+# 查看 events 
+$ oc -n open-cluster-management-addon-observability get events -w 
+$ oc get deployment -A
+$ oc get statefulset -A
+$ oc get daemonset -A
+$ oc get pods -A
+
+# 为 serviceaccount 添加权限
+$ oc adm policy add-scc-to-user privileged -z kube-state-metrics -n open-cluster-management-addon-observability
+$ oc -n open-cluster-management-addon-observability patch deployment/kube-state-metrics --patch \
+   "{\"spec\":{\"template\":{\"metadata\":{\"annotations\":{\"last-restart\":\"`date +'%s'`\"}}}}}"
+
+# 为 serviceaccount 添加权限
+$ oc adm policy add-scc-to-user privileged -z node-exporter -n open-cluster-management-addon-observability
+$ oc -n open-cluster-management-addon-observability patch daemonset/node-exporter --patch \
+   "{\"spec\":{\"template\":{\"metadata\":{\"annotations\":{\"last-restart\":\"`date +'%s'`\"}}}}}"
 ```

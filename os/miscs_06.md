@@ -20458,5 +20458,8 @@ echo $IMPORT | base64 -d | oc --kubeconfig=./kubeconfig apply -f -
 ### https://thesecmaster.com/how-to-generate-a-csr-for-multi-domain-ssl-certificates-using-openssl/
 ### https://www.baeldung.com/openssl-self-signed-cert
 
+### 如何安装 TKEStack 
+https://github.com/tkestack/tke/blob/master/docs/guide/zh-CN/installation/installation-procedures.md
 
+yum install --downloadonly --downloaddir=/microshift microshift
 ```

@@ -2755,3 +2755,21 @@ $ podman run --name nodered-v1 -d -t --privileged --network=host registry.exampl
 ### 虚拟工厂 Factroy IO
 ### https://factoryio.com/
 ```
+
+### 尝试 rhel 9.2 上的 microshift
+```
+### 检查日志 - router-default
+$ oc -n openshift-ingress logs $(oc get pods -n openshift-ingress -l ingresscontroller.operator.openshift.io/deployment-ingresscontroller=default -o name)
+### 如果报错
+$ oc -n openshift-ingress delete $(oc get pods -n openshift-ingress -l ingresscontroller.operator.openshift.io/deployment-ingresscontroller=default -o name)
+
+### 检查日志 - ovnkube-master
+$ oc -n openshift-ovn-kubernetes logs $(oc get pods -n openshift-ovn-kubernetes -l app=ovnkube-master -o name)
+
+### 检查日志 - ovnkube-node
+$ oc -n openshift-ovn-kubernetes logs $(oc get pods -n openshift-ovn-kubernetes -l app=ovnkube-node -o name)
+### 如果报错
+$ oc -n openshift-ovn-kubernetes delete $(oc get pods -n openshift-ovn-kubernetes -l app=ovnkube-node -o name)
+
+
+```

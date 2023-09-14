@@ -2850,4 +2850,6 @@ $ oc -n open-cluster-management-addon-observability patch deployment/kube-state-
 $ oc adm policy add-scc-to-user privileged -z node-exporter -n open-cluster-management-addon-observability
 $ oc -n open-cluster-management-addon-observability patch daemonset/node-exporter --patch \
    "{\"spec\":{\"template\":{\"metadata\":{\"annotations\":{\"last-restart\":\"`date +'%s'`\"}}}}}"
+
+
 ```

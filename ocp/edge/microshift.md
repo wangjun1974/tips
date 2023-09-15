@@ -2851,5 +2851,11 @@ $ oc adm policy add-scc-to-user privileged -z node-exporter -n open-cluster-mana
 $ oc -n open-cluster-management-addon-observability patch daemonset/node-exporter --patch \
    "{\"spec\":{\"template\":{\"metadata\":{\"annotations\":{\"last-restart\":\"`date +'%s'`\"}}}}}"
 
+### microshift public cert
+/var/lib/microshift/certs/kube-apiserver-external-signer/kube-external-serving/server.crt
 
+### 编辑 /root/.kube/config 文件
+### - cluster:
+###    certificate-authority-data: $(cat /var/lib/microshift/certs/kube-apiserver-external-signer/kube-external-serving/server.crt | base64 -w 0) <===
+###     server: https://192.168.122.123:6443 <===
 ```

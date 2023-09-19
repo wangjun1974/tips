@@ -20467,4 +20467,10 @@ echo $IMPORT | base64 -d | oc --kubeconfig=./kubeconfig apply -f -
 https://github.com/tkestack/tke/blob/master/docs/guide/zh-CN/installation/installation-procedures.md
 
 yum install --downloadonly --downloaddir=/microshift microshift
+
+# 禁用 CrashReport
+# https://iboysoft.com/wiki/reportcrash-mac.html
+
+$ launchctl unload -w /System/Library/LaunchAgents/com.apple.ReportCrash.plist
+$ sudo launchctl unload -w /System/Library/LaunchDaemons/com.apple.ReportCrash.Root.plist
 ```

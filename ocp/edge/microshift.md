@@ -2857,4 +2857,22 @@ $ cp /var/lib/microshift/resources/kubeadmin/edge-3.example.com/kubeconfig ~/.ku
 
 ### 检查 external api server 证书
 $ echo | openssl s_client -servername 192.168.122.123 -connect 192.168.122.123:6443 | openssl x509 -text
+
+# 测试 cluster-proxy 的程序
+https://github.com/open-cluster-management-io/cluster-proxy/blob/main/examples/test-client/main.go
+
+
+#### 查看 Cluster 的内容
+#### RHACM 设置用户 bob 在 RHACM 里作为 Cluster ocp1 的 admin
+oc --kubeconfig=/srv/workspace/ocphub/upi/auth/kubeconfig create clusterrolebinding crb-ocm-cma-bob-ocp1 --clusterrole=open-cluster-management:admin:ocp1 --user=bob
+oc --kubeconfig=/srv/workspace/ocphub/upi/auth/kubeconfig create rolebinding rb-ocm-cma-bob-ocp1 -n ocp1 --clusterrole=admin --user=bob
+
+#### 检查用户 bob 是否可查看对象 managedCluster 
+oc --kubeconfig=/srv/workspace/ocphub/upi/auth/kubeconfig auth can-i list managedCluster -n ocp1 --as=bob
+oc --kubeconfig=/srv/workspace/ocphub/upi/auth/kubeconfig auth can-i list managedCluster -n ocp2 --as=bob
+
+#### 设置 bob 为 ocp1 的 admin 和 clusteradmin
+oc --kubeconfig=/srv/workspace/ocp1/upi/auth/kubeconfig adm policy add-cluster-role-to-user admin bob
+oc --kubeconfig=/srv/workspace/ocp1/upi/auth/kubeconfig adm policy add-cluster-role-to-user cluster-admin bob
+
 ```

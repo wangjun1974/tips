@@ -1,0 +1,68 @@
+---
+apiVersion: policy.open-cluster-management.io/v1
+kind: Policy
+metadata:
+  name: policy-config-gitea-mirror-registries
+  annotations:
+    policy.open-cluster-management.io/standards: NIST SP 800-53
+    policy.open-cluster-management.io/categories: CM Configuration Management
+    policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
+spec:
+  disabled: false
+  policy-templates:
+    - objectDefinition:
+        apiVersion: policy.open-cluster-management.io/v1
+        kind: ConfigurationPolicy
+        metadata:
+          name: cp-policy-gitea-mirror-registries
+        spec:
+          object-templates:
+            - complianceType: mustonlyhave
+              objectDefinition:
+                apiVersion: machineconfiguration.openshift.io/v1
+                kind: MachineConfig
+                metadata:
+                  name: 99-master-gitea-mirror-registries
+                  labels:
+                    machineconfiguration.openshift.io/role: master
+                spec:
+                  config:
+                    ignition:
+                      version: 3.2.0
+                    storage:
+                      files:
+                      - contents:
+                          source: data:text/plain;charset=utf-8;base64,W1tyZWdpc3RyeV1dCiAgcHJlZml4ID0gIiIKICBsb2NhdGlvbiA9ICJnY3IuaW8va3ViZWJ1aWxkZXIiCiAgbWlycm9yLWJ5LWRpZ2VzdC1vbmx5ID0gZmFsc2UKCiAgW1tyZWdpc3RyeS5taXJyb3JdXQogICAgbG9jYXRpb24gPSAicmVnaXN0cnkub2NwaHViLnRyaW5hc29sYXIuY29tL2t1YmVidWlsZGVyIgo=
+                        filesystem: root
+                        mode: 420
+                        path: /etc/containers/registries.conf.d/99-master-gitea-mirror-registries.conf
+          remediationAction: enforce
+          severity: low
+  remediationAction: enforce
+---
+apiVersion: policy.open-cluster-management.io/v1
+kind: PlacementBinding
+metadata:
+  name: binding-add-policy-config-gitea-mirror-registries
+placementRef:
+  name: placement-add-policy-config-gitea-mirror-registries
+  kind: Placement
+  apiGroup: cluster.open-cluster-management.io
+subjects:
+- name: policy-config-gitea-mirror-registries
+  kind: Policy
+  apiGroup: policy.open-cluster-management.io
+---
+apiVersion: cluster.open-cluster-management.io/v1beta1
+kind: Placement
+metadata:
+  name: placement-add-policy-config-gitea-mirror-registries
+spec:
+  predicates:
+  - requiredClusterSelector:
+      labelSelector:
+        matchExpressions:
+        - key: name
+          operator: In
+          values:
+          - ocpcz2

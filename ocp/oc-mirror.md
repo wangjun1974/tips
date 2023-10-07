@@ -1780,4 +1780,17 @@ $ /usr/local/bin/oc-mirror --config ./image-config-realse-local.yaml file://outp
 $ /usr/local/bin/oc-mirror --from ./mirror_seq1_000000.tar docker://registry.example.com:5000
 
 
+#### 发哥用的同步OpenShift安装所需镜像到本地的命令
+#### https://access.redhat.com/solutions/6976534
+export OCP_RELEASE="4.11.4-x86_64"
+export LOCAL_REGISTRY='registry.ocp-poc.v01.net:5000' 
+export LOCAL_REPOSITORY='ocp4/openshift4'
+export PRODUCT_REPO='openshift-release-dev'
+export LOCAL_SECRET_JSON='./pull-secret.json'
+export RELEASE_NAME="ocp-release"
+export GODEBUG=x509ignoreCN=0
+
+oc adm -a ${LOCAL_SECRET_JSON} release mirror  --from=quay.io/${PRODUCT_REPO}/${RELEASE_NAME}:${OCP_RELEASE} --to-dir=./ocp-install
+oc image mirror -a ${LOCAL_SECRET_JSON} --dir=./ocp-install file://openshift/release:4.11.4* ${LOCAL_REGISTRY}/${LOCAL_REPOSITORY}
+
 ```

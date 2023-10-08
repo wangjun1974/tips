@@ -2970,7 +2970,7 @@ EOF
 echo | oc get secret cert-secret -o jsonpath='{.data.ca\.crt}'| base64 -d  | openssl x509 -text | more
 echo | oc get secret cert-secret -o jsonpath='{.data.tls\.crt}'| base64 -d  | openssl x509 -text | more
 
-#### 参考 https://blog.csdn.net/weixin_43902588/article/details/127047109
+#### 参考晓宇的blog https://blog.csdn.net/weixin_43902588/article/details/127047109
 #### 安装 Vault
 helm repo add hashicorp https://helm.releases.hashicorp.com
 curl -OL https://raw.githubusercontent.com/hashicorp/vault-helm/main/values.openshift.yaml
@@ -2997,5 +2997,69 @@ oc exec -n vault -it vault-server-0 -- vault secrets enable -path=secret/ kv
 oc exec -n vault -it vault-server-0 -- vault kv put secret/openshiftpullsecret dockerconfigjson='xxxx'
 # 获取 secret/openshiftpullsecret
 oc exec -n vault -it vault-server-0 -- vault kv get secret/openshiftpullsecret
+
+# 安装 external secret operator
+# 创建 OperatorConfig
+# 创建 Vault Root Token
+# 使用 vault 服务地址和上一步生成的 vault-token 作为认证信息，创建一个 ClusterSecretStore 对象
+
+# 创建应用项目 my-app
+oc new-project my-app
+# 创建一个 ExternalSecret 对象，它会通过 ClusterSecretStore 访问 Vault 后端 secret/openshiftpullsecret 中的 dockerconfigjson 主键，并将其保存到名为 pullsecret 的 Secret 中
+cat << EOF | oc apply -f -
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+metadata:
+  name: pullsecret-eso
+  namespace: my-app
+spec:
+  refreshInterval: "15s"
+  secretStoreRef:
+    name: vault-backend
+    kind: ClusterSecretStore
+  target:
+    name: pullsecret
+  data:
+  - secretKey: dockerconfigjson
+    remoteRef:
+      key: secret/openshiftpullsecret
+      property: dockerconfigjson
+EOF
+# 查看创建的 externalsecret 对象，其状态为 SecretSynced 说明已经从 Vault 后端完成 Secret 的数据同步
+oc get externalsecret pullsecret-eso -n my-app
+NAME             STORE           REFRESH INTERVAL   STATUS         READY
+pullsecret-eso   vault-backend   15s                SecretSynced   True
+# 如果 ExternalSecret 的状态是 SecretSyncedError，在处理完 ClusterSecretStore 的问题后
+# kubectl annotate ExternalSecret pullsecret-eso force-sync=$(date +%s) --overwrite
+
+# 检查 secret pullsecret 的内容
+$ oc get secret pullsecret -n my-app -o yaml
+apiVersion: v1
+data:
+  dockerconfigjson: xxx
+immutable: false
+kind: Secret
+metadata:
+  annotations:
+    force-sync: "1696755881"
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"external-secrets.io/v1beta1","kind":"ExternalSecret","metadata":{"annotations":{},"name":"pullsecret-eso","namespace":"my-app"},"spec":{"data":[{"remoteRef":{"key":"secret/openshiftpullsecret","property":"dockerconfigjson"},"secretKey":"dockerconfigjson"}],"refreshInterval":"15s","secretStoreRef":{"kind":"ClusterSecretStore","name":"vault-backend"},"target":{"name":"pullsecret"}}}
+    reconcile.external-secrets.io/data-hash: 76f1b4be9d97679ecff6a06a82333268
+  creationTimestamp: "2023-10-08T09:04:42Z"
+  labels:
+    reconcile.external-secrets.io/created-by: a440d3497c63ca020299f88e0a37f5bd
+  name: pullsecret
+  namespace: my-app
+  ownerReferences:
+  - apiVersion: external-secrets.io/v1beta1
+    blockOwnerDeletion: true
+    controller: true
+    kind: ExternalSecret
+    name: pullsecret-eso
+    uid: 34e754a5-d0dc-43d8-9cea-673fe163b633
+  resourceVersion: "57796"
+  uid: 2249f10e-9759-4df5-afde-32f5085b27f4
+type: Opaque
+
 
 ```

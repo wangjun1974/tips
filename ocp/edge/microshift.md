@@ -2970,4 +2970,32 @@ EOF
 echo | oc get secret cert-secret -o jsonpath='{.data.ca\.crt}'| base64 -d  | openssl x509 -text | more
 echo | oc get secret cert-secret -o jsonpath='{.data.tls\.crt}'| base64 -d  | openssl x509 -text | more
 
+#### 参考 https://blog.csdn.net/weixin_43902588/article/details/127047109
+#### 安装 Vault
+helm repo add hashicorp https://helm.releases.hashicorp.com
+curl -OL https://raw.githubusercontent.com/hashicorp/vault-helm/main/values.openshift.yaml
+cat values.openshift.yaml
+oc new-project vault
+helm install vault-server hashicorp/vault -f values.openshift.yaml
+# 设置 pod-security 相关 label
+kubectl label namespace vault pod-security.kubernetes.io/audit=privileged pod-security.kubernetes.io/enforce=privileged pod-security.kubernetes.io/warn=privileged security.openshift.io/scc.podSecurityLabelSync=false --overwrite=true
+
+# 初始化 vault
+oc get pod -n vault
+oc exec -n vault -ti vault-server-0 -- vault operator init
+
+# unseal vault 后 login vault
+oc exec -n vault -ti vault-server-0 -- vault operator unseal hVhxM5cDiywoQgTotsGhp33CPPUpSJvmlrL0LEN4iMQl
+oc exec -n vault -ti vault-server-0 -- vault operator unseal e8dQMEJG3QxapbiawfqYdUKPH+ml+8rb9N/KiZUc5D2D
+oc exec -n vault -ti vault-server-0 -- vault operator unseal p4JN8UIBBXaR4RjMKulizNvbEUYMtSdgQHVKDrBF0IOR
+oc exec -n vault -it vault-server-0 -- vault login hvs.wRsu6MNJLUWTiKLxULTg9FaC
+
+# 启用 kv secret
+oc exec -n vault -it vault-server-0 -- vault secrets enable -path=secret/ kv
+# 创建 secret/openshiftpullsecret 
+# 详细内容参见 https://blog.csdn.net/weixin_43902588/article/details/127047109
+oc exec -n vault -it vault-server-0 -- vault kv put secret/openshiftpullsecret dockerconfigjson='xxxx'
+# 获取 secret/openshiftpullsecret
+oc exec -n vault -it vault-server-0 -- vault kv get secret/openshiftpullsecret
+
 ```

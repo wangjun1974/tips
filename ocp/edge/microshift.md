@@ -2927,4 +2927,47 @@ oc -n metallb-system logs $(oc get pods -n metallb-system -l component=speaker -
 echo | openssl s_client -servername 192.168.122.140 -connect 192.168.122.140:443 2>/dev/null | openssl x509 -text
 
 oc get pods -n metallb-system controller-7dbf5bd4d4-2cghw -o yaml  | grep label -A10 
+
+
+#### 安装 cert-manager operator
+#### 创建 Issuer 
+oc new-project test
+cat <<EOF | oc apply -f -
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: cert-issuer
+  namespace: test
+spec:
+  selfSigned: {}
+EOF
+
+#### 参考
+#### https://cert-manager.io/docs/concepts/certificate/
+cat <<EOF | oc apply -f -
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: certificate-tls
+  namespace: test
+spec:
+  commonName: foo.example.com
+  dnsNames:
+    - example.com
+    - foo.example.com
+    - bar.example.com
+    - 192.168.122.140
+  duration: 20h
+  issuerRef:
+    name: cert-issuer
+    kind: Issuer
+  isCA: false
+  renewBefore: 10h
+  secretName: cert-secret
+EOF
+
+#### 检查 ca.crt 和 tls.crt
+echo | oc get secret cert-secret -o jsonpath='{.data.ca\.crt}'| base64 -d  | openssl x509 -text | more
+echo | oc get secret cert-secret -o jsonpath='{.data.tls\.crt}'| base64 -d  | openssl x509 -text | more
+
 ```

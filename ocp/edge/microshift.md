@@ -2875,4 +2875,56 @@ oc --kubeconfig=/srv/workspace/ocphub/upi/auth/kubeconfig auth can-i list manage
 oc --kubeconfig=/srv/workspace/ocp1/upi/auth/kubeconfig adm policy add-cluster-role-to-user admin bob
 oc --kubeconfig=/srv/workspace/ocp1/upi/auth/kubeconfig adm policy add-cluster-role-to-user cluster-admin bob
 
+
+#### 在 microshift 上安装 metallb
+kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.13.11/config/manifests/metallb-native.yaml
+
+#### 添加 pod security labels
+#### https://github.com/openshift/cluster-policy-controller/pull/127 
+#### 在这个改变之后，需要添加 label security.openshift.io/scc.podSecurityLabelSync=false 
+kubectl label namespace metallb-system pod-security.kubernetes.io/audit=privileged pod-security.kubernetes.io/enforce=privileged pod-security.kubernetes.io/warn=privileged security.openshift.io/scc.podSecurityLabelSync=false --overwrite=true
+kubectl get namespace metallb-system --show-labels
+
+#### 为 serviceaccount 添加 scc
+oc adm policy add-scc-to-user anyuid -z controller -n metallb-system
+oc adm policy add-scc-to-user privileged -z speaker -n metallb-system
+
+#### 触发 controller/speaker 部署
+kubectl -n metallb-system patch deployment/controller --patch \
+   "{\"spec\":{\"template\":{\"metadata\":{\"annotations\":{\"last-restart\":\"`date +'%s'`\"}}}}}"
+kubectl -n metallb-system patch daemonset/speaker --patch \
+   "{\"spec\":{\"template\":{\"metadata\":{\"annotations\":{\"last-restart\":\"`date +'%s'`\"}}}}}"   
+
+#### 删除时运行
+kubectl delete -f https://raw.githubusercontent.com/metallb/metallb/v0.13.11/config/manifests/metallb-native.yaml
+
+#### 创建 AddressPool 与 L2Advertisement
+cat <<EOF | oc apply -f -
+apiVersion: metallb.io/v1beta1
+kind: IPAddressPool
+metadata:
+  name: addresspool-sample1
+  namespace: metallb-system
+spec:
+  addresses:
+    - 192.168.122.140-192.168.122.150
+EOF
+cat <<EOF | oc apply -f -
+apiVersion: metallb.io/v1beta1
+kind: L2Advertisement
+metadata:
+  name: l2adver
+  namespace: metallb-system
+EOF
+
+#### 查看日志
+#### controller
+oc -n metallb-system logs $(oc get pods -n metallb-system -l component=controller -o name)
+#### speaker
+oc -n metallb-system logs $(oc get pods -n metallb-system -l component=speaker -o name)
+
+#### 检查证书
+echo | openssl s_client -servername 192.168.122.140 -connect 192.168.122.140:443 2>/dev/null | openssl x509 -text
+
+oc get pods -n metallb-system controller-7dbf5bd4d4-2cghw -o yaml  | grep label -A10 
 ```

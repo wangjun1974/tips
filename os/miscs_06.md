@@ -20473,4 +20473,22 @@ yum install --downloadonly --downloaddir=/microshift microshift
 
 $ launchctl unload -w /System/Library/LaunchAgents/com.apple.ReportCrash.plist
 $ sudo launchctl unload -w /System/Library/LaunchDaemons/com.apple.ReportCrash.Root.plist
+
+
+### EDA 与 AAP 集成的 secret
+### 创建一个 secret，secret 包含
+### aap 的 url
+### aap 的 access token
+### 访问时是否校验 ssl
+### 其中 aap 的 access token 可以在 aap 的 '访问' -> '用户' -> Token 处创建
+### 因为 EDA 需要在 AAP 里创建对象，因此需要创建 Scope 为 Write 的 Token
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: aap-connection-token
+stringData:
+  url: "https://example-aap.apps.cluster-9tfv2.9tfv2.sandbox575.opentlc.com/"
+  token: "xxxx"
+  ssl_verify: "false"
 ```

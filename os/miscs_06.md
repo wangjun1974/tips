@@ -20453,6 +20453,11 @@ oc --kubeconfig=./kubeconfig create namespace open-cluster-management-agent-addo
 oc --kubeconfig=./kubeconfig -n open-cluster-management-agent-addon create secret generic rhacm --from-file=.dockerconfigjson=auth.json --type=kubernetes.io/dockerconfigjson
 oc --kubeconfig=./kubeconfig -n open-cluster-management-agent-addon create sa klusterlet-addon-operator
 oc --kubeconfig=./kubeconfig -n open-cluster-management-agent-addon patch sa klusterlet-addon-operator -p '{"imagePullSecrets": [{"name": "rhacm"}]}'
+#### 替换 namespace open-cluster-management-agent-addon 下所有 sa 的 imagePullSecrets
+for serviceaccount in $(kubectl get serviceaccount -n open-cluster-management-agent-addon -o name)
+do 
+  kubectl --kubeconfig=./kubeconfig -n open-cluster-management-agent-addon patch sa ${serviceaccount} -p '{"imagePullSecrets": [{"name": "rhacm"}]}'
+done
 
 echo $CRDS | base64 -d | oc --kubeconfig=./kubeconfig apply -f -
 echo $IMPORT | base64 -d | oc --kubeconfig=./kubeconfig apply -f -

@@ -3099,6 +3099,16 @@ EOF
 $ kubectl get svc -A | grep klusterlet-addon-workmgr 
 open-cluster-management-agent-addon           klusterlet-addon-workmgr                                          LoadBalancer   10.97.163.60     192.168.122.124                                                                     443:32407/TCP                  16h
 
+# 查看 metallb controller 日志
+$ kubectl -n metallb-system logs $(kubectl get pods -n metallb-system -l component=controller -o name) 
+{"branch":"HEAD","caller":"level.go:63","commit":"v0.11.0","goversion":"gc / go1.16.9 / amd64","level":"info","msg":"MetalLB controller starting version 0.11.0 (commit v0.11.0, branch HEAD)","ts":"2023-10-11T02:00:56.604514553Z","version":"0.11.0"}
+{"caller":"level.go:63","level":"info","msg":"secret succesfully created","op":"CreateMlSecret","ts":"2023-10-11T02:00:56.634476037Z"}
+{"caller":"level.go:63","configmap":"metallb-system/config","event":"configLoaded","level":"info","msg":"config (re)loaded","ts":"2023-10-11T02:00:56.735633869Z"}
+{"caller":"level.go:63","error":"controller not synced","level":"error","msg":"controller not synced yet, cannot allocate IP; will retry after sync","op":"allocateIP","service":"open-cluster-management-agent-addon/klusterlet-addon-workmgr","ts":"2023-10-11T02:00:56.735943508Z"}
+{"caller":"level.go:63","event":"stateSynced","level":"info","msg":"controller synced, can allocate IPs now","ts":"2023-10-11T02:00:56.736948213Z"}
+{"caller":"level.go:63","event":"ipAllocated","ip":"192.168.122.124","level":"info","msg":"IP address assigned by controller","service":"open-cluster-management-agent-addon/klusterlet-addon-workmgr","ts":"2023-10-11T02:00:56.741992694Z"}
+{"caller":"level.go:63","event":"serviceUpdated","level":"info","msg":"updated service object","service":"open-cluster-management-agent-addon/klusterlet-addon-workmgr","ts":"2023-10-11T02:00:56.762350222Z"}
+
 # ACM -> Search -> Pod -> Log 功能在 k8s v1.18 上这样处理后就正常了
 
 ```

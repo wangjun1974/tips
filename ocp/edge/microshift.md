@@ -3061,5 +3061,44 @@ metadata:
   uid: 2249f10e-9759-4df5-afde-32f5085b27f4
 type: Opaque
 
+### 获取 ACM 下 microshift 的 LoggingCA
+$ oc get ManagedClusterInfo edge-3  -n edge-3 -o jsonpath='{.spec.loggingCA}' | base64 -d
+
+### 在 k8s 上安装 nginx ingress controller - v1.18.18
+### https://blog.csdn.net/D1179869625/article/details/128235603
+### https://raw.githubusercontent.com/kubernetes/ingress-nginx/nginx-0.30.0/deploy/static/mandatory.yaml
+wget https://raw.githubusercontent.com/kubernetes/ingress-nginx/nginx-0.30.0/deploy/static/mandatory.yaml
+kubectl apply -f mandatory.yaml
+wget  https://raw.githubusercontent.com/kubernetes/ingress-nginx/nginx-0.30.0/deploy/static/provider/baremetal/service-nodeport.yaml
+kubectl apply -f service-nodeport.yaml
+kubectl get pods --namespace=ingress-nginx
+
+### 在 k8s v1.18.18 上安装 metallb v0.12
+wget https://raw.githubusercontent.com/metallb/metallb/v0.11/manifests/metallb.yaml
+# 安装 metallb
+kubectl create namespace metallb-system
+kubectl apply -f metallb.yaml
+
+# 创建 MetalLB 
+cat <<EOF | kubectl apply -f -
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: metallb-system
+  name: config
+data:
+  config: |
+    address-pools:
+    - name: my-ip-space
+      protocol: layer2
+      addresses:
+      - 192.168.122.124/32
+EOF
+
+# 查看 service type: LoadBalancer svc klusterlet-addon-workmgr
+$ kubectl get svc -A | grep klusterlet-addon-workmgr 
+open-cluster-management-agent-addon           klusterlet-addon-workmgr                                          LoadBalancer   10.97.163.60     192.168.122.124                                                                     443:32407/TCP                  16h
+
+# ACM -> Search -> Pod -> Log 功能在 k8s v1.18 上这样处理后就正常了
 
 ```

@@ -3111,4 +3111,8 @@ $ kubectl -n metallb-system logs $(kubectl get pods -n metallb-system -l compone
 
 # ACM -> Search -> Pod -> Log 功能在 k8s v1.18 上这样处理后就正常了
 
+
+### 查看 microshift 上的 openshift-service-ca singing-key
+$ oc get secret -n openshift-service-ca signing-key -o template='{{index .data "tls.crt"}}' | base64 -d | openssl x509 -text
+
 ```

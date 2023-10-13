@@ -1,6 +1,8 @@
 ### install rhacs
 ### 参考: https://blog.csdn.net/weixin_43902588/article/details/121772253
 ### 参考: https://redhat-scholars.github.io/acs-workshop/acs-workshop/index.html
+### 参考: https://github.com/rcarrata/devsecops-demo
+### 参考: https://github.com/RedHatDemos/SecurityDemos/blob/master/2021Labs/OpenShiftSecurity/documentation/lab4.adoc
 ```
 ### 安装 RHACS operator
 

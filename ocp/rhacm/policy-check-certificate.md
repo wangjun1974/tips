@@ -32,6 +32,9 @@ metadata:
 spec:
   remediationAction: inform
   disabled: false
+  evaluationInterval:
+    compliant: 10m
+    noncompliant: 10m
   policy-templates:
     - objectDefinition:
         apiVersion: policy.open-cluster-management.io/v1

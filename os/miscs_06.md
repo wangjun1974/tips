@@ -20501,4 +20501,17 @@ stringData:
 BINARY=yq_linux_amd64 
 LATEST=$(wget -qO- https://api.github.com/repos/mikefarah/yq/releases/latest 2>/dev/null | grep browser_download_url | grep $BINARY\"\$|awk '{print $NF}' )
 sudo wget -q $LATEST -O /usr/bin/yq && sudo chmod +x /usr/bin/yq
+
+
+### 安装 cert-manager 
+### https://cert-manager.io/docs/installation/helm/
+KUBECONFIG=/data/ocp-cluster/ocp4-3/auth/kubeconfig helm repo add jetstack https://charts.jetstack.io
+KUBECONFIG=/data/ocp-cluster/ocp4-3/auth/kubeconfig helm repo update
+KUBECONFIG=/data/ocp-cluster/ocp4-3/auth/kubeconfig helm repo list
+KUBECONFIG=/data/ocp-cluster/ocp4-3/auth/kubeconfig helm install \
+  cert-manager jetstack/cert-manager \
+  --namespace cert-manager \
+  --create-namespace \
+  --version v1.13.1 \
+  --set installCRDs=true
 ```

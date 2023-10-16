@@ -20496,4 +20496,9 @@ stringData:
   url: "https://example-aap.apps.cluster-9tfv2.9tfv2.sandbox575.opentlc.com/"
   token: "xxxx"
   ssl_verify: "false"
+
+### 安装 yq
+BINARY=yq_linux_amd64 
+LATEST=$(wget -qO- https://api.github.com/repos/mikefarah/yq/releases/latest 2>/dev/null | grep browser_download_url | grep $BINARY\"\$|awk '{print $NF}' )
+sudo wget -q $LATEST -O /usr/bin/yq && sudo chmod +x /usr/bin/yq
 ```

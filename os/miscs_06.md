@@ -20522,5 +20522,7 @@ KUBECONFIG=/data/ocp-cluster/ocp4-3/auth/kubeconfig helm install \
 (central)$ oc -n stackrox get secret scanner-db-password -o jsonpath='{.data.password}' -n stackrox | base64 -d
 (scanner-db-pod)$ zcat /docker-entrypoint-initdb.d/definitions.sql.gz | psql -U postgres -W postgres -c "SELECT * from vulnerability WHERE name = 'CVE-2023-38545';"
 
+### 定义 securedCluster 对象
+### 调整资源限制 scanner/sensor
 
 ```

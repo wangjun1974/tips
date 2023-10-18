@@ -143,4 +143,52 @@ KUBECONFIG=/data/ocp-cluster/ocp4-3/auth/kubeconfig oc delete Secret cert-secret
 
 ### ocp4-3: 没有证书过期，Policy COMPLIANCE STATE 恢复 Complaint 状态
 
+
+### 
+$ oc get policy 
+NAME                       REMEDIATION ACTION   COMPLIANCE STATE   AGE
+policy-check-certificate   inform               NonCompliant       32m
+
+$ oc -n open-cluster-management-agent-addon logs $(oc -n open-cluster-management-agent-addon get pods -l app=cert-policy-controller -o name) | grep "non compliant" | tail -2 
+2023-10-18T09:53:33.703Z        info    certificate-policy-controller   controllers/certificatepolicy_controller.go:611 Policy updated  {"policy.Name": "cp-policy-check-certificate", "message": "Found 1 non compliant certificates in the namespace default.\nList of non compliant certificates:\ncert-secret expires in 1h31m19.296178685s\n"}
+2023-10-18T09:53:33.703Z        info    certificate-policy-controller   controllers/certificatepolicy_controller.go:662 Policy has violations and is non compliant        {"plc.Name": "cp-policy-check-certificate", "namespace": "default"}
+
+$ oc delete Certificate certificate-tls -n default
+certificate.cert-manager.io "certificate-tls" deleted
+
+$ oc delete Secret cert-secret -n default
+secret "cert-secret" deleted
+
+$ oc -n open-cluster-management-agent-addon logs $(oc -n open-cluster-management-agent-addon get pods -l app=cert-policy-controller -o name) | grep "non compliant" | tail -2 
+2023-10-18T09:58:33.938Z        info    certificate-policy-controller   controllers/certificatepolicy_controller.go:611 Policy updated  {"policy.Name": "cp-policy-check-certificate", "message": "Found 0 non compliant certificates in the namespace default.\n"}
+2023-10-18T09:59:03.956Z        info    certificate-policy-controller   controllers/certificatepolicy_controller.go:611 Policy updated  {"policy.Name": "cp-policy-check-certificate", "message": "Found 0 non compliant certificates in the namespace default.\n"}
+
+$ date 
+Wed Oct 18 18:04:17 CST 2023
+$ sleep 60
+$ date 
+Wed Oct 18 18:05:26 CST 2023
+
+$ oc get policy 
+NAME                       REMEDIATION ACTION   COMPLIANCE STATE   AGE
+policy-check-certificate   inform               NonCompliant       39m
+
+$ oc get csv -n open-cluster-management 
+NAME                                 DISPLAY                                      VERSION   REPLACES                             PHASE
+advanced-cluster-management.v2.8.2   Advanced Cluster Management for Kubernetes   2.8.2     advanced-cluster-management.v2.8.1   Succeeded
+cert-manager.v1.13.1                 cert-manager                                 1.13.1    cert-manager.v1.13.1-rc1             Succeeded
+$ oc get csv -n multicluster-engine 
+NAME                         DISPLAY                              VERSION   REPLACES                     PHASE
+cert-manager.v1.13.1         cert-manager                         1.13.1    cert-manager.v1.13.1-rc1     Succeeded
+multicluster-engine.v2.3.2   multicluster engine for Kubernetes   2.3.2     multicluster-engine.v2.3.1   Succeeded
+$ date 
+Wed Oct 18 18:18:21 CST 2023
+$ oc -n open-cluster-management-agent-addon logs $(oc -n open-cluster-management-agent-addon get pods -l app=cert-policy-controller -o name) | grep "non compliant" | tail -2 
+2023-10-18T10:13:04.491Z        info    certificate-policy-controller   controllers/certificatepolicy_controller.go:611 Policy updated  {"policy.Name": "cp-policy-check-certificate", "message": "Found 0 non compliant certificates in the namespace default.\n"}
+2023-10-18T10:13:34.510Z        info    certificate-policy-controller   controllers/certificatepolicy_controller.go:611 Policy updated  {"policy.Name": "cp-policy-check-certificate", "message": "Found 0 non compliant certificates in the namespace default.\n"}
+$ oc get policy 
+NAME                       REMEDIATION ACTION   COMPLIANCE STATE   AGE
+policy-check-certificate   inform               NonCompliant       52m
+
+
 ```

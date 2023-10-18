@@ -20525,4 +20525,28 @@ KUBECONFIG=/data/ocp-cluster/ocp4-3/auth/kubeconfig helm install \
 ### 定义 securedCluster 对象
 ### 调整资源限制 scanner/sensor
 
+### 调整 console operator
+### https://docs.openshift.com/container-platform/4.13/web_console/disabling-web-console.html
+### https://raw.githubusercontent.com/openshift/console-operator/master/examples/cvo-unmanage-operator.yaml
+cat <<EOF | oc apply -f -
+apiVersion: config.openshift.io/v1
+kind: ClusterVersion
+metadata:
+  namespace: openshift-cluster-version
+  name: version
+spec:
+  overrides:
+    - kind: Deployment
+      name: console-operator
+      namespace: openshift-console-operator
+      unmanaged: true
+      group: apps
+    - kind: ClusterRole
+      name: console-operator
+      namespace: ""
+      unmanaged: true
+      group: rbac.authorization.k8s.io
+EOF
+### 调整 console-operator replica 为 0 
+### 调整 openshift-console replica 数量
 ```

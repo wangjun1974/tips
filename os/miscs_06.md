@@ -20561,4 +20561,8 @@ $ list-local-registry-images.sh /data/registry/data | grep 4\.10\.30 | grep -Ev 
 $ list-local-registry-images.sh /data/registry/data | grep '4.10.30'
 $ podman exec -it poc-registry bin/registry garbage-collect /etc/docker/registry/config.yml
 
+### 调整 rhacs-operator namespace 的 podsecurity
+$ kubectl label namespace rhacs-operator pod-security.kubernetes.io/audit=privileged pod-security.kubernetes.io/enforce=privileged pod-security.kubernetes.io/warn=privileged security.openshift.io/scc.podSecurityLabelSync=false --overwrite=true
+
+
 ```

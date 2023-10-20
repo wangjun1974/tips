@@ -20549,4 +20549,16 @@ spec:
 EOF
 ### 调整 console-operator replica 为 0 
 ### 调整 openshift-console replica 数量
+
+### 查看 docker registry 的镜像
+$ cat <<'EOF' > /usr/local/bin/list-local-registry-images.sh
+find $1 -print | grep 'v2/repositories' | grep 'current' | grep -v 'link' | sed -e 's/\/_manifests\/tags\//:/' | sed -e 's/\/current//' | sed -e 's/^.*repositories\///' | sort
+EOF
+$ chmod +x /usr/local/bin/list-local-registry-images.sh
+### 删除 openshift/release image 4.10.30
+$ cd /data/registry/data/docker/registry/v2
+$ list-local-registry-images.sh /data/registry/data | grep 4\.10\.30 | grep -Ev "release-images" | awk -F':' '{print $2}'  | while read i ; do NAME="openshift/release"; VERSION="$i" ; rm -rf ./repositories/$NAME/_manifests/tags/$VERSION ; done
+$ list-local-registry-images.sh /data/registry/data | grep '4.10.30'
+$ podman exec -it poc-registry bin/registry garbage-collect /etc/docker/registry/config.yml
+
 ```

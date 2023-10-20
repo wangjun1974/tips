@@ -191,4 +191,62 @@ NAME                       REMEDIATION ACTION   COMPLIANCE STATE   AGE
 policy-check-certificate   inform               NonCompliant       52m
 
 
+### 
+$ date 
+Fri Oct 20 01:10:43 UTC 2023
+
+$ cat <<EOF | oc apply -f -
+> apiVersion: cert-manager.io/v1
+> kind: Certificate
+> metadata:
+>   name: certificate-tls
+>   namespace: default
+> spec:
+>   commonName: foo.example.com
+>   dnsNames:
+>     - example.com
+>     - foo.example.com
+>     - bar.example.com
+>     - 192.168.122.140
+>   duration: 2h
+>   issuerRef:
+>     name: cert-issuer
+>     kind: Issuer
+>   isCA: false
+>   renewBefore: 1h
+>   secretName: cert-secret
+> EOF
+certificate.cert-manager.io/certificate-tls created
+
+$ oc -n open-cluster-management-agent-addon logs $(oc -n open-cluster-management-agent-addon get pods -l app=cert-policy-controller -o name) | grep "non compliant" | tail -2 
+2023-10-20T01:26:18.738Z        info    certificate-policy-controller   controllers/certificatepolicy_controller.go:611 Policy updated  {"policy.Name": "cp-policy-check-certificate", "message": "Found 1 non compliant certificates in the namespace default.\nList of non compliant certificates:\ncert-secret expires in 1h58m7.261227201s\n"}
+2023-10-20T01:26:18.738Z        info    certificate-policy-controller   controllers/certificatepolicy_controller.go:662 Policy has violations and is non compliant  {"plc.Name": "cp-policy-check-certificate", "namespace": "default"}
+
+$ oc get policy -A 
+NAMESPACE       NAME                                   REMEDIATION ACTION   COMPLIANCE STATE   AGE
+local-cluster   policy-test.policy-check-certificate   inform               NonCompliant       40h
+policy-test     policy-check-certificate               inform               NonCompliant       40h
+
+$ date 
+Fri Oct 20 01:27:27 UTC 2023
+
+$ oc delete Certificate certificate-tls -n default
+certificate.cert-manager.io "certificate-tls" deleted
+
+$ oc delete Secret cert-secret -n default
+secret "cert-secret" deleted
+
+$ oc delete certificaterequests certificate-tls-1 -n default
+certificaterequest.cert-manager.io "certificate-tls-1" deleted
+
+$ sleep 60; date
+Fri Oct 20 01:29:22 UTC 2023
+
+$ oc get policy -A 
+NAMESPACE       NAME                                   REMEDIATION ACTION   COMPLIANCE STATE   AGE
+local-cluster   policy-test.policy-check-certificate   inform               Compliant          40h
+policy-test     policy-check-certificate               inform               Compliant          40h
+
+
+
 ```

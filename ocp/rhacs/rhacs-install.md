@@ -59,7 +59,7 @@ metadata:
   name: stackrox-secured-cluster-services
   namespace: stackrox
 spec:
-  clusterName: my-cluster
+  clusterName: local-cluster
 EOF
 
 ```

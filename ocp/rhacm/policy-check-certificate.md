@@ -247,6 +247,9 @@ NAMESPACE       NAME                                   REMEDIATION ACTION   COMP
 local-cluster   policy-test.policy-check-certificate   inform               Compliant          40h
 policy-test     policy-check-certificate               inform               Compliant          40h
 
-
+### 收集日志
+1. Framework pod logs: oc -n open-cluster-management-agent-addon logs $(oc -n open-cluster-management-agent-addon get pods -l app=governance-policy-framework -o name) > policyframework.log
+2. Certificate controller logs: oc -n open-cluster-management-agent-addon logs $(oc -n open-cluster-management-agent-addon get pods -l app=cert-policy-controller -o name) > certpolicycontroller.log
+3. Events in local-cluster: oc get events -n local-cluster > events.log
 
 ```

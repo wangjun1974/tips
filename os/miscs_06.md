@@ -20564,5 +20564,18 @@ $ podman exec -it poc-registry bin/registry garbage-collect /etc/docker/registry
 ### 调整 rhacs-operator namespace 的 podsecurity
 $ kubectl label namespace rhacs-operator pod-security.kubernetes.io/audit=privileged pod-security.kubernetes.io/enforce=privileged pod-security.kubernetes.io/warn=privileged security.openshift.io/scc.podSecurityLabelSync=false --overwrite=true
 
-
+### ACM Service Account 的 ClusterRoleBinding 的例子
+### 将 ClusterRole 'cluster-admin' 与 namespace 'default' 下的 ServiceAccount 'robot-acm-poc' 关联起来
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: robot-acm-poc-admin
+subjects:
+  - kind: ServiceAccount
+    name: robot-acm-poc
+    namespace: default
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-admin
 ```

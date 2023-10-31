@@ -20657,4 +20657,18 @@ Error from server (Forbidden): pods "book-import-fc5fd8b9f-qbw2w" is forbidden: 
 $ oc logs $(oc get pod book-import-fc5fd8b9f-qbw2w -o name)
 ...
 02:59:16.64 INFO  ==> ** Starting NGINX **
+
+
+##### ACS 设置 SecureCluster Listen on Events
+##### spec.admissionControl.listenOnEvents: true
+##### 参考: https://medium.com/@dlakshma/run-time-vulnerability-prevention-using-red-hat-advanced-cluster-security-for-kubernetes-ca39fca78e1e
+spec:
+  admissionControl:
+    bypass: BreakGlassAnnotation
+    contactImageScanners: DoNotScanInline
+    listenOnCreates: false
+    listenOnEvents: true
+    listenOnUpdates: false
+    timeoutSeconds: 20
+
 ```

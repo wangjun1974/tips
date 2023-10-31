@@ -20636,7 +20636,8 @@ book-import-fc5fd8b9f-qbw2w         1/1     Running   121 (28m ago)   5d1h
 ### 获取 serviceaccount 的 token
 $ kubectl get $(kubectl get secret -o name| grep test-serviceaccount-token) -o jsonpath='{.token}' | base64 -d
 ### 用获取的 token 登陆
-$ oc login --token=`kubectl get $(kubectl get secret -o name| grep test-serviceaccount-1-token) -o jsonpath='{..data.token}' | base64 -d`
+$ oc login -u admin
+$ oc login --token=`kubectl get $(kubectl get secret -o name| grep test-serviceaccount-1-token) -o jsonpath='{.data.token}' | base64 -d`
 Logged into "https://api.ocp4-1.example.com:6443" as "system:serviceaccount:user01:test-serviceaccount" using the token provided.
 ### 执行 kubectl exec 查看 id
 $ oc exec -it $(oc get pod book-import-fc5fd8b9f-qbw2w -o name) -- /bin/sh -c 'id' 

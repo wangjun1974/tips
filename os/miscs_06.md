@@ -20662,6 +20662,7 @@ $ oc logs $(oc get pod book-import-fc5fd8b9f-qbw2w -o name)
 ##### ACS 设置 SecureCluster Listen on Events
 ##### spec.admissionControl.listenOnEvents: true
 ##### 参考: https://medium.com/@dlakshma/run-time-vulnerability-prevention-using-red-hat-advanced-cluster-security-for-kubernetes-ca39fca78e1e
+##### 视频: https://youtu.be/pFrMpd4nye8
 spec:
   admissionControl:
     bypass: BreakGlassAnnotation

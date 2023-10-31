@@ -20578,4 +20578,49 @@ roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
   name: cluster-admin
+
+
+### 编辑 custom-admin clusterrole
+$ oc get clusterrole admin -o yaml > custom.yaml
+### 编辑 custom.yaml 文件
+### 让 clusterrole custom-admin 没有 secrets 的 get 权限
+### 创建 serviceaccount test-serviceaccount
+$ oc create serviceaccount test-serviceaccount
+### 将serviceacount test-serviceaccount 与 clusterrole custom-admin 关联
+$ oc create rolebinding test-serviceaccount-custom-admin --clusterrole=custom-admin --serviceaccount=user01:test-serviceaccount
+$ oc get sa
+test-serviceaccount   1         76s
+$ oc get pods
+security-context-demo         1/1     Running   121 (28m ago)   5d1h
+### 获取 serviceaccount 的 token
+$ kubectl get $(kubectl get secret -o name| grep test-serviceaccount-token) -o jsonpath='{.token}' | base64 -d
+### 用获取的 token 登陆
+$ oc login --token='...'
+Logged into "https://api.ocp4-1.example.com:6443" as "system:serviceaccount:user01:test-serviceaccount" using the token provided.
+
+### 用户查看 secret 内容
+$ oc exec -it security-context-demo -- /bin/bash
+
+### 设置 security context 
+### https://docs.openshift.com/container-platform/4.8/authentication/managing-security-context-constraints.html
+$ oc get scc
+$ oc get scc restricted-v2 -o yaml > restricted-v2-custom.yaml 
+### 编辑 yaml 文件
+### 设置新的 spec.name
+### 调整 runAsUser 部分，添加自定义的 uidRangeMin: 1000990000，默认是 1000980000
+runAsUser:
+  type: MustRunAsRange
+  uidRangeMin: 1000990000
+
+### 将用户与 scc 关联起来
+$ oc adm policy add-scc-to-user restricted-v2-custom system:serviceaccount:user01:test-serviceaccount
+### 查看更新的 clusterrolebinding system:openshift:scc:<scc-name>
+$ oc describe clusterrolebinding system:openshift:scc:restricted-v2-custom 
+...
+Subjects:
+  Kind            Name                 Namespace
+  ----            ----                 ---------
+  ServiceAccount  test-serviceaccount  user01
+
+
 ```

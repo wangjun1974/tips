@@ -20587,7 +20587,7 @@ $ oc get clusterrole admin -o yaml > custom.yaml
 ### 创建 serviceaccount test-serviceaccount
 $ oc create serviceaccount test-serviceaccount
 ### 将serviceacount test-serviceaccount 与 clusterrole custom-admin 关联
-$ oc create rolebinding test-serviceaccount-custom-admin --clusterrole=custom-admin --serviceaccount=user01:test-serviceaccount
+$ oc create rolebinding test-serviceaccount-view --clusterrole=view --serviceaccount=user01:test-serviceaccount
 $ oc get sa
 test-serviceaccount   1         76s
 $ oc get pods
@@ -20611,6 +20611,7 @@ $ oc get scc restricted-v2 -o yaml > restricted-v2-custom.yaml
 runAsUser:
   type: MustRunAsRange
   uidRangeMin: 1000990000
+  uidRangeMax: 1000999999
 
 ### 将用户与 scc 关联起来
 $ oc adm policy add-scc-to-user restricted-v2-custom system:serviceaccount:user01:test-serviceaccount
@@ -20622,5 +20623,37 @@ Subjects:
   ----            ----                 ---------
   ServiceAccount  test-serviceaccount  user01
 
+### 用 serviceaccount login 
+$ oc login --token `oc get $(oc get secret -o name | grep test-serviceaccount-token) -o jsonpath='{.data.token}' | base64 -d `
 
+### 创建 serviceaccount test-serviceaccount-1
+$ oc create serviceaccount test-serviceaccount-1
+$ oc create rolebinding test-serviceaccount-1 --clusterrole=admin --serviceaccount=user01:test-serviceaccount-1
+$ oc get sa test-serviceaccount-1
+test-serviceaccount-1   1         22s
+$ oc get pods
+book-import-fc5fd8b9f-qbw2w         1/1     Running   121 (28m ago)   5d1h
+### 获取 serviceaccount 的 token
+$ kubectl get $(kubectl get secret -o name| grep test-serviceaccount-token) -o jsonpath='{.token}' | base64 -d
+### 用获取的 token 登陆
+$ oc login --token=`kubectl get $(kubectl get secret -o name| grep test-serviceaccount-1-token) -o jsonpath='{..data.token}' | base64 -d`
+Logged into "https://api.ocp4-1.example.com:6443" as "system:serviceaccount:user01:test-serviceaccount" using the token provided.
+### 执行 kubectl exec 查看 id
+$ oc exec -it $(oc get pod book-import-fc5fd8b9f-qbw2w -o name) -- /bin/sh -c 'id' 
+uid=1000980000(1000980000) gid=0(root) groups=0(root),1000980000
+### 查看日志 
+$ oc logs $(oc get pod book-import-fc5fd8b9f-qbw2w -o name)
+...
+02:59:16.64 INFO  ==> ** Starting NGINX **
+
+### 切换到serviceaccount test-serviceaccount
+$ oc login --token=`kubectl get $(kubectl get secret -o name| grep test-serviceaccount-token) -o jsonpath='{..data.token}' | base64 -d`
+$ oc whoami 
+system:serviceaccount:user01:test-serviceaccount
+### 执行 kubectl exec 查看 id
+Error from server (Forbidden): pods "book-import-fc5fd8b9f-qbw2w" is forbidden: User "system:serviceaccount:user01:test-serviceaccount" cannot create resource "pods/exec" in API group "" in the namespace "user01"
+### 查看日志
+$ oc logs $(oc get pod book-import-fc5fd8b9f-qbw2w -o name)
+...
+02:59:16.64 INFO  ==> ** Starting NGINX **
 ```

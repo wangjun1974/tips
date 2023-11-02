@@ -20673,6 +20673,7 @@ spec:
     timeoutSeconds: 20
 
 #### ACS Log4Shell 
+#### https://medium.com/@dlakshma/run-time-vulnerability-prevention-using-red-hat-advanced-cluster-security-for-kubernetes-ca39fca78e1e
 #### 下载 JNDIExploit.v1.2.zip
 $ wget https://web.archive.org/web/20211211031401/https://github.com/feihong-cs/JNDIExploit/releases/download/v1.2/JNDIExploit.v1.2.zip
 #### 解压缩 JNDIExploit.v1.2.zip 文件

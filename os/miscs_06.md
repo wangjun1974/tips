@@ -20795,4 +20795,12 @@ log4shell-app-5647489c-lzmrx               1/1     Running   0              15s
 Hello, world!
 NAME                                       READY   STATUS    RESTARTS       AGE
 log4shell-app-5647489c-lzc7d               1/1     Running   0              30s
+
+
+
+#### vault 与 kubernetes 的集成
+#### https://medium.com/@jackalus/vault-kubernetes-auth-and-database-secrets-engine-6551d686a12
+#### 获取 k8s cacert 的方法
+k8s_cacert="$(kubectl config view --raw --minify --flatten -o jsonpath='{.clusters[].cluster.certificate-authority-data}' | base64 --decode)"
+
 ```

@@ -20672,4 +20672,109 @@ spec:
     listenOnUpdates: false
     timeoutSeconds: 20
 
+#### ACS Log4Shell 
+#### 下载 JNDIExploit.v1.2.zip
+$ wget https://web.archive.org/web/20211211031401/https://github.com/feihong-cs/JNDIExploit/releases/download/v1.2/JNDIExploit.v1.2.zip
+#### 解压缩 JNDIExploit.v1.2.zip 文件
+#### 运行 
+$ java java -jar JNDIExploit-1.2-SNAPSHOT.jar -i <IP> -p 8888
+
+#### 在 ocp 内部署测试应用
+$ oc new-project test
+#### 默认 4.12 的 PSA 根本不允许 log4shell 测试应用运行
+#### 自身安全性还是有保证的
+#### 如果想运行测试应用，需要调整PSA设置，并且为 serviceaccount 添加 privileged scc
+$ oc label namespace test pod-security.kubernetes.io/audit=privileged pod-security.kubernetes.io/enforce=privileged pod-security.kubernetes.io/warn=privileged security.openshift.io/scc.podSecurityLabelSync=false --overwrite=true
+$ oc adm policy add-scc-to-user privileged -z default -n test
+
+#### log4shell
+#### 注意调整镜像
+#### 测试镜像 quay.io/smileyfritz/log4shell-app:v0.5
+#### 以及 Route 里的 host
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: log4shell-app
+  namespace: test
+  labels:
+    app: log4shell-app
+    app.kubernetes.io/component: log4shell-app
+    app.kubernetes.io/instance: log4shell-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      deployment: log4shell-app
+  template:
+    metadata:
+      labels:
+        app: log4shell-app
+        deployment: log4shell-app
+    spec:
+      containers:
+        - name: log4shell-app
+          image: registry.ocp4.example.com/smileyfritz/log4shell-app:v0.5
+          securityContext:
+            capabilities:
+              add:
+                - SYS_ADMIN
+                - NET_ADMIN
+          ports:
+            - containerPort: 8080
+              protocol: TCP
+          resources: {}
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          imagePullPolicy: IfNotPresent
+          volumeMounts:
+            - name: unix-socket
+              mountPath: /var/run/docker.sock
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+      dnsPolicy: ClusterFirst
+      securityContext: {}
+      schedulerName: default-scheduler
+      volumes:
+        - name: unix-socket
+          hostPath:
+            path: /var/run/docker.sock
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 25%
+      maxSurge: 25%
+  revisionHistoryLimit: 10
+  progressDeadlineSeconds: 600
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: log4shell-app
+  namespace: test
+spec:
+  type: ClusterIP
+  ports:
+  - port: 8080
+  selector:
+    app: log4shell-app 
+---
+kind: Route
+apiVersion: route.openshift.io/v1
+metadata:
+  name: log4shell-app
+  namespace: test
+  labels:
+    app: log4shell-app
+    app.kubernetes.io/component: log4shell-app
+    app.kubernetes.io/instance: log4shell-app
+spec:
+  host: log4shell-app-test.apps.ocp4.example.com
+  to:
+    kind: Service
+    name: log4shell-app
+    weight: 100
+  port:
+    targetPort: 8080
+  wildcardPolicy: None
+
 ```

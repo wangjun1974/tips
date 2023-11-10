@@ -20800,7 +20800,56 @@ log4shell-app-5647489c-lzc7d               1/1     Running   0              30s
 
 #### vault 与 kubernetes 的集成
 #### https://medium.com/@jackalus/vault-kubernetes-auth-and-database-secrets-engine-6551d686a12
+#### 获取 k8s_host
+k8s_host="$(kubectl config view --minify | grep server | cut -f 2- -d ":" | tr -d " ")"
 #### 获取 k8s cacert 的方法
+#### k8s_cacert
 k8s_cacert="$(kubectl config view --raw --minify --flatten -o jsonpath='{.clusters[].cluster.certificate-authority-data}' | base64 --decode)"
+#### 在 default namespace 下创建 service account vault-auth
+$ kubectl create serviceaccount vault-auth -n default
+#### 创建 ClusterRoleBinding，将 ClusterRole system:auth-delegator 与 ServiceAccount vault-auth 关联
+kubectl apply -f -<<EOH
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: role-tokenreview-binding
+  namespace: default
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: system:auth-delegator
+subjects:
+- kind: ServiceAccount
+  name: vault-auth
+  namespace: default
+EOH
+#### serviceaccount vault-auth 的 token 具有 token reviewer 角色
+tr_account_token="$(kubectl create token vault-auth -n default)"
 
+#### 将 vault 与 kubernetes 认证集成
+vault auth enable kubernetes
+vault write auth/kubernetes/config
+token_reviewer_jwt="${token_reviewer_jwt}"
+kubernetes_host="${kubernetes_host}"
+kubernetes_ca_cert="${kubernetes_cacert}"
+
+
+### 获取 ACS scanner-db 口令
+$ oc -n stackrox get secret scanner-db-password -o jsonpath='{.data.password}' -n stackrox | base64 -d
+
+### 访问 scanner-db pod，在 DB 里查询 CVE 
+$ oc -n stackrox rsh $(oc -n stackrox get pods -n stackrox -l app=scanner-db -o name)
+$ zcat /docker-entrypoint-initdb.d/definitions.sql.gz | psql -U postgres -W postgres -c "\x"
+$ zcat /docker-entrypoint-initdb.d/definitions.sql.gz | psql -U postgres -W postgres -c "SELECT * from vulnerability WHERE name = 'CVE-2022-42889';"
+
+### 设置 重命名, 获取 context, 切换 context
+https://jstakun.blogspot.com/2019/10/switching-context-between-clusters.html
+oc login -u admin https://api.test1.xxx.xxx:6443 
+oc config rename-context $(oc config current-context) test1
+oc config get-contexts
+oc login -u admin https://api.test2.xxx.xxx:6443
+oc config rename-context $(oc config current-context) test2
+oc config get-contexts
+oc config use-context test1
 ```

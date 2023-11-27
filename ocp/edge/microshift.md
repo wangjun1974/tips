@@ -3115,4 +3115,29 @@ $ kubectl -n metallb-system logs $(kubectl get pods -n metallb-system -l compone
 ### 查看 microshift 上的 openshift-service-ca singing-key
 $ oc get secret -n openshift-service-ca signing-key -o template='{{index .data "tls.crt"}}' | base64 -d | openssl x509 -text
 
+
+
+#### 创建
+
+mkdir -p /var/www/html/repos/microshift
+cat > reposync.sh <<'EOF'
+#!/bin/bash
+
+localPath="/var/www/html/repos/microshift/"
+fileConn="/getPackage/"
+
+# fast-datapath-for-rhel-9-x86_64-rpms
+# rhocp-4.14-for-rhel-9-x86_64-rpms
+
+for i in fast-datapath-for-rhel-9-x86_64-rpms rhocp-4.14-for-rhel-9-x86_64-rpms 
+do
+
+  rm -rf "$localPath"$i/repodata
+  echo "sync channel $i..."
+  reposync -n --delete --download-path="$localPath" --repoid $i --downloadcomps --download-metadata
+  
+done
+
+exit 0
+EOF
 ```

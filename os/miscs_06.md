@@ -20852,4 +20852,9 @@ oc login -u admin https://api.test2.xxx.xxx:6443
 oc config rename-context $(oc config current-context) test2
 oc config get-contexts
 oc config use-context test1
+
+### external dns 与 rfc2136
+### https://github.com/kubernetes-sigs/external-dns/blob/master/docs/tutorials/rfc2136.md
+$ tsig-keygen -a hmac-sha256 externaldns
+
 ```

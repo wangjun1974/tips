@@ -5310,4 +5310,120 @@ $ echo 0000:03:00.0 > /sys/bus/pci/drivers/vfio-pci/bind
 
 ### FieldBus 配置参考
 ### https://help.codesys.com/webapp/_ecat_general;product=core_EtherCAT_Configuration_Editor;version=4.1.0.0
+
+
+
+### 设置 multus ip 地址为默认路由地址
+---
+apiVersion: "k8s.cni.cncf.io/v1"
+kind: NetworkAttachmentDefinition
+metadata:
+  name: codesys-management-gateway
+  namespace: codesysdemo
+spec:
+  config: '{
+      "cniVersion": "0.3.1",
+      "type": "macvlan",
+      "master": "enp1s0",
+      "mode": "bridge",
+      "capabilities": { "ips": true },
+      "ipam": {
+            "type": "static"
+      }
+  }'
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: codesysedge
+  labels:
+    app: codesysedge
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: k8s.ocp4.example.com
+    external-dns.alpha.kubernetes.io/endpoints-type: HostIP
+spec:
+  ports:
+  - port: 1217
+    hostPort: 1217
+    name: gateway
+  - port: 1743
+    hostPort: 1743
+    name: gatewayudp
+    protocol: UDP
+  clusterIP: None
+  selector:
+    app: codesysedge
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: codesysedge
+  labels:
+    app: codesysedge
+spec:
+  serviceName: codesysedge
+  replicas: 1
+  selector:
+    matchLabels:
+      app: codesysedge
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: codesysedge
+      annotations:
+        k8s.v1.cni.cncf.io/networks: '[{
+        "name": "codesys-management-gateway",
+        "ips": [ "192.168.56.144/24" ],
+        "default-route": [ "192.168.56.1" ]
+      }]'
+    spec:
+      nodeSelector:
+        node-role.kubernetes.io/worker: ""
+        kubernetes.io/hostname: "w0-ocp4test.ocp4.example.com"
+      containers:
+      - image: registry.ocp4.example.com/smileyfritz/codesys/codesysedge:latest
+        name: codesysedge
+        securityContext:
+          privileged: true
+        ports:
+        - containerPort: 1217
+          name: gateway
+          protocol: TCP
+          hostPort: 1217
+        - containerPort: 1743
+          name: gatewayudp
+          protocol: UDP
+          hostPort: 1743
+### ip address in pod, net1@if2 的 ip 地址就是通过 annotation 附加上的地址
+$ oc -n codesysdemo rsh codesysedge-0 ip a s 
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+       valid_lft forever preferred_lft forever
+    inet6 ::1/128 scope host 
+       valid_lft forever preferred_lft forever
+3: eth0@if268: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1450 qdisc noqueue state UP group default 
+    link/ether 0a:58:ac:12:03:10 brd ff:ff:ff:ff:ff:ff link-netnsid 0
+    inet 172.18.3.16/24 brd 172.18.3.255 scope global eth0
+       valid_lft forever preferred_lft forever
+    inet6 fe80::b8d2:80ff:fee5:d4c0/64 scope link 
+       valid_lft forever preferred_lft forever
+4: net1@if2: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default 
+    link/ether e2:6a:31:cb:bf:7a brd ff:ff:ff:ff:ff:ff link-netnsid 0
+    inet 192.168.56.144/24 brd 192.168.56.255 scope global net1
+       valid_lft forever preferred_lft forever
+    inet6 fe80::e06a:31ff:fecb:bf7a/64 scope link 
+       valid_lft forever preferred_lft forever
+
+### 缺省路由是 annotation 设置的缺省路由
+$ oc -n codesysdemo rsh codesysedge-0 ip r s 
+default via 192.168.56.1 dev net1 
+172.18.0.0/16 dev eth0 
+172.18.3.0/24 dev eth0 proto kernel scope link src 172.18.3.16 
+172.30.0.0/16 via 172.18.3.1 dev eth0 
+192.168.56.0/24 dev net1 proto kernel scope link src 192.168.56.144 
+224.0.0.0/4 dev eth0
+
 ```

@@ -261,4 +261,11 @@ curl: (52) Empty reply from server
 
 # 监控 redis 日志里有消息
 1:M 27 Nov 2023 03:05:05.642 # Possible SECURITY ATTACK detected. It looks like somebody is sending POST or Host: commands to Redis. This is likely due to an attacker attempting to use Cross Protocol Scripting to compromise your Redis instance. Connection aborted.
+
+# 访问 redis
+nc redis-0.k8s.ocp4.example.com 6379
+> scan 0
+> set mykey "hello"
+> scan 0
+> get mykey
 ```

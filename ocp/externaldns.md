@@ -277,4 +277,13 @@ oc label node w0-ocp4test.ocp4.example.com zone="zone0"
 oc label node w1-ocp4test.ocp4.example.com zone="zone0"
 oc label node w2-ocp4test.ocp4.example.com zone="zone0"
 
+# 为 pod 添加 external-dns 所需的 annotation
+for i in $(seq 0 3)
+do
+MULTUSPODIP=$(kubectl get pod redis-$i -n test -o jsonpath='{.metadata.annotations.k8s\.v1\.cni\.cncf\.io/networks-status}' | jq -r '.[1].ips[0]')
+
+oc patch pod redis-$i -n test --type=merge --patch-file=/dev/fd/0 <<EOF
+{"metadata": {"annotations": {"external-dns.alpha.kubernetes.io/target": "$MULTUSPODIP"}}}
+EOF
+done
 ```

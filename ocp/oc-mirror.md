@@ -1814,7 +1814,7 @@ EOF
 
 
 ### 检查 operator 的情况
-### for packagename in kubevirt-hyperconverged performance-addon-operator kubernetes-nmstate-operator sriov-network-operator local-storage-operator odf-operator cincinnati-operator advanced-cluster-management openshift-gitops-operator lvms-operator multicluster-engine rhacs-operator ansible-automation-platform-operator nfd node-healthcheck-operator metallb-operator sandboxed-containers-operator openshift-special-resource-operator  lvms-operator ocs-operator mcg-operator web-terminal openshift-pipelines-operator-rh devworkspace-operator web-terminal rhods-operator rhods-prometheus-operator nfd
+### for packagename in kubevirt-hyperconverged performance-addon-operator kubernetes-nmstate-operator sriov-network-operator local-storage-operator odf-operator cincinnati-operator advanced-cluster-management openshift-gitops-operator lvms-operator multicluster-engine rhacs-operator ansible-automation-platform-operator nfd node-healthcheck-operator metallb-operator sandboxed-containers-operator openshift-special-resource-operator  lvms-operator ocs-operator mcg-operator web-terminal openshift-pipelines-operator-rh devworkspace-operator web-terminal rhods-operator rhods-prometheus-operator nfd whereabouts
 ### do 
 ###  /usr/local/bin/oc-mirror list operators --catalog=registry.redhat.io/redhat/redhat-operator-index:v4.12 --package=${packagename}
 ### done
@@ -1846,8 +1846,8 @@ mirror:
         - name: odf-operator
           channels:
             - name: 'stable-4.14'
-              minVersion: 'v4.12.3-rhodf'
-              maxVersion: 'v4.12.3-rhodf'
+              minVersion: 'v4.14.0-rhodf'
+              maxVersion: 'v4.14.0-rhodf'
         - name: ocs-operator
           channels:
             - name: 'stable-4.14'
@@ -1866,43 +1866,18 @@ mirror:
         - name: metallb-operator
           channels:
             - name: stable
-              minVersion: '4.12.0-202305102015'
-              maxVersion: '4.12.0-202305102015'
-        - name: sandboxed-containers-operator
-          channels:
-            - name: stable-1.3
-              minVersion: 'v1.3.3'
-              maxVersion: 'v1.3.3'
-        - name: openshift-pipelines-operator-rh
-          channels:
-            - name: latest
-              minVersion: 'v1.10.3'
-              maxVersion: 'v1.10.3'
+              minVersion: 'v4.14.0-202311211133'
+              maxVersion: 'v4.14.0-202311211133'
         - name: devworkspace-operator
           channels:
             - name: fast
-              minVersion: 'v0.20.0'
-              maxVersion: 'v0.20.0'
+              minVersion: 'v0.23.0'
+              maxVersion: 'v0.23.0'
         - name: web-terminal
           channels:
             - name: fast
-              minVersion: 'v1.7.0-0.1684429884.p'
-              maxVersion: 'v1.7.0-0.1684429884.p'
-        - name: rhods-operator
-          channels:
-            - name: stable
-              minVersion: '1.26.0'
-              maxVersion: '1.26.0'
-        - name: rhods-prometheus-operator
-          channels:
-            - name: beta
-              minVersion: '4.10.0'
-              maxVersion: '4.10.0'
-        - name: nfd
-          channels:
-            - name: stable
-              minVersion: '4.12.0-202305101515'
-              maxVersion: '4.12.0-202305101515'              
+              minVersion: 'v1.8.0-0.1692219820.p'
+              maxVersion: 'v1.8.0-0.1692219820.p'        
 EOF
 
 

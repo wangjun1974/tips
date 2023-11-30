@@ -268,4 +268,13 @@ nc redis-0.k8s.ocp4.example.com 6379
 > set mykey "hello"
 > scan 0
 > get mykey
+
+# 查看 redis service endpoint
+kubectl get endpoints ksvc -n test
+
+
+oc label node w0-ocp4test.ocp4.example.com zone="zone0"
+oc label node w1-ocp4test.ocp4.example.com zone="zone0"
+oc label node w2-ocp4test.ocp4.example.com zone="zone0"
+
 ```

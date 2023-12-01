@@ -20859,4 +20859,27 @@ $ tsig-keygen -a hmac-sha256 externaldns
 
 ### 对于 worker latency profile 的介绍
 https://docs.okd.io/latest/scalability_and_performance/scaling-worker-latency-profiles.html
+
+### Intel - OpenShift SNO 节点启用 nested virtualization
+cat <<EOF | oc apply -f -
+apiVersion: machineconfiguration.openshift.io/v1
+kind: MachineConfig
+metadata:
+  labels:
+    machineconfiguration.openshift.io/role: master
+  name: 80-enable-nested-virt-master
+spec:
+  config:
+    ignition:
+      version: 3.2.0
+    storage:
+      files:
+      - contents:
+          source: data:text/plain;charset=utf-8;base64,b3B0aW9ucyBrdm1faW50ZWwgbmVzdGVkPTEK
+          verification: {}
+        filesystem: root
+        mode: 420
+        path: /etc/modprobe.d/kvm.conf
+  osImageURL: ""
+EOF
 ```

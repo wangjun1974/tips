@@ -20857,4 +20857,6 @@ oc config use-context test1
 ### https://github.com/kubernetes-sigs/external-dns/blob/master/docs/tutorials/rfc2136.md
 $ tsig-keygen -a hmac-sha256 externaldns
 
+### 对于 worker latency profile 的介绍
+https://docs.okd.io/latest/scalability_and_performance/scaling-worker-latency-profiles.html
 ```

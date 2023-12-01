@@ -1877,10 +1877,35 @@ mirror:
           channels:
             - name: fast
               minVersion: 'v1.8.0-0.1692219820.p'
-              maxVersion: 'v1.8.0-0.1692219820.p'        
+              maxVersion: 'v1.8.0-0.1692219820.p'
+        - name: advanced-cluster-management
+          channels:
+            - name: release-2.9
+              minVersion: 'v2.9.0'
+              maxVersion: 'v2.9.0'
+        - name: multicluster-engine
+          channels:
+            - name: stable-2.3
+              minVersion: 'v2.3.4'
+              maxVersion: 'v2.3.4'
+          channels:
+            - name: stable-2.4
+              minVersion: 'v2.4.1'
+              maxVersion: 'v2.4.1'
+        - name: openshift-gitops-operator
+          channels:
+            - name: latest
+              minVersion: 'v1.10.1'
+              maxVersion: 'v1.10.1'
+        - name: ansible-automation-platform-operator
+          channels:
+            - name: stable-2.4-cluster-scoped
+              minVersion: 'v2.4.0-0.1700365194'
+              maxVersion: 'v2.4.0-0.1700365194'
 EOF
 
 $ /usr/local/bin/oc-mirror --config ./image-config-realse-local.yaml file://output-dir 2>&1 | tee /tmp/oc-mirror 
+$ /usr/local/bin/oc-mirror --from ./mirror_seq1_000000.tar docker://registry.example.com:5000
 
 
 ```

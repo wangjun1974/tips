@@ -1808,8 +1808,9 @@ mirror:
     graph: true # Include Cincinnati upgrade graph image in imageset
 EOF
 
-/usr/local/bin/oc-mirror --config ./image-config-realse-local.yaml file://output-dir 2>&1 | tee /tmp/err 
-
+$ /usr/local/bin/oc-mirror --config ./image-config-realse-local.yaml file://output-dir 2>&1 | tee /tmp/err 
+# 拷贝 output-dir/mirror_seq1_000000.tar 到离线环境并上传到离线 registry
+$ /usr/local/bin/oc-mirror --from ./mirror_seq1_000000.tar docker://registry.example.com:5000
 
 
 
@@ -1826,7 +1827,6 @@ kind: ImageSetConfiguration
 mirror:
   operators:
     - catalog: registry.redhat.io/redhat/redhat-operator-index:v4.14
-      packages:
       packages:
         - name: kubevirt-hyperconverged
           channels:
@@ -1880,7 +1880,7 @@ mirror:
               maxVersion: 'v1.8.0-0.1692219820.p'        
 EOF
 
-
+$ /usr/local/bin/oc-mirror --config ./image-config-realse-local.yaml file://output-dir 2>&1 | tee /tmp/oc-mirror 
 
 
 ```

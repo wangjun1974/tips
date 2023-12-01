@@ -1888,7 +1888,6 @@ mirror:
             - name: stable-2.3
               minVersion: 'v2.3.4'
               maxVersion: 'v2.3.4'
-          channels:
             - name: stable-2.4
               minVersion: 'v2.4.1'
               maxVersion: 'v2.4.1'

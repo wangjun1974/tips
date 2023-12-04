@@ -1901,6 +1901,16 @@ mirror:
             - name: stable-2.4-cluster-scoped
               minVersion: 'v2.4.0-0.1700365194'
               maxVersion: 'v2.4.0-0.1700365194'
+        - name: lvms-operator
+          channels:
+            - name: stable-4.14
+              minVersion: 'v4.14.1'
+              maxVersion: 'v4.14.1'
+        - name: mtv-operator
+          channels:
+            - name: release-v2.5
+              minVersion: 'v2.5.2'
+              maxVersion: 'v2.5.2'
 EOF
 
 $ /usr/local/bin/oc-mirror --config ./image-config-realse-local.yaml file://output-dir 2>&1 | tee /tmp/oc-mirror 

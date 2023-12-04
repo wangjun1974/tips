@@ -20883,4 +20883,22 @@ spec:
   osImageURL: ""
 EOF
 
+
+### add oc-mirror into container on rhel7
+[root@support oc-mirror-container]# ls -l
+total 131164
+-rw-r--r--. 1 root root       139 Dec  4 16:58 Dockerfile.app-v1
+-rwxr-xr-x. 1 root root 134305080 Dec  4 16:59 oc-mirror
+
+### build container and push container
+podman build -f Dockerfile.app-v1 -t registry.example.com:5000/codesys/oc-mirror:latest
+podman push registry.example.com:5000/codesys/oc-mirror:latest
+
+### cd oc-mirror directory
+[root@support oc-mirror-container]# cd /data/OCP-4.14.3/ocp/oc-mirror/release/
+[root@support release]# ls
+mirror_seq1_000000.tar
+
+### run oc-mirror container
+podman run --name oc-mirror -d -t --network host -v /etc/pki/ca-trust/source/anchors/registry.crt:/etc/ssl/certs/registry.crt -v /root/.docker/config.json:/root/.docker/config.json -v .:/test --privileged registry.example.com:5000/codesys/oc-mirror:latest --from /test/mirror_seq1_000000.tar docker://registry.example.com:5000
 ```

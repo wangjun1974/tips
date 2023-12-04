@@ -286,4 +286,19 @@ oc patch pod redis-$i -n test --type=merge --patch-file=/dev/fd/0 <<EOF
 {"metadata": {"annotations": {"external-dns.alpha.kubernetes.io/target": "$MULTUSPODIP"}}}
 EOF
 done
+
+### event 监控 statefulset redis 的 events
+kubectl -n test get events -w --field-selector involvedObject.name=redis 
+### 将 replicas 数量从 4 减少为 3
+oc scale statefulset/redis --replicas=3
+### event 监控输出为 
+LAST SEEN   TYPE     REASON             OBJECT              MESSAGE
+0s          Normal   SuccessfulDelete   statefulset/redis   delete Pod redis-3 in StatefulSet redis successful
+### 将 replicas 数量从 3 增加为 4
+oc scale statefulset/redis --replicas=4
+### event 监控输出为 
+LAST SEEN   TYPE     REASON             OBJECT              MESSAGE
+0s          Normal   SuccessfulDelete   statefulset/redis   delete Pod redis-3 in StatefulSet redis successful
+0s          Normal   SuccessfulCreate   statefulset/redis   create Pod redis-3 in StatefulSet redis successful
+
 ```

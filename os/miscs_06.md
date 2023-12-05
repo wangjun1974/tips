@@ -20885,10 +20885,17 @@ EOF
 
 
 ### add oc-mirror into container on rhel7
+cat > Dockerfile.app-v1 <<'EOF'
+FROM registry.access.redhat.com/ubi8/ubi:latest
+COPY oc-mirror /oc-mirror
+RUN chmod +x /oc-mirror
+CMD ["/bin/bash", "-c", "exec /bin/bash -c 'trap : TERM INT; sleep 9999999999d & wait'"]
+EOF
 [root@support oc-mirror-container]# ls -l
 total 131164
 -rw-r--r--. 1 root root       139 Dec  4 16:58 Dockerfile.app-v1
 -rwxr-xr-x. 1 root root 134305080 Dec  4 16:59 oc-mirror
+
 
 ### build container and push container
 podman build -f Dockerfile.app-v1 -t registry.example.com:5000/codesys/oc-mirror:latest
@@ -20900,5 +20907,39 @@ podman push registry.example.com:5000/codesys/oc-mirror:latest
 mirror_seq1_000000.tar
 
 ### run oc-mirror container
-podman run --name oc-mirror -d -t --network host -v /etc/pki/ca-trust/source/anchors/registry.crt:/etc/ssl/certs/registry.crt -v /root/.docker/config.json:/root/.docker/config.json -v .:/test --privileged registry.example.com:5000/codesys/oc-mirror:latest --from /test/mirror_seq1_000000.tar docker://registry.example.com:5000
+podman run --name oc-mirror -d -t --network host -v /etc/pki/ca-trust/source/anchors/registry.crt:/etc/ssl/certs/registry.crt -v /root/.docker/config.json:/root/.docker/config.json -v .:/test --privileged registry.example.com:5000/codesys/oc-mirror:latest
+
+podman exec -it oc-mirror /bin/bash
+/oc-mirror --from /test/mirror_seq1_000000.tar docker://registry.example.com:5000
+
+### 在容器内运行图形程序 Firefox
+https://medium.com/geekculture/run-a-gui-software-inside-a-docker-container-dce61771f9
+
+mkdir podman-firefox
+cd podman-firefox
+cat > Dockerfile <<EOF
+# We are going to use the Latest version of Centos
+FROM  registry.access.redhat.com/ubi8/ubi:latest
+# Installing the sources for the locales
+RUN  yum install -y glibc-locale-source
+# Setting up the default locale to en_US.UTF-8
+RUN  localedef --no-archive -i en_US -f UTF-8 en_US.UTF-8 && \
+     export LANG=en_US.UTF-8
+# Installing Necessary packages including firefox
+RUN  yum install -y dbus-x11 PackageKit-gtk3-module libcanberra-gtk2 firefox
+# Generating a universally unique ID for the Container
+RUN  dbus-uuidgen > /etc/machine-id
+# Starting Firefox application
+CMD  /usr/bin/firefox
+EOF
+
+podman build -f Dockerfile -t registry.example.com:5000/codesys/firefox:latest
+podman push registry.example.com:5000/codesys/firefox:latest
+### 在有图形的机器上
+### 设置DISPLAY变量
+### 绑定/tmp/.X11-unix目录
+### 设置security-opt label=type:container_runtime_t
+### 参考：https://major.io/p/run-xorg-applications-with-podman/
+podman run -e DISPLAY=$DISPLAY -v /tmp/.X11-unix/:/tmp/.X11-unix/ --security-opt label=type:container_runtime_t --name firefox registry.example.com:5000/codesys/firefox:latest
+
 ```

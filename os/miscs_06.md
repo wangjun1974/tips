@@ -20942,4 +20942,6 @@ podman push registry.example.com:5000/codesys/firefox:latest
 ### 参考：https://major.io/p/run-xorg-applications-with-podman/
 podman run -e DISPLAY=$DISPLAY -v /tmp/.X11-unix/:/tmp/.X11-unix/ --security-opt label=type:container_runtime_t --name firefox registry.example.com:5000/codesys/firefox:latest
 
+### 查看 GPU 状态
+oc describe node | egrep "Name:|Roles:|Capacity|nvidia.com/gpu|Allocatable:|Requests +Limits"
 ```

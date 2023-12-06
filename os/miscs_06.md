@@ -20944,4 +20944,161 @@ podman run -e DISPLAY=$DISPLAY -v /tmp/.X11-unix/:/tmp/.X11-unix/ --security-opt
 
 ### 查看 GPU 状态
 oc describe node | egrep "Name:|Roles:|Capacity|nvidia.com/gpu|Allocatable:|Requests +Limits"
+
+### 等待 Node 状态变为 Ready
+kubectl wait node/worker-2.ocp4-1.example.com --for=condition=Ready --timeout=5m
+
+### 安装 NMState
+### 创建 NMState
+### create NNCP
+cat <<EOF | oc apply -f -
+apiVersion: nmstate.io/v1
+kind: NodeNetworkConfigurationPolicy
+metadata:
+  name: test
+spec:
+  nodeSelector:
+    node-role.kubernetes.io/mynode: ""
+  desiredState:
+    interfaces:
+        - name: bondvm
+          description: Bonding ens10 and ens11 for Linux bridge
+          ipv4:
+            enabled: false
+          ipv6:
+            enabled: false
+          type: bond
+          state: up
+          link-aggregation:
+            mode: active-backup
+            port:
+            - ens10
+            - ens11
+        - name: br1
+          description: Linux bridge on bond
+          type: linux-bridge
+          state: up
+          bridge:
+            options:
+              stp:
+                enabled: false
+            port:
+            - name: bondvm
+          ipv4:
+            enabled: false
+          ipv6:
+            enabled: false
+EOF
+
+oc get pods -n openshift-nmstate $(oc -n openshift-nmstate get pods -l component=kubernetes-nmstate-handler -o name)
+
+oc get nncp
+oc get nnce
+
+### 创建 net-attach-def
+cat <<EOF | oc apply -f -
+apiVersion: k8s.cni.cncf.io/v1
+kind: NetworkAttachmentDefinition
+metadata:
+  name: br1-network
+  namespace: default
+spec:
+  config: >-
+    { "name":"br1-network", "cniVersion": "0.3.1", "type": "cnv-bridge",
+    "bridge": "br1", "ipam": {} }
+EOF
+
+### 创建测试虚拟机
+### 虚拟机模版上传到 url http://xxx.xxx.xxx/url/rhel-8.9-x86_64-kvm.qcow2
+cat <<EOF | oc apply -f -
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: rhel8-muddy-chicken
+  namespace: default
+spec:
+  dataVolumeTemplates:
+    - apiVersion: cdi.kubevirt.io/v1beta1
+      kind: DataVolume
+      metadata:
+        creationTimestamp: null
+        name: rhel8-muddy-chicken
+      spec:
+        source:
+          http:
+            url: http://xxx.xxx.xxx/url/rhel-8.9-x86_64-kvm.qcow2
+        storage:
+          resources:
+            requests:
+              storage: 10Gi
+  running: false
+  template:
+    metadata:
+      annotations:
+        vm.kubevirt.io/flavor: small
+        vm.kubevirt.io/os: rhel8
+        vm.kubevirt.io/workload: server
+      creationTimestamp: null
+      labels:
+        kubevirt.io/domain: rhel8-muddy-chicken
+        kubevirt.io/size: small
+    spec:
+      architecture: amd64
+      domain:
+        cpu:
+          cores: 1
+          sockets: 1
+          threads: 1
+        devices:
+          disks:
+            - disk:
+                bus: virtio
+              name: rootdisk
+            - disk:
+                bus: virtio
+              name: cloudinitdisk
+          interfaces:
+            - macAddress: '02:d4:c6:00:00:0d'
+              masquerade: {}
+              model: virtio
+              name: default
+            - macaddress: '02:d4:c6:00:00:0e'
+              bridge: {}
+              model: virtio
+              name: br1-network
+          networkInterfaceMultiqueue: true
+          rng: {}
+        machine:
+          type: pc-q35-rhel9.2.0
+        memory:
+          guest: 2Gi
+        resources: {}
+      networks:
+        - name: default
+          pod: {}
+        - name: br1-network
+          multus:
+            networkName: default/br1-network
+      terminationGracePeriodSeconds: 180
+      volumes:
+        - dataVolume:
+            name: rhel8-muddy-chicken
+          name: rootdisk
+        - cloudInitNoCloud:
+            networkData: |-
+              version: 2
+              ethernets:
+                eth1:
+                  addresses:
+                  - 192.168.122.145/24
+                  gateway: 192.168.122.1
+            userData: |-
+              #cloud-config
+              user: cloud-user
+              password: '<XXXXXXXX>'
+              chpasswd: { expire: False }
+              ssh_authorized_keys:
+                - ssh-rsa AAAA....
+          name: cloudinitdisk
+EOF
 ```

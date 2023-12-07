@@ -21233,6 +21233,17 @@ spec:
           image: registry.redhat.io/container-native-virtualization/virtio-win-rhel9@sha256:b374546ba2b6b1742c0530c9c4a4d95c5c3c57b259e2a8960d693c0bc9e80f2b
         name: windows-drivers-disk
 EOF
+
+### 执行 sysprep
+%windir%\system32\sysprep\sysprep.exe /generalize /oobe /shutdown
+
+### linux remote desktop client
+### Windows Server 2019
+### 找到 开始菜单 - 服务器管理器
+### 本地服务器
+### Remote Desktop - Enable
+### 用 linux remote desktop client vinagre 连接
+
 ```
 
 

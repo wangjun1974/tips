@@ -21101,4 +21101,138 @@ spec:
                 - ssh-rsa AAAA....
           name: cloudinitdisk
 EOF
+
+### 上传 windows server 2019 eval iso 
+virtctl image-upload dv iso-win2019-dv-force-bind --image-path=./windows-2019-eval.iso  --size=10Gi --storage-class=lvms-vg1 --insecure --force-bind
+
+### Windows VirtualMachine
+cat <<EOF | oc apply -f -
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: win2k19-cooperative-hornet
+  namespace: default
+spec:
+  dataVolumeTemplates:
+  - apiVersion: cdi.kubevirt.io/v1beta1
+    kind: DataVolume
+    metadata:
+      creationTimestamp: null
+      name: win2k19-cooperative-hornet
+    spec:
+      source:
+        blank: {}
+      storage:
+        resources:
+          requests:
+            storage: 12Gi
+  - metadata:
+      creationTimestamp: null
+      name: win2k19-cooperative-hornet-installation-cdrom
+    spec:
+      source:
+        pvc:
+          name: iso-win2019-dv-force-bind
+          namespace: default
+      storage:
+        resources:
+          requests:
+            storage: 12Gi
+  running: false
+  template:
+    metadata:
+      annotations:
+        vm.kubevirt.io/flavor: medium
+        vm.kubevirt.io/os: windows2k19
+        vm.kubevirt.io/workload: server
+      creationTimestamp: null
+      labels:
+        kubevirt.io/domain: win2k19-cooperative-hornet
+        kubevirt.io/size: medium
+    spec:
+      architecture: amd64
+      domain:
+        clock:
+          timer:
+            hpet:
+              present: false
+            hyperv: {}
+            pit:
+              tickPolicy: delay
+            rtc:
+              tickPolicy: catchup
+          utc: {}
+        cpu:
+          cores: 1
+          sockets: 1
+          threads: 1
+        devices:
+          disks:
+          - bootOrder: 2
+            disk:
+              bus: sata
+            name: rootdisk
+          - bootOrder: 1
+            cdrom:
+              bus: sata
+            name: installation-cdrom
+          - cdrom:
+              bus: sata
+            name: windows-drivers-disk
+          inputs:
+          - bus: usb
+            name: tablet
+            type: tablet
+          interfaces:
+          - macAddress: 02:d4:c6:00:00:19
+            masquerade: {}
+            model: e1000e
+            name: default
+          - bridge: {}
+            macAddress: 02:d4:c6:00:00:1a
+            model: virtio
+            name: nic-conceptual-dove
+        features:
+          acpi: {}
+          apic: {}
+          hyperv:
+            frequencies: {}
+            ipi: {}
+            reenlightenment: {}
+            relaxed: {}
+            reset: {}
+            runtime: {}
+            spinlocks:
+              spinlocks: 8191
+            synic: {}
+            synictimer:
+              direct: {}
+            tlbflush: {}
+            vapic: {}
+            vpindex: {}
+        machine:
+          type: pc-q35-rhel9.2.0
+        memory:
+          guest: 4Gi
+        resources: {}
+      networks:
+      - name: default
+        pod: {}
+      - multus:
+          networkName: br1-network
+        name: nic-conceptual-dove
+      terminationGracePeriodSeconds: 3600
+      volumes:
+      - dataVolume:
+          name: win2k19-cooperative-hornet
+        name: rootdisk
+      - dataVolume:
+          name: win2k19-cooperative-hornet-installation-cdrom
+        name: installation-cdrom
+      - containerDisk:
+          image: registry.redhat.io/container-native-virtualization/virtio-win-rhel9@sha256:b374546ba2b6b1742c0530c9c4a4d95c5c3c57b259e2a8960d693c0bc9e80f2b
+        name: windows-drivers-disk
+EOF
 ```
+
+

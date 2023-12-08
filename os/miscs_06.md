@@ -21244,6 +21244,12 @@ EOF
 ### Remote Desktop - Enable
 ### 用 linux remote desktop client vinagre 连接
 
+
+### 执行 aws-cli 
+podman run --rm -it -v ~/.aws:/root/.aws registry.example.com:5000/amazon/aws-cli configure
+podman run --rm -it -v ~/.aws:/root/.aws registry.example.com:5000/amazon/aws-cli --endpoint=$(oc -n velero get route minio -o jsonpath='{"http://"}{.spec.host}') s3 ls 
+
+
 ```
 
 

@@ -1911,6 +1911,11 @@ mirror:
             - name: release-v2.5
               minVersion: 'v2.5.2'
               maxVersion: 'v2.5.2'
+        - name: redhat-oadp-operator
+          channels:
+            - name: stable-1.3
+              minVersion: 'v1.3.0'
+              maxVersion: 'v1.3.0'
 EOF
 
 $ /usr/local/bin/oc-mirror --config ./image-config-realse-local.yaml file://output-dir 2>&1 | tee /tmp/oc-mirror 

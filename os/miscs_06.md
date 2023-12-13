@@ -21309,6 +21309,38 @@ podman run --rm -it -v ~/.aws:/root/.aws registry.example.com:5000/amazon/aws-cl
 2023-12-13 03:17:14       1075 velero/kopia/test/kopia.repository
 2023-12-13 03:17:15       4298 velero/kopia/test/qebf9b210c26859516c25abc54574148a-s81271f7ffb1a25b1123
 2023-12-13 03:17:15        143 velero/kopia/test/xn0_568f7b1ed3c400b8e2e2608d99cbef3e-s81271f7ffb1a25b1123-c1
+
+### 创建备份
+cat <<EOF | oc create -f -
+apiVersion: velero.io/v1
+kind: Backup
+metadata:
+  generateName: test-
+  namespace: openshift-adp
+spec:
+  includedNamespaces:
+  - test
+  snapshotVolumes: true
+  storageLocation: velero-sample-1
+  ttl: 720h0m0s
+  snapshotMoveData: true
+EOF
+
+### 查看备份状态
+oc get backup -n openshift-adp test-5s9pt -o json | jq .status.phase
+"WaitingForPluginOperations"
+
+### 查看备份数据
+podman run --rm -it -v ~/.aws:/root/.aws registry.example.com:5000/amazon/aws-cli --endpoint=$(oc -n velero get route minio -o jsonpath='{"http://"}{.spec.host}') s3 ls s3://oadp-backups-2 --recursive | wc -l 
+447
+
+### 查看备份状态
+oc get backup -n openshift-adp test-5s9pt -o json | jq .status.phase
+"Completed"
+
+### 查看备份数据
+podman run --rm -it -v ~/.aws:/root/.aws registry.example.com:5000/amazon/aws-cli --endpoint=$(oc -n velero get route minio -o jsonpath='{"http://"}{.spec.host}') s3 ls s3://oadp-backups-2 --recursive | wc -l 
+502
 ```
 
 

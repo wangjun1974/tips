@@ -21253,6 +21253,8 @@ podman run --rm -it -v ~/.aws:/root/.aws registry.example.com:5000/amazon/aws-cl
 https://learn.microsoft.com/en-us/answers/questions/515817/windows-10-sysprep-error-a-fatal-error-occurred-wh
 https://www.raytechnote.com/a-fatal-error-occurred-while-trying-to-sysprep-the-machine/
 
+### 从pod拷贝文件，向pod拷贝文件
+https://access.redhat.com/solutions/7047691
 ### 从pod拷贝文件到外部
 oc -n openshift-adp exec -i velero-78c76c764b-vn8wb -- bash -c 'cat - > /tmp/kubeconfig' < /root/.kube/config
 ### 从外部拷贝文件到pod

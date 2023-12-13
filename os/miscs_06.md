@@ -21250,6 +21250,65 @@ podman run --rm -it -v ~/.aws:/root/.aws registry.example.com:5000/amazon/aws-cl
 podman run --rm -it -v ~/.aws:/root/.aws registry.example.com:5000/amazon/aws-cli --endpoint=$(oc -n velero get route minio -o jsonpath='{"http://"}{.spec.host}') s3 ls 
 podman run --rm -it -v ~/.aws:/root/.aws registry.example.com:5000/amazon/aws-cli --endpoint=$(oc -n velero get route minio -o jsonpath='{"http://"}{.spec.host}') s3 mb s3://oadp-backups 
 
+https://learn.microsoft.com/en-us/answers/questions/515817/windows-10-sysprep-error-a-fatal-error-occurred-wh
+https://www.raytechnote.com/a-fatal-error-occurred-while-trying-to-sysprep-the-machine/
+
+### 从pod拷贝文件到外部
+oc -n openshift-adp exec -i velero-78c76c764b-vn8wb -- bash -c 'cat - > /tmp/kubeconfig' < /root/.kube/config
+### 从外部拷贝文件到pod
+oc -n openshift-adp exec -i velero-78c76c764b-vn8wb -- bash -c 'cat - < /tmp/backup-test-49kgq.logs' > /tmp/backup-test-49kgq.log
+
+### 创建bucket
+podman run --rm -it -v ~/.aws:/root/.aws registry.example.com:5000/amazon/aws-cli --endpoint=$(oc -n velero get route minio -o jsonpath='{"http://"}{.spec.host}') s3 mb s3://oadp-backups-2 
+podman run --rm -it -v ~/.aws:/root/.aws registry.example.com:5000/amazon/aws-cli --endpoint=$(oc -n velero get route minio -o jsonpath='{"http://"}{.spec.host}') s3 ls s3://oadp-backups-2 --recursive
+
+### patch DPA
+cat <<EOF | oc apply -f -
+apiVersion: oadp.openshift.io/v1alpha1
+kind: DataProtectionApplication
+metadata:
+  name: velero-sample
+  namespace: openshift-adp
+spec:
+  backupLocations:
+  - velero:
+      config:
+        insecureSkipTLSVerify: "true"
+        profile: default
+        region: minio
+        s3ForcePathStyle: "true"
+        s3Url: http://minio.velero.svc:9000
+      credential:
+        key: cloud
+        name: cloud-credentials
+      default: true
+      objectStorage:
+        bucket: oadp-backups-2
+        prefix: velero
+      provider: aws
+  configuration:
+    restic:
+      enable: true
+    velero:
+      defaultPlugins:
+      - openshift
+      - aws
+      - csi
+      - kubevirt
+EOF
+
+### 检查 BackupStorageLocation 状态
+oc get backupstoragelocations velero-sample-1 -n openshift-adp 
+NAME              PHASE       LAST VALIDATED   AGE   DEFAULT
+velero-sample-1   Available   63s              17h   true
+
+### 查看bucket，在bucket里有velero/kopia
+podman run --rm -it -v ~/.aws:/root/.aws registry.example.com:5000/amazon/aws-cli --endpoint=$(oc -n velero get route minio -o jsonpath='{"http://"}{.spec.host}') s3 ls s3://oadp-backups-2 --recursive
+2023-12-13 03:17:15        747 velero/kopia/test/_log_20231213031715_c9d2_1702437435_1702437435_1_f61740cf3d83f86f743afb60756064cf
+2023-12-13 03:17:14         30 velero/kopia/test/kopia.blobcfg
+2023-12-13 03:17:14       1075 velero/kopia/test/kopia.repository
+2023-12-13 03:17:15       4298 velero/kopia/test/qebf9b210c26859516c25abc54574148a-s81271f7ffb1a25b1123
+2023-12-13 03:17:15        143 velero/kopia/test/xn0_568f7b1ed3c400b8e2e2608d99cbef3e-s81271f7ffb1a25b1123-c1
 ```
 
 

@@ -1916,6 +1916,11 @@ mirror:
             - name: stable-1.3
               minVersion: 'v1.3.0'
               maxVersion: 'v1.3.0'
+        - name: openshift-pipelines-operator-rh
+          channels:
+            - name: latest
+              minVersion: 'v1.13.0'
+              maxVersion: 'v1.13.0'
 EOF
 
 $ /usr/local/bin/oc-mirror --config ./image-config-realse-local.yaml file://output-dir 2>&1 | tee /tmp/oc-mirror 

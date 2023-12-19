@@ -21343,6 +21343,230 @@ oc get backup -n openshift-adp test-5s9pt -o json | jq .status.phase
 ### 查看备份数据
 podman run --rm -it -v ~/.aws:/root/.aws registry.example.com:5000/amazon/aws-cli --endpoint=$(oc -n velero get route minio -o jsonpath='{"http://"}{.spec.host}') s3 ls s3://oadp-backups-2 --recursive | wc -l 
 502
+
+
+### server deploy pipeline - 部署 rhel8 server
+oc project openshift-cnv
+
+cat <<'EOF' | oc apply -f -
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  annotations:
+    task.kubevirt.io/associatedServiceAccount: generate-ssh-keys-task
+    publicKeySecretName.params.task.kubevirt.io/kind: Secret
+    publicKeySecretName.params.task.kubevirt.io/apiVersion: v1
+    publicKeySecretNamespace.params.task.kubevirt.io/type: namespace
+    privateKeySecretName.params.task.kubevirt.io/kind: Secret
+    privateKeySecretName.params.task.kubevirt.io/apiVersion: v1
+    privateKeySecretNamespace.params.task.kubevirt.io/type: namespace
+    privateKeyConnectionOptions.params.task.kubevirt.io/type: private-key-options-array
+  labels:
+    task.kubevirt.io/type: generate-ssh-keys
+    task.kubevirt.io/category: generate-ssh-keys
+  name: generate-ssh-keys
+spec:
+  params:
+    - name: publicKeySecretName
+      description: Name of a new or existing secret to append the generated public key to. The name will be generated and new secret created if not specified.
+      default: ""
+      type: string
+    - name: publicKeySecretNamespace
+      description: Namespace of publicKeySecretName. (defaults to active namespace)
+      default: ""
+      type: string
+    - name: privateKeySecretName
+      description: Name of a new secret to add the generated private key to. The name will be generated if not specified. The secret uses format of execute-in-vm task.
+      default: ""
+      type: string
+    - name: privateKeySecretNamespace
+      description: Namespace of privateKeySecretName. (defaults to active namespace)
+      default: ""
+      type: string
+    - name: privateKeyConnectionOptions
+      description: Additional options to use in SSH client. Please see execute-in-vm task SSH section for more details. Eg ["host-public-key:ssh-rsa AAAAB...", "additional-ssh-options:-p 8022"].
+      default: []
+      type: array
+    - name: additionalSSHKeygenOptions
+      description: Additional options to pass to the ssh-keygen command.
+      default: ""
+      type: string
+  results:
+    - name: publicKeySecretName
+      description: The name of a public key secret.
+    - name: publicKeySecretNamespace
+      description: The namespace of a public key secret.
+    - name: privateKeySecretName
+      description: The name of a private key secret.
+    - name: privateKeySecretNamespace
+      description: The namespace of a private key secret.
+  steps:
+    - name: generate-ssh-keys
+      image: "registry.example.com:5000/kubevirt/tekton-tasks:v0.16.0"
+      command:
+        - entrypoint
+      args:
+        - '--'
+        - $(params.privateKeyConnectionOptions)
+      env:
+        - name: COMMAND
+          value: generate-ssh-keys
+        - name: PUBLIC_KEY_SECRET_NAME
+          value: $(params.publicKeySecretName)
+        - name: PUBLIC_KEY_SECRET_NAMESPACE
+          value: $(params.publicKeySecretNamespace)
+        - name: PRIVATE_KEY_SECRET_NAME
+          value: $(params.privateKeySecretName)
+        - name: PRIVATE_KEY_SECRET_NAMESPACE
+          value: $(params.privateKeySecretNamespace)
+        - name: ADDITIONAL_SSH_KEYGEN_OPTIONS
+          value: $(params.additionalSSHKeygenOptions)
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: generate-ssh-keys-task
+rules:
+  - verbs:
+      - get
+      - list
+      - create
+      - patch
+    apiGroups:
+      - ''
+    resources:
+      - secrets
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: generate-ssh-keys-task
+roleRef:
+  kind: ClusterRole
+  name: generate-ssh-keys-task
+  apiGroup: rbac.authorization.k8s.io
+subjects:
+  - kind: ServiceAccount
+    name: pipeline
+EOF
+
+cat <<'EOF' | oc apply -f -
+---
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: server-deployer
+spec:
+  tasks:
+    - name: modify-data-object
+      params:
+        - name: manifest
+          value: |
+            apiVersion: cdi.kubevirt.io/v1beta1
+            kind: DataVolume
+            metadata:
+              generateName: rhel8-server-
+            spec:
+              pvc:
+                accessModes:
+                  - ReadWriteOnce
+                resources:
+                  requests:
+                    storage: 11Gi
+                volumeMode: Filesystem
+              source:
+                http:
+                  url: http://yum.example.com:8080/ocp4-1/ignition/rhel-8.9-x86_64-kvm.qcow2
+        - name: waitForSuccess
+          value: 'true'
+      taskRef:
+        kind: Task
+        name: modify-data-object
+    - name: generate-ssh-keys
+      params:
+        - name: privateKeyConnectionOptions
+          value:
+            - 'user:cloud-user'
+            - 'disable-strict-host-key-checking:true'
+      runAfter:
+        - modify-data-object
+      taskRef:
+        kind: Task
+        name: generate-ssh-keys
+    - name: create-vm-from-manifest
+      params:
+        - name: manifest
+          value: |
+            apiVersion: kubevirt.io/v1
+            kind: VirtualMachine
+            metadata:
+              name: $(tasks.modify-data-object.results.name)
+              annotation:
+                description: RHEL8 VM generated by server-deployer pipeline
+              labels:
+                app: $(tasks.modify-data-object.results.name)
+            spec:
+              running: true
+              template:
+                metadata:
+                  labels:
+                    kubevirt.io/domain: $(tasks.modify-data-object.results.name)
+                spec:
+                  accessCredentials:
+                    - sshPublicKey:
+                        source:
+                          secret:
+                            secretName: $(tasks.generate-ssh-keys.results.publicKeySecretName)
+                        propagationMethod:
+                          configDrive: {}
+                  domain:
+                    cpu:
+                      cores: 2
+                      sockets: 1
+                      threads: 1
+                    devices:
+                      disks:
+                        - name: rootdisk
+                          bootOrder: 1
+                          disk:
+                            bus: virtio
+                        - name: cloudinitdrive
+                          disk:
+                            bus: virtio
+                      interfaces:
+                        - bridge: {}
+                          name: default
+                      networkInterfaceMultiqueue: true
+                      rng: {}
+                    resources:
+                      requests:
+                        memory: 2Gi
+                  hostname: $(tasks.modify-data-object.results.name)
+                  networks:
+                    - name: default
+                      pod: {}
+                  volumes:
+                    - dataVolume:
+                        name: $(tasks.modify-data-object.results.name)
+                      name: rootdisk
+                    - name: cloudinitdrive
+                      cloudInitConfigDrive:
+                        userData: |
+                          #cloud-config
+                          password: 'redhat123'
+                          chpasswd: { expire: False }
+        - name: ownDataVolumes
+          value:
+            - "rootdisk:$(tasks.modify-data-object.results.name)"
+      runAfter:
+        - generate-ssh-keys
+      taskRef:
+        kind: Task
+        name: create-vm-from-manifest
+EOF
 ```
 
 

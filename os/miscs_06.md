@@ -21601,6 +21601,11 @@ sudo podman run \
 
 ### 下载大文件并且显示进度
 wget -c -q --show-progress http://1.2.3.4:8080/ocp/oc-mirror/operator/mirror_seq1_000000.tar
+
+### 在Mac下启用本地http服务器
+https://discussions.apple.com/docs/DOC-250006086
+https://discussions.apple.com/docs/DOC-3083
+https://superuser.com/questions/160567/how-to-enable-directory-listing-in-apache-on-mac-os-x
 ```
 
 

@@ -21598,6 +21598,9 @@ sudo podman run \
     --type qcow2 \
     --config ./config.json \
     quay.io/centos-bootc/fedora-bootc:eln
+
+### 下载大文件并且显示进度
+wget -c -q --show-progress http://1.2.3.4:8080/ocp/oc-mirror/operator/mirror_seq1_000000.tar
 ```
 
 

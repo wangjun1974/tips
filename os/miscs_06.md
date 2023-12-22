@@ -21567,6 +21567,37 @@ spec:
         kind: Task
         name: create-vm-from-manifest
 EOF
+
+### bootable container
+mkdir output
+cat <<EOF > ./config.json
+{
+  "blueprint": {
+    "customizations": {
+      "user": [
+        {
+          "name": "jwang",
+          "password": "xxxxxxxx",
+          "groups": [
+            "wheel"
+          ]
+        }
+      ]
+    }
+  }
+}
+EOF
+sudo podman run \
+    --rm \
+    -it \
+    --privileged \
+    --pull=newer \
+    --security-opt label=type:unconfined_t \
+    -v $(pwd)/output:/output \
+    quay.io/centos-bootc/bootc-image-builder:latest \
+    --type qcow2 \
+    --config ./config.json \
+    quay.io/centos-bootc/fedora-bootc:eln
 ```
 
 

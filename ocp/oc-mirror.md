@@ -1921,6 +1921,16 @@ mirror:
             - name: latest
               minVersion: 'v1.13.0'
               maxVersion: 'v1.13.0'
+        - name: node-healthcheck-operator
+          channels:
+            - name: stable
+              minVersion: 'v0.6.1'
+              maxVersion: 'v0.6.1'
+        - name: self-node-remediation
+          channels:
+            - name: stable
+              minVersion: 'v0.7.1'
+              maxVersion: 'v0.7.1'                
 EOF
 
 $ /usr/local/bin/oc-mirror --config ./image-config-realse-local.yaml file://output-dir 2>&1 | tee /tmp/oc-mirror 

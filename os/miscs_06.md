@@ -21606,6 +21606,17 @@ wget -c -q --show-progress http://1.2.3.4:8080/ocp/oc-mirror/operator/mirror_seq
 https://discussions.apple.com/docs/DOC-250006086
 https://discussions.apple.com/docs/DOC-3083
 https://superuser.com/questions/160567/how-to-enable-directory-listing-in-apache-on-mac-os-x
+
+### oc bash completion
+## Write bash completion code to a file and source it from .bash_profile
+  oc completion bash > ~/.kube/completion.bash.inc
+  printf "
+  # Kubectl shell completion
+  source /etc/profile.d/bash_completion.sh
+  source '$HOME/.kube/completion.bash.inc'
+  " >> $HOME/.bash_profile
+  source $HOME/.bash_profile
+
 ```
 
 

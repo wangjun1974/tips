@@ -1935,4 +1935,39 @@ EOF
 
 $ /usr/local/bin/oc-mirror --config ./image-config-realse-local.yaml file://output-dir 2>&1 | tee /tmp/oc-mirror 
 $ /usr/local/bin/oc-mirror --from ./mirror_seq1_000000.tar docker://registry.example.com:5000
+
+### 更新到最新的 oc-mirror 
+### rhbk-operator    Keycloak Operator    stable-v22
+### 然后查看 operator rhbk-oprator 的详细信息
+for packagename in rhbk-operator 
+do 
+ /usr/local/bin/oc-mirror list operators --catalog=registry.redhat.io/redhat/redhat-operator-index:v4.14 --package=${packagename}
+done
+NAME           DISPLAY NAME       DEFAULT CHANNEL
+rhbk-operator  Keycloak Operator  stable-v22
+
+PACKAGE        CHANNEL     HEAD
+rhbk-operator  stable-v22  rhbk-operator.v22.0.7-opr.1
+
+### 同步 operator 
+### catalog 是 registry.redhat.io/redhat/redhat-operator-index:v4.14
+$ cd /tmp
+$ cat > image-config-realse-local-jwang.yaml <<EOF
+apiVersion: mirror.openshift.io/v1alpha2
+kind: ImageSetConfiguration
+mirror:
+  operators:
+    - catalog: registry.redhat.io/redhat/redhat-operator-index:v4.14
+      targetName: "jwang-catalog"
+      targetTag: "4.14"
+      packages:
+        - name: rhbk-operator
+          channels:
+            - name: stable-v22
+              minVersion: 'v22.0.7-opr.1'
+              maxVersion: 'v22.0.7-opr.1'
+EOF
+$ /usr/local/bin/oc-mirror --config ./image-config-realse-local-jwang.yaml file://output-dir 2>&1 | tee /tmp/oc-mirror-jwang
+### 在目标环境里将mirror_seq1_000000.tar重命名为rhbk-mirror_seq1_000000.tar
+$ /usr/local/bin/oc-mirror --from ./rhbk-mirror_seq1_000000.tar docker://registry.example.com:5000
 ```

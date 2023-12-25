@@ -1970,4 +1970,13 @@ EOF
 $ /usr/local/bin/oc-mirror --config ./image-config-realse-local-jwang.yaml file://output-dir 2>&1 | tee /tmp/oc-mirror-jwang
 ### 在目标环境里将mirror_seq1_000000.tar重命名为rhbk-mirror_seq1_000000.tar
 $ /usr/local/bin/oc-mirror --from ./rhbk-mirror_seq1_000000.tar docker://registry.example.com:5000
+
+# RHEL 7.x
+$ podman run --name oc-mirror -d -t --network host -v /etc/pki/ca-trust/source/anchors/registry.crt:/etc/ssl/certs/registry.crt -v /root/.docker/config.json:/root/.docker/config.json -v .:/test --privileged registry.example.com:5000/codesys/oc-mirror:latest
+$ podman exec -it oc-mirror /bin/bash
+(oc-mirror)$ /oc-mirror --from /test/rhbk-mirror_seq1_000000.tar docker://registry.example.com:5000
+...
+Rendering catalog image "registry.example.com:5000/redhat/jwang-catalog:4.14" with file-based catalog 
+...
+
 ```

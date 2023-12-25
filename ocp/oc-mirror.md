@@ -1978,5 +1978,58 @@ $ podman exec -it oc-mirror /bin/bash
 ...
 Rendering catalog image "registry.example.com:5000/redhat/jwang-catalog:4.14" with file-based catalog 
 ...
+(oc-mirror)$ exit
+$ podman cp oc-mirror:/oc-mirror-workspace/results-1703471988 . 
+$ cd results-1703471988
+$ tree . 
+.
+├── catalogSource-jwang-catalog.yaml
+├── charts
+├── imageContentSourcePolicy.yaml
+├── mapping.txt
+└── release-signatures
+$ cat catalogSource-jwang-catalog.yaml 
+apiVersion: operators.coreos.com/v1alpha1
+kind: CatalogSource
+metadata:
+  name: jwang-catalog
+  namespace: openshift-marketplace
+spec:
+  image: registry.example.com:5000/redhat/jwang-catalog:4.14
+  sourceType: grpc
 
+$ cat imageContentSourcePolicy.yaml 
+---
+apiVersion: operator.openshift.io/v1alpha1
+kind: ImageContentSourcePolicy
+metadata:
+  labels:
+    operators.openshift.org/catalog: "true"
+  name: operator-0
+spec:
+  repositoryDigestMirrors:
+  - mirrors:
+    - registry.example.com:5000/rhbk
+    source: registry.redhat.io/rhbk
+  - mirrors:
+    - registry.example.com:5000/redhat
+    source: registry.redhat.io/redhat
+### 这个文件需要按需修改
+### 例如将 name: operator-0 改为 name:rhbk-operator-0
+$ cat imageContentSourcePolicy.yaml 
+---
+apiVersion: operator.openshift.io/v1alpha1
+kind: ImageContentSourcePolicy
+metadata:
+  labels:
+    operators.openshift.org/catalog: "true"
+  name: rhbk-operator-0
+spec:
+  repositoryDigestMirrors:
+  - mirrors:
+    - registry.example.com:5000/rhbk
+    source: registry.redhat.io/rhbk
+  - mirrors:
+    - registry.example.com:5000/redhat
+    source: registry.redhat.io/redhat
 ```

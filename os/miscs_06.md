@@ -21617,6 +21617,34 @@ https://superuser.com/questions/160567/how-to-enable-directory-listing-in-apache
   " >> $HOME/.bash_profile
   source $HOME/.bash_profile
 
+### keycloak on ocp4.14
+$ mkdir keycloak
+$ cd keycloak
+$ openssl req -subj '/CN=sso.apps.ocp4-1.example.com/O=Test Keycloak./C=US' -newkey rsa:2048 -nodes -keyout key.pem -x509 -days 365 -out certificate.pem
+$ kubectl create secret tls example-tls-secret --cert certificate.pem --key key.pem
+
+### 创建 Keycloak
+cat <<EOF | oc apply -f -
+apiVersion: k8s.keycloak.org/v2alpha1
+kind: Keycloak
+metadata:
+  name: example-keycloak
+  namespace: default
+  labels:
+    app: sso
+spec:
+  http:
+    tlsSecret: example-tls-secret
+  hostname:
+    hostname: sso.apps.ocp4-1.example.com
+    strict: false
+    adminUrl: https://sso.apps.ocp4-1.example.com
+  instances: 1
+  ingress:
+    enabled: true
+    ingressClass: openshift-default
+EOF
+
 ```
 
 

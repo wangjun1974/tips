@@ -21620,7 +21620,7 @@ https://superuser.com/questions/160567/how-to-enable-directory-listing-in-apache
 ### keycloak on ocp4.14
 $ mkdir keycloak
 $ cd keycloak
-$ openssl req -subj '/CN=sso.apps.ocp4-1.example.com/O=Test Keycloak./C=US' -newkey rsa:2048 -nodes -keyout key.pem -x509 -days 365 -out certificate.pem
+$ openssl req -newkey rsa:2048 -nodes -sha256 -keyout key.pem -x509 -days 365 -out certificate.pem -addext "subjectAltName = DNS:sso.apps.ocp4-1.example.com" -subj "/CN=sso.apps.ocp4-1.example.com/O=Test Keycloak./C=US"
 $ kubectl create secret tls example-tls-secret --cert certificate.pem --key key.pem
 
 ### 创建 Keycloak
@@ -21645,6 +21645,60 @@ spec:
     ingressClass: openshift-default
 EOF
 
+### 获取rhsso admin口令
+oc get secret example-keycloak-initial-admin -o jsonpath='{.data.password}' | base64 -d
+
+### 登陆rhsso adminurl
+
+### Add Realm
+
+### Add User
+
+### Add Client
+
+### 获取Client secret
+
+### 检查realm可访问
+curl -v --cacert ./certificate.pem -d 'client_id=rhsso' -d 'client_secret=xxxxxxxx' -d 'grant_type=client_credentials' 'https://sso.apps.ocp4-1.example.com/realms/rhsso/protocol/openid-connect/token' | jq .
+
+### 添加cacert configmap
+oc create configmap idpdemo-oidc-client-ca-cert --from-file=ca.crt=./certificate.pem -n openshift-config
+
+### Add OAuth IDP
+    - mappingMethod: claim
+      name: rhsso
+      openID:
+        ca:
+          name: openid-ca-g2hjk
+        claims:
+          email:
+            - email
+          name:
+            - name
+          preferredUsername:
+            - preferred_username
+        clientID: rhsso
+        clientSecret:
+          name: openid-client-secret-fswjh
+        extraScopes: []
+        issuer: 'https://sso.apps.ocp4-1.example.com/realms/rhsso'
+      type: OpenID
+
+### 查看openshift-authentication-operator日志
+$ oc -n openshift-authentication-operator logs $(oc get pods -n openshift-authentication-operator -l app=authentication-operator -o name)
+
+### 查看pod重启
+$ watch 'oc get pods -n openshift-authentication'
+
+### rhsso用户登陆
+$ oc get user
+NAME    UID                                    FULL NAME   IDENTITIES
+admin   9a5cc363-138a-4611-ba84-c0644652215b               htpasswd_provider:admin
+jwang   13985323-577d-4f74-a215-46dbb5095b69               rhsso:138c92ab-59d1-4be4-8a58-64d1204fe0f6
+
+### 为用户jwang添加cluster-admin clusterrole
+$ oc adm policy add-cluster-role-to-user cluster-admin jwang
+clusterrole.rbac.authorization.k8s.io/cluster-admin added: "jwang"
 ```
 
 

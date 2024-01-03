@@ -21699,6 +21699,42 @@ jwang   13985323-577d-4f74-a215-46dbb5095b69               rhsso:138c92ab-59d1-4
 ### 为用户jwang添加cluster-admin clusterrole
 $ oc adm policy add-cluster-role-to-user cluster-admin jwang
 clusterrole.rbac.authorization.k8s.io/cluster-admin added: "jwang"
+
+### cli登录
+$ oc login --insecure-skip-tls-verify=true -u jwang
+
+### 创建lvmcluster
+### lvm operator - lvmcluster
+cat <<EOF | oc apply -f -
+---
+apiVersion: lvm.topolvm.io/v1alpha1
+kind: LVMCluster
+metadata:
+  name: test-lvmcluster
+  namespace: openshift-storage
+spec:
+  storage:
+    deviceClasses:
+    - fstype: xfs
+      name: vg1
+      deviceSelector:
+        paths:
+          - /dev/vdb
+      nodeSelector:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: node-role.kubernetes.io/worker
+            operator: In
+            values:
+            - ""
+      thinPoolConfig:
+        name: thin-pool-1
+        overprovisionRatio: 10
+        sizePercent: 90
+EOF
+
+### 删除 lvmcluster 
+oc -n openshift-storage delete lvmcluster test-lvmcluster
 ```
 
 

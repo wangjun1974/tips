@@ -21735,6 +21735,18 @@ EOF
 
 ### 删除 lvmcluster 
 oc -n openshift-storage delete lvmcluster test-lvmcluster
+
+### 创建支持UEFI的guest
+$ virt-install --name jwang-aliyun2-1 \
+    --ram 8192 --vcpus 4 --os-variant rhel7 \
+    --cpu host,+vmx \
+    --network network:default \
+    --boot uefi,cdrom,hd,network,menu=on \
+    --noautoconsole --vnc \
+    --disk path=/data/kvm/jwang-aliyun2-1.qcow2,device=disk,bus=virtio,format=qcow2 \
+    --dry-run --print-xml > /tmp/jwang-aliyun2-1.xml;
+$ virsh define /tmp/jwang-aliyun2-1.xml
+
 ```
 
 

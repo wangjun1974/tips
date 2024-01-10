@@ -21747,6 +21747,10 @@ $ virt-install --name jwang-aliyun2-1 \
     --dry-run --print-xml > /tmp/jwang-aliyun2-1.xml;
 $ virsh define /tmp/jwang-aliyun2-1.xml
 
+### 配置s3 client
+podman run --rm -it -v ~/.aws:/root/.aws --privileged --network host registry.ocp4.example.com/amazon/aws-cli configure
+podman run --rm -it -v ~/.aws:/root/.aws --privileged --network host registry.ocp4.example.com/amazon/aws-cli --endpoint=$(oc -n velero get route minio -o jsonpath='{"http://"}{.spec.host}') s3 ls
+podman run --rm -it -v ~/.aws:/root/.aws --privileged --network host registry.ocp4.example.com/amazon/aws-cli --endpoint=$(oc -n velero get route minio -o jsonpath='{"http://"}{.spec.host}') s3 mb s3://rhods 
 ```
 
 

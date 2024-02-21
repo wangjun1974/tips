@@ -209,3 +209,280 @@ Test PASSED
 Done
 
 ```
+
+### 安装 HuggingFace Text Generate Inference Server 
+参考链接：
+https://github.com/rh-aiservices-bu/llm-on-openshift/tree/main/llm-servers/hf_tgi
+```
+$ oc project dsp01
+
+# 创建 pvc model-cache
+# 400G
+cat <<EOF | oc apply -f -
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: models-cache
+  namespace: dsp01
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 400Gi
+  storageClassName: ocs-storagecluster-ceph-rbd
+  volumeMode: Filesystem
+EOF
+
+# 创建部署
+# https://raw.githubusercontent.com/rh-aiservices-bu/llm-on-openshift/main/llm-servers/hf_tgi/deployment.yaml
+cat <<EOF | oc apply -f -
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: hf-text-generation-inference-server
+  labels:
+    app: hf-text-generation-inference-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: hf-text-generation-inference-server
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: hf-text-generation-inference-server
+    spec:
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      affinity: {}
+      terminationGracePeriodSeconds: 120
+      securityContext: {}
+      containers:
+        - resources:
+            limits:
+              cpu: '8'
+              nvidia.com/gpu: '1'
+            requests:
+              cpu: '1'
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+              scheme: HTTP
+            timeoutSeconds: 5
+            periodSeconds: 30
+            successThreshold: 1
+            failureThreshold: 3
+          terminationMessagePath: /dev/termination-log
+          name: server
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+              scheme: HTTP
+            timeoutSeconds: 8
+            periodSeconds: 100
+            successThreshold: 1
+            failureThreshold: 3
+          env:
+            - name: MODEL_ID
+              value: google/flan-t5-small
+            - name: MAX_INPUT_LENGTH
+              value: '1024'
+            - name: MAX_TOTAL_TOKENS
+              value: '2048'
+            - name: QUANTIZE
+              value: bitsandbytes
+            - name: HUGGINGFACE_HUB_CACHE
+              value: /models-cache
+            - name: PORT
+              value: '3000'
+            - name: HOST
+              value: '0.0.0.0'
+            - name: HF_HUB_ENABLE_HF_TRANSFER
+              value: '0'
+          securityContext:
+            capabilities:
+              drop:
+                - ALL
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false
+            seccompProfile:
+              type: RuntimeDefault
+          ports:
+            - name: http
+              containerPort: 3000
+              protocol: TCP
+          imagePullPolicy: IfNotPresent
+          startupProbe:
+            httpGet:
+              path: /health
+              port: http
+              scheme: HTTP
+            timeoutSeconds: 1
+            periodSeconds: 30
+            successThreshold: 1
+            failureThreshold: 24
+          volumeMounts:
+            - name: models-cache
+              mountPath: /models-cache
+            - name: shm
+              mountPath: /dev/shm
+          terminationMessagePolicy: File
+          image: 'ghcr.io/huggingface/text-generation-inference:1.2.0'
+      volumes:
+        - name: models-cache
+          persistentVolumeClaim:
+            claimName: models-cache
+        - name: shm
+          emptyDir:
+            medium: Memory
+            sizeLimit: 1Gi
+      dnsPolicy: ClusterFirst
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 25%
+      maxSurge: 1
+  revisionHistoryLimit: 10
+  progressDeadlineSeconds: 600
+EOF
+
+# 检查 pods 状态
+$ oc get pods
+NAME                                                   READY   STATUS    RESTARTS   AGE
+hf-text-generation-inference-server-5df6759cd6-48zxb   1/1     Running   0          2m53s
+
+# 检查日志
+$ oc logs $(oc get pods -l app=hf-text-generation-inference-server -o name)
+
+{"timestamp":"2024-02-21T05:09:46.814956Z","level":"INFO","fields":{"message":"Args { model_id: \"google/flan-t5-small\", revision: None, validation_workers: 2, sharded: None, num_shard: None, quantize: S
+ome(Bitsandbytes), dtype: None, trust_remote_code: false, max_concurrent_requests: 128, max_best_of: 2, max_stop_sequences: 4, max_top_n_tokens: 5, max_input_length: 1024, max_total_tokens: 2048, waiting_
+served_ratio: 1.2, max_batch_prefill_tokens: 4096, max_batch_total_tokens: None, max_waiting_tokens: 20, hostname: \"hf-text-generation-inference-server-5df6759cd6-48zxb\", port: 3000, shard_uds_path: \"/
+tmp/text-generation-server\", master_addr: \"localhost\", master_port: 29500, huggingface_hub_cache: Some(\"/models-cache\"), weights_cache_override: None, disable_custom_kernels: false, cuda_memory_fract
+ion: 1.0, rope_scaling: None, rope_factor: None, json_output: true, otlp_endpoint: None, cors_allow_origin: [], watermark_gamma: None, watermark_delta: None, ngrok: false, ngrok_authtoken: None, ngrok_edg
+e: None, env: false }"},"target":"text_generation_launcher"}
+{"timestamp":"2024-02-21T05:09:46.815155Z","level":"INFO","fields":{"message":"Starting download process."},"target":"text_generation_launcher","span":{"name":"download"},"spans":[{"name":"download"}]}
+{"timestamp":"2024-02-21T05:09:51.008236Z","level":"INFO","fields":{"message":"Download file: model.safetensors\n"},"target":"text_generation_launcher"}
+{"timestamp":"2024-02-21T05:09:51.984734Z","level":"INFO","fields":{"message":"Downloaded /models-cache/models--google--flan-t5-small/snapshots/0fc9ddf78a1e988dac52e2dac162b0ede4fd74ab/model.safetensors i
+n 0:00:00.\n"},"target":"text_generation_launcher"}
+{"timestamp":"2024-02-21T05:09:51.984862Z","level":"INFO","fields":{"message":"Download: [1/1] -- ETA: 0\n"},"target":"text_generation_launcher"}
+{"timestamp":"2024-02-21T05:09:52.420748Z","level":"INFO","fields":{"message":"Successfully downloaded weights."},"target":"text_generation_launcher","span":{"name":"download"},"spans":[{"name":"download"
+}]}
+{"timestamp":"2024-02-21T05:09:52.421039Z","level":"INFO","fields":{"message":"Starting shard"},"target":"text_generation_launcher","span":{"rank":0,"name":"shard-manager"},"spans":[{"rank":0,"name":"shar
+d-manager"}]}
+{"timestamp":"2024-02-21T05:09:56.421772Z","level":"WARN","fields":{"message":"Could not import Flash Attention enabled models: GPU with CUDA capability 7 0 is not supported\n"},"target":"text_generation_
+launcher"}
+{"timestamp":"2024-02-21T05:09:56.424576Z","level":"WARN","fields":{"message":"Could not import Mistral model: GPU with CUDA capability 7 0 is not supported\n"},"target":"text_generation_launcher"}
+{"timestamp":"2024-02-21T05:09:57.685776Z","level":"WARN","fields":{"message":"Bitsandbytes 8bit is deprecated, using `eetq` is a drop-in replacement, and has much better performnce\n"},"target":"text_gen
+eration_launcher"}
+{"timestamp":"2024-02-21T05:09:57.948206Z","level":"INFO","fields":{"message":"Server started at unix:///tmp/text-generation-server-0\n"},"target":"text_generation_launcher"}
+{"timestamp":"2024-02-21T05:09:58.029562Z","level":"INFO","fields":{"message":"Shard ready in 5.607799614s"},"target":"text_generation_launcher","span":{"rank":0,"name":"shard-manager"},"spans":[{"rank":0
+,"name":"shard-manager"}]}
+{"timestamp":"2024-02-21T05:09:58.126308Z","level":"INFO","fields":{"message":"Starting Webserver"},"target":"text_generation_launcher"}
+{"timestamp":"2024-02-21T05:09:58.167950Z","level":"WARN","message":"Could not find a fast tokenizer implementation for google/flan-t5-small","target":"text_generation_router","filename":"router/src/main.
+rs","line_number":166}
+{"timestamp":"2024-02-21T05:09:58.167999Z","level":"WARN","message":"Rust input length validation and truncation is disabled","target":"text_generation_router","filename":"router/src/main.rs","line_number
+":169}
+{"timestamp":"2024-02-21T05:09:58.168006Z","level":"WARN","message":"`--revision` is not set","target":"text_generation_router","filename":"router/src/main.rs","line_number":349}
+{"timestamp":"2024-02-21T05:09:58.168012Z","level":"WARN","message":"We strongly advise to set it to a known supported commit.","target":"text_generation_router","filename":"router/src/main.rs","line_numb
+er":350}
+{"timestamp":"2024-02-21T05:09:58.306446Z","level":"INFO","message":"Serving revision 0fc9ddf78a1e988dac52e2dac162b0ede4fd74ab of model google/flan-t5-small","target":"text_generation_router","filename":"
+router/src/main.rs","line_number":371}
+{"timestamp":"2024-02-21T05:09:58.311499Z","level":"INFO","message":"Warming up model","target":"text_generation_router","filename":"router/src/main.rs","line_number":213}
+{"timestamp":"2024-02-21T05:10:01.304539Z","level":"WARN","message":"Model does not support automatic max batch total tokens","target":"text_generation_router","filename":"router/src/main.rs","line_number
+":224}
+{"timestamp":"2024-02-21T05:10:01.304575Z","level":"INFO","message":"Setting max batch total tokens to 16000","target":"text_generation_router","filename":"router/src/main.rs","line_number":246}
+{"timestamp":"2024-02-21T05:10:01.304586Z","level":"INFO","message":"Connected","target":"text_generation_router","filename":"router/src/main.rs","line_number":247}
+{"timestamp":"2024-02-21T05:10:01.304595Z","level":"WARN","message":"Invalid hostname, defaulting to 0.0.0.0","target":"text_generation_router","filename":"router/src/main.rs","line_number":252}
+
+# 创建 service
+cat <<EOF | oc apply -f -
+kind: Service
+apiVersion: v1
+metadata:
+  name: hf-text-generation-inference-server
+  labels:
+    app: hf-text-generation-inference-server
+spec:
+  clusterIP: None
+  ipFamilies:
+    - IPv4
+  ports:
+    - name: http
+      protocol: TCP
+      port: 3000
+      targetPort: http
+  type: ClusterIP
+  ipFamilyPolicy: SingleStack
+  sessionAffinity: None
+  selector:
+    app: hf-text-generation-inference-server
+EOF
+
+# 创建 route
+$ cat <<EOF | oc apply -f -
+kind: Route
+apiVersion: route.openshift.io/v1
+metadata:
+  name: hf-text-generation-inference-server
+  labels:
+    app: hf-text-generation-inference-server
+spec:
+  to:
+    kind: Service
+    name: hf-text-generation-inference-server
+    weight: 100
+  port:
+    targetPort: http
+  tls:
+    termination: edge
+  wildcardPolicy: None
+EOF
+
+$ oc get route
+NAME                                  HOST/PORT                                                                              PATH   SERVICES                              PORT   TERMINATION   WILDCARD
+hf-text-generation-inference-server   hf-text-generation-inference-server-dsp01.apps.cluster-26bnl.sandbox1553.opentlc.com          hf-text-generation-inference-server   http   edge          None
+
+# 测试
+$ curl -k https://$(oc get route hf-text-generation-inference-server -o jsonpath='{.spec.host}')/generate \
+    -X POST \
+    -d '{"inputs":"What is Deep Learning?","parameters":{"max_new_tokens":20}}' \
+    -H 'Content-Type: application/json'
+{"generated_text":"Deep learning is a learning process that involves learning to learn."}
+
+$ curl -k https://$(oc get route hf-text-generation-inference-server -o jsonpath='{.spec.host}')/generate_stream \
+    -X POST \
+    -d '{"inputs":"What is Deep Learning?","parameters":{"max_new_tokens":20}}' \
+    -H 'Content-Type: application/json'
+data:{"token":{"id":9509,"text":" Deep","logprob":-0.5175781,"special":false},"generated_text":null,"details":null}
+
+data:{"token":{"id":1036,"text":" learning","logprob":-0.21582031,"special":false},"generated_text":null,"details":null}
+
+data:{"token":{"id":19,"text":" is","logprob":-1.3515625,"special":false},"generated_text":null,"details":null}
+
+data:{"token":{"id":3,"text":" ","logprob":-0.7524414,"special":false},"generated_text":null,"details":null}
+
+data:{"token":{"id":9,"text":"a","logprob":-0.0068893433,"special":false},"generated_text":null,"details":null}
+
+data:{"token":{"id":1036,"text":" learning","logprob":-2.4960938,"special":false},"generated_text":null,"details":null}
+
+data:{"token":{"id":433,"text":" process","logprob":-2.2460938,"special":false},"generated_text":null,"details":null}
+
+data:{"token":{"id":24,"text":" that","logprob":-0.9345703,"special":false},"generated_text":null,"details":null}
+
+data:{"token":{"id":5806,"text":" involves","logprob":-2.0273438,"special":false},"generated_text":null,"details":null}
+
+data:{"token":{"id":1036,"text":" learning","logprob":-1.1386719,"special":false},"generated_text":null,"details":null}
+
+data:{"token":{"id":12,"text":" to","logprob":-2.0449219,"special":false},"generated_text":null,"details":null}
+
+data:{"token":{"id":669,"text":" learn","logprob":-2.375,"special":false},"generated_text":null,"details":null}
+
+data:{"token":{"id":5,"text":".","logprob":-2.1367188,"special":false},"generated_text":null,"details":null}
+
+data:{"token":{"id":1,"text":"</s>","logprob":-0.30688477,"special":true},"generated_text":"Deep learning is a learning process that involves learning to learn.","details":null}
+
+```

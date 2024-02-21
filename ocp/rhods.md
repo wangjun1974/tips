@@ -11,7 +11,7 @@ kind: ImageSetConfiguration
 mirror:
   operators:
     - catalog: registry.redhat.io/redhat/redhat-operator-index:v4.12
-      targetName: "jwang-rhods-index"
+      targetName: "jwang-redhat-operator-index"
       targetTag: "4.12"
       packages:
         - name: rhods-operator
@@ -29,6 +29,15 @@ mirror:
             - name: stable
               minVersion: 'v1.31.0'
               maxVersion: 'v1.31.0'
+    - catalog: registry.redhat.io/redhat/certified-operator-index:v4.12
+      targetName: "jwang-certified-operator-index"
+      targetTag: "4.12"
+      packages:
+        - name: gpu-operator-certified
+          channels:
+            - name: stable
+              minVersion: '2.5.0'
+              maxVersion: '2.5.0'
   additionalImages:
     - name: quay.io/integreatly/prometheus-blackbox-exporter@sha256:35b9d2c1002201723b7f7a9f54e9406b2ec4b5b0f73d114f47c70e15956103b5
     - name: quay.io/modh/cuda-notebooks@sha256:00c53599f5085beedd0debb062652a1856b19921ccf59bd76134471d24c3fa7d

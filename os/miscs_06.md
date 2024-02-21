@@ -21751,6 +21751,9 @@ $ virsh define /tmp/jwang-aliyun2-1.xml
 podman run --rm -it -v ~/.aws:/root/.aws --privileged --network host registry.ocp4.example.com/amazon/aws-cli configure
 podman run --rm -it -v ~/.aws:/root/.aws --privileged --network host registry.ocp4.example.com/amazon/aws-cli --endpoint=$(oc -n velero get route minio -o jsonpath='{"http://"}{.spec.host}') s3 ls
 podman run --rm -it -v ~/.aws:/root/.aws --privileged --network host registry.ocp4.example.com/amazon/aws-cli --endpoint=$(oc -n velero get route minio -o jsonpath='{"http://"}{.spec.host}') s3 mb s3://rhods 
+
+### python3 to python 3.9 in rhel8
+alternatives --set python3 /usr/bin/python3.9
 ```
 
 

@@ -518,4 +518,197 @@ $ oc exec -it $(oc get pods -l app=hf-text-generation-inference-server -o name) 
 /models-cache/models--google--flan-t5-small/.no_exist/0fc9ddf78a1e988dac52e2dac162b0ede4fd74ab
 /models-cache/models--google--flan-t5-small/.no_exist/0fc9ddf78a1e988dac52e2dac162b0ede4fd74ab/added_tokens.json
 /models-cache/models--google--flan-t5-small/.no_exist/0fc9ddf78a1e988dac52e2dac162b0ede4fd74ab/adapter_config.json
+
+# 定义一个新的 ServingRuntime
+$ oc project redhat-ods-applications
+$ cat <<EOF | oc apply -f -
+apiVersion: serving.kserve.io/v1alpha1
+kind: ServingRuntime
+metadata:
+  name: hf-tgi-runtime
+spec:
+  containers:
+    - name: kserve-container
+      image: ghcr.io/huggingface/text-generation-inference:1.4.0
+      command: ["text-generation-launcher"]
+      args:
+        - "--model-id=/mnt/models/"
+        - "--port=3000"
+      env:
+      - name: HF_HOME
+        value: /tmp/hf_home
+      - name: HUGGINGFACE_HUB_CACHE
+        value: /tmp/hf_hub_cache
+      - name: TRANSFORMER_CACHE
+        value: /tmp/transformers_cache
+      #resources: # configure as required
+      #  requests:
+      #    nvidia.com/gpu: 1
+      #  limits:
+      #    nvidia.com/gpu: 1
+      readinessProbe: # Use exec probes instad of httpGet since the probes' port gets rewritten to the containerPort
+        exec:
+          command:
+            - curl
+            - localhost:3000/health
+        initialDelaySeconds: 30
+      livenessProbe:
+        exec:
+          command:
+            - curl
+            - localhost:3000/health
+        initialDelaySeconds: 30
+      ports:
+        - containerPort: 3000
+          protocol: TCP
+  multiModel: false
+  supportedModelFormats:
+    - autoSelect: true
+      name: pytorch
+```
+
+# 下载模型google/flan-t5-small并保存模型格式为caikit-tgis-serving所支持的格式到pvc
+```
+oc project dsp01
+cat <<EOF | oc apply -f -
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: caikit-claim
+spec:
+  accessModes:
+    - ReadWriteOnce
+  volumeMode: Filesystem
+  resources:
+    requests:
+      storage: 5Gi
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: setup-flan-t5-small
+spec:
+  volumes:
+    - name: model-volume
+      persistentVolumeClaim:
+        claimName: caikit-claim
+  restartPolicy: Never
+  initContainers:
+    - name: fix-volume-permissions
+      image: busybox
+      command: ["sh"]
+      args: ["-c", "chown -R 1001:1001 /mnt/models"]
+      volumeMounts:
+        - mountPath: "/mnt/models/"
+          name: model-volume
+  containers:
+    - name: download-model
+      image: quay.io/opendatahub/caikit-tgis-serving:fast
+      command: ["python", "-c"]
+      args: [
+          'import caikit_nlp;
+          caikit_nlp.text_generation.TextGeneration.bootstrap(
+          "google/flan-t5-small"
+          ).save(
+          "/mnt/models/flan-t5-small-caikit"
+          )',
+        ]
+      env:
+        - name: ALLOW_DOWNLOADS
+          value: "1"
+        - name: TRANSFORMERS_CACHE
+          value: "/tmp"
+      volumeMounts:
+        - mountPath: "/mnt/models/"
+          name: model-volume
+EOF
+
+# 拷贝模型文件到本地
+$ mkdir -p ~/tmp/flan-t5-small-caikit/artifacts
+$ cd ~/tmp/flan-t5-small-caikit/artifacts
+cat <<EOF | oc apply -f -
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: check-flan-t5-small
+spec:
+  volumes:
+    - name: model-volume
+      persistentVolumeClaim:
+        claimName: caikit-claim
+  restartPolicy: Never
+  initContainers:
+    - name: fix-volume-permissions
+      image: busybox
+      command: ["sh"]
+      args: ["-c", "chown -R 1001:1001 /mnt/models"]
+      volumeMounts:
+        - mountPath: "/mnt/models/"
+          name: model-volume
+  containers:
+    - name: check-download-model
+      image: quay.io/opendatahub/caikit-tgis-serving:fast
+      command: ["/bin/bash", "-c", "exec /bin/bash -c 'trap : TERM INT; sleep 9999999999d & wait'"]
+      volumeMounts:
+        - mountPath: "/mnt/models/"
+          name: model-volume
+EOF
+
+$ oc get pods check-flan-t5-small
+NAME                  READY   STATUS    RESTARTS   AGE
+check-flan-t5-small   1/1     Running   0          19m
+
+# 拷贝模型文件到本地
+oc exec -i check-flan-t5-small -- bash -c 'cat - < /mnt/models/flan-t5-small-caikit/artifacts/config.json'  > config.json
+oc exec -i check-flan-t5-small -- bash -c 'cat - < /mnt/models/flan-t5-small-caikit/artifacts/model.safetensors'  > model.safetensors
+oc exec -i check-flan-t5-small -- bash -c 'cat - < /mnt/models/flan-t5-small-caikit/artifacts/tokenizer.json'  > tokenizer.json
+oc exec -i check-flan-t5-small -- bash -c 'cat - < /mnt/models/flan-t5-small-caikit/artifacts/generation_config.json'  > generation_config.json
+oc exec -i check-flan-t5-small -- bash -c 'cat - < /mnt/models/flan-t5-small-caikit/artifacts/special_tokens_map.json'  > special_tokens_map.json
+oc exec -i check-flan-t5-small -- bash -c 'cat - < /mnt/models/flan-t5-small-caikit/artifacts/tokenizer_config.json'  > tokenizer_config.json
+cd ~/tmp/flan-t5-small-caikit
+
+oc exec -i check-flan-t5-small -- bash -c 'cat - < /mnt/models/flan-t5-small-caikit/config.yml'  > config.yml
+
+# 查看文件
+[junwang@JundeMacBook-Pro ~/tmp/flan-t5-small-caikit]$ tree . 
+.
+├── artifacts
+│   ├── config.json
+│   ├── generation_config.json
+│   ├── model.safetensors
+│   ├── special_tokens_map.json
+│   ├── tokenizer.json
+│   └── tokenizer_config.json
+└── config.yml
+
+aws --endpoint=$(oc -n velero get route minio -o jsonpath='{"http://"}{.spec.host}') s3 ls
+
+# 上传文件到 s3 buckect rhoai 下
+aws --endpoint=$(oc -n velero get route minio -o jsonpath='{"http://"}{.spec.host}') s3 cp config.yml s3://rhoai/models/flan-t5-small-caikit/config.yml
+
+aws --endpoint=$(oc -n velero get route minio -o jsonpath='{"http://"}{.spec.host}') s3 cp artifacts/config.json s3://rhoai/models/flan-t5-small-caikit/artifacts/config.json
+
+aws --endpoint=$(oc -n velero get route minio -o jsonpath='{"http://"}{.spec.host}') s3 cp artifacts/generation_config.json s3://rhoai/models/flan-t5-small-caikit/artifacts/generation_config.json
+
+aws --endpoint=$(oc -n velero get route minio -o jsonpath='{"http://"}{.spec.host}') s3 cp artifacts/model.safetensors s3://rhoai/models/flan-t5-small-caikit/artifacts/model.safetensors
+
+aws --endpoint=$(oc -n velero get route minio -o jsonpath='{"http://"}{.spec.host}') s3 cp artifacts/special_tokens_map.json s3://rhoai/models/flan-t5-small-caikit/artifacts/special_tokens_map.json
+
+aws --endpoint=$(oc -n velero get route minio -o jsonpath='{"http://"}{.spec.host}') s3 cp artifacts/tokenizer.json s3://rhoai/models/flan-t5-small-caikit/artifacts/tokenizer.json
+
+aws --endpoint=$(oc -n velero get route minio -o jsonpath='{"http://"}{.spec.host}') s3 cp artifacts/tokenizer_config.json s3://rhoai/models/flan-t5-small-caikit/artifacts/tokenizer_config.json
+
+# 查看 s3 bucket 内容
+aws --endpoint=$(oc -n velero get route minio -o jsonpath='{"http://"}{.spec.host}') s3 ls s3://rhoai/models/flan-t5-small-caikit/
+                           PRE artifacts/
+2024-02-21 17:04:08        424 config.yml
+
+aws --endpoint=$(oc -n velero get route minio -o jsonpath='{"http://"}{.spec.host}') s3 ls s3://rhoai/models/flan-t5-small-caikit/artifacts/
+2024-02-21 17:05:08       1555 config.json
+2024-02-21 17:07:07        142 generation_config.json
+2024-02-21 17:07:43  306511872 model.safetensors
+2024-02-21 17:07:51       2543 special_tokens_map.json
+2024-02-21 17:07:59    2422256 tokenizer.json
+2024-02-21 17:08:05      20798 tokenizer_config.json
 ```

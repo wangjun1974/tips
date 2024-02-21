@@ -485,4 +485,37 @@ data:{"token":{"id":5,"text":".","logprob":-2.1367188,"special":false},"generate
 
 data:{"token":{"id":1,"text":"</s>","logprob":-0.30688477,"special":true},"generated_text":"Deep learning is a learning process that involves learning to learn.","details":null}
 
+# 查看进程
+$ oc exec -it $(oc get pods -l app=hf-text-generation-inference-server -o name) /bin/bash
+1000790000@hf-text-generation-inference-server-5df6759cd6-48zxb:/usr/src$ ps -ax
+    PID TTY      STAT   TIME COMMAND
+      1 ?        Ssl    0:00 text-generation-launcher --json-output
+     30 ?        Sl     0:16 /opt/conda/bin/python3.10 /opt/conda/bin/text-generation-server serve google/flan-t5-small --uds-path /tmp/text-generation-server --logger-level INFO --json-output --quantize bitsandbytes
+     69 ?        Sl     0:00 text-generation-router --max-concurrent-requests 128 --max-best-of 2 --max-stop-sequences 4 --max-top-n-tokens 5 --max-input-length 1024 --max-total-tokens 2048 --max-batch-prefill-tokens 4096 --waiting-served-ratio 1.2 --max-waiting-tokens 20 --validation-workers 2 --hostname hf-text-generation-inference-server-5df6759cd6-48zxb --port 3000 --master-shard-uds-path /tmp/text-generation-server-0 --tokenizer-name google/flan-t5-small --json-output
+     88 pts/0    Ss     0:00 /bin/bash
+
+# 模型文件
+1000790000@hf-text-generation-inference-server-5df6759cd6-48zxb:/usr/src$ find /models-cache/models--google--flan-t5-small
+/models-cache/models--google--flan-t5-small
+/models-cache/models--google--flan-t5-small/blobs
+/models-cache/models--google--flan-t5-small/blobs/fc669fbad1a6a82119ca3e1fa75db33ee22ca47d
+/models-cache/models--google--flan-t5-small/blobs/360a0073f29a105ced4a366cda27e668b11bb73b
+/models-cache/models--google--flan-t5-small/blobs/d60acb128cf7b7f2536e8f38a5b18a05535c9e14c7a355904270e15b0945ea86
+/models-cache/models--google--flan-t5-small/blobs/db13bf98b7714acc4dea7621ff7f4ab93f64258e
+/models-cache/models--google--flan-t5-small/blobs/495fa51e204676f1a857a9fc13c4c89f3f5ba9f480b898cebca02add25e6d749
+/models-cache/models--google--flan-t5-small/blobs/2c19eb6e3b583f52d34b903b5978d3d30b6b7682
+/models-cache/models--google--flan-t5-small/refs
+/models-cache/models--google--flan-t5-small/refs/main
+/models-cache/models--google--flan-t5-small/snapshots
+/models-cache/models--google--flan-t5-small/snapshots/0fc9ddf78a1e988dac52e2dac162b0ede4fd74ab
+/models-cache/models--google--flan-t5-small/snapshots/0fc9ddf78a1e988dac52e2dac162b0ede4fd74ab/tokenizer_config.json
+/models-cache/models--google--flan-t5-small/snapshots/0fc9ddf78a1e988dac52e2dac162b0ede4fd74ab/model.safetensors
+/models-cache/models--google--flan-t5-small/snapshots/0fc9ddf78a1e988dac52e2dac162b0ede4fd74ab/spiece.model
+/models-cache/models--google--flan-t5-small/snapshots/0fc9ddf78a1e988dac52e2dac162b0ede4fd74ab/special_tokens_map.json
+/models-cache/models--google--flan-t5-small/snapshots/0fc9ddf78a1e988dac52e2dac162b0ede4fd74ab/tokenizer.json
+/models-cache/models--google--flan-t5-small/snapshots/0fc9ddf78a1e988dac52e2dac162b0ede4fd74ab/config.json
+/models-cache/models--google--flan-t5-small/.no_exist
+/models-cache/models--google--flan-t5-small/.no_exist/0fc9ddf78a1e988dac52e2dac162b0ede4fd74ab
+/models-cache/models--google--flan-t5-small/.no_exist/0fc9ddf78a1e988dac52e2dac162b0ede4fd74ab/added_tokens.json
+/models-cache/models--google--flan-t5-small/.no_exist/0fc9ddf78a1e988dac52e2dac162b0ede4fd74ab/adapter_config.json
 ```

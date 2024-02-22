@@ -711,4 +711,96 @@ aws --endpoint=$(oc -n velero get route minio -o jsonpath='{"http://"}{.spec.hos
 2024-02-21 17:07:51       2543 special_tokens_map.json
 2024-02-21 17:07:59    2422256 tokenizer.json
 2024-02-21 17:08:05      20798 tokenizer_config.json
+
+
+# OpenVINO Model Server
+# https://redhat-internal.slack.com/archives/C03UGJY6Z1A/p1703006973601799
+
+
+apiVersion: serving.kserve.io/v1alpha1
+kind: ServingRuntime
+labels:
+  opendatahub.io/dashboard: "true"
+metadata:
+  annotations:
+    openshift.io/display-name: OpenVINO Model Server
+  name: kserve-ovms
+spec:
+  multiModel: false
+  annotations:
+    prometheus.kserve.io/port: "8888"
+    prometheus.kserve.io/path: /metrics
+  supportedModelFormats:
+    - name: openvino_ir
+      version: opset11
+      autoSelect: true
+    - name: onnx
+      version: "1"
+    - name: tensorflow
+      version: "1"
+      autoSelect: true
+    - name: tensorflow
+      version: "2"
+      autoSelect: true
+    - name: paddle
+      version: "2"
+      autoSelect: true
+  protocolVersions:
+    - v2
+    - grpc-v2
+  containers:
+    - name: kserve-container
+      image: quay.io/opendatahub/openvino_model_server:stable
+      args:
+        - --model_name={{.Name}}
+        - --port=8001
+        - --rest_port=8888
+        - --model_path=/mnt/models
+        - --file_system_poll_wait_seconds=0
+        - --grpc_bind_address=127.0.0.1
+        - --rest_bind_address=127.0.0.1
+      ports:
+        - containerPort: 8888
+          protocol: TCP
+
+
+
+
+### 参考
+https://mp.weixin.qq.com/s/VN6Koyx2doSV-bCfXxtbgQ
+
+### 添加ServingRuntime
+apiVersion: serving.kserve.io/v1alpha1
+kind: ServingRuntime
+metadata:
+  annotations:
+    openshift.io/display-name: Text Generation Inference Service
+  name: kserve-tgis
+spec:
+  multiModel: false
+  supportedModelFormats:
+    - autoSelect: true
+      name: pytorch
+  containers:
+    - name: kserve-container
+      image: 'quay.io/opendatahub/text-generation-inference:stable'
+      command: ["text-generation-launcher"]
+      args:
+        - "--model-name=/mnt/models/"
+        - "--port=3000"
+        - "--grpc-port=8033"
+      env:
+        - name: TRANSFORMERS_CACHE
+          value: /tmp/transformers_cache
+      ports:
+        - containerPort: 8033
+          name: h2c
+          protocol: TCP
+
+### 上传 models 到 s3
+### https://github.com/JonkeyGuan/llm-kserve
+### 执行 notebook 1_download_save.ipynb
+
+
+
 ```

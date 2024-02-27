@@ -803,4 +803,79 @@ spec:
 
 
 
+
+### notebook for convert model for caikit and upload to s3 bucket
+
+## Install the required packages and define a function for the upload - caikit
+!pip install git+https://github.com/caikit/caikit-nlp
+
+## Convert model 'google/flan-t5-small' to caikit format 
+import os
+# The env var ALLOW_DOWNLOADS has to be set to allow model downloads before importing caikit_nlp
+os.environ['ALLOW_DOWNLOADS'] = "1"
+
+import caikit_nlp
+
+model_name = "google/flan-t5-small"
+model = caikit_nlp.text_generation.TextGeneration.bootstrap(model_name)
+model.save(f"{model_name}-caikit") # optionally save the model
+
+## Upload and check again
+upload_directory_to_s3("google/flan-t5-small-caikit", "models/flan-t5-small-caikit")
+
+### List buckets
+list_objects("models")
+
+
+curl --json '{"model_id": "flan-t5-small-caikit", "inputs": "At what temperature does water boil?"}' https://:443/api/v1/task/server-streaming-text-generation
+
+
+curl -k --json '{
+    "model_id": "flan-t5-small-caikit",
+    "inputs": "At what temperature does liquid Nitrogen boil?"
+}' https://flan-t5-small-caikit-dsp01.apps.cluster-bv66h.dynamic.redhatworkshops.io/api/v1/task/text-generation
+
+curl -k -H "Content-Type: application/json" -d '{
+    "model_id": "flan-t5-small-caikit",
+    "inputs": "At what temperature does liquid Nitrogen boil?"
+}' https://flan-t5-small-caikit-dsp01.apps.cluster-bv66h.dynamic.redhatworkshops.io/api/v1/task/text-generation
+
+
+curl -k --json '{
+    "model_id": "flan-t5-small-caikit",
+    "inputs": "At what temperature does liquid Nitrogen boil?"
+}' https://10.132.2.60/api/v1/task/text-generation
+
+curl -H "Content-Type: application/json" -d '{"model_id":"flan-t5-small-caikit","inputs":"At what temperature does liquid Nitrogen boil?"
+}'
+
+curl -k -H "Content-Type: application/json" -d '{
+    "model_id": "flan-t5-small-caikit",
+    "inputs": "At what temperature does liquid Nitrogen boil?"
+}' https://10.132.2.60:3000/api/v1/task/text-generation
+
+
+https://huggingface.co/Qwen/Qwen1.5-0.5B
+
+
+
+### Download HuggingFace
+!git clone https://huggingface.co/Qwen/Qwen1.5-0.5B
+
+## Upload and check again
+upload_directory_to_s3("Qwen1.5-0.5B", "models/Qwen1.5-0.5B")
+
+## List models
+list_objects("models")
+models/Qwen1.5-0.5B/LICENSE
+models/Qwen1.5-0.5B/README.md
+models/Qwen1.5-0.5B/config.json
+models/Qwen1.5-0.5B/generation_config.json
+models/Qwen1.5-0.5B/merges.txt
+models/Qwen1.5-0.5B/model.safetensors
+models/Qwen1.5-0.5B/tokenizer.json
+models/Qwen1.5-0.5B/tokenizer_config.json
+models/Qwen1.5-0.5B/vocab.json
+
+
 ```

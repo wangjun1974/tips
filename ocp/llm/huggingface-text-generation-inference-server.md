@@ -878,4 +878,44 @@ models/Qwen1.5-0.5B/tokenizer_config.json
 models/Qwen1.5-0.5B/vocab.json
 
 
+curl -k --json '{
+    "model_id": "flan-t5-small-caikit",
+    "inputs": "At what temperature does liquid Nitrogen boil?"
+}' https://qwen15-05b-dsp01.apps.cluster-bv66h.dynamic.redhatworkshops.io/api/v1/task/text-generation
+
+### vLLM Runtime
+### https://github.com/rh-aiservices-bu/llm-on-openshift/tree/main/serving-runtimes/vllm_runtime
+### https://raw.githubusercontent.com/rh-aiservices-bu/llm-on-openshift/main/serving-runtimes/vllm_runtime/vllm-runtime.yaml
+
+apiVersion: serving.kserve.io/v1alpha1
+kind: ServingRuntime
+labels:
+  opendatahub.io/dashboard: "true"
+metadata:
+  annotations:
+    openshift.io/display-name: vLLM
+  name: vllm
+spec:
+  builtInAdapter:
+    modelLoadingTimeoutMillis: 90000
+  containers:
+    - args:
+        - --model
+        - /mnt/models/
+        - --download-dir
+        - /models-cache
+        - --port
+        - "8080"
+      image: quay.io/rh-aiservices-bu/vllm-openai-ubi9:0.3.1
+      name: kserve-container
+      ports:
+        - containerPort: 8080
+          name: http1
+          protocol: TCP
+  multiModel: false
+  supportedModelFormats:
+    - autoSelect: true
+      name: pytorch
+
+
 ```

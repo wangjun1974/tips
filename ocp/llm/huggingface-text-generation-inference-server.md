@@ -917,5 +917,39 @@ spec:
     - autoSelect: true
       name: pytorch
 
+### python and curl 例子
+https://docs.vllm.ai/en/latest/getting_started/quickstart.html#using-openai-completions-api-with-vllm
+
+### vLLM Server List Models
+curl http://localhost:8000/v1/models
+
+### 根据 Prompt 补全内容
+curl http://localhost:8000/v1/completions \
+    -H "Content-Type: application/json" \
+    -d '{
+        "model": "facebook/opt-125m",
+        "prompt": "San Francisco is a",
+        "max_tokens": 7,
+        "temperature": 0
+    }'
+# You can use the create chat completion endpoint to communicate with the model in a chat-like interface:
+curl http://localhost:8000/v1/chat/completions \
+    -H "Content-Type: application/json" \
+    -d '{
+        "model": "facebook/opt-125m",
+        "messages": [
+            {"role": "system", "content": "You are a helpful assistant."},
+            {"role": "user", "content": "Who won the world series in 2020?"}
+        ]
+    }'
+
+### containerfile
+### https://github.com/rh-aiservices-bu/llm-on-openshift/blob/main/vllm_deployment/Containerfile
+
+### oc bash completion
+brew reinstall bash-completion
+oc completion bash > /usr/local/etc/bash_completion.d/oc_bash_completion.sh 
+source /usr/local/etc/bash_completion.d/oc_bash_completion.sh
+
 
 ```

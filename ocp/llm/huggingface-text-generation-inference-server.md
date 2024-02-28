@@ -951,5 +951,9 @@ brew reinstall bash-completion
 oc completion bash > /usr/local/etc/bash_completion.d/oc_bash_completion.sh 
 source /usr/local/etc/bash_completion.d/oc_bash_completion.sh
 
+### data science pipeline
+oc api-resources | grep dsp
+datasciencepipelinesapplications      dspa                                   datasciencepipelinesapplications.opendatahub.io/v1alpha1   true         DataSciencePipelinesApplication
+
 
 ```

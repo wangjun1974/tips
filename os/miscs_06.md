@@ -21754,6 +21754,11 @@ podman run --rm -it -v ~/.aws:/root/.aws --privileged --network host registry.oc
 
 ### python3 to python 3.9 in rhel8
 alternatives --set python3 /usr/bin/python3.9
+
+### 列出 namespace test 下的所有namespace级别对象并保存在/tmp/err文件中
+oc api-resources --namespaced=true -o name| while read i ;do echo ; echo oc get $i -n test; oc get $i -n test 2>&1 ; echo ; done | tee /tmp/err
+
+
 ```
 
 

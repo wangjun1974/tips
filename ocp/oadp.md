@@ -231,4 +231,138 @@ gitea-persistent-5   Completed   0        0          2022-03-02 01:10:36 +0000 U
 # 在目标集群里需要创建与源集群同名的 StorageClass
 # 因为迁移前的 PVC 如果包含 StorageClass，PVC 可以找到需要的 StorageClass
 
+
+
+### OADP and Migration Toolkit for Container
+### Migration Toolkit for Containers 
+
+1 - 00:42:39
+Clusters - 有哪些集群
+源集群，目标集群
+
+2 - 00:43:26
+Replication repositoies - s3 object store
+ODF/Minio
+
+3 - 00:43:27
+Migration Plan
+
+
+
+列出 s3 bucket 内容
+podman run --rm -it -v ~/.aws:/root/.aws registry.example.com:5000/amazon/aws-cli --endpoint=$(oc -n velero get route minio -o jsonpath='{"http://"}{.spec.host}') s3 rb s3://oadp-backups-3 --force
+podman run --rm -it -v ~/.aws:/root/.aws registry.example.com:5000/amazon/aws-cli --endpoint=$(oc -n velero get route minio -o jsonpath='{"http://"}{.spec.host}') s3 ls
+podman run --rm -it -v ~/.aws:/root/.aws registry.example.com:5000/amazon/aws-cli --endpoint=$(oc -n velero get route minio -o jsonpath='{"http://"}{.spec.host}') s3 mb s3://oadp-backups-3
+podman run --rm -it -v ~/.aws:/root/.aws registry.example.com:5000/amazon/aws-cli --endpoint=$(oc -n velero get route minio -o jsonpath='{"http://"}{.spec.host}') s3 ls
+
+
+### DataProtectionApplication
+cat <<EOF | oc apply -f -
+apiVersion: oadp.openshift.io/v1alpha1
+kind: DataProtectionApplication
+metadata:
+  name: velero-sample
+  namespace: openshift-adp
+spec:
+  backupLocations:
+  - velero:
+      config:
+        insecureSkipTLSVerify: "true"
+        profile: default
+        region: minio
+        s3ForcePathStyle: "true"
+        s3Url: http://minio.velero.svc:9000
+      credential:
+        key: cloud
+        name: cloud-credentials
+      default: true
+      objectStorage:
+        bucket: oadp-backups-3
+        prefix: velero
+      provider: aws
+  configuration:
+    restic:
+      enable: true
+    velero:
+      defaultPlugins:
+      - openshift
+      - aws
+      - csi
+      - kubevirt
+EOF
+
+### 检查 test1 namespace 下的 wordpress 
+
+### 创建 Backup
+cat <<EOF | oc create -f -
+apiVersion: velero.io/v1
+kind: Backup
+metadata:
+  generateName: test1-
+  namespace: openshift-adp
+spec:
+  includedNamespaces:
+  - test1
+  snapshotVolumes: true
+  storageLocation: velero-sample-1
+  ttl: 720h0m0s
+  snapshotMoveData: true
+EOF
+
+# 列出 s3 bucket 内容
+podman run --rm -it -v ~/.aws:/root/.aws registry.example.com:5000/amazon/aws-cli --endpoint=$(oc -n velero get route minio -o jsonpath='{"http://"}{.spec.host}') s3 ls
+
+### 切换到 default namespace
+oc project default
+oc delete namespace test1
+
+### 创建 Restore
+cat <<EOF | oc create -f -
+apiVersion: velero.io/v1
+kind: Restore
+metadata:
+  name: restore-test1
+  namespace: openshift-adp
+spec:
+  backupName: test1-mwhqf
+  excludedResources:
+    - nodes
+    - events
+    - events.events.k8s.io
+    - backups.velero.io
+    - restores.velero.io
+    - resticrepositories.velero.io
+  restorePVs: true
+EOF
+
+### 创建 schedule
+cat <<EOF | oc apply -f -
+apiVersion: velero.io/v1
+kind: Schedule
+metadata:
+  name: test1-1-devops-backup
+  namespace: openshift-adp
+spec:
+  schedule: 00 09 * * *
+  template:
+    includedNamespaces:
+      - test1
+    excludedResources:
+      - nodes
+      - events
+      - events.events.k8s.io
+      - backups.velero.io
+      - restores.velero.io
+      - resticrepositories.velero.io
+    excludeClusterScopedResources: true
+    snapshotMoveData: true
+    snapshotVolumes: true
+    storageLocation: velero-sample-1
+    ttl: 720h0m0s
+EOF
+
+
+
+
+
 ```

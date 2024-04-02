@@ -324,7 +324,7 @@ metadata:
   name: restore-test1
   namespace: openshift-adp
 spec:
-  backupName: test1-mwhqf
+  backupName: test1-csi-6lfdr
   excludedResources:
     - nodes
     - events
@@ -356,13 +356,40 @@ spec:
       - resticrepositories.velero.io
     excludeClusterScopedResources: true
     snapshotMoveData: true
-    snapshotVolumes: true
     storageLocation: velero-sample-1
     ttl: 720h0m0s
 EOF
 
 
+### 配置 Backing up persistent volumes with CSI snapshots
+### https://docs.openshift.com/container-platform/4.15/backup_and_restore/application_backup_and_restore/backing_up_and_restoring/oadp-backing-up-pvs-csi-doc.html
+oc label VolumeSnapshotClass lvms-vg1 velero.io/csi-volumesnapshot-class="true"
+### VolumeSnapshotClass
+oc get volumesnapshotclass lvms-vg1 -o yaml 
+apiVersion: snapshot.storage.k8s.io/v1
+deletionPolicy: Retain
+driver: topolvm.io
+kind: VolumeSnapshotClass
+metadata:
+  creationTimestamp: "2023-12-05T08:48:45Z"
+  generation: 2
+  labels:
+    velero.io/csi-volumesnapshot-class: "true"
+  name: lvms-vg1
+  resourceVersion: "101653831"
+  uid: 61197cee-4857-449b-88e5-b880b8147488
 
-
-
+cat <<EOF | oc create -f -
+apiVersion: velero.io/v1
+kind: Backup
+metadata:
+  generateName: test1-csi-
+  namespace: openshift-adp
+spec:
+  includedNamespaces:
+  - test1
+  storageLocation: velero-sample-1
+  ttl: 720h0m0s
+  snapshotMoveData: true
+EOF
 ```

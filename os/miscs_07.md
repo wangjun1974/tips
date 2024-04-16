@@ -173,3 +173,6 @@ FOF
 
 ### virtio-win 驱动下载
 https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/
+
+### pci device pass through
+https://www.ibm.com/docs/en/linux-on-systems?topic=vfio-pass-through-pci

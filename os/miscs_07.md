@@ -170,3 +170,6 @@ virsh "${ACTION}-device" "$DOMAIN" "$CONF_FILE"
 rm "$CONF_FILE"
 FOF
 ```
+
+### virtio-win 驱动下载
+https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/

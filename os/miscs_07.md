@@ -112,3 +112,9 @@ $ cat tasks housekeeping/tasks | while read p; do echo -n $p: ; cat /proc/$p/tas
 ```
 $ virt-install -n utuntu2204-inteleci31 --os-variant=ubuntu22.04 --memory=8192,hugepages=yes --memorybacking hugepages=yes,size=1,unit=G,locked=yes --vcpus=4 --numatune=0 --disk path=/var/lib/libvirt/images/utuntu2204-inteleci31.img,bus=virtio,cache=none,format=raw,io=threads,size=30 --graphics none --console pty,target_type=serial -l /var/lib/libvirt/images/ubuntu-22.04.4-live-server-amd64.iso,kernel=casper/vmlinuz,initrd=casper/initrd --extra-args 'console=ttyS0,115200n8 serial'
 ```
+
+### apt-file search which file provides file
+```
+apt-file search stress-ng
+apt-file search cyclictest
+```

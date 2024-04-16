@@ -124,3 +124,8 @@ apt-file search cyclictest
 https://stackoverflow.com/questions/12254378/how-to-find-the-serial-port-number-on-mac-os-x
 brew install minicom
 ```
+
+### 恢复或者重装操作系统
+```
+https://support.apple.com/en-il/guide/mac-help/mchl338cf9a8/mac
+```

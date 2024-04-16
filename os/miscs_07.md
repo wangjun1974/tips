@@ -98,3 +98,17 @@ spec:
         name: cloudinitdisk
 EOF
 ```
+
+### 检查物理cpu情况
+```
+$ pidof qemu-kvm
+$ cd /proc/qemu_pid
+$ cd /sys/fs/cgroup/cpuset/`cat cpuset`
+$ cd ..
+$ cat tasks housekeeping/tasks | while read p; do echo -n $p: ; cat /proc/$p/task/$p/comm; cat /proc/$p/status | grep Cpus_allowed_list;  done
+```
+
+### install ubuntu2204 in console mode
+```
+$ virt-install -n utuntu2204-inteleci31 --os-variant=ubuntu22.04 --memory=8192,hugepages=yes --memorybacking hugepages=yes,size=1,unit=G,locked=yes --vcpus=4 --numatune=0 --disk path=/var/lib/libvirt/images/utuntu2204-inteleci31.img,bus=virtio,cache=none,format=raw,io=threads,size=30 --graphics none --console pty,target_type=serial -l /var/lib/libvirt/images/ubuntu-22.04.4-live-server-amd64.iso,kernel=casper/vmlinuz,initrd=casper/initrd --extra-args 'console=ttyS0,115200n8 serial'
+```

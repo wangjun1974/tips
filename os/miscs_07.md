@@ -129,3 +129,44 @@ brew install minicom
 ```
 https://support.apple.com/en-il/guide/mac-help/mchl338cf9a8/mac
 ```
+
+### kvm usb device auto passthrough 
+```
+https://nickpegg.com/2021/01/kvm-usb-auto-passthrough/
+cat > /etc/udev/rules.d/90-libvirt-usb.rules <<'EOF'
+ACTION=="bind", \
+  SUBSYSTEM=="usb", \
+  ENV{ID_VENDOR_ID}=="6b62", \
+  ENV{ID_MODEL_ID}=="6869", \
+  RUN+="/usr/local/bin/kvm-udev attach steam"
+ACTION=="remove", \
+  SUBSYSTEM=="usb", \
+  ENV{ID_VENDOR_ID}=="6b62", \
+  ENV{ID_MODEL_ID}=="6869", \
+  RUN+="/usr/local/bin/kvm-udev detach steam"
+EOF
+
+cat > /usr/local/bin/kvm-udev <<'FOF'
+#!/bin/bash
+
+# Usage: ./kvm-udev.sh attach|detach <domain>
+
+set -e
+
+ACTION=$1
+DOMAIN=$2
+
+CONF_FILE=$(mktemp --suffix=.kvm-udev)
+cat << EOF >$CONF_FILE
+<hostdev mode='subsystem' type='usb'>
+  <source>
+    <vendor id='0x${ID_VENDOR_ID}' />
+    <product id='0x${ID_MODEL_ID}' />
+  </source>
+</hostdev>
+EOF
+
+virsh "${ACTION}-device" "$DOMAIN" "$CONF_FILE"
+rm "$CONF_FILE"
+FOF
+```

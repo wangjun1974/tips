@@ -118,3 +118,9 @@ $ virt-install -n utuntu2204-inteleci31 --os-variant=ubuntu22.04 --memory=8192,h
 apt-file search stress-ng
 apt-file search cyclictest
 ```
+
+### Mac and serial port 
+```
+https://stackoverflow.com/questions/12254378/how-to-find-the-serial-port-number-on-mac-os-x
+brew install minicom
+```

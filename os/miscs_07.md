@@ -176,3 +176,8 @@ https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/
 
 ### pci device pass through
 https://www.ibm.com/docs/en/linux-on-systems?topic=vfio-pass-through-pci
+
+### 检查 ubuntu grub menu entry 
+```
+awk '/menuentry/ && /class/ {count++; print count-1"****"$0 }' /boot/grub/grub.cfg
+```

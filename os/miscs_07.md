@@ -181,3 +181,15 @@ https://www.ibm.com/docs/en/linux-on-systems?topic=vfio-pass-through-pci
 ```
 awk '/menuentry/ && /class/ {count++; print count-1"****"$0 }' /boot/grub/grub.cfg
 ```
+
+### ubuntu 安装旧内核版本
+https://community.sisense.com/t5/knowledge/how-to-install-new-kernel-or-update-existing-one-in-ubuntu/ta-p/7794
+```
+sudo apt list linux-*image-* | grep generic
+sudo apt -fix-broken install linux-image-5.4.0-137-generic 
+```
+
+### 查询virt-install有哪些os-variant
+```
+virt-install --osinfo list
+```

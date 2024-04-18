@@ -196,12 +196,12 @@ virt-install --osinfo list
 
 ### 安装 kernel-rt-core kernel-source
 ```
-dnf install yum-utils rpm-build python3-devel
-yumdownloader --source kernel-rt-core
-echo '%_topdir %(echo $HOME)/rpmbuild' > .rpmmacros
-subscription-manager repos --enable=codeready-builder-for-rhel-9-x86_64-rpms
+$ dnf install yum-utils rpm-build python3-devel
+$ yumdownloader --source kernel-rt-core
+$ echo '%_topdir %(echo $HOME)/rpmbuild' > .rpmmacros
+$ subscription-manager repos --enable=codeready-builder-for-rhel-9-x86_64-rpms
 
-rpm -ivh kernel-5.14.0-362.24.1.el9_3.src.rpm
-cd rpmbuild/SPEC
-rpmbuild -bp kernel.spec
+$ rpm -ivh kernel-5.14.0-362.24.1.el9_3.src.rpm
+$ cd rpmbuild/SPEC
+$ rpmbuild -bp kernel.spec
 ```

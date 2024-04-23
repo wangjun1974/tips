@@ -205,3 +205,8 @@ $ rpm -ivh kernel-5.14.0-362.24.1.el9_3.src.rpm
 $ cd rpmbuild/SPEC
 $ rpmbuild -bp kernel.spec
 ```
+
+### virt-install安装ubuntu 22.04
+```
+virt-install -n ubuntu2204-inteleci31 --os-variant=ubuntu22.04 --memory=8192,hugepages=yes --memorybacking hugepages=yes,size=1,unit=G,locked=yes --vcpus=2 --numatune=0 --disk path=/var/lib/libvirt/images/utuntu2204-inteleci31.img,bus=virtio,cache=none,format=raw,io=threads,size=30 --network network=default,model=virtio --graphics none --console pty,target_type=serial -l /var/lib/libvirt/images/ubuntu-22.04.4-live-server-amd64.iso,kernel=casper/vmlinuz,initrd=casper/initrd --extra-args 'console=ttyS0,115200n8 serial'
+```

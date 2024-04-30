@@ -210,3 +210,29 @@ $ rpmbuild -bp kernel.spec
 ```
 virt-install -n ubuntu2204-inteleci31 --os-variant=ubuntu22.04 --memory=8192,hugepages=yes --memorybacking hugepages=yes,size=1,unit=G,locked=yes --vcpus=2 --numatune=0 --disk path=/var/lib/libvirt/images/utuntu2204-inteleci31.img,bus=virtio,cache=none,format=raw,io=threads,size=30 --network network=default,model=virtio --graphics none --console pty,target_type=serial -l /var/lib/libvirt/images/ubuntu-22.04.4-live-server-amd64.iso,kernel=casper/vmlinuz,initrd=casper/initrd --extra-args 'console=ttyS0,115200n8 serial'
 ```
+
+### NodeHealthCheck的例子
+```
+apiVersion: remediation.medik8s.io/v1alpha1
+kind: NodeHealthCheck
+metadata:
+  name: 'nodehealthcheck-cnv'
+spec:
+  selector:
+    matchExpressions:
+    - key: node-role.kubernetes.io/worker
+      operator: Exists
+  remediationTemplate:
+    apiVersion: self-node-remediation.medik8s.io/v1alpha1
+    kind: SelfNodeRemediationTemplate
+    namespace: openshift-workload-availability
+    name: self-node-remediation-automatic-strategy-template
+  unhealthyConditions:
+    - duration: 60s
+      status: 'False'
+      type: Ready
+    - duration: 60s
+      status: Unknown
+      type: Ready
+  minHealthy: 50%
+```

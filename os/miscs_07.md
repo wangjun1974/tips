@@ -222,6 +222,8 @@ spec:
     matchExpressions:
     - key: node-role.kubernetes.io/worker
       operator: Exists
+    - key: node-role.kubernetes.io/master
+      operator: DoesNotExist
   remediationTemplate:
     apiVersion: self-node-remediation.medik8s.io/v1alpha1
     kind: SelfNodeRemediationTemplate
@@ -234,5 +236,5 @@ spec:
     - duration: 60s
       status: Unknown
       type: Ready
-  minHealthy: 50%
+  minHealthy: 0%
 ```

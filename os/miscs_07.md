@@ -238,3 +238,6 @@ spec:
       type: Ready
   minHealthy: 0%
 ```
+
+### ubuntu ssh password auth
+https://medium.com/@ravidevops2470/how-to-enable-ssh-with-password-authentication-on-ubuntu-22-04-a7cbdf476d8b

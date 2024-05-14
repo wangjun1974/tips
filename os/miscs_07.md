@@ -241,3 +241,158 @@ spec:
 
 ### ubuntu ssh password auth
 https://medium.com/@ravidevops2470/how-to-enable-ssh-with-password-authentication-on-ubuntu-22-04-a7cbdf476d8b
+
+### 
+```
+dmsetup info --columns 
+cinder--volumes-volume--120a8e2d--cf3c--43dd--a48e--7fc938c44f0d 253   9 L--w    1    1      0 LVM-Y8HA2wVMTi0o7fkMd4zc3WMvL1BMLEv94dbrUl8URTuZS9E9nd5eUe2h5RUViB30
+
+dmsetup remove cinder--volumes-volume--120a8e2d--cf3c--43dd--a48e--7fc938c44f0d
+device-mapper: remove ioctl on cinder--volumes-volume--120a8e2d--cf3c--43dd--a48e--7fc938c44f0d  failed: Device or resource busy
+
+https://duncancloud.blogspot.com/2016/05/lvm-remove-ioctl-on-failed-device-or.html
+https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/8/html/managing_storage_devices/configuring-an-iscsi-target_managing-storage-devices#removing-an-iscsi-object-using-targetcli-tool_configuring-an-iscsi-target
+
+backstores/block/ delete iqn.2010-10.org.openstack:volume-120a8e2d-cf3c-43dd-a48e-7fc938c44f0d
+iscsi/ delete iqn.2010-10.org.openstack:volume-120a8e2d-cf3c-43dd-a48e-7fc938c44f0d
+  File "/usr/bin/targetcli", line 317, in main
+    shell.run_interactive()
+  File "/usr/lib/python3.6/site-packages/configshell_fb/shell.py", line 900, in run_interactive
+    self._cli_loop()
+  File "/usr/lib/python3.6/site-packages/configshell_fb/shell.py", line 729, in _cli_loop
+    self.run_cmdline(cmdline)
+  File "/usr/lib/python3.6/site-packages/configshell_fb/shell.py", line 843, in run_cmdline
+    self._execute_command(path, command, pparams, kparams)
+  File "/usr/lib/python3.6/site-packages/configshell_fb/shell.py", line 818, in _execute_command
+    result = target.execute_command(command, pparams, kparams)
+  File "/usr/lib/python3.6/site-packages/configshell_fb/node.py", line 1406, in execute_command
+    return method(*pparams, **kparams)
+  File "/usr/lib/python3.6/site-packages/targetcli/ui_backstore.py", line 309, in ui_command_delete
+    child.rtsnode.delete(save=save)
+  File "/usr/lib/python3.6/site-packages/rtslib_fb/tcm.py", line 269, in delete
+    for lun in self._gen_attached_luns():
+  File "/usr/lib/python3.6/site-packages/rtslib_fb/tcm.py", line 215, in _gen_attached_luns
+    for tpgt_dir in listdir(tpgts_base):
+NotADirectoryError: [Errno 20] Not a directory: '/sys/kernel/config/target/iscsi/cpus_allowed_list'
+
+### 更新 python3-rtslib 和 target-restore
+wget -O 'https://access.cdn.redhat.com/content/origin/rpms/python3-rtslib/2.1.75/4.el8/fd431d51/python3-rtslib-2.1.75-4.el8.noarch.rpm?user=b7b0b556ec14123110fb684718376553&_auth_=1715665022_55b27f93d1605041cbe3943dd3eeed2d' python3-rtslib-2.1.75-4.el8.noarch.rpm
+
+### 查看iscsi相关信息
+targetcli 
+/> ls
+o- / ..................................................................................................... [...]
+  o- backstores .......................................................................................... [...]
+  | o- block .............................................................................. [Storage Objects: 7]
+  | | o- iqn.2010-10.org.openstack:volume-12170175-642f-4bc4-8d2f-e59d549eed14  [/dev/cinder-volumes/volume-12170175-642f-4bc4-8d2f-e59d549eed14 (1.0GiB) write-thru activated]
+  | | | o- alua ............................................................................... [ALUA Groups: 1]
+  | | |   o- default_tg_pt_gp ................................................... [ALUA state: Active/optimized]
+  | | o- iqn.2010-10.org.openstack:volume-4f16fa4c-a93e-4c24-92ee-9dcc48d28ff8  [/dev/cinder-volumes/volume-4f16fa4c-a93e-4c24-92ee-9dcc48d28ff8 (20.0GiB) write-thru activated]
+  | | | o- alua ............................................................................... [ALUA Groups: 1]
+  | | |   o- default_tg_pt_gp ................................................... [ALUA state: Active/optimized]
+  | | o- iqn.2010-10.org.openstack:volume-6f148688-0cd2-44ca-b3fc-02f5b4ea0c37  [/dev/cinder-volumes/volume-6f148688-0cd2-44ca-b3fc-02f5b4ea0c37 (40.0GiB) write-thru activated]
+  | | | o- alua ............................................................................... [ALUA Groups: 1]
+  | | |   o- default_tg_pt_gp ................................................... [ALUA state: Active/optimized]
+  | | o- iqn.2010-10.org.openstack:volume-93e0e615-113d-4650-b5e0-52e062172555  [/dev/cinder-volumes/volume-93e0e615-113d-4650-b5e0-52e062172555 (1.0GiB) write-thru activated]
+  | | | o- alua ............................................................................... [ALUA Groups: 1]
+  | | |   o- default_tg_pt_gp ................................................... [ALUA state: Active/optimized]
+  | | o- iqn.2010-10.org.openstack:volume-a9d79cbb-db53-4425-a1b8-29fbd66ad253  [/dev/cinder-volumes/volume-a9d79cbb-db53-4425-a1b8-29fbd66ad253 (10.0GiB) write-thru activated]
+  | | | o- alua ............................................................................... [ALUA Groups: 1]
+  | | |   o- default_tg_pt_gp ................................................... [ALUA state: Active/optimized]
+  | | o- iqn.2010-10.org.openstack:volume-b02bc9d1-7b58-4984-93fe-e3a784f0309d  [/dev/cinder-volumes/volume-b02bc9d1-7b58-4984-93fe-e3a784f0309d (20.0GiB) write-thru activated]
+  | | | o- alua ............................................................................... [ALUA Groups: 1]
+  | | |   o- default_tg_pt_gp ................................................... [ALUA state: Active/optimized]
+  | | o- iqn.2010-10.org.openstack:volume-b0997248-9b94-4fda-b9f8-aa893387127d  [/dev/cinder-volumes/volume-b0997248-9b94-4fda-b9f8-aa893387127d (22.0GiB) write-thru activated]
+  | |   o- alua ............................................................................... [ALUA Groups: 1]
+  | |     o- default_tg_pt_gp ................................................... [ALUA state: Active/optimized]
+  | o- fileio ............................................................................. [Storage Objects: 0]
+  | o- pscsi .............................................................................. [Storage Objects: 0]
+  | o- ramdisk ............................................................................ [Storage Objects: 0]
+  o- iscsi ........................................................................................ [Targets: 7]
+  | o- iqn.2010-10.org.openstack:volume-12170175-642f-4bc4-8d2f-e59d549eed14 ......................... [TPGs: 1]
+  | | o- tpg1 ...................................................................... [no-gen-acls, auth per-acl]
+  | |   o- acls ...................................................................................... [ACLs: 1]
+  | |   | o- iqn.1994-05.com.redhat:372aa22b28bc .................................. [1-way auth, Mapped LUNs: 1]
+  | |   |   o- mapped_lun0  [lun0 block/iqn.2010-10.org.openstack:volume-12170175-642f-4bc4-8d2f-e59d549eed14 (rw)]
+  | |   o- luns ...................................................................................... [LUNs: 1]
+  | |   | o- lun0  [block/iqn.2010-10.org.openstack:volume-12170175-642f-4bc4-8d2f-e59d549eed14 (/dev/cinder-volumes/volume-12170175-642f-4bc4-8d2f-e59d549eed14) (default_tg_pt_gp)]
+  | |   o- portals ................................................................................ [Portals: 1]
+  | |     o- 192.168.39.125:3260 .......................................................................... [OK]
+  | o- iqn.2010-10.org.openstack:volume-4f16fa4c-a93e-4c24-92ee-9dcc48d28ff8 ......................... [TPGs: 1]
+  | | o- tpg1 ...................................................................... [no-gen-acls, auth per-acl]
+  | |   o- acls ...................................................................................... [ACLs: 1]
+  | |   | o- iqn.1994-05.com.redhat:372aa22b28bc .................................. [1-way auth, Mapped LUNs: 1]
+  | |   |   o- mapped_lun0  [lun0 block/iqn.2010-10.org.openstack:volume-4f16fa4c-a93e-4c24-92ee-9dcc48d28ff8 (rw)]
+  | |   o- luns ...................................................................................... [LUNs: 1]
+  | |   | o- lun0  [block/iqn.2010-10.org.openstack:volume-4f16fa4c-a93e-4c24-92ee-9dcc48d28ff8 (/dev/cinder-volumes/volume-4f16fa4c-a93e-4c24-92ee-9dcc48d28ff8) (default_tg_pt_gp)]
+  | |   o- portals ................................................................................ [Portals: 1]
+  | |     o- 192.168.39.125:3260 .......................................................................... [OK]
+  | o- iqn.2010-10.org.openstack:volume-6f148688-0cd2-44ca-b3fc-02f5b4ea0c37 ......................... [TPGs: 1]
+  | | o- tpg1 ...................................................................... [no-gen-acls, auth per-acl]
+  | |   o- acls ...................................................................................... [ACLs: 1]
+  | |   | o- iqn.1994-05.com.redhat:372aa22b28bc .................................. [1-way auth, Mapped LUNs: 1]
+  | |   |   o- mapped_lun0  [lun0 block/iqn.2010-10.org.openstack:volume-6f148688-0cd2-44ca-b3fc-02f5b4ea0c37 (rw)]
+  | |   o- luns ...................................................................................... [LUNs: 1]
+  | |   | o- lun0  [block/iqn.2010-10.org.openstack:volume-6f148688-0cd2-44ca-b3fc-02f5b4ea0c37 (/dev/cinder-volumes/volume-6f148688-0cd2-44ca-b3fc-02f5b4ea0c37) (default_tg_pt_gp)]
+  | |   o- portals ................................................................................ [Portals: 1]
+  | |     o- 192.168.39.125:3260 .......................................................................... [OK]
+  | o- iqn.2010-10.org.openstack:volume-93e0e615-113d-4650-b5e0-52e062172555 ......................... [TPGs: 1]
+  | | o- tpg1 ...................................................................... [no-gen-acls, auth per-acl]
+  | |   o- acls ...................................................................................... [ACLs: 1]
+  | |   | o- iqn.1994-05.com.redhat:372aa22b28bc .................................. [1-way auth, Mapped LUNs: 1]
+  | |   |   o- mapped_lun0  [lun0 block/iqn.2010-10.org.openstack:volume-93e0e615-113d-4650-b5e0-52e062172555 (rw)]
+  | |   o- luns ...................................................................................... [LUNs: 1]
+  | |   | o- lun0  [block/iqn.2010-10.org.openstack:volume-93e0e615-113d-4650-b5e0-52e062172555 (/dev/cinder-volumes/volume-93e0e615-113d-4650-b5e0-52e062172555) (default_tg_pt_gp)]
+  | |   o- portals ................................................................................ [Portals: 1]
+  | |     o- 192.168.39.125:3260 .......................................................................... [OK]
+  | o- iqn.2010-10.org.openstack:volume-a9d79cbb-db53-4425-a1b8-29fbd66ad253 ......................... [TPGs: 1]
+  | | o- tpg1 ...................................................................... [no-gen-acls, auth per-acl]
+  | |   o- acls ...................................................................................... [ACLs: 1]
+  | |   | o- iqn.1994-05.com.redhat:372aa22b28bc .................................. [1-way auth, Mapped LUNs: 1]
+  | |   |   o- mapped_lun0  [lun0 block/iqn.2010-10.org.openstack:volume-a9d79cbb-db53-4425-a1b8-29fbd66ad253 (rw)]
+  | |   o- luns ...................................................................................... [LUNs: 1]
+  | |   | o- lun0  [block/iqn.2010-10.org.openstack:volume-a9d79cbb-db53-4425-a1b8-29fbd66ad253 (/dev/cinder-volumes/volume-a9d79cbb-db53-4425-a1b8-29fbd66ad253) (default_tg_pt_gp)]
+  | |   o- portals ................................................................................ [Portals: 1]
+  | |     o- 192.168.39.125:3260 .......................................................................... [OK]
+  | o- iqn.2010-10.org.openstack:volume-b02bc9d1-7b58-4984-93fe-e3a784f0309d ......................... [TPGs: 1]
+  | | o- tpg1 ...................................................................... [no-gen-acls, auth per-acl]
+  | |   o- acls ...................................................................................... [ACLs: 1]
+  | |   | o- iqn.1994-05.com.redhat:372aa22b28bc .................................. [1-way auth, Mapped LUNs: 1]
+  | |   |   o- mapped_lun0  [lun0 block/iqn.2010-10.org.openstack:volume-b02bc9d1-7b58-4984-93fe-e3a784f0309d (rw)]
+  | |   o- luns ...................................................................................... [LUNs: 1]
+  | |   | o- lun0  [block/iqn.2010-10.org.openstack:volume-b02bc9d1-7b58-4984-93fe-e3a784f0309d (/dev/cinder-volumes/volume-b02bc9d1-7b58-4984-93fe-e3a784f0309d) (default_tg_pt_gp)]
+  | |   o- portals ................................................................................ [Portals: 1]
+  | |     o- 192.168.39.125:3260 .......................................................................... [OK]
+  | o- iqn.2010-10.org.openstack:volume-b0997248-9b94-4fda-b9f8-aa893387127d ......................... [TPGs: 1]
+  |   o- tpg1 ...................................................................... [no-gen-acls, auth per-acl]
+  |     o- acls ...................................................................................... [ACLs: 1]
+  |     | o- iqn.1994-05.com.redhat:372aa22b28bc .................................. [1-way auth, Mapped LUNs: 1]
+  |     |   o- mapped_lun0  [lun0 block/iqn.2010-10.org.openstack:volume-b0997248-9b94-4fda-b9f8-aa893387127d (rw)]
+  |     o- luns ...................................................................................... [LUNs: 1]
+  |     | o- lun0  [block/iqn.2010-10.org.openstack:volume-b0997248-9b94-4fda-b9f8-aa893387127d (/dev/cinder-volumes/volume-b0997248-9b94-4fda-b9f8-aa893387127d) (default_tg_pt_gp)]
+  |     o- portals ................................................................................ [Portals: 1]
+  |       o- 192.168.39.125:3260 ....
+### 删除 backstore/block 下的对象
+> backstores/block delete XXXXX
+### 删除 iscsi 下的对象
+> iscsi delete XXXX
+
+### 删除 cinder volume
+$ lvs
+  LV                                          VG             Attr       LSize   Pool                Origin Data%  Meta%  Move Log Cpy%Sync Convert
+  cinder-volumes-pool                         cinder-volumes twi-aotz--  19.57g                            86.94  33.32                           
+  volume-120a8e2d-cf3c-43dd-a48e-7fc938c44f0d cinder-volumes Vwi-a-tz--  40.00g cinder-volumes-pool        13.16                                  
+  volume-12170175-642f-4bc4-8d2f-e59d549eed14 cinder-volumes Vwi-aotz--   1.00g cinder-volumes-pool        8.12                                   
+  volume-6f148688-0cd2-44ca-b3fc-02f5b4ea0c37 cinder-volumes Vwi-aotz--  40.00g cinder-volumes-pool        25.07                                  
+  volume-b0997248-9b94-4fda-b9f8-aa893387127d cinder-volumes Vwi-aotz--  22.00g cinder-volumes-pool        7.46                                   
+  home                                        rhel           -wi-ao----   1.26t                                                                   
+  root                                        rhel           -wi-ao----  70.00g                                                                   
+  swap                                        rhel           -wi-ao---- <31.44g   
+
+$ lvremove cinder-volumes/volume-120a8e2d-cf3c-43dd-a48e-7fc938c44f0d
+
+### 强制删除 cinder volume
+$ openstack volume set --state available 93e0e615-113d-4650-b5e0-52e062172555
+$ openstack volume set --detached 93e0e615-113d-4650-b5e0-52e062172555
+$ openstack volume delete --force 93e0e615-113d-4650-b5e0-52e062172555
+```

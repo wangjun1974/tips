@@ -396,3 +396,35 @@ $ openstack volume set --state available 93e0e615-113d-4650-b5e0-52e062172555
 $ openstack volume set --detached 93e0e615-113d-4650-b5e0-52e062172555
 $ openstack volume delete --force 93e0e615-113d-4650-b5e0-52e062172555
 ```
+
+### 检查 ODF rbd 和 snapshot 相关信息
+```
+$ oc patch storagecluster ocs-storagecluster -n openshift-storage --type json --patch '[{ "op": "replace", "path": "/spec/enableCephTools", "value": true }]'
+$ oc -n openshift-storage rsh $(oc get pods -n openshift-storage -l app=rook-ceph-tools -o name)
+
+sh-5.1$ rbd -p ocs-storagecluster-cephblockpool info csi-vol-6d517552-f9c1-4b0d-adda-8d100d4fb44c  
+rbd image 'csi-vol-6d517552-f9c1-4b0d-adda-8d100d4fb44c':
+        size 90 GiB in 23040 objects
+        order 22 (4 MiB objects)
+        snapshot_count: 0
+        id: 412075328863
+        block_name_prefix: rbd_data.412075328863
+        format: 2
+        features: layering, exclusive-lock, object-map, fast-diff, deep-flatten
+        op_features: 
+        flags: 
+        create_timestamp: Thu May 16 16:22:14 2024
+        access_timestamp: Thu May 16 16:22:14 2024
+        modify_timestamp: Thu May 16 16:22:14 2024
+
+$ rados -p ocs-storagecluster-cephblockpool ls | grep rbd_data.412075328863 | wc -l 
+
+### VolumeSnapshotContent的
+### volumeHandle: 0001-0011-openshift-storage-0000000000000009-6d517552-f9c1-4b0d-adda-8d100d4fb44c
+### 需要检查 6d517552-f9c1-4b0d-adda-8d100d4fb44c 后缀部分
+$ rbd ls -l ocs-storagecluster-cephblockpool | grep 6d517552-f9c1-4b0d-adda-8d100d4fb44c
+csi-snap-4f703880-3740-42c0-ace9-f892d03bcb2e
+csi-snap-4f703880-3740-42c0-ace9-f892d03bcb2e@csi-snap-4f703880-3740-42c0-ace9-f892d03bcb2e
+
+
+```

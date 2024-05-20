@@ -428,3 +428,8 @@ csi-snap-4f703880-3740-42c0-ace9-f892d03bcb2e@csi-snap-4f703880-3740-42c0-ace9-f
 
 
 ```
+
+### openshift client latest
+```
+https://mirror.openshift.com/pub/openshift-v4/clients/ocp/latest/
+```

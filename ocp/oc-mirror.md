@@ -1933,6 +1933,132 @@ mirror:
               maxVersion: 'v0.7.1'                
 EOF
 
+# for packagename in kubevirt-hyperconverged kubernetes-nmstate-operator local-storage-operator odf-operator cincinnati-operator advanced-cluster-management openshift-gitops-operator lvms-operator multicluster-engine rhacs-operator ansible-automation-platform-operator nfd node-healthcheck-operator self-node-remediation metallb-operator ocs-operator mcg-operator web-terminal openshift-pipelines-operator-rh devworkspace-operator web-terminal mtv-operator redhat-oadp-operator
+do 
+  /usr/local/bin/oc-mirror list operators --catalog=registry.redhat.io/redhat/redhat-operator-index:v4.15 --package=${packagename} | tee -a /tmp/redhat-operator-index-v4.15
+done
+### 同步 operator 
+### catalog 是 registry.redhat.io/redhat/redhat-operator-index:v4.15
+$ cat > image-config-realse-local.yaml <<EOF
+apiVersion: mirror.openshift.io/v1alpha2
+kind: ImageSetConfiguration
+mirror:
+  operators:
+    - catalog: registry.redhat.io/redhat/redhat-operator-index:v4.15
+      packages:
+        - name: kubevirt-hyperconverged
+          channels:
+            - name: 'stable'
+              minVersion: 'v4.15.1'
+              maxVersion: 'v4.15.1'            
+        - name: kubernetes-nmstate-operator
+          channels:
+            - name: 'stable'
+              minVersion: '4.15.0-202405070739'
+              maxVersion: '4.15.0-202405070739'                         
+        - name: local-storage-operator
+          channels:
+            - name: 'stable'
+              minVersion: 'v4.15.0-202405070739'
+              maxVersion: 'v4.15.0-202405070739'            
+        - name: odf-operator
+          channels:
+            - name: 'stable-4.15'
+              minVersion: 'v4.15.2-rhodf'
+              maxVersion: 'v4.15.2-rhodf'
+        - name: ocs-operator
+          channels:
+            - name: 'stable-4.15'
+              minVersion: 'v4.15.2-rhodf'
+              maxVersion: 'v4.15.2-rhodf'
+        - name: mcg-operator
+          channels:
+            - name: 'stable-4.15'
+              minVersion: 'v4.15.2-rhodf'
+              maxVersion: 'v4.15.2-rhodf'              
+        - name: cincinnati-operator
+          channels:
+            - name: v1
+              minVersion: 'v5.0.2'
+              maxVersion: 'v5.0.2'
+        - name: metallb-operator
+          channels:
+            - name: stable
+              minVersion: 'v4.15.0-202405071637'
+              maxVersion: 'v4.15.0-202405071637'
+        - name: advanced-cluster-management
+          channels:
+            - name: release-2.10
+              minVersion: 'v2.10.3'
+              maxVersion: 'v2.10.3'
+        - name: multicluster-engine
+          channels:
+            - name: stable-2.5
+              minVersion: 'v2.5.3'
+              maxVersion: 'v2.5.3'
+        - name: openshift-gitops-operator
+          channels:
+            - name: latest
+              minVersion: 'v1.12.2'
+              maxVersion: 'v1.12.2'
+        - name: ansible-automation-platform-operator
+          channels:
+            - name: stable-2.4-cluster-scoped
+              minVersion: 'v2.4.0-0.1713467078'
+              maxVersion: 'v2.4.0-0.1713467078'
+        - name: lvms-operator
+          channels:
+            - name: stable-4.15
+              minVersion: 'v4.15.3'
+              maxVersion: 'v4.15.3'
+        - name: mtv-operator
+          channels:
+            - name: release-v2.6
+              minVersion: 'v2.6.1'
+              maxVersion: 'v2.6.1'
+            - name: release-v2.5
+              minVersion: 'v2.5.6'
+              maxVersion: 'v2.5.6'            
+        - name: redhat-oadp-operator
+          channels:
+            - name: stable-1.3
+              minVersion: 'v1.3.1'
+              maxVersion: 'v1.3.1'
+            - name: stable-1.2
+              minVersion: 'v1.2.4'
+              maxVersion: 'v1.2.4'
+        - name: openshift-pipelines-operator-rh
+          channels:
+            - name: latest
+              minVersion: 'v1.14.4'
+              maxVersion: 'v1.14.4'
+        - name: node-healthcheck-operator
+          channels:
+            - name: stable
+              minVersion: 'v0.8.0'
+              maxVersion: 'v0.8.0'
+        - name: self-node-remediation
+          channels:
+            - name: stable
+              minVersion: 'v0.8.0'
+              maxVersion: 'v0.8.0'
+        - name: web-terminal
+          channels:
+            - name: fast
+              minVersion: 'v1.10.0'
+              maxVersion: 'v1.10.0'
+        - name: devworkspace-operator
+          channels:
+            - name: fast
+              minVersion: 'v0.27.0-0.1714987663.p'
+              maxVersion: 'v0.27.0-0.1714987663.p'
+        - name: nfd
+          channels:
+            - name: stable
+              minVersion: '4.15.0-202405071815'
+              maxVersion: '4.15.0-202405071815'            
+EOF
+
 $ /usr/local/bin/oc-mirror --config ./image-config-realse-local.yaml file://output-dir 2>&1 | tee /tmp/oc-mirror 
 $ /usr/local/bin/oc-mirror --from ./mirror_seq1_000000.tar docker://registry.example.com:5000
 
@@ -2072,4 +2198,50 @@ curl -k -H "Host: $URL" \
     -H "Content-Type: ${CONTENT_TYPE}" \
     -H "Authorization: AWS ${USERNAME}:${SIGNATURE}" \
     ${PROTOCOL}://$URL${MINIO_PATH}
+```
+
+### 同步Operator
+```
+
+mkdir -p operators/kubevirt-hyperconverged/output-dir
+pushd operators/kubevirt-hyperconverged
+cat > image-config-realse-local.yaml <<EOF
+apiVersion: mirror.openshift.io/v1alpha2
+kind: ImageSetConfiguration
+mirror:
+  operators:
+    - catalog: registry.redhat.io/redhat/redhat-operator-index:v4.15
+      targetName: "kubevirt-hyperconverged-catalog"
+      targetTag: "4.15"    
+      packages:
+        - name: kubevirt-hyperconverged
+          channels:
+            - name: 'stable'
+              minVersion: 'v4.15.1'
+              maxVersion: 'v4.15.1'
+EOF
+/usr/local/bin/oc-mirror --config ./image-config-realse-local.yaml file://output-dir 2>&1 | tee -a /tmp/oc-mirror
+popd
+
+mkdir -p operators/kubernetes-nmstate-operator/output-dir
+pushd operators/kubernetes-nmstate-operator
+cat > image-config-realse-local.yaml <<EOF
+apiVersion: mirror.openshift.io/v1alpha2
+kind: ImageSetConfiguration
+mirror:
+  operators:
+    - catalog: registry.redhat.io/redhat/redhat-operator-index:v4.15
+      targetName: "kubernetes-nmstate-catalog"
+      targetTag: "4.15"    
+      packages:
+        - name: kubernetes-nmstate-operator
+          channels:
+            - name: 'stable'
+              minVersion: '4.15.0-202405070739'
+              maxVersion: '4.15.0-202405070739' 
+EOF
+/usr/local/bin/oc-mirror --config ./image-config-realse-local.yaml file://output-dir 2>&1 | tee -a /tmp/oc-mirror
+popd
+
+
 ```

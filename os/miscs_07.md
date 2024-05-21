@@ -438,3 +438,131 @@ https://mirror.openshift.com/pub/openshift-v4/clients/ocp/latest/
 ```
 https://www.cnblogs.com/layzer/articles/nfs-csi-use.html
 ```
+
+### 为 Pod Network 添加路由
+```
+ip route add 10.128.0.0/14 via 10.0.2.1
+```
+
+### kubevirt cnv vm example
+### password: xxxxxx -- this is not a real password
+```
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: rhel8-vm-01
+  namespace: jwang
+  finalizers:
+    - kubevirt.io/virtualMachineControllerFinalize
+  labels:
+    app: rhel8-vm-01
+    kubevirt.io/dynamic-credentials-support: 'false'
+    vm.kubevirt.io/template: rhel8-server-small
+    vm.kubevirt.io/template.namespace: openshift
+    vm.kubevirt.io/template.revision: '1'
+    vm.kubevirt.io/template.version: v0.27.0
+spec:
+  dataVolumeTemplates:
+    - apiVersion: cdi.kubevirt.io/v1beta1
+      kind: DataVolume
+      metadata:
+        creationTimestamp: null
+        name: rhel8-vm-01
+      spec:
+        sourceRef:
+          kind: DataSource
+          name: rhel8
+          namespace: openshift-virtualization-os-images
+        storage:
+          resources:
+            requests:
+              storage: 30Gi
+  running: false
+  template:
+    metadata:
+      annotations:
+        vm.kubevirt.io/flavor: small
+        vm.kubevirt.io/os: rhel8
+        vm.kubevirt.io/workload: server
+      creationTimestamp: null
+      labels:
+        kubevirt.io/domain: rhel8-vm-01
+        kubevirt.io/size: small
+    spec:
+      architecture: amd64
+      domain:
+        cpu:
+          cores: 1
+          sockets: 1
+          threads: 1
+        devices:
+          disks:
+            - disk:
+                bus: virtio
+              name: rootdisk
+            - disk:
+                bus: virtio
+              name: cloudinitdisk
+          interfaces:
+            - bridge: {}
+              macAddress: 02:d4:c6:00:00:1a
+              model: virtio
+              name: nic1
+            - masquerade: {}
+              macAddress: 02:d4:c6:00:00:1b
+              name: nic2              
+          logSerialConsole: false
+          networkInterfaceMultiqueue: true
+          rng: {}
+        features:
+          acpi: {}
+          smm:
+            enabled: true
+        firmware:
+          bootloader:
+            efi: {}
+        machine:
+          type: pc-q35-rhel9.2.0
+        memory:
+          guest: 2Gi
+        resources: {}
+      networks:
+        - multus:
+            networkName: 'default/net1'
+          name: nic1
+        - name: nic2
+          pod: {}
+      terminationGracePeriodSeconds: 180
+      accessCredentials:
+      - sshPublicKey:
+          source:
+            secret:
+              secretName: jwang
+          propagationMethod:
+            qemuGuestAgent:
+              users: ["cloud-user"]
+      volumes:
+        - dataVolume:
+            name: rhel8-vm-01
+          name: rootdisk
+        - cloudInitNoCloud:
+            networkData: |-
+              version: 2
+              ethernets:
+                eth1:
+                  dhcp4: true
+                  routes:
+                    - to: 10.128.0.0/14
+                      via: 10.0.2.1
+                      metric: 100
+            userData: |
+              #cloud-config
+              user: cloud-user
+              password: xxxxxx
+              chpasswd:
+                expire: false
+              rh_subscription:
+                activation-key: second
+                org: 'xxxxxxx'
+          name: cloudinitdisk
+```

@@ -566,3 +566,74 @@ spec:
                 org: 'xxxxxxx'
           name: cloudinitdisk
 ```
+
+### setup master and worker core user
+```
+### https://access.redhat.com/solutions/7010657
+echo $MYBASE64STRING 
+Y29yZTokNiQzQUo3Y3gyb2tNUHpHdnZNJEY0eUNaYjVzTU44d29CVDdFOUFhaktGYnRIeVBJcE0yVnZ0U0ZmS2RNcS5wREcxaDhLYUo5dkU1NjRHWWczaHA4a2dyWVR3bkRTdENZeXRkekU1d08xCg==
+
+cat << EOF > 99-master-set-core-passwd.yaml
+apiVersion: machineconfiguration.openshift.io/v1
+kind: MachineConfig
+metadata:
+  labels:
+    machineconfiguration.openshift.io/role: master
+  name: 99-master-set-core-passwd
+spec:
+  config:
+    ignition:
+      version: 3.2.0
+    storage:
+      files:
+      - contents:
+          source: data:text/plain;charset=utf-8;base64,$MYBASE64STRING
+        mode: 420
+        overwrite: true
+        path: /etc/core.passwd
+    systemd:
+      units:
+      - name: set-core-passwd.service
+        enabled: true
+        contents: |
+          [Unit]
+          Description=Set 'core' user password for out-of-band login
+          [Service]
+          Type=oneshot
+          ExecStart=/bin/sh -c 'chpasswd -e < /etc/core.passwd'
+          [Install]
+          WantedBy=multi-user.target
+EOF
+
+cat << EOF > 99-worker-set-core-passwd.yaml
+apiVersion: machineconfiguration.openshift.io/v1
+kind: MachineConfig
+metadata:
+  labels:
+    machineconfiguration.openshift.io/role: worker
+  name: 99-worker-set-core-passwd
+spec:
+  config:
+    ignition:
+      version: 3.2.0
+    storage:
+      files:
+      - contents:
+          source: data:text/plain;charset=utf-8;base64,$MYBASE64STRING
+        mode: 420
+        overwrite: true
+        path: /etc/core.passwd
+    systemd:
+      units:
+      - name: set-core-passwd.service
+        enabled: true
+        contents: |
+          [Unit]
+          Description=Set 'core' user password for out-of-band login
+          [Service]
+          Type=oneshot
+          ExecStart=/bin/sh -c 'chpasswd -e < /etc/core.passwd'
+          [Install]
+          WantedBy=multi-user.target
+EOF
+```

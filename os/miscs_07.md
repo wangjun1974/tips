@@ -669,3 +669,8 @@ iptables -t nat -I POSTROUTING 1 -s 192.0.3.0/24 -d 192.168.122.0/24 -j ACCEPT
 iptables -I FORWARD 1 -s 192.168.122.0/24 -d 192.0.3.0/24 -j ACCEPT
 iptables -I FORWARD 1 -s 192.0.3.0/24 -d 192.168.122.0/24 -j ACCEPT
 ```
+
+### passthrough GPU in kvm libvirt 
+```
+https://wiki.gentoo.org/wiki/GPU_passthrough_with_libvirt_qemu_kvm
+```

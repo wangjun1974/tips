@@ -657,15 +657,15 @@ EOF
   <forward mode='nat'/>
   <bridge name='virbr1' stp='on' delay='0'/>
   <mac address='52:54:00:f1:fb:a3'/>
-  <ip address='192.0.2.254' netmask='255.255.255.0'>
+  <ip address='192.0.3.254' netmask='255.255.255.0'>
   </ip>
 </network>
 
 ### Disable masquerading between the two networks, and
-iptables -t nat -I POSTROUTING 1 -s 192.168.122.0/24 -d 192.0.2.0/24 -j ACCEPT
-iptables -t nat -I POSTROUTING 1 -s 192.0.2.0/24 -d 192.168.122.0/24 -j ACCEPT
+iptables -t nat -I POSTROUTING 1 -s 192.168.122.0/24 -d 192.0.3.0/24 -j ACCEPT
+iptables -t nat -I POSTROUTING 1 -s 192.0.3.0/24 -d 192.168.122.0/24 -j ACCEPT
 
 ### Allow forwarding between the two networks
-iptables -I FORWARD 1 -s 192.168.122.0/24 -d 192.0.2.0/24 -j ACCEPT
-iptables -I FORWARD 1 -s 192.0.2.0/24 -d 192.168.122.0/24 -j ACCEPT
+iptables -I FORWARD 1 -s 192.168.122.0/24 -d 192.0.3.0/24 -j ACCEPT
+iptables -I FORWARD 1 -s 192.0.3.0/24 -d 192.168.122.0/24 -j ACCEPT
 ```

@@ -573,7 +573,7 @@ spec:
 echo $MYBASE64STRING 
 Y29yZTokNiQzQUo3Y3gyb2tNUHpHdnZNJEY0eUNaYjVzTU44d29CVDdFOUFhaktGYnRIeVBJcE0yVnZ0U0ZmS2RNcS5wREcxaDhLYUo5dkU1NjRHWWczaHA4a2dyWVR3bkRTdENZeXRkekU1d08xCg==
 
-cat << EOF > 99-master-set-core-passwd.yaml
+cat << EOF > ${IGN_PATH}/openshift/99-master-set-core-passwd.yaml
 apiVersion: machineconfiguration.openshift.io/v1
 kind: MachineConfig
 metadata:
@@ -605,7 +605,7 @@ spec:
           WantedBy=multi-user.target
 EOF
 
-cat << EOF > 99-worker-set-core-passwd.yaml
+cat << EOF > ${IGN_PATH}/openshift/99-worker-set-core-passwd.yaml
 apiVersion: machineconfiguration.openshift.io/v1
 kind: MachineConfig
 metadata:
@@ -636,4 +636,36 @@ spec:
           [Install]
           WantedBy=multi-user.target
 EOF
+```
+
+### route between 2 nat network on libvirt
+```
+### https://serverfault.com/questions/1109903/libvirt-routing-between-two-nat-networks
+<network>
+  <name>default</name>
+  <uuid>4eb93b42-faf0-43aa-913e-8a454d7c0a0d</uuid>
+  <forward mode='nat'/>
+  <bridge name='virbr0' stp='on' delay='0'/>
+  <mac address='52:54:00:4e:2e:84'/>
+  <ip address='192.168.122.1' netmask='255.255.255.0'>
+  </ip>
+</network>
+
+<network>
+  <name>provisioning</name>
+  <uuid>79803491-ce42-47c1-ad53-638927b9fc04</uuid>
+  <forward mode='nat'/>
+  <bridge name='virbr1' stp='on' delay='0'/>
+  <mac address='52:54:00:f1:fb:a3'/>
+  <ip address='192.0.2.254' netmask='255.255.255.0'>
+  </ip>
+</network>
+
+### Disable masquerading between the two networks, and
+iptables -t nat -I POSTROUTING 1 -s 192.168.122.0/24 -d 192.0.2.0/24 -j ACCEPT
+iptables -t nat -I POSTROUTING 1 -s 192.0.2.0/24 -d 192.168.122.0/24 -j ACCEPT
+
+### Allow forwarding between the two networks
+iptables -I FORWARD 1 -s 192.168.122.0/24 -d 192.0.2.0/24 -j ACCEPT
+iptables -I FORWARD 1 -s 192.0.2.0/24 -d 192.168.122.0/24 -j ACCEPT
 ```

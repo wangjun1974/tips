@@ -677,6 +677,7 @@ https://wiki.gentoo.org/wiki/GPU_passthrough_with_libvirt_qemu_kvm
 
 ### linux downloader aria2
 ```
+### https://installati.one/centos/8/aria2/
 ### https://askubuntu.com/questions/214018/how-to-make-wget-faster-or-multithreading
 ### -c allows continuation of download if it gets interrupted, 
 ### -x 10 and -s 10 allow up to 10 connections per server, 

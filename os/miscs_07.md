@@ -674,3 +674,13 @@ iptables -I FORWARD 1 -s 192.0.3.0/24 -d 192.168.122.0/24 -j ACCEPT
 ```
 https://wiki.gentoo.org/wiki/GPU_passthrough_with_libvirt_qemu_kvm
 ```
+
+### linux downloader aria2c 
+```
+### https://askubuntu.com/questions/214018/how-to-make-wget-faster-or-multithreading
+### -c allows continuation of download if it gets interrupted, 
+### -x 10 and -s 10 allow up to 10 connections per server, 
+### and -d "mydir" outputs file to directory mydir.
+
+$ aria2c --file-allocation=none -c -x 10 -s 10 -d "mydir" URL
+```

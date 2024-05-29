@@ -685,3 +685,8 @@ https://wiki.gentoo.org/wiki/GPU_passthrough_with_libvirt_qemu_kvm
 
 $ aria2c --file-allocation=none -c -x 10 -s 10 -d "mydir" URL
 ```
+
+### OCP ETCD Backup and Restore
+```
+### https://access.redhat.com/solutions/5599961
+```

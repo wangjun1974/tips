@@ -695,3 +695,14 @@ $ aria2c --file-allocation=none -c -x 10 -s 10 -d "mydir" URL
 ```
 https://devopshunger.com/coming-soon/
 ```
+
+### 演示程序
+```
+https://medium.com/@deathbreather/setup-a-3-tier-application-in-aws-beginners-guide-d694904a7b87
+```
+
+### demo application
+```
+https://github.com/pstauffer/flask-mysql-app?tab=readme-ov-file
+https://github.com/spring-guides/gs-accessing-data-mysql.git
+```

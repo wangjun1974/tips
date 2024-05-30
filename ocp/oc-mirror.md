@@ -2362,7 +2362,12 @@ mirror:
           channels:
             - name: stable
               minVersion: '4.15.0-202405161507'
-              maxVersion: '4.15.0-202405161507'                   
+              maxVersion: '4.15.0-202405161507'
+        - name: node-maintenance-operator
+          channels:
+            - name: stable
+              minVersion: 'v5.3.0'
+              maxVersion: 'v5.3.0'                   
 EOF
 $ /usr/local/bin/oc-mirror --config ./image-config-realse-local.yaml file://output-dir 2>&1 | tee -a /tmp/oc-mirror-4.15 
 $ /usr/local/bin/oc-mirror --from ./mirror_seq1_000000.tar docker://registry.example.com:5000

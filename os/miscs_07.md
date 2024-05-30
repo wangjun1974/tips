@@ -690,3 +690,8 @@ $ aria2c --file-allocation=none -c -x 10 -s 10 -d "mydir" URL
 ```
 ### https://access.redhat.com/solutions/5599961
 ```
+
+### 用bbolt工具修复损坏的etcd db
+```
+https://devopshunger.com/coming-soon/
+```

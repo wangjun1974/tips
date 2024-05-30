@@ -703,6 +703,7 @@ https://medium.com/@deathbreather/setup-a-3-tier-application-in-aws-beginners-gu
 
 ### demo application
 ```
+https://spring.io/guides/gs/accessing-data-mysql#initial
 https://github.com/pstauffer/flask-mysql-app?tab=readme-ov-file
 https://github.com/spring-guides/gs-accessing-data-mysql.git
 ```

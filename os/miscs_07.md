@@ -716,3 +716,10 @@ echo '<RANDOM_TEXT>' | openssl passwd -5 -stdin
 ### sha512
 echo '<RANDOM_TEXT>' | openssl passwd -6 -stdin
 ``` 
+
+
+### 配置Intel i915显卡透传
+```
+### https://wiki.archlinux.org/index.php/Intel_GVT-g
+### https://github.com/intel/gvt-linux/issues/155
+```

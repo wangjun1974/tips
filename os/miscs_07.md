@@ -722,4 +722,5 @@ echo '<RANDOM_TEXT>' | openssl passwd -6 -stdin
 ```
 ### https://wiki.archlinux.org/index.php/Intel_GVT-g
 ### https://github.com/intel/gvt-linux/issues/155
+### https://www.reddit.com/r/VFIO/comments/12pxo25/full_passthrough_of_12th_gen_iris_xe_seems/
 ```

@@ -707,3 +707,12 @@ https://spring.io/guides/gs/accessing-data-mysql#initial
 https://github.com/pstauffer/flask-mysql-app?tab=readme-ov-file
 https://github.com/spring-guides/gs-accessing-data-mysql.git
 ```
+
+### setup hash 
+```
+### https://rakeshjain-devops.medium.com/how-to-create-sha512-sha256-md5-password-hashes-on-command-line-2223db20c08c
+### sha256
+echo '<RANDOM_TEXT>' | openssl passwd -5 -stdin 
+### sha512
+echo '<RANDOM_TEXT>' | openssl passwd -6 -stdin
+``` 

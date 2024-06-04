@@ -724,3 +724,8 @@ echo '<RANDOM_TEXT>' | openssl passwd -6 -stdin
 ### https://github.com/intel/gvt-linux/issues/155
 ### https://www.reddit.com/r/VFIO/comments/12pxo25/full_passthrough_of_12th_gen_iris_xe_seems/
 ```
+
+### 强制删除处于Terminating状态的Pod
+```
+for p in $(kubectl get pods | grep Terminating | awk '{print $1}'); do kubectl delete pod $p --grace-period=0 --force;done
+```

@@ -739,3 +739,8 @@ https://github.com/rikka0w0/qemu-gvt-d
 ```
 /usr/libexec/qemu-kvm -machine ? 
 ```
+
+### 设置libvirt kvm 使用 qemu 命令参数
+```
+https://libvirt.org/drvqemu.html#pass-through-of-arbitrary-qemu-commands
+```

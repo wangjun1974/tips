@@ -729,3 +729,8 @@ echo '<RANDOM_TEXT>' | openssl passwd -6 -stdin
 ```
 for p in $(kubectl get pods | grep Terminating | awk '{print $1}'); do kubectl delete pod $p --grace-period=0 --force;done
 ```
+
+### QEMU and gvt-d
+```
+https://github.com/rikka0w0/qemu-gvt-d
+```

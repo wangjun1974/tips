@@ -734,3 +734,8 @@ for p in $(kubectl get pods | grep Terminating | awk '{print $1}'); do kubectl d
 ```
 https://github.com/rikka0w0/qemu-gvt-d
 ```
+
+### 检查qemu-kvm支持的机器类型
+```
+/usr/libexec/qemu-kvm -machine ? 
+```

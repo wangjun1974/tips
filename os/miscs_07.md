@@ -744,3 +744,8 @@ https://github.com/rikka0w0/qemu-gvt-d
 ```
 https://libvirt.org/drvqemu.html#pass-through-of-arbitrary-qemu-commands
 ```
+
+### ARCN iGPU passthrough
+```
+https://projectacrn.github.io/latest/tutorials/gpu-passthru.html
+```

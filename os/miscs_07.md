@@ -749,3 +749,13 @@ https://libvirt.org/drvqemu.html#pass-through-of-arbitrary-qemu-commands
 ```
 https://projectacrn.github.io/latest/tutorials/gpu-passthru.html
 ```
+
+### libvirt windows xml 
+```
+https://github.com/benwbooth/qemu/blob/master/windows.libvirt.xml
+```
+
+### 获取 pci 设备 iommu group 信息
+```
+for d in /sys/kernel/iommu_groups/*/devices/*; do n=${d#*/iommu_groups/*}; n=${n%%/*}; printf 'IOMMU group %s ' "$n"; lspci -nns "${d##*/}"; done;
+```

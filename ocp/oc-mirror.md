@@ -2604,5 +2604,132 @@ $ rm -rf output
 $ /usr/local/bin/oc-mirror --config ./image-config-realse-local.yaml file://output-dir 2>&1 | tee -a /tmp/oc-mirror-4.15 
 $ /usr/local/bin/oc-mirror --from ./mirror_seq1_000000.tar docker://registry.example.com:5000
 
+$ cat > image-config-realse-local.yaml <<EOF
+apiVersion: mirror.openshift.io/v1alpha2
+kind: ImageSetConfiguration
+mirror:
+  operators:
+    - catalog: registry.redhat.io/redhat/redhat-operator-index:v4.14
+      packages:
+        - name: kubevirt-hyperconverged
+          channels:
+            - name: 'stable'
+              minVersion: 'v4.14.5'
+              maxVersion: 'v4.14.5'            
+        - name: kubernetes-nmstate-operator
+          channels:
+            - name: 'stable'
+              minVersion: '4.14.0-202405141639'
+              maxVersion: '4.14.0-202405141639'                         
+        - name: local-storage-operator
+          channels:
+            - name: 'stable'
+              minVersion: 'v4.14.0-202405141639'
+              maxVersion: 'v4.14.0-202405141639'            
+        - name: odf-operator
+          channels:
+            - name: 'stable-4.14'
+              minVersion: 'v4.14.6-rhodf'
+              maxVersion: 'v4.14.6-rhodf'
+        - name: ocs-operator
+          channels:
+            - name: 'stable-4.14'
+              minVersion: 'v4.14.6-rhodf'
+              maxVersion: 'v4.14.6-rhodf'
+        - name: mcg-operator
+          channels:
+            - name: 'stable-4.14'
+              minVersion: 'v4.14.6-rhodf'
+              maxVersion: 'v4.14.6-rhodf'              
+        - name: cincinnati-operator
+          channels:
+            - name: v1
+              minVersion: 'v5.0.2'
+              maxVersion: 'v5.0.2'
+        - name: openshift-gitops-operator
+          channels:
+            - name: latest
+              minVersion: 'v1.12.2'
+              maxVersion: 'v1.12.2'
+        - name: node-healthcheck-operator
+          channels:
+            - name: stable
+              minVersion: 'v0.8.0'
+              maxVersion: 'v0.8.0'
+        - name: self-node-remediation
+          channels:
+            - name: stable
+              minVersion: 'v0.8.0'
+              maxVersion: 'v0.8.0'
+        - name: metallb-operator
+          channels:
+            - name: stable
+              minVersion: 'v4.14.0-202405141639'
+              maxVersion: 'v4.14.0-202405141639'
+        - name: openshift-pipelines-operator-rh
+          channels:
+            - name: latest
+              minVersion: 'v1.14.4'
+              maxVersion: 'v1.14.4'
+        - name: devworkspace-operator
+          channels:
+            - name: fast
+              minVersion: 'v0.27.0-0.1714987663.p'
+              maxVersion: 'v0.27.0-0.1714987663.p'
+        - name: web-terminal
+          channels:
+            - name: fast
+              minVersion: 'v1.9.0-0.1708477317.p'
+              maxVersion: 'v1.9.0-0.1708477317.p'
+        - name: mtv-operator
+          channels:
+            - name: release-v2.6
+              minVersion: 'v2.6.1'
+              maxVersion: 'v2.6.1'
+            - name: release-v2.5
+              minVersion: 'v2.5.6'
+              maxVersion: 'v2.5.6'            
+        - name: redhat-oadp-operator
+          channels:
+            - name: stable-1.3
+              minVersion: 'v1.3.1'
+              maxVersion: 'v1.3.1'
+            - name: stable-1.2
+              minVersion: 'v1.2.4'
+              maxVersion: 'v1.2.4'
+        - name: nfd
+          channels:
+            - name: stable
+              minVersion: '4.14.0-202405141639'
+              maxVersion: '4.14.0-202405141639'
+        - name: cluster-logging
+          channels:
+            - name: stable-5.9
+              minVersion: 'v5.9.2'
+              maxVersion: 'v5.9.2'
+        - name: loki-operator
+          channels:
+            - name: stable-5.9
+              minVersion: 'v5.9.2'
+              maxVersion: 'v5.9.2'
+        - name: advanced-cluster-management
+          channels:
+            - name: 'release-2.10'
+              minVersion: 'v2.10.3'
+              maxVersion: 'v2.10.3'
+        - name: multicluster-engine
+          channels:
+            - name: 'stable-2.5'
+              minVersion: 'v2.5.3'
+              maxVersion: 'v2.5.3'
+        - name: rhacs-operator
+          channels:
+            - name: 'stable'
+              minVersion: 'v4.4.2'
+              maxVersion: 'v4.4.2'
+EOF
+$ rm -rf output
+$ /usr/local/bin/oc-mirror --config ./image-config-realse-local.yaml file://output-dir 2>&1 | tee -a /tmp/oc-mirror-4.15 
+$ /usr/local/bin/oc-mirror --from ./mirror_seq1_000000.tar docker://registry.example.com:5000
 
 ```

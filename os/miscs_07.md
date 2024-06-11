@@ -769,3 +769,14 @@ https://blog.dowhile0.org/2022/04/22/fedora-36-a-brave-new-drm-kms-only-world/
 # 1) nomodeset
 # The newest kernels have moved the video mode setting into the kernel. So all the programming of the hardware specific clock rates and registers on the video card happen in the kernel rather than in the X driver when the X server starts.. This makes it possible to have high resolution nice looking splash (boot) screens and flicker free transitions from boot splash to login screen. Unfortunately, on some cards this doesnt work properly and you end up with a black screen. Adding the nomodeset parameter instructs the kernel to not load video drivers and use BIOS modes instead until X is loaded.
 ```
+
+### text mode install
+```
+https://access.redhat.com/documentation/zh-tw/red_hat_enterprise_linux/9/html-single/boot_options_for_rhel_installer/index#console-environment-and-display-boot-options_kickstart-and-advanced-boot-options
+
+# 修改启动参数
+# nomodeset 禁用 kernel graphics driver
+# inst.text 采用 text mode 安装
+# vga=text 显示模式为 vga 字符模式
+nomodeset inst.text vga=text
+```

@@ -780,3 +780,17 @@ https://access.redhat.com/documentation/zh-tw/red_hat_enterprise_linux/9/html-si
 # vga=text 显示模式为 vga 字符模式
 nomodeset inst.text vga=text
 ```
+
+### 检查 iommu group 信息
+```
+https://github.com/clayfreeman/gpu-passthrough?tab=readme-ov-file#blacklisting-the-gpu
+cat > iommu_groups.sh <<'EOF'
+#!/bin/bash
+shopt -s nullglob
+for d in /sys/kernel/iommu_groups/*/devices/*; do
+  n=${d#*/iommu_groups/*}; n=${n%%/*}
+  printf 'IOMMU Group %s ' "$n"
+  lspci -nns "${d##*/}"
+done;
+EOF
+```

@@ -797,6 +797,12 @@ EOF
 
 ### 设置 console=ttyS0，禁用本地显示
 ```
+# iommu=pt intel_iommu=on
+# earlymodules=vfio-pci
+# vfio-pci.ids=8086:9a49,8086:a0c8
+# video=vesafb:off,efifb:off,simplefb:off,vga:off
+# nofb
+# nomodeset
 $ grubby --update-kernel=`grubby --default-kernel` --args="audit=0 idle=poll intel_idle.max_cstate=0 processor.max_cstate=0 mce=off numa=off iommu=pt intel_iommu=on default_hugepagesz=1G hugepagesz=1G hugepages=16 igb.blacklist=no nospectre_v2 nopti hpet=disable clocksource=tsc intel_pstate=disable intel.max_cstate=0 processor_idle.max_cstate=0 rcupdate.rcu_cpu_stall_suppress=1 nmi_watchdog=0 nosoftlockup noht numa_balancing=disable rcu_nocb_poll=1024 earlymodules=vfio-pci vfio-pci.ids=8086:9a49,8086:a0c8 video=vesafb:off,efifb:off,simplefb:off,vga:off nofb nomodeset gfxpayload=text console=ttyS0"
 $ cat /proc/cmdline 
 BOOT_IMAGE=(hd0,gpt2)/vmlinuz-5.14.0-427.20.1.el9_4.x86_64+rt root=/dev/mapper/rhel_dhcp--192--20-root ro rd.lvm.lv=rhel_dhcp-192-20/root crashkernel=1G-4G:192M,4G-64G:256M,64G-:512M skew_tick=1 tsc=reliable rcupdate.rcu_normal_after_boot=1 isolcpus=managed_irq,domain,1-3 intel_pstate=disable nosoftlockup nohz=on nohz_full=1-3 rcu_nocbs=1-3 irqaffinity=0 i915.enable_gvt=1 i915.enable_guc=0 i915.blacklist=1 rd.driver.blacklist=i915 snd_hda_codec_hdmi.blacklist=1 rd.driver.blacklist=snd_hda_codec_hdmi audit=0 idle=poll intel_idle.max_cstate=0 processor.max_cstate=0 mce=off numa=off iommu=pt intel_iommu=on default_hugepagesz=1G hugepagesz=1G hugepages=16 igb.blacklist=no nospectre_v2 nopti hpet=disable clocksource=tsc intel_pstate=disable intel.max_cstate=0 processor_idle.max_cstate=0 rcupdate.rcu_cpu_stall_suppress=1 nmi_watchdog=0 nosoftlockup noht numa_balancing=disable rcu_nocb_poll=1024 earlymodules=vfio-pci vfio-pci.ids=8086:9a49,8086:a0c8 video=vesafb:off,efifb:off,simplefb:off,vga:off nofb nomodeset gfxpayload=text console=ttyS0

@@ -763,6 +763,7 @@ for d in /sys/kernel/iommu_groups/*/devices/*; do n=${d#*/iommu_groups/*}; n=${n
 ### text only mode install 
 ```
 https://askubuntu.com/questions/1024895/why-do-i-need-to-replace-quiet-splash-with-nomodeset
+https://blog.dowhile0.org/2022/04/22/fedora-36-a-brave-new-drm-kms-only-world/
 将启动参数从 quiet 改为 nomodeset
 
 # 1) nomodeset

@@ -824,3 +824,42 @@ BOOT_IMAGE=(hd0,gpt2)/vmlinuz-5.14.0-427.20.1.el9_4.x86_64+rt root=/dev/mapper/r
 
 4. create a cluster but tell HCO to use custom images (will need help from install upgrade an operators team on how to do that)
 ```
+
+### 拷贝文件并且追踪进度
+```
+rsync -avh --progress source_file destination_file
+```
+
+### ubuntu 22.04 
+```
+### 安装 libvirt kvm virt-manager
+$ apt-get update
+
+$ apt install -y virt-manager qemu-kvm libvirt-daemon-system
+$ usermod -aG libvirt $USER
+
+$ apt install -y xfce4 xfce4-goodies tigervncserver
+$ iptables -A INPUT -p tcp --match multiport --dports 5900:5920 -j ACCEPT
+$ cat > xstartup <<'EOF'
+#!/bin/bash
+xrdb $HOME/.Xresources
+startxfce4 &
+EOF
+$ chmod +x ~/.vnc/xstartup
+
+$ sudo add-apt-repository -y ppa:projectatomic/ppa
+$ sudo apt update
+$ sudo apt install -y podman
+
+$ cat > /etc/containers/registries.conf <<'EOF'
+[registries.search]
+registries=["registry.access.redhat.com", "registry.fedoraproject.org", "docker.io"]
+EOF
+
+$ sudo sed -ie 's|ubuntu--vg-ubuntu--lv ro|ubuntu--vg-ubuntu--lv ro console=ttyS0,115200 iommu=pt intel_iommu=on default_hugepagesz=1G hugepagesz=1G hugepages=8 earlymodules=vfio-pci vfio-pci.ids=8086:9a49 3 nomodeset initcall_blacklist=sysfb_init i915.blacklist=1 rd.driver.blacklist=i915 snd_hda_codec_hdmi.blacklist=1 rd.driver.blacklist=snd_hda_codec_hdmi"|' /boot/grub/grub.cfg
+```
+
+### 拷贝iso到usb
+```
+dd bs=4M if=./ubuntu-22.04.4-live-server-amd64.iso of=/dev/sdc status=progress oflag=sync
+```

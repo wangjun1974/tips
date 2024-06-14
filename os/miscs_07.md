@@ -898,3 +898,10 @@ bash-5.1$ ip a s dev tap0
     inet6 fe80::884a:aeff:fe66:1611/64 scope link 
        valid_lft forever preferred_lft forever
 ```
+
+### 查询具有label的cpu利用率
+```
+具有label的节点的cpu利用率查询
+https://access.redhat.com/solutions/7021585
+instance:node_cpu_utilisation:rate1m * on(instance) (group by(instance)(label_replace(kube_node_labels{label_pool="pool1"}, "instance", "$1", "node", "(.*)")))
+```

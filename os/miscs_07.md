@@ -835,7 +835,7 @@ rsync -avh --progress source_file destination_file
 ### 安装 libvirt kvm virt-manager
 $ apt-get update
 
-$ apt install -y virt-manager qemu-kvm libvirt-daemon-system
+$ apt install qemu-kvm qemu-utils libvirt-daemon-system libvirt-clients bridge-utils virt-manager ovmf
 $ usermod -aG libvirt $USER
 
 $ apt install -y xfce4 xfce4-goodies tigervncserver
@@ -856,10 +856,45 @@ $ cat > /etc/containers/registries.conf <<'EOF'
 registries=["registry.access.redhat.com", "registry.fedoraproject.org", "docker.io"]
 EOF
 
+cat > iommu_groups.sh <<'EOF'
+#!/bin/bash
+# change the 999 if needed
+shopt -s nullglob
+for d in /sys/kernel/iommu_groups/{0..999}/devices/*; do
+    n=${d#*/iommu_groups/*}; n=${n%%/*}
+    printf 'IOMMU Group %s ' "$n"
+    lspci -nns "${d##*/}"
+done;
+EOF
 $ sudo sed -ie 's|ubuntu--vg-ubuntu--lv ro|ubuntu--vg-ubuntu--lv ro console=ttyS0,115200 iommu=pt intel_iommu=on default_hugepagesz=1G hugepagesz=1G hugepages=8 earlymodules=vfio-pci vfio-pci.ids=8086:9a49 3 nomodeset initcall_blacklist=sysfb_init i915.blacklist=1 rd.driver.blacklist=i915 snd_hda_codec_hdmi.blacklist=1 rd.driver.blacklist=snd_hda_codec_hdmi"|' /boot/grub/grub.cfg
 ```
 
 ### 拷贝iso到usb
 ```
 dd bs=4M if=./ubuntu-22.04.4-live-server-amd64.iso of=/dev/sdc status=progress oflag=sync
+```
+
+### kubevirt network internals 
+```
+https://www.51cto.com/article/710845.html
+https://s6.51cto.com/oss/202206/06/e115ad120d0d411933b7187f1f28e1944277d2.jpg
+bash-5.1$ ip a s dev eth0 
+3: eth0@if249: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1400 qdisc noqueue state UP group default 
+    link/ether 0a:58:14:82:02:1f brd ff:ff:ff:ff:ff:ff link-netnsid 0
+    inet 20.130.2.31/23 brd 20.130.3.255 scope global eth0
+       valid_lft forever preferred_lft forever
+    inet6 fe80::858:14ff:fe82:21f/64 scope link 
+       valid_lft forever preferred_lft forever
+bash-5.1$ ip a s dev k6t-eth0 
+6: k6t-eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1400 qdisc noqueue state UP group default qlen 1000
+    link/ether 02:00:00:00:00:00 brd ff:ff:ff:ff:ff:ff
+    inet 10.0.2.1/24 brd 10.0.2.255 scope global k6t-eth0
+       valid_lft forever preferred_lft forever
+    inet6 fe80::ff:fe00:0/64 scope link 
+       valid_lft forever preferred_lft forever
+bash-5.1$ ip a s dev tap0 
+7: tap0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1400 qdisc fq_codel master k6t-eth0 state UP group default qlen 1000
+    link/ether 8a:4a:ae:66:16:11 brd ff:ff:ff:ff:ff:ff
+    inet6 fe80::884a:aeff:fe66:1611/64 scope link 
+       valid_lft forever preferred_lft forever
 ```

@@ -940,7 +940,7 @@ $ kubectl patch vm rhel-8-03 --type=json -p='[{"op": "add", "path": "/spec/templ
 
 ### 为用户添加cluster-reader权限
 ```
-oc adm policy add-role-to-user cluster-reader test2 -n test2
+oc adm policy add-cluster-role-to-user cluster-reader test2
 kubectl auth can-i list roles -n default
 kubectl auth can-i list net-attach-def -n default
 ```

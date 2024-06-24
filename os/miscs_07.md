@@ -943,4 +943,23 @@ $ kubectl patch vm rhel-8-03 --type=json -p='[{"op": "add", "path": "/spec/templ
 oc adm policy add-cluster-role-to-user cluster-reader test2
 kubectl auth can-i list roles -n default
 kubectl auth can-i list net-attach-def -n default
+
+
+cat <<'EOF' | oc apply -f -
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: cluster-nad-viewer
+rules:
+  - apiGroups: 
+      - k8s.cni.cncf.io
+    resources:
+      - network-attachment-definitions
+    verbs:
+      - get
+      - list
+      - watch
+EOF
+oc adm policy add-cluster-role-to-user cluster-nad-viewer test2
 ```

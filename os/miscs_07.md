@@ -903,5 +903,44 @@ bash-5.1$ ip a s dev tap0
 ```
 具有label的节点的cpu利用率查询
 https://access.redhat.com/solutions/7021585
+# cpu
 instance:node_cpu_utilisation:rate1m * on(instance) (group by(instance)(label_replace(kube_node_labels{label_pool="pool1"}, "instance", "$1", "node", "(.*)")))
+# memory
+instance:node_memory_utilisation:ratio * on(instance) (group by(instance)(label_replace(kube_node_labels{label_pool="pool1"}, "instance", "$1", "node", "(.*)")))
+# network
+instance:node_network_receive_bytes_excluding_lo:rate1m * on(instance) (group by(instance)(label_replace(kube_node_labels{label_pool="pool1"}, "instance", "$1", "node", "(.*)")))
+instance:node_network_transmit_bytes_excluding_lo:rate1m * on(instance) (group by(instance)(label_replace(kube_node_labels{label_pool="pool1"}, "instance", "$1", "node", "(.*)")))
+# disk
+```
+
+### skopeo copy container images to local registry
+```
+### minio
+$ skopeo copy --format v2s2 --all dir:/tmp/minio/minio docker://registry.ocp4.example.com/jwang/minio:RELEASE.2022-07-24T01-54-52Z
+$ skopeo copy --format v2s2 --all dir:/tmp/minio/mc docker://registry.ocp4.example.com/jwang/mc:RELEASE.2022-07-24T02-25-13Z
+### aws cli 
+$ skopeo copy --format v2s2 --all dir:/tmp/amazon docker://registry.ocp4.example.com/jwang/aws-cli:latest
+```
+
+### patch vm add interface 的例子
+```
+### 例子1
+### 采用jq同时增加
+### .spec.template.spec.domain.devices.interfaces
+### .spec.template.spec.networks
+$ oc get vm rhel-8-03 -o json | jq '.spec.template.spec.domain.devices.interfaces +=[{"bridge":{},"macAddress":"02:a6:fb:00:00:10","model":"virtio","name":"nic2"}]' | jq '.spec.template.spec.networks +=[{"multus":{"networkName":"default/test"},"name":"nic2"}]' | oc apply -f -
+
+### 例子2
+### 直接用kubectl patch
+### 同时增加
+### /spec/template/spec/domain/devices/interfaces/-
+### /spec/template/spec/networks/-
+$ kubectl patch vm rhel-8-03 --type=json -p='[{"op": "add", "path": "/spec/template/spec/domain/devices/interfaces/-", "value": {"name": "nic2", "bridge": {}}}, {"op": "add", "path": "/spec/template/spec/networks/-", "value": {"name": "nic2", "multus": {"networkName": "default/blue"}}}]'
+```
+
+### 为用户添加cluster-reader权限
+```
+oc adm policy add-role-to-user cluster-reader test2 -n test2
+kubectl auth can-i list roles -n default
+kubectl auth can-i list net-attach-def -n default
 ```

@@ -963,3 +963,99 @@ rules:
 EOF
 oc adm policy add-cluster-role-to-user cluster-nad-viewer test2
 ```
+
+### submariner blog
+https://piotrminkowski.com/2024/01/15/openshift-multicluster-with-advanced-cluster-management-for-kubernetes-and-submariner/ 
+```
+oc login <cluster1:6443> --insecure-skip-tls-verify
+oc new-project cross-site
+oc create deployment hello-world-frontend --image quay.io/jonkey/skupper/hello-world-frontend:20230225
+oc expose deployment hello-world-frontend --port 8080
+oc expose svc hello-world-frontend
+oc set env deployment hello-world-frontend BACKEND_SERVICE_HOST_="hello-world-backend.cross-site.svc.clusterset.local"
+oc set env deployment hello-world-frontend BACKEND_SERVICE_PORT_="8080"
+oc get route
+oc create deployment hello-world-backend --image quay.io/jonkey/skupper/hello-world-backend:20230225
+oc expose deployment/hello-world-backend --port 8080
+cat <<EOF | oc apply -f -
+apiVersion: multicluster.x-k8s.io/v1alpha1
+kind: ServiceExport
+metadata:
+  name: hello-world-backend
+  namespace: cross-site
+EOF
+
+oc login <cluster2:6443> --insecure-skip-tls-verify
+oc new-project cross-site
+oc create deployment hello-world-backend --image quay.io/jonkey/skupper/hello-world-backend:20230225
+oc expose deployment/hello-world-backend --port 8080
+
+cat <<EOF | oc apply -f -
+apiVersion: multicluster.x-k8s.io/v1alpha1
+kind: ServiceExport
+metadata:
+  name: hello-world-backend
+  namespace: cross-site
+EOF
+
+$ kubectl --kubeconfig=kubeconfig/cluster3/kubeconfig -n default run tmp-shell --rm -i --tty --image quay.io/submariner/nettest -- /bin/bash
+If you don't see a command prompt, try pressing enter.
+bash-5.0# dig hello-world-backend.cross-site.svc.clusterset.local.
+
+; <<>> DiG 9.16.6 <<>> hello-world-backend.cross-site.svc.clusterset.local.
+;; global options: +cmd
+;; Got answer:
+;; WARNING: .local is reserved for Multicast DNS
+;; You are currently testing what happens when an mDNS query is leaked to DNS
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 18346
+;; flags: qr aa rd; QUERY: 1, ANSWER: 1, AUTHORITY: 0, ADDITIONAL: 1
+;; WARNING: recursion requested but not available
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 1232
+; COOKIE: 0bc1897e9898fa40 (echoed)
+;; QUESTION SECTION:
+;hello-world-backend.cross-site.svc.clusterset.local. IN        A
+
+;; ANSWER SECTION:
+hello-world-backend.cross-site.svc.clusterset.local. 5 IN A 172.30.18.133
+
+;; Query time: 3 msec
+;; SERVER: 172.30.0.10#53(172.30.0.10)
+;; WHEN: Wed Jun 26 05:10:45 UTC 2024
+;; MSG SIZE  rcvd: 159
+
+bash-5.0# curl 172.30.18.133:8080/api/hello
+Hello, stranger.  I am Posh Processor (hello-world-backend-575f897b6b-68vp5).
+
+bash-5.0# dig hello-world-backend.cross-site.svc.clusterset.local.
+
+; <<>> DiG 9.16.6 <<>> hello-world-backend.cross-site.svc.clusterset.local.
+;; global options: +cmd
+;; Got answer:
+;; WARNING: .local is reserved for Multicast DNS
+;; You are currently testing what happens when an mDNS query is leaked to DNS
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 52924
+;; flags: qr aa rd; QUERY: 1, ANSWER: 1, AUTHORITY: 0, ADDITIONAL: 1
+;; WARNING: recursion requested but not available
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 1232
+; COOKIE: f2da6742e858c7a8 (echoed)
+;; QUESTION SECTION:
+;hello-world-backend.cross-site.svc.clusterset.local. IN        A
+
+;; ANSWER SECTION:
+hello-world-backend.cross-site.svc.clusterset.local. 5 IN A 172.31.102.158
+
+;; Query time: 5 msec
+;; SERVER: 172.30.0.10#53(172.30.0.10)
+;; WHEN: Wed Jun 26 05:13:38 UTC 2024
+;; MSG SIZE  rcvd: 159
+
+bash-5.0# curl 172.31.102.158:8080/api/hello
+Hello, stranger.  I am Droll Droid (hello-world-backend-575f897b6b-grmvk).
+```
+
+### subctl download url
+https://developers.redhat.com/content-gateway/rest/browse/pub/rhacm/clients/subctl/

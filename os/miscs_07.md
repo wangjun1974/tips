@@ -1095,3 +1095,27 @@ spec:
       - key: node-role.kubernetes.io/storage
         operator: Exists
 ```
+
+### 设置OVN-K local gateway mode
+```
+### 获取配置
+$ oc get network.operator.openshift.io cluster -o json | jq .spec.defaultNetwork.ovnKubernetesConfig.gatewayConfig
+{
+  "ipv4": {},
+  "ipv6": {},
+  "routingViaHost": false
+}
+
+### 更新配置
+### https://access.redhat.com/solutions/7053694
+$ oc get network.operator.openshift.io cluster -o json | jq '.spec.defaultNetwork.ovnKubernetesConfig.gatewayConfig ={"ipv4":{},"ipv6":{},"routingViaHost":true,"ipForwarding":"Global"}' | oc apply -f -
+
+### 再次获取配置
+$ oc get network.operator.openshift.io cluster -o json | jq .spec.defaultNetwork.ovnKubernetesConfig.gatewayConfig
+{
+  "ipForwarding": "Global",
+  "ipv4": {},
+  "ipv6": {},
+  "routingViaHost": true
+}
+```

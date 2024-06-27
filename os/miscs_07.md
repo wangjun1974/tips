@@ -1119,3 +1119,21 @@ $ oc get network.operator.openshift.io cluster -o json | jq .spec.defaultNetwork
   "routingViaHost": true
 }
 ```
+
+### 安装配置xrdp
+https://post4vps.com/Thread-CentOS-7-8-with-XFCE-XRDP
+```
+dnf install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm
+
+yum groupinstall -y "Xfce"
+
+yum install -y xrdp
+systemctl enable xrdp
+systemctl start xrdp
+
+firewall-cmd --add-port=3389/tcp --permanent
+firewall-cmd --reload
+
+echo "xfce4-session" > ~/.Xclients
+chmod a+x ~/.Xclients
+```

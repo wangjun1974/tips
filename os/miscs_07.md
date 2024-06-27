@@ -1059,3 +1059,39 @@ Hello, stranger.  I am Droll Droid (hello-world-backend-575f897b6b-grmvk).
 
 ### subctl download url
 https://developers.redhat.com/content-gateway/rest/browse/pub/rhacm/clients/subctl/
+
+### infra node and storage node 
+### machineConfigSelector
+### nodeSelector
+```
+apiVersion: machineconfiguration.openshift.io/v1
+kind: MachineConfigPool
+metadata:
+  name: infra
+spec:
+  machineConfigSelector:
+    matchExpressions:
+      - {key: machineconfiguration.openshift.io/role, operator: In, values: [worker,infra]}
+  nodeSelector:
+    matchExpressions:
+      - key: node-role.kubernetes.io/infra
+        operator: Exists
+      - key: node-role.kubernetes.io/storage
+        operator: DoesNotExist
+
+---
+apiVersion: machineconfiguration.openshift.io/v1
+kind: MachineConfigPool
+metadata:
+  name: storage
+spec:
+  machineConfigSelector:
+    matchExpressions:
+      - {key: machineconfiguration.openshift.io/role, operator: In, values: [worker,storage]}
+  nodeSelector:
+    matchExpressions:
+      - key: node-role.kubernetes.io/infra
+        operator: Exists
+      - key: node-role.kubernetes.io/storage
+        operator: Exists
+```

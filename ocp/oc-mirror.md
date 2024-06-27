@@ -2599,6 +2599,23 @@ mirror:
             - name: 'stable'
               minVersion: 'v4.4.2'
               maxVersion: 'v4.4.2'
+    - catalog: registry.redhat.io/redhat/redhat-marketplace-index:v4.15
+      packages:
+        - name: k10-kasten-operator-paygo-rhmp
+          channels:
+            - name: 'stable'
+              minVersion: 'v7.0.1'
+              maxVersion: 'v7.0.1'
+        - name: k10-kasten-operator-rhmp
+          channels:
+            - name: 'stable'
+              minVersion: 'v7.0.1'
+              maxVersion: 'v7.0.1'
+        - name: k10-kasten-operator-term-rhmp
+          channels:
+            - name: 'stable'
+              minVersion: 'v7.0.1'
+              maxVersion: 'v7.0.1'
 EOF
 $ rm -rf output
 $ /usr/local/bin/oc-mirror --config ./image-config-realse-local.yaml file://output-dir 2>&1 | tee -a /tmp/oc-mirror-4.15 
@@ -2727,9 +2744,26 @@ mirror:
             - name: 'stable'
               minVersion: 'v4.4.2'
               maxVersion: 'v4.4.2'
+    - catalog: registry.redhat.io/redhat/redhat-marketplace-index:v4.14
+      packages:
+        - name: k10-kasten-operator-paygo-rhmp
+          channels:
+            - name: 'stable'
+              minVersion: 'v7.0.1'
+              maxVersion: 'v7.0.1'
+        - name: k10-kasten-operator-rhmp
+          channels:
+            - name: 'stable'
+              minVersion: 'v7.0.1'
+              maxVersion: 'v7.0.1'
+        - name: k10-kasten-operator-term-rhmp
+          channels:
+            - name: 'stable'
+              minVersion: 'v7.0.1'
+              maxVersion: 'v7.0.1'
 EOF
 $ rm -rf output
-$ /usr/local/bin/oc-mirror --config ./image-config-realse-local.yaml file://output-dir 2>&1 | tee -a /tmp/oc-mirror-4.15 
+$ /usr/local/bin/oc-mirror --config ./image-config-realse-local.yaml file://output-dir 2>&1 | tee -a /tmp/oc-mirror-4.14
 $ /usr/local/bin/oc-mirror --from ./mirror_seq1_000000.tar docker://registry.example.com:5000
 
 ```

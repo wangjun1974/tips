@@ -2766,4 +2766,7 @@ $ rm -rf output
 $ /usr/local/bin/oc-mirror --config ./image-config-realse-local.yaml file://output-dir 2>&1 | tee -a /tmp/oc-mirror-4.14
 $ /usr/local/bin/oc-mirror --from ./mirror_seq1_000000.tar docker://registry.example.com:5000
 
+### latest version of oc-mirror
+https://mirror.openshift.com/pub/openshift-v4/x86_64/clients/ocp/4.15.19/
+https://mirror.openshift.com/pub/openshift-v4/x86_64/clients/ocp/latest/
 ```

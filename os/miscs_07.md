@@ -1137,3 +1137,9 @@ firewall-cmd --reload
 echo "xfce4-session" > ~/.Xclients
 chmod a+x ~/.Xclients
 ```
+
+### download latest version of oc-mirror
+```
+https://mirror.openshift.com/pub/openshift-v4/x86_64/clients/ocp/4.15.19/
+https://mirror.openshift.com/pub/openshift-v4/x86_64/clients/ocp/latest/
+```

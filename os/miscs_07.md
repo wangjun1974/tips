@@ -1143,3 +1143,9 @@ chmod a+x ~/.Xclients
 https://mirror.openshift.com/pub/openshift-v4/x86_64/clients/ocp/4.15.19/
 https://mirror.openshift.com/pub/openshift-v4/x86_64/clients/ocp/latest/
 ```
+
+### cleanup operator
+```
+operator cleanup
+https://access.redhat.com/solutions/6459071
+```

@@ -2631,33 +2631,33 @@ mirror:
         - name: kubevirt-hyperconverged
           channels:
             - name: 'stable'
-              minVersion: 'v4.14.5'
-              maxVersion: 'v4.14.5'            
+              minVersion: 'v4.14.6'
+              maxVersion: 'v4.14.6'            
         - name: kubernetes-nmstate-operator
           channels:
             - name: 'stable'
-              minVersion: '4.14.0-202405141639'
-              maxVersion: '4.14.0-202405141639'                         
+              minVersion: '4.14.0-202406060838'
+              maxVersion: '4.14.0-202406060838'                         
         - name: local-storage-operator
           channels:
             - name: 'stable'
-              minVersion: 'v4.14.0-202405141639'
-              maxVersion: 'v4.14.0-202405141639'            
+              minVersion: 'v4.14.0-202405222237'
+              maxVersion: 'v4.14.0-202405222237'            
         - name: odf-operator
           channels:
             - name: 'stable-4.14'
-              minVersion: 'v4.14.6-rhodf'
-              maxVersion: 'v4.14.6-rhodf'
+              minVersion: 'v4.14.8-rhodf'
+              maxVersion: 'v4.14.8-rhodf'
         - name: ocs-operator
           channels:
             - name: 'stable-4.14'
-              minVersion: 'v4.14.6-rhodf'
-              maxVersion: 'v4.14.6-rhodf'
+              minVersion: 'v4.14.8-rhodf'
+              maxVersion: 'v4.14.8-rhodf'
         - name: mcg-operator
           channels:
             - name: 'stable-4.14'
-              minVersion: 'v4.14.6-rhodf'
-              maxVersion: 'v4.14.6-rhodf'              
+              minVersion: 'v4.14.8-rhodf'
+              maxVersion: 'v4.14.8-rhodf'              
         - name: cincinnati-operator
           channels:
             - name: v1
@@ -2666,13 +2666,13 @@ mirror:
         - name: openshift-gitops-operator
           channels:
             - name: latest
-              minVersion: 'v1.12.2'
-              maxVersion: 'v1.12.2'
+              minVersion: 'v1.12.4'
+              maxVersion: 'v1.12.4'
         - name: node-healthcheck-operator
           channels:
             - name: stable
-              minVersion: 'v0.8.0'
-              maxVersion: 'v0.8.0'
+              minVersion: 'v0.8.1'
+              maxVersion: 'v0.8.1'
         - name: self-node-remediation
           channels:
             - name: stable
@@ -2681,18 +2681,18 @@ mirror:
         - name: metallb-operator
           channels:
             - name: stable
-              minVersion: 'v4.14.0-202405141639'
-              maxVersion: 'v4.14.0-202405141639'
+              minVersion: 'v4.14.0-202406111908'
+              maxVersion: 'v4.14.0-202406111908'
         - name: openshift-pipelines-operator-rh
           channels:
             - name: latest
-              minVersion: 'v1.14.4'
-              maxVersion: 'v1.14.4'
+              minVersion: 'v1.15.0'
+              maxVersion: 'v1.15.0'
         - name: devworkspace-operator
           channels:
             - name: fast
-              minVersion: 'v0.27.0-0.1714987663.p'
-              maxVersion: 'v0.27.0-0.1714987663.p'
+              minVersion: 'v0.28.0'
+              maxVersion: 'v0.28.0'
         - name: web-terminal
           channels:
             - name: fast
@@ -2701,34 +2701,34 @@ mirror:
         - name: mtv-operator
           channels:
             - name: release-v2.6
-              minVersion: 'v2.6.1'
-              maxVersion: 'v2.6.1'
+              minVersion: 'v2.6.2'
+              maxVersion: 'v2.6.2'
             - name: release-v2.5
-              minVersion: 'v2.5.6'
-              maxVersion: 'v2.5.6'            
+              minVersion: 'v2.5.7'
+              maxVersion: 'v2.5.7'            
         - name: redhat-oadp-operator
           channels:
             - name: stable-1.3
-              minVersion: 'v1.3.1'
-              maxVersion: 'v1.3.1'
+              minVersion: 'v1.3.2'
+              maxVersion: 'v1.3.2'
             - name: stable-1.2
-              minVersion: 'v1.2.4'
-              maxVersion: 'v1.2.4'
+              minVersion: 'v1.2.5'
+              maxVersion: 'v1.2.5'
         - name: nfd
           channels:
             - name: stable
-              minVersion: '4.14.0-202405141639'
-              maxVersion: '4.14.0-202405141639'
+              minVersion: '4.14.0-202405281408'
+              maxVersion: '4.14.0-202405281408'
         - name: cluster-logging
           channels:
             - name: stable-5.9
-              minVersion: 'v5.9.2'
-              maxVersion: 'v5.9.2'
+              minVersion: 'v5.9.3'
+              maxVersion: 'v5.9.3'
         - name: loki-operator
           channels:
             - name: stable-5.9
-              minVersion: 'v5.9.2'
-              maxVersion: 'v5.9.2'
+              minVersion: 'v5.9.3'
+              maxVersion: 'v5.9.3'
         - name: advanced-cluster-management
           channels:
             - name: 'release-2.10'
@@ -2742,8 +2742,13 @@ mirror:
         - name: rhacs-operator
           channels:
             - name: 'stable'
-              minVersion: 'v4.4.2'
-              maxVersion: 'v4.4.2'
+              minVersion: 'v4.4.3'
+              maxVersion: 'v4.4.3'
+        - name: ansible-automation-platform-operator
+          channels:
+            - name: 'stable-2.4-cluster-scoped'
+              minVersion: 'v2.4.0-0.1718152680'
+              maxVersion: 'v2.4.0-0.1718152680'        
     - catalog: registry.redhat.io/redhat/redhat-marketplace-index:v4.14
       packages:
         - name: k10-kasten-operator-paygo-rhmp

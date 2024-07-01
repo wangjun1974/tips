@@ -1149,3 +1149,22 @@ https://mirror.openshift.com/pub/openshift-v4/x86_64/clients/ocp/latest/
 operator cleanup
 https://access.redhat.com/solutions/6459071
 ```
+
+### hello-world
+```
+oc create deployment hello-world-frontend --image registry.ocp4.example.com/jwang/skupper/hello-world-frontend:20230225
+oc expose deployment hello-world-frontend --port 8080
+oc expose svc hello-world-frontend
+oc set env deployment hello-world-frontend BACKEND_SERVICE_HOST_="hello-world-backend.cross-site.svc.cluster.local"
+oc set env deployment hello-world-frontend BACKEND_SERVICE_PORT_="8080"
+oc get route
+
+oc create deployment hello-world-backend --image registry.ocp4.example.com/jwang/skupper/hello-world-backend:20230225
+oc expose deployment/hello-world-backend --port 8080
+```
+
+### debug openshift pod with debug and ubi image
+```
+$ oc -n openshift-logging debug --image=registry.redhat.io/ubi8:latest deployment/logging-loki-distributor
+$ oc -n openshift-logging debug  --image=registry.redhat.io/ubi8:latest logging-loki-ingester-0
+```

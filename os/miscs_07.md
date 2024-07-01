@@ -1168,3 +1168,8 @@ oc expose deployment/hello-world-backend --port 8080
 $ oc -n openshift-logging debug --image=registry.redhat.io/ubi8:latest deployment/logging-loki-distributor
 $ oc -n openshift-logging debug  --image=registry.redhat.io/ubi8:latest logging-loki-ingester-0
 ```
+
+### 设置 submariner 检查集群可互联以及可服务发现
+```
+subctl verify --kubeconfig <kubeconfig_sno2> --toconfig <kubeconfig_sno3>  --only service-discovery,connectivity --verbose --image-override=submariner-nettest=quay.io/submariner/nettest:release-0.16 
+```

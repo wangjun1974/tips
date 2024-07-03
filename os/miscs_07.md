@@ -1212,3 +1212,13 @@ subctl verify --kubeconfig <kubeconfig_sno2> --toconfig <kubeconfig_sno3>  --onl
 
 
 ```
+
+### HyperConverged添加VMLiveUpdateFeatures FeatureGates的方法
+https://github.com/kubevirt/hyperconverged-cluster-operator/blob/main/docs/cluster-configuration.md#jsonpatch-annotations
+```
+$ oc annotate --overwrite -n openshift-cnv hyperconverged kubevirt-hyperconverged kubevirt.kubevirt.io/jsonpatch='[{
+      "op": "add",
+      "path": "/spec/configuration/developerConfiguration/featureGates/-",
+      "value": "VMLiveUpdateFeatures"
+  }]'
+```

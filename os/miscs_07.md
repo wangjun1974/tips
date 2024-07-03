@@ -1222,3 +1222,45 @@ $ oc annotate --overwrite -n openshift-cnv hyperconverged kubevirt-hyperconverge
       "value": "VMLiveUpdateFeatures"
   }]'
 ```
+
+### OpenShift Virtualization虚拟机LiveMigration到指定节点
+```
+### 虚拟机设置 spec.liveUpdateFeatures: affinity: {}
+$ oc get vm rhel-8-03 -o json | jq '.spec.liveUpdateFeatures' 
+null
+$ oc get vm rhel-8-03 -o json | jq '.spec.liveUpdateFeatures += {"affinity":{}}' | oc apply -f -
+$ oc get vm rhel-8-03 -o json | jq '.spec.liveUpdateFeatures'
+{
+  "affinity": {}}
+}
+
+### 虚拟机运行在节点b1-ocp4test.ocp4.example.com上
+$ oc get vmi rhel-8-03 
+NAME        AGE   PHASE     IP            NODENAME                       READY
+rhel-8-03   22m   Running   172.18.2.19   b1-ocp4test.ocp4.example.com   True
+
+### 在
+$ oc get vm rhel-8-03 -o json | jq '.spec.template.spec.affinity={"nodeAffinity":{"requiredDuringSchedulingIgnoredDuringExecution":{"nodeSelectorTerms":[{"matchExpressions":[{"key":"kubernetes.io/hostname","operator":"In","values":["b2-ocp4test.ocp4.example.com"]}]}]}}}' | oc apply -f -
+$ cat <<EOF | oc apply -f -
+apiVersion: kubevirt.io/v1
+kind: VirtualMachineInstanceMigration
+metadata:
+  name: rhel-8-03-mig-00005
+spec:
+  vmiName: rhel-8-03
+EOF
+$ oc get VirtualMachineInstanceMigration rhel-8-03-mig-00003 -w | ts 
+Jul 03 15:07:54 NAME                  PHASE        VMI
+Jul 03 15:07:54 rhel-8-03-mig-00003   Scheduling   rhel-8-03
+Jul 03 15:07:58 rhel-8-03-mig-00003   Scheduled    rhel-8-03
+Jul 03 15:07:58 rhel-8-03-mig-00003   PreparingTarget   rhel-8-03
+Jul 03 15:07:59 rhel-8-03-mig-00003   TargetReady       rhel-8-03
+Jul 03 15:07:59 rhel-8-03-mig-00003   Running           rhel-8-03
+Jul 03 15:08:07 rhel-8-03-mig-00003   Succeeded         rhel-8-03
+Jul 03 15:08:07 rhel-8-03-mig-00003   Succeeded         rhel-8-03
+Jul 03 15:08:07 rhel-8-03-mig-00003   Succeeded         rhel-8-03
+
+$ oc get vmi rhel-8-03 
+NAME        AGE   PHASE     IP            NODENAME                       READY
+rhel-8-03   23m   Running   172.18.5.23   b2-ocp4test.ocp4.example.com   True
+```

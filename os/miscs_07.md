@@ -1173,3 +1173,42 @@ $ oc -n openshift-logging debug  --image=registry.redhat.io/ubi8:latest logging-
 ```
 subctl verify --kubeconfig <kubeconfig_sno2> --toconfig <kubeconfig_sno3>  --only service-discovery,connectivity --verbose --image-override=submariner-nettest=quay.io/submariner/nettest:release-0.16 
 ```
+
+### 尝试更新HCO featureGates
+### 首先Disable CVO
+### 然后Disable OLM
+### 然后Disable HCO
+```
+  CONTROL_PLANE_TOPOLOGY=$(oc get infrastructure cluster -o=jsonpath='{$.status.controlPlaneTopology}')
+  if [[ ${CONTROL_PLANE_TOPOLOGY} != "External" ]]; then
+    # Disable CVO so that it doesn't reconcile the OLM Operator
+    oc scale deployment/cluster-version-operator \
+      --namespace='openshift-cluster-version' \
+      --replicas='0'
+
+    # Disable OLM so that it doesn't reconcile the HCO Operator
+    oc scale deployment/olm-operator \
+      --namespace='openshift-operator-lifecycle-manager' \
+      --replicas='0'
+  fi
+
+  # Disable HCO so that it doesn't reconcile CRs CDI, KubeVirt, ...
+  hco_namespace=$(
+    oc get deployments --all-namespaces \
+      --field-selector=metadata.name='hco-operator' \
+      --output=jsonpath='{$.items[0].metadata.namespace}'
+  )
+  oc scale deployment/hco-operator \
+    --namespace="${hco_namespace}" \
+    --replicas='0'
+
+  # Ensure HCO pods are gone
+  oc wait pods \
+    --namespace="${hco_namespace}" \
+    --selector='name=hyperconverged-cluster-operator' \
+    --for=delete \
+    --timeout='2m' ||
+    echo 'failed to verify HCO pods are gone / were already gone at the point we executed oc wait'
+
+
+```

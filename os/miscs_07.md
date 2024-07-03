@@ -1239,8 +1239,10 @@ $ oc get vmi rhel-8-03
 NAME        AGE   PHASE     IP            NODENAME                       READY
 rhel-8-03   22m   Running   172.18.2.19   b1-ocp4test.ocp4.example.com   True
 
-### 在
+### VM对象设置迁移目标节点
 $ oc get vm rhel-8-03 -o json | jq '.spec.template.spec.affinity={"nodeAffinity":{"requiredDuringSchedulingIgnoredDuringExecution":{"nodeSelectorTerms":[{"matchExpressions":[{"key":"kubernetes.io/hostname","operator":"In","values":["b2-ocp4test.ocp4.example.com"]}]}]}}}' | oc apply -f -
+
+### 触发VM迁移
 $ cat <<EOF | oc apply -f -
 apiVersion: kubevirt.io/v1
 kind: VirtualMachineInstanceMigration
@@ -1249,6 +1251,8 @@ metadata:
 spec:
   vmiName: rhel-8-03
 EOF
+
+### 检查迁移执行进度
 $ oc get VirtualMachineInstanceMigration rhel-8-03-mig-00003 -w | ts 
 Jul 03 15:07:54 NAME                  PHASE        VMI
 Jul 03 15:07:54 rhel-8-03-mig-00003   Scheduling   rhel-8-03
@@ -1260,6 +1264,7 @@ Jul 03 15:08:07 rhel-8-03-mig-00003   Succeeded         rhel-8-03
 Jul 03 15:08:07 rhel-8-03-mig-00003   Succeeded         rhel-8-03
 Jul 03 15:08:07 rhel-8-03-mig-00003   Succeeded         rhel-8-03
 
+### 检查VMI所在节点
 $ oc get vmi rhel-8-03 
 NAME        AGE   PHASE     IP            NODENAME                       READY
 rhel-8-03   23m   Running   172.18.5.23   b2-ocp4test.ocp4.example.com   True

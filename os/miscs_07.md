@@ -1269,3 +1269,54 @@ $ oc get vmi rhel-8-03
 NAME        AGE   PHASE     IP            NODENAME                       READY
 rhel-8-03   23m   Running   172.18.5.23   b2-ocp4test.ocp4.example.com   True
 ```
+
+### 离线kasten
+```
+### 离线helm charts
+$ helm repo add kasten https://charts.kasten.io/
+$ helm repo update && helm fetch kasten/k10 --version=7.0.3
+
+### 离线kasten images
+cat > image-config-realse-local.yaml <<EOF
+apiVersion: mirror.openshift.io/v1alpha2
+kind: ImageSetConfiguration
+mirror:
+  additionalImages: # List of additional images to be included in imageset
+    - name: gcr.io/kasten-images/admin:7.0.3
+    - name: gcr.io/kasten-images/aggregatedapis:7.0.3
+    - name: gcr.io/kasten-images/auth:7.0.3
+    - name: gcr.io/kasten-images/bloblifecyclemanager:7.0.3
+    - name: gcr.io/kasten-images/catalog:7.0.3
+    - name: gcr.io/kasten-images/configmap-reload:7.0.3
+    - name: gcr.io/kasten-images/controllermanager:7.0.3
+    - name: gcr.io/kasten-images/crypto:7.0.3
+    - name: gcr.io/kasten-images/dashboardbff:7.0.3
+    - name: gcr.io/kasten-images/datamover:7.0.3
+    - name: gcr.io/kasten-images/dex:7.0.3
+    - name: gcr.io/kasten-images/emissary:7.0.3
+    - name: gcr.io/kasten-images/events:7.0.3
+    - name: gcr.io/kasten-images/executor:7.0.3
+    - name: gcr.io/kasten-images/frontend:7.0.3
+    - name: gcr.io/kasten-images/garbagecollector:7.0.3
+    - name: gcr.io/kasten-images/grafana:7.0.3
+    - name: gcr.io/kasten-images/init:7.0.3
+    - name: gcr.io/kasten-images/jobs:7.0.3
+    - name: gcr.io/kasten-images/k10fieldtools:7.0.3
+    - name: gcr.io/kasten-images/k10tools:7.0.3
+    - name: gcr.io/kasten-images/kanister-tools:7.0.3
+    - name: gcr.io/kasten-images/kanister:7.0.3
+    - name: gcr.io/kasten-images/logging:7.0.3
+    - name: gcr.io/kasten-images/metering:7.0.3
+    - name: gcr.io/kasten-images/metric-sidecar:7.0.3
+    - name: gcr.io/kasten-images/prometheus:7.0.3
+    - name: gcr.io/kasten-images/repositories:7.0.3
+    - name: gcr.io/kasten-images/restorectl:7.0.3
+    - name: gcr.io/kasten-images/state:7.0.3
+    - name: gcr.io/kasten-images/upgrade:7.0.3
+    - name: gcr.io/kasten-images/vbrintegrationapi:7.0.3
+EOF
+$ rm -rf output
+$ /usr/local/bin/oc-mirror --config ./image-config-realse-local.yaml file://output-dir 2>&1 | tee -a /tmp/oc-mirror-4.15
+$ /usr/local/bin/oc-mirror --from ./mirror_seq1_000000.tar docker://registry.example.com:5000
+
+```

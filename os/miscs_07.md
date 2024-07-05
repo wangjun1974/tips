@@ -1323,6 +1323,7 @@ $ /usr/local/bin/oc-mirror --from ./mirror_seq1_000000.tar docker://registry.exa
 
 ### openshift获取证书过期时间更新证书过期时间
 ```
+https://github.com/crc-org/snc/issues/27
 ### 获取namespace和secret名称
 $ oc get secret -A -o json | jq -r '.items[] | select(.metadata.annotations."auth.openshift.io/certificate-not-after" | .!=null and fromdateiso8601<='$( date --date='+1year' +%s )') | "-n \(.metadata.namespace) \(.metadata.name)"'
 ### 获取secret证书过期时间

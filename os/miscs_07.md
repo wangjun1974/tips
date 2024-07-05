@@ -1331,3 +1331,8 @@ $ oc get secret -A -o json | jq -r '.items[] | select(.metadata.annotations."aut
 ### 更新证书过期时间
 oc get secret -A -o json | jq -r '.items[] | select(.metadata.annotations."auth.openshift.io/certificate-not-after" | .!=null and fromdateiso8601<='$( date --date='+1year' +%s )') | "-n \(.metadata.namespace) \(.metadata.name)"' | xargs -n3 oc patch secret -p='{"metadata": {"annotations": {"auth.openshift.io/certificate-not-after": null}}}'
 ```
+
+### 查看pci设备相关性
+```
+# lspci -Dt
+```

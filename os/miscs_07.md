@@ -1336,3 +1336,9 @@ oc get secret -A -o json | jq -r '.items[] | select(.metadata.annotations."auth.
 ```
 # lspci -Dt
 ```
+
+### 检查磁盘和存储子系统 
+```
+$ lshw -class disk 
+$ lshw -class storage
+```

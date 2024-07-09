@@ -1342,3 +1342,45 @@ oc get secret -A -o json | jq -r '.items[] | select(.metadata.annotations."auth.
 $ lshw -class disk 
 $ lshw -class storage
 ```
+
+### 用vmexport导出导入虚拟机
+```
+### 创建vmexport
+cat <<EOF | oc apply -f -
+apiVersion: export.kubevirt.io/v1alpha1
+kind: VirtualMachineExport
+metadata:
+  name: fedora-40-01
+  namespace: test2
+spec:
+  source:
+    apiGroup: "kubevirt.io"
+    kind: VirtualMachine
+    name: fedora-40-01
+  ttlDuration: 1h
+EOF
+
+### 查询vmexport状态
+oc get vmexport fedora-40-01 -o json | jq .status.phase
+
+### 下载manifest
+virtctl vmexport download fedora-40-01 --keep-vme --manifest --include-secret --output fedora-40-vm.yml
+
+### 下载volume
+virtctl vmexport download fedora-40-01 --keep-vme --volume fedora-bronze-dingo-31 --output fedora-40-01-disk.img.gz
+
+### 基于snapshot创建vmexport
+virtctl vmexport create --snapshot=fedora-snapshot fedora-export-snapshot
+
+### 删除vmexport
+virtctl vmexport delete fedora-export-snapshot
+
+### 上传dv
+virtctl image-upload dv fedora-rootdisk --size 30Gi --image-path fedora-vm-disk.img.gz --storage-class ocs-external-storagecluster-ceph-rbd-virtualization
+
+### 导入vm
+oc apply -f fedora-vm.yml
+configmap/export-ca-cm-fedora-export created
+virtualmachine.kubevirt.io/fedora-vm created
+secret/header-secret-fedora-export created
+```

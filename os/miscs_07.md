@@ -1231,7 +1231,7 @@ null
 $ oc get vm rhel-8-03 -o json | jq '.spec.liveUpdateFeatures += {"affinity":{}}' | oc apply -f -
 $ oc get vm rhel-8-03 -o json | jq '.spec.liveUpdateFeatures'
 {
-  "affinity": {}}
+  "affinity": {}
 }
 
 ### 虚拟机运行在节点b1-ocp4test.ocp4.example.com上

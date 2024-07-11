@@ -1400,3 +1400,9 @@ $ oc get vm fedora-40-01 -o json | jq '.spec.template.spec.evictionStrategy="Non
 重启VM
 $ virtctl restart fedora-40-01
 ```
+
+### 检查vm是否运行
+```
+$ oc get vm fedora-40-01 -o json | jq '.spec.running' 
+true
+```

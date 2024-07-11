@@ -1384,3 +1384,19 @@ configmap/export-ca-cm-fedora-export created
 virtualmachine.kubevirt.io/fedora-vm created
 secret/header-secret-fedora-export created
 ```
+
+### CNV VM Live Migration
+```
+获取虚拟机是否支持在线迁移
+$ oc get vmi fedora-40-01 -o json | jq '.status.conditions[] | select(.type == "LiveMigratable" ) | "\(.status)"'
+
+获取VM在线迁移策略
+$ oc get vm fedora-40-01 -o json | jq .spec.template.spec.evictionStrategy 
+"LiveMigrate"
+
+设置VM在线迁移策略为None或者LiveMigrate
+$ oc get vm fedora-40-01 -o json | jq '.spec.template.spec.evictionStrategy="None"' | oc apply -f -
+
+重启VM
+$ virtctl restart fedora-40-01
+```

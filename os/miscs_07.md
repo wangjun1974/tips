@@ -1406,3 +1406,9 @@ $ virtctl restart fedora-40-01
 $ oc get vm fedora-40-01 -o json | jq '.spec.running' 
 true
 ```
+
+### vSphere监控
+```
+https://blog.csdn.net/weixin_34248487/article/details/92973609
+vSphere监控
+```

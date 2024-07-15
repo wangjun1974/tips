@@ -1412,3 +1412,42 @@ true
 https://blog.csdn.net/weixin_34248487/article/details/92973609
 vSphere监控
 ```
+
+### 检查pod的conditions
+```
+oc get pods virt-launcher-rhel8-jwang-06-5xdvj -o json | jq .status.conditions
+
+  {
+    "lastProbeTime": null,
+    "lastTransitionTime": "2024-07-09T08:30:46Z",
+    "message": "Taint manager: deleting due to NoExecute taint",
+    "reason": "DeletionByTaintManager",
+    "status": "True",
+    "type": "DisruptionTarget"
+  }
+
+
+```
+
+### 为节点添加taints
+```
+节点添加taint
+kubectl taint nodes b4-ocp4test.ocp4.example.com 'node-role.kubernetes.io/worker-gpu'='':NoSchedule
+kubectl taint nodes b1-ocp4test.ocp4.example.com 'maintenance'='true':NoSchedule
+
+节点移除taint
+kubectl taint nodes b1-ocp4test.ocp4.example.com 'maintenance'='true':NoSchedule-
+kubectl taint nodes b4-ocp4test.ocp4.example.com 'node-role.kubernetes.io/worker-gpu'='':NoSchedule-
+```
+
+### 获取openshift集群的metrics列表
+```
+### 参见https://docs.openshift.com/container-platform/4.15/observability/monitoring/managing-metrics.html#understanding-metrics_managing-metrics
+### thanos-querier的路由 
+### oc get routes -n openshift-monitoring thanos-querier -o jsonpath='{.status.ingress[0].host}'
+### 访问的Bearer Token
+### oc whoami -t
+### metric 的 endpoint
+### https://$(oc get routes -n openshift-monitoring thanos-querier -o jsonpath='{.status.ingress[0].host}')/api/v1/metadata
+$ curl -k -H "Authorization: Bearer $(oc whoami -t)" https://$(oc get routes -n openshift-monitoring thanos-querier -o jsonpath='{.status.ingress[0].host}')/api/v1/metadata  | jq .data
+```

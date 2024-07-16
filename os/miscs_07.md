@@ -1451,3 +1451,31 @@ kubectl taint nodes b4-ocp4test.ocp4.example.com 'node-role.kubernetes.io/worker
 ### https://$(oc get routes -n openshift-monitoring thanos-querier -o jsonpath='{.status.ingress[0].host}')/api/v1/metadata
 $ curl -k -H "Authorization: Bearer $(oc whoami -t)" https://$(oc get routes -n openshift-monitoring thanos-querier -o jsonpath='{.status.ingress[0].host}')/api/v1/metadata  | jq .data
 ```
+
+### build usbredirect on rhel 9.4 
+```
+### https://gitlab.freedesktop.org/spice/usbredir/
+### https://github.com/kubevirt/kubevirt/issues/10074#issuecomment-1630423053
+
+$ wget https://gitlab.freedesktop.org/-/project/72/uploads/211844dd64853ca4378ad7e74faf3e00/usbredir-0.13.0.tar.xz
+$ tar Jxvf usbredir-0.13.0.tar.xz
+$ cd usbredir-0.13.0/
+
+$ dnf groupinstall -y 'Development Tools'
+$ dnf install -y meson cmake libusb-devel.x86_64 glib2-devel.x86_64
+
+$ meson . build 
+$ meson compile -C build
+$ file ./build/tools/usbredirect
+
+$ cp ./build/tools/usbredirect  /usr/local/sbin/
+
+$ usbredirect --help
+```
+
+### Mac OSX命令行查看USB设备
+```
+$ ioreg -p IOUSB
+$ ioreg -p IOUSB -w0 -l
+$ ioreg -p IOUSB -w0 | sed 's/[^o]*o //; s/@.*$//' | grep -v '^Root.*'
+```

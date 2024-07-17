@@ -1479,3 +1479,8 @@ $ ioreg -p IOUSB
 $ ioreg -p IOUSB -w0 -l
 $ ioreg -p IOUSB -w0 | sed 's/[^o]*o //; s/@.*$//' | grep -v '^Root.*'
 ```
+
+### Chrome版本发布信息
+```
+https://chromiumdash.appspot.com/releases?platform=Linux
+```

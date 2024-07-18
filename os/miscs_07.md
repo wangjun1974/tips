@@ -1484,3 +1484,15 @@ $ ioreg -p IOUSB -w0 | sed 's/[^o]*o //; s/@.*$//' | grep -v '^Root.*'
 ```
 https://chromiumdash.appspot.com/releases?platform=Linux
 ```
+
+### linux安装chrome浏览器
+```
+wget https://dl.google.com/linux/direct/google-chrome-stable_current_x86_64.rpm
+yum install ./google-chrome-stable_current_*.rpm
+
+```
+
+### 配置userworkload stack
+```
+https://docs.fedoraproject.org/en-US/infra/ocp4/sop_configure_userworkload_monitoring_stack/
+```

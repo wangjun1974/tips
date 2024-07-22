@@ -2859,6 +2859,26 @@ $ rm -rf output
 $ /usr/local/bin/oc-mirror --config ./image-config-realse-local.yaml file://output-dir 2>&1 | tee -a /tmp/oc-mirror-4.15
 $ /usr/local/bin/oc-mirror --from ./mirror_seq1_000000.tar docker://registry.example.com:5000 --rebuild-catalogs
 
+How to rebuild catalogs on ubi9/rhel9 based oc-mirror via podman
+### https://access.redhat.com/solutions/7062641
+$ podman run -dt --name ubi9 -v /data/OCP-4.14.26/ocp/oc-mirror:/oc-mirror --hostname ubi9-oc-mirror --network host --privileged registry.redhat.io/ubi9 bash
+$ cd /oc-mirror
+$ tar xzf oc-mirror.rhel9.tar.gz  -C /usr/local/bin && chmod +x /usr/local/bin/oc-mirror
+$ oc-mirror version --short
+Flag --short has been deprecated, and will be removed in a future release. Use oc-mirror version instead.
+Client Version: 4.15.0-202405220207.p0.gfc3b010.assembly.stream.el9-fc3b010
+
+### podman host
+$ podman cp /data/registry/certs/registry.crt ubi9:/etc/pki/ca-trust/source/anchors
+$ podman cp ~/.docker ubi9:/root/
+### ubi9 pod
+$ podman exec -it ubi9 bash
+u$ pdate-ca-trust extract
+
+$ cd /oc-mirror
+$ /usr/local/bin/oc-mirror --from ./mirror_seq1_000000.tar docker://registry.example.com:5000 --rebuild-catalogs
+
+
 ### latest version of oc-mirror
 https://mirror.openshift.com/pub/openshift-v4/x86_64/clients/ocp/4.15.19/
 https://mirror.openshift.com/pub/openshift-v4/x86_64/clients/ocp/latest/

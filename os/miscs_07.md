@@ -1496,3 +1496,23 @@ yum install ./google-chrome-stable_current_*.rpm
 ```
 https://docs.fedoraproject.org/en-US/infra/ocp4/sop_configure_userworkload_monitoring_stack/
 ```
+
+### oc-mirror rebuild catalogs ubi9
+```
+### https://access.redhat.com/solutions/7062641
+podman run -dt --name ubi9 -v /data/OCP-4.14.26/ocp/oc-mirror:/oc-mirror --hostname ubi9-oc-mirror --network host --privileged registry.redhat.io/ubi9 bash
+cd /oc-mirror
+tar xzf oc-mirror.rhel9.tar.gz  -C /usr/local/bin && chmod +x /usr/local/bin/oc-mirror
+oc-mirror version --short
+
+### podman host 主机上
+podman cp /data/registry/certs/registry.crt ubi9:/etc/pki/ca-trust/source/anchors
+podman cp ~/.docker ubi9:/root/
+### 在 ubi9 pod里
+podman exec -it ubi9 bash
+update-ca-trust extract
+
+cd /oc-mirror
+/usr/local/bin/oc-mirror --from ./mirror_seq1_000000.tar docker://registry.example.com:5000 --rebuild-catalogs
+
+```

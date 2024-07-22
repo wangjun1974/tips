@@ -2619,7 +2619,7 @@ mirror:
 EOF
 $ rm -rf output
 $ /usr/local/bin/oc-mirror --config ./image-config-realse-local.yaml file://output-dir 2>&1 | tee -a /tmp/oc-mirror-4.15 
-$ /usr/local/bin/oc-mirror --from ./mirror_seq1_000000.tar docker://registry.example.com:5000 --build-catalogs
+$ /usr/local/bin/oc-mirror --from ./mirror_seq1_000000.tar docker://registry.example.com:5000 --rebuild-catalogs
 
 $ cat > image-config-realse-local.yaml <<EOF
 apiVersion: mirror.openshift.io/v1alpha2
@@ -2769,7 +2769,7 @@ mirror:
 EOF
 $ rm -rf output
 $ /usr/local/bin/oc-mirror --config ./image-config-realse-local.yaml file://output-dir 2>&1 | tee -a /tmp/oc-mirror-4.14
-$ /usr/local/bin/oc-mirror --from ./mirror_seq1_000000.tar docker://registry.example.com:5000 --build-catalogs
+$ /usr/local/bin/oc-mirror --from ./mirror_seq1_000000.tar docker://registry.example.com:5000 --rebuild-catalogs
 
 cat > image-config-realse-local.yaml <<EOF
 apiVersion: mirror.openshift.io/v1alpha2
@@ -2787,7 +2787,7 @@ mirror:
 EOF
 $ rm -rf output
 $ /usr/local/bin/oc-mirror --config ./image-config-realse-local.yaml file://output-dir 2>&1 | tee -a /tmp/oc-mirror-4.15
-$ /usr/local/bin/oc-mirror --from ./mirror_seq1_000000.tar docker://registry.example.com:5000 --build-catalogs
+$ /usr/local/bin/oc-mirror --from ./mirror_seq1_000000.tar docker://registry.example.com:5000 --rebuild-catalogs
 
 cat > image-config-realse-local.yaml <<EOF
 apiVersion: mirror.openshift.io/v1alpha2
@@ -2829,7 +2829,7 @@ mirror:
 EOF
 $ rm -rf output
 $ /usr/local/bin/oc-mirror --config ./image-config-realse-local.yaml file://output-dir 2>&1 | tee -a /tmp/oc-mirror-4.15
-$ /usr/local/bin/oc-mirror --from ./mirror_seq1_000000.tar docker://registry.example.com:5000 --build-catalogs
+$ /usr/local/bin/oc-mirror --from ./mirror_seq1_000000.tar docker://registry.example.com:5000 --rebuild-catalogs
 
 cat > image-config-realse-local.yaml <<EOF
 apiVersion: mirror.openshift.io/v1alpha2

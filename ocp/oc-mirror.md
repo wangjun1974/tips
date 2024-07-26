@@ -2873,7 +2873,7 @@ $ podman cp /data/registry/certs/registry.crt ubi9:/etc/pki/ca-trust/source/anch
 $ podman cp ~/.docker ubi9:/root/
 ### ubi9 pod
 $ podman exec -it ubi9 bash
-u$ pdate-ca-trust extract
+$ update-ca-trust extract
 
 $ cd /oc-mirror
 $ /usr/local/bin/oc-mirror --from ./mirror_seq1_000000.tar docker://registry.example.com:5000 --rebuild-catalogs

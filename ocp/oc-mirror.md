@@ -2878,7 +2878,6 @@ $ update-ca-trust extract
 $ cd /oc-mirror
 $ /usr/local/bin/oc-mirror --from ./mirror_seq1_000000.tar docker://registry.example.com:5000 --rebuild-catalogs
 
-
 ### latest version of oc-mirror
 https://mirror.openshift.com/pub/openshift-v4/x86_64/clients/ocp/4.15.19/
 https://mirror.openshift.com/pub/openshift-v4/x86_64/clients/ocp/latest/

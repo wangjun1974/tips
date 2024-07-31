@@ -2876,9 +2876,28 @@ $ podman exec -it ubi9 bash
 $ update-ca-trust extract
 
 $ cd /oc-mirror
-$ /usr/local/bin/oc-mirror --from ./mirror_seq1_000000.tar docker://registry.example.com:5000 --rebuild-catalogs
+$ /usr/local/bin/oc-mirror --from ./huawei_mirror_seq1_000000.tar docker://registry.example.com:5000 --rebuild-catalogs
 
 ### latest version of oc-mirror
 https://mirror.openshift.com/pub/openshift-v4/x86_64/clients/ocp/4.15.19/
 https://mirror.openshift.com/pub/openshift-v4/x86_64/clients/ocp/latest/
+
+
+
+cat > image-config-realse-local.yaml <<EOF
+apiVersion: mirror.openshift.io/v1alpha2
+kind: ImageSetConfiguration
+mirror:
+  additionalImages: # List of additional images to be included in imageset
+    - name: k8s.gcr.io/sig-storage/csi-resizer:v1.4.0
+    - name: k8s.gcr.io/sig-storage/csi-node-driver-registrar:v2.3.0
+    - name: k8s.gcr.io/sig-storage/csi-snapshotter:v4.2.1
+    - name: k8s.gcr.io/sig-storage/snapshot-controller:v4.2.1
+    - name: k8s.gcr.io/sig-storage/csi-provisioner:v3.0.0
+    - name: k8s.gcr.io/sig-storage/csi-attacher:v3.4.0
+EOF
+$ rm -rf output
+$ /usr/local/bin/oc-mirror --config ./image-config-realse-local.yaml file://output-dir 2>&1 | tee -a /tmp/oc-mirror-4.15
+$ /usr/local/bin/oc-mirror --from ./mirror_seq1_000000.tar docker://registry.example.com:5000 --rebuild-catalogs
+
 ```

@@ -2900,4 +2900,29 @@ $ rm -rf output
 $ /usr/local/bin/oc-mirror --config ./image-config-realse-local.yaml file://output-dir 2>&1 | tee -a /tmp/oc-mirror-4.15
 $ /usr/local/bin/oc-mirror --from ./mirror_seq1_000000.tar docker://registry.example.com:5000 --rebuild-catalogs
 
+### add mtc 
+cat > image-config-realse-local.yaml <<EOF
+apiVersion: mirror.openshift.io/v1alpha2
+kind: ImageSetConfiguration
+mirror:
+  operators:
+    - catalog: registry.redhat.io/redhat/redhat-operator-index:v4.14
+      targetCatalog: "mtc-catalog"
+      packages:
+        - name: mtc-operator
+          channels:
+            - name: release-v1.8
+              minVersion: 'v1.8.3'
+              maxVersion: 'v1.8.3'
+        - name: redhat-oadp-operator
+          channels:
+            - name: stable-1.4
+              minVersion: 'v1.4.0'
+              maxVersion: 'v1.4.0'
+EOF
+
+$ rm -rf output
+$ /usr/local/bin/oc-mirror -v1 --config ./image-config-realse-local.yaml file://output-dir 2>&1 | tee -a /tmp/oc-mirror
+$ /usr/local/bin/oc-mirror --from ./mirror_seq1_000000.tar docker://registry.example.com:5000 --rebuild-catalogs
+
 ```

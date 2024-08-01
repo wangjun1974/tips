@@ -1516,3 +1516,6 @@ cd /oc-mirror
 /usr/local/bin/oc-mirror --from ./mirror_seq1_000000.tar docker://registry.example.com:5000 --rebuild-catalogs
 
 ```
+
+### daocloud mirror
+https://docs.daocloud.io/community/mirror/#_3

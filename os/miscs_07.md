@@ -1521,6 +1521,7 @@ cd /oc-mirror
 https://docs.daocloud.io/community/mirror/#_3
 
 ### install homebrew in container
+https://github.com/Homebrew/install/issues/616
 ```
 podman run -it -h fedora --network host --privileged quay.io/fedora/fedora:40-x86_64 /bin/bash
 yum install -y curl git procps libxcrypt-compat

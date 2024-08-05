@@ -2925,4 +2925,60 @@ $ rm -rf output
 $ /usr/local/bin/oc-mirror -v1 --config ./image-config-realse-local.yaml file://output-dir 2>&1 | tee -a /tmp/oc-mirror
 $ /usr/local/bin/oc-mirror --from ./mirror_seq1_000000.tar docker://registry.example.com:5000 --rebuild-catalogs
 
+### add node-healthcheck-opeartor, self-node-remediation, fence-agents-remediation 
+for packagename in node-healthcheck-operator self-node-remediation fence-agents-remediation ; do    /usr/local/bin/oc-mirror list operators --catalog=registry.redhat.io/redhat/redhat-operator-index:v4.14 --package=${packagename} | tee -a /tmp/redhat-operator-index-v4.14; done 
+cat > image-config-realse-local.yaml <<EOF
+apiVersion: mirror.openshift.io/v1alpha2
+kind: ImageSetConfiguration
+mirror:
+  operators:
+    - catalog: registry.redhat.io/redhat/redhat-operator-index:v4.14
+      targetCatalog: "nodehealthcheck-catalog"
+      packages:
+        - name: node-healthcheck-operator
+          channels:
+            - name: stable
+              minVersion: 'v0.8.1'
+              maxVersion: 'v0.8.1'
+        - name: self-node-remediation
+          channels:
+            - name: stable
+              minVersion: 'v0.9.0'
+              maxVersion: 'v0.9.0'
+        - name: fence-agents-remediation
+          channels:
+            - name: stable
+              minVersion: 'v0.4.0'
+              maxVersion: 'v0.4.0'             
+EOF
+
+$ rm -rf output
+$ /usr/local/bin/oc-mirror -v1 --config ./image-config-realse-local.yaml file://output-dir 2>&1 | tee -a /tmp/oc-mirror
+$ /usr/local/bin/oc-mirror --from ./mirror_seq1_000000.tar docker://registry.example.com:5000 --rebuild-catalogs
+
+
+### oc-mirror and proxy
+set -o nounset
+DATETIME=`date +"%Y%m%d%H%M%S"`
+#shame on me for no error handling
+cluster_id=${1}
+privileged_user=${2}
+ocpv4_version=${3}
+MIRROR_TO_REGISTRY=${4}
+HTTPS_PROXY=${5}
+NO_PROXY=${6}
+export https_proxy=${HTTPS_PROXY}
+export http_proxy=${HTTPS_PROXY}
+export no_proxy=${NO_PROXY}
+export PATH=/home/${privileged_user}/${ocpv4_version}:~/bin:$PATH
+export KUBECONFIG=/home/${privileged_user}/${cluster_id}/installocpv4/auth/kubeconfig
+RETURN_CODE=0
+FILE="/home/${privileged_user}/${cluster_id}/${DATETIME}_mirror_catalog_4u10.log"
+exec &> >(tee ${FILE})
+oc-mirror --continue-on-error --max-per-registry 12 --dest-skip-tls --config /home/${privileged_user}/git/ocpv4-deployment/config/content_mirror/ocpv4u10/imageset-config-catalog-4u10.yaml docker://${MIRROR_TO_REGISTRY}
+if [ $? -ne 0 ]
+then
+  RETURN_CODE=1
+  exit 1
+fi
 ```

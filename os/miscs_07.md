@@ -1519,3 +1519,23 @@ cd /oc-mirror
 
 ### daocloud mirror
 https://docs.daocloud.io/community/mirror/#_3
+
+### install homebrew in container
+```
+podman run -it -h fedora --network host --privileged quay.io/fedora/fedora:40-x86_64 /bin/bash
+yum install -y curl git procps libxcrypt-compat
+
+useradd user1
+passwd user1
+echo 'user1 ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/user1
+
+su - user1
+
+bash --version
+git --version
+curl --version
+
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
+eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+brew --version
+```

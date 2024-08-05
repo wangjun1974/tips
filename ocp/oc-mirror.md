@@ -2981,4 +2981,9 @@ then
   RETURN_CODE=1
   exit 1
 fi
+
+
+### example: http_proxy with authentication 
+export http_proxy="http://userName:yourPassword@yourProxyURL.com:8080"
+export https_proxy="http://userName:yourPassword@yourProxyURL.com:8080"
 ```

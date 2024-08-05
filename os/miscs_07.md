@@ -1543,3 +1543,9 @@ brew install ffmpeg
 brew install yt-dlp
 yt-dlp <URL>
 ```
+
+### velero and backup  
+https://velero.io/docs/main/contributions/minio/
+```
+The example Minio yaml provided uses “empty dir”. 
+```

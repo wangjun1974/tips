@@ -1555,3 +1555,65 @@ https://www.nakivo.com/blog/how-to-install-truenas-iscsi-target/
 https://www.truenas.com/docs/solutions/integrations/containers/
 https://artifacthub.io/packages/helm/truenas-csp/truenas-csp
 
+
+### truenas csp machineconfig
+```
+cd /tmp
+cat > my_registry.conf <<EOF
+[[registry]]
+  prefix = ""
+  location = "quay.io/hpestorage"
+  mirror-by-digest-only = false
+
+  [[registry.mirror]]
+    location = "helper.ocp.ap.vwg:5000/jwang/hpestorage"
+
+[[registry]]
+  prefix = ""
+  location = "registry.k8s.io/sig-storage"
+  mirror-by-digest-only = false
+
+  [[registry.mirror]]
+    location = "helper.ocp.ap.vwg:5000/jwang/sig-storage"
+EOF
+
+cat <<EOF | oc apply -f -
+apiVersion: machineconfiguration.openshift.io/v1
+kind: MachineConfig
+metadata:
+  labels:
+    machineconfiguration.openshift.io/role: master
+  name: 99-master-mirror-truenas-csp
+spec:
+  config:
+    ignition:
+      version: 3.2.0
+    storage:
+      files:
+      - contents:
+          source: data:text/plain;charset=utf-8;base64,$(base64 -w0 my_registry.conf)
+        filesystem: root
+        mode: 420
+        path: /etc/containers/registries.conf.d/99-master-mirror-truenas-csp.conf
+EOF
+
+cat <<EOF | oc apply -f -
+apiVersion: machineconfiguration.openshift.io/v1
+kind: MachineConfig
+metadata:
+  labels:
+    machineconfiguration.openshift.io/role: worker
+  name: 99-worker-mirror-truenas-csp
+spec:
+  config:
+    ignition:
+      version: 3.2.0
+    storage:
+      files:
+      - contents:
+          source: data:text/plain;charset=utf-8;base64,$(base64 -w0 my_registry.conf)
+        filesystem: root
+        mode: 420
+        path: /etc/containers/registries.conf.d/99-worker-mirror-truenas-csp.conf
+EOF
+```

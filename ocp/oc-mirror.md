@@ -3021,6 +3021,7 @@ mirror:
     - name: registry.k8s.io/sig-storage/csi-node-driver-registrar:v2.10.0
     - name: quay.io/hpestorage/alletra-6000-and-nimble-csp:v2.4.1
     - name: quay.io/hpestorage/alletra-9000-primera-and-3par-csp:v2.4.2
+    - name: quay.io/datamattsson/truenas-csp:v2.4.2
 EOF
 
 

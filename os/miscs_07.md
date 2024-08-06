@@ -1575,6 +1575,14 @@ cat > my_registry.conf <<EOF
 
   [[registry.mirror]]
     location = "helper.ocp.ap.vwg:5000/jwang/sig-storage"
+
+[[registry]]
+  prefix = ""
+  location = "quay.io/datamattsson"
+  mirror-by-digest-only = false
+
+  [[registry.mirror]]
+    location = "registry.ocp4.example.com/jwang/datamattsson"
 EOF
 
 cat <<EOF | oc apply -f -
@@ -1617,3 +1625,6 @@ spec:
         path: /etc/containers/registries.conf.d/99-worker-mirror-truenas-csp.conf
 EOF
 ```
+
+### 
+https://jonathangazeley.com/2021/01/05/using-truenas-to-provide-persistent-storage-for-kubernetes/

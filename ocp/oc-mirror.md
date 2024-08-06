@@ -2397,7 +2397,7 @@ mirror:
               minVersion: 'v4.4.2'
               maxVersion: 'v4.4.2'
 EOF
-$ rm -rf output
+$ rm -rf output-dir
 $ /usr/local/bin/oc-mirror --config ./image-config-realse-local.yaml file://output-dir 2>&1 | tee -a /tmp/oc-mirror-4.15 
 $ /usr/local/bin/oc-mirror --from ./mirror_seq1_000000.tar docker://registry.example.com:5000
 
@@ -2455,7 +2455,7 @@ mirror:
               minVersion: 'v4.4.2'
               maxVersion: 'v4.4.2'
 EOF
-$ rm -rf output
+$ rm -rf output-dir
 $ /usr/local/bin/oc-mirror --config ./image-config-realse-local.yaml file://output-dir 2>&1 | tee -a /tmp/oc-mirror-4.15 
 $ /usr/local/bin/oc-mirror --from ./mirror_seq1_000000.tar docker://registry.example.com:5000 --rebuild-catalogs
 
@@ -2617,7 +2617,7 @@ mirror:
               minVersion: 'v7.0.1'
               maxVersion: 'v7.0.1'
 EOF
-$ rm -rf output
+$ rm -rf output-dir
 $ /usr/local/bin/oc-mirror --config ./image-config-realse-local.yaml file://output-dir 2>&1 | tee -a /tmp/oc-mirror-4.15 
 $ /usr/local/bin/oc-mirror --from ./mirror_seq1_000000.tar docker://registry.example.com:5000 --rebuild-catalogs
 
@@ -2767,7 +2767,7 @@ mirror:
               minVersion: 'v7.0.1'
               maxVersion: 'v7.0.1'
 EOF
-$ rm -rf output
+$ rm -rf output-dir
 $ /usr/local/bin/oc-mirror --config ./image-config-realse-local.yaml file://output-dir 2>&1 | tee -a /tmp/oc-mirror-4.14
 $ /usr/local/bin/oc-mirror --from ./mirror_seq1_000000.tar docker://registry.example.com:5000 --rebuild-catalogs
 
@@ -2785,7 +2785,7 @@ mirror:
               minVersion: 'v7.0.3'
               maxVersion: 'v7.0.3'
 EOF
-$ rm -rf output
+$ rm -rf output-dir
 $ /usr/local/bin/oc-mirror --config ./image-config-realse-local.yaml file://output-dir 2>&1 | tee -a /tmp/oc-mirror-4.15
 $ /usr/local/bin/oc-mirror --from ./mirror_seq1_000000.tar docker://registry.example.com:5000 --rebuild-catalogs
 
@@ -2827,7 +2827,7 @@ mirror:
     - name: gcr.io/kasten-images/upgrade:7.0.3
     - name: gcr.io/kasten-images/vbrintegrationapi:7.0.3
 EOF
-$ rm -rf output
+$ rm -rf output-dir
 $ /usr/local/bin/oc-mirror --config ./image-config-realse-local.yaml file://output-dir 2>&1 | tee -a /tmp/oc-mirror-4.15
 $ /usr/local/bin/oc-mirror --from ./mirror_seq1_000000.tar docker://registry.example.com:5000 --rebuild-catalogs
 
@@ -2855,7 +2855,7 @@ mirror:
               minVersion: 'v7.0.4'
               maxVersion: 'v7.0.4'
 EOF
-$ rm -rf output
+$ rm -rf output-dir
 $ /usr/local/bin/oc-mirror --config ./image-config-realse-local.yaml file://output-dir 2>&1 | tee -a /tmp/oc-mirror-4.15
 $ /usr/local/bin/oc-mirror --from ./mirror_seq1_000000.tar docker://registry.example.com:5000 --rebuild-catalogs
 
@@ -2896,7 +2896,7 @@ mirror:
     - name: k8s.gcr.io/sig-storage/csi-provisioner:v3.0.0
     - name: k8s.gcr.io/sig-storage/csi-attacher:v3.4.0
 EOF
-$ rm -rf output
+$ rm -rf output-dir
 $ /usr/local/bin/oc-mirror --config ./image-config-realse-local.yaml file://output-dir 2>&1 | tee -a /tmp/oc-mirror-4.15
 $ /usr/local/bin/oc-mirror --from ./mirror_seq1_000000.tar docker://registry.example.com:5000 --rebuild-catalogs
 
@@ -2921,7 +2921,7 @@ mirror:
               maxVersion: 'v1.4.0'
 EOF
 
-$ rm -rf output
+$ rm -rf output-dir
 $ /usr/local/bin/oc-mirror -v1 --config ./image-config-realse-local.yaml file://output-dir 2>&1 | tee -a /tmp/oc-mirror
 $ /usr/local/bin/oc-mirror --from ./mirror_seq1_000000.tar docker://registry.example.com:5000 --rebuild-catalogs
 
@@ -2952,7 +2952,7 @@ mirror:
               maxVersion: 'v0.4.0'             
 EOF
 
-$ rm -rf output
+$ rm -rf output-dir
 $ /usr/local/bin/oc-mirror -v1 --config ./image-config-realse-local.yaml file://output-dir 2>&1 | tee -a /tmp/oc-mirror
 $ /usr/local/bin/oc-mirror --from ./mirror_seq1_000000.tar docker://registry.example.com:5000 --rebuild-catalogs
 
@@ -2986,4 +2986,47 @@ fi
 ### example: http_proxy with authentication 
 export http_proxy="http://userName:yourPassword@yourProxyURL.com:8080"
 export https_proxy="http://userName:yourPassword@yourProxyURL.com:8080"
+
+
+charts/hpe-csi-driver/templates/hpe-csi-controller.yaml:          image: quay.io/hpestorage/csi-driver:v2.4.2
+charts/hpe-csi-driver/templates/hpe-csi-controller.yaml:          image: quay.io/hpestorage/csi-extensions:v1.2.6
+charts/hpe-csi-driver/templates/hpe-csi-controller.yaml:          image: quay.io/hpestorage/volume-group-provisioner:v1.0.5
+charts/hpe-csi-driver/templates/hpe-csi-controller.yaml:          image: quay.io/hpestorage/volume-group-snapshotter:v1.0.5
+charts/hpe-csi-driver/templates/hpe-csi-controller.yaml:          image: quay.io/hpestorage/volume-mutator:v1.3.5
+charts/hpe-csi-driver/templates/hpe-csi-controller.yaml:          image: registry.k8s.io/sig-storage/csi-attacher:v4.5.0
+charts/hpe-csi-driver/templates/hpe-csi-controller.yaml:          image: registry.k8s.io/sig-storage/csi-provisioner:v4.0.0
+charts/hpe-csi-driver/templates/hpe-csi-controller.yaml:          image: registry.k8s.io/sig-storage/csi-resizer:v1.9.3
+charts/hpe-csi-driver/templates/hpe-csi-controller.yaml:          image: registry.k8s.io/sig-storage/csi-snapshotter:v6.3.3
+charts/hpe-csi-driver/templates/hpe-csi-node.yaml:          image: quay.io/hpestorage/csi-driver:v2.4.2
+charts/hpe-csi-driver/templates/hpe-csi-node.yaml:          image: registry.k8s.io/sig-storage/csi-node-driver-registrar:v2.10.0
+charts/hpe-csi-driver/templates/nimble-csp.yaml:          image: quay.io/hpestorage/alletra-6000-and-nimble-csp:v2.4.1
+charts/hpe-csi-driver/templates/primera-3par-csp.yaml:          image: quay.io/hpestorage/alletra-9000-primera-and-3par-csp:v2.4.2
+
+
+cat > image-config-realse-local.yaml <<EOF
+apiVersion: mirror.openshift.io/v1alpha2
+kind: ImageSetConfiguration
+mirror:
+  additionalImages: # List of additional images to be included in imageset
+    - name: quay.io/hpestorage/csi-driver:v2.4.2
+    - name: quay.io/hpestorage/csi-extensions:v1.2.6
+    - name: quay.io/hpestorage/volume-group-provisioner:v1.0.5    
+    - name: quay.io/hpestorage/volume-group-snapshotter:v1.0.5    
+    - name: quay.io/hpestorage/volume-mutator:v1.3.5
+    - name: registry.k8s.io/sig-storage/csi-attacher:v4.5.0       
+    - name: registry.k8s.io/sig-storage/csi-provisioner:v4.0.0    
+    - name: registry.k8s.io/sig-storage/csi-resizer:v1.9.3        
+    - name: registry.k8s.io/sig-storage/csi-snapshotter:v6.3.3    
+    - name: quay.io/hpestorage/csi-driver:v2.4.2
+    - name: registry.k8s.io/sig-storage/csi-node-driver-registrar:v2.10.0
+    - name: quay.io/hpestorage/alletra-6000-and-nimble-csp:v2.4.1
+    - name: quay.io/hpestorage/alletra-9000-primera-and-3par-csp:v2.4.2
+EOF
+
+
+$ rm -rf output-dir
+$ /usr/local/bin/oc-mirror -v1 --config ./image-config-realse-local.yaml file://output-dir 2>&1 | tee -a /tmp/oc-mirror
+$ /usr/local/bin/oc-mirror --from ./mirror_seq1_000000.tar docker://registry.example.com:5000 --rebuild-catalogs
+
+
 ```

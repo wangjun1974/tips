@@ -1662,3 +1662,333 @@ oc -n openshift-machine-config-operator delete $(oc -n openshift-machine-config-
 oc -n openshift-machine-config-operator logs $(oc -n openshift-machine-config-operator get pods -l k8s-app='machine-config-operator' -o name)
 oc -n openshift-machine-config-operator logs $(oc -n openshift-machine-config-operator get pods -l k8s-app='machine-config-controller' -o name)
 ```
+
+### 集成 truenas iscsi 服务到 openshift
+```
+### 参考
+### https://www.nakivo.com/blog/how-to-install-truenas-iscsi-target/
+### iscsi的portal name需配置为hpe-csi
+### 这是truenas-csp所使用hpe csi plugins所要求的
+### 创建apikey
+### truenas iscsiapikey
+### 1-tgH9r6voLAto9RSXThaa7biJlujmGkdEhgyc9ZNx3CPrdujFj3Iz3aMP5ivgLivR
+
+oc new-project hpe-storage
+oc label namespace hpe-storage pod-security.kubernetes.io/audit=privileged pod-security.kubernetes.io/enforce=privileged pod-security.kubernetes.io/warn=privileged --overwrite=true
+
+cat <<EOF | oc apply -f -
+kind: SecurityContextConstraints
+apiVersion: security.openshift.io/v1
+metadata:
+  name: hpe-csi-scc
+allowHostDirVolumePlugin: true
+allowHostIPC: true
+allowHostNetwork: true
+allowHostPID: true
+allowHostPorts: true
+allowPrivilegeEscalation: true
+allowPrivilegedContainer: true
+allowedCapabilities:
+- '*'
+defaultAddCapabilities: []
+fsGroup:
+  type: RunAsAny
+groups: []
+priority:
+readOnlyRootFilesystem: false
+requiredDropCapabilities: []
+runAsUser:
+  type: RunAsAny
+seLinuxContext:
+  type: RunAsAny
+supplementalGroups:
+  type: RunAsAny
+users:
+- system:serviceaccount:hpe-storage:hpe-csi-controller-sa
+- system:serviceaccount:hpe-storage:hpe-csi-node-sa
+- system:serviceaccount:hpe-storage:hpe-csp-sa
+volumes:
+- '*'
+EOF
+
+### 同步所需镜像
+cat > image-config-realse-local.yaml <<EOF
+apiVersion: mirror.openshift.io/v1alpha2
+kind: ImageSetConfiguration
+mirror:
+  additionalImages: # List of additional images to be included in imageset
+    - name: quay.io/hpestorage/csi-driver:v2.4.2
+    - name: quay.io/hpestorage/csi-extensions:v1.2.6
+    - name: quay.io/hpestorage/volume-group-provisioner:v1.0.5    
+    - name: quay.io/hpestorage/volume-group-snapshotter:v1.0.5    
+    - name: quay.io/hpestorage/volume-mutator:v1.3.5
+    - name: registry.k8s.io/sig-storage/csi-attacher:v4.5.0       
+    - name: registry.k8s.io/sig-storage/csi-provisioner:v4.0.0    
+    - name: registry.k8s.io/sig-storage/csi-resizer:v1.9.3        
+    - name: registry.k8s.io/sig-storage/csi-snapshotter:v6.3.3    
+    - name: quay.io/hpestorage/csi-driver:v2.4.2
+    - name: registry.k8s.io/sig-storage/csi-node-driver-registrar:v2.10.0
+    - name: quay.io/hpestorage/alletra-6000-and-nimble-csp:v2.4.1
+    - name: quay.io/hpestorage/alletra-9000-primera-and-3par-csp:v2.4.2
+    - name: quay.io/datamattsson/truenas-csp:v2.4.2
+EOF
+
+$ rm -rf output-dir
+$ /usr/local/bin/oc-mirror -v1 --config ./image-config-realse-local.yaml file://output-dir 2>&1 | tee -a /tmp/oc-mirror
+$ /usr/local/bin/oc-mirror --from ./mirror_seq1_000000.tar docker://registry.example.com:5000 --rebuild-catalogs
+
+### 创建registry config
+cd /tmp
+cat > my_registry.conf <<EOF
+[[registry]]
+  prefix = ""
+  location = "quay.io/hpestorage"
+  mirror-by-digest-only = false
+
+  [[registry.mirror]]
+    location = "registry.ocp4.example.com/jwang/hpestorage"
+
+[[registry]]
+  prefix = ""
+  location = "registry.k8s.io/sig-storage"
+  mirror-by-digest-only = false
+
+  [[registry.mirror]]
+    location = "registry.ocp4.example.com/jwang/sig-storage"
+
+[[registry]]
+  prefix = ""
+  location = "quay.io/datamattsson"
+  mirror-by-digest-only = false
+
+  [[registry.mirror]]
+    location = "registry.ocp4.example.com/jwang/datamattsson"
+EOF
+
+cat <<EOF | oc apply -f -
+apiVersion: machineconfiguration.openshift.io/v1
+kind: MachineConfig
+metadata:
+  labels:
+    machineconfiguration.openshift.io/role: master
+  name: 99-master-mirror-truenas-csp
+spec:
+  config:
+    ignition:
+      version: 3.2.0
+    storage:
+      files:
+      - contents:
+          source: data:text/plain;charset=utf-8;base64,$(base64 -w0 my_registry.conf)
+        filesystem: root
+        mode: 420
+        path: /etc/containers/registries.conf.d/99-master-mirror-truenas-csp.conf
+EOF
+
+cat <<EOF | oc apply -f -
+apiVersion: machineconfiguration.openshift.io/v1
+kind: MachineConfig
+metadata:
+  labels:
+    machineconfiguration.openshift.io/role: worker
+  name: 99-worker-mirror-truenas-csp
+spec:
+  config:
+    ignition:
+      version: 3.2.0
+    storage:
+      files:
+      - contents:
+          source: data:text/plain;charset=utf-8;base64,$(base64 -w0 my_registry.conf)
+        filesystem: root
+        mode: 420
+        path: /etc/containers/registries.conf.d/99-worker-mirror-truenas-csp.conf
+EOF
+
+### 离线 helm charts
+helm repo add truenas-csp https://hpe-storage.github.io/truenas-csp/
+helm pull truenas-csp/truenas-csp --version 1.1.6
+
+### 将 truenas-csp-1.1.6.tgz 拷贝到repo
+mkdir -p /var/www/html/repo
+cd  /var/www/html/repo
+cp <path_of_truenas-csp-1.1.6.tgz>/truenas-csp-1.1.6.tgz /var/www/html/repo
+helm repo index /var/www/html/repo --url http://helper-ocp4test.ocp4.example.com:8080/repo/
+helm repo add local-truenas-repo http://helper-ocp4test.ocp4.example.com:8080/repo
+helm search repo local-truenas-repo 
+NAME                            CHART VERSION   APP VERSION     DESCRIPTION                                       
+local-truenas-repo/truenas-csp  1.1.6           2.4.2           TrueNAS Container Storage Provider Helm chart f...
+
+### 生成 helm chart values.yaml 文件
+cat <<EOF > /tmp/values.yaml
+# Default values for truenas-csp.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+logDebug: false
+
+# Tunes the CSP backend API requests
+optimizeFor: "Default"
+
+image:
+  repository: quay.io/datamattsson/truenas-csp
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: "v2.4.2"
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+podAnnotations: {}
+
+podSecurityContext: {}
+  # fsGroup: 2000
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+service:
+  type: ClusterIP
+  port: 8080
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+  hosts:
+    - host: truenas-csp.hpe-storage
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+  tls: []
+  #  - secretName: chart-example-tls
+  #    hosts:
+  #      - chart-example.local
+
+resources:
+  limits:
+    cpu: 1000m
+    memory: 1Gi
+  requests:
+    cpu: 100m
+    memory: 256Mi
+
+nodeSelector: {}
+
+tolerations:
+  - effect: NoExecute
+    key: node.kubernetes.io/not-ready
+    operator: Exists
+    tolerationSeconds: 30
+  - effect: NoExecute
+    key: node.kubernetes.io/unreachable
+    operator: Exists
+    tolerationSeconds: 30
+
+affinity: {}
+
+# Dependencies
+hpe-csi-driver:
+  disable:
+    nimble: true
+    primera: true
+    alletra6000: true
+    alletra9000: true
+    alletraStorageMP: true
+EOF
+
+### 创建secret truenas-secret
+cat <<EOF | oc apply -f -
+apiVersion: v1
+kind: Secret
+metadata:
+  name: truenas-secret
+  namespace: hpe-storage
+stringData:
+  serviceName: truenas-csp-svc
+  servicePort: "8080"
+  username: hpe-csi
+  password: 1-tgH9r6voLAto9RSXThaa7biJlujmGkdEhgyc9ZNx3CPrdujFj3Iz3aMP5ivgLivR
+  backend: 192.168.56.19
+EOF
+
+### 安装truenas-csp
+helm install my-truenas-csp local-truenas-repo/truenas-csp --version 1.1.6 -f /tmp/values.yaml -n hpe-storage
+
+oc get all -n hpe-storage
+NAME                                      READY   STATUS    RESTARTS   AGE
+pod/hpe-csi-controller-55ddf587dd-qfzcs   9/9     Running   0          125m
+pod/hpe-csi-node-9j6hc                    2/2     Running   0          125m
+pod/hpe-csi-node-blkd5                    2/2     Running   0          125m
+pod/hpe-csi-node-gwpk4                    2/2     Running   0          125m
+pod/hpe-csi-node-h98qq                    2/2     Running   0          125m
+pod/hpe-csi-node-khr7w                    2/2     Running   0          125m
+pod/hpe-csi-node-nwxp5                    2/2     Running   2          125m
+pod/truenas-csp-596ccf49b9-j7tbt          1/1     Running   0          128m
+
+NAME                      TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)    AGE
+service/truenas-csp-svc   ClusterIP   172.30.37.211   <none>        8080/TCP   128m
+
+NAME                          DESIRED   CURRENT   READY   UP-TO-DATE   AVAILABLE   NODE SELECTOR   AGE
+daemonset.apps/hpe-csi-node   6         6         6       6            6           <none>          128m
+
+NAME                                 READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/hpe-csi-controller   1/1     1            1           128m
+deployment.apps/truenas-csp          1/1     1            1           128m
+
+NAME                                            DESIRED   CURRENT   READY   AGE
+replicaset.apps/hpe-csi-controller-55ddf587dd   1         1         1       128m
+replicaset.apps/truenas-csp-596ccf49b9          1         1         1       128m
+
+### 创建storageclass
+cat <<EOF | oc apply -f -
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  annotations:
+    storageclass.kubernetes.io/is-default-class: "true"
+  name: truenas-iscsi
+provisioner: csi.hpe.com
+parameters:
+  csi.storage.k8s.io/controller-expand-secret-name: truenas-secret
+  csi.storage.k8s.io/controller-expand-secret-namespace: hpe-storage
+  csi.storage.k8s.io/controller-publish-secret-name: truenas-secret
+  csi.storage.k8s.io/controller-publish-secret-namespace: hpe-storage
+  csi.storage.k8s.io/node-publish-secret-name: truenas-secret
+  csi.storage.k8s.io/node-publish-secret-namespace: hpe-storage
+  csi.storage.k8s.io/node-stage-secret-name: truenas-secret
+  csi.storage.k8s.io/node-stage-secret-namespace: hpe-storage
+  csi.storage.k8s.io/provisioner-secret-name: truenas-secret
+  csi.storage.k8s.io/provisioner-secret-namespace: hpe-storage
+  csi.storage.k8s.io/fstype: xfs
+  allowOverrides: sparse,compression,deduplication,volblocksize,sync,description
+  root: iscsipool01
+  accessProtocol: "iscsi"
+  description: "Volume created by the HPE CSI Driver for Kubernetes"
+reclaimPolicy: Delete
+allowVolumeExpansion: true
+EOF
+
+oc get sc 
+NAME                      PROVISIONER                    RECLAIMPOLICY   VOLUMEBINDINGMODE      ALLOWVOLUMEEXPANSION   AGE
+truenas-iscsi (default)   csi.hpe.com                    Delete          Immediate              true                   123m
+
+
+```

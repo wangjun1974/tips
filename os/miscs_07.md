@@ -1631,6 +1631,7 @@ https://jonathangazeley.com/2021/01/05/using-truenas-to-provide-persistent-stora
 
 ### 在 machineconfig 出现错误时如何恢复
 https://access.redhat.com/solutions/7061142
+https://gist.github.com/ikurni/067ea20449588008de4e19a07f0de5f4
 ```
 ### 将 machineconfiguration.openshift.io/currentConfig 和 
 ### machineconfiguration.openshift.io/desiredConfig 设置为

@@ -1626,5 +1626,37 @@ spec:
 EOF
 ```
 
-### 
+### truenas k8s 信息
 https://jonathangazeley.com/2021/01/05/using-truenas-to-provide-persistent-storage-for-kubernetes/
+
+### 在 machineconfig 出现错误时如何恢复
+https://access.redhat.com/solutions/7061142
+```
+### 将 machineconfiguration.openshift.io/currentConfig 和 
+### machineconfiguration.openshift.io/desiredConfig 设置为
+### rendered-worker-0cc133496d8b46e09c2a5c1e22e3ae37
+### 将 machineconfiguration.openshift.io/reason 设置为 ''
+### 将 machineconfiguration.openshift.io/state 设置为 'Done'
+for i in `seq 0 3`
+do 
+oc patch node b${i}-ocp4test.ocp4.example.com --type merge --patch "{\"metadata\": {\"annotations\": {\"machineconfiguration.openshift.io/currentConfig\": \"rendered-worker-0cc133496d8b46e09c2a5c1e22e3ae37\"}}}"
+ 
+oc patch node b${i}-ocp4test.ocp4.example.com --type merge --patch "{\"metadata\": {\"annotations\": {\"machineconfiguration.openshift.io/desiredConfig\": \"rendered-worker-0cc133496d8b46e09c2a5c1e22e3ae37\"}}}"
+
+oc patch node b${i}-ocp4test.ocp4.example.com --type merge --patch '{"metadata": {"annotations": {"machineconfiguration.openshift.io/reason": ""}}}'
+
+oc patch node b${i}-ocp4test.ocp4.example.com  --type merge --patch '{"metadata": {"annotations": {"machineconfiguration.openshift.io/state": "Done"}}}'
+done
+
+### 登录节点
+rm /etc/machine-config-daemon/currentconfig 
+touch /run/machine-config-daemon-force
+
+### 如果上述操作不生效，删除pod machine-config-operator 和 machine-config-controller
+oc -n openshift-machine-config-operator delete $(oc -n openshift-machine-config-operator get pod -l k8s-app='machine-config-operator' -o name)
+oc -n openshift-machine-config-operator delete $(oc -n openshift-machine-config-operator get pod -l k8s-app='machine-config-controller' -o name)
+
+### 检查日志
+oc -n openshift-machine-config-operator logs $(oc -n openshift-machine-config-operator get pods -l k8s-app='machine-config-operator' -o name)
+oc -n openshift-machine-config-operator logs $(oc -n openshift-machine-config-operator get pods -l k8s-app='machine-config-controller' -o name)
+```

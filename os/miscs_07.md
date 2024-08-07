@@ -1992,3 +1992,6 @@ truenas-iscsi (default)   csi.hpe.com                    Delete          Immedia
 
 
 ```
+
+### rhel8 corosync gfs2
+https://bidhankhatri.com.np/system/gfs2-filesystem-setup-in-rhel8-with-pacemaker-and-corosync/

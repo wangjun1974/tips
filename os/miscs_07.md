@@ -1995,3 +1995,33 @@ truenas-iscsi (default)   csi.hpe.com                    Delete          Immedia
 
 ### rhel8 corosync gfs2
 https://bidhankhatri.com.np/system/gfs2-filesystem-setup-in-rhel8-with-pacemaker-and-corosync/
+
+### spec.defaultNetwork.ovnKubernetesConfig.gatewayConfig 支持的配置
+```
+$ oc explain network.spec.defaultNetwork.ovnKubernetesConfig.gatewayConfig --api-version=operator.openshift.io/v1
+GROUP:      operator.openshift.io
+KIND:       Network
+VERSION:    v1
+
+FIELD: gatewayConfig <Object>
+
+DESCRIPTION:
+    gatewayConfig holds the configuration for node gateway options.
+    
+FIELDS:
+  ipForwarding  <string>
+    IPForwarding controls IP forwarding for all traffic on OVN-Kubernetes
+    managed interfaces (such as br-ex). By default this is set to Restricted,
+    and Kubernetes related traffic is still forwarded appropriately, but other
+    IP traffic will not be routed by the OCP node. If there is a desire to allow
+    the host to forward traffic across OVN-Kubernetes managed interfaces, then
+    set this field to "Global". The supported values are "Restricted" and
+    "Global".
+
+  routingViaHost        <boolean>
+    RoutingViaHost allows pod egress traffic to exit via the ovn-k8s-mp0
+    management port into the host before sending it out. If this is not set,
+    traffic will always egress directly from OVN to outside without touching the
+    host stack. Setting this to true means hardware offload will not be
+    supported. Default is false if GatewayConfig is specified.
+```

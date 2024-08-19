@@ -2123,3 +2123,27 @@ EOF
 
 
 ```
+
+### nfs csi driver
+```
+https://github.com/kubernetes-csi/csi-driver-nfs/tree/master
+
+cat > image-config-realse-local.yaml <<EOF
+apiVersion: mirror.openshift.io/v1alpha2
+kind: ImageSetConfiguration
+mirror:
+  additionalImages: # List of additional images to be included in imageset
+    - name: registry.k8s.io/sig-storage/csi-provisioner:v5.0.1
+    - name: registry.k8s.io/sig-storage/csi-snapshotter:v8.0.1
+    - name: registry.k8s.io/sig-storage/livenessprobe:v2.13.1
+    - name: registry.k8s.io/sig-storage/nfsplugin:v4.8.0
+    - name: registry.k8s.io/sig-storage/csi-node-driver-registrar:v2.11.1
+    - name: registry.k8s.io/sig-storage/nfsplugin:v4.8.0
+    - name: registry.k8s.io/sig-storage/snapshot-controller:v8.0.1
+EOF
+
+$ rm -rf output-dir
+$ /usr/local/bin/oc-mirror --config ./image-config-realse-local.yaml file://output-dir 2>&1 | tee -a /tmp/oc-mirror-4.15 
+$ /usr/local/bin/oc-mirror --from ./mirror_seq1_000000.tar docker://registry.example.com:5000 --rebuild-catalogs
+
+```

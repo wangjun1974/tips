@@ -2147,3 +2147,82 @@ $ /usr/local/bin/oc-mirror --config ./image-config-realse-local.yaml file://outp
 $ /usr/local/bin/oc-mirror --from ./mirror_seq1_000000.tar docker://registry.example.com:5000 --rebuild-catalogs
 
 ```
+
+### OpenShift LDAP OAUTH
+https://docs.openshift.com/container-platform/4.14/authentication/identity_providers/configuring-ldap-identity-provider.html
+https://rhthsa.github.io/openshift-demo/infrastructure-authentication-providers.html
+```
+### IPA to AD then LDAP
+$ ldapsearch -xLLL -h ipa.cn.example.com -b "dc=cn,dc=example,dc=com" -D "user1@cn.example.com" -w 'XXXXXXXX' -s sub "(&(objectclass=user)(objectcategory=person))"
+$ openssl s_client -connect ipa.cn.example.com:636 2>/dev/null </dev/null | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' | tee ipaca.crt
+$ oc create configmap ca-config-map --from-file=ipaca.crt=/<path>/ipaca.crt -n openshift-config
+$ oc create secret generic ldap-secret --from-literal=bindPassword='<password>' -n openshift-config
+
+### LDAP
+$ cat <<EOF | oc apply -f -
+apiVersion: config.openshift.io/v1
+kind: OAuth
+metadata:
+  name: cluster
+spec:
+  identityProviders:
+  - name: ldap
+    challenge: false
+    login: true
+    mappingMethod: claim
+    type: LDAP
+    ldap:
+      attributes:
+        id:
+        - distinguishedName
+        email:
+        - userPrincipalName
+        name:
+        - givenName
+        preferredUsername:
+        - sAMAccountName
+      bindDN: "user1@cn.example.com" 
+      bindPassword: 
+        name: ldap-secret
+      insecure: true 
+      url: "ldap://ipa.cn.example.com:389/DC=cn,DC=example,DC=com?sAMAccountName?sub?(&(objectclass=user)(objectcategory=person))"
+EOF
+
+### LDAPS
+$ cat <<EOF | oc apply -f -
+apiVersion: config.openshift.io/v1
+kind: OAuth
+metadata:
+  name: cluster
+spec:
+  identityProviders:
+  - name: ldap
+    challenge: false
+    login: true
+    mappingMethod: claim
+    type: LDAP
+    ldap:
+      attributes:
+        id:
+        - distinguishedName
+        email:
+        - userPrincipalName
+        name:
+        - givenName
+        preferredUsername:
+        - sAMAccountName
+      bindDN: "user1@cn.example.com" 
+      bindPassword: 
+        name: ldap-secret
+      ca: 
+        name: ca-config-map 
+      insecure: false
+      url: "ldaps://ipa.cn.example.com:636/DC=cn,DC=example,DC=com?sAMAccountName?sub?(&(objectclass=user)(objectcategory=person))"
+EOF
+
+```
+
+### 检查NNCP配置时间
+```
+oc get nncp | grep intranet | awk '{print $1}' | xargs -I file sh -c 'oc get nncp file -o yaml | grep -B1 "4/4 nodes successfully configured" | grep lastTransitionTime' | sed 's/    lastTransitionTime: "//g; s/"//g' | sort | awk 'NR==1 {first=$0; next} {last=$0} END {cmd="date -d " first " +%s"; cmd | getline first_time; close(cmd); cmd="date -d " last " +%s"; cmd | getline last_time; close(cmd); total=last_time - first_time; hours=int(total/3600); minutes=int((total%3600)/60); seconds=total%60; printf "%d hours, %d minutes, %d seconds from %s to %s\n", hours, minutes, seconds, first, last}'
+```

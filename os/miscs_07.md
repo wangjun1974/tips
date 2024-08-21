@@ -2226,3 +2226,13 @@ EOF
 ```
 oc get nncp | grep intranet | awk '{print $1}' | xargs -I file sh -c 'oc get nncp file -o yaml | grep -B1 "4/4 nodes successfully configured" | grep lastTransitionTime' | sed 's/    lastTransitionTime: "//g; s/"//g' | sort | awk 'NR==1 {first=$0; next} {last=$0} END {cmd="date -d " first " +%s"; cmd | getline first_time; close(cmd); cmd="date -d " last " +%s"; cmd | getline last_time; close(cmd); total=last_time - first_time; hours=int(total/3600); minutes=int((total%3600)/60); seconds=total%60; printf "%d hours, %d minutes, %d seconds from %s to %s\n", hours, minutes, seconds, first, last}'
 ```
+
+### 检查节点开机时间
+```
+oc get nodes -o name  | while read i ; do oc debug $i -- w 2>&1 | grep ' up ' ; done
+ 05:52:31 up 8 days, 20:34,  0 users,  load average: 0.56, 0.55, 0.54
+ 05:52:32 up 5 days, 15:17,  0 users,  load average: 0.77, 0.48, 0.32
+ 05:52:34 up 8 days, 20:54,  0 users,  load average: 0.40, 0.45, 0.49
+ 05:52:36 up 8 days, 21:03,  0 users,  load average: 0.42, 0.28, 0.36
+ 05:52:38 up 8 days, 21:50,  0 users,  load average: 6.31, 6.35, 6.43
+```

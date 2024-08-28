@@ -2236,3 +2236,79 @@ oc get nodes -o name  | while read i ; do oc debug $i -- w 2>&1 | grep ' up ' ; 
  05:52:36 up 8 days, 21:03,  0 users,  load average: 0.42, 0.28, 0.36
  05:52:38 up 8 days, 21:50,  0 users,  load average: 6.31, 6.35, 6.43
 ```
+
+### multipath and blacklist for single node
+```
+cat <<EOF | oc apply -f -
+apiVersion: machineconfiguration.openshift.io/v1
+kind: MachineConfigPool
+metadata:
+  name: worker-baremetal-1
+  labels:
+    machineconfiguration.openshift.io/role: worker-baremetal-1
+spec:
+  machineConfigSelector:
+    matchExpressions:
+      - {
+           key: machineconfiguration.openshift.io/role,
+           operator: In,
+           values: [worker, worker-baremetal-1],
+        }
+  paused: false
+  nodeSelector:
+    matchLabels:
+      node-role.kubernetes.io/worker-baremetal-1: ""
+EOF
+
+export MULTIPATH_CONF_1=$(cat << EOF | base64 -w 0
+defaults {
+  user_friendly_names yes
+}
+devices {
+  device {
+    vendor "DGC"
+    product ".*"
+    product_blacklist "LUNZ"
+    features "1 queue_if_no_path"
+    hardware_handler "1 alua"
+    path_grouping_policy "group_by_prio"
+    path_selector "roundrobin 0"
+    path_checker "emc_clariion"
+    failback "immediate"
+    rr_weight "uniform"
+    no_path_retry "60"
+    prio "alua"
+    dev_loss_tmp "0"
+  }
+}
+blacklist {
+    wwid wwid2
+    wwid wwid3
+    wwid wwid4
+}
+EOF)
+
+cat <<EOF | oc apply -f -
+apiVersion: machineconfiguration.openshift.io/v1
+kind: MachineConfig
+metadata:
+  labels:
+    machineconfiguration.openshift.io/role: worker-baremetal-1
+  name: 99-worker-baremetal-1-multipathing
+spec:
+  config:
+    ignition:
+      version: 3.2.0
+    storage:
+      files:
+      - contents:
+         source: data:text/plain;charset=utf-8;base64,${MULTIPATH_CONF_1}
+        filesystem: root
+        mode: 420
+        path: /etc/multipath.conf
+    systemd:
+      units:
+      - name: multipathd.service
+        enabled: true
+EOF
+```

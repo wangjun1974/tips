@@ -3385,4 +3385,23 @@ $ rm -rf output-dir
 $ /usr/local/bin/oc-mirror --config ./image-config-realse-local.yaml file://output-dir 2>&1 | tee -a /tmp/oc-mirror-4.15 
 $ /usr/local/bin/oc-mirror --from ./mirror_seq1_000000.tar docker://registry.example.com:5000 --rebuild-catalogs
 
+
+cat > image-config-realse-local.yaml <<EOF
+apiVersion: mirror.openshift.io/v1alpha2
+kind: ImageSetConfiguration
+mirror:
+  operators:
+    - catalog: registry.redhat.io/redhat/redhat-operator-index:v4.15
+      targetCatalog: "metallb-catalog"
+      packages:
+        - name: metallb-operator
+          channels:
+            - name: stable
+              minVersion: 'v4.15.0-202408091808'
+              maxVersion: 'v4.15.0-202408091808' 
+EOF
+$ rm -rf output-dir
+$ /usr/local/bin/oc-mirror --config ./image-config-realse-local.yaml file://output-dir 2>&1 | tee -a /tmp/oc-mirror-4.15 
+$ /usr/local/bin/oc-mirror --from ./mirror_seq1_000000.tar docker://registry.example.com:5000 --rebuild-catalogs
+
 ```

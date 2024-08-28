@@ -2312,3 +2312,6 @@ spec:
         enabled: true
 EOF
 ```
+ 
+### change discovery iso core user password
+https://raw.githubusercontent.com/openshift/assisted-service/master/docs/change-iso-password.sh

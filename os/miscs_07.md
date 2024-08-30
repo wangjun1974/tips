@@ -2314,4 +2314,8 @@ EOF
 ```
  
 ### change discovery iso core user password
+Agent Discovery ISO 为 core 用户设置口令
 https://raw.githubusercontent.com/openshift/assisted-service/master/docs/change-iso-password.sh
+
+### 清理某个namespace下无法清理的对象
+https://github.com/mvazquezc/termin8

@@ -1270,6 +1270,12 @@ NAME        AGE   PHASE     IP            NODENAME                       READY
 rhel-8-03   23m   Running   172.18.5.23   b2-ocp4test.ocp4.example.com   True
 ```
 
+### 离线metallb
+```
+helm repo add metallb https://metallb.github.io/metallb
+helm repo update && helm fetch metallb/metallb --version=7.0.3
+```
+
 ### 离线kasten
 ```
 ### 离线helm charts
@@ -2319,3 +2325,12 @@ https://raw.githubusercontent.com/openshift/assisted-service/master/docs/change-
 
 ### 清理某个namespace下无法清理的对象
 https://github.com/mvazquezc/termin8
+
+### HCP - Data Plane MetalLB manifests
+https://gist.github.com/jeniferh/1c69b8329b61988187cc66f7664f6a71
+
+### Restart Control Plane Components
+https://hypershift-docs.netlify.app/how-to/restart-control-plane-components/
+```
+oc annotate hostedcluster -n jwang-hcp-demo jwang-hcp-demo hypershift.openshift.io/restart-date=$(date --iso-8601=seconds)
+```

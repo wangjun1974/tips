@@ -2334,3 +2334,12 @@ https://hypershift-docs.netlify.app/how-to/restart-control-plane-components/
 ```
 oc annotate hostedcluster -n jwang-hcp-demo jwang-hcp-demo hypershift.openshift.io/restart-date=$(date --iso-8601=seconds)
 ```
+
+### https://www.yjlink.cc/?id=3405
+```
+
+{"level":"fatal","ts":"2024-09-19T08:50:38.647215Z","caller":"etcdserver/storage.go:96","msg":"failed to open WAL","error":"fileutil: file already locked","stacktrace":"go.etcd.io/etcd/server/v3/etcdserver.readWAL\n\tgo.etcd.io/etcd/server/v3/etcdserver/storage.go:96\ngo.etcd.io/etcd/server/v3/etcdserver.restartNode\n\tgo.etcd.io/etcd/server/v3/etcdserver/raft.go:528\ngo.etcd.io/etcd/server/v3/etcdserver.NewServer\n\tgo.etcd.io/etcd/server/v3/etcdserver/server.go:539\ngo.etcd.io/etcd/server/v3/embed.StartEtcd\n\tgo.etcd.io/etcd/server/v3/embed/etcd.go:246\ngo.etcd.io/etcd/server/v3/etcdmain.startEtcd\n\tgo.etcd.io/etcd/server/v3/etcdmain/etcd.go:228\ngo.etcd.io/etcd/server/v3/etcdmain.startEtcdOrProxyV2\n\tgo.etcd.io/etcd/server/v3/etcdmain/etcd.go:123\ngo.etcd.io/etcd/server/v3/etcdmain.Main\n\tgo.etcd.io/etcd/server/v3/etcdmain/main.go:40\nmain.main\n\tgo.etcd.io/etcd/server/v3/main.go:31\nruntime.main\n\truntime/proc.go:250"}
+
+$ rm -f /var/nfsshare/jwang-hcp-demo-jwang-hcp-demo/data-etcd-0/data/member/wal/0.tmp
+oc rollout restart statefulset/etcd -n jwang-hcp-demo-jwang-hcp-demo
+```

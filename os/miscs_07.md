@@ -2343,3 +2343,25 @@ oc annotate hostedcluster -n jwang-hcp-demo jwang-hcp-demo hypershift.openshift.
 $ rm -f /var/nfsshare/jwang-hcp-demo-jwang-hcp-demo/data-etcd-0/data/member/wal/0.tmp
 oc rollout restart statefulset/etcd -n jwang-hcp-demo-jwang-hcp-demo
 ```
+
+### 重新签署节点证书 
+```
+ssh -i <ssh_private_key> core@master
+
+$ sudo -i
+$ cd /etc/kubernetes/static-pod-resources/kube-apiserver-certs/secrets/node-kubeconfigs
+$ oc --kubeconfig=./localhost.kubeconfig get csr
+$ oc --kubeconfig=./localhost.kubeconfig get csr --no-headers | grep Pending | /usr/bin/awk '{print $1}' | xargs oc --kubeconfig=./localhost.kubeconfig adm certificate approve
+```
+
+### 在集群里创建OpenShift AI所需的Object Bucket Claim
+https://github.com/rh-aiservices-bu/models-aas/blob/main/deployment/model_serving/obc-rgw.yaml
+```
+apiVersion: objectbucket.io/v1alpha1
+kind: ObjectBucketClaim
+metadata:
+  name: models
+spec:
+  generateBucketName: models
+  storageClassName: ocs-storagecluster-ceph-rgw
+```

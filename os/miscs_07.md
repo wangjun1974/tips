@@ -2365,3 +2365,8 @@ spec:
   generateBucketName: models
   storageClassName: ocs-storagecluster-ceph-rgw
 ```
+
+### 清理xfce进程
+```
+ps ax | grep -E  "xfce|xfwm|xfsetting|xfdesktop"  | grep -Ev grep | awk '{print $1}' | while read i ; do kill -9 $i ; done
+```

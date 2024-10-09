@@ -2370,3 +2370,8 @@ spec:
 ```
 ps ax | grep -E  "xfce|xfwm|xfsetting|xfdesktop"  | grep -Ev grep | awk '{print $1}' | while read i ; do kill -9 $i ; done
 ```
+
+### 拷贝qcow2文件，由于文件是精简格式，可以用rsync --sparse 参数拷贝
+```
+rsync --archive --sparse --progress /var/lib/libvirt/images/xxxx.qcow2 192.168.100.1:/exports/vms_disk_bak/ 
+```

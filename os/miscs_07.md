@@ -2375,3 +2375,34 @@ ps ax | grep -E  "xfce|xfwm|xfsetting|xfdesktop"  | grep -Ev grep | awk '{print 
 ```
 rsync --archive --sparse --progress /var/lib/libvirt/images/xxxx.qcow2 192.168.100.1:/exports/vms_disk_bak/ 
 ```
+
+### command build usbredir
+```
+### rhel8 build 
+$ subscription-manager repos --enable=codeready-builder-for-rhel-8-x86_64-rpms 
+$ dnf install -y meson cmake libusb libusb-devel glib2-devel
+
+### download usbredir source code
+### https://gitlab.freedesktop.org/spice/usbredir/
+### https://gitlab.freedesktop.org/spice/usbredir/-/archive/main/usbredir-main.tar.gz
+$ cd src/usbredir
+$ meson . build
+$ meson compile -C build
+$ file ./build/tools/usbredirect
+$ cp ./build/tools/usbredirect /usr/local/bin
+
+### redirect usb device to vm via virtctl
+### patch vm object
+$ oc patch vm/rhel8-vm-01 --type=merge -p '{"spec":{"template":{"spec":{"domain":{"devices":{"clientPassthrough": {}}}}}}}'
+### restart vm 
+$ virtctl restart rhel8-vm-01
+$ oc get vm rhel8-vm-01
+NAME          AGE   STATUS    READY
+rhel8-vm-01   58d   Running   True
+$ lsusb
+...
+Bus 002 Device 007: ID 0930:6544 Toshiba Corp. TransMemory-Mini / Kingston DataTraveler 2.0 Stick
+...
+### redirect usb device 0930:6544 to vm rhel8-vm-01
+$ virtctl usbredir 0930:6544 rhel8-vm-01
+```

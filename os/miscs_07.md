@@ -2406,3 +2406,11 @@ Bus 002 Device 007: ID 0930:6544 Toshiba Corp. TransMemory-Mini / Kingston DataT
 ### redirect usb device 0930:6544 to vm rhel8-vm-01
 $ virtctl usbredir 0930:6544 rhel8-vm-01
 ```
+
+### install old version of docker-ce
+```
+### https://github.com/moby/moby/issues/47207
+### Docker Engine 25 breaks loading images in various Kubernetes
+sudo yum list docker-ce.x86_64 --showduplicates | sort -r
+sudo dnf install -y containerd docker-ce-3:23.0.6-1.el8 
+```

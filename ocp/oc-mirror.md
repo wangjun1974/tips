@@ -3404,4 +3404,24 @@ $ rm -rf output-dir
 $ /usr/local/bin/oc-mirror --config ./image-config-realse-local.yaml file://output-dir 2>&1 | tee -a /tmp/oc-mirror-4.15 
 $ /usr/local/bin/oc-mirror --from ./mirror_seq1_000000.tar docker://registry.example.com:5000 --rebuild-catalogs
 
+
+
+cat > image-config-realse-local.yaml <<EOF
+apiVersion: mirror.openshift.io/v1alpha2
+kind: ImageSetConfiguration
+mirror:
+  additionalImages: # List of additional images to be included in imageset
+    - name: registry.aliyuncs.com/google_containers/kube-apiserver:v1.18.0
+    - name: registry.aliyuncs.com/google_containers/kube-controller-manager:v1.18.0
+    - name: registry.aliyuncs.com/google_containers/kube-scheduler:v1.18.0   
+    - name: registry.aliyuncs.com/google_containers/kube-proxy:v1.18.0    
+    - name: registry.aliyuncs.com/google_containers/pause:3.2
+    - name: registry.aliyuncs.com/google_containers/etcd:3.4.3-0      
+    - name: registry.aliyuncs.com/google_containers/coredns:1.6.7    
+    - name: docker.io/flannel/flannel-cni-plugin:v1.5.1-flannel2
+    - name: docker.io/flannel/flannel:v0.25.7
+EOF
+$ rm -rf output-dir
+$ /usr/local/bin/oc-mirror --config ./image-config-realse-local.yaml file://output-dir 2>&1 | tee /tmp/oc-mirror 
+$ /usr/local/bin/oc-mirror --from ./mirror_seq1_000000.tar docker://registry.example.com:5000 --rebuild-catalogs
 ```

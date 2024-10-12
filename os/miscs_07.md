@@ -2414,3 +2414,9 @@ $ virtctl usbredir 0930:6544 rhel8-vm-01
 sudo yum list docker-ce.x86_64 --showduplicates | sort -r
 sudo dnf install -y containerd docker-ce-3:23.0.6-1.el8 
 ```
+
+### request openshift oauth token 
+```
+### 访问openshift oauth api申请短期的token
+### https://oauth-openshift.apps.ocp.example.com/oauth/token/request
+```

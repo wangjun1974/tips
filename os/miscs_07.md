@@ -2426,3 +2426,18 @@ sudo dnf install -y containerd docker-ce-3:23.0.6-1.el8
 ### 在ocp下运行fedora容器
 $ oc run --generator=run-pod/v1 -it fedora --image=fedora:latest /bin/bash
 ```
+
+### build fedora image with sensors packages
+```
+mkdir fedora-sensors
+cd fedora-sensors
+
+cat > Dockerfile.sensors <<EOF
+FROM registry.fedoraproject.org/fedora:latest
+RUN dnf install -y lm_sensors lm_sensors-libs && dnf clean all 
+CMD ["/bin/bash", "-c", "exec /bin/bash -c 'trap : TERM INT; sleep 9999999999d & wait'"]
+EOF
+
+podman build -f Dockerfile.sensors -t quay.io/jwang1/fedora-sensors:v1
+podman push quay.io/jwang1/fedora-sensors:v1
+```

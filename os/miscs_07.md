@@ -2420,3 +2420,9 @@ sudo dnf install -y containerd docker-ce-3:23.0.6-1.el8
 ### 访问openshift oauth api申请短期的token
 ### https://oauth-openshift.apps.ocp.example.com/oauth/token/request
 ```
+
+### 在ocp下运行fedora容器
+```
+### 在ocp下运行fedora容器
+$ oc run --generator=run-pod/v1 -it fedora --image=fedora:latest /bin/bash
+```

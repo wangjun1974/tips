@@ -1468,6 +1468,7 @@ $ tar Jxvf usbredir-0.13.0.tar.xz
 $ cd usbredir-0.13.0/
 
 $ dnf groupinstall -y 'Development Tools'
+$ subscription-manager repos --enable=codeready-builder-for-rhel-8-x86_64-rpms 
 $ dnf install -y meson cmake libusb-devel.x86_64 glib2-devel.x86_64
 
 $ meson . build 

@@ -2446,3 +2446,5 @@ podman push quay.io/jwang1/fedora-sensors:v1
 ### cloudinit networkData v2 
 https://cloudinit.readthedocs.io/en/latest/reference/network-config-format-v2.html
 
+### Using the Multus CNI in OpenShift
+https://www.redhat.com/en/blog/using-the-multus-cni-in-openshift

@@ -2442,3 +2442,7 @@ EOF
 podman build -f Dockerfile.sensors -t quay.io/jwang1/fedora-sensors:v1
 podman push quay.io/jwang1/fedora-sensors:v1
 ```
+
+### cloudinit networkData v2 
+https://cloudinit.readthedocs.io/en/latest/reference/network-config-format-v2.html
+

@@ -2448,3 +2448,105 @@ https://cloudinit.readthedocs.io/en/latest/reference/network-config-format-v2.ht
 
 ### Using the Multus CNI in OpenShift
 https://www.redhat.com/en/blog/using-the-multus-cni-in-openshift
+
+### 比较 cni chaining mode 的 NetworkAttachmentDefinition 
+```
+https://github.com/noironetworks/cko/blob/main/docs/user-guide/cno-additional-interfaces.md#65-orchestrate-fabric-configuration-for-bridgelinux-bridge-interfaces-connected-to-pod
+
+apiVersion: nmstate.io/v1alpha1
+kind: NodeNetworkConfigurationPolicy
+metadata:
+  name: bridge-bond1
+spec:
+  nodeSelector:
+    kubernetes.io/hostname: worker1.ocpbm1.noiro.local
+  desiredState:
+    interfaces:
+    - name: bridge-net1
+      description: Linux bridge with bond1 as a port
+      type: linux-bridge
+      state: up
+      bridge:
+        port:
+        - name: bond1
+
+apiVersion: k8s.cni.cncf.io/v1
+kind: NetworkAttachmentDefinition
+metadata:
+  name: bridge-net1
+  namespace: default
+  annotations:
+    k8s.v1.cni.cncf.io/resourceName: bridge.network.kubevirt.io/bridge-net1
+spec:
+  config: |-
+   '{"cniVersion": "0.3.1",
+     "name": "bridge-net1", 
+     "plugins":[{  
+         "cniVersion": "0.3.1",
+         "name": "bridge-net1",
+         "type": "bridge",
+         "bridge": "bridge-net1",
+         "vlanTrunk": [{ "id": 105 },{ "minID": 102, "maxID": 104 }],
+       },
+       {
+          "supportedVersions": [
+              "0.3.0",
+              "0.3.1",
+              "0.4.0"
+          ],
+          "type": "netop-cni",
+          "chaining-mode": true,
+        }
+       ]}'
+
+### NNCP: bond and linux-bridge, NAD:cnv-bridge 
+cat <<EOF | oc apply -f -
+apiVersion: nmstate.io/v1
+kind: NodeNetworkConfigurationPolicy
+metadata:
+  name: intranet-bond1-4
+spec:
+  nodeSelector:
+    node-role.kubernetes.io/worker: ''
+  desiredState:
+    interfaces:
+      - name: bond1.4
+        type: vlan
+        state: up
+        ipv4:
+          enabled: false
+        vlan:
+          base-iface: bond1
+          id: 4
+      - name: br-bond1-4
+        description: Linux bridge on bond1 vlanid 4
+        type: linux-bridge
+        state: up
+        bridge:
+          options:
+            stp:
+              enabled: false
+          port:
+          - name: bond1.4
+        ipv4:
+          enabled: false
+EOF
+
+cat <<EOF | oc apply -f
+apiVersion: "k8s.cni.cncf.io/v1"
+kind: NetworkAttachmentDefinition
+metadata:
+  name: br-bond1-4
+  namespace: default
+  annotations:
+    k8s.v1.cni.cncf.io/resourceName: bridge.network.kubevirt.io/br-bond1-4
+spec:
+  config: '{
+    "cniVersion": "0.3.1",
+    "name": "br-bond1-4",
+    "type": "cnv-bridge",
+    "bridge": "br-bond1-4"
+  }'
+EOF
+
+```

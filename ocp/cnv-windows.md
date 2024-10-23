@@ -105,7 +105,7 @@
     <component name="Microsoft-Windows-Shell-Setup" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS">
       <AutoLogon>
         <Password>
-          <Value>NOTREALPASS</Value>
+          <Value>R3dh4t1!</Value>
           <PlainText>true</PlainText>
         </Password>
         <Enabled>true</Enabled>

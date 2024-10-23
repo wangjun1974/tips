@@ -2550,3 +2550,6 @@ spec:
 EOF
 
 ```
+
+### install remmina on RHEL9
+https://www.geeksforgeeks.org/install-remmina-on-red-hat-enterprise-linux-rhel-9/

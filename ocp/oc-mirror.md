@@ -3424,4 +3424,154 @@ EOF
 $ rm -rf output-dir
 $ /usr/local/bin/oc-mirror --config ./image-config-realse-local.yaml file://output-dir 2>&1 | tee /tmp/oc-mirror 
 $ /usr/local/bin/oc-mirror --from ./mirror_seq1_000000.tar docker://registry.example.com:5000 --rebuild-catalogs
+
+
+$ for packagename in kubevirt-hyperconverged kubernetes-nmstate-operator local-storage-operator odf-operator ocs-operator mcg-operator cincinnati-operator openshift-gitops-operator node-healthcheck-operator self-node-remediation metallb-operator openshift-pipelines-operator-rh devworkspace-operator web-terminal mtv-operator redhat-oadp-operator nfd cluster-logging loki-operator advanced-cluster-management multicluster-engine rhacs-operator ansible-automation-platform-operator odf-csi-addons-operator lvms-operator; do /usr/local/bin/oc-mirror list operators --catalog=registry.redhat.io/redhat/redhat-operator-index:v4.16 --package=${packagename}; done | tee /tmp/oc-mirror
+
+cat > image-config-realse-local.yaml <<EOF
+apiVersion: mirror.openshift.io/v1alpha2
+kind: ImageSetConfiguration
+mirror:
+  operators:
+    - catalog: registry.redhat.io/redhat/redhat-operator-index:v4.16
+      packages:
+        - name: kubevirt-hyperconverged
+          channels:
+            - name: 'stable'
+              minVersion: 'v4.16.3'
+              maxVersion: 'v4.16.3'            
+        - name: kubernetes-nmstate-operator
+          channels:
+            - name: 'stable'
+              minVersion: '4.16.0-202410091137'
+              maxVersion: '4.16.0-202410091137'                         
+        - name: local-storage-operator
+          channels:
+            - name: 'stable'
+              minVersion: 'v4.16.0-202410031007'
+              maxVersion: 'v4.16.0-202410031007'            
+        - name: odf-operator
+          channels:
+            - name: 'stable-4.16'
+              minVersion: 'v4.16.3-rhodf'
+              maxVersion: 'v4.16.3-rhodf'
+        - name: ocs-operator
+          channels:
+            - name: 'stable-4.16'
+              minVersion: 'v4.16.3-rhodf'
+              maxVersion: 'v4.16.3-rhodf'
+        - name: mcg-operator
+          channels:
+            - name: 'stable-4.16'
+              minVersion: 'v4.16.3-rhodf'
+              maxVersion: 'v4.16.3-rhodf'
+        - name: cincinnati-operator
+          channels:
+            - name: v1
+              minVersion: 'v5.0.3'
+              maxVersion: 'v5.0.3'
+        - name: openshift-gitops-operator
+          channels:
+            - name: latest
+              minVersion: 'v1.14.0'
+              maxVersion: 'v1.14.0'
+        - name: node-healthcheck-operator
+          channels:
+            - name: stable
+              minVersion: 'v0.8.2'
+              maxVersion: 'v0.8.2'
+        - name: self-node-remediation
+          channels:
+            - name: stable
+              minVersion: 'v0.9.0'
+              maxVersion: 'v0.9.0'
+        - name: metallb-operator
+          channels:
+            - name: stable
+              minVersion: 'v4.16.0-202410011135'
+              maxVersion: 'v4.16.0-202410011135'
+        - name: openshift-pipelines-operator-rh
+          channels:
+            - name: latest
+              minVersion: 'v1.16.0'
+              maxVersion: 'v1.16.0'
+        - name: devworkspace-operator
+          channels:
+            - name: fast
+              minVersion: 'v0.31.0'
+              maxVersion: 'v0.31.0'
+        - name: web-terminal
+          channels:
+            - name: fast
+              minVersion: 'v1.11.0'
+              maxVersion: 'v1.11.0'
+        - name: mtv-operator
+          channels:
+            - name: release-v2.7
+              minVersion: 'v2.7.2'
+              maxVersion: 'v2.7.2'
+            - name: release-v2.6
+              minVersion: 'v2.6.7'
+              maxVersion: 'v2.6.7'            
+        - name: redhat-oadp-operator
+          channels:
+            - name: stable-1.4
+              minVersion: 'v1.4.1'
+              maxVersion: 'v1.4.1'
+        - name: nfd
+          channels:
+            - name: stable
+              minVersion: '4.16.0-202410011135'
+              maxVersion: '4.16.0-202410011135'
+        - name: cluster-logging
+          channels:
+            - name: stable-6.0
+              minVersion: 'v6.0.1'
+              maxVersion: 'v6.0.1'
+        - name: loki-operator
+          channels:
+            - name: stable-6.0
+              minVersion: 'v6.0.1'
+              maxVersion: 'v6.0.1'
+        - name: advanced-cluster-management
+          channels:
+            - name: 'release-2.11'
+              minVersion: 'v2.11.3'
+              maxVersion: 'v2.11.3'
+            - name: 'release-2.10'
+              minVersion: 'v2.10.6'
+              maxVersion: 'v2.10.6'
+        - name: multicluster-engine
+          channels:
+            - name: 'stable-2.6'
+              minVersion: 'v2.6.3'
+              maxVersion: 'v2.6.3'
+            - name: 'stable-2.5'
+              minVersion: 'v2.5.7'
+              maxVersion: 'v2.5.7'
+        - name: rhacs-operator
+          channels:
+            - name: 'stable'
+              minVersion: 'v4.5.4'
+              maxVersion: 'v4.5.4'
+        - name: ansible-automation-platform-operator
+          channels:
+            - name: 'stable-2.5-cluster-scoped'
+              minVersion: 'v2.5.0-0.1728520687'
+              maxVersion: 'v2.5.0-0.1728520687'
+        - name: odf-csi-addons-operator
+          channels:
+            - name: 'stable-4.16'
+              minVersion: 'v4.16.3-rhodf'
+              maxVersion: 'v4.16.3-rhodf'
+        - name: lvms-operator
+          channels:
+            - name: 'stable-4.16'
+              minVersion: 'v4.16.4'
+              maxVersion: 'v4.16.4'
+EOF
+
+$ rm -rf output-dir
+$ /usr/local/bin/oc-mirror --config ./image-config-realse-local.yaml file://output-dir 2>&1 | tee -a /tmp/oc-mirror-4.15 
+$ /usr/local/bin/oc-mirror --from ./mirror_seq1_000000.tar docker://registry.example.com:5000 --rebuild-catalogs
 ```

@@ -2553,3 +2553,38 @@ EOF
 
 ### install remmina on RHEL9
 https://www.geeksforgeeks.org/install-remmina-on-red-hat-enterprise-linux-rhel-9/
+
+### pvc clone from windows disk to windows golden template
+```
+### https://docs.openshift.com/container-platform/4.15/virt/virtual_machines/creating_vms_custom/virt-creating-vms-uploading-images.html
+
+### detach sysprep disk
+
+### 重命名文件
+move C:\Windows\Panther\unattend.xml C:\Windows\Panther\unattend.xml.sav
+
+### generalize
+%WINDIR%\System32\Sysprep\sysprep.exe /generalize /shutdown /oobe /mode:vm
+
+### 关机
+
+### 克隆 windows disk to windows golden image
+cat <<EOF | oc apply -f -
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+    name: win2k19-golden-image
+    namespace: test2
+spec:
+  accessModes:
+  - ReadWriteOnce
+  storageClassName: lvms-vgb3-i
+  volumeMode: Block
+  resources:
+    requests:
+      storage: 60Gi
+  dataSource:
+    kind: PersistentVolumeClaim
+    name: win2k19-vm-03
+EOF
+```

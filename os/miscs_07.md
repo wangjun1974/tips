@@ -2588,3 +2588,8 @@ spec:
     name: win2k19-vm-03
 EOF
 ```
+
+### 获取集群 install-config on day2
+```
+$ oc get configmap cluster-config-v1 -n kube-system -o yaml
+```

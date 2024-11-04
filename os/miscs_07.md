@@ -2593,3 +2593,88 @@ EOF
 ```
 $ oc get configmap cluster-config-v1 -n kube-system -o yaml
 ```
+
+### CNV 网络配置示例
+```
+### NNCP bond
+cat <<EOF | oc apply -f -
+apiVersion: nmstate.io/v1
+kind: NodeNetworkConfigurationPolicy
+metadata:
+  name: bond2 
+spec:
+  nodeSelector:
+    node-role.kubernetes.io/worker: ''
+  desiredState:
+    interfaces:
+      - name: bond2
+        type: bond
+        state: up
+        ipv4:
+          enabled: false
+        link-aggregation:
+          mode: 802.3ad
+          options:
+            miimon: '100'
+            lacp_rate: 'fast'
+          port:
+            - ens6f0
+            - ens6f1
+      - name: ens6f0
+        state: up
+        type: ethernet
+      - name: ens6f1
+        state: up
+        type: ethernet
+EOF
+
+### NNCP bridge
+cat <<EOF | oc apply -f -
+apiVersion: nmstate.io/v1
+kind: NodeNetworkConfigurationPolicy
+metadata:
+  name: intranet-bond2
+spec:
+  nodeSelector:
+    node-role.kubernetes.io/worker: ''
+  desiredState:
+    interfaces:
+      - name: br-bond2
+        description: Linux bridge on bond2
+        type: linux-bridge
+        state: up
+        bridge:
+          options:
+            stp:
+              enabled: false
+          port:
+          - name: bond2
+        ipv4:
+          enabled: false
+EOF
+
+### NAD vm network bridge vlan
+### https://docs.openshift.com/container-platform/4.16/virt/vm_networking/virt-connecting-vm-to-linux-bridge.html#virt-creating-linux-bridge-nad-cli_virt-connecting-vm-to-linux-bridge
+
+cat <<EOF | oc apply -f
+apiVersion: "k8s.cni.cncf.io/v1"
+kind: NetworkAttachmentDefinition
+metadata:
+  name: br-bond2-4
+  namespace: default
+  annotations:
+    k8s.v1.cni.cncf.io/resourceName: bridge.network.kubevirt.io/br-bond2-4
+spec:
+  config: '{
+    "cniVersion": "0.3.1",
+    "name": "br-bond2-4",
+    "type": "cnv-bridge",
+    "bridge": "br-bond2",
+    "macspoofchk": false, 
+    "vlan": 4, 
+    "disableContainerInterface": true,
+    "preserveDefaultVlan": false     
+  }'
+EOF
+
+```

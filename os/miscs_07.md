@@ -2683,3 +2683,17 @@ EOF
 ```
 sysctl net.bridge.bridge-nf-call-iptables=0
 ```
+
+### create file system and make filesystem
+```
+### 创建分区，创建pv,vg,lv，创建文件系统，挂载文件系统
+mkdir /export
+parted -s /dev/sdb mklabel msdos 
+parted -s /dev/sdb unit mib mkpart primary 1 100%
+parted -s /dev/sdb set 1 lvm on
+pvcreate /dev/sdb1
+vgcreate vol_nfs_grp1 /dev/sdb1
+lvcreate -l 100%FREE -n logical_nfs_vol1 vol_nfs_grp1 
+mkfs.xfs /dev/vol_nfs_grp1/logical_nfs_vol1
+mount /dev/vol_nfs_grp1/logical_nfs_vol1 /export
+```

@@ -2678,3 +2678,8 @@ spec:
 EOF
 
 ```
+
+### disable iptables rules for bridges - RHEL7
+```
+sysctl net.bridge.bridge-nf-call-iptables=0
+```

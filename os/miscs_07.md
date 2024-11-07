@@ -2697,3 +2697,28 @@ lvcreate -l 100%FREE -n logical_nfs_vol1 vol_nfs_grp1
 mkfs.xfs /dev/vol_nfs_grp1/logical_nfs_vol1
 mount /dev/vol_nfs_grp1/logical_nfs_vol1 /export
 ```
+
+### 恢复RESCUE EFI GRUB的步骤
+```
+mkdir /mnt/rescue
+
+mount /dev/vdXY /mnt/rescue
+
+mount -t proc /proc /mnt/rescue/proc
+mount --rbind /sys /mnt/rescue/sys
+mount --make-rslave /mnt/rescue/sys
+mount --rbind /dev /mnt/rescue/dev
+mount --make-rslave /mnt/rescue/dev
+test -L /dev/shm && rm /dev/shm && mkdir /dev/shm
+mount -t tmpfs -o nosuid,nodev,noexec shm /dev/shm
+chmod 1777 /dev/shm
+
+chroot /mnt/rescue /bin/bash 
+source /etc/profile
+
+mount /boot
+
+grub-install --target=x86_64-efi --efi-directory=/boot
+
+grub-mkconfig -o /boot/grub/grub.cfg
+```

@@ -2722,3 +2722,48 @@ grub-install --target=x86_64-efi --efi-directory=/boot
 
 grub-mkconfig -o /boot/grub/grub.cfg
 ```
+
+### run virt-who on openshift
+https://blog.cudanet.org/openshift-virt-who-and-satellite/
+```
+oc new project virt-who
+oc create serviceaccount virt-who
+oc create clusterrole lsnodes --verb=list --resources=nodes
+oc create clusterrole lsvims --verb=list --resources=vmis
+oc adm policy add-cluster-role-to-user lsnodes system:serviceaccount:virt-who:virt-who
+oc adm policy add-cluster-role-to-user lsvmis system:serviceaccount:virt-who:virt-who
+
+oc get vmis -A --as=system:serviceaccount:virt-who:virt-who
+
+# Generate a non-expiring token
+cat << EOF | oc apply -f -
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: virt-who-token
+  namespace: virt-who
+  annotations:
+    kubernetes.io/service-account.name: virt-who
+type: kubernetes.io/service-account-token
+EOF
+
+TOKEN=$(oc get secret virt-who-token -n virt-who -o json | jq .data.token | sed -e 's|"||g' | base64 -d)
+echo $TOKEN
+
+oc login https://api.ocp4.example.com:6443 --token=$TOKEN
+oc get vmi -A
+oc get node
+
+
+```
+
+### OCP-V 检查 ping 是否能通
+```
+ping -i 0.01 10.66.208.131
+...
+--- 10.66.208.131 ping statistics ---
+4674 packets transmitted, 4650 packets received, 0.5% packet loss
+round-trip min/avg/max/stddev = 0.311/0.756/2.458/0.143 ms
+
+```

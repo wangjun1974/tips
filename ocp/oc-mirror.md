@@ -3443,13 +3443,13 @@ mirror:
         - name: kubernetes-nmstate-operator
           channels:
             - name: 'stable'
-              minVersion: '4.16.0-202410091137'
-              maxVersion: '4.16.0-202410091137'                         
+              minVersion: '4.16.0-202410300036'
+              maxVersion: '4.16.0-202410300036'                         
         - name: local-storage-operator
           channels:
             - name: 'stable'
-              minVersion: 'v4.16.0-202410031007'
-              maxVersion: 'v4.16.0-202410031007'            
+              minVersion: 'v4.16.0-202410242205'
+              maxVersion: 'v4.16.0-202410242205'            
         - name: odf-operator
           channels:
             - name: 'stable-4.16'
@@ -3473,8 +3473,8 @@ mirror:
         - name: openshift-gitops-operator
           channels:
             - name: latest
-              minVersion: 'v1.14.0'
-              maxVersion: 'v1.14.0'
+              minVersion: 'v1.14.1'
+              maxVersion: 'v1.14.1'
         - name: node-healthcheck-operator
           channels:
             - name: stable
@@ -3488,8 +3488,8 @@ mirror:
         - name: metallb-operator
           channels:
             - name: stable
-              minVersion: 'v4.16.0-202410011135'
-              maxVersion: 'v4.16.0-202410011135'
+              minVersion: 'v4.16.0-202410292005'
+              maxVersion: 'v4.16.0-202410292005'
         - name: openshift-pipelines-operator-rh
           channels:
             - name: latest
@@ -3498,8 +3498,8 @@ mirror:
         - name: devworkspace-operator
           channels:
             - name: fast
-              minVersion: 'v0.31.0'
-              maxVersion: 'v0.31.0'
+              minVersion: 'v0.31.1'
+              maxVersion: 'v0.31.1'
         - name: web-terminal
           channels:
             - name: fast
@@ -3508,8 +3508,8 @@ mirror:
         - name: mtv-operator
           channels:
             - name: release-v2.7
-              minVersion: 'v2.7.2'
-              maxVersion: 'v2.7.2'
+              minVersion: 'v2.7.3'
+              maxVersion: 'v2.7.3'
             - name: release-v2.6
               minVersion: 'v2.6.7'
               maxVersion: 'v2.6.7'            
@@ -3521,8 +3521,8 @@ mirror:
         - name: nfd
           channels:
             - name: stable
-              minVersion: '4.16.0-202410011135'
-              maxVersion: '4.16.0-202410011135'
+              minVersion: '4.16.0-202410251436'
+              maxVersion: '4.16.0-202410251436'
         - name: cluster-logging
           channels:
             - name: stable-6.0
@@ -3535,20 +3535,20 @@ mirror:
               maxVersion: 'v6.0.1'
         - name: advanced-cluster-management
           channels:
+            - name: 'release-2.12'
+              minVersion: 'v2.12.0'
+              maxVersion: 'v2.12.0'
             - name: 'release-2.11'
               minVersion: 'v2.11.3'
               maxVersion: 'v2.11.3'
-            - name: 'release-2.10'
-              minVersion: 'v2.10.6'
-              maxVersion: 'v2.10.6'
         - name: multicluster-engine
           channels:
+            - name: 'stable-2.7'
+              minVersion: 'v2.7.0'
+              maxVersion: 'v2.7.0'
             - name: 'stable-2.6'
               minVersion: 'v2.6.3'
               maxVersion: 'v2.6.3'
-            - name: 'stable-2.5'
-              minVersion: 'v2.5.7'
-              maxVersion: 'v2.5.7'
         - name: rhacs-operator
           channels:
             - name: 'stable'
@@ -3557,8 +3557,8 @@ mirror:
         - name: ansible-automation-platform-operator
           channels:
             - name: 'stable-2.5-cluster-scoped'
-              minVersion: 'v2.5.0-0.1728520687'
-              maxVersion: 'v2.5.0-0.1728520687'
+              minVersion: 'v2.5.0-0.1729742145'
+              maxVersion: 'v2.5.0-0.1729742145'
         - name: odf-csi-addons-operator
           channels:
             - name: 'stable-4.16'

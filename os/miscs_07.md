@@ -2816,4 +2816,62 @@ oc get virtualmachinesnapshots -n $NAMESPACE -o json | jq -c '.items[]' | while 
         echo "Snapshot $snapshot_name is $snapshot_age days old and will be retained"
     fi
 done
+
+### 改进后的脚本
+#!/bin/bash
+
+# Namespace with the VMs
+NAMESPACE="my-vms"
+# Snapshot retention in days
+RETENTION_DAYS=14
+# Current date in epoch format for comparison
+CURRENT_DATE=$(date +%s)
+
+# Create snapshots for all VMs in the specified namespace
+echo "Creating snapshots for all VMs in namespace: $NAMESPACE"
+for vm in $(oc get vms -n $NAMESPACE -o jsonpath='{.items[*].metadata.name}'); do
+    snapshot_name="${vm}-auto-$(date +%Y-%m-%d)"
+    echo "Creating snapshot for VM: $vm with name: $snapshot_name"
+    oc create -f - <<EOF
+apiVersion: snapshot.kubevirt.io/v1alpha1
+kind: VirtualMachineSnapshot
+metadata:
+  name: $snapshot_name
+  namespace: $NAMESPACE
+spec:
+  source:
+    apiGroup: kubevirt.io
+    kind: VirtualMachine
+    name: $vm
+EOF
+done
+
+# Clean up snapshots older than RETENTION_DAYS in the specified namespace
+echo "Cleaning up automated snapshots older than $RETENTION_DAYS days in namespace: $NAMESPACE"
+
+# Get all snapshots in the namespace and filter them based on age
+oc get virtualmachinesnapshots -n $NAMESPACE -o json | jq -c '.items[]' | while read snapshot; do
+    snapshot_name=$(echo $snapshot | jq -r '.metadata.name')
+    snapshot_creation_time=$(echo $snapshot | jq -r '.metadata.creationTimestamp')
+
+    # Skip snapshots that do not start with "-auto-"
+    if [[ ! "$snapshot_name" == *"-auto-"* ]]; then
+        echo "Skipping manual snapshot: $snapshot_name"
+        continue
+    fi
+
+    # Convert snapshot creation time to epoch for comparison
+    snapshot_creation_epoch=$(date -d "$snapshot_creation_time" +%s)
+
+    # Calculate the age of the snapshot in days
+    snapshot_age=$(( (CURRENT_DATE - snapshot_creation_epoch) / 86400 ))
+
+    # Delete the snapshot if it's older than RETENTION_DAYS
+    if [ $snapshot_age -gt $RETENTION_DAYS ]; then
+        echo "Deleting automated snapshot: $snapshot_name, which is $snapshot_age days old"
+        oc delete virtualmachinesnapshot $snapshot_name -n $NAMESPACE
+    else
+        echo "Automated snapshot $snapshot_name is $snapshot_age days old and will be retained"
+    fi
+done
 ```

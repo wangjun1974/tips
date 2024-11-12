@@ -2890,3 +2890,28 @@ done
 {"component":"virt-launcher","level":"info","msg":"Registered libvirt event notify callback","pos":"client.go:563","timestamp":"2024-11-11T03:01:57.599981Z"}
 {"component":"virt-launcher","level":"info","msg":"Marked as ready","pos":"virt-launcher.go:75","timestamp":"2024-11-11T03:01:57.600432Z"}
 ```
+
+### Nested MachineConfig 
+```
+cat <<EOF | oc apply -f -
+apiVersion: machineconfiguration.openshift.io/v1
+kind: MachineConfig
+metadata:
+  labels:
+    machineconfiguration.openshift.io/role: worker
+  name: 80-enable-nested-virt
+spec:
+  config:
+    ignition:
+      version: 3.2.0
+    storage:
+      files:
+      - contents:
+          source: data:text/plain;charset=utf-8;base64,b3B0aW9ucyBrdm1faW50ZWwgbmVzdGVkPTEKb3B0aW9ucyBrdm1fYW1kIG5lc3RlZD0xCg==
+          verification: {}
+        filesystem: root
+        mode: 420
+        path: /etc/modprobe.d/kvm.conf
+  osImageURL: ""
+EOF
+```

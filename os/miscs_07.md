@@ -2875,3 +2875,18 @@ oc get virtualmachinesnapshots -n $NAMESPACE -o json | jq -c '.items[]' | while 
     fi
 done
 ```
+
+### 由于nfs服务器no_root_suaqsh引起的错误
+```
+{"component":"virt-launcher","level":"info","msg":"Collected all requested hook sidecar sockets","pos":"manager.go:88","timestamp":"2024-11-11T03:01:57.089601Z"}
+{"component":"virt-launcher","level":"info","msg":"Sorted all collected sidecar sockets per hook point based on their priority and name: map[]","pos":"manager.go:91","timestamp":"2024-11-11T03:01:57.089670Z"}
+{"component":"virt-launcher","level":"info","msg":"Connecting to libvirt daemon: qemu+unix:///session?socket=/var/run/libvirt/virtqemud-sock","pos":"libvirt.go:565","timestamp":"2024-11-11T03:01:57.090010Z"}
+{"component":"virt-launcher","level":"info","msg":"Connecting to libvirt daemon failed: virError(Code=38, Domain=7, Message='Failed to connect socket to '/var/run/libvirt/virtqemud-sock': No such file or directory')","pos":"libvirt.go:573","timestamp":"2024-11-11T03:01:57.090315Z"}
+{"component":"virt-launcher","level":"info","msg":"libvirt version: 10.0.0, package: 6.7.el9_4 (Red Hat, Inc. <http://bugzilla.redhat.com/bugzilla>, 2024-09-12-06:48:10, )","subcomponent":"libvirt","thread":"44","timestamp":"2024-11-11T03:01:57.128000Z"}
+{"component":"virt-launcher","level":"info","msg":"hostname: fedora-maroon-muskox-92","subcomponent":"libvirt","thread":"44","timestamp":"2024-11-11T03:01:57.128000Z"}
+{"component":"virt-launcher","level":"error","msg":"internal error: Unable to get session bus connection: Cannot spawn a message bus without a machine-id: Invalid machine ID in /var/lib/dbus/machine-id or /etc/machine-id","pos":"virGDBusGetSessionBus:126","subcomponent":"libvirt","thread":"44","timestamp":"2024-11-11T03:01:57.128000Z"}
+{"component":"virt-launcher","level":"error","msg":"internal error: Unable to get system bus connection: Could not connect: No such file or directory","pos":"virGDBusGetSystemBus:99","subcomponent":"libvirt","thread":"44","timestamp":"2024-11-11T03:01:57.128000Z"}
+{"component":"virt-launcher","level":"info","msg":"Connected to libvirt daemon","pos":"libvirt.go:581","timestamp":"2024-11-11T03:01:57.593556Z"}
+{"component":"virt-launcher","level":"info","msg":"Registered libvirt event notify callback","pos":"client.go:563","timestamp":"2024-11-11T03:01:57.599981Z"}
+{"component":"virt-launcher","level":"info","msg":"Marked as ready","pos":"virt-launcher.go:75","timestamp":"2024-11-11T03:01:57.600432Z"}
+```

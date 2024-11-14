@@ -3426,7 +3426,7 @@ $ /usr/local/bin/oc-mirror --config ./image-config-realse-local.yaml file://outp
 $ /usr/local/bin/oc-mirror --from ./mirror_seq1_000000.tar docker://registry.example.com:5000 --rebuild-catalogs
 
 
-$ for packagename in kubevirt-hyperconverged kubernetes-nmstate-operator local-storage-operator odf-operator ocs-operator mcg-operator cincinnati-operator openshift-gitops-operator node-healthcheck-operator self-node-remediation metallb-operator openshift-pipelines-operator-rh devworkspace-operator web-terminal mtv-operator redhat-oadp-operator nfd cluster-logging loki-operator advanced-cluster-management multicluster-engine rhacs-operator ansible-automation-platform-operator odf-csi-addons-operator lvms-operator; do /usr/local/bin/oc-mirror list operators --catalog=registry.redhat.io/redhat/redhat-operator-index:v4.16 --package=${packagename}; done | tee /tmp/oc-mirror
+$ for packagename in kubevirt-hyperconverged kubernetes-nmstate-operator local-storage-operator odf-operator ocs-operator mcg-operator cincinnati-operator openshift-gitops-operator node-healthcheck-operator self-node-remediation metallb-operator openshift-pipelines-operator-rh devworkspace-operator web-terminal mtv-operator redhat-oadp-operator nfd cluster-logging loki-operator advanced-cluster-management multicluster-engine rhacs-operator ansible-automation-platform-operator odf-csi-addons-operator lvms-operator mtc-operator; do /usr/local/bin/oc-mirror list operators --catalog=registry.redhat.io/redhat/redhat-operator-index:v4.16 --package=${packagename}; done | tee /tmp/oc-mirror
 
 cat > image-config-realse-local.yaml <<EOF
 apiVersion: mirror.openshift.io/v1alpha2
@@ -3569,6 +3569,11 @@ mirror:
             - name: 'stable-4.16'
               minVersion: 'v4.16.4'
               maxVersion: 'v4.16.4'
+        - name: mtc-operator
+          channels:
+            - name: 'release-v1.8'
+              minVersion: 'v1.8.4'
+              maxVersion: 'v1.8.4'
 EOF
 
 $ rm -rf output-dir

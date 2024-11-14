@@ -2915,3 +2915,157 @@ spec:
   osImageURL: ""
 EOF
 ```
+
+### NFS 
+```
+source ~/.bashrc-ocp
+setVAR NFS_USER_FILE_PATH /data/ocp-cluster/${OCP_CLUSTER_ID}/nfs/userfile
+setVAR NFS_DOMAIN helper.ocp.ap.vwg
+setVAR NFS_CLIENT_NAMESPACE csi-nfs
+setVAR NFS_CLIENT_PROVISIONER_IMAGE ${REGISTRY_DOMAIN}/${NFS_CLIENT_NAMESPACE}/nfs-client-provisioner:v4.0.2
+setVAR PROVISIONER_NAME kubernetes-nfs
+setVAR STORAGECLASS_NAME sc-csi-nfs
+
+yum -y install nfs-utils
+systemctl enable nfs-server --now
+systemctl status nfs-server
+
+mkdir -p ${NFS_USER_FILE_PATH}
+chown -R nobody.nobody ${NFS_USER_FILE_PATH}
+chmod -R 777 ${NFS_USER_FILE_PATH}
+echo ${NFS_USER_FILE_PATH} *'(rw,sync,no_wdelay,no_root_squash,insecure)' > /etc/exports.d/userfile-${OCP_CLUSTER_ID}.exports
+
+exportfs -rav | grep userfile
+showmount -e | grep userfile
+
+skopeo copy dir://tmp/nfs-client-provisioner docker://${REGISTRY_DOMAIN}/${NFS_CLIENT_NAMESPACE}/nfs-client-provisioner:v4.0.2
+skopeo copy dir://tmp/nfs-client-provisioner docker://${REGISTRY_DOMAIN}/${NFS_CLIENT_NAMESPACE}/nfs-client-provisioner:latest
+skopeo inspect --creds=openshift:redhat docker://${REGISTRY_DOMAIN}/${NFS_CLIENT_NAMESPACE}/nfs-client-provisioner:v4.0.2
+skopeo inspect --creds=openshift:redhat docker://${REGISTRY_DOMAIN}/${NFS_CLIENT_NAMESPACE}/nfs-client-provisioner:latest
+
+oc new-project ${NFS_CLIENT_NAMESPACE}
+oc label namespace ${NFS_CLIENT_NAMESPACE} pod-security.kubernetes.io/audit=privileged pod-security.kubernetes.io/enforce=privileged pod-security.kubernetes.io/warn=privileged --overwrite=true
+
+cat << EOF > ~/rbac.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: sa-nfs-client-provisioner
+  namespace: ${NFS_CLIENT_NAMESPACE}
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: cr-nfs-client-provisioner
+rules:
+  - apiGroups: [""]
+    resources: ["persistentvolumes"]
+    verbs: ["get", "list", "watch", "create", "delete"]
+  - apiGroups: [""]
+    resources: ["persistentvolumeclaims"]
+    verbs: ["get", "list", "watch", "update"]
+  - apiGroups: ["storage.k8s.io"]
+    resources: ["storageclasses"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: [""]
+    resources: ["events"]
+    verbs: ["create", "update", "patch"]
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: crb-nfs-client-provisioner
+subjects:
+  - kind: ServiceAccount
+    name: sa-nfs-client-provisioner
+    namespace: ${NFS_CLIENT_NAMESPACE}
+roleRef:
+  kind: ClusterRole
+  name: cr-nfs-client-provisioner
+  apiGroup: rbac.authorization.k8s.io
+---
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: r-nfs-client-provisioner
+  namespace: ${NFS_CLIENT_NAMESPACE}
+rules:
+  - apiGroups: [""]
+    resources: ["endpoints"]
+    verbs: ["get", "list", "watch", "create", "update", "patch"]
+---
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: rb-nfs-client-provisioner
+  namespace: ${NFS_CLIENT_NAMESPACE}
+subjects:
+  - kind: ServiceAccount
+    name: sa-nfs-client-provisioner
+    namespace: ${NFS_CLIENT_NAMESPACE}
+roleRef:
+  kind: Role
+  name: r-nfs-client-provisioner
+  apiGroup: rbac.authorization.k8s.io
+EOF
+oc apply -f ~/rbac.yaml
+oc adm policy add-scc-to-user privileged -z sa-nfs-client-provisioner -n ${NFS_CLIENT_NAMESPACE}
+
+cat << EOF > ~/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nfs-client-provisioner
+  namespace: ${NFS_CLIENT_NAMESPACE}
+  labels:
+    app: nfs-client-provisioner
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: nfs-client-provisioner
+  template:
+    metadata:
+      labels:
+        app: nfs-client-provisioner
+    spec:
+      serviceAccountName: sa-nfs-client-provisioner
+      containers:
+        - name: nfs-client-provisioner
+          image: ${NFS_CLIENT_PROVISIONER_IMAGE}
+          volumeMounts:
+            - name: nfs-client-root
+              mountPath: /persistentvolumes
+          env:
+            - name: PROVISIONER_NAME
+              value: ${PROVISIONER_NAME}
+            - name: NFS_SERVER
+              value: ${NFS_DOMAIN}
+            - name: NFS_PATH
+              value: ${NFS_USER_FILE_PATH}
+      volumes:
+        - name: nfs-client-root
+          nfs:
+            server: ${NFS_DOMAIN}
+            path: ${NFS_USER_FILE_PATH}
+EOF
+
+oc apply -f ~/deployment.yaml
+
+cat << EOF > ~/storageclass.yaml
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: ${STORAGECLASS_NAME}
+provisioner: ${PROVISIONER_NAME}
+parameters:
+  archiveOnDelete: "false"
+  allowVolumeExpansion: true
+EOF
+
+oc apply -f ~/storageclass.yaml
+oc patch storageclass sc-csi-nfs -p '{"metadata": {"annotations": {"storageclass.kubernetes.io/is-default-class": "true"}}}'
+
+```

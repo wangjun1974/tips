@@ -2677,6 +2677,51 @@ spec:
   }'
 EOF
 
+### nncp bridge on eno2np1, nad 
+cat <<EOF | oc apply -f -
+apiVersion: nmstate.io/v1
+kind: NodeNetworkConfigurationPolicy
+metadata:
+  name: br-cnv
+spec:
+  nodeSelector:
+    node-role.kubernetes.io/worker: ''
+  desiredState:
+    interfaces:
+      - name: br-cnv
+        description: Linux bridge on eno2np1
+        type: linux-bridge
+        state: up
+        bridge:
+          options:
+            stp:
+              enabled: false
+          port:
+          - name: eno2np1
+        ipv4:
+          enabled: false
+EOF
+
+cat <<EOF | oc apply -f
+apiVersion: "k8s.cni.cncf.io/v1"
+kind: NetworkAttachmentDefinition
+metadata:
+  name: br-cnv-54
+  namespace: default
+  annotations:
+    k8s.v1.cni.cncf.io/resourceName: bridge.network.kubevirt.io/br-cnv
+spec:
+  config: '{
+    "cniVersion": "0.3.1",
+    "name": "br-cnv-54",
+    "type": "cnv-bridge",
+    "bridge": "br-cnv",
+    "macspoofchk": false,
+    "vlan": 54,
+    "disableContainerInterface": true,
+    "preserveDefaultVlan": false    
+  }'
+EOF
 ```
 
 ### disable iptables rules for bridges - RHEL7

@@ -3162,3 +3162,16 @@ spec:
 EOF
 ```
 
+### source BASH ENV in tmux (interactive non-login mode)
+https://unix.stackexchange.com/questions/320465/new-tmux-sessions-do-not-source-bashrc-file 
+```
+cat > ~/.bash_profile <<'EOF'
+if [ -n "$BASH_VERSION" -a -n "$PS1" ]; then
+    # include .bashrc if it exists
+    if [ -f "$HOME/.bashrc" ]; then
+    . "$HOME/.bashrc"
+    fi
+fi
+EOF
+```
+

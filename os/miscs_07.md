@@ -3175,3 +3175,27 @@ fi
 EOF
 ```
 
+### RDMA 无损网络和PFC（基于优先级的流量控制）ECN
+https://blog.csdn.net/bandaoyu/article/details/115346857
+
+### 虚拟机设置网卡Multiqueue支持
+```
+$ oc get vm rhel8-vm-01 -o json | jq .spec.template.spec.domain.devices.networkInterfaceMultiqueue=true | oc apply -f -
+$ oc get vm rhel8-vm-01 -o json | jq .spec.template.spec.domain.devices.networkInterfaceMultiqueue
+
+
+```
+
+### 强制删除Terminationg状态的virt-launcher Pod
+```
+2m23s       Normal    Killing            pod/virt-launcher-rhel8-vm-01-8jdrt   Stopping container compute
+2m24s       Warning   FailedKillPod      pod/virt-launcher-rhel8-vm-01-8jdrt   error killing pod: [failed to "KillContainer" for "compute" with KillContainerError: "rpc error: code = DeadlineExceeded desc = context deadline exceeded", failed to "KillPodSandbox" for "86d27f93-ec91-4af9-ae5c-ec2f18a36a21" with KillPodSandboxError: "rpc error: code = DeadlineExceeded desc = context deadline exceeded"]
+
+$ oc get pods 
+NAME                                       READY   STATUS        RESTARTS   AGE
+virt-launcher-gitea-rhel9-pqxwh            1/1     Running       0          9d
+virt-launcher-rhel-8-ivory-carp-18-hm6dq   1/1     Running       0          6d1h
+virt-launcher-rhel8-vm-01-8jdrt            1/1     Terminating   0          16d
+
+$ oc delete pod virt-launcher-rhel8-vm-01-8jdrt --force
+```

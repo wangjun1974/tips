@@ -3199,3 +3199,24 @@ virt-launcher-rhel8-vm-01-8jdrt            1/1     Terminating   0          16d
 
 $ oc delete pod virt-launcher-rhel8-vm-01-8jdrt --force
 ```
+
+### 查看virt-launcher pod支持的qemu机器类型
+```
+$ oc exec -it $(oc -n test2 get pods -l 'kubevirt.io/domain=rhel8-vm-01' -o name)  -- bash -c '/usr/libexec/qemu-kvm -machine ?'
+Supported machines are:
+pc                   RHEL 7.6.0 PC (i440FX + PIIX, 1996) (alias of pc-i440fx-rhel7.6.0)
+pc-i440fx-rhel7.6.0  RHEL 7.6.0 PC (i440FX + PIIX, 1996) (default) (deprecated)
+q35                  RHEL-9.4.0 PC (Q35 + ICH9, 2009) (alias of pc-q35-rhel9.4.0)
+pc-q35-rhel9.4.0     RHEL-9.4.0 PC (Q35 + ICH9, 2009)
+pc-q35-rhel9.2.0     RHEL-9.2.0 PC (Q35 + ICH9, 2009)
+pc-q35-rhel9.0.0     RHEL-9.0.0 PC (Q35 + ICH9, 2009)
+pc-q35-rhel8.6.0     RHEL-8.6.0 PC (Q35 + ICH9, 2009) (deprecated)
+pc-q35-rhel8.5.0     RHEL-8.5.0 PC (Q35 + ICH9, 2009) (deprecated)
+pc-q35-rhel8.4.0     RHEL-8.4.0 PC (Q35 + ICH9, 2009) (deprecated)
+pc-q35-rhel8.3.0     RHEL-8.3.0 PC (Q35 + ICH9, 2009) (deprecated)
+pc-q35-rhel8.2.0     RHEL-8.2.0 PC (Q35 + ICH9, 2009) (deprecated)
+pc-q35-rhel8.1.0     RHEL-8.1.0 PC (Q35 + ICH9, 2009) (deprecated)
+pc-q35-rhel8.0.0     RHEL-8.0.0 PC (Q35 + ICH9, 2009) (deprecated)
+pc-q35-rhel7.6.0     RHEL-7.6.0 PC (Q35 + ICH9, 2009) (deprecated)
+none                 empty machine
+```

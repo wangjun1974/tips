@@ -3220,3 +3220,13 @@ pc-q35-rhel8.0.0     RHEL-8.0.0 PC (Q35 + ICH9, 2009) (deprecated)
 pc-q35-rhel7.6.0     RHEL-7.6.0 PC (Q35 + ICH9, 2009) (deprecated)
 none                 empty machine
 ```
+
+### skopeo copy 命令报错处理
+```
+skopeo copy --format v2s2 --all docker://docker.io/asciidoctor/docker-asciidoctor:latest dir:/tmp/docker-asciidoctor
+...
+FATA[0145] copying image 3/4 from manifest list: creating an updated image manifest: Unknown media type during manifest conversion: "application/vnd.in-toto+json" 
+
+# 将参数调整为 --format oci
+skopeo copy --format oci --all docker://docker.io/asciidoctor/docker-asciidoctor:latest dir:/tmp/docker-asciidoctor
+```

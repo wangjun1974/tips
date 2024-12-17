@@ -3230,3 +3230,17 @@ FATA[0145] copying image 3/4 from manifest list: creating an updated image manif
 # 将参数调整为 --format oci
 skopeo copy --format oci --all docker://docker.io/asciidoctor/docker-asciidoctor:latest dir:/tmp/docker-asciidoctor
 ```
+
+### bash completion 与 oc completion
+```
+# .bashrc
+...
+if [ -f ~/.oc_completion_bash ]; then
+  source ~/.oc_completion_bash
+fi
+
+[[ -r "$(brew --prefix)/etc/profile.d/bash_completion.sh" ]] && . "$(brew --prefix)/etc/profile.d/bash_completion.sh"
+
+# .bash_profile
+source ~/.bashrc
+```

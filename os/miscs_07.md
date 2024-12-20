@@ -3292,6 +3292,8 @@ skopeo copy --format v2s2 --all docker://registry.redhat.io/advanced-cluster-sec
 
 ### operator - 删除job和job相关的configmap
 ```
+https://access.redhat.com/solutions/6459071
+
 $ jobname=$(oc get job -n openshift-marketplace -o json | jq -r '.items[] | select(.spec.template.spec.containers[].env[].value|contains ("rhacs")) | .metadata.name')
 $ oc delete job ${jobname} -n openshift-marketplace
 $ oc delete configmap ${jobname} -n openshift-marketplace

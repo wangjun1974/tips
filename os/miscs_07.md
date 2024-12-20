@@ -3263,3 +3263,30 @@ oc get packagemanifests rhacs-operator -n openshift-marketplace -o json  | jq .s
   "registry.redhat.io/advanced-cluster-security/rhacs-scanner-v4-rhel8@sha256:2f04f3b6de16da6f4d3ce4a16eff72654d45a76887764b0c54669316a0f54fa3"
 ]
 ```
+
+### 根据packagemanifests生成下载镜像的名称
+```
+repo=advanced-cluster-security
+mkdir -p /tmp/advanced-cluster-security
+
+oc get packagemanifests rhacs-operator -n openshift-marketplace -o json  | jq .status.channels[0].currentCSVDesc.relatedImages | grep -Ev '\[|\]' | sed -e 's/^.*"registry/registry/g' -e 's/",$//g'  | while read i ; do 
+  image=$i
+  subimage=$(echo $i| sed -e 's,registry.redhat.io/advanced-cluster-security/,,g' -e 's,@.*$,,g')
+  echo skopeo copy --format v2s2 --all docker://${image} dir:/tmp/${repo}/${subimage}
+done 
+
+skopeo copy --format v2s2 --all docker://registry.redhat.io/advanced-cluster-security/rhacs-main-rhel8@sha256:853ce8d425b52959557227dfb8cb241e6843e710be56b9aaa08fabaa294206a0 dir:/tmp/advanced-cluster-security/rhacs-main-rhel8
+skopeo copy --format v2s2 --all docker://registry.redhat.io/advanced-cluster-security/rhacs-scanner-db-slim-rhel8@sha256:7a149b76269ee937e2db0b9c1f63e5763c770babc9c32d6f19982163e9fc2831 dir:/tmp/advanced-cluster-security/rhacs-scanner-db-slim-rhel8
+skopeo copy --format v2s2 --all docker://registry.redhat.io/advanced-cluster-security/rhacs-collector-slim-rhel8@sha256:c1eb9c5e3b62805cd30ee314fdf5b92d3ca7a3075b9d9ba02679e3d4b62240b4 dir:/tmp/advanced-cluster-security/rhacs-collector-slim-rhel8
+skopeo copy --format v2s2 --all docker://registry.redhat.io/advanced-cluster-security/rhacs-collector-rhel8@sha256:53e291598c0756cf0c5402107e568bdd8eb8ae37b41c4596467e09543c8b36dd dir:/tmp/advanced-cluster-security/rhacs-collector-rhel8
+skopeo copy --format v2s2 --all docker://registry.redhat.io/advanced-cluster-security/rhacs-scanner-rhel8@sha256:2f110138f996e4e455bb9158ca4174ebecf6053ec73c7793b596cd7094441e63 dir:/tmp/advanced-cluster-security/rhacs-scanner-rhel8
+skopeo copy --format v2s2 --all docker://registry.redhat.io/advanced-cluster-security/rhacs-rhel8-operator@sha256:bd2b9597b046a7d3726780343ef6887b9c848ca90e751e52a687166f92d890da dir:/tmp/advanced-cluster-security/rhacs-rhel8-operator
+skopeo copy --format v2s2 --all docker://registry.redhat.io/advanced-cluster-security/rhacs-scanner-slim-rhel8@sha256:ad8457ee562501c6fde0bba7361dfd717321af3e959de8f85156ce01f47b1622 dir:/tmp/advanced-cluster-security/rhacs-scanner-slim-rhel8
+skopeo copy --format v2s2 --all docker://registry.redhat.io/advanced-cluster-security/rhacs-scanner-db-rhel8@sha256:03d198bbd9a30578ee57099fc1e6c795bd9ad714ad519fa5419ea89d4b446bfb dir:/tmp/advanced-cluster-security/rhacs-scanner-db-rhel8
+skopeo copy --format v2s2 --all docker://registry.redhat.io/advanced-cluster-security/rhacs-roxctl-rhel8@sha256:e1e3ef9c4113c1a19a1bb304fdb79ec00abf9d54f4337d6481bf4d5943b259bd dir:/tmp/advanced-cluster-security/rhacs-roxctl-rhel8
+skopeo copy --format v2s2 --all docker://registry.redhat.io/advanced-cluster-security/rhacs-scanner-v4-db-rhel8@sha256:f29b582541b597299a37d2e7d834ad03a8bdcc140a867d6c6a3aa6cbe2bde946 dir:/tmp/advanced-cluster-security/rhacs-scanner-v4-db-rhel8
+skopeo copy --format v2s2 --all docker://registry.redhat.io/advanced-cluster-security/rhacs-central-db-rhel8@sha256:3b5fffb40c68870387293458bca2ee6f035e7be0c7e95c9d7d47e806b1ee0841 dir:/tmp/advanced-cluster-security/rhacs-central-db-rhel8
+skopeo copy --format v2s2 --all docker://registry.redhat.io/advanced-cluster-security/rhacs-scanner-v4-rhel8@sha256:2f04f3b6de16da6f4d3ce4a16eff72654d45a76887764b0c54669316a0f54fa3" dir:/tmp/advanced-cluster-security/rhacs-scanner-v4-rhel8
+```
+
+

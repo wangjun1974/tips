@@ -3269,7 +3269,7 @@ oc get packagemanifests rhacs-operator -n openshift-marketplace -o json  | jq .s
 repo=advanced-cluster-security
 mkdir -p /tmp/advanced-cluster-security
 
-oc get packagemanifests rhacs-operator -n openshift-marketplace -o json  | jq .status.channels[0].currentCSVDesc.relatedImages | grep -Ev '\[|\]' | sed -e 's/^.*"registry/registry/g' -e 's/",$//g'  | while read i ; do 
+oc get packagemanifests rhacs-operator -n openshift-marketplace -o json  | jq .status.channels[0].currentCSVDesc.relatedImages | grep -Ev '\[|\]' | sed -e 's/^.*"registry/registry/g' -e 's/",$//g' -e 's/"$//g'  | while read i ; do 
   image=$i
   subimage=$(echo $i| sed -e 's,registry.redhat.io/advanced-cluster-security/,,g' -e 's,@.*$,,g')
   echo skopeo copy --format v2s2 --all docker://${image} dir:/tmp/${repo}/${subimage}
@@ -3286,7 +3286,13 @@ skopeo copy --format v2s2 --all docker://registry.redhat.io/advanced-cluster-sec
 skopeo copy --format v2s2 --all docker://registry.redhat.io/advanced-cluster-security/rhacs-roxctl-rhel8@sha256:e1e3ef9c4113c1a19a1bb304fdb79ec00abf9d54f4337d6481bf4d5943b259bd dir:/tmp/advanced-cluster-security/rhacs-roxctl-rhel8
 skopeo copy --format v2s2 --all docker://registry.redhat.io/advanced-cluster-security/rhacs-scanner-v4-db-rhel8@sha256:f29b582541b597299a37d2e7d834ad03a8bdcc140a867d6c6a3aa6cbe2bde946 dir:/tmp/advanced-cluster-security/rhacs-scanner-v4-db-rhel8
 skopeo copy --format v2s2 --all docker://registry.redhat.io/advanced-cluster-security/rhacs-central-db-rhel8@sha256:3b5fffb40c68870387293458bca2ee6f035e7be0c7e95c9d7d47e806b1ee0841 dir:/tmp/advanced-cluster-security/rhacs-central-db-rhel8
-skopeo copy --format v2s2 --all docker://registry.redhat.io/advanced-cluster-security/rhacs-scanner-v4-rhel8@sha256:2f04f3b6de16da6f4d3ce4a16eff72654d45a76887764b0c54669316a0f54fa3" dir:/tmp/advanced-cluster-security/rhacs-scanner-v4-rhel8
+skopeo copy --format v2s2 --all docker://registry.redhat.io/advanced-cluster-security/rhacs-scanner-v4-rhel8@sha256:2f04f3b6de16da6f4d3ce4a16eff72654d45a76887764b0c54669316a0f54fa3 dir:/tmp/advanced-cluster-security/rhacs-scanner-v4-rhel8
 ```
 
 
+### operator - 删除job和job相关的configmap
+```
+$ jobname=$(oc get job -n openshift-marketplace -o json | jq -r '.items[] | select(.spec.template.spec.containers[].env[].value|contains ("rhacs")) | .metadata.name')
+$ oc delete job ${jobname} -n openshift-marketplace
+$ oc delete configmap ${jobname} -n openshift-marketplace
+```

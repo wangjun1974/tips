@@ -3298,3 +3298,27 @@ $ jobname=$(oc get job -n openshift-marketplace -o json | jq -r '.items[] | sele
 $ oc delete job ${jobname} -n openshift-marketplace
 $ oc delete configmap ${jobname} -n openshift-marketplace
 ```
+
+### 关闭 ceph osd pool pg autoscale
+```
+ceph osd ls pool detail
+# 检查 osd pool pg autoscale 状态
+ceph osd pool autoscale-status
+
+# 关闭 osd pool pg autoscale 
+ceph osd pool set pool rbd-pool pg_autoscale_mode off
+
+# 设置 ceph osd pool 属性
+osd pool set <poolname> size|min_size|pg_num|pgp_num|pgp_num_actual|crush_rule|           set pool parameter <var> to <val>
+ hashpspool|nodelete|nopgchange|nosizechange|write_fadvise_dontneed|noscrub|nodeep-scrub| 
+ hit_set_type|hit_set_period|hit_set_count|hit_set_fpp|use_gmt_hitset|target_max_bytes|   
+ target_max_objects|cache_target_dirty_ratio|cache_target_dirty_high_ratio|cache_target_  
+ full_ratio|cache_min_flush_age|cache_min_evict_age|min_read_recency_for_promote|min_     
+ write_recency_for_promote|fast_read|hit_set_grade_decay_rate|hit_set_search_last_n|      
+ scrub_min_interval|scrub_max_interval|deep_scrub_interval|recovery_priority|recovery_op_ 
+ priority|scrub_priority|compression_mode|compression_algorithm|compression_required_     
+ ratio|compression_max_blob_size|compression_min_blob_size|csum_type|csum_min_block|csum_ 
+ max_block|allow_ec_overwrites|fingerprint_algorithm|pg_autoscale_mode|pg_autoscale_bias| 
+ pg_num_min|pg_num_max|target_size_bytes|target_size_ratio|dedup_tier|dedup_chunk_        
+ algorithm|dedup_cdc_chunk_size|eio|bulk <val> {--yes-i-really-mean-it}  
+```

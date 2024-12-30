@@ -3329,3 +3329,47 @@ https://raw.githubusercontent.com/Mellanox/doca-driver-build/249ff2118e4ae849d3c
 https://raw.githubusercontent.com/Mellanox/doca-driver-build/249ff2118e4ae849d3c138ca6cbc5942f6101007/dtk_nic_driver_build.sh
 https://linux.mellanox.com/public/repo/doca/2.9.1/SOURCES/MLNX_OFED/
 https://mellanox.github.io/network-operator-docs/advanced-configurations.html#rhcos-specific-build-parameters
+```
+### 参考链接
+https://mellanox.github.io/network-operator-docs/advanced-configurations.html#precompiled-container-build-instructions-for-doca-drivers
+### 下载以下文件
+mkdir -p /tmp/build
+cd /tmp/build
+wget -4 https://raw.githubusercontent.com/Mellanox/doca-driver-build/249ff2118e4ae849d3c138ca6cbc5942f6101007/RHEL_Dockerfile
+wget -4 https://raw.githubusercontent.com/Mellanox/doca-driver-build/249ff2118e4ae849d3c138ca6cbc5942f6101007/entrypoint.sh
+wget -4 https://raw.githubusercontent.com/Mellanox/doca-driver-build/249ff2118e4ae849d3c138ca6cbc5942f6101007/dtk_nic_driver_build.sh
+chmod +x *.sh
+
+### 获取 DOCA 对应的 OFED 链接
+### DOCA version 2.9.1
+https://linux.mellanox.com/public/repo/doca/2.9.1/SOURCES/MLNX_OFED/MLNX_OFED_SRC-24.10-1.1.4.0.tgz
+### 根据 DOCA 版本及对应的 OFED 版本设置 D_DOCA_VERSION 和 D_OFED_VERSION
+### 并且设置对应的 D_OFED_URL_PATH
+
+### 获取 D_KERNEL_VER
+### 查询 https://access.redhat.com/solutions/7077108 或者在 rhcos 节点上执行 uname -a
+
+### 获取 D_BASE_IMAGE 
+### 例如
+oc adm release info 4.16.26 --image-for=driver-toolkit
+
+podman build --no-cache \
+ --build-arg D_OS=rhcos4.16 \
+ --build-arg D_ARCH=x86_64 \
+ --build-arg D_KERNEL_VER=5.14.0-427.47.1.el9_4.x86_64 \
+ --build-arg D_DOCA_VERSION=2.9.1 \
+ --build-arg D_OFED_VERSION=24.10-1.1.4.0 \
+ --build-arg D_OFED_URL_PATH=https://linux.mellanox.com/public/repo/doca/2.9.1/SOURCES/MLNX_OFED/MLNX_OFED_SRC-24.10-1.1.4.0.tgz \
+ --build-arg D_BASE_IMAGE="quay.io/openshift-release-dev/ocp-v4.0-art-dev@sha256:d0e1f1e1fa657e1bcb148ef714f9325d75ef3a21248a7cef56d404a15b143bea" \
+ --build-arg D_FINAL_BASE_IMAGE=registry.access.redhat.com/ubi9/ubi:9.4 \
+ --tag quay.io/jwang1/doca-driver:24.10-1.1.4.0-0-5.14.0-427.47.1.el9_4.x86_64-rhcos4.16-amd64 \
+ --tag quay.io/jwang1/doca-driver:24.10-1.1.4.0-0-rhcos4.16-amd64 \
+ --tag quay.io/jwang1/doca-driver:24.10-1.1.4.0-0 \
+ -f RHEL_Dockerfile \
+ --target precompiled . 2>&1 | tee build.log
+
+podman push quay.io/jwang1/doca-driver:24.10-1.1.4.0-0 
+podman push quay.io/jwang1/doca-driver:24.10-1.1.4.0-0-rhcos4.16-amd64
+podman push quay.io/jwang1/doca-driver:24.10-1.1.4.0-0-5.14.0-427.47.1.el9_4.x86_64-rhcos4.16-amd64
+
+```

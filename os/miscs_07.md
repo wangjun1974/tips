@@ -3322,3 +3322,10 @@ osd pool set <poolname> size|min_size|pg_num|pgp_num|pgp_num_actual|crush_rule| 
  pg_num_min|pg_num_max|target_size_bytes|target_size_ratio|dedup_tier|dedup_chunk_        
  algorithm|dedup_cdc_chunk_size|eio|bulk <val> {--yes-i-really-mean-it}  
 ```
+
+### Nvidia Mellanox precompiled container build instructions for doca drivers
+https://mellanox.github.io/network-operator-docs/advanced-configurations.html#precompiled-container-build-instructions-for-doca-drivers
+https://raw.githubusercontent.com/Mellanox/doca-driver-build/249ff2118e4ae849d3c138ca6cbc5942f6101007/RHEL_Dockerfile
+https://raw.githubusercontent.com/Mellanox/doca-driver-build/249ff2118e4ae849d3c138ca6cbc5942f6101007/dtk_nic_driver_build.sh
+https://linux.mellanox.com/public/repo/doca/2.9.1/SOURCES/MLNX_OFED/
+https://mellanox.github.io/network-operator-docs/advanced-configurations.html#rhcos-specific-build-parameters

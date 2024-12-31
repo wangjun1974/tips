@@ -3373,3 +3373,55 @@ podman push quay.io/jwang1/doca-driver:24.10-1.1.4.0-0-rhcos4.16-amd64
 podman push quay.io/jwang1/doca-driver:24.10-1.1.4.0-0-5.14.0-427.47.1.el9_4.x86_64-rhcos4.16-amd64
 
 ```
+
+### 配置rdmaSharedDevicePlugin
+```
+...
+  rdmaSharedDevicePlugin:
+    config: | {
+      "configList": [
+         {
+           "resourceName": "rdma_shared_device_eth1",
+           "rdmaHcaMax": 63,
+           "selectors": {
+             "ifNames": ["ens108np0"]
+           }
+         },
+         {
+           "resourceName": "rdma_shared_device_eth2",
+           "rdmaHcaMax": 63,
+           "selectors": {
+             "ifNames": ["ens110np0"]
+           }
+         },
+         {
+           "resourceName": "rdma_shared_device_eth3",
+           "rdmaHcaMax": 63,
+           "selectors": {
+             "ifNames": ["ens112np0"]
+           }
+         },
+         {
+           "resourceName": "rdma_shared_device_eth4",
+           "rdmaHcaMax": 63,
+           "selectors": {
+             "ifNames": ["ens114np0"]
+           }
+         }
+       ]
+    }
+    image: k8s-rdma-shared-dev-plugin
+    repository: ghcr.io/mellanox
+    version: v1.5.1
+  secondaryNetwork:
+    ipoib:
+      image: ipoib-cni
+      repository: ghcr.io/mellanox
+      version: v1.2.0
+  nvIpam:
+    enableWebhook: false
+    image: nvidia-k8s-ipam
+    repository: ghcr.io/mellanox
+    version: v0.2.0
+
+```

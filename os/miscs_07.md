@@ -3425,3 +3425,111 @@ podman push quay.io/jwang1/doca-driver:24.10-1.1.4.0-0-5.14.0-427.47.1.el9_4.x86
     version: v0.2.0
 
 ```
+
+### 配置 MacvlanNetwork
+```
+apiVersion: mellanox.com/v1alpha1
+kind: MacvlanNetwork
+metadata:
+  name: rdmashared-net-eth1
+spec:
+  networkNamespace: default
+  master: ens108np0
+  mode: bridge
+  mtu: 1500
+  ipam: |
+    {
+      "type": "whereabouts",
+      "range": "172.19.5.0/24",
+      "exclude": [
+       "172.19.5.1/32",
+       "172.19.5.2/32",
+       "172.19.5.3/32",
+       "172.19.5.4/32",
+       "172.19.5.5/32",
+       "172.19.5.6/32",
+       "172.19.5.7/32",
+       "172.19.5.8/32",
+      ],
+      "gateway": "172.19.5.254"
+    }
+
+apiVersion: mellanox.com/v1alpha1
+kind: MacvlanNetwork
+metadata:
+  name: rdmashared-net-eth2
+spec:
+  networkNamespace: default
+  master: ens110np0
+  mode: bridge
+  mtu: 1500
+  ipam: |
+    {
+      "type": "whereabouts",
+      "range": "172.19.6.0/24",
+      "exclude": [
+       "172.19.6.1/32",
+       "172.19.6.2/32",
+       "172.19.6.3/32",
+       "172.19.6.4/32",
+       "172.19.6.5/32",
+       "172.19.6.6/32",
+       "172.19.6.7/32",
+       "172.19.6.8/32",
+      ],
+      "gateway": "172.19.6.254"
+    }
+
+apiVersion: mellanox.com/v1alpha1
+kind: MacvlanNetwork
+metadata:
+  name: rdmashared-net-eth3
+spec:
+  networkNamespace: default
+  master: ens112np0
+  mode: bridge
+  mtu: 1500
+  ipam: |
+    {
+      "type": "whereabouts",
+      "range": "172.19.7.0/24",
+      "exclude": [
+       "172.19.7.1/32",
+       "172.19.7.2/32",
+       "172.19.7.3/32",
+       "172.19.7.4/32",
+       "172.19.7.5/32",
+       "172.19.7.6/32",
+       "172.19.7.7/32",
+       "172.19.7.8/32",
+      ],
+      "gateway": "172.19.7.254"
+    }
+
+apiVersion: mellanox.com/v1alpha1
+kind: MacvlanNetwork
+metadata:
+  name: rdmashared-net-eth4
+spec:
+  networkNamespace: default
+  master: ens114np0
+  mode: bridge
+  mtu: 1500
+  ipam: |
+    {
+      "type": "whereabouts",
+      "range": "172.19.8.0/24",
+      "exclude": [
+       "172.19.8.1/32",
+       "172.19.8.2/32",
+       "172.19.8.3/32",
+       "172.19.8.4/32",
+       "172.19.8.5/32",
+       "172.19.8.6/32",
+       "172.19.8.7/32",
+       "172.19.8.8/32",
+      ],
+      "gateway": "172.19.8.254"
+    }
+
+```

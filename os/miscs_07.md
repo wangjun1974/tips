@@ -3533,3 +3533,8 @@ spec:
     }
 
 ```
+
+### 获取节点Capacity
+```
+oc describe node -l node-role.kubernetes.io/worker=| grep -E 'Capacity:|Allocatable:' -A9
+```

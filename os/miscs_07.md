@@ -3538,3 +3538,88 @@ spec:
 ```
 oc describe node -l node-role.kubernetes.io/worker=| grep -E 'Capacity:|Allocatable:' -A9
 ```
+
+### 测试 RDMA Shared Network 性能
+```
+$ cat <<EOF | oc apply -f -
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+name: rdma
+  namespace: default
+EOF
+
+$ oc -n default adm policy add-scc-to-user privileged -z rdma
+
+$ cat <<EOF | oc apply -f -
+apiVersion: v1
+kind: Pod
+metadata:
+  name: rdma-eth1-07-workload
+  namespace: default
+  annotations:
+    k8s.v1.cni.cncf.io/networks: rdmashared-net-eth1
+spec:
+  nodeSelector:
+    kubernetes.io/hostname: worker07.ocp-wh-01.taikangcloud.com
+  serviceAccountName: rdma
+  containers:
+  - image: quay.io/redhat_emp1/ecosys-nvidia/gpu-operator:tools
+    name: rdma-eth1-07-workload
+    command:
+      - sh
+      - -c
+      - sleep inf
+    securityContext:
+      privileged: true
+      capabilities:
+        add: [ "IPC_LOCK" ]
+    resources:
+      limits:
+        rdma/rdma_shared_device_eth1: 1
+      requests:
+        rdma/rdma_shared_device_eth1: 1
+EOF
+
+$ cat <<EOF | oc apply -f -
+apiVersion: v1
+kind: Pod
+metadata:
+  name: rdma-eth1-08-workload
+  namespace: default
+  annotations:
+    k8s.v1.cni.cncf.io/networks: rdmashared-net-eth1
+spec:
+  nodeSelector:
+    kubernetes.io/hostname: worker08.ocp-wh-01.taikangcloud.com
+  serviceAccountName: rdma
+  containers:
+  - image: quay.io/redhat_emp1/ecosys-nvidia/gpu-operator:tools
+    name: rdma-eth1-08-workload
+    command:
+      - sh
+      - -c
+      - sleep inf
+    securityContext:
+      privileged: true
+      capabilities:
+        add: [ "IPC_LOCK" ]
+    resources:
+      limits:
+        rdma/rdma_shared_device_eth1: 1
+      requests:
+        rdma/rdma_shared_device_eth1: 1
+EOF
+
+$ oc get pods -n default
+
+$ oc -n default get pod rdma-eth1-07-workload -o yaml | grep -E 'default/rdmashared' -A3
+<rdma-eth1-07-workload pod ip>
+
+$ oc rsh -n default rdma-eth1-07-workload
+sh-5.1# ib_write_bw -R --report_gbits --tos=106
+
+$ oc rsh -n default rdma-eth1-08-workload 
+sh-5.1# ib_write_bw --report_gbits <rdma-eth1-07-workload pod ip> --tos=106 --run_infinitely
+
+```

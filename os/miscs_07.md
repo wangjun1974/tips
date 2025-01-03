@@ -3623,3 +3623,31 @@ $ oc rsh -n default rdma-eth1-08-workload
 sh-5.1# ib_write_bw --report_gbits <rdma-eth1-07-workload pod ip> --tos=106 --run_infinitely
 
 ```
+
+### 检查 pod 里的 container 的内存占用情况
+```
+$ kubectl -n test2 top pod virt-launcher-rhel8-vm-01-hqm4d --containers 
+POD                               NAME      CPU(cores)   MEMORY(bytes)   
+virt-launcher-rhel8-vm-01-hqm4d   compute   7m           806Mi 
+
+### 检查 pod 的 spec.containers[0].resources
+$ oc -n test2 get pod virt-launcher-rhel8-vm-01-hqm4d -o json  | jq .spec.containers[0].resources
+{
+  "limits": {
+    "bridge.network.kubevirt.io/br1": "1",
+    "devices.kubevirt.io/kvm": "1",
+    "devices.kubevirt.io/tun": "1",
+    "devices.kubevirt.io/vhost-net": "1"
+  },
+  "requests": {
+    "bridge.network.kubevirt.io/br1": "1",
+    "cpu": "200m",
+    "devices.kubevirt.io/kvm": "1",
+    "devices.kubevirt.io/tun": "1",
+    "devices.kubevirt.io/vhost-net": "1",
+    "ephemeral-storage": "50M",
+    "memory": "2302Mi"
+  }
+}
+
+```

@@ -3701,4 +3701,25 @@ $ oc -n jwang get pod virt-launcher-rhel9-vm-01-c9fwz -o json | jq .spec.contain
   "ephemeral-storage": "50M",
   "memory": "2807Mi"
 }
+
+
+$ oc -n jwang get vm rhel9-vm-01 -o json | jq 'del(.spec.template.spec.domain.resources.requests)' | oc apply -f -
+
+$ oc -n jwang get vm rhel9-vm-01 -o json | jq .spec.template.spec.domain.resources
+{}
+
+$ oc -n jwang get $(oc -n jwang get pod -l vm.kubevirt.io/name='rhel9-vm-01' -o name) -o json | jq .spec.containers[0].resources.requests
+{
+  "bridge.network.kubevirt.io/br-vlan153": "1",
+  "cpu": "100m",
+  "devices.kubevirt.io/kvm": "1",
+  "devices.kubevirt.io/tun": "1",
+  "devices.kubevirt.io/vhost-net": "1",
+  "ephemeral-storage": "50M",
+  "memory": "2294Mi"
+}
+
+### 执行内存压力测试
+$ stress-ng --vm $(nproc) --vm-bytes 90% --vm-keep 
+
 ```

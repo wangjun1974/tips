@@ -3651,3 +3651,54 @@ $ oc -n test2 get pod virt-launcher-rhel8-vm-01-hqm4d -o json  | jq .spec.contai
 }
 
 ```
+
+### 强制关机
+```
+virtctl stop --force=true --grace-period=0 xxx-vm
+```
+
+### 检查虚拟机内存占用 - cnv 
+```
+$ kubectl -n jwang top pod virt-launcher-rhel9-vm-01-c9fwz --containers 
+POD                               NAME      CPU(cores)   MEMORY(bytes)   
+virt-launcher-rhel9-vm-01-c9fwz   compute   92m          1253Mi
+
+$ oc -n jwang get vm rhel9-vm-01 -o json | jq .spec.template.spec.domain.memory 
+{
+  "guest": "2Gi"
+}
+
+$ oc -n jwang get pod virt-launcher-rhel9-vm-01-c9fwz -o json | jq .spec.containers[0].resources.requests
+{
+  "bridge.network.kubevirt.io/br-vlan153": "1",
+  "cpu": "100m",
+  "devices.kubevirt.io/kvm": "1",
+  "devices.kubevirt.io/tun": "1",
+  "devices.kubevirt.io/vhost-net": "1",
+  "ephemeral-storage": "50M",
+  "memory": "2294Mi"
+}
+
+$ virtctl stop rhel9-vm-01
+
+$ oc -n jwang get vm rhel9-vm-01 -o json | jq '.spec.template.spec.domain.resources.requests.memory+="2.5Gi"' | oc apply -f -
+
+$ oc -n jwang get vm rhel9-vm-01 -o json | jq .spec.template.spec.domain.resources
+{
+  "requests": {
+    "memory": "2560Mi"
+  }
+}
+
+$ virtctl start rhel9-vm-01 
+$ oc -n jwang get pod virt-launcher-rhel9-vm-01-c9fwz -o json | jq .spec.containers[0].resources.requests
+{
+  "bridge.network.kubevirt.io/br-vlan153": "1",
+  "cpu": "100m",
+  "devices.kubevirt.io/kvm": "1",
+  "devices.kubevirt.io/tun": "1",
+  "devices.kubevirt.io/vhost-net": "1",
+  "ephemeral-storage": "50M",
+  "memory": "2807Mi"
+}
+```

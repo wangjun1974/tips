@@ -3579,4 +3579,7 @@ EOF
 $ rm -rf output-dir
 $ /usr/local/bin/oc-mirror --config ./image-config-realse-local.yaml file://output-dir 2>&1 | tee -a /tmp/oc-mirror
 $ /usr/local/bin/oc-mirror --from ./mirror_seq1_000000.tar docker://registry.example.com:5000 --rebuild-catalogs
+
+$ for packagename in serverless-operator servicemeshoperator3 kiali-ossm ; do /usr/local/bin/oc-mirror list operators --catalog=registry.redhat.io/redhat/redhat-operator-index:v4.16 --package=${packagename}; done | tee /tmp/oc-mirror
+
 ```

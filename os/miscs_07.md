@@ -3720,6 +3720,8 @@ $ oc -n jwang get $(oc -n jwang get pod -l vm.kubevirt.io/name='rhel9-vm-01' -o 
 }
 
 ### 执行内存压力测试
-$ stress-ng --vm $(nproc) --vm-bytes 90% --vm-keep 
+$ virtctl console rhel9-vm-01
+$ sudo -i
+# stress-ng --vm $(nproc) --vm-bytes 90% --vm-keep 
 
 ```

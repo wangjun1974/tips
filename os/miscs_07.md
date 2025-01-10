@@ -3725,3 +3725,16 @@ $ sudo -i
 # stress-ng --vm $(nproc) --vm-bytes 90% --vm-keep 
 
 ```
+
+### etcd 性能问题分析
+```
+https://access.redhat.com/solutions/5489721
+### 查看是否有etcd disk backend commit时间小于 0.05 的范围
+histogram_quantile(0.99, rate(etcd_disk_backend_commit_duration_seconds_bucket[5m])) < 0.05
+
+### 查看是否有etcd disk backend commit时间过长的阶段，如果有说明有问题
+histogram_quantile(0.99, rate(etcd_disk_backend_commit_duration_seconds_bucket[5m])) > 0.03
+
+### 通常在etcd disk backend commit时间过长的阶段也会出现etcd disk wal fsync 时间较长，两者可以进行相互印证
+histogram_quantile(0.99, rate(etcd_disk_wal_fsync_duration_seconds_bucket[5m])) > 0.015
+```

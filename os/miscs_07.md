@@ -3738,3 +3738,109 @@ histogram_quantile(0.99, rate(etcd_disk_backend_commit_duration_seconds_bucket[5
 ### 通常在etcd disk backend commit时间过长的阶段也会出现etcd disk wal fsync 时间较长，两者可以进行相互印证
 histogram_quantile(0.99, rate(etcd_disk_wal_fsync_duration_seconds_bucket[5m])) > 0.015
 ```
+
+### trident fcp integration
+```
+### 准备worker节点的多路径配置
+https://docs.netapp.com/us-en/trident/trident-use/fcp.html#prepare-the-worker-node
+
+export MULTIPATH_CONF=$(cat << EOF | base64 -w 0
+defaults {
+   user_friendly_names yes
+   find_multipaths no
+}
+blacklist {
+}
+EOF)
+
+cat <<EOF | oc apply -f -
+apiVersion: machineconfiguration.openshift.io/v1
+kind: MachineConfig
+metadata:
+  labels:
+    machineconfiguration.openshift.io/role: worker
+  name: 99-worker-multipathing
+spec:
+  config:
+    ignition:
+      version: 3.2.0
+    storage:
+      files:
+      - contents:
+         source: data:text/plain;charset=utf-8;base64,${MULTIPATH_CONF}
+        filesystem: root
+        mode: 420
+        path: /etc/multipath.conf
+    systemd:
+      units:
+      - name: multipathd.service
+        enabled: true
+EOF
+
+### 配置NetApp FAS FC相关基础配置案例
+https://blog.csdn.net/sjj222sjj/article/details/112972814
+
+### RHEL 查询 WWPN 的命令
+$ find /sys/class/fc_host/*/ -name 'port_name'             << retrieve path to wwpn entry
+$ grep -v "zZzZ" -H /sys/class/fc_host/host*/*_name
+/sys/class/fc_host/host6/fabric_name:0x100000051e900105    << switch port name, wwpn
+/sys/class/fc_host/host6/node_name:0x200000e08b87de9a      <<    HBA node name, wwnn
+/sys/class/fc_host/host6/port_name:0x210000e08b87de9a      <<    HBA port name, wwpn
+/sys/class/fc_host/host6/symbolic_name:QLE2462 FW:v7.03.00 DVR:v8.07.00.18.07.2-k
+
+### 配置 TridentBackendConfig
+### https://docs.netapp.com/us-en/trident/trident-use/fcp.html#create-a-backend-configuration
+
+kubectl -n trident create -f backend-tbc-ontap-san-secret.yaml
+cat <<EOF | oc apply -f -
+apiVersion: v1
+kind: Secret
+metadata:
+  name: backend-tbc-ontap-san-secret
+  namespace: trident
+type: Opaque
+stringData:
+  username: admin
+  password: 'NOTREALPASSWORD'
+EOF
+
+# TridentBackendConfig example with FC
+apiVersion: trident.netapp.io/v1
+kind: TridentBackendConfig
+metadata:
+  name: backend-tbc-ontap-san
+  namespace: trident
+spec:
+  version: 1
+  backendName: ontap-san-backend
+  storageDriverName: ontap-san
+  managementLIF: 10.0.0.1
+  sanType: fcp
+  svm: trident_svm
+  credentials:
+    name: backend-tbc-ontap-san-secret
+
+### Trident SCSI over FiberChannel StorageClass配置参考
+### https://community.netapp.com/t5/Tech-ONTAP-Blogs/Fibre-Channel-technology-preview-support-in-Trident/ba-p/457427
+
+### 创建StorageClass
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: fcp-sc
+provisioner: csi.trident.netapp.io
+allowVolumeExpansion: true
+parameters:
+  backendType: "ontap-san"
+  fsType: "ext4"
+
+### 创建 VolumeSnapshotClass
+apiVersion: snapshot.storage.k8s.io/v1
+kind: VolumeSnapshotClass
+metadata:
+  name: csi-snapclass
+driver: csi.trident.netapp.io
+deletionPolicy: Delete
+
+
+```

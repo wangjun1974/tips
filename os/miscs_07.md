@@ -3844,3 +3844,8 @@ deletionPolicy: Delete
 
 
 ```
+
+### Google 文档编辑的文件适应页宽显示的快捷键是 
+```
+Command+Option+[
+```

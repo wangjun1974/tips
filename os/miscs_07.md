@@ -3899,3 +3899,14 @@ oc patch storageclass lvms-vg1 -p '{"metadata": {"annotations": {"storageclass.k
 
 oc run log4shell -n log4shell --image=docker.io/elastic/logstash:7.13.0
 ```
+
+### upload scanner vuln updates
+```
+wget -4 https://install.stackrox.io/scanner/scanner-vuln-updates.zip
+export ROX_API_TOKEN='ey...TNo'
+export ROX_CENTRAL_ADDRESS=central-stackrox.apps.ocp4.example.com:443
+roxctl scanner upload-db \
+  -e "$ROX_CENTRAL_ADDRESS" \
+  --insecure-skip-tls-verify \
+  --scanner-db-file=scanner-vuln-updates.zip
+```

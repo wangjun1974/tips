@@ -3849,3 +3849,53 @@ deletionPolicy: Delete
 ```
 Command+Option+[
 ```
+
+### 设置 default storageclass
+```
+apiVersion: lvm.topolvm.io/v1alpha1
+kind: LVMCluster
+metadata:
+  name: test-lvmcluster
+  namespace: openshift-storage
+spec:
+  storage:
+    deviceClasses:
+    - fstype: xfs
+      name: vg1
+      deviceSelector:
+        paths:
+          - /dev/vdc
+      nodeSelector:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: kubernetes.io/hostname
+            operator: In
+            values:
+            - "worker1.ocp4.example.com"
+      thinPoolConfig:
+        name: thin-pool-1
+        overprovisionRatio: 10
+        sizePercent: 90
+
+oc patch storageclass lvms-vg1 -p '{"metadata": {"annotations": {"storageclass.kubernetes.io/is-default-class": "true"}}}'
+
+### nodeSelector的例子
+      nodeSelector:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: kubernetes.io/hostname
+            operator: In
+            values:
+            - "worker1.ocp4.example.com"
+
+      db:
+        nodeSelector:
+          kubernetes.io/hostname: "worker1.ocp4.example.com"
+      db:
+        resources:
+          requests:
+            cpu: '0.1'
+            memory: 256Mi
+
+oc run log4shell -n log4shell --image=docker.io/elastic/logstash:7.13.0
+```

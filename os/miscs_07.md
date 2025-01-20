@@ -3910,3 +3910,6 @@ roxctl scanner upload-db \
   --insecure-skip-tls-verify \
   --scanner-db-file=scanner-vuln-updates.zip
 ```
+
+### IE 如何禁用 Ennhanced Security Configuration
+https://www.casbay.com/guide/kb/disable-enhanced-security-configuration-for-internet-explorer-in-windows-server-2019-2016

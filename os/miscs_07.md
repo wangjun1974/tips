@@ -3913,3 +3913,19 @@ roxctl scanner upload-db \
 
 ### IE 如何禁用 Ennhanced Security Configuration
 https://www.casbay.com/guide/kb/disable-enhanced-security-configuration-for-internet-explorer-in-windows-server-2019-2016
+
+### 检查etcd状态
+
+```
+$ oc -n openshift-etcd rsh -c etcd etcd-master1.ocp4.example.com
+sh-5.1# etcdctl endpoint status -w table
++------------------------------+------------------+---------+---------+-----------+------------+-----------+------------+--------------------+--------+
+|           ENDPOINT           |        ID        | VERSION | DB SIZE | IS LEADER | IS LEARNER | RAFT TERM | RAFT INDEX | RAFT APPLIED INDEX | ERRORS |
++------------------------------+------------------+---------+---------+-----------+------------+-----------+------------+--------------------+--------+
+| https://192.168.122.101:2379 | ded1a7fce225b098 |  3.5.14 |  106 MB |     false |      false |       126 |   33378766 |           33378766 |        |
+| https://192.168.122.102:2379 | c1e3651bf07a9547 |  3.5.14 |  108 MB |      true |      false |       126 |   33378766 |           33378766 |        |
+| https://192.168.122.103:2379 |  b85d428f8fd4aeb |  3.5.14 |  107 MB |     false |      false |       126 |   33378766 |           33378766 |        |
++------------------------------+------------------+---------+---------+-----------+------------+-----------+------------+--------------------+--------+
+
+### leader 是 master2
+```

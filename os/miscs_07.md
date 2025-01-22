@@ -3929,3 +3929,27 @@ sh-5.1# etcdctl endpoint status -w table
 
 ### leader 是 master2
 ```
+
+### windows 检查网卡 InterfaceName
+```
+netsh interface show interface
+
+以下内容由OpenAI生成
+unattend.xml 里设置静态 ip 地址
+<?xml version="1.0" encoding="utf-8"?>
+<unattend xmlns="urn:schemas-microsoft-com:unattend">
+    
+    <settings pass="specialize">
+        <component name="Microsoft-Windows-Shell-Setup" processorArchitecture="amd64" xmlns="urn:schemas-microsoft-com:unattend">
+            <FirstLogonCommands>
+                <SynchronousCommand>
+                    <CommandLine>netsh interface ipv4 set address name="Ethernet Instance 0" static 192.168.1.100 255.255.255.0 192.168.1.1</CommandLine>
+                    <Description>Set Static IP Address for the First Network Interface</Description>
+                    <Order>1</Order>
+                </SynchronousCommand>
+            </FirstLogonCommands>
+        </component>
+    </settings>
+    
+</unattend>
+```

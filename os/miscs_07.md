@@ -3953,3 +3953,45 @@ unattend.xml 里设置静态 ip 地址
     
 </unattend>
 ```
+
+### StorageProfile for ocs-external-storagecluster-ceph-rbd
+```
+oc get storageprofile ocs-external-storagecluster-ceph-rbd -o yaml  | more
+apiVersion: cdi.kubevirt.io/v1beta1
+kind: StorageProfile
+metadata:
+  creationTimestamp: "2025-01-17T10:59:38Z"
+  generation: 2
+  labels:
+    app: containerized-data-importer
+    app.kubernetes.io/component: storage
+    app.kubernetes.io/managed-by: cdi-controller
+    app.kubernetes.io/part-of: hyperconverged-cluster
+    app.kubernetes.io/version: 4.16.3
+    cdi.kubevirt.io: ""
+  name: ocs-external-storagecluster-ceph-rbd
+  ownerReferences:
+  - apiVersion: cdi.kubevirt.io/v1beta1
+    blockOwnerDeletion: true
+    controller: true
+    kind: CDI
+    name: cdi-kubevirt-hyperconverged
+    uid: 3f6e9454-7277-4638-ac3f-d83b11b6dcd9
+  resourceVersion: "59661183"
+  uid: ec5f9d78-4572-4934-9568-11960a5cb0a9
+spec: {}
+status:
+  claimPropertySets:
+  - accessModes:
+    - ReadWriteMany
+    volumeMode: Block
+  - accessModes:
+    - ReadWriteOnce
+    volumeMode: Block
+  - accessModes:
+    - ReadWriteOnce
+    volumeMode: Filesystem
+  cloneStrategy: csi-clone
+  dataImportCronSourceFormat: snapshot
+  provisioner: openshift-storage.rbd.csi.ceph.com
+```

@@ -3995,3 +3995,9 @@ status:
   dataImportCronSourceFormat: snapshot
   provisioner: openshift-storage.rbd.csi.ceph.com
 ```
+
+### 如何配置VMware Distributed Switch
+https://www.nakivo.com/blog/vmware-distributed-switch-configuration/
+```
+https://www.nakivo.com/blog/vmware-distributed-switch-configuration/
+```

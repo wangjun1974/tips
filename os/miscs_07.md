@@ -4061,3 +4061,6 @@ curl -LOk https://certs.corp.redhat.com/RH-IT-Root-CA.crt
 curl -LOk https://certs.corp.redhat.com/certs/2022-IT-Root-CA.pem
 update-ca-trust
 ```
+
+### Run.AI 的调度器
+https://docs.run.ai/v2.17/Researcher/scheduling/the-runai-scheduler/

@@ -4001,3 +4001,63 @@ https://www.nakivo.com/blog/vmware-distributed-switch-configuration/
 ```
 https://www.nakivo.com/blog/vmware-distributed-switch-configuration/
 ```
+
+### DeepSeek 生成的 Prometheus Metrics 查询程序
+```
+### 查询 histogram_quantile(0.99, rate(etcd_disk_backend_commit_duration_seconds_bucket[5m])) > 0.03 的python 程序
+### 用法是 python query_prometheus.py 2025-01-24T00:00:00Z 2025-01-24T08:00:00Z 
+
+cat > query_prometheus.py <<'EOF'
+import requests
+import json
+import sys  # 导入 sys 模块
+from datetime import datetime
+
+def query_prometheus():
+    # Prometheus 服务器地址
+    prometheus_url = "http://localhost:9090/api/v1/query_range"
+
+    # 查询参数
+    params = {
+        "query": 'histogram_quantile(0.99, rate(etcd_disk_backend_commit_duration_seconds_bucket[5m]))',
+        "start": sys.argv[1],  # 从命令行参数获取 start
+        "end": sys.argv[2],    # 从命令行参数获取 end
+        "step": "30"           # 步长（秒）
+    }
+
+    # 发送 HTTP 请求
+    response = requests.get(prometheus_url, params=params)
+
+    # 检查请求是否成功
+    if response.status_code != 200:
+        print(f"请求失败，状态码：{response.status_code}")
+        print(response.text)
+        exit(1)
+
+    # 解析 JSON 数据
+    data = response.json()
+
+    # 过滤出满足条件的数据点并转换为 RFC3339 格式
+    print("满足条件的数据点：")
+    for result in data["data"]["result"]:
+        for timestamp, metric_value in result["values"]:
+            if float(metric_value) > 0.03:  # 过滤条件
+                # 将 Unix 时间戳转换为 RFC3339 格式
+                rfc3339_time = datetime.utcfromtimestamp(int(timestamp)).strftime('%Y-%m-%dT%H:%M:%SZ')
+                print(f"时间: {rfc3339_time}, 值: {metric_value}")
+
+if __name__ == "__main__":
+    if len(sys.argv) != 3:
+        print("用法: python query_prometheus.py <start_timestamp> <end_timestamp>")
+        exit(1)
+    query_prometheus()
+EOF
+```
+
+### 添加CA和证书
+```
+cd /etc/pki/ca-trust/source/anchors/
+curl -LOk https://certs.corp.redhat.com/RH-IT-Root-CA.crt
+curl -LOk https://certs.corp.redhat.com/certs/2022-IT-Root-CA.pem
+update-ca-trust
+```

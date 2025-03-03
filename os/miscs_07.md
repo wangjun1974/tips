@@ -4064,3 +4064,8 @@ update-ca-trust
 
 ### Run.AI 的调度器
 https://docs.run.ai/v2.17/Researcher/scheduling/the-runai-scheduler/
+
+### Podman login auth.json
+```
+${XDG_RUNTIME_DIR}/containers/auth.json
+```

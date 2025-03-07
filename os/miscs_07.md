@@ -4178,4 +4178,137 @@ oc -n jwang-hcp-demo patch hostedcluster jwang-hcp-demo \
   }
 ]
 '
+
+oc -n jwang-hcp-demo patch hostedcluster jwang-hcp-demo \
+  --type=json \
+  --patch '
+[
+  {
+    "op": "replace",
+    "path": "/spec/imageContentSources",
+    "value": [
+      {
+        "source": "quay.io/openshift-release-dev/ocp-v4.0-art-dev",
+        "mirrors": ["helper.ocp.ap.vwg:5000/ocp4/openshift4"]
+      },
+      {
+        "source": "quay.io/openshift-release-dev/ocp-release",
+        "mirrors": ["helper.ocp.ap.vwg:5000/ocp4/openshift4"]
+      },
+      {
+        "source": "registry.redhat.io/devworkspace",
+        "mirrors": ["helper.ocp.ap.vwg:5000/devworkspace"]
+      },
+      {
+        "source": "registry.redhat.io/workload-availability",
+        "mirrors": ["helper.ocp.ap.vwg:5000/workload-availability"]
+      },
+      {
+        "source": "registry.redhat.io/openshift-logging",
+        "mirrors": ["helper.ocp.ap.vwg:5000/openshift-logging"]
+      },
+      {
+        "source": "registry.redhat.io/rhacm2",
+        "mirrors": ["helper.ocp.ap.vwg:5000/rhacm2"]
+      },
+      {
+        "source": "registry.redhat.io/multicluster-engine",
+        "mirrors": ["helper.ocp.ap.vwg:5000/multicluster-engine"]
+      },
+      {
+        "source": "registry.redhat.io/openshift4",
+        "mirrors": ["helper.ocp.ap.vwg:5000/openshift4"]
+      },
+      {
+        "source": "registry.redhat.io/source-to-image",
+        "mirrors": ["helper.ocp.ap.vwg:5000/source-to-image"]
+      },
+      {
+        "source": "registry.redhat.io/rhel9",
+        "mirrors": ["helper.ocp.ap.vwg:5000/rhel9"]
+      },
+      {
+        "source": "registry.redhat.io/rhel8",
+        "mirrors": ["helper.ocp.ap.vwg:5000/rhel8"]
+      },
+      {
+        "source": "registry.redhat.io/ubi8",
+        "mirrors": ["helper.ocp.ap.vwg:5000/ubi8"]
+      },
+      {
+        "source": "registry.redhat.io/ansible-automation-platform-25",
+        "mirrors": ["helper.ocp.ap.vwg:5000/ansible-automation-platform-25"]
+      },
+      {
+        "source": "registry.redhat.io/rhceph",
+        "mirrors": ["helper.ocp.ap.vwg:5000/rhceph"]
+      },
+      {
+        "source": "registry.redhat.io/oadp",
+        "mirrors": ["helper.ocp.ap.vwg:5000/oadp"]
+      },
+      {
+        "source": "registry.redhat.io/advanced-cluster-security",
+        "mirrors": ["helper.ocp.ap.vwg:5000/advanced-cluster-security"]
+      },
+      {
+        "source": "registry.redhat.io/openshift-update-service",
+        "mirrors": ["helper.ocp.ap.vwg:5000/openshift-update-service"]
+      },
+      {
+        "source": "registry.redhat.io/ansible-automation-platform",
+        "mirrors": ["helper.ocp.ap.vwg:5000/ansible-automation-platform"]
+      },
+      {
+        "source": "registry.redhat.io/web-terminal",
+        "mirrors": ["helper.ocp.ap.vwg:5000/web-terminal"]
+      },
+      {
+        "source": "registry.redhat.io/openshift-gitops-1",
+        "mirrors": ["helper.ocp.ap.vwg:5000/openshift-gitops-1"]
+      },
+      {
+        "source": "registry.redhat.io/lvms4",
+        "mirrors": ["helper.ocp.ap.vwg:5000/lvms4"]
+      },
+      {
+        "source": "registry.redhat.io/rh-sso-7",
+        "mirrors": ["helper.ocp.ap.vwg:5000/rh-sso-7"]
+      },
+      {
+        "source": "registry.redhat.io/ubi8-minimal",
+        "mirrors": ["helper.ocp.ap.vwg:5000/ubi8-minimal"]
+      },
+      {
+        "source": "registry.redhat.io/migration-toolkit-virtualization",
+        "mirrors": ["helper.ocp.ap.vwg:5000/migration-toolkit-virtualization"]
+      },
+      {
+        "source": "registry.redhat.io/openshift-pipelines",
+        "mirrors": ["helper.ocp.ap.vwg:5000/openshift-pipelines"]
+      },
+      {
+        "source": "registry.redhat.io/container-native-virtualization",
+        "mirrors": ["helper.ocp.ap.vwg:5000/container-native-virtualization"]
+      },
+      {
+        "source": "registry.redhat.io/odf4",
+        "mirrors": ["helper.ocp.ap.vwg:5000/odf4"]
+      },
+      {
+        "source": "registry.redhat.io/openshift-serverless-1",
+        "mirrors": ["helper.ocp.ap.vwg:5000/openshift-serverless-1"]
+      },
+      {
+        "source": "registry.redhat.io/rhmtc",
+        "mirrors": ["helper.ocp.ap.vwg:5000/rhmtc"]
+      },
+      {
+        "source": "registry.redhat.io/openshift-update-service",
+        "mirrors": ["helper.ocp.ap.vwg:5000/openshift-update-service"]
+      }
+    ]
+  }
+]
+'
 ```

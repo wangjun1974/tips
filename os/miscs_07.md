@@ -4104,3 +4104,78 @@ spec:
   vfioManager: ...
   toolkit: ...
 ```
+
+### 获取 rhel coreos rpm package list 的方法
+https://access.redhat.com/solutions/5787001
+```
+oc adm release info --image-for=rhel-coreos 4.16.17
+PATH_TO_AUTH_FILE=/run/user/0/containers/auth.json
+podman run --rm --authfile ${PATH_TO_AUTH_FILE} -it --entrypoint /bin/rpm $(oc adm release info --image-for=rhel-coreos 4.16.17) -qa
+```
+
+### Patch hostedcluster CR 添加 spec.additionalTrustBundle 和 spec.imageContentSources
+```
+oc -n jwang-hcp-demo patch hostedcluster jwang-hcp-demo \
+  --type=json \
+  --patch '
+[
+  {
+    "op": "add",
+    "path": "/spec/additionalTrustBundle",
+    "value": {
+      "name": "user-ca-bundle"
+    }
+  },
+  {
+    "op": "add",
+    "path": "/spec/imageContentSources",
+    "value": [
+      {
+        "source": "quay.io/openshift-release-dev/ocp-v4.0-art-dev",
+        "mirrors": ["helper.ocp.ap.vwg:5000/ocp4/openshift4"]
+      },
+      {
+        "source": "quay.io/openshift-release-dev/ocp-release",
+        "mirrors": ["helper.ocp.ap.vwg:5000/ocp4/openshift4"]
+      },
+      {
+        "source": "registry.redhat.io/rhacm2",
+        "mirrors": ["helper.ocp.ap.vwg:5000/rhacm2"]
+      },
+      {
+        "source": "registry.redhat.io/multicluster-engine",
+        "mirrors": ["helper.ocp.ap.vwg:5000/multicluster-engine"]
+      },
+      {
+        "source": "registry.redhat.io/openshift4",
+        "mirrors": ["helper.ocp.ap.vwg:5000/openshift4"]
+      },
+      {
+        "source": "registry.redhat.io/source-to-image",
+        "mirrors": ["helper.ocp.ap.vwg:5000/source-to-image"]
+      },
+      {
+        "source": "registry.redhat.io/rhel9",
+        "mirrors": ["helper.ocp.ap.vwg:5000/rhel9"]
+      },
+      {
+        "source": "registry.redhat.io/rhel8",
+        "mirrors": ["helper.ocp.ap.vwg:5000/rhel8"]
+      },
+      {
+        "source": "registry.redhat.io/ubi8",
+        "mirrors": ["helper.ocp.ap.vwg:5000/ubi8"]
+      },
+      {
+        "source": "registry.redhat.io/rhmtc",
+        "mirrors": ["helper.ocp.ap.vwg:5000/rhmtc"]
+      },
+      {
+        "source": "registry.redhat.io/openshift-update-service",
+        "mirrors": ["helper.ocp.ap.vwg:5000/openshift-update-service"]
+      }
+    ]
+  }
+]
+'
+```

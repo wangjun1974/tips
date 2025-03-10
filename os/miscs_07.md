@@ -4312,3 +4312,48 @@ oc -n jwang-hcp-demo patch hostedcluster jwang-hcp-demo \
 ]
 '
 ```
+
+### HostedCluster 添加 
+```
+### 在 Management Cluster namespace jwang-hcp-demo 下添加包含帐号口令的 secret
+oc create secret generic htpass-secret --from-file=htpasswd=/root/ocp4/htpasswd -n jwang-hcp-demo
+### 编辑 HostedCluster 添加
+spec:
+  configuration:
+    oauth:
+      identityProviders:
+      - htpasswd:
+          fileData:
+            name: htpass-secret
+        name: htpass
+        type: HTPasswd
+
+### 可以用命令完成上述配置
+oc -n jwang-hcp-demo patch hostedcluster jwang-hcp-demo \
+  --type='json' \
+  --patch '
+[
+  {
+    "op": "add",
+    "path": "/spec/configuration/oauth/identityProviders",
+    "value": [
+      {
+        "name": "htpass",
+        "type": "HTPasswd",
+        "htpasswd": {
+          "fileData": {
+            "name": "htpass-secret"
+          }
+        }
+      }
+    ]
+  }
+]
+'
+
+### 在 HostedCluster 里为用户添加 clusterrole/role
+oc --kubeconfig=/root/Downloads/kubeconfig adm policy add-cluster-role-to-user admin admin
+oc --kubeconfig=/root/Downloads/kubeconfig adm policy add-cluster-role-to-user cluster-admin admin
+oc --kubeconfig=/root/Downloads/kubeconfig adm policy add-role-to-user self-provisioner user01
+oc --kubeconfig=/root/Downloads/kubeconfig adm policy add-role-to-user self-provisioner user02
+```

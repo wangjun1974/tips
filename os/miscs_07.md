@@ -4510,3 +4510,18 @@ oc -n jwang-hcp-demo patch hostedcluster jwang-hcp-demo \
 ]
 '
 ```
+
+### 设置 OADP
+```
+oc extract secret/vm-backups -n openshift-adp --keys=AWS_ACCESS_KEY_ID --to=-
+oc extract secret/vm-backups -n openshift-adp --keys=AWS_SECRET_ACCESS_KEY --to=-
+
+创建文件 credentials-velero 
+cat <<EOF > credentials-velero
+[default]
+aws_access_key_id=<AWS_ACCESS_KEY_ID>
+aws_secret_access_key=<AWS_SECRET_ACCESS_KEY>
+EOF
+
+
+```

@@ -4532,3 +4532,6 @@ https://guanjia.qq.com/knowledge-base/content/1390?from=clinic
 
 ### 生成uattend.xml的网址
 https://windowsafg.com/server2016.html
+```
+https://windowsafg.com/server2016.html
+```

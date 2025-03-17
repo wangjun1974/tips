@@ -4532,3 +4532,12 @@ https://guanjia.qq.com/knowledge-base/content/1390?from=clinic
 
 ### 生成uattend.xml的网址
 https://windowsafg.com/server2016.html
+
+```
+%WINDIR%\System32\Sysprep\sysprep.exe /generalize /shutdown /oobe /mode:vm
+```
+
+### 获取Windows SID
+```
+wmic useraccount where name='%username%' get sid
+```

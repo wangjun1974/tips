@@ -4541,3 +4541,47 @@ https://windowsafg.com/server2016.html
 ```
 wmic useraccount where name='%username%' get sid
 ```
+
+### RHEL8 配置SMB/CIFS共享的简易流程
+```
+dnf install -y samba samba-client
+systemctl enable --now smb nmb
+
+cat <<EOF > /etc/samba/smb.conf 
+[global]
+    workgroup = WORKGROUP
+    server string = Samba Server
+    security = user
+    map to guest = bad user
+    guest account = nobody
+    log file = /var/log/samba/log.%m
+    max log size = 50
+
+[SecureShare]
+    comment = Secure User Share
+    path = /samba/share
+    valid users = @smbusers
+    browseable = yes
+    writable = yes
+    create mask = 0664
+    directory mask = 0775
+EOF
+
+sudo groupadd smbusers
+sudo useradd -G smbusers user1
+sudo smbpasswd -a user1
+
+sudo mkdir -p /samba/share
+sudo chmod -R 2775 /samba/share
+sudo chown -R nobody:nobody /samba/share
+
+sudo setsebool -P samba_export_all_rw=1
+sudo semanage fcontext -a -t samba_share_t "/samba(/.*)?"
+sudo restorecon -Rv /samba
+
+sudo firewall-cmd --permanent --add-service=samba
+sudo firewall-cmd --reload
+
+smbclient //<server_ip_address>/SecureShare -U user1
+net use Z: \\<server_ip_address>\SecureShare /user:user1
+```

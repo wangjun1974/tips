@@ -4585,3 +4585,17 @@ sudo firewall-cmd --reload
 smbclient //<server_ip_address>/SecureShare -U user1
 net use Z: \\<server_ip_address>\SecureShare /user:user1
 ```
+
+### 下载 hypershift cli 
+https://github.com/openshift/release/blob/b4128007922810f00c92f506fb7808ca70237805/ci-operator/step-registry/hypershift/mce/dump/hypershift-mce-dump-commands.sh#L9-L30
+```
+downURL=$(oc get ConsoleCLIDownload hcp-cli-download -o json | jq -r '.spec.links[] | select(.text | test("Linux for x86_64")).href') && curl -k --output /tmp/hypershift.tar.gz ${downURL}
+cd /tmp && tar -xvf /tmp/hypershift.tar.gz
+chmod +x /tmp/hcp
+HCP_CLI="/tmp/hcp"
+```
+
+### 包含ibstat的工具
+```
+quay.io/bschmaus/gpu-operator:tools
+```

@@ -4647,7 +4647,7 @@ kill %1
 EOF
 ```
 
-### 
+### HyperShift hosted clusters, konnectivity is used via a socks or https proxy
 ```
 ### openshift-apiserver
 ### Communicates with webhook services for resources served by the OpenShift APIServer

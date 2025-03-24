@@ -4599,3 +4599,50 @@ HCP_CLI="/tmp/hcp"
 ```
 quay.io/bschmaus/gpu-operator:tools
 ```
+
+### 检查 konnectivity 是否正常工作的脚本
+https://hypershift-docs.netlify.app/reference/konnectivity/#testing-the-konnectivity-server-with-curl
+```
+cat <<'EOF' > test-konnectivity.sh
+#!/bin/bash
+
+set -euo pipefail
+
+workdir="$(mktemp -d)"
+cp_namespace="jwang-hcp-demo-jwang-hcp-demo"
+
+echo "work directory is: ${workdir}"
+
+# Get the cert/CA required to use the konnectivity server as a proxy
+oc get secret konnectivity-client -n ${cp_namespace} -o jsonpath='{ .data.tls\.key }' | base64 -d > "${workdir}/client.key"
+oc get secret konnectivity-client -n ${cp_namespace} -o jsonpath='{ .data.tls\.crt }' | base64 -d > "${workdir}/client.crt"
+oc get cm konnectivity-ca-bundle -n ${cp_namespace} -o jsonpath='{ .data.ca\.crt }' > "${workdir}/konnectivity_ca.crt"
+
+# Get the cert/CA required to access the kubelet endpoint
+oc get cm kubelet-client-ca -n ${cp_namespace} -o jsonpath='{ .data.ca\.crt }' > ${workdir}/kubelet_ca.crt
+oc get secret kas-kubelet-client-crt -n ${cp_namespace} -o jsonpath='{ .data.tls\.crt }' | base64 -d > ${workdir}/kubelet_client.crt
+oc get secret kas-kubelet-client-crt -n ${cp_namespace} -o jsonpath='{ .data.tls\.key }' | base64 -d > ${workdir}/kubelet_client.key
+
+# Obtain a node IP from local machines
+nodeip="$(oc get agentmachines -n ${cp_namespace} -o json | jq -r '.items[0].status.addresses[] | select(.type=="ExternalIP") | .address')"
+
+# Forward the konnectivity server endpdoint to the local machine
+oc port-forward -n ${cp_namespace} svc/konnectivity-server-local 8090:8090 &
+
+# Allow some time for the port-forwarding to start
+sleep 2
+
+# Perform the curl command with the localhost konnectivity endpoint
+curl -x "https://127.0.0.1:8090" \
+  --proxy-cacert ${workdir}/konnectivity_ca.crt \
+  --proxy-cert ${workdir}/client.crt \
+  --proxy-key ${workdir}/client.key \
+  --cacert ${workdir}/kubelet_ca.crt \
+  --cert ${workdir}/kubelet_client.crt \
+  --key ${workdir}/kubelet_client.key \
+  "https://${nodeip}:10250/metrics"
+
+# Kill the port-forward job
+kill %1
+EOF
+```

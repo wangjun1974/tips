@@ -4646,3 +4646,104 @@ curl -x "https://127.0.0.1:8090" \
 kill %1
 EOF
 ```
+
+### 
+```
+### openshift-apiserver
+### Communicates with webhook services for resources served by the OpenShift APIServer
+### Routes ImageStream connection to remote registries through the data plane.
+oc -n jwang-hcp-demo-jwang-hcp-demo get $(oc get pods -n jwang-hcp-demo-jwang-hcp-demo -l app=openshift-apiserver -o name) -o json | jq -r '.spec.containers[] | select (.name=="konnectivity-proxy") | .command' 
+[
+  "/usr/bin/control-plane-operator",
+  "konnectivity-https-proxy"
+]
+oc -n jwang-hcp-demo-jwang-hcp-demo get $(oc get pods -n jwang-hcp-demo-jwang-hcp-demo -l app=openshift-apiserver -o name) -o json | jq -r '.spec.containers[] | select (.name=="konnectivity-proxy") | .args' 
+[
+  "run"
+]
+
+### ingress-operator
+### Uses konnectivity for route health checks (routes in data plane are not necessarily accessible from the control plane)
+oc -n jwang-hcp-demo-jwang-hcp-demo get $(oc get pods -n jwang-hcp-demo-jwang-hcp-demo -l app=ingress-operator -o name) -o json | jq -r '.spec.containers[] | select (.name=="konnectivity-proxy") | .command'
+[
+  "/usr/bin/control-plane-operator",
+  "konnectivity-https-proxy"
+]
+oc -n jwang-hcp-demo-jwang-hcp-demo get $(oc get pods -n jwang-hcp-demo-jwang-hcp-demo -l app=ingress-operator -o name) -o json | jq -r '.spec.containers[] | select (.name=="konnectivity-proxy") | .args'
+[
+  "run",
+  "--connect-directly-to-cloud-apis"
+]
+
+### OAuth Server
+### Enables communication with identity providers that potentially are only available to the data plane network.
+### http-proxy
+oc -n jwang-hcp-demo-jwang-hcp-demo get $(oc get pods -n jwang-hcp-demo-jwang-hcp-demo -l app=oauth-openshift -o name) -o json | jq -r '.spec.containers[] | select (.name=="http-proxy") | .command'
+[
+  "/usr/bin/control-plane-operator",
+  "konnectivity-https-proxy"
+]
+oc -n jwang-hcp-demo-jwang-hcp-demo get $(oc get pods -n jwang-hcp-demo-jwang-hcp-demo -l app=oauth-openshift -o name) -o json | jq -r '.spec.containers[] | select (.name=="http-proxy") | .args'
+[
+  "run",
+  "--serving-port=8092"
+]
+oc -n jwang-hcp-demo-jwang-hcp-demo get $(oc get pods -n jwang-hcp-demo-jwang-hcp-demo -l app=oauth-openshift -o name) -o json | jq -r '.spec.containers[] | select (.name=="socks5-proxy") | .command'
+
+### socks5-proxy
+oc -n jwang-hcp-demo-jwang-hcp-demo get $(oc get pods -n jwang-hcp-demo-jwang-hcp-demo -l app=oauth-openshift -o name) -o json | jq -r '.spec.containers[] | select (.name=="socks5-proxy") | .command'
+[
+  "/usr/bin/control-plane-operator",
+  "konnectivity-socks5-proxy"
+]
+oc -n jwang-hcp-demo-jwang-hcp-demo get $(oc get pods -n jwang-hcp-demo-jwang-hcp-demo -l app=oauth-openshift -o name) -o json | jq -r '.spec.containers[] | select (.name=="socks5-proxy") | .args'
+[
+  "run",
+  "--resolve-from-guest-cluster-dns=true",
+  "--resolve-from-management-cluster-dns=true"
+]
+
+### cluster-network-operator
+### Performs proxy readiness requests through the data plane network
+oc -n jwang-hcp-demo-jwang-hcp-demo get $(oc get pods -n jwang-hcp-demo-jwang-hcp-demo -l app=cluster-network-operator -o name) -o json | jq -r '.spec.containers[] | select (.name=="konnectivity-proxy") | .command'
+[
+  "/usr/bin/control-plane-operator",
+  "konnectivity-socks5-proxy",
+  "--disable-resolver"
+]
+oc -n jwang-hcp-demo-jwang-hcp-demo get $(oc get pods -n jwang-hcp-demo-jwang-hcp-demo -l app=cluster-network-operator -o name) -o json | jq -r '.spec.containers[] | select (.name=="konnectivity-proxy") | .args'
+[
+  "run"
+]
+
+### OVNKube Control Plane
+### Used to enable OVN interconnect for hosted clusters
+oc -n jwang-hcp-demo-jwang-hcp-demo get $(oc get pods -n jwang-hcp-demo-jwang-hcp-demo -l app=ovnkube-control-plane -o name) -o json | jq -r '.spec.containers[] | select (.name=="socks-proxy") | .command'
+[
+  "/usr/bin/control-plane-operator",
+  "konnectivity-socks5-proxy"
+]
+oc -n jwang-hcp-demo-jwang-hcp-demo get $(oc get pods -n jwang-hcp-demo-jwang-hcp-demo -l app=ovnkube-control-plane -o name) -o json | jq -r '.spec.containers[] | select (.name=="socks-proxy") | .args'
+[
+  "run"
+]
+
+### OLM Operator
+### Used for GRPC communication with in-cluster catalogs
+oc -n jwang-hcp-demo-jwang-hcp-demo get $(oc get pods -n jwang-hcp-demo-jwang-hcp-demo -l app=olm-operator -o name) -o json | jq -r '.spec.containers[] | select (.name=="socks5-proxy") | .command'
+[
+  "/usr/bin/control-plane-operator",
+  "konnectivity-socks5-proxy"
+]
+oc -n jwang-hcp-demo-jwang-hcp-demo get $(oc get pods -n jwang-hcp-demo-jwang-hcp-demo -l app=olm-operator -o name) -o json | jq -r '.spec.containers[] | select (.name=="socks5-proxy") | .args'
+[
+  "run"
+]
+
+### OLM Catalog Operator
+### Used for GRPC communication with in-cluster catalogs
+
+### OLM Package Server
+### Used for GRPC communication with in-cluster catalogs
+
+```

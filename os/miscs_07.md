@@ -4747,3 +4747,40 @@ oc -n jwang-hcp-demo-jwang-hcp-demo get $(oc get pods -n jwang-hcp-demo-jwang-hc
 ### Used for GRPC communication with in-cluster catalogs
 
 ```
+
+### metallb L2Advertisement 的 nodeSelectors
+```
+### 修改L2Advertisement的nodeSelector
+oc patch L2Advertisement l2-adv-jwang -n metallb-system \
+  --type='json' \
+  -p '[{
+    "op": "replace",
+    "path": "/spec/nodeSelectors",
+    "value": [
+      {
+        "matchLabels": {
+          "kubernetes.io/hostname": "worker2.ocp.ap.vwg"
+        }
+      }
+    ]
+}]'
+
+### 为L2Advertisement添加nodeSelectors
+oc patch L2Advertisement l2-adv-jwang -n metallb-system \
+  --type='json' \
+  -p '[{
+    "op": "add",
+    "path": "/spec/nodeSelectors",
+    "value": [
+      {
+        "matchLabels": {
+          "kubernetes.io/hostname": "worker1.ocp.ap.vwg"
+        }
+      }
+    ]
+}]'
+
+### 抓包 - 指定源主机地址和协议
+tcpdump -i enp1s0 -n -nn src host 10.120.88.141 and icmp
+
+```

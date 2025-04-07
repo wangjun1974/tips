@@ -4740,6 +4740,43 @@ oc -n jwang-hcp-demo-jwang-hcp-demo get $(oc get pods -n jwang-hcp-demo-jwang-hc
   "run"
 ]
 
+### app: kube-apiserver
+oc -n jwang-hcp-demo-jwang-hcp-demo get $(oc get pods -n jwang-hcp-demo-jwang-hcp-demo -l app=kube-apiserver -o name) -o json | jq -r '.spec.containers[] | select (.name=="konnectivity-server") | .command'
+[
+  "/usr/bin/proxy-server"
+]
+oc -n jwang-hcp-demo-jwang-hcp-demo get $(oc get pods -n jwang-hcp-demo-jwang-hcp-demo -l app=kube-apiserver -o name) -o json | jq -r '.spec.containers[] | select (.name=="konnectivity-server") | .args'
+[
+  "--logtostderr=true",
+  "--log-file-max-size=0",
+  "--cluster-cert",
+  "/etc/konnectivity/cluster/tls.crt",
+  "--cluster-key",
+  "/etc/konnectivity/cluster/tls.key",
+  "--server-cert",
+  "/etc/konnectivity/server/tls.crt",
+  "--server-key",
+  "/etc/konnectivity/server/tls.key",
+  "--server-ca-cert",
+  "/etc/konnectivity/ca/ca.crt",
+  "--server-port",
+  "8090",
+  "--agent-port",
+  "8091",
+  "--health-port",
+  "2041",
+  "--admin-port=8093",
+  "--mode=http-connect",
+  "--proxy-strategies=destHost,defaultRoute",
+  "--keepalive-time",
+  "30s",
+  "--frontend-keepalive-time",
+  "30s",
+  "--server-count",
+  "1",
+  "--cipher-suites=TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256,TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256"
+]
+
 ### OLM Catalog Operator
 ### Used for GRPC communication with in-cluster catalogs
 
@@ -4792,4 +4829,10 @@ oc get HostedCluster jwang-hcp-demo -o json | jq -r '.spec.release.image="helper
 
 ### 更新NodePool spec.release.image
 oc get NodePool nodepool-jwang-hcp-demo-1 -n jwang-hcp-demo -o json | jq -r '.spec.release.image="helper.ocp.ap.vwg:5000/ocp4/openshift4:4.16.37-x86_64"' | oc apply -f -
+```
+
+### 检查 hypershift 的 commit id
+```
+### 检查 hypershift 的 commit id
+oc logs -n hypershift -lapp=operator --tail=-1 -c operator | head -1 | jq
 ```

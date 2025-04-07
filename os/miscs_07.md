@@ -4780,7 +4780,16 @@ oc patch L2Advertisement l2-adv-jwang -n metallb-system \
     ]
 }]'
 
-### 抓包 - 指定源主机地址和协议
+### 抓包 - 指定源主机地址和协议s
 tcpdump -i enp1s0 -n -nn src host 10.120.88.141 and icmp
 
+```
+
+### 更新HyperShift Cluster
+```
+### 更新HostedCluster spec.release.image
+oc get HostedCluster jwang-hcp-demo -o json | jq -r '.spec.release.image="helper.ocp.ap.vwg:5000/ocp4/openshift4:4.16.37-x86_64"' | oc apply -f -
+
+### 更新NodePool spec.release.image
+oc get NodePool nodepool-jwang-hcp-demo-1 -n jwang-hcp-demo -o json | jq -r '.spec.release.image="helper.ocp.ap.vwg:5000/ocp4/openshift4:4.16.37-x86_64"' | oc apply -f -
 ```

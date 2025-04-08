@@ -4843,5 +4843,5 @@ oc logs -n hypershift -lapp=operator --tail=-1 -c operator | head -1 | jq
   "version": "openshift/hypershift: b1be2a651f26e755fd37f631273a74876a8a3893. Latest supported OCP: 4.18.0"
 }
 ### 最高支持 4.18.0
-
+https://github.com/openshift/hypershift/commit/b1be2a651f26e755fd37f631273a74876a8a3893
 ```

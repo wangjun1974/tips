@@ -4835,4 +4835,13 @@ oc get NodePool nodepool-jwang-hcp-demo-1 -n jwang-hcp-demo -o json | jq -r '.sp
 ```
 ### 检查 hypershift 的 commit id
 oc logs -n hypershift -lapp=operator --tail=-1 -c operator | head -1 | jq
+{
+  "level": "info",
+  "ts": "2025-04-08T06:31:19Z",
+  "logger": "setup",
+  "msg": "Starting hypershift-operator-manager",
+  "version": "openshift/hypershift: b1be2a651f26e755fd37f631273a74876a8a3893. Latest supported OCP: 4.18.0"
+}
+### 最高支持 4.18.0
+
 ```

@@ -4844,4 +4844,7 @@ oc logs -n hypershift -lapp=operator --tail=-1 -c operator | head -1 | jq
 }
 ### 最高支持 4.18.0
 https://github.com/openshift/hypershift/commit/b1be2a651f26e755fd37f631273a74876a8a3893
+
+### 查询 OpenShift Release Date
+https://amd64.ocp.releases.ci.openshift.org/releasestream/4-stable
 ```

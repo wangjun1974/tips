@@ -4876,3 +4876,8 @@ volumeBindingMode: WaitForFirstConsumer
 parameters:
   storagePool: local
 ```
+
+### 改变 nfs pvc 的 owner 和 group 为 qemu
+```
+oc get vm -A | grep -Ev NAMESPACE | awk '{print $1" "$2}' | while read namespace vm ; do echo $namespace-$vm; done | while read i ; do ls -1 /data/ocp-cluster/ocp/nfs/userfile | grep -q $i ; if [ $? -eq 0 ]; then echo chown 107:107 -R /data/ocp-cluster/ocp/nfs/userfile/$(ls -1 /data/ocp-cluster/ocp/nfs/userfile | grep $i) ; fi;  done
+```

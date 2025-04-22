@@ -4848,3 +4848,31 @@ https://github.com/openshift/hypershift/commit/b1be2a651f26e755fd37f631273a74876
 ### 查询 OpenShift Release Date
 https://amd64.ocp.releases.ci.openshift.org/releasestream/4-stable
 ```
+
+### 设置hostpath-provisioner为虚拟机提供所需磁盘
+```
+---
+apiVersion: hostpathprovisioner.kubevirt.io/v1beta1
+kind: HostPathProvisioner
+metadata:
+  name: hostpath-provisioner
+spec:
+  imagePullPolicy: IfNotPresent
+  storagePools:
+  - name: local
+    path: /var/hpvolumes
+  workload:
+    nodeSelector:
+      kubernetes.io/os: linux
+
+---
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: hostpath-csi
+provisioner: kubevirt.io.hostpath-provisioner
+reclaimPolicy: Delete 
+volumeBindingMode: WaitForFirstConsumer 
+parameters:
+  storagePool: local
+```

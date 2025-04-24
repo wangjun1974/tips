@@ -4881,3 +4881,14 @@ parameters:
 ```
 oc get vm -A | grep -Ev NAMESPACE | awk '{print $1" "$2}' | while read namespace vm ; do echo $namespace-$vm; done | while read i ; do ls -1 /data/ocp-cluster/ocp/nfs/userfile | grep -q $i ; if [ $? -eq 0 ]; then echo chown 107:107 -R /data/ocp-cluster/ocp/nfs/userfile/$(ls -1 /data/ocp-cluster/ocp/nfs/userfile | grep $i) ; fi;  done
 ```
+
+### 清理 docker registry 里的镜像
+```
+CLEANUP_REGISTRY_DOMAIN='helper.ocp.ap.vwg:5000'
+CLEANUP_REGISTRY_REPO='ocp4/openshift4'
+CLEANUP_OCP_VER='4.16.37'
+
+ls -1F /data/registry/data/docker/registry/v2/repositories/ocp4/openshift4/_manifests/tags| grep ${CLEANUP_OCP_VER} | while read i ;do cat /data/registry/data/docker/registry/v2/repositories/ocp4/openshift4/_manifests/tags/$i/current/link ; echo ;done | while read sha256 ; do curl -u 'openshift:redhat' -X DELETE https://${CLEANUP_REGISTRY_DOMAIN}/v2/${CLEANUP_REGISTRY_REPO}/manifests/$sha256; done
+
+podman exec -it $(podman ps | grep poc-registry | awk '{print $1}') bin/registry garbage-collect /etc/docker/registry/config.yml
+```

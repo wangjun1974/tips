@@ -4885,10 +4885,11 @@ oc get vm -A | grep -Ev NAMESPACE | awk '{print $1" "$2}' | while read namespace
 ### 清理 docker registry 里的镜像
 ```
 CLEANUP_REGISTRY_DOMAIN='helper.ocp.ap.vwg:5000'
+CLEANUP_REGISTRY_DIR='/data/registry/data'
 CLEANUP_REGISTRY_REPO='ocp4/openshift4'
 CLEANUP_OCP_VER='4.16.37'
 
-ls -1F /data/registry/data/docker/registry/v2/repositories/ocp4/openshift4/_manifests/tags| grep ${CLEANUP_OCP_VER} | while read i ;do cat /data/registry/data/docker/registry/v2/repositories/ocp4/openshift4/_manifests/tags/$i/current/link ; echo ;done | while read sha256 ; do curl -u 'openshift:redhat' -X DELETE https://${CLEANUP_REGISTRY_DOMAIN}/v2/${CLEANUP_REGISTRY_REPO}/manifests/$sha256; done
+ls -1F ${CLEANUP_REGISTRY_DIR}/docker/registry/v2/repositories/${CLEANUP_REGISTRY_REPO}/_manifests/tags| grep ${CLEANUP_OCP_VER} | while read i ;do cat ${CLEANUP_REGISTRY_DIR}/docker/registry/v2/repositories/${CLEANUP_REGISTRY_REPO}/_manifests/tags/$i/current/link ; echo ;done | while read sha256 ; do curl -u 'openshift:redhat' -X DELETE https://${CLEANUP_REGISTRY_DOMAIN}/v2/${CLEANUP_REGISTRY_REPO}/manifests/$sha256; done
 
 podman exec -it $(podman ps | grep poc-registry | awk '{print $1}') bin/registry garbage-collect /etc/docker/registry/config.yml
 ```

@@ -4946,3 +4946,98 @@ ls -1F ${CLEANUP_REGISTRY_DIR}/docker/registry/v2/repositories/${CLEANUP_REGISTR
 
 podman exec -it $(podman ps | grep poc-registry | awk '{print $1}') bin/registry garbage-collect /etc/docker/registry/config.yml
 ```
+
+### cleanup outdate digests
+https://gist.github.com/gbougeard/48e190f931653f99aaea668dd03759ef?permalink_comment_id=3029991#gistcomment-3029991
+```
+#!/bin/bash
+
+function help() {
+  cat << EOF
+Usage: $(basename $0) [OPTION] REGISTRY_PATH
+Find the images with outdated digests in the docker registry stored in ROOT_PATH
+
+Available options:
+  -h Display help
+  -c Show the command to be run to remove the outdated digests.
+
+Warning, be sure that you know what you are doing before remove anything. Check https://gbougeard.github.io/blog.english/2017/05/20/How-to-clean-a-docker-registry-v2.html
+EOF
+}
+
+function get_repositories() {
+    local registry_path=$1
+    find $registry_path/repositories -type d -name _manifests
+}
+
+function get_images() {
+    local repository=$1
+    for tag in $(ls $repository/tags);do
+        echo $repository/tags/$tag
+    done
+}
+
+function get_indexes() {
+    local image=$1
+    ls -1 $image/index/sha256
+}
+
+function get_sha() {
+    local image=$1
+    cat $image/current/link | sed 's/sha256://'
+}
+
+function get_outdated_indexes() {
+    local image=$1
+    get_indexes $image | grep -v $(get_sha $image)
+}
+
+function number_outdated_indexes() {
+    local image=$1
+    get_outdated_indexes $image|wc -l
+}
+
+function has_outdated_digests() {
+    local image=$1
+    [ "$(number_outdated_indexes $image)" != "0" ]
+}
+
+
+show_commands=false
+while getopts ':hc' option;do
+    case "$option" in
+        h) help
+           exit
+           ;;
+        c) show_commands=true
+    esac
+done
+shift $((OPTIND-1))
+
+if [ "$#" -ne 1 ];then
+    >&2 echo "Invalid number of parameters!"
+    help
+    exit 1
+fi
+
+registry_path="$1/docker/registry/v2"
+if [ ! -d $registry_path ];then
+    >&2 echo "Invalid registry path!"
+    help
+    exit 1
+fi
+
+for repository in $(get_repositories $registry_path);do
+    for image in $(get_images $repository);do
+        if has_outdated_digests $image ;then
+            if [ "$show_commands" = true ]; then
+                for hash in $(get_outdated_indexes $image);do
+                    echo "rm -rf $image/index/sha256/$hash $repository/revisions/sha256/$hash"
+                done
+            else
+                echo "There are $(number_outdated_indexes $image) outdated index for $image"
+            fi
+        fi
+    done
+done
+```

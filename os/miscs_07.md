@@ -4936,4 +4936,13 @@ CLEANUP_OCP_VER='4.16.37'
 ls -1F ${CLEANUP_REGISTRY_DIR}/docker/registry/v2/repositories/${CLEANUP_REGISTRY_REPO}/_manifests/tags| grep ${CLEANUP_OCP_VER} | while read i ;do cat ${CLEANUP_REGISTRY_DIR}/docker/registry/v2/repositories/${CLEANUP_REGISTRY_REPO}/_manifests/tags/$i/current/link ; echo ;done | while read sha256 ; do curl -u 'openshift:redhat' -X DELETE https://${CLEANUP_REGISTRY_DOMAIN}/v2/${CLEANUP_REGISTRY_REPO}/manifests/$sha256; done
 
 podman exec -it $(podman ps | grep poc-registry | awk '{print $1}') bin/registry garbage-collect /etc/docker/registry/config.yml
+
+### cleanup operator image from docker image
+CLEANUP_REGISTRY_DOMAIN='helper.ocp.ap.vwg:5000'
+CLEANUP_REGISTRY_DIR='/data/registry/data'
+CLEANUP_REGISTRY_REPO_PART1='migration-toolkit-virtualization'
+
+ls -1F ${CLEANUP_REGISTRY_DIR}/docker/registry/v2/repositories/${CLEANUP_REGISTRY_REPO_PART1} | while read CLEANUP_REGISTRY_REPO_PART2 ; do ls -1F ${CLEANUP_REGISTRY_DIR}/docker/registry/v2/repositories/${CLEANUP_REGISTRY_REPO_PART1}/${CLEANUP_REGISTRY_REPO_PART2}/_manifests/tags | while read i ;do cat ${CLEANUP_REGISTRY_DIR}/docker/registry/v2/repositories/${CLEANUP_REGISTRY_REPO_PART1}/${CLEANUP_REGISTRY_REPO_PART2}/_manifests/tags/$i/current/link ; echo ;done | while read sha256 ; do curl -u 'openshift:redhat' -X DELETE https://${CLEANUP_REGISTRY_DOMAIN}/v2/${CLEANUP_REGISTRY_REPO}/manifests/$sha256; done ; done
+
+podman exec -it $(podman ps | grep poc-registry | awk '{print $1}') bin/registry garbage-collect /etc/docker/registry/config.yml
 ```

@@ -5041,3 +5041,10 @@ for repository in $(get_repositories $registry_path);do
     done
 done
 ```
+
+### 清理 migration-toolkit-virtualization 占用的空间
+```
+### 清理 migration-toolkit-virtualization 占用的空间
+podman exec -it $(podman ps | grep poc-registry | awk '{print $1}') rm -rf /var/lib/registry/docker/registry/v2/repositories/migration-toolkit-virtualization
+podman exec -it $(podman ps | grep poc-registry | awk '{print $1}') bin/registry garbage-collect /etc/docker/registry/config.yml
+```

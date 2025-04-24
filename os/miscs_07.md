@@ -4882,8 +4882,52 @@ parameters:
 oc get vm -A | grep -Ev NAMESPACE | awk '{print $1" "$2}' | while read namespace vm ; do echo $namespace-$vm; done | while read i ; do ls -1 /data/ocp-cluster/ocp/nfs/userfile | grep -q $i ; if [ $? -eq 0 ]; then echo chown 107:107 -R /data/ocp-cluster/ocp/nfs/userfile/$(ls -1 /data/ocp-cluster/ocp/nfs/userfile | grep $i) ; fi;  done
 ```
 
+### local docker distribution registry
+```
+mkdir -p /data/registry/conf
+cat <<EOF > /data/registry/conf/config.yml
+version: 0.1
+log:
+  fields:
+    service: registry
+storage:
+  delete:
+    enabled: true
+  cache:
+    blobdescriptor: inmemory
+  filesystem:
+    rootdirectory: /var/lib/registry
+http:
+  addr: :5000
+  headers:
+    X-Content-Type-Options: [nosniff]
+health:
+  storagedriver:
+    enabled: true
+    interval: 10s
+    threshold: 3
+EOF
+
+cat <<EOF > /usr/local/bin/localregistry.sh 
+#!/bin/bash
+podman run --name poc-registry -d -p 5000:5000 \
+-v /data/registry/conf:/etc/docker/registry:z \
+-v /data/registry/data:/var/lib/registry:z \
+-v /data/registry/auth:/auth:z \
+-e "REGISTRY_AUTH=htpasswd" \
+-e "REGISTRY_AUTH_HTPASSWD_REALM=Registry" \
+-e "REGISTRY_HTTP_SECRET=ALongRandomSecretForRegistry" \
+-e REGISTRY_AUTH_HTPASSWD_PATH=/auth/htpasswd \
+-v /data/registry/certs:/certs:z \
+-e REGISTRY_HTTP_TLS_CERTIFICATE=/certs/registry.crt \
+-e REGISTRY_HTTP_TLS_KEY=/certs/registry.key \
+docker.io/library/registry:2 
+EOF
+```
+
 ### 清理 docker registry 里的镜像
 ```
+### OCP cleanup
 CLEANUP_REGISTRY_DOMAIN='helper.ocp.ap.vwg:5000'
 CLEANUP_REGISTRY_DIR='/data/registry/data'
 CLEANUP_REGISTRY_REPO='ocp4/openshift4'

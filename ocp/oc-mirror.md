@@ -3590,7 +3590,7 @@ $ for packagename in serverless-operator servicemeshoperator3 kiali-ossm ; do /u
 
 CATALOG='registry.redhat.io/redhat/redhat-operator-index:v4.18'
 
-for packagename in serverless-operator servicemeshoperator3
+for packagename in kubevirt-hyperconverged kubernetes-nmstate-operator local-storage-operator odf-operator ocs-operator mcg-operator cincinnati-operator node-healthcheck-operator self-node-remediation metallb-operator mtv-operator redhat-oadp-operator advanced-cluster-management multicluster-engine odf-csi-addons-operator lvms-operator
 do
 output=$(/usr/local/bin/oc-mirror list operators --catalog=$CATALOG --package=${packagename})
 echo $output

@@ -5106,6 +5106,7 @@ mkdir -p /tmp/csi-driver-nfs/nfsplugin
 mkdir -p /tmp/csi-driver-nfs/csi-provisioner
 mkdir -p /tmp/csi-driver-nfs/csi-resizer
 mkdir -p /tmp/csi-driver-nfs/csi-snapshotter
+mkdir -p /tmp/csi-driver-nfs/snapshot-controller
 
 skopeo copy --format v2s2 --all docker://registry.k8s.io/sig-storage/livenessprobe:v2.15.0  dir:/tmp/csi-driver-nfs/livenessprobe
 skopeo copy --format v2s2 --all docker://registry.k8s.io/sig-storage/csi-node-driver-registrar:v2.13.0  dir:/tmp/csi-driver-nfs/csi-node-driver-registrar
@@ -5113,6 +5114,8 @@ skopeo copy --format v2s2 --all docker://registry.k8s.io/sig-storage/nfsplugin:v
 skopeo copy --format v2s2 --all docker://registry.k8s.io/sig-storage/csi-provisioner:v5.2.0 dir:/tmp/csi-driver-nfs/csi-provisioner
 skopeo copy --format v2s2 --all docker://registry.k8s.io/sig-storage/csi-resizer:v1.13.1 dir:/tmp/csi-driver-nfs/csi-resizer
 skopeo copy --format v2s2 --all docker://registry.k8s.io/sig-storage/csi-snapshotter:v8.2.0 dir:/tmp/csi-driver-nfs/csi-snapshotter
+skopeo copy --format v2s2 --all docker://registry.k8s.io/sig-storage/snapshot-controller:v8.2.0 dir:/tmp/csi-driver-nfs/snapshot-controller
+
 
 skopeo copy --format v2s2 --all dir:/tmp/csi-driver-nfs/livenessprobe docker://helper.ocp.ap.vwg:5000/sig-storage/livenessprobe:v2.15.0
 skopeo copy --format v2s2 --all dir:/tmp/csi-driver-nfs/csi-node-driver-registrar docker://helper.ocp.ap.vwg:5000/sig-storage/csi-node-driver-registrar:v2.13.0
@@ -5120,5 +5123,6 @@ skopeo copy --format v2s2 --all dir:/tmp/csi-driver-nfs/nfsplugin docker://helpe
 skopeo copy --format v2s2 --all dir:/tmp/csi-driver-nfs/csi-provisioner docker://helper.ocp.ap.vwg:5000/sig-storage/csi-provisioner:v5.2.0
 skopeo copy --format v2s2 --all dir:/tmp/csi-driver-nfs/csi-resizer docker://helper.ocp.ap.vwg:5000/sig-storage/csi-resizer:v1.13.1
 skopeo copy --format v2s2 --all dir:/tmp/csi-driver-nfs/csi-snapshotter docker://helper.ocp.ap.vwg:5000/sig-storage/csi-snapshotter:v8.2.0
+skopeo copy --format v2s2 --all dir:/tmp/csi-driver-nfs/snapshot-controller docker://helper.ocp.ap.vwg:5000/sig-storage/snapshot-controller:v8.2.0
 
 ```

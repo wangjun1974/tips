@@ -5152,3 +5152,33 @@ spec:
   osImageURL: ""
 EOF
 ```
+
+### 创建 HostPath Storage
+```
+cat <<EOF | oc apply -f -
+---
+apiVersion: hostpathprovisioner.kubevirt.io/v1beta1
+kind: HostPathProvisioner
+metadata:
+  name: hostpath-provisioner
+spec:
+  imagePullPolicy: IfNotPresent
+  storagePools:
+  - name: local
+    path: /var/hpvolumes
+  workload:
+    nodeSelector:
+      kubernetes.io/os: linux
+
+---
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: hostpath-csi
+provisioner: kubevirt.io.hostpath-provisioner
+reclaimPolicy: Delete 
+volumeBindingMode: WaitForFirstConsumer 
+parameters:
+  storagePool: local
+EOF
+```

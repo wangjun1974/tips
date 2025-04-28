@@ -5126,3 +5126,29 @@ skopeo copy --format v2s2 --all dir:/tmp/csi-driver-nfs/csi-snapshotter docker:/
 skopeo copy --format v2s2 --all dir:/tmp/csi-driver-nfs/snapshot-controller docker://helper.ocp.ap.vwg:5000/sig-storage/snapshot-controller:v8.2.0
 
 ```
+
+### enabel nested virt in ocp
+https://access.redhat.com/solutions/6692341
+```
+cat <<EOF | oc apply -f -
+apiVersion: machineconfiguration.openshift.io/v1
+kind: MachineConfig
+metadata:
+  labels:
+    machineconfiguration.openshift.io/role: worker
+  name: 80-enable-nested-virt
+spec:
+  config:
+    ignition:
+      version: 3.2.0
+    storage:
+      files:
+      - contents:
+          source: data:text/plain;charset=utf-8;base64,b3B0aW9ucyBrdm1faW50ZWwgbmVzdGVkPTEKb3B0aW9ucyBrdm1fYW1kIG5lc3RlZD0xCg==
+          verification: {}
+        filesystem: root
+        mode: 420
+        path: /etc/modprobe.d/kvm.conf
+  osImageURL: ""
+EOF
+```

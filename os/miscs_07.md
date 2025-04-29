@@ -5182,3 +5182,20 @@ parameters:
   storagePool: local
 EOF
 ```
+
+### export vmdk to raw and qcow2
+```
+datastore -> select file 'ubuntu2404-jwang-02.vmdk' -> Download -> file ubuntu2404-jwang-02_files.zip 
+
+ls 
+...
+-rw-r--r--. 1 user1 user1 32212254720 Apr 29 02:45 ubuntu2404-jwang-02-flat.vmdk
+-rw-r--r--. 1 user1 user1         513 Apr 29 02:48 ubuntu2404-jwang-02.vmdk
+
+qemu-img convert -p -f vmdk -O raw ubuntu2404-jwang-02.vmdk ubuntu2404-jwang-02.img
+qemu-img convert -p -f vmdk -O qcow2 ubuntu2404-jwang-02.vmdk ubuntu2404-jwang-02.qcow2
+
+
+virtctl image-upload dv ubuntu2404-jwang-02 --size 31Gi --image-path ubuntu2404-jwang-02.img --storage-class ocs-external-storagecluster-ceph-rbd --insecure --force-bind
+virtctl image-upload dv ubuntu2404-jwang-03 --size 31Gi --image-path ubuntu2404-jwang-02.qcow2 --storage-class ocs-external-storagecluster-ceph-rbd --insecure --force-bind
+```

@@ -3630,3 +3630,29 @@ fi
 
 done
 ```
+
+### 测试升级 from 4.16.17 to 4.17.25 (stable-4.17) then to 4.18.10(stable-4.18) 
+```
+$ cat > image-config-realse-local.yaml <<EOF
+apiVersion: mirror.openshift.io/v1alpha2
+kind: ImageSetConfiguration
+mirror:
+  platform:
+    channels:
+      - name: stable-4.17
+        type: ocp
+        minVersion: 4.16.17
+        maxVersion: 4.17.25
+        shortestPath: true
+      - name: stable-4.18
+        type: ocp
+        minVersion: 4.18.10
+        maxVersion: 4.18.10
+        shortestPath: true
+    graph: true # Include Cincinnati upgrade graph image in imageset
+EOF
+$ rm -rf output-dir
+$ /usr/local/bin/oc-mirror --config ./image-config-realse-local.yaml file://output-dir 2>&1 | tee -a /tmp/oc-mirror
+$ /usr/local/bin/oc-mirror --from ./mirror_seq1_000000.tar docker://registry.example.com:5000 --rebuild-catalogs
+
+```

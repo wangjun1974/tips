@@ -5198,3 +5198,8 @@ qemu-img convert -p -f vmdk -O qcow2 ubuntu2404-jwang-02.vmdk ubuntu2404-jwang-0
 virtctl image-upload dv ubuntu2404-jwang-02 --size 31Gi --image-path ubuntu2404-jwang-02.img --storage-class ocs-external-storagecluster-ceph-rbd --insecure --force-bind
 virtctl image-upload dv ubuntu2404-jwang-03 --size 31Gi --image-path ubuntu2404-jwang-02.qcow2 --storage-class ocs-external-storagecluster-ceph-rbd --insecure --force-bind
 ```
+
+### 检查哪个pod提供metallb arp响应
+```
+oc get pods | grep speaker | awk '{print $1}' | while read i ; do echo ; echo $i ; oc logs $i | grep 'announcing' ; done
+```

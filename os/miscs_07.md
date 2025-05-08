@@ -4329,27 +4329,28 @@ spec:
         type: HTPasswd
 
 ### 可以用命令完成上述配置
-oc -n jwang-hcp-demo patch hostedcluster jwang-hcp-demo \
-  --type='json' \
-  --patch '
-[
-  {
-    "op": "add",
-    "path": "/spec/configuration/oauth/identityProviders",
-    "value": [
-      {
-        "name": "htpass",
-        "type": "HTPasswd",
-        "htpasswd": {
-          "fileData": {
-            "name": "htpass-secret"
-          }
+oc patch hostedcluster jwang-cnv-hcp \
+  -n clusters \
+  --type=merge \
+  -p '{
+    "spec": {
+      "configuration": {
+        "oauth": {
+          "identityProviders": [
+            {
+              "htpasswd": {
+                "fileData": {
+                  "name": "htpass-secret"
+                }
+              },
+              "name": "htpass",
+              "type": "HTPasswd"
+            }
+          ]
         }
       }
-    ]
-  }
-]
-'
+    }
+  }'
 
 ### 在 HostedCluster 里为用户添加 clusterrole/role
 oc --kubeconfig=/root/Downloads/kubeconfig adm policy add-cluster-role-to-user admin admin

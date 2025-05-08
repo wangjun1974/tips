@@ -5202,4 +5202,53 @@ virtctl image-upload dv ubuntu2404-jwang-03 --size 31Gi --image-path ubuntu2404-
 ### 检查哪个pod提供metallb arp响应
 ```
 oc get pods | grep speaker | awk '{print $1}' | while read i ; do echo ; echo $i ; oc logs $i | grep 'announcing' ; done
+
+cat <<"EOF" | oc apply -f -
+apiVersion: metallb.io/v1beta1
+kind: MetalLB
+metadata:
+  name: metallb
+  namespace: metallb-system
+EOF
+
+export API_IP=10.120.88.50
+
+envsubst <<"EOF" | oc apply -f -
+apiVersion: metallb.io/v1beta1
+kind: IPAddressPool
+metadata:
+  name: api-public-ip
+  namespace: metallb-system
+spec:
+  protocol: layer2
+  autoAssign: true
+  addresses:
+    - ${API_IP}-${API_IP}
+---
+
+apiVersion: metallb.io/v1beta1
+kind: L2Advertisement
+metadata:
+  name: api-public-ip
+  namespace: metallb-system
+spec:
+  nodeSelectors:
+  - matchLabels:
+      node-role.kubernetes.io/worker: ""
+EOF
+```
+
+### 登录kubevirt vm节点
+```
+$ oc project clusters-jwang-cnv-hcp 
+Now using project "clusters-jwang-cnv-hcp" on server "https://api.ocp.ap.vwg:6443".
+
+$ oc get vmi 
+NAME                           AGE   PHASE     IP             NODENAME             READY
+jwang-cnv-hcp-7072ce76-q22vx   48m   Running   10.128.3.69    worker2.ocp.ap.vwg   True
+jwang-cnv-hcp-7072ce76-s7z9p   48m   Running   10.129.2.133   worker1.ocp.ap.vwg   True
+
+$ virtctl ssh core@jwang-cnv-hcp-7072ce76-q22vx -i /data/ocp-cluster/ocp/ssh-key/id_rsa
+
+$ virtctl ssh core@jwang-cnv-hcp-7072ce76-q22vx -i /data/ocp-cluster/ocp/ssh-key/id_rsa -c journalctl > journal-jwang-cnv-hcp-7072ce76-q22cx.log
 ```

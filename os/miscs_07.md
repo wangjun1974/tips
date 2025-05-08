@@ -5260,3 +5260,17 @@ https://access.redhat.com/solutions/6979741
 ### How to run oc command on cluster nodes in OpenShift 4.x
 oc --kubeconfig=/var/lib/kubelet/kubeconfig get nodes
 ```
+
+### 不推荐的更新hypershift operator的方法
+```
+不推荐的更新hypershift operator的方法
+oc apply -f - <<EOF
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: hypershift-override-images
+  namespace: local-cluster
+data:
+  hypershift-operator: ${OVERRIDE_HO_IMAGE}
+EOF
+```

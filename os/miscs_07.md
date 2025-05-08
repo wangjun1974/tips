@@ -5253,3 +5253,10 @@ $ virtctl ssh core@jwang-cnv-hcp-7072ce76-q22vx -i /data/ocp-cluster/ocp/ssh-key
 
 $ virtctl ssh core@jwang-cnv-hcp-7072ce76-q22vx -i /data/ocp-cluster/ocp/ssh-key/id_rsa -c journalctl > journal-jwang-cnv-hcp-7072ce76-q22cx.log
 ```
+
+### 在 openshift 节点上运行 oc 命令
+https://access.redhat.com/solutions/6979741
+```
+### How to run oc command on cluster nodes in OpenShift 4.x
+oc --kubeconfig=/var/lib/kubelet/kubeconfig get nodes
+```

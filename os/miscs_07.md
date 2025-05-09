@@ -5274,3 +5274,21 @@ data:
   hypershift-operator: ${OVERRIDE_HO_IMAGE}
 EOF
 ```
+
+### 检查metallb svc layer2 
+```
+$ oc -n clusters-jwang-cnv-hcp describe svc kube-apiserver
+...
+Events:
+  Type    Reason        Age                  From             Message
+  ----    ------        ----                 ----             -------
+  Normal  nodeAssigned  121m (x2 over 121m)  metallb-speaker  announcing from node "master1.ocp.ap.vwg" with protocol "layer2"
+  Normal  nodeAssigned  14m (x7 over 137m)   metallb-speaker  announcing from node "master2.ocp.ap.vwg" with protocol "layer2"
+  Normal  nodeAssigned  12m (x2 over 12m)    metallb-speaker  announcing from node "master1.ocp.ap.vwg" with protocol "layer2"
+$ ping 10.120.88.50
+$ arp -an 
+? (10.120.88.50) at 52:54:00:78:9f:25 [ether] on ens3
+$ tcpdump -nn -i ens3 arp 
+15:26:43.193393 ARP, Reply 10.120.88.50 is-at 52:54:00:78:9f:25, length 46
+
+```

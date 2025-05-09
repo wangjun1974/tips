@@ -5290,5 +5290,8 @@ $ arp -an
 ? (10.120.88.50) at 52:54:00:78:9f:25 [ether] on ens3
 $ tcpdump -nn -i ens3 arp 
 15:26:43.193393 ARP, Reply 10.120.88.50 is-at 52:54:00:78:9f:25, length 46
+$ arping -I ens3 10.120.88.50
+ARPING 10.120.88.50 from 10.120.88.123 ens3
+Unicast reply from 10.120.88.50 [52:54:00:78:9F:25]  1.605ms
 
 ```

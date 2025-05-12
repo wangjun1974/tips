@@ -5295,3 +5295,53 @@ ARPING 10.120.88.50 from 10.120.88.123 ens3
 Unicast reply from 10.120.88.50 [52:54:00:78:9F:25]  1.605ms
 
 ```
+
+
+### 更新hypershift-operator镜像和hcp客户端，创建4.18集群
+```
+mkdir -p /tmp/2
+skopeo copy --format v2s2 --all docker://quay.io/hypershift/hypershift-operator:latest dir:/tmp/2
+skopeo copy --format v2s2 --all  dir:/tmp/2 docker://helper.ocp.ap.vwg:5000/hypershift/hypershift-operator:latest
+
+oc apply -f - <<EOF
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: hypershift-override-images
+  namespace: local-cluster
+data:
+  hypershift-operator: helper.ocp.ap.vwg:5000/hypershift/hypershift-operator:latest
+EOF
+
+mkdir -p /tmp/3
+cd /tmp/3
+oc image extract helper.ocp.ap.vwg:5000/hypershift/hypershift-operator:latest --path=/usr/bin/hcp:.
+cp hcp /usr/local/bin
+chmod +x /usr/local/bin/hcp 
+
+export CLUSTER_NAME=jwang-cnv-hcp
+export PULL_SECRET="/root/pull-secret.json"
+export MEM="6Gi"
+export CPU="2"
+export WORKER_COUNT="2"
+
+hcp create cluster kubevirt \
+--name $CLUSTER_NAME \
+--ssh-key /data/ocp-cluster/ocp/ssh-key/id_rsa.pub \
+--node-pool-replicas $WORKER_COUNT \
+--pull-secret $PULL_SECRET \
+--memory $MEM \
+--cores $CPU \
+--release-image=helper.ocp.ap.vwg:5000/openshift/release-images:4.18.10-x86_64 \
+--service-cidr 172.16.16.0/20 \
+--cluster-cidr 192.168.64.0/19 \
+--image-content-sources /root/icsp.yaml \
+--additional-trust-bundle /etc/pki/ca-trust/source/anchors/registry.crt \
+--control-plane-availability-policy SingleReplica \
+--infra-availability-policy SingleReplica \
+--olm-disable-default-sources \
+--olm-catalog-placement Guest \
+--node-upgrade-type InPlace \
+--render-sensitive \
+--render > jwang-cnv-hcp.yaml
+```

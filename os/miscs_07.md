@@ -5357,4 +5357,122 @@ crictl ps -o json | jq -r '.containers[].id'
 ### 获取容器名对应的容器id
 crictl ps -o json | jq -r '.containers[] | select(.metadata.name == "haproxy") | .id'
 
+### 根据容器名获取日志
+crictl logs $(crictl ps -o json | jq -r '.containers[] | select (.metadata.name == "csi-driver") | .id')
+
+### 根据容器名和状态获取日志
+crictl logs $(crictl ps -a -o json | jq -r '.containers[] | select (.metadata.name == "console-operator") | select (.state == "CONTAINER_EXITED") | .id')
+crictl logs $(crictl ps -a -o json | jq -r '.containers[] | select (.metadata.name == "console-operator") | select (.state == "CONTAINER_RUNNING") | .id')
+
+```
+
+### 获取hypershift pod日志
+```
+### 获取etcd-0 pod日志
+oc -n clusters-jwang-cnv-hcp logs $(oc get pods -n clusters-jwang-cnv-hcp -o json | jq -r '.items[] | select (.metadata.name == "etcd-0") | .metadata.name')
+```
+
+### UserDefinedNetwork VM 测试
+```
+### 创建 namespace 和 UserDefinedNetwork
+cat <<EOF | oc apply -f -
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    k8s.ovn.org/primary-user-defined-network: ""
+  name: jwang-udn-poc4
+---
+apiVersion: k8s.ovn.org/v1
+kind: UserDefinedNetwork
+metadata:
+  name: jwang-udn-poc4
+  namespace: jwang-udn-poc4
+spec:
+  layer2:
+    ipam:
+      lifecycle: Persistent
+    role: Primary
+    subnets:
+    - 10.200.0.0/16
+  topology: Layer2
+EOF
+
+### 创建 VirtualMachine
+###           interfaces:
+###           - binding:
+###               name: l2bridge
+###             name: nic1
+###
+###       networks:
+###       - name: nic1
+###         pod: {}
+cat <<EOF | oc apply -f -
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: rhel-8-jwang-01
+  namespace: jwang-udn-poc4
+spec:
+  dataVolumeTemplates:
+  - metadata:
+      creationTimestamp: null
+      name: dv-rhel-8-jwang-01
+    spec:
+      source:
+        pvc:
+          name: rhel-8.9-golden
+          namespace: openshift-virtualization-os-images
+      storage:
+        resources:
+          requests:
+            storage: 11Gi
+        storageClassName: nfs-csi
+  instancetype:
+    kind: virtualmachineclusterinstancetype
+    name: u1.medium
+  preference:
+    kind: virtualmachineclusterpreference
+    name: rhel.8
+  runStrategy: Always
+  template:
+    metadata:
+      creationTimestamp: null
+    spec:
+      architecture: amd64
+      domain:
+        devices:
+          autoattachPodInterface: false
+          disks:
+          - disk:
+              bus: virtio
+            name: rootdisk
+          - disk:
+              bus: virtio
+            name: cloudinitdisk
+          interfaces:
+          - binding:
+              name: l2bridge
+            name: nic1
+        machine:
+          type: pc-q35-rhel9.4.0
+        resources: {}
+      networks:
+      - name: nic1
+        pod: {}
+      subdomain: headless
+      volumes:
+      - dataVolume:
+          name: dv-rhel-8-jwang-01
+        name: rootdisk
+      - cloudInitNoCloud:
+          userData: |
+            #cloud-config
+            chpasswd:
+              expire: false
+            password: redhat
+            user: rhel
+        name: cloudinitdisk
+EOF
 ```

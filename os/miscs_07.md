@@ -5345,3 +5345,8 @@ hcp create cluster kubevirt \
 --render-sensitive \
 --render > jwang-cnv-hcp.yaml
 ```
+
+### 获取crictl ps 输出里的 container的名字
+```
+crictl ps -o json | jq -r '.containers[].metadata.name'
+```

@@ -5348,5 +5348,9 @@ hcp create cluster kubevirt \
 
 ### 获取crictl ps 输出里的 container的名字
 ```
+### 获取名字
 crictl ps -o json | jq -r '.containers[].metadata.name'
+
+### 获取id
+crictl ps -o json | jq -r '.containers[].id'
 ```

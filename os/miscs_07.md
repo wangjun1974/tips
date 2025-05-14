@@ -5064,10 +5064,10 @@ echo $output
 package_name=$packagename
 echo "package_name is $package_name"
 
-default_channel=$(echo "$output" | awk 'NR==2 {print $2}')
+default_channel=$(echo "$output" | awk 'NR==2 {print $NF}')
 echo "default_channel is $default_channel"
 
-latest_version=$(echo "$output" | grep $default_channel | tail -1 | awk '{print $3}' | sed -e "s|^[^.]*\.||")
+latest_version=$(echo "$output" | grep $default_channel | tail -1 | awk '{print $NF}' | sed -e "s|^[^.]*\.||")
 
 echo "Latest version in default channel: $latest_version"
 

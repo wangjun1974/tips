@@ -3626,6 +3626,7 @@ cat ./image-config-realse-local.yaml
 
 if [ $? -eq 0 ]; then
   mv -f ./output-dir/mirror_seq1_000000.tar /var/www/html/${package_name}-$(date +"%Y%m%d")-mirror_seq1_000000.tar
+  restorecon -Rv /var/www/html
 fi
 
 done

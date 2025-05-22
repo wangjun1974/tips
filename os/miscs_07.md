@@ -5477,3 +5477,9 @@ spec:
         name: cloudinitdisk
 EOF
 ```
+
+### 禁用ipv6
+https://linuxconfig.org/how-to-disable-ipv6-on-linux
+```
+echo 1 | sudo tee /proc/sys/net/ipv6/conf/all/disable_ipv6
+```

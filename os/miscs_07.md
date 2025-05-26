@@ -5483,3 +5483,9 @@ https://linuxconfig.org/how-to-disable-ipv6-on-linux
 ```
 echo 1 | sudo tee /proc/sys/net/ipv6/conf/all/disable_ipv6
 ```
+
+### 启用 windows vTPM
+https://blog.csdn.net/x_idea/article/details/121783299
+```
+https://blog.csdn.net/x_idea/article/details/121783299
+```

@@ -5489,3 +5489,24 @@ https://blog.csdn.net/x_idea/article/details/121783299
 ```
 https://blog.csdn.net/x_idea/article/details/121783299
 ```
+
+### get vcenter ksm provider 
+https://knowledge.broadcom.com/external/article/312030/unable-to-backup-native-key-provider-whe.html
+```
+### ssh vcenter server
+ssh root@vc.ocp4.example.com
+
+### dcli interactive shell
+dcli +server https://vc.ocp4.example.com/api +skip-server-verification +interactive
+
+### list kms providers
+dcli> com vmware vcenter cryptomanager kms providers list
+|----------------|------|------|
+|provider        |health|type  |
+|----------------|------|------|
+|NKP-VCENTER-TEST|ERROR |NATIVE|
+|----------------|------|------|
+
+### export kms providers
+dcli> com vmware vcenter cryptomanager kms providers export --provider NKP-VCENTER-TEST
+```

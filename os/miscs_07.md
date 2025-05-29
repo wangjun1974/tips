@@ -5510,3 +5510,35 @@ dcli> com vmware vcenter cryptomanager kms providers list
 ### export kms providers
 dcli> com vmware vcenter cryptomanager kms providers export --provider NKP-VCENTER-TEST
 ```
+
+### create DataSource
+```
+cat <<EOF | oc apply -f -
+---
+apiVersion: cdi.kubevirt.io/v1beta1
+kind: DataSource
+metadata:
+  labels:
+    instancetype.kubevirt.io/default-preference: rhel.8
+  name: rhel-8.10-golden
+  namespace: openshift-virtualization-os-images
+spec:
+  source:
+    pvc:
+      name: rhel-8.10-golden
+      namespace: openshift-virtualization-os-images
+---
+apiVersion: cdi.kubevirt.io/v1beta1
+kind: DataSource
+metadata:
+  labels:
+    instancetype.kubevirt.io/default-preference: rhel.9
+  name: rhel-9.4-golden
+  namespace: openshift-virtualization-os-images
+spec:
+  source:
+    pvc:
+      name: rhel-9.4-golden
+      namespace: openshift-virtualization-os-images
+EOF
+```

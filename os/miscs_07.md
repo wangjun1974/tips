@@ -5542,3 +5542,9 @@ spec:
       namespace: openshift-virtualization-os-images
 EOF
 ```
+
+### BLOG: Windows 11 security and how to get there, if you want
+```
+BLOG: Windows 11 security and how to get there, if you want
+https://techcommunity.microsoft.com/discussions/windows11/blog-windows-11-security-and-how-to-get-there-if-you-want/4358433
+```

@@ -5554,4 +5554,7 @@ https://techcommunity.microsoft.com/discussions/windows11/blog-windows-11-securi
 net use Z: \\192.168.56.201\share 
 net use Z: \\192.168.56.201\share persistent:yes
 net use Z: \\192.168.56.201\share persistent:no
+去掉共享
+net use /persistent:no
+net use Z: /delte
 ```

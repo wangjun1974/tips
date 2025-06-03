@@ -5548,3 +5548,10 @@ EOF
 BLOG: Windows 11 security and how to get there, if you want
 https://techcommunity.microsoft.com/discussions/windows11/blog-windows-11-security-and-how-to-get-there-if-you-want/4358433
 ```
+
+### 挂载 window 文件共享
+```
+net use Z: \\192.168.56.201\share 
+net use Z: \\192.168.56.201\share persistent:yes
+net use Z: \\192.168.56.201\share persistent:no
+```

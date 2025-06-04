@@ -5556,5 +5556,29 @@ net use Z: \\192.168.56.201\share persistent:yes
 net use Z: \\192.168.56.201\share persistent:no
 去掉共享
 net use /persistent:no
-net use Z: /delte
+net use Z: /delete
+```
+
+### 修改nfs权限，让无法启动的pod启动
+```
+### etcd-0 pod因没有权限无法启动
+Events:
+  Type     Reason       Age                  From               Message
+  ----     ------       ----                 ----               -------
+  Normal   Scheduled    9m1s                 default-scheduler  Successfully assigned clusters-jwang-hcp-demo/etcd-0 to worker2.ocp.ap.vwg
+  Warning  FailedMount  46s (x12 over 9m1s)  kubelet            MountVolume.SetUp failed for volume "pvc-f62122a0-6dd9-43f4-88b0-dbe292b55cb9" : applyFSGroup failed for vol 10.120.88.123#var/nfsshare#clus
+ters-jwang-hcp-demo-data-etcd-0-pvc-f62122a0-6dd9-43f4-88b0-dbe292b55cb9#pvc-f62122a0-6dd9-43f4-88b0-dbe292b55cb9#: open /var/lib/kubelet/pods/6f1adf30-a4bf-4c37-81b2-65cbe9e61a80/volumes/kubernetes.io~cs
+i/pvc-f62122a0-6dd9-43f4-88b0-dbe292b55cb9/mount/data: permission denied
+
+### 在nfs服务器上修改目录权限
+[root@helper nfsshare]# ls /var/nfsshare/clusters-jwang-hcp-demo-data-etcd-0-pvc-f62122a0-6dd9-43f4-88b0-dbe292b55cb9/ -l
+total 0
+drwx--S---. 3 root root 20 May 23 13:45 data
+### 在nfs服务器上修改目录权限
+[root@helper clusters-jwang-hcp-demo-data-etcd-0-pvc-f62122a0-6dd9-43f4-88b0-dbe292b55cb9]# chmod -R 777 data/
+[root@helper clusters-jwang-hcp-demo-data-etcd-0-pvc-f62122a0-6dd9-43f4-88b0-dbe292b55cb9]# ls -al
+total 4
+drwxrwsr-x.  3 root root   18 May 23 13:45 .
+drwxrwxrwx. 11 root root 4096 May 27 16:41 ..
+drwxrwsrwx.  3 root root   20 May 23 13:45 data
 ```

@@ -5582,3 +5582,9 @@ drwxrwsr-x.  3 root root   18 May 23 13:45 .
 drwxrwxrwx. 11 root root 4096 May 27 16:41 ..
 drwxrwsrwx.  3 root root   20 May 23 13:45 data
 ```
+
+### HCP installation on kubevirt is failing in RHOCP 4
+https://access.redhat.com/solutions/7111917 
+```
+https://access.redhat.com/solutions/7111917 
+```

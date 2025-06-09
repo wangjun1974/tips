@@ -5588,3 +5588,12 @@ https://access.redhat.com/solutions/7111917
 ```
 https://access.redhat.com/solutions/7111917 
 ```
+
+### hcp create cluster kubevirt 参数
+```
+--root-volume-storage-class  string                 The storage class to use for machines in the NodePool
+--etcd-storage-class string                   The persistent volume storage class for etcd data volumes
+--vm-node-selector stringToString                  A comma separated list of key=value pairs to use as the node selector for the KubeVirt VirtualMachines to be scheduled onto. (e.g. role=kubevirt,size=large) (default [])
+--control-plane-availability-policy string    Availability policy for hosted cluster components. Supported options: SingleReplica, HighlyAvailable (default "HighlyAvailable")
+--infra-availability-policy string            Availability policy for infrastructure services in guest cluster. Supported options: SingleReplica, HighlyAvailable
+```

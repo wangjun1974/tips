@@ -5603,3 +5603,15 @@ https://access.redhat.com/solutions/7111917
 mkdir -p /tmp/ocp-v4.0-art-dev-8eb36b
 skopeo copy --format v2s2 --all --src-creds $(cat /root/.docker/config.json  | jq -r '.auths."quay.io".auth' |base64 -d) docker://quay.io/openshift-release-dev/ocp-v4.0-art-dev@sha256:8eb36bfb824edeaf091a039c99145721e695cabff9751412b2ff58f1351f2954  dir:/tmp/ocp-v4.0-art-dev-8eb36b
 ```
+
+### 检查 hypershift 的 operator 的 commitid
+```
+oc logs -n hypershift -lapp=operator --tail=-1 -c operator | head -1 | jq
+{
+  "level": "info",
+  "ts": "2025-06-05T03:36:39Z",
+  "logger": "setup",
+  "msg": "Starting hypershift-operator-manager",
+  "version": "openshift/hypershift: 5337df1bbc15958173d877e70260f63ec0a25002. Latest supported OCP: 4.18.0"
+}
+```

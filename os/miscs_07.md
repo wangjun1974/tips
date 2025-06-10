@@ -5615,3 +5615,8 @@ oc logs -n hypershift -lapp=operator --tail=-1 -c operator | head -1 | jq
   "version": "openshift/hypershift: 5337df1bbc15958173d877e70260f63ec0a25002. Latest supported OCP: 4.18.0"
 }
 ```
+
+### 检查 events 按照时间进行排序，由旧到新
+```
+oc --kubeconfig=/root/jwang-hcp-demo-kubeconfig get events --sort-by='.firstTimestamp'
+```

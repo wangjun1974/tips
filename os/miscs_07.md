@@ -5597,3 +5597,9 @@ https://access.redhat.com/solutions/7111917
 --control-plane-availability-policy string    Availability policy for hosted cluster components. Supported options: SingleReplica, HighlyAvailable (default "HighlyAvailable")
 --infra-availability-policy string            Availability policy for infrastructure services in guest cluster. Supported options: SingleReplica, HighlyAvailable
 ```
+
+### skopeo copy 时输入 src registry 和 dest registry 的用户名和密码
+```
+mkdir -p /tmp/ocp-v4.0-art-dev-8eb36b
+skopeo copy --format v2s2 --all --src-creds $(cat /root/.docker/config.json  | jq -r '.auths."quay.io".auth' |base64 -d) docker://quay.io/openshift-release-dev/ocp-v4.0-art-dev@sha256:8eb36bfb824edeaf091a039c99145721e695cabff9751412b2ff58f1351f2954  dir:/tmp/ocp-v4.0-art-dev-8eb36b
+```

@@ -5627,10 +5627,19 @@ oc --kubeconfig=/root/jwang-hcp-demo-kubeconfig get events --sort-by='.firstTime
 
 ### hcp guest cluster upgrade 问题处理
 ```
+### 离线环境hostedcluster升级遇到ingressoperator报错CanaryChecksRepetitiveFailures的处理方法
+### ingressoperator报错
 ### 获取 canary-openshift-ingress-canary url
-oc --kubeconfig ~/jwang-hcp-demo-kubeconfig get co ingress -o json | jq .status.conditions
+$ oc --kubeconfig=/root/jwang-hcp-demo-kubeconfig get co ingress -o json | jq .status.conditions[2] 
+{
+  "lastTransitionTime": "2025-06-04T03:10:42Z",
+  "message": "The \"default\" ingress controller reports Degraded=True: DegradedConditions: One or more other status conditions indicate a degraded state: CanaryChecksSucceeding=False (CanaryChecksRepetitiveFailures: Canary route checks for the default ingress controller are failing. Last 1 error messages:\nerror sending canary HTTP request to \"canary-openshift-ingress-canary.apps.jwang-hcp-demo.apps.ocp.ap.vwg\": Get \"https://canary-openshift-ingress-canary.apps.jwang-hcp-demo.apps.ocp.ap.vwg\": Bad Gateway (x1112 over 18h31m57s))",
+  "reason": "IngressDegraded",
+  "status": "True",
+  "type": "Degraded"
+}
 
-### 需要从 konnectivity-agent-fkkfv pod 访问一次 canary-openshift-ingress-canary url
+### 需要从 konnectivity-agent-xxxxx pod 访问一次 canary-openshift-ingress-canary url
 $ oc --kubeconfig ~/jwang-hcp-demo-kubeconfig -n kube-system rsh $(oc --kubeconfig ~/jwang-hcp-demo-kubeconfig get pods -n kube-system -l app=konnectivity-agent -o name)
 sh-5.1$ curl -k https://canary-openshift-ingress-canary.apps.jwang-hcp-demo.apps.ocp.ap.vwg
 
@@ -5645,4 +5654,41 @@ $ oc get -n clusters HostedCluster jwang-hcp-demo -o json | jq -r '.spec.release
 $ oc annotate hostedcluster -n clusters jwang-hcp-demo "hypershift.openshift.io/force-upgrade-to=helper.ocp.ap.vwg:5000/ocp4/openshift4:4.17.5-x86_64" --overwrite
 
 $ oc get NodePool -n clusters jwang-hcp-demo -o json | jq -r '.spec.release.image="helper.ocp.ap.vwg:5000/ocp4/openshift4:4.17.5-x86_64"'  | oc apply -f -
+```
+
+### 设置 mongodb admin-user 口令
+```
+# 停止当前的 mongod 进程
+sudo pkill mongod
+
+# 以无授权模式启动（临时）
+sudo mongod --noauth --dbpath /var/lib/mongo --logpath /var/log/mongodb/mongod.log --fork
+
+# 进入 mongo shell，切换到 admin db
+mongosh
+use admin
+
+# 创建 admin-user 用户
+db.createUser(
+  {
+    user: "admin-user",
+    pwd: passwordPrompt(),
+    roles: [ { role: "root", db: "admin" }, "readWriteAnyDatabase" ]
+ }
+)
+
+# 如果 admin-user已存在，则更新 admin-user 口令
+db.updateUser("admin-user", {
+  pwd: passwordPrompt()
+})
+
+# 创建用户或更新口令后，停止并正常重启
+sudo pkill mongod
+
+# 设置权限
+chown -R mongod:mongod /var/log/mongodb && chown -R mongod:mongod /var/lib/mongo 
+
+# 启动服务
+systemctl start mongod
+
 ```

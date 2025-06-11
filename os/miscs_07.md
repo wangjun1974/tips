@@ -5631,9 +5631,18 @@ oc --kubeconfig=/root/jwang-hcp-demo-kubeconfig get events --sort-by='.firstTime
 oc --kubeconfig ~/jwang-hcp-demo-kubeconfig get co ingress -o json | jq .status.conditions
 
 ### 需要从 konnectivity-agent-fkkfv pod 访问一次 canary-openshift-ingress-canary url
-oc --kubeconfig ~/jwang-hcp-demo-kubeconfig -n kube-system rsh konnectivity-agent-fkkfv
+$ oc --kubeconfig ~/jwang-hcp-demo-kubeconfig -n kube-system rsh $(oc --kubeconfig ~/jwang-hcp-demo-kubeconfig get pods -n kube-system -l app=konnectivity-agent -o name)
 sh-5.1$ curl -k https://canary-openshift-ingress-canary.apps.jwang-hcp-demo.apps.ocp.ap.vwg
 
 oc --kubeconfig ~/jwang-hcp-demo-kubeconfig -n openshift-insights rollout restart deployment insights-operator
 oc --kubeconfig ~/jwang-hcp-demo-kubeconfig get co
+```
+
+### 升级 HostedCluster 和 NodePool
+```
+$ oc get -n clusters HostedCluster jwang-hcp-demo -o json | jq -r '.spec.release.image="helper.ocp.ap.vwg:5000/ocp4/openshift4:4.17.5-x86_64"' | oc apply -f - 
+
+$ oc annotate hostedcluster -n clusters jwang-hcp-demo "hypershift.openshift.io/force-upgrade-to=helper.ocp.ap.vwg:5000/ocp4/openshift4:4.17.5-x86_64" --overwrite
+
+$ oc get NodePool -n clusters jwang-hcp-demo -o json | jq -r '.spec.release.image="helper.ocp.ap.vwg:5000/ocp4/openshift4:4.17.5-x86_64"'  | oc apply -f -
 ```

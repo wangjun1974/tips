@@ -5606,7 +5606,7 @@ skopeo copy --format v2s2 --all --src-creds $(cat /root/.docker/config.json  | j
 
 ### 检查 hypershift 的 operator 的 commitid
 ```
-oc logs -n hypershift -lapp=operator --tail=-1 -c operator | head -1 | jq
+$ oc logs -n hypershift -lapp=operator --tail=-1 -c operator | head -1 | jq
 {
   "level": "info",
   "ts": "2025-06-05T03:36:39Z",
@@ -5614,9 +5614,26 @@ oc logs -n hypershift -lapp=operator --tail=-1 -c operator | head -1 | jq
   "msg": "Starting hypershift-operator-manager",
   "version": "openshift/hypershift: 5337df1bbc15958173d877e70260f63ec0a25002. Latest supported OCP: 4.18.0"
 }
+
+### 获取git commit日期
+$ git show 5337df1bbc15958173d877e70260f63ec0a25002 | grep Date
+Date:   Fri Mar 28 19:47:02 2025 -0400
 ```
 
 ### 检查 events 按照时间进行排序，由旧到新
 ```
 oc --kubeconfig=/root/jwang-hcp-demo-kubeconfig get events --sort-by='.firstTimestamp'
+```
+
+### hcp guest cluster upgrade 问题处理
+```
+### 获取 canary-openshift-ingress-canary url
+oc --kubeconfig ~/jwang-hcp-demo-kubeconfig get co ingress -o json | jq .status.conditions
+
+### 需要从 konnectivity-agent-fkkfv pod 访问一次 canary-openshift-ingress-canary url
+oc --kubeconfig ~/jwang-hcp-demo-kubeconfig -n kube-system rsh konnectivity-agent-fkkfv
+sh-5.1$ curl -k https://canary-openshift-ingress-canary.apps.jwang-hcp-demo.apps.ocp.ap.vwg
+
+oc --kubeconfig ~/jwang-hcp-demo-kubeconfig -n openshift-insights rollout restart deployment insights-operator
+oc --kubeconfig ~/jwang-hcp-demo-kubeconfig get co
 ```

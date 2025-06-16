@@ -5692,3 +5692,108 @@ chown -R mongod:mongod /var/log/mongodb && chown -R mongod:mongod /var/lib/mongo
 systemctl start mongod
 
 ```
+
+### 实时虚拟机配置
+```
+### 参见：https://access.redhat.com/articles/6994974
+### 参见：https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html-single/virtualization/index#virt-using-huge-pages-with-vms
+
+### 节点添加 label node-role.kubernetes.io/worker-rt
+oc label node b0-ocp4test.ocp4.example.com node-role.kubernetes.io/worker-rt=''
+
+### 创建 MachineConfigPool worker-rt
+cat <<EOF | oc apply -f -
+apiVersion: machineconfiguration.openshift.io/v1
+kind: MachineConfigPool
+metadata:
+  name: worker-rt
+  labels:
+    machineconfiguration.openshift.io/role: worker-rt
+spec:
+  machineConfigSelector:
+    matchExpressions:
+      - {
+           key: machineconfiguration.openshift.io/role,
+           operator: In,
+           values: [worker, worker-rt],
+        }
+  paused: false
+  nodeSelector:
+    matchLabels:
+      node-role.kubernetes.io/worker-rt: ""
+EOF
+
+### 配置 PerformanceProfile
+cat <<EOF | oc apply -f -
+apiVersion: performance.openshift.io/v2
+kind: PerformanceProfile
+metadata:
+  name: rt
+spec:
+  additionalKernelArgs:
+  - audit=0
+  - idle=poll
+  - intel_idle.max_cstate=0
+  - processor.max_cstate=0
+  - mce=off
+  - numa=off
+  - iommu=pt
+  - intel_iommu=on
+  - nospectre_v2
+  - nopti
+  - "default_hugepagesz=1G" 
+  - "hugepagesz=1G"
+  - "hugepages=16"
+  cpu:
+    isolated: 4-31
+    reserved: "0-3"
+  hugepages:
+    defaultHugePagesSize: 1G
+    pages:
+    - count: 16
+      node: 0
+      size: 1G
+  globallyDisableIrqLoadBalancing: true
+  machineConfigPoolSelector:
+    machineconfiguration.openshift.io/role: worker-rt
+  nodeSelector:
+    node-role.kubernetes.io/worker-rt: ""
+  numa:
+    topologyPolicy: single-numa-node
+  realTimeKernel:
+    enabled: true
+EOF
+
+### 编辑虚拟机
+### 去掉
+metadata.annotations
+   vm.kubevirt.io/validations: |
+      [
+        {
+          "name": "minimal-required-memory",
+          "path": "jsonpath::.spec.domain.memory.guest",
+          "rule": "integer",
+          "message": "This VM requires more memory.",
+          "min": 1610612736
+        }
+      ]
+
+### 编辑 spec.template.spec.domain.cpu
+spec.template.spec. 
+     domain:
+        cpu:
+          cores: 1
+          sockets: 3 #需要由2改为3
+          threads: 1
+          dedicatedCpuPlacement: true
+          isolateEmulatorThread: true
+          numa:
+            guestMappingPassthrough : {}
+        memory:
+          hugepages:
+            pageSize: "1Gi"
+        resources: 
+          requests:
+            memory: "4Gi"
+
+```

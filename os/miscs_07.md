@@ -5810,11 +5810,11 @@ $ oc get pod -n clusters-jwang-hcp-demo | grep ovnkube-control-plane
 ovnkube-control-plane-5894fdc59d-cvdvj                3/3     Running     0          7m2s
 
 ### 获取 hcp cluster 的 canary route
-$ oc --kubeconfig ~/jwang-hcp-demo-kubeconfig -n kube-system get route -n openshift-ingress-canary canary -o json | jq -r '.status.ingress[].host'
+$ oc --kubeconfig ~/jwang-hcp-demo-kubeconfig get route -n openshift-ingress-canary canary -o json | jq -r '.status.ingress[].host'
 
 ### 在 hcp cluster 的 kube-system/konnectivity-agent pod 里访问 canary route
 ### 返回 Healthcheck requested
-$ oc --kubeconfig ~/jwang-hcp-demo-kubeconfig -n kube-system exec -it $(oc --kubeconfig ~/jwang-hcp-demo-kubeconfig -n kube-system get pod -l app=konnectivity-agent -o name) -- curl -k https://$(oc --kubeconfig ~/jwang-hcp-demo-kubeconfig -n kube-system get route -n openshift-ingress-canary canary -o json | jq -r '.status.ingress[].host')
+$ oc --kubeconfig ~/jwang-hcp-demo-kubeconfig -n kube-system exec -it $(oc --kubeconfig ~/jwang-hcp-demo-kubeconfig -n kube-system get pod -l app=konnectivity-agent -o name) -- curl -k https://$(oc --kubeconfig ~/jwang-hcp-demo-kubeconfig get route -n openshift-ingress-canary canary -o json | jq -r '.status.ingress[].host')
 
 ### 观察 HostedCluster 状态正常
 $ oc get HostedCluster -n clusters jwang-hcp-demo 

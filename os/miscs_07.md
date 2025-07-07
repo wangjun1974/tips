@@ -5797,3 +5797,46 @@ spec.template.spec.
             memory: "4Gi"
 
 ```
+
+### 更新HCP集群的方法
+```
+### 升级控制平面
+### HostedCluster
+$ oc get -n clusters HostedCluster jwang-hcp-demo -o json | jq -r '.spec.release.image="helper.ocp.ap.vwg:5000/ocp4/openshift4:4.17.5-x86_64"' | oc apply -f -
+$ oc annotate hostedcluster -n clusters jwang-hcp-demo "hypershift.openshift.io/force-upgrade-to=helper.ocp.ap.vwg:5000/ocp4/openshift4:4.17.5-x86_64" --overwrite
+
+### 观察 pod ovnkube-control-plane 是否已经重启
+$ oc get pod -n clusters-jwang-hcp-demo | grep ovnkube-control-plane
+ovnkube-control-plane-5894fdc59d-cvdvj                3/3     Running     0          7m2s
+
+### 获取 hcp cluster 的 canary route
+$ oc --kubeconfig ~/jwang-hcp-demo-kubeconfig -n kube-system get route -n openshift-ingress-canary canary -o json | jq -r '.status.ingress[].host'
+
+### 在 hcp cluster 的 kube-system/konnectivity-agent pod 里访问 canary route
+### 返回 Healthcheck requested
+$ oc --kubeconfig ~/jwang-hcp-demo-kubeconfig -n kube-system exec -it $(oc --kubeconfig ~/jwang-hcp-demo-kubeconfig -n kube-system get pod -l app=konnectivity-agent -o name) -- curl -k https://$(oc --kubeconfig ~/jwang-hcp-demo-kubeconfig -n kube-system get route -n openshift-ingress-canary canary -o json | jq -r '.status.ingress[].host')
+
+### 观察 HostedCluster 状态正常
+$ oc get HostedCluster -n clusters jwang-hcp-demo 
+NAME             VERSION   KUBECONFIG                        PROGRESS    AVAILABLE   PROGRESSING   MESSAGE
+jwang-hcp-demo   4.17.5    jwang-hcp-demo-admin-kubeconfig   Completed   True        False         The hosted control plane is available
+$ oc --kubeconfig ~/jwang-hcp-demo-kubeconfig get co
+
+### 升级数据平面
+### NodePool
+$ oc get NodePool -n clusters jwang-hcp-demo -o json | jq -r '.spec.release.image="helper.ocp.ap.vwg:5000/ocp4/openshift4:4.17.5-x86_64"'  | oc apply -f -
+
+### 观察新节点加入
+$ oc project clusters-jwang-hcp-demo
+$ oc get vmi
+NAME                            AGE   PHASE     IP             NODENAME             READY
+jwang-hcp-demo-dae5a3ba-jnvvg   18d   Running   10.129.3.120   worker1.ocp.ap.vwg   True
+jwang-hcp-demo-xszn8-vfpmj      14m   Running   10.128.2.12    worker2.ocp.ap.vwg   True
+
+### 观察node数量及状态
+$ oc --kubeconfig ~/jwang-hcp-demo-kubeconfig get node
+
+### 最终检查升级后的版本
+$ oc get nodepool -n clusters jwang-hcp-demo -o json | jq .status.version 
+"4.17.5"
+```

@@ -5840,3 +5840,15 @@ $ oc --kubeconfig ~/jwang-hcp-demo-kubeconfig get node
 $ oc get nodepool -n clusters jwang-hcp-demo -o json | jq .status.version 
 "4.17.5"
 ```
+
+### 从 thanos-querier 查询 openshift metrics  
+```
+TOKEN=$(oc whoami -t)
+HOST=$(oc -n openshift-monitoring get route thanos-querier -ojsonpath='{.status.ingress[].host}')
+curl -k -H "Authorization: Bearer $TOKEN" https://$HOST/api/v1/label/__name__/values 
+```
+
+### 查询 HCP 节点的 Config 是否在更新中
+```
+oc get nodepool jwang-hcp-demo -o json | jq '.status.conditions[] | select(.type == "UpdatingConfig" and .status == "True")'
+```

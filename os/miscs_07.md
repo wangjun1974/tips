@@ -5852,3 +5852,60 @@ curl -k -H "Authorization: Bearer $TOKEN" https://$HOST/api/v1/label/__name__/va
 ```
 oc get nodepool jwang-hcp-demo -o json | jq '.status.conditions[] | select(.type == "UpdatingConfig" and .status == "True")'
 ```
+
+### HCP 集群添加 MachineConfig/KubeletConfig 的例子
+```
+### MachineConfig
+NTP_CONF="c2VydmVyIGhlbHBlci5vY3AuYXAudndnIGlidXJzdApkcmlmdGZpbGUgL3Zhci9saWIvY2hyb255L2RyaWZ0Cm1ha2VzdGVwIDEuMCAzCnJ0Y3N5bmMKbG9nZGlyIC92YXIvbG9nL2Nocm9ueQo="
+CONFIGMAP_NAME=workers-chrony-configuration
+MACHINECONFIG_NAME=workers-chrony-configuration
+cat <<EOF | oc apply -f -
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ${CONFIGMAP_NAME}
+  namespace: clusters
+data:
+  config: |
+    apiVersion: machineconfiguration.openshift.io/v1
+    kind: MachineConfig
+    metadata:
+      labels:
+        machineconfiguration.openshift.io/role: worker
+      name: ${MACHINECONFIG_NAME}
+    spec:
+      config:
+        ignition:
+          version: 3.2.0
+        storage:
+          files:
+          - contents:
+              source: data:text/plain;charset=utf-8;base64,${NTP_CONF}
+            mode: 420
+            overwrite: true
+            path: /etc/chrony.conf
+EOF
+
+oc get nodepool -n clusters $CLUSTER_NAME -o json | jq '.spec.config+=[{"name":"workers-chrony-configuration"}]' | oc apply -f -
+
+### KubeletConfig
+cat <<EOF > kubelet-config.yaml
+apiVersion: machineconfiguration.openshift.io/v1
+kind: KubeletConfig
+metadata:
+  name: test-custom-kubelet
+spec:
+  kubeletConfig:
+    allowedUnsafeSysctls: 
+      - "kernel.msg*"
+      - "net.core.somaxconn"
+EOF
+
+oc create configmap jwang-hcp-demo-kubeletconfig -n clusters --from-file config=kubelet-config.yaml 
+
+oc get nodepool -n clusters jwang-hcp-demo -o json | jq '.spec.config+=[{"name":"jwang-hcp-demo-kubeletconfig"}]' | oc apply -f -
+
+oc --kubeconfig=/root/jwang-hcp-demo-kubeconfig debug node/jwang-hcp-demo-xszn8-vfpmj -- chroot /host cat /etc/kubernetes/kubelet.conf 2>&1 | grep allowedUnsafeSysctls
+
+
+```

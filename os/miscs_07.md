@@ -5952,6 +5952,45 @@ kill -USR1 1
 // 还原镜像到原始状态的话 只需要删除镜像后重启pods即可。重新pull镜像可以还原release-manifests原始状态
 # podman rmi d29424caa281aba6eaa0eb5c8e9b0684552bb5d2b7fd065e51f864b342da4556
 oc -n openshift-cluster-version rollout restart deploy/cluster-version-operator
+
+
+
+方案思路：
+// 找到clusterersion的节点，一般是master1第一个master节点
+# oc -n openshift-cluster-version get pods -o wide
+
+// 进入master1节点
+# oc debug node/master1
+# chroot /host
+
+// 找到clusterversion容器的container id
+# crictl ps | grep cluster-version
+
+// 找到挂载目录
+# crictl inspect <container-id> | grep -E 'path.*overlay' 
+
+// 查询挂载属性的lowerdir位置
+# mount | grep /var/lib/containers/storage/overlay/4284398addffc475f208aad1a98cd15b75c0589b132c45b264816e625e24d85e/merged
+
+// 假设lowerdir=/var/lib/containers/storage/overlay/l/KWZRWVZKK6RKJHAMNAVDZAD2GY第一个目录就是镜像的release-manifests位置，release-manifests就在里面
+# ls /var/lib/containers/storage/overlay/l/KWZRWVZKK6RKJHAMNAVDZAD2GY
+
+// 先备份release-manifest内容，vi直接修改镜像layered内容
+
+# vi /var/lib/containers/storage/overlay/l/KWZRWVZKK6RKJHAMNAVDZAD2GY/release-manifests/0000_50_cluster-monitoring-operator_05-deployment.yaml
+
+# vi /var/lib/containers/storage/overlay/l/KWZRWVZKK6RKJHAMNAVDZAD2GY/release-manifests/0000_70_dns-operator_02-deployment.yaml
+
+# vi /var/lib/containers/storage/overlay/l/KWZRWVZKK6RKJHAMNAVDZAD2GY/release-manifests/0000_70_cluster-network-operator_03_deployment.yaml
+
+// 注意：必须在cluster-version-operator容器里面发kill信号，不要对宿主机发送kill信号
+使用给cluster-version-operator的pod发kill信号会原地重启cluster-version-operator的pod，此时可以新的release-manifests可以生效了
+# oc -n openshift-cluster-version rsh cluster-version-operator-xxxxx
+$ kill -HUP `pgrep -f cluster-version-operator`
+
+// 还原镜像到原始状态的话 只需要删除镜像后重启pods即可。重新pull镜像可以还原release-manifests原始状态
+# podman rmi <image-id>
+# oc -n openshift-cluster-version rollout restart deploy/cluster-version-operator
 ```
 
 ### OCP 离线环境安装 collectl
@@ -6004,5 +6043,5 @@ oc get node -o name -l collectl=true | xargs -I {} oc label {} collectl-
 ### 检查collectl信息
 https://access.redhat.com/articles/351143
 ```
-collectl -scnD -oT -p HOSTNAME-20130416-164506.raw.gz
+collectl -scnD -oT --from 11:00 --thru 11:01 -p HOSTNAME-20130416-164506.raw.gz
 ```

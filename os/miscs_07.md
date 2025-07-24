@@ -5924,3 +5924,34 @@ vi /release-manifests/0000_50_cluster-monitoring-operator_05-deployment.yaml
 kill -USR1 1
 ### 这个记得要在 容器里面操作
 ```
+
+### OCP 离线环境安装 collectl
+https://access.redhat.com/solutions/6989124
+```
+### 标记节点
+$ oc label node worker1.ocp.ap.vwg collectl=true
+
+### 拷贝镜像到本地镜像仓库
+$ tar xvf /tmp/gmeghnag-collectl.tar -C /
+$ skopeo copy --format v2s2 --all dir:/tmp/gmeghnag-collectl docker://helper.ocp.ap.vwg:5000/gmeghnag/collectl:4.3.20-ubi9 
+
+### 解压缩manifests
+$ tar xvf /tmp/github-collectl.tar 
+
+$ cd collectl
+
+$ cp Kustomization.yaml kustomization.yml
+
+### 编辑文件，替换本地镜像
+$ vi DaemonSet.yaml
+...
+        image: helper.ocp.ap.vwg:5000/gmeghnag/collectl:4.3.20-ubi9
+
+### 部署manifests
+oc apply -k .
+
+### 为 namespace 打标签
+$ oc label namespace collectl pod-security.kubernetes.io/audit=privileged pod-security.kubernetes.io/enforce=privileged pod-security.kubernetes.io/warn=privileged security.openshift.io/scc.podSecurityLabelSync=false --overwrite=true
+
+$ oc rollout restart daemonset collectl 
+```

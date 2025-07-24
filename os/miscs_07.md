@@ -5990,4 +5990,19 @@ $ ls collectl_out/ -l
 
 ### 删除文件
 oc get node -o name -l collectl=true -o name | xargs -I {} oc debug {} -q --to-namespace=openshift-etcd -- chroot host sh -c 'rm -f /var/log/collectl/*'
+
+### 删除manifests
+oc delete -k . 
+
+### 删除目录
+oc get node -o name -l collectl=true -o name | xargs -I {} oc debug {} -q --to-namespace=openshift-etcd -- chroot host sh -c 'rm -rf /var/log/collectl'
+
+### 删除标签
+oc get node -o name -l collectl=true | xargs -I {} oc label {} collectl- 
+```
+
+### 检查collectl信息
+https://access.redhat.com/articles/351143
+```
+collectl -scnD -oT -p HOSTNAME-20130416-164506.raw.gz
 ```

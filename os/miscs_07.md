@@ -5909,3 +5909,18 @@ oc --kubeconfig=/root/jwang-hcp-demo-kubeconfig debug node/jwang-hcp-demo-xszn8-
 
 
 ```
+
+### 海光兼容性问题的临时处理方法
+```
+### 同事分享的临时处理cpu兼容性问题的方法
+oc rsh cluster-version-operator-xxxxx
+cd /release-manifests/
+ls -lh 0000_50* |grep monitoring
+### 监控应该在50里面
+cp -a  0000_50_cluster-monitoring-operator_05-deployment.yaml  /tmp
+### 然后修改 
+vi /release-manifests/0000_50_cluster-monitoring-operator_05-deployment.yaml
+### 再发个信号 告诉operator reload一下
+kill -USR1 1
+### 这个记得要在 容器里面操作
+```

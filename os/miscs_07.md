@@ -6045,3 +6045,281 @@ https://access.redhat.com/articles/351143
 ```
 collectl -scnD -oT --from 11:00 --thru 11:01 -p HOSTNAME-20130416-164506.raw.gz
 ```
+
+### 按照时间差删除旧文件的脚本
+### 扫描LOG_DIR文件夹，与当前时间差大于MAX_AGE_MINUTES的文件会被删除
+```
+#!/bin/bash
+
+# Collectl log cleanup script
+# Remove log files older than 5 minutes
+
+# Configuration variables
+LOG_DIR="/var/log/collectl"
+MAX_AGE_MINUTES=5
+DRY_RUN=false
+VERBOSE=false
+
+# Color definitions
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
+# Help information
+show_help() {
+    echo "Usage: $0 [OPTIONS]"
+    echo ""
+    echo "Remove collectl log files older than 5 minutes from /var/log/collectl"
+    echo ""
+    echo "Options:"
+    echo "  -d, --dir PATH        Specify collectl log directory (default: /var/log/collectl)"
+    echo "  -a, --age MINUTES     Specify maximum retention time in minutes (default: 5)"
+    echo "  -n, --dry-run         Show files to be deleted without actually deleting them"
+    echo "  -v, --verbose         Show detailed information"
+    echo "  -h, --help            Show help information"
+    echo ""
+    echo "Examples:"
+    echo "  $0                    # Delete files older than 5 minutes"
+    echo "  $0 -n                 # Preview mode, only show files to be deleted"
+    echo "  $0 -a 10 -v           # Delete files older than 10 minutes with verbose output"
+    echo "  $0 -d /custom/path    # Specify custom directory"
+}
+
+# Logging functions
+log_info() {
+    echo -e "${BLUE}[INFO]${NC} $1"
+}
+
+log_success() {
+    echo -e "${GREEN}[SUCCESS]${NC} $1"
+}
+
+log_warning() {
+    echo -e "${YELLOW}[WARNING]${NC} $1"
+}
+
+log_error() {
+    echo -e "${RED}[ERROR]${NC} $1"
+}
+
+# Check if directory exists and is readable
+check_directory() {
+    if [[ ! -d "$LOG_DIR" ]]; then
+        log_error "Directory does not exist: $LOG_DIR"
+        exit 1
+    fi
+    
+    if [[ ! -r "$LOG_DIR" ]]; then
+        log_error "Cannot read directory: $LOG_DIR"
+        exit 1
+    fi
+}
+
+# Get file modification timestamp (seconds)
+get_file_timestamp() {
+    local file="$1"
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        # macOS
+        stat -f %m "$file" 2>/dev/null
+    else
+        # Linux
+        stat -c %Y "$file" 2>/dev/null
+    fi
+}
+
+# Format file size
+format_size() {
+    local size=$1
+    if [[ $size -lt 1024 ]]; then
+        echo "${size}B"
+    elif [[ $size -lt 1048576 ]]; then
+        echo "$((size/1024))KB"
+    elif [[ $size -lt 1073741824 ]]; then
+        echo "$((size/1048576))MB"
+    else
+        echo "$((size/1073741824))GB"
+    fi
+}
+
+# Format time difference
+format_time_diff() {
+    local diff_minutes=$1
+    if [[ $diff_minutes -lt 60 ]]; then
+        echo "${diff_minutes} minutes"
+    elif [[ $diff_minutes -lt 1440 ]]; then
+        local hours=$((diff_minutes / 60))
+        local minutes=$((diff_minutes % 60))
+        if [[ $minutes -eq 0 ]]; then
+            echo "${hours} hours"
+        else
+            echo "${hours} hours ${minutes} minutes"
+        fi
+    else
+        local days=$((diff_minutes / 1440))
+        local remaining_minutes=$((diff_minutes % 1440))
+        local hours=$((remaining_minutes / 60))
+        local minutes=$((remaining_minutes % 60))
+        if [[ $hours -eq 0 && $minutes -eq 0 ]]; then
+            echo "${days} days"
+        elif [[ $minutes -eq 0 ]]; then
+            echo "${days} days ${hours} hours"
+        else
+            echo "${days} days ${hours} hours ${minutes} minutes"
+        fi
+    fi
+}
+
+# Main cleanup function
+cleanup_files() {
+    local current_time=$(date +%s)
+    local max_age_seconds=$((MAX_AGE_MINUTES * 60))
+    local deleted_count=0
+    local deleted_size=0
+    local total_files=0
+    local total_size=0
+    
+    log_info "Starting directory scan: $LOG_DIR"
+    log_info "Removing files older than $MAX_AGE_MINUTES minutes"
+    
+    if [[ "$DRY_RUN" == "true" ]]; then
+        log_warning "Preview mode - files will not be actually deleted"
+    fi
+    
+    echo ""
+    
+    # Use find command to get all files
+    while IFS= read -r -d '' file; do
+        # Skip directories
+        [[ -f "$file" ]] || continue
+        
+        total_files=$((total_files + 1))
+        
+        # Get file information
+        local file_timestamp=$(get_file_timestamp "$file")
+        local file_size=$(stat -c %s "$file" 2>/dev/null || stat -f %z "$file" 2>/dev/null || echo 0)
+        total_size=$((total_size + file_size))
+        
+        if [[ -z "$file_timestamp" ]]; then
+            log_warning "Cannot get file timestamp: $file"
+            continue
+        fi
+        
+        # Calculate time difference
+        local time_diff=$((current_time - file_timestamp))
+        local time_diff_minutes=$((time_diff / 60))
+        
+        # Format file modification time
+        local file_date
+        if [[ "$OSTYPE" == "darwin"* ]]; then
+            file_date=$(date -r "$file_timestamp" "+%Y-%m-%d %H:%M:%S" 2>/dev/null)
+        else
+            file_date=$(date -d "@$file_timestamp" "+%Y-%m-%d %H:%M:%S" 2>/dev/null)
+        fi
+        
+        if [[ $VERBOSE == "true" ]]; then
+            local age_str=$(format_time_diff $time_diff_minutes)
+            local size_str=$(format_size $file_size)
+            echo "Checking file: $(basename "$file") | Size: $size_str | Modified: $file_date | Age: $age_str"
+        fi
+        
+        # Determine if file should be deleted
+        if [[ $time_diff -gt $max_age_seconds ]]; then
+            local age_str=$(format_time_diff $time_diff_minutes)
+            local size_str=$(format_size $file_size)
+            
+            if [[ "$DRY_RUN" == "true" ]]; then
+                echo -e "${YELLOW}[PREVIEW]${NC} Would delete: $(basename "$file") (Size: $size_str, Age: $age_str)"
+            else
+                if rm "$file" 2>/dev/null; then
+                    echo -e "${RED}[DELETED]${NC} $(basename "$file") (Size: $size_str, Age: $age_str)"
+                    deleted_count=$((deleted_count + 1))
+                    deleted_size=$((deleted_size + file_size))
+                else
+                    log_error "Failed to delete: $file"
+                fi
+            fi
+        fi
+        
+    done < <(find "$LOG_DIR" -type f -print0 2>/dev/null)
+    
+    # Display statistics
+    echo ""
+    echo "=============== STATISTICS ==============="
+    echo "Scanned directory: $LOG_DIR"
+    echo "Total files: $total_files"
+    echo "Total file size: $(format_size $total_size)"
+    echo "Retention time: $MAX_AGE_MINUTES minutes"
+    
+    if [[ "$DRY_RUN" == "true" ]]; then
+        echo "Preview mode: Found $deleted_count files that can be deleted"
+        echo "Space that can be freed: $(format_size $deleted_size)"
+    else
+        echo "Files deleted: $deleted_count"
+        echo "Space freed: $(format_size $deleted_size)"
+    fi
+    echo "=========================================="
+}
+
+# Parameter parsing
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        -d|--dir)
+            LOG_DIR="$2"
+            shift 2
+            ;;
+        -a|--age)
+            if [[ "$2" =~ ^[0-9]+$ ]] && [[ "$2" -gt 0 ]]; then
+                MAX_AGE_MINUTES="$2"
+            else
+                log_error "Invalid time parameter: $2"
+                exit 1
+            fi
+            shift 2
+            ;;
+        -n|--dry-run)
+            DRY_RUN=true
+            shift
+            ;;
+        -v|--verbose)
+            VERBOSE=true
+            shift
+            ;;
+        -h|--help)
+            show_help
+            exit 0
+            ;;
+        *)
+            log_error "Unknown parameter: $1"
+            show_help
+            exit 1
+            ;;
+    esac
+done
+
+# Main program
+main() {
+    echo "Collectl Log Cleanup Script"
+    echo "=========================="
+    
+    # Check directory
+    check_directory
+    
+    # Display current configuration
+    log_info "Configuration:"
+    echo "  - Log directory: $LOG_DIR"
+    echo "  - Retention time: $MAX_AGE_MINUTES minutes"
+    echo "  - Preview mode: $DRY_RUN"
+    echo "  - Verbose output: $VERBOSE"
+    echo ""
+    
+    # Execute cleanup
+    cleanup_files
+    
+    log_success "Script execution completed"
+}
+
+# Run main program
+main
+```

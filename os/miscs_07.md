@@ -6323,3 +6323,9 @@ main() {
 # Run main program
 main
 ```
+
+### OCP 4.19 enable developer console
+https://docs.redhat.com/en/documentation/openshift_container_platform/4.19/html-single/web_console/index#enabling-developer-perspective_web-console_web-console-overview
+```
+oc patch console.operator.openshift.io/cluster --type='merge' -p '{"spec":{"customization":{"perspectives":[{"id":"dev","visibility":{"state":"Enabled"}}]}}}'
+```

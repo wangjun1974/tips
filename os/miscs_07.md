@@ -6329,3 +6329,8 @@ https://docs.redhat.com/en/documentation/openshift_container_platform/4.19/html-
 ```
 oc patch console.operator.openshift.io/cluster --type='merge' -p '{"spec":{"customization":{"perspectives":[{"id":"dev","visibility":{"state":"Enabled"}}]}}}'
 ```
+
+### 为新节点添加Fusion Access for SAN所需标签
+```
+oc label node ip-10-0-33-224.us-east-2.compute.internal scale.spectrum.ibm.com/role='storage'
+```

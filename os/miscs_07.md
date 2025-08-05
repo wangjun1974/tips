@@ -6334,3 +6334,11 @@ oc patch console.operator.openshift.io/cluster --type='merge' -p '{"spec":{"cust
 ```
 oc label node ip-10-0-33-224.us-east-2.compute.internal scale.spectrum.ibm.com/role='storage'
 ```
+
+### download dnf module nodejs:18 profile common 
+```
+download dnf module nodejs:18 profile common 
+mkdir -p /tmp/custom-repo
+dnf module install --downloadonly --downloaddir /tmp/custom-repo \
+    nodejs:18/common
+```

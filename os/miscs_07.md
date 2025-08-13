@@ -6341,4 +6341,52 @@ download dnf module nodejs:18 profile common
 mkdir -p /tmp/custom-repo
 dnf module install --downloadonly --downloaddir /tmp/custom-repo \
     nodejs:18/common
+
+dnf module install --downloadonly --downloaddir /tmp/custom-repo \
+    nodejs:18/development
+
+dnf module install --downloadonly --downloaddir /tmp/custom-repo \
+    nodejs:18/s2i
+```
+
+### cdi upload prime 日志
+```
+oc logs cdi-upload-prime-921884ec-3f2c-42c3-b037-90db76325cdb 
+I0813 06:44:28.276615       1 uploadserver.go:81] Running server on 0.0.0.0:8443
+I0813 06:44:35.065280       1 uploadserver.go:361] Content type header is ""
+I0813 06:44:35.065330       1 data-processor.go:348] Calculating available size
+I0813 06:44:35.069446       1 data-processor.go:360] Checking out file system volume size.
+I0813 06:44:35.070639       1 data-processor.go:367] Request image size not empty.
+I0813 06:44:35.070659       1 data-processor.go:373] Target size 34087042032.
+I0813 06:44:35.070750       1 data-processor.go:247] New phase: TransferScratch
+I0813 06:44:35.378197       1 util.go:96] Writing data...
+2025/08/13 06:45:10 http: TLS handshake error from 172.18.4.2:36244: EOF
+I0813 06:45:24.558442       1 data-processor.go:247] New phase: ValidatePause
+I0813 06:45:24.558593       1 data-processor.go:253] Validating image
+E0813 06:45:24.629922       1 prlimit.go:156] failed to kill the process; os: process already finished
+I0813 06:45:24.630065       1 data-processor.go:247] New phase: Pause
+I0813 06:45:24.630084       1 uploadserver.go:411] Returning success to caller, continue processing in background
+I0813 06:45:24.630188       1 data-processor.go:158] Resuming processing at phase Convert
+I0813 06:45:24.630209       1 data-processor.go:253] Validating image
+E0813 06:45:24.636151       1 prlimit.go:156] failed to kill the process; os: process already finished
+I0813 06:45:24.637493       1 qemu.go:115] Running qemu-img with args: [convert -t writeback -p -O raw /scratch/tmpimage /data/disk.img]
+```
+
+### 生成DataSource
+```
+cat <<EOF | oc apply -f -
+apiVersion: cdi.kubevirt.io/v1beta1
+kind: DataSource
+metadata:
+  labels:
+    instancetype.kubevirt.io/default-instancetype: cx1.large
+    instancetype.kubevirt.io/default-preference: rhel.9
+  name: rhel-9.4-golden-nfs
+  namespace: openshift-virtualization-os-images
+spec:
+  source:
+    pvc:
+      name: rhel-9-4-golden-nfs
+      namespace: openshift-virtualization-os-images
+EOF
 ```

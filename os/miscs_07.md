@@ -6390,3 +6390,22 @@ spec:
       namespace: openshift-virtualization-os-images
 EOF
 ```
+
+### bootc Containerfile to add the http service to firewalld 
+```
+FROM registry.redhat.io/rhel10/rhel-bootc:10.0
+RUN dnf install -y firewalld httpd && \
+  dnf clean all && \
+  firewall-offline-cmd --zone=public --add-service=http && \
+  systemctl enable httpd && \
+  systemctl enable firewalld
+ADD html /var/www/html
+
+Build it and create a VM from it . SSH is allowed by the firewall, by default. virt-install with passt and portForward0=8022:22,portForward1=8080:80
+
+vm$ sudo firewall-cmd --list-services
+cockpit dhcpv6-client http ssh
+
+host$ curl 127.0.0.1:8080
+Misc tests of bootc images and firewalld
+```

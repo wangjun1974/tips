@@ -6409,3 +6409,9 @@ cockpit dhcpv6-client http ssh
 host$ curl 127.0.0.1:8080
 Misc tests of bootc images and firewalld
 ```
+
+### AI 模型排名
+https://artificialanalysis.ai/text-to-image
+```
+https://artificialanalysis.ai/text-to-image
+```

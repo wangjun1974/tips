@@ -6415,3 +6415,37 @@ https://artificialanalysis.ai/text-to-image
 ```
 https://artificialanalysis.ai/text-to-image
 ```
+
+### 在 3 node compat cluster 上设置 loadaware descheduler with cnv
+```
+cat <<EOF | oc apply -f -
+apiVersion: machineconfiguration.openshift.io/v1
+kind: MachineConfig
+metadata:
+  labels:
+    machineconfiguration.openshift.io/role: master
+  name: 99-openshift-machineconfig-master-psi-karg
+spec:
+  kernelArguments:
+    - psi=1
+EOF
+
+cat <<EOF | oc apply -f -
+apiVersion: operator.openshift.io/v1
+kind: KubeDescheduler
+metadata:
+  name: cluster
+  namespace: openshift-kube-descheduler-operator
+spec:
+  managementState: Managed
+  deschedulingIntervalSeconds: 60
+  mode: "Automatic"
+  profiles:
+    - DevKubeVirtRelieveAndMigrate
+  profileCustomizations:
+    devEnableEvictionsInBackground: true
+    devEnableSoftTainter: true
+    devDeviationThresholds: AsymmetricLow
+    devActualUtilizationProfile: PrometheusCPUCombined
+EOF
+```

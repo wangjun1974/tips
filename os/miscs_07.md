@@ -6496,4 +6496,25 @@ processor       : 8
 processor       : 9
 processor       : 10
 processor       : 11
+
+### LongLifeCycle 对节点的理解是
+### 节点 m0-ocp4test.ocp4.example.com 和 m1-ocp4test.ocp4.example.com 被归类为 overutilized 的节点
+### 节点 m2-ocp4test.ocp4.example.com 被归类为 appropriately utilized
+### 归类的条件是
+### "Criteria for a node under utilization" cpu="10.00%" memory="10.00%" pods="10.00%"
+### "Criteria for a node above target utilization" cpu="30.00%" memory="30.00%" pods="30.00%"
+I0826 07:38:17.306483       1 toomanyrestarts.go:116] "Processing node" node="m0-ocp4test.ocp4.example.com"
+I0826 07:38:17.306789       1 toomanyrestarts.go:116] "Processing node" node="m1-ocp4test.ocp4.example.com"
+I0826 07:38:17.307055       1 toomanyrestarts.go:116] "Processing node" node="m2-ocp4test.ocp4.example.com"
+I0826 07:38:17.307206       1 profile.go:347] "Total number of evictions/requests" extension point="Deschedule" evictedPods=0 evictionRequests=0
+I0826 07:38:17.308747       1 lownodeutilization.go:210] "Node has been classified" category="overutilized" node="m1-ocp4test.ocp4.example.com" usage={"cpu":"7183m","memory":"32639Mi","pods":"111"} usagePercentage={"cpu":18,"memory":17,"pods":44}
+I0826 07:38:17.308847       1 lownodeutilization.go:210] "Node has been classified" category="overutilized" node="m0-ocp4test.ocp4.example.com" usage={"cpu":"5708m","memory":"16401Mi","pods":"83"} usagePercentage={"cpu":18,"memory":6,"pods":33}
+I0826 07:38:17.308881       1 lownodeutilization.go:236] "Node is appropriately utilized" node="m2-ocp4test.ocp4.example.com" usage={"cpu":"6089m","memory":"14664Mi","pods":"42"} usagePercentage={"cpu":13,"memory":8,"pods":17}
+I0826 07:38:17.308899       1 lownodeutilization.go:248] "Criteria for a node under utilization" cpu="10.00%" memory="10.00%" pods="10.00%"
+I0826 07:38:17.308913       1 lownodeutilization.go:249] "Number of underutilized nodes" totalNumber=0
+I0826 07:38:17.308930       1 lownodeutilization.go:250] "Criteria for a node above target utilization" cpu="30.00%" memory="30.00%" pods="30.00%"
+I0826 07:38:17.308943       1 lownodeutilization.go:251] "Number of overutilized nodes" totalNumber=2
+I0826 07:38:17.308955       1 lownodeutilization.go:254] "No node is underutilized, nothing to do here, you might tune your thresholds further"
+I0826 07:38:17.308978       1 profile.go:376] "Total number of evictions/requests" extension point="Balance" evictedPods=0 evictionRequests=0
+I0826 07:38:17.309002       1 descheduler.go:403] "Number of evictions/requests" totalEvicted=0 evictionRequests=0
 ```

@@ -6448,4 +6448,52 @@ spec:
     devDeviationThresholds: AsymmetricLow
     devActualUtilizationProfile: PrometheusCPUCombined
 EOF
+
+### 这个Profile不适合产生实际负载的场景，例如虚拟机
+apiVersion: operator.openshift.io/v1
+kind: KubeDescheduler
+metadata:
+  name: cluster
+  namespace: openshift-kube-descheduler-operator
+spec:
+  managementState: Managed
+  logLevel: Normal
+  mode: Automatic
+  operatorLogLevel: Normal
+  deschedulingIntervalSeconds: 60
+  profileCustomizations:
+    devEnableEvictionsInBackground: true
+    devLowNodeUtilizationThresholds: Medium
+  profiles:
+    - LongLifecycle
+
+### 3 台虚拟机都在 m2-ocp4test.ocp4.example.com 这个节点上
+$ oc get vmi 
+NAME                    AGE   PHASE     IP            NODENAME                       READY
+rhel9-jwang-stress-01   52m   Running   172.18.1.61   m2-ocp4test.ocp4.example.com   True
+rhel9-jwang-stress-02   51m   Running   172.18.1.62   m2-ocp4test.ocp4.example.com   True
+rhel9-jwang-stress-03   50m   Running   172.18.1.64   m2-ocp4test.ocp4.example.com   True
+
+### 3 台虚拟机的 cpu 基本吃满
+[root@helper-ocp4test tmp]# virtctl ssh cloud-user@rhel9-jwang-stress-01 -c 'top -b -n 1 | grep -E "^%Cpu"'
+%Cpu(s): 98.2 us,  0.9 sy,  0.0 ni,  0.0 id,  0.0 wa,  0.5 hi,  0.5 si,  0.0 st
+[root@helper-ocp4test tmp]# virtctl ssh cloud-user@rhel9-jwang-stress-02 -c 'top -b -n 1 | grep -E "^%Cpu"'
+%Cpu(s): 98.1 us,  1.1 sy,  0.0 ni,  0.0 id,  0.0 wa,  0.8 hi,  0.0 si,  0.0 st
+[root@helper-ocp4test tmp]# virtctl ssh cloud-user@rhel9-jwang-stress-03 -c 'top -b -n 1 | grep -E "^%Cpu"'
+%Cpu(s): 98.6 us,  0.9 sy,  0.0 ni,  0.0 id,  0.0 wa,  0.5 hi,  0.0 si,  0.0 st
+
+### 每台虚拟机配置了12个vcpu
+[root@helper-ocp4test tmp]# virtctl ssh cloud-user@rhel9-jwang-stress-01 -c 'cat /proc/cpuinfo | grep processor '
+processor       : 0
+processor       : 1
+processor       : 2
+processor       : 3
+processor       : 4
+processor       : 5
+processor       : 6
+processor       : 7
+processor       : 8
+processor       : 9
+processor       : 10
+processor       : 11
 ```

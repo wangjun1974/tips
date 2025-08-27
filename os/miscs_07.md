@@ -6430,6 +6430,8 @@ spec:
     - psi=1
 EOF
 
+### 这个 Profile 适用于虚拟机
+### 需要注意节点的处理器是否一致，如果不一致虚拟机会无法迁移
 cat <<EOF | oc apply -f -
 apiVersion: operator.openshift.io/v1
 kind: KubeDescheduler
@@ -6517,4 +6519,121 @@ I0826 07:38:17.308943       1 lownodeutilization.go:251] "Number of overutilized
 I0826 07:38:17.308955       1 lownodeutilization.go:254] "No node is underutilized, nothing to do here, you might tune your thresholds further"
 I0826 07:38:17.308978       1 profile.go:376] "Total number of evictions/requests" extension point="Balance" evictedPods=0 evictionRequests=0
 I0826 07:38:17.309002       1 descheduler.go:403] "Number of evictions/requests" totalEvicted=0 evictionRequests=0
+
+### 无法迁移的原因是处理器不兼容，在处理器较新的节点上启动的虚拟机由于nodeSelector导致无法迁移到处理器较旧的节点上
+$ oc describe pod virt-launcher-rhel9-jwang-stress-02-t2m4f
+...
+Events:
+  Type     Reason            Age                   From               Message
+  ----     ------            ----                  ----               -------
+  Warning  FailedScheduling  4m50s                 default-scheduler  0/3 nodes are available: 1 node(s) didn't match pod anti-affinity rules, 2 node(s) didn't match Pod's node affinity/selector. preemption: 0/3 nodes are available: 1 No preemption victims found for incoming pod, 2 Preemption is not helpful for scheduling.
+  Warning  FailedScheduling  2m14s (x2 over 4m2s)  default-scheduler  0/3 nodes are available: 1 node(s) didn't match pod anti-affinity rules, 2 node(s) didn't match Pod's node affinity/selector. preemption: 0/3 nodes are available: 1 No preemption victims found for incoming pod, 2 Preemption is not helpful for scheduling.
+
+### 在我的lab环境里虚拟机启动在1台较新处理器的节点上，节点具有label"cpu-feature.node.kubevirt.io/abm": "true"
+### 另外两个节点由于没有这个cpu feature导致live migration时新的virt-launcher pod无法调度
+
+[root@helper-ocp4test tmp]# oc get pods virt-launcher-rhel9-jwang-stress-03-kj8jh -o json | jq .spec.nodeSelector  | tee /tmp/descheduler_nodeSelector.json
+{ 
+  "cpu-feature.node.kubevirt.io/abm": "true",
+  "cpu-feature.node.kubevirt.io/amd-ssbd": "true",
+  "cpu-feature.node.kubevirt.io/amd-stibp": "true",
+  "cpu-feature.node.kubevirt.io/arat": "true",
+  "cpu-feature.node.kubevirt.io/arch-capabilities": "true",
+  "cpu-feature.node.kubevirt.io/f16c": "true",
+  "cpu-feature.node.kubevirt.io/flush-l1d": "true",
+  "cpu-feature.node.kubevirt.io/gds-no": "true",
+  "cpu-feature.node.kubevirt.io/hypervisor": "true",
+  "cpu-feature.node.kubevirt.io/ibpb": "true",
+  "cpu-feature.node.kubevirt.io/ibrs": "true",
+  "cpu-feature.node.kubevirt.io/invtsc": "true",
+  "cpu-feature.node.kubevirt.io/md-clear": "true",
+  "cpu-feature.node.kubevirt.io/pdcm": "true",
+  "cpu-feature.node.kubevirt.io/pdpe1gb": "true",
+  "cpu-feature.node.kubevirt.io/pschange-mc-no": "true",
+  "cpu-feature.node.kubevirt.io/rdrand": "true",
+  "cpu-feature.node.kubevirt.io/skip-l1dfl-vmentry": "true",
+  "cpu-feature.node.kubevirt.io/ss": "true",
+  "cpu-feature.node.kubevirt.io/ssbd": "true",
+  "cpu-feature.node.kubevirt.io/stibp": "true",
+  "cpu-feature.node.kubevirt.io/tsc_adjust": "true",
+  "cpu-feature.node.kubevirt.io/umip": "true",
+  "cpu-feature.node.kubevirt.io/vme": "true",
+  "cpu-feature.node.kubevirt.io/vmx": "true",
+  "cpu-feature.node.kubevirt.io/vmx-activity-hlt": "true",
+  "cpu-feature.node.kubevirt.io/vmx-activity-wait-sipi": "true",
+  "cpu-feature.node.kubevirt.io/vmx-apicv-register": "true",
+  "cpu-feature.node.kubevirt.io/vmx-apicv-vid": "true",
+  "cpu-feature.node.kubevirt.io/vmx-apicv-x2apic": "true",
+  "cpu-feature.node.kubevirt.io/vmx-apicv-xapic": "true",
+  "cpu-feature.node.kubevirt.io/vmx-cr3-load-noexit": "true",
+  "cpu-feature.node.kubevirt.io/vmx-cr3-store-noexit": "true",
+  "cpu-feature.node.kubevirt.io/vmx-cr8-load-exit": "true",
+  "cpu-feature.node.kubevirt.io/vmx-cr8-store-exit": "true",
+  "cpu-feature.node.kubevirt.io/vmx-desc-exit": "true",
+  "cpu-feature.node.kubevirt.io/vmx-entry-ia32e-mode": "true",
+  "cpu-feature.node.kubevirt.io/vmx-entry-load-efer": "true",
+  "cpu-feature.node.kubevirt.io/vmx-entry-load-pat": "true",
+  "cpu-feature.node.kubevirt.io/vmx-entry-load-perf-global-ctrl": "true",
+  "cpu-feature.node.kubevirt.io/vmx-entry-noload-debugctl": "true",
+  "cpu-feature.node.kubevirt.io/vmx-ept": "true",
+  "cpu-feature.node.kubevirt.io/vmx-ept-1gb": "true",
+  "cpu-feature.node.kubevirt.io/vmx-ept-2mb": "true",
+  "cpu-feature.node.kubevirt.io/vmx-ept-execonly": "true",
+  "cpu-feature.node.kubevirt.io/vmx-eptad": "true",
+  "cpu-feature.node.kubevirt.io/vmx-eptp-switching": "true",
+  "cpu-feature.node.kubevirt.io/vmx-exit-ack-intr": "true",
+  "cpu-feature.node.kubevirt.io/vmx-exit-load-efer": "true",
+  "cpu-feature.node.kubevirt.io/vmx-exit-load-pat": "true",
+  "cpu-feature.node.kubevirt.io/vmx-exit-load-perf-global-ctrl": "true",
+  "cpu-feature.node.kubevirt.io/vmx-exit-nosave-debugctl": "true",
+  "cpu-feature.node.kubevirt.io/vmx-exit-save-efer": "true",
+  "cpu-feature.node.kubevirt.io/vmx-exit-save-pat": "true",
+  "cpu-feature.node.kubevirt.io/vmx-exit-save-preemption-timer": "true",
+  "cpu-feature.node.kubevirt.io/vmx-flexpriority": "true",
+  "cpu-feature.node.kubevirt.io/vmx-hlt-exit": "true",
+  "cpu-feature.node.kubevirt.io/vmx-ins-outs": "true",
+  "cpu-feature.node.kubevirt.io/vmx-intr-exit": "true",
+  "cpu-feature.node.kubevirt.io/vmx-invept": "true",
+  "cpu-feature.node.kubevirt.io/vmx-invept-all-context": "true",
+  "cpu-feature.node.kubevirt.io/vmx-invept-single-context": "true",
+  "cpu-feature.node.kubevirt.io/vmx-invlpg-exit": "true",
+  "cpu-feature.node.kubevirt.io/vmx-invpcid-exit": "true",
+  "cpu-feature.node.kubevirt.io/vmx-invvpid": "true",
+  "cpu-feature.node.kubevirt.io/vmx-invvpid-all-context": "true",
+  "cpu-feature.node.kubevirt.io/vmx-invvpid-single-addr": "true",
+  "cpu-feature.node.kubevirt.io/vmx-io-bitmap": "true",
+  "cpu-feature.node.kubevirt.io/vmx-io-exit": "true",
+  "cpu-feature.node.kubevirt.io/vmx-monitor-exit": "true",
+  "cpu-feature.node.kubevirt.io/vmx-movdr-exit": "true",
+  "cpu-feature.node.kubevirt.io/vmx-msr-bitmap": "true",
+  "cpu-feature.node.kubevirt.io/vmx-mtf": "true",
+  "cpu-feature.node.kubevirt.io/vmx-mwait-exit": "true",
+  "cpu-feature.node.kubevirt.io/vmx-nmi-exit": "true",
+  "cpu-feature.node.kubevirt.io/vmx-page-walk-4": "true",
+  "cpu-feature.node.kubevirt.io/vmx-pause-exit": "true",
+  "cpu-feature.node.kubevirt.io/vmx-pml": "true",
+  "cpu-feature.node.kubevirt.io/vmx-posted-intr": "true",
+  "cpu-feature.node.kubevirt.io/vmx-preemption-timer": "true",
+  "cpu-feature.node.kubevirt.io/vmx-rdpmc-exit": "true",
+  "cpu-feature.node.kubevirt.io/vmx-rdrand-exit": "true",
+  "cpu-feature.node.kubevirt.io/vmx-rdtsc-exit": "true",
+  "cpu-feature.node.kubevirt.io/vmx-rdtscp-exit": "true",
+  "cpu-feature.node.kubevirt.io/vmx-secondary-ctls": "true",
+  "cpu-feature.node.kubevirt.io/vmx-shadow-vmcs": "true",
+  "cpu-feature.node.kubevirt.io/vmx-store-lma": "true",
+  "cpu-feature.node.kubevirt.io/vmx-true-ctls": "true",
+  "cpu-feature.node.kubevirt.io/vmx-tsc-offset": "true",
+  "cpu-feature.node.kubevirt.io/vmx-unrestricted-guest": "true",
+  "cpu-feature.node.kubevirt.io/vmx-vintr-pending": "true",
+  "cpu-feature.node.kubevirt.io/vmx-vmfunc": "true",
+  "cpu-feature.node.kubevirt.io/vmx-vmwrite-vmexit-fields": "true",
+  "cpu-feature.node.kubevirt.io/vmx-vnmi": "true",
+  "cpu-feature.node.kubevirt.io/vmx-vnmi-pending": "true",
+  "cpu-feature.node.kubevirt.io/vmx-vpid": "true",
+  "cpu-feature.node.kubevirt.io/vmx-wbinvd-exit": "true",
+  "cpu-feature.node.kubevirt.io/xsaveopt": "true",
+  "cpu-model-migration.node.kubevirt.io/Haswell-noTSX-IBRS": "true",
+  "kubernetes.io/arch": "amd64",
+  "kubevirt.io/schedulable": "true"
+}
 ```

@@ -6641,5 +6641,123 @@ Events:
 ### 下载显示下载进度条
 ```
 mkdir -p ./models/RedHatAI/Qwen3-0.6B-FP8-dynamic
-huggingface-cli download RedHatAI/Qwen3-0.6B-FP8-dynamic --local-dir ./models/RedHatAI/Qwen3-0.6B-FP8-dynamic --resume-download -v 
+huggingface-cli download RedHatAI/Qwen3-0.6B-FP8-dynamic --local-dir ./models/RedHatAI/Qwen3-0.6B-FP8-dynamic
+```
+
+### 尝试RHAIIS
+```
+### 启用CDI
+$ sudo nvidia-ctk cdi generate --output=/etc/cdi/nvidia.yaml
+
+### 启动vllm inference server
+$ HUGGING_FACE_HUB_TOKEN=XXXXXXXX HF_HUB_OFFLINE=0 /usr/bin/podman run -it --device nvidia.com/gpu=all -p 8000:8000 \
+    --ipc=host \
+    --env "HUGGING_FACE_HUB_TOKEN=${HUGGING_FACE_HUB_TOKEN}" \
+    --env "HF_HUB_OFFLINE=${HF_HUB_OFFLINE}" \
+    -v /home/dev/.cache/vllm:/home/vllm/.cache \
+    --name=rhaiis \
+    registry.redhat.io/rhaiis/vllm-cuda-rhel9:3.2.0-1754088865-hotfix-1 \
+    --tensor-parallel-size 1 \
+    --max-model-len 8192 \
+    --enforce-eager --model ibm-granite/granite-3.3-2b-instruct
+
+### 检查模型
+$ curl -s http://localhost:8000/v1/models | jq
+{
+  "object": "list",
+  "data": [
+    {
+      "id": "ibm-granite/granite-3.3-2b-instruct",
+      "object": "model",
+      "created": 1756367377,
+      "owned_by": "vllm",
+      "root": "ibm-granite/granite-3.3-2b-instruct",
+      "parent": null,
+      "max_model_len": 8192,
+      "permission": [
+        {
+          "id": "modelperm-555136edbe3e4a95b6de8a1bc4501610",
+          "object": "model_permission",
+          "created": 1756367377,
+          "allow_create_engine": false,
+          "allow_sampling": true,
+          "allow_logprobs": true,
+          "allow_search_indices": false,
+          "allow_view": true,
+          "allow_fine_tuning": false,
+          "organization": "*",
+          "group": null,
+          "is_blocking": false
+        }
+      ]
+    }
+  ]
+}
+
+### 监控资源占用情况
+$ nvtop
+
+### 检查GPU驱动信息
+[dev@rhaiis ~]$ nvidia-smi 
+Thu Aug 28 07:52:18 2025       
++-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 580.65.06              Driver Version: 580.65.06      CUDA Version: 13.0     |
++-----------------------------------------+------------------------+----------------------+
+| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+|                                         |                        |               MIG M. |
+|=========================================+========================+======================|
+|   0  NVIDIA A10G                    Off |   00000000:00:1E.0 Off |                    0 |
+|  0%   29C    P0             59W /  300W |   20675MiB /  23028MiB |      0%      Default |
+|                                         |                        |                  N/A |
++-----------------------------------------+------------------------+----------------------+
+
++-----------------------------------------------------------------------------------------+
+| Processes:                                                                              |
+|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |
+|        ID   ID                                                               Usage      |
+|=========================================================================================|
+|    0   N/A  N/A            3109      C   python3                               20666MiB |
++-----------------------------------------------------------------------------------------+
+
+### 与模型对话
+$ curl -s -X POST http://localhost:8000/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "ibm-granite/granite-3.3-2b-instruct",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Write me 5 to 10 paragraphs about RHEL"
+      }
+    ],
+    "temperature": 0.7,
+    "max_tokens": 1500
+  }' | jq
+
+### 用程序与模型对话
+$ cat << 'EOF' > api.py
+from openai import OpenAI
+
+api_key = "XXXXXXXXXX"
+
+model = "ibm-granite/granite-3.3-2b-instruct"
+base_url = "http://localhost:8000/v1/"
+
+client = OpenAI(
+    base_url=base_url,
+    api_key=api_key,
+)
+
+response = client.chat.completions.create(
+    model=model,
+    messages=[
+        {"role": "system", "content": "You are a helpful assistant."},
+        {"role": "user", "content": "Why is Red Hat AI Inference Server a great fit for RHEL?"}
+    ]
+)
+print(response.choices[0].message.content)
+EOF
+
+$ python api.py
 ```

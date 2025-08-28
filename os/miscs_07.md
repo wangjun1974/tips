@@ -6637,3 +6637,9 @@ Events:
   "kubevirt.io/schedulable": "true"
 }
 ```
+
+### 下载显示下载进度条
+```
+mkdir -p ./models/RedHatAI/Qwen3-0.6B-FP8-dynamic
+huggingface-cli download RedHatAI/Qwen3-0.6B-FP8-dynamic --local-dir ./models/RedHatAI/Qwen3-0.6B-FP8-dynamic --resume-download -v 
+```

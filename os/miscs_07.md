@@ -6761,3 +6761,87 @@ EOF
 
 $ python api.py
 ```
+
+### ibm fusion access troubleshooting
+```
+### 检查internal image registry的内容
+oc exec -it -n openshift-image-registry $(oc get pod -n openshift-image-registry -l docker-registry='default' -o name) -- ls -lR /registry
+
+### 检查ibm-fusion-access的build
+oc get build -n ibm-fusion-access
+
+```
+
+### 运行qemu-system-aarch64创建arm64虚拟机
+```
+0. 安装qmeu
+brew install qemu
+
+1. 准备工作
+验证QEMU安装：
+qemu-system-aarch64 --version
+qemu-system-aarch64 -machine help | grep virt
+创建VM工作目录：
+mkdir -p ~/VMs/aarch64-vm
+cd ~/VMs/aarch64-vm
+
+2. 下载必需文件
+下载UEFI固件（必需）：
+# 下载aarch64 UEFI固件
+wget https://releases.linaro.org/components/kernel/uefi-linaro/latest/release/qemu64/QEMU_EFI.fd
+
+#查找aarch64 UEFI固件
+find /usr/local/Cellar -name "edk2*" 
+/usr/local/Cellar/qemu/10.1.0/share/qemu/edk2-i386-code.fd
+/usr/local/Cellar/qemu/10.1.0/share/qemu/edk2-loongarch64-vars.fd
+/usr/local/Cellar/qemu/10.1.0/share/qemu/edk2-riscv-vars.fd
+/usr/local/Cellar/qemu/10.1.0/share/qemu/edk2-x86_64-secure-code.fd
+/usr/local/Cellar/qemu/10.1.0/share/qemu/edk2-i386-vars.fd
+/usr/local/Cellar/qemu/10.1.0/share/qemu/edk2-loongarch64-code.fd
+/usr/local/Cellar/qemu/10.1.0/share/qemu/edk2-riscv-code.fd
+/usr/local/Cellar/qemu/10.1.0/share/qemu/edk2-aarch64-code.fd
+/usr/local/Cellar/qemu/10.1.0/share/qemu/edk2-arm-vars.fd
+/usr/local/Cellar/qemu/10.1.0/share/qemu/edk2-i386-secure-code.fd
+/usr/local/Cellar/qemu/10.1.0/share/qemu/edk2-licenses.txt
+/usr/local/Cellar/qemu/10.1.0/share/qemu/edk2-x86_64-code.fd
+/usr/local/Cellar/qemu/10.1.0/share/qemu/edk2-arm-code.fd
+
+下载操作系统镜像：
+wget -4 https://download.fedoraproject.org/pub/fedora/linux/releases/42/Server/aarch64/iso/Fedora-Server-dvd-aarch64-42-1.1.iso
+
+3. 创建虚拟磁盘
+qemu-img create -f qcow2 vm-disk.qcow2 50G
+
+4. 创建启动脚本
+创建start-vm.sh脚本：
+#!/bin/bash
+
+VM_NAME="fedora-aarch64"
+DISK_IMAGE="vm-disk.qcow2"
+ISO_IMAGE="Fedora-Server-dvd-aarch64-42-1.1.iso"
+UEFI_FIRMWARE="edk2-aarch64-code.fd"
+
+QEMU_AUDIO_DRV=none qemu-system-aarch64 \
+    -name "${VM_NAME}" \
+    -machine virt \
+    -cpu cortex-a72 \
+    -m 4096 \
+    -bios "${UEFI_FIRMWARE}" \
+    -audio driver=none \
+    -device virtio-gpu-pci \
+    -device virtio-keyboard \
+    -device virtio-mouse \
+    -device ich9-intel-hda \
+    -device hda-duplex \
+    -device qemu-xhci \
+    -device usb-kbd \
+    -device usb-mouse \
+    -netdev user,id=net0,hostfwd=tcp::2222-:22 \
+    -device virtio-net-pci,netdev=net0 \
+    -drive file="${DISK_IMAGE}",if=virtio,format=qcow2 \
+    -cdrom "${ISO_IMAGE}" \
+    -boot d \
+    -nographic
+
+
+```

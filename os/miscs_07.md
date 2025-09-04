@@ -6845,3 +6845,78 @@ QEMU_AUDIO_DRV=none qemu-system-aarch64 \
 
 
 ```
+
+### 更新pull secret
+```
+### 保存当前的pull-secret
+oc get secret/pull-secret -n openshift-config -o jsonpath='{.data.\.dockerconfigjson}' | base64 -d > current-pull-secret.json
+
+### 添加新registry的pull-secret
+REGISTRY="helper-ocp4test.ocp4.example.com:5000"
+USERNAME="openshift"
+PASSWORD="redhat"
+EMAIL="noemail@localhost"
+
+AUTH_STRING=$(echo -n "${USERNAME}:${PASSWORD}" | base64 -w 0)
+jq --arg registry "$REGISTRY" --arg auth "$AUTH_STRING" --arg email "$EMAIL" \
+  '.auths += {($registry): {"auth": $auth, "email": $email}}' \
+  current-pull-secret.json > updated-pull-secret.json
+
+### 更新cluster pull secret...
+oc set data secret/pull-secret -n openshift-config --from-file=.dockerconfigjson=updated-pull-secret.json
+
+```
+
+###  RHEL 8 设置 iscsi target 
+```
+### 安装 iscsi-initiator 和 iscsi target
+dnf install -y iscsi-initiator-utils
+dnf install -y targetcli
+
+### 启动 target 服务
+systemctl enable --now target
+systemctl status target
+
+### 生成 disk01.img 文件
+mkdir -p /var/lib/iscsi_disks
+truncate -s 10G /var/lib/iscsi_disks/disk01.img
+chown root:root /var/lib/iscsi_disks/disk01.img
+chmod 600 /var/lib/iscsi_disks/disk01.img
+
+### 运行 targetcli 
+targetcli
+/> cd backstores/fileio
+
+### 创建 disk01 fileio backstore
+/backstores/fileio> create name=disk01 file_or_dev=/var/lib/iscsi_disks/disk01.img size=10G
+
+### 创建 target
+/backstores/fileio> cd /iscsi
+/iscsi> create iqn.2025-09.com.example:storage.target01
+
+### 创建 lun
+/iscsi> cd iqn.2025-09.com.example:storage.target01/tpg1/luns
+/iscsi/iqn.20...t01/tpg1/luns> create /backstores/fileio/disk01
+
+### 创建 acls
+/> cd /
+/> /iscsi/iqn.2025-09.com.example:storage.target01/tpg1/acls create iqn.1994-05.com.redhat:47b09045abfc
+/> /iscsi/iqn.2025-09.com.example:storage.target01/tpg1/acls create iqn.1994-05.com.redhat:5d75d9f09b19
+/> /iscsi/iqn.2025-09.com.example:storage.target01/tpg1/acls create iqn.1994-05.com.redhat:abc24c69d3ff
+/> /iscsi/iqn.2025-09.com.example:storage.target01/tpg1/acls create iqn.1994-05.com.redhat:7444c2347684
+
+### 保存配置
+/> saveconfig
+/> exit
+
+### 配置firewall
+firewall-cmd --zone=public --add-port=3260/tcp --permanent
+firewall-cmd --reload
+
+### discovery portal
+iscsiadm --mode discoverydb --type sendtargets --portal 192.168.56.64 --discover
+192.168.56.64:3260,1 iqn.2025-09.com.example:storage.target01
+
+### login portal
+iscsiadm --mode node --targetname iqn.2025-09.com.example:storage.target01 --portal 192.168.56.64:3260 --login
+```

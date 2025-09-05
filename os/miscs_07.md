@@ -6964,3 +6964,112 @@ oc get image.config.openshift.io/cluster -o yaml
 oc patch image.config.openshift.io/cluster --type=merge -p \
 '{"spec":{"additionalTrustedCA":{"name":"registry-ca"}}}'
 ```
+
+### 卸载 Fusion Access for SAN
+https://docs.google.com/document/d/1pOR51_5yNdrfPb_zU26Rm-aFEYBEXcUvCFVsK0wsCLU/edit?tab=t.0#heading=h.p52lw56l95hi
+```
+
+for fs in $(oc -n ibm-spectrum-scale get filesystems -o custom-columns='NAME:.metadata.name' --no-headers ); do 
+oc -n ibm-spectrum-scale label filesystems ${fs} \
+scale.spectrum.ibm.com/allowDelete=; 
+oc -n ibm-spectrum-scale delete filesystems ${fs}; 
+done
+
+oc -n ibm-spectrum-scale get localdisks \
+-o custom-columns='NAME:.metadata.name' --no-headers | xargs \
+-n1 oc -n ibm-spectrum-scale delete localdisks
+
+oc delete clusters.scale.spectrum.ibm.com ibm-spectrum-scale
+
+oc -n ibm-fusion-access get fusionaccesses.fusion.storage.openshift.io \
+-o custom-columns='NAME:.metadata.name' --no-headers | xargs \
+-n1 oc -n ibm-fusion-access delete \
+fusionaccesses.fusion.storage.openshift.io
+
+oc -n ibm-spectrum-scale delete pvc --all
+oc get pv -o json \
+  | jq -r '.items[] | select(.spec.storageClassName=="ibm-spectrum-scale-internal") | .metadata.name' \
+  | xargs oc delete pv
+
+oc delete nodemodulesconfigs.kmm.sigs.x-k8s.io -l \
+  beta.kmm.node.kubernetes.io/ibm-fusion-access.gpfs-module.module-in-use=
+
+oc -n ibm-fusion-access delete modules.kmm.sigs.x-k8s.io --all
+
+oc delete ns ibm-fusion-access \
+             ibm-spectrum-scale \
+             ibm-spectrum-scale-csi \
+             ibm-spectrum-scale-dns \
+             ibm-spectrum-scale-operator
+
+oc get volumesnapshotclass -o json \
+  | jq -r '.items[] | select(.driver=="spectrumscale.csi.ibm.com") | .metadata.name' \
+  | xargs -n1 oc delete volumesnapshotclass
+
+oc get storageclass -o json \
+  | jq -r '.items[] | select(.provisioner=="spectrumscale.csi.ibm.com") | .metadata.name' \
+  | xargs -n1 oc delete storageclass
+
+oc delete storageclass ibm-spectrum-scale-internal
+
+oc get console.operator cluster -o json | \
+jq 'del(.spec.plugins[] | select(. == "fusion-access-console"))' | \
+oc replace -f -
+
+oc delete consoleplugin fusion-access-console
+
+oc delete crd approvalrequests.scale.spectrum.ibm.com
+oc delete crd asyncreplications.scale.spectrum.ibm.com
+oc delete crd cachevolumeoperations.scale.spectrum.ibm.com
+oc delete crd cachevolumes.scale.spectrum.ibm.com
+oc delete crd callhomes.scale.spectrum.ibm.com
+oc delete crd clusterinterconnects.scale.spectrum.ibm.com
+oc delete crd clusters.scale.spectrum.ibm.com
+oc delete crd compressionjobs.scale.spectrum.ibm.com
+oc delete crd consistencygroups.scale.spectrum.ibm.com
+oc delete crd csiscaleoperators.csi.ibm.com
+oc delete crd daemons.scale.spectrum.ibm.com
+oc delete crd diskjobs.scale.spectrum.ibm.com
+oc delete crd dnsconfigs.scale.spectrum.ibm.com
+oc delete crd dnss.scale.spectrum.ibm.com
+oc delete crd encryptionconfigs.scale.spectrum.ibm.com
+oc delete crd filesystems.scale.spectrum.ibm.com
+oc delete crd fusionaccesses.fusion.storage.openshift.io
+oc delete crd grafanabridges.scale.spectrum.ibm.com
+oc delete crd guis.scale.spectrum.ibm.com
+oc delete crd localdisks.scale.spectrum.ibm.com
+oc delete crd localvolumediscoveries.fusion.storage.openshift.io
+oc delete crd localvolumediscoveryresults.fusion.storage.openshift.io
+oc delete crd pmcollectors.scale.spectrum.ibm.com
+oc delete crd recoverygroups.scale.spectrum.ibm.com
+oc delete crd regionaldrexports.scale.spectrum.ibm.com
+oc delete crd regionaldrs.scale.spectrum.ibm.com
+oc delete crd remoteclusters.scale.spectrum.ibm.com
+oc delete crd restripefsjobs.scale.spectrum.ibm.com
+oc delete crd stretchclusterinitnodes.scale.spectrum.ibm.com
+oc delete crd stretchclusters.scale.spectrum.ibm.com
+oc delete crd stretchclustertiebreakers.scale.spectrum.ibm.com
+oc delete crd upgradeapprovals.scale.spectrum.ibm.com
+oc delete crd volumes.scale.spectrum.ibm.com
+
+oc get nodes -l scale.spectrum.ibm.com/role=storage -o json \
+| jq -r ' .items[] | .metadata.name ' \
+| xargs -n1 -I {} oc debug node/{} -T -- \
+chroot /host sh -c "rm -rf /var/mmfs; rm -rf /var/adm/ras"
+
+oc get nodes -l scale.spectrum.ibm.com/role=storage -o json \
+| jq -r ' .items[] | .metadata.name ' \
+| xargs -n1 -I {} oc label node {} \
+scale.spectrum.ibm.com/daemon- \
+	scale.spectrum.ibm.com/designation- \
+	scale.spectrum.ibm.com/image-digest- \
+	scale.spectrum.ibm.com/nsdFailureGroup- \
+	scale.spectrum.ibm.com/nsdFailureGroupMappingType- \
+	scale.spectrum.ibm.com/role- 
+
+oc delete mutatingwebhookconfigurations \
+            ibm-spectrum-scale-mutating-webhook-configuration
+
+oc delete validatingwebhookconfigurations \
+            ibm-spectrum-scale-validating-webhook-configuration
+```

@@ -6930,3 +6930,37 @@ oc get clusterversion version -o jsonpath='{.spec.capabilities}{"\n"}{.status.ca
 ### 为 cluster 添加 capabilities
 oc patch clusterversion/version --type merge -p '{"spec":{"capabilities":{"additionalEnabledCapabilities":["Build","Console","Ingress","Storage","CSISnapshot","OperatorLifecycleManager","marketplace","NodeTuning"]}}}'
 ```
+
+### 设置证书信任
+```
+### 生成 registry1ca
+openssl s_client -connect registry.ocp4.example.com:443 2>/dev/null </dev/null | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' | tee registry1ca.crt
+
+### 生成 registry2ca
+openssl s_client -connect helper-ocp4test.ocp4.example.com:5000 2>/dev/null </dev/null | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' | tee registry2ca.crt
+
+### 将 registry1ca 和 registry2ca 合成为 registryca.pem 
+cat registry1ca.crt registry2ca.crt > registryca.pem
+
+### 设置证书信任
+oc -n openshift-config delete configmap custom-ca
+oc -n openshift-config create configmap custom-ca \
+  --from-file=ca-bundle.crt=registryca.pem \
+  --dry-run=client -o yaml | oc apply -f -
+
+oc get proxy/cluster -o yaml
+oc patch proxy/cluster \
+     --type=merge \
+     --patch='{"spec":{"trustedCA":{"name":"custom-ca"}}}'
+
+### 设置证书信任
+oc -n openshift-config delete configmap registry-ca
+oc -n openshift-config create configmap registry-ca \
+  --from-file=registry.ocp4.example.com=registry1ca.crt \
+  --from-file=helper-ocp4test.ocp4.example.com..5000=registry2ca.crt \
+  --dry-run=client -o yaml | oc apply -f -
+
+oc get image.config.openshift.io/cluster -o yaml
+oc patch image.config.openshift.io/cluster --type=merge -p \
+'{"spec":{"additionalTrustedCA":{"name":"registry-ca"}}}'
+```

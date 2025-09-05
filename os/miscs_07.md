@@ -6920,3 +6920,13 @@ iscsiadm --mode discoverydb --type sendtargets --portal 192.168.56.64 --discover
 ### login portal
 iscsiadm --mode node --targetname iqn.2025-09.com.example:storage.target01 --portal 192.168.56.64:3260 --login
 ```
+
+### 为集群启用 additionalEnabledCapabilities
+https://docs.redhat.com/en/documentation/openshift_container_platform/4.13/html/post-installation_configuration/enabling-cluster-capabilities
+```
+### 获取 cluster capabilities
+oc get clusterversion version -o jsonpath='{.spec.capabilities}{"\n"}{.status.capabilities}{"\n"}'
+
+### 为 cluster 添加 capabilities
+oc patch clusterversion/version --type merge -p '{"spec":{"capabilities":{"additionalEnabledCapabilities":["Build","Console","Ingress","Storage","CSISnapshot","OperatorLifecycleManager","marketplace","NodeTuning"]}}}'
+```

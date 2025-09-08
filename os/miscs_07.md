@@ -7081,3 +7081,45 @@ oc delete mutatingwebhookconfigurations \
 oc delete validatingwebhookconfigurations \
             ibm-spectrum-scale-validating-webhook-configuration
 ```
+
+### 启用 openshift image-registry
+```
+### 增加 capabilities ImageRegistry
+oc patch clusterversion/version --type merge -p '{"spec":{"capabilities":{"additionalEnabledCapabilities":["Build","Console","ImageRegistry","Ingress","Storage","CSISnapshot","OperatorLifecycleManager","marketplace","NodeTuning"]}}}'
+
+### 等待 cluster operator 状态正常
+oc get co
+
+### 创建 pvc 
+cat <<EOF | oc apply -f -
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: image-registry
+  namespace: openshift-image-registry
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 20Gi
+  storageClassName: ocs-external-storagecluster-ceph-rbd
+  volumeMode: Filesystem
+EOF
+
+### patch configs.imageregistry.operator.openshift.io/cluster
+oc patch configs.imageregistry.operator.openshift.io/cluster --type=merge --patch '{"spec":{"storage":{"pvc":{"claim":"image-registry"}}}}'
+
+oc patch configs.imageregistry.operator.openshift.io/cluster --type=merge --patch '{"spec":{"rolloutStrategy":"Recreate"}}'
+
+oc patch configs.imageregistry.operator.openshift.io/cluster --type=merge --patch '{"spec":{"managementState":"Managed"}}'
+
+### 检查 pods
+oc get pods -n openshift-image-registry
+NAME                                               READY   STATUS    RESTARTS   AGE
+cluster-image-registry-operator-79fdcbb7f4-pzx7h   1/1     Running   0          19m
+image-registry-7d7c7bd985-q24ng                    1/1     Running   0          5m2s
+node-ca-4hzf9                                      1/1     Running   0          19m
+node-ca-6tbn5                                      1/1     Running   0          19m
+node-ca-jc5w6                                      1/1     Running   0          19m
+```

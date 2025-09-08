@@ -6929,6 +6929,9 @@ oc get clusterversion version -o jsonpath='{.spec.capabilities}{"\n"}{.status.ca
 
 ### 为 cluster 添加 capabilities
 oc patch clusterversion/version --type merge -p '{"spec":{"capabilities":{"additionalEnabledCapabilities":["Build","Console","Ingress","Storage","CSISnapshot","OperatorLifecycleManager","marketplace","NodeTuning"]}}}'
+
+### 增加 capabilities ImageRegistry
+oc patch clusterversion/version --type merge -p '{"spec":{"capabilities":{"additionalEnabledCapabilities":["Build","Console","ImageRegistry","Ingress","Storage","CSISnapshot","OperatorLifecycleManager","marketplace","NodeTuning"]}}}'
 ```
 
 ### 设置证书信任
@@ -6995,6 +6998,11 @@ oc delete nodemodulesconfigs.kmm.sigs.x-k8s.io -l \
   beta.kmm.node.kubernetes.io/ibm-fusion-access.gpfs-module.module-in-use=
 
 oc -n ibm-fusion-access delete modules.kmm.sigs.x-k8s.io --all
+
+for i in $(seq 0 2) ;do oc debug node/m${i}-ocp4test.ocp4.example.com -q -- chroot /host rmmod mmfs26 ; done
+for i in $(seq 0 2) ;do oc debug node/m${i}-ocp4test.ocp4.example.com -q -- chroot /host rmmod mmfslinux ; done
+for i in $(seq 0 2) ;do oc debug node/m${i}-ocp4test.ocp4.example.com -q -- chroot /host rmmod tracedev ; done
+
 
 oc delete ns ibm-fusion-access \
              ibm-spectrum-scale \

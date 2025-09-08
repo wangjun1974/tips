@@ -121,6 +121,9 @@ spec:
     license: data-management
 EOF
 
+### 检查磁盘
+oc debug node/m2-ocp4test.ocp4.example.com -q -- chroot /host ls -l /dev/disk/by-path 
+
 ### 创建 localdisks
 cat <<EOF | oc apply -f -
 apiVersion: scale.spectrum.ibm.com/v1beta1
@@ -176,6 +179,4 @@ spec:
 EOF
 
 
-
-oc adm must-gather --image=icr.io/cpopen/ibm-spectrum-scale-must-gather:v5.2.3.1
 oc adm must-gather --image=registry.ocp4.example.com/fafso/cpopen/ibm-spectrum-scale-must-gather:v5.2.3.1

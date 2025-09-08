@@ -7123,3 +7123,188 @@ node-ca-4hzf9                                      1/1     Running   0          
 node-ca-6tbn5                                      1/1     Running   0          19m
 node-ca-jc5w6                                      1/1     Running   0          19m
 ```
+
+### 安装 Fusion Access for SAN
+```
+### 第一部分
+上传镜像，需要ubi镜像
+/usr/local/bin/oc-mirror --from ./ubi_mirror_seq1_000000.tar docker://harbor.sewc.siemens.com/fafso 
+
+生成ImageTagMirrorSet
+cat <<EOF | oc apply -f -
+apiVersion: config.openshift.io/v1
+kind: ImageTagMirrorSet
+metadata:
+  name: operator-certified-fafs-ubi9
+spec:
+  imageTagMirrors:
+  - mirrors:
+    - harbor.sewc.siemens.com/fafso/ubi9
+    source: registry.redhat.io/ubi9
+EOF
+
+
+### 第二部分
+oc get configmap -n openshift-config 
+确认openshift-config namespace下没有configmap custom-ca和registry-ca
+
+保存registryca.crt文件
+openssl s_client -connect harbor.sewc.siemens.com:443 2>/dev/null </dev/null | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' | tee registryca.crt
+
+oc -n openshift-config create configmap custom-ca \
+  --from-file=ca-bundle.crt=registryca.crt \
+  --dry-run=client -o yaml | oc apply -f -
+
+oc get proxy/cluster -o yaml
+
+确认/spec/trustedCA为空运行
+oc patch proxy/cluster \
+     --type=merge \
+     --patch='{"spec":{"trustedCA":{"name":"custom-ca"}}}'  
+
+oc -n openshift-config create configmap registry-ca \
+  --from-file=harbor.sewc.siemens.com=registryca.crt \
+  --dry-run=client -o yaml | oc apply -f -
+
+oc get image.config.openshift.io/cluster -o yaml 
+
+确认/spec/additionalTrustedCA为空运行
+oc patch image.config.openshift.io/cluster --type=merge -p \
+'{"spec":{"additionalTrustedCA":{"name":"registry-ca"}}}'
+
+
+### 第三部分
+安装完Fusion Access for SAN Operator后
+oc create secret -n ibm-fusion-access generic fusion-pullsecret --from-literal=ibm-entitlement-key=
+
+可选 - 启用 image-registry，并且为 image-registry 设置 .spec.storage.pvc.claim
+可选 - 创建 configmap kmm-image-config 和 secret kmm-push-secret
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kmm-image-config
+  namespace: ibm-fusion-access
+data:
+  kmm_image_registry_url: "registry.ocp4.example.com"
+  kmm_image_repo: "kmm/gpfs_compat_kmod"
+  # kmm_tls_insecure: "false"
+  # kmm_tls_skip_verify: "true"
+  kmm_image_registry_secret_name: "kmm-push-secret"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: kmm-push-secret
+  namespace: ibm-fusion-access
+data:
+  .dockerconfigjson: ewogICJhdXRocyI6IHsKICAgICJyZWdpc3RyeS5vY3A0LmV4YW1wbGUuY29tIjogewogICAgICAiYXV0aCI6ICJkR1Z6ZERFNlVtVmthR0YwSVRJeiIKICAgIH0KICB9Cn0K
+type: kubernetes.io/dockerconfigjson
+
+
+为节点打标签 scale.spectrum.ibm.com/role=storage
+oc label nodes -l node-role.kubernetes.io/master "scale.spectrum.ibm.com/role=storage"
+
+创建Cluster
+oc apply -f=- <<EOF
+---
+apiVersion: scale.spectrum.ibm.com/v1beta1
+kind: Cluster
+metadata:
+  name: ibm-spectrum-scale
+  namespace: ibm-spectrum-scale
+spec:
+  pmcollector:
+    nodeSelector:
+      scale.spectrum.ibm.com/role: storage
+  daemon:
+    nsdDevicesConfig:
+      localDevicePaths:
+      - devicePath: /dev/disk/by-id/*
+        deviceType: generic
+    clusterProfile:
+      controlSetxattrImmutableSELinux: "yes"
+      enforceFilesetQuotaOnRoot: "yes"
+      ignorePrefetchLUNCount: "yes"
+      initPrefetchBuffers: "128"
+      maxblocksize: 16M
+      prefetchPct: "25"
+      prefetchTimeout: "30"
+    nodeSelector:
+      scale.spectrum.ibm.com/role: storage
+    roles:
+    - name: client
+      resources:
+        cpu: "2"
+        memory: 4Gi
+    - name: storage
+      resources:
+        cpu: "2"
+        memory: 8Gi
+  license:
+    accept: true
+    license: data-management
+EOF
+
+### 检查磁盘
+oc debug node/m0-ocp4test.ocp4.example.com -q -- chroot /host ls -l /dev/disk/by-path 
+oc debug node/m1-ocp4test.ocp4.example.com -q -- chroot /host ls -l /dev/disk/by-path 
+oc debug node/m2-ocp4test.ocp4.example.com -q -- chroot /host ls -l /dev/disk/by-path 
+
+### 创建 localdisks
+cat <<EOF | oc apply -f -
+apiVersion: scale.spectrum.ibm.com/v1beta1
+kind: LocalDisk
+metadata:
+  name: shareddisk1
+  namespace: ibm-spectrum-scale
+spec:
+  # After successful creation of the local disk, this parameter is no longer used
+  device: /dev/sda
+  # The Kubernetes node where the specified device exists at creation time.
+  node: m2-ocp4test.ocp4.example.com
+  # nodeConnectionSelector defines the nodes that have the shared lun directly attached to them. If left commented out, all the nodes with the label “scale.spectrum.ibm.com/role=storage” will be used
+  # nodeConnectionSelector:
+  #  matchExpressions:
+  #  - key: node-role.kubernetes.io/worker
+  #    operator: Exists
+  # You could also list the node names instead
+  # nodeConnectionSelector:
+  #  matchExpressions:
+  #  - key: kubernetes.io/hostname
+  #    operator: In
+  #    values:
+  #      - ip-10-0-17-96.eu-central-1.compute.internal
+  #      - ip-10-0-39-125.eu-central-1.compute.internal
+  #      - ip-10-0-40-135.eu-central-1.compute.internal
+  # set below only during testing, this will wipe existing stuff
+  existingDataSkipVerify: true
+EOF
+
+### 创建 Filesystem
+cat <<EOF | oc apply -f -
+apiVersion: scale.spectrum.ibm.com/v1beta1
+kind: Filesystem
+metadata:
+  name: localfilesystem
+  namespace: ibm-spectrum-scale
+spec:
+  local:
+    blockSize: 4M
+    pools:
+    - name: system
+      disks:
+      - shareddisk1
+    # Only 1-way is supported for LFS https://www.ibm.com/docs/en/scalecontainernative/5.2.1?topic=systems-local-file-system#filesystem-spec
+    replication: 1-way
+    type: shared
+  seLinuxOptions:
+    level: s0
+    role: object_r
+    type: container_file_t
+    user: system_u
+EOF
+
+
+### 收集 must-gather
+oc adm must-gather --image=registry.ocp4.example.com/fafso/cpopen/ibm-spectrum-scale-must-gather:v5.2.3.1
+```

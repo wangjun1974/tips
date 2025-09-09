@@ -78,7 +78,7 @@ type: kubernetes.io/dockerconfigjson
 
 
 为节点打标签 scale.spectrum.ibm.com/role=storage
-oc label nodes -l node-role.kubernetes.io/master "scale.spectrum.ibm.com/role=storage"
+oc label nodes -l node-role.kubernetes.io/worker "scale.spectrum.ibm.com/role=storage"
 
 创建Cluster
 oc apply -f=- <<EOF

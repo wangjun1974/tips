@@ -7201,6 +7201,8 @@ data:
 type: kubernetes.io/dockerconfigjson
 
 
+
+
 为节点打标签 scale.spectrum.ibm.com/role=storage
 oc label nodes -l node-role.kubernetes.io/master "scale.spectrum.ibm.com/role=storage"
 
@@ -7312,4 +7314,77 @@ oc adm must-gather --image=registry.ocp4.example.com/fafso/cpopen/ibm-spectrum-s
 ### 可以通过修改CSV来实现
 oc get csv openshift-fusion-access-operator.v0.9.3 -o json | jq -r .spec.install.spec.deployments[0].spec.template.spec.containers[0].resources.limits.memory
 2Gi
+```
+
+### 检查模块签名
+### 生成public key/private key
+### 在节点添加MOK
+### 在UEFI Enroll MOK
+### 重启系统检查 enrolled key
+### 安装Fusion Access for SAN Operator
+### 设置secureboot-signing-key和secureboot-signing-key-pub
+### 创建FusionAccess对象
+```
+### 检查模块签名
+mkdir /mnt/foo
+podman run --security-opt 'label=disable' -it -v /mnt/foo:/mnt/foo:rw image-registry.openshift-image-registry.svc:5000/ibm-fusion-access/gpfs_compat_kmod:5.14.0-427.68.1.el9_4.x86_64-c7bac83afa194b9f37a4edc59628779a sh
+cp -avf /opt/lib/modules/5.14.0-427.68.1.el9_4.x86_64/* /mnt/foo/
+exit
+modinfo /mnt/foo/mmfs26.ko 
+
+### 检查节点是否启用 secure boot
+oc debug node/m2-ocp4test.ocp4.example.com -q -- chroot /host mokutil --sb-state
+
+### On the host where you create the keypair to upload to secureboot
+### RHEL9.4 works
+dnf install -y pesign nss-tools
+export KEYFOLDER=/etc/pki/pesign
+
+# 1. Create the keypair in the NSS db at /etc/pki/pesign
+efikeygen --dbdir ${KEYFOLDER} \
+  --self-sign \
+  --module \
+  --common-name 'CN=Organization signing key' \
+  --nickname 'Custom Secure Boot key'
+
+# 2. Exports the public key in “sb_cert.cer”
+certutil -d ${KEYFOLDER} \
+  -n 'Custom Secure Boot key' \
+  -Lr > sb_cert.cer
+
+# 3. Exports the p12 version of the private key
+pk12util -o sb_cert.p12 \
+           -n 'Custom Secure Boot key' \
+           -d ${KEYFOLDER}
+
+# 4. Exports the private key in “sb_cert.priv”
+openssl pkcs12 \
+         -in sb_cert.p12 \
+         -out sb_cert.priv \
+         -nocerts \
+         -noenc
+
+# 5. Copy the sb_cert.cert file on each worker node that will run the 
+# core pods.
+# On each worker node run the following command (will prompt for password E.g. "changeme")
+mokutil --import sb_cert.cert 
+
+# 6. Then reboot into UEFI, in the BIOS make sure Secure Boot is Enabled and during boot choose “MOK Enroll” (will change depending on vendor) and type in the password E.g. "changeme" (Note: If you miss this menu, you'll have to import the certificate again, followed by reboot.)
+https://www.dell.com/support/kbdoc/zh-cn/000221584/mok-message-when-booting-linux-with-secure-boot-enabled
+
+# 7. After the reboot, verify that our Key is correctly loaded
+# check secure boot state:
+mokutil --sb-state
+# check enrolled keys (there will usually be three):
+mokutil -l
+
+# 8. Install the Fusion Access for SAN operator on the cluster
+
+# 9. Upload the secret keys for KMM to consume
+oc create secret generic secureboot-signing-key -n ibm-fusion-access --from-file=key=~/secure_boot_poc/sb_cert.priv
+oc create secret generic secureboot-signing-key-pub -n ibm-fusion-access --from-file=cert=~/secure_boot_poc/sb_cert.cer
+
+# 10. Create the fusion access object
+# At this point the kernel modules should be signed and a secureboot enabled system with our key enrolled, will be able to modprobe them
+
 ```

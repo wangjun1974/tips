@@ -7307,4 +7307,9 @@ EOF
 
 ### 收集 must-gather
 oc adm must-gather --image=registry.ocp4.example.com/fafso/cpopen/ibm-spectrum-scale-must-gather:v5.2.3.1
+
+### 调整Deployment Limits
+### 可以通过修改CSV来实现
+oc get csv openshift-fusion-access-operator.v0.9.3 -o json | jq -r .spec.install.spec.deployments[0].spec.template.spec.containers[0].resources.limits.memory
+2Gi
 ```

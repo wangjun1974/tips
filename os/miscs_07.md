@@ -7388,3 +7388,86 @@ oc create secret generic secureboot-signing-key-pub -n ibm-fusion-access --from-
 # At this point the kernel modules should be signed and a secureboot enabled system with our key enrolled, will be able to modprobe them
 
 ```
+
+### GPFS Troubleshooting Command
+```
+sh-5.1# mmgetstate -aLs
+
+ Node number  Node name    Quorum  Nodes up  Total nodes  GPFS state    Remarks    
+-----------------------------------------------------------------------------------
+           1  m0-ocp4test    1*         3          3      active        quorum node
+           2  m1-ocp4test    1*         3          3      active        quorum node
+           3  m2-ocp4test    1*         3          3      active        quorum node
+
+ Summary information 
+---------------------
+Number of nodes defined in the cluster:            3
+Number of local nodes active in the cluster:       3
+Number of remote nodes joined in this cluster:     0
+Number of quorum nodes defined in the cluster:     3
+Number of quorum nodes active in the cluster:      3
+Quorum = 1*, Quorum achieved
+
+sh-5.1# mmlsfs all -T
+
+File system attributes for /dev/localfilesystem:
+================================================
+flag                value                    description
+------------------- ------------------------ -----------------------------------
+ -T                 /mnt/localfilesystem     Default mount point
+
+sh-5.1# mmlsdisk /dev/localfilesystem
+disk         driver   sector     failure holds    holds                            storage
+name         type       size       group metadata data  status        availability pool
+------------ -------- ------ ----------- -------- ----- ------------- ------------ ------------
+shareddisk1  nsd         512           0 yes      yes   ready         up           system       
+
+sh-5.1# tail -100 /var/adm/ras/mmfs.log.latest | grep ERROR
+
+sh-5.1# mmlsconfig
+Configuration data for cluster ibm-spectrum-scale.stg.ocp4.example.com:
+-----------------------------------------------------------------------
+clusterName ibm-spectrum-scale.stg.ocp4.example.com
+clusterId 13606102661978813861
+autoload no
+dmapiFileHandleSize 32
+minReleaseLevel 5.2.3.0
+ccrEnabled yes
+cipherList AUTHONLY
+sdrNotifyAuthEnabled yes
+cloudEnv general
+controlSetxattrImmutableSELinux yes
+ignorePrefetchLUNCount yes
+initPrefetchBuffers 128
+prefetchTimeout 30
+tscCmdPortRange 60000-61000
+traceGenSubDir /var/mmfs/tmp/traces
+ignoreReplicationForQuota yes
+ignoreReplicationOnStatfs yes
+ignoreReplicaSpaceOnStat yes
+readReplicaPolicy local
+afmEnableADR no
+afmNFSVersion 4.1
+afmMountRetryInterval 30
+maxblocksize 16M
+prefetchPct 25
+enforceFilesetQuotaOnRoot yes
+[storage_role]
+pagepool 5148192768
+workerThreads 1024
+maxFilesToCache 96000
+maxStatCache 96000
+[common]
+tiebreakerDisks shareddisk1
+adminMode central
+
+File systems in cluster ibm-spectrum-scale.stg.ocp4.example.com:
+----------------------------------------------------------------
+/dev/localfilesystem
+```
+
+### Make a bootable Windows 10 USB drive from a Mac
+https://alexlubbock.com/bootable-windows-usb-on-mac
+```
+https://alexlubbock.com/bootable-windows-usb-on-mac
+```

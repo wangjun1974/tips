@@ -180,3 +180,28 @@ EOF
 
 
 oc adm must-gather --image=registry.ocp4.example.com/fafso/cpopen/ibm-spectrum-scale-must-gather:v5.2.3.1
+
+mmchconfig tiebreakerDisks="shareddisk1"
+sh-5.1# mmchconfig tiebreakerDisks="shareddisk1"
+mmchconfig: Command successfully completed
+mmchconfig: Propagating the cluster configuration data to all
+  affected nodes.  This is an asynchronous process.
+  
+mmchconfig tiebreakerDisks=no
+
+
+sh-5.1# mmhealth cluster show
+
+Component           Total         Failed       Degraded        Healthy          Other
+----------------------------------------------------------------------------------------------------------------
+NODE                    3              0              0              2              1
+GPFS                    3              0              0              2              1
+NETWORK                 3              0              0              3              0
+FILESYSTEM              1              0              0              1              0
+DISK                    1              0              0              1              0
+FILESYSMGR              1              0              0              1              0
+GUI                     2              0              0              2              0
+PERFMON                 3              0              0              3              0
+THRESHOLD               3              0              0              3              0
+
+sh-5.1# 

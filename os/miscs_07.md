@@ -7316,6 +7316,16 @@ oc adm must-gather --image=registry.ocp4.example.com/fafso/cpopen/ibm-spectrum-s
 ### 可以通过修改CSV来实现
 oc get csv openshift-fusion-access-operator.v0.9.3 -o json | jq -r .spec.install.spec.deployments[0].spec.template.spec.containers[0].resources.limits.memory
 2Gi
+
+### 创建VolumeSnapshotClass
+cat <<EOF | oc apply -f -
+apiVersion: snapshot.storage.k8s.io/v1
+kind: VolumeSnapshotClass
+metadata:
+  name: ibm-spectrum-scale-snapshot-class
+driver: spectrumscale.csi.ibm.com
+deletionPolicy: Delete
+EOF
 ```
 
 ### 检查模块签名

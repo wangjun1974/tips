@@ -7306,6 +7306,8 @@ spec:
     user: system_u
 EOF
 
+### 查看 ibm-spectrum-scale-operator 日志
+oc -n ibm-spectrum-scale-operator logs $(oc get pods -n ibm-spectrum-scale-operator -l app.kubernetes.io/name="operator" -o name)
 
 ### 收集 must-gather
 oc adm must-gather --image=registry.ocp4.example.com/fafso/cpopen/ibm-spectrum-scale-must-gather:v5.2.3.1

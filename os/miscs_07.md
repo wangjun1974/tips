@@ -7326,6 +7326,26 @@ metadata:
 driver: spectrumscale.csi.ibm.com
 deletionPolicy: Delete
 EOF
+
+### 上传镜像
+virtctl image-upload dv rhel-9-4-golden-gpfs --size 11Gi --image-path rhel-9.4-x86_64-kvm.qcow2 --storage-class ibm-spectrum-scale-fs-2 --insecure --force-bind
+
+### 创建DataSource
+cat <<EOF | oc apply -f -
+apiVersion: cdi.kubevirt.io/v1beta1
+kind: DataSource
+metadata:
+  name: rhel-9-4-golden-gpfs 
+  namespace: openshift-virtualization-os-images
+  labels:
+    instancetype.kubevirt.io/default-instancetype: cx1.large
+    instancetype.kubevirt.io/default-preference: rhel.9
+spec:
+  source:
+    pvc:
+      name: rhel-9-4-golden-gpfs 
+      namespace: openshift-virtualization-os-images
+EOF
 ```
 
 ### 检查模块签名
@@ -7482,4 +7502,10 @@ File systems in cluster ibm-spectrum-scale.stg.ocp4.example.com:
 https://alexlubbock.com/bootable-windows-usb-on-mac
 ```
 https://alexlubbock.com/bootable-windows-usb-on-mac
+```
+
+### Integrate legacy applications on-premise with OpenShift clusters in the cloud
+https://developers.redhat.com/developer-sandbox/activities/connect-services-across-different-environments
+```
+https://developers.redhat.com/developer-sandbox/activities/connect-services-across-different-environments
 ```

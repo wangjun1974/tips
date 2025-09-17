@@ -5596,6 +5596,8 @@ https://access.redhat.com/solutions/7111917
 --vm-node-selector stringToString                  A comma separated list of key=value pairs to use as the node selector for the KubeVirt VirtualMachines to be scheduled onto. (e.g. role=kubevirt,size=large) (default [])
 --control-plane-availability-policy string    Availability policy for hosted cluster components. Supported options: SingleReplica, HighlyAvailable (default "HighlyAvailable")
 --infra-availability-policy string            Availability policy for infrastructure services in guest cluster. Supported options: SingleReplica, HighlyAvailable
+--additional-network stringArray                   Specify additional network that should be attached to the nodes, the "name" field should point to a multus network attachment definition with the format "[namespace]/[name]", it can be specified multiple times to attach to multiple networks. Supported parameters: name:string, example: "name:ns1/nad-foo
+--attach-default-network                           Specify if the default pod network should be attached to the nodes, equal symbol should be used to pass boolean value: --attach-default-network=[true|false]. This can only be set if --additional-network is configured (default true)
 ```
 
 ### skopeo copy 时输入 src registry 和 dest registry 的用户名和密码

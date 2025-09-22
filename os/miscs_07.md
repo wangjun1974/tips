@@ -7920,7 +7920,7 @@ oc patch hyperconverged kubevirt-hyperconverged -n openshift-cnv --type='json' -
   {
     "op": "add",
     "path": "/spec/defaultCPUModel",
-    "value": "IvyBridge-v1"
+    "value": "IvyBridge"
   }
 ]
 '
@@ -7929,7 +7929,16 @@ oc patch hyperconverged kubevirt-hyperconverged -n openshift-cnv --type='json' -
   {
     "op": "replace",
     "path": "/spec/defaultCPUModel",
-    "value": "IvyBridge-v1"
+    "value": "IvyBridge"
+  }
+]
+'
+oc patch hyperconverged kubevirt-hyperconverged -n openshift-cnv --type='json' -p='
+[
+  {
+    "op": "replace",
+    "path": "/spec/defaultCPUModel",
+    "value": "IvyBridge"
   }
 ]
 '

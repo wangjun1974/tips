@@ -7511,3 +7511,399 @@ https://developers.redhat.com/developer-sandbox/activities/connect-services-acro
 ```
 https://developers.redhat.com/developer-sandbox/activities/connect-services-across-different-environments
 ```
+
+### 
+https://github.com/kubevirt/containerized-data-importer/blob/main/doc/annotations.md
+```
+https://github.com/kubevirt/containerized-data-importer/blob/main/doc/annotations.md
+
+```
+
+### find_common_cpu_models.sh
+ 
+
+```
+#!/bin/bash
+
+# Script to find common CPU models across all Kubernetes nodes
+# Generated with AI assistance (Claude Sonnet 4)
+# Usage: ./find_common_cpu_models.sh [kubeconfig_path]
+
+set -euo pipefail
+
+# Function to display usage
+usage() {
+    echo "Usage: $0 [kubeconfig_path] [--debug]"
+    echo "  kubeconfig_path: Optional path to kubeconfig file (defaults to ~/.kube/config)"
+    echo "  --debug: Show detailed CPU model parsing information"
+    echo ""
+    echo "This script finds CPU models that are common across all nodes"
+    echo "by examining labels that start with 'cpu-model.node.kubevirt.io'"
+    echo "and reports the newest Intel and AMD models."
+    exit 1
+}
+
+# Parse command line arguments
+DEBUG_MODE=false
+KUBECONFIG_PATH=""
+
+# Parse arguments
+for arg in "$@"; do
+    case $arg in
+        --debug)
+            DEBUG_MODE=true
+            ;;
+        --help|-h)
+            usage
+            ;;
+        *)
+            if [[ -z "$KUBECONFIG_PATH" ]]; then
+                KUBECONFIG_PATH="$arg"
+            fi
+            ;;
+    esac
+done
+
+# Set default kubeconfig if not provided
+if [[ -z "$KUBECONFIG_PATH" ]]; then
+    KUBECONFIG_PATH="$HOME/.kube/config"
+fi
+
+# Check if kubeconfig file exists
+if [[ ! -f "$KUBECONFIG_PATH" ]]; then
+    echo "Error: Kubeconfig file not found at: $KUBECONFIG_PATH"
+    usage
+fi
+
+# Set KUBECONFIG environment variable
+export KUBECONFIG="$KUBECONFIG_PATH"
+
+# Check if kubectl is available
+if ! command -v kubectl &> /dev/null; then
+    echo "Error: kubectl command not found. Please install kubectl."
+    exit 1
+fi
+
+# Check if we can connect to the cluster
+if ! kubectl cluster-info &> /dev/null; then
+    echo "Error: Cannot connect to Kubernetes cluster. Please check your kubeconfig."
+    exit 1
+fi
+
+echo "Finding common CPU models across all nodes..."
+echo "Using kubeconfig: $KUBECONFIG_PATH"
+echo ""
+
+# Get all node names
+NODES=$(kubectl get nodes -o jsonpath='{.items[*].metadata.name}')
+if [[ -z "$NODES" ]]; then
+    echo "Error: No nodes found in the cluster"
+    exit 1
+fi
+
+echo "Found $(echo $NODES | wc -w) nodes: $(echo $NODES | tr ' ' ', ')"
+echo ""
+
+# Initialize arrays to store CPU models for each node
+declare -A NODE_CPU_MODELS
+declare -A ALL_CPU_MODELS
+
+# Process each node
+for node in $NODES; do
+    echo "Processing node: $node"
+    
+    # Get all labels for the node that start with 'cpu-model.node.kubevirt.io'
+    # Use a more robust approach to extract labels
+    CPU_LABELS=$(kubectl get node "$node" -o json | \
+                 grep -o '"cpu-model\.node\.kubevirt\.io[^"]*"' | \
+                 sed 's/"//g' | \
+                 sed 's/cpu-model\.node\.kubevirt\.io\///')
+    
+    if [[ -z "$CPU_LABELS" ]]; then
+        echo "  Warning: No CPU model labels found for node $node"
+        continue
+    fi
+    
+    # CPU_LABELS now contains just the CPU model names
+    CPU_MODELS="$CPU_LABELS"
+    
+    # Add each CPU model to the global list
+    for cpu_model in $CPU_MODELS; do
+        if [[ -n "$cpu_model" ]]; then
+            ALL_CPU_MODELS["$cpu_model"]=1
+        fi
+    done
+    
+    # Store CPU models for this node
+    NODE_CPU_MODELS["$node"]="$CPU_MODELS"
+    
+    echo "  Found CPU models: $(echo $CPU_MODELS | tr ' ' ', ')"
+done
+
+echo ""
+
+# Find common CPU models across all nodes
+COMMON_MODELS=""
+FIRST_NODE=true
+
+for node in $NODES; do
+    if [[ -n "${NODE_CPU_MODELS[$node]:-}" ]]; then
+        if [[ "$FIRST_NODE" == "true" ]]; then
+            # For the first node, all its CPU models are potential common models
+            COMMON_MODELS="${NODE_CPU_MODELS[$node]}"
+            FIRST_NODE=false
+        else
+            # Find intersection with existing common models
+            NEW_COMMON_MODELS=""
+            for model in $COMMON_MODELS; do
+                if echo "${NODE_CPU_MODELS[$node]}" | grep -q "\b$model\b"; then
+                    NEW_COMMON_MODELS="$NEW_COMMON_MODELS $model"
+                fi
+            done
+            COMMON_MODELS="$NEW_COMMON_MODELS"
+        fi
+    fi
+done
+
+# Function to parse CPU model and extract vendor, family, and version
+parse_cpu_model() {
+    local model="$1"
+    local vendor=""
+    local family=""
+    local version=""
+    
+    # Convert to lowercase for easier matching
+    local model_lower=$(echo "$model" | tr '[:upper:]' '[:lower:]')
+    
+    # Detect Intel models (including KubeVirt CPU model names)
+    if [[ "$model_lower" =~ intel ]] || [[ "$model_lower" =~ broadwell ]] || [[ "$model_lower" =~ haswell ]] || [[ "$model_lower" =~ ivybridge ]] || [[ "$model_lower" =~ nehalem ]] || [[ "$model_lower" =~ penryn ]] || [[ "$model_lower" =~ sandybridge ]] || [[ "$model_lower" =~ skylake ]] || [[ "$model_lower" =~ cascadelake ]] || [[ "$model_lower" =~ westmere ]]; then
+        vendor="intel"
+        # Extract family from KubeVirt CPU model names
+        if [[ "$model_lower" =~ broadwell ]]; then
+            family="broadwell"
+        elif [[ "$model_lower" =~ haswell ]]; then
+            family="haswell"
+        elif [[ "$model_lower" =~ ivybridge ]]; then
+            family="ivybridge"
+        elif [[ "$model_lower" =~ nehalem ]]; then
+            family="nehalem"
+        elif [[ "$model_lower" =~ penryn ]]; then
+            family="penryn"
+        elif [[ "$model_lower" =~ sandybridge ]]; then
+            family="sandybridge"
+        elif [[ "$model_lower" =~ skylake ]]; then
+            family="skylake"
+        elif [[ "$model_lower" =~ cascadelake ]]; then
+            family="cascadelake"
+        elif [[ "$model_lower" =~ westmere ]]; then
+            family="westmere"
+        elif [[ "$model_lower" =~ xeon ]]; then
+            family="xeon"
+        elif [[ "$model_lower" =~ core ]]; then
+            family="core"
+        elif [[ "$model_lower" =~ pentium ]]; then
+            family="pentium"
+        elif [[ "$model_lower" =~ celeron ]]; then
+            family="celeron"
+        elif [[ "$model_lower" =~ atom ]]; then
+            family="atom"
+        else
+            family="other"
+        fi
+        
+        # Extract version number (e.g., Broadwell-v4 -> v4, Cascadelake-Server-v5 -> v5)
+        if [[ "$model" =~ -v([0-9]+) ]]; then
+            version="${BASH_REMATCH[1]}"
+        elif [[ "$model" =~ -([0-9]+) ]]; then
+            version="${BASH_REMATCH[1]}"
+        elif [[ "$model" =~ ([0-9]+) ]]; then
+            version="${BASH_REMATCH[1]}"
+        fi
+    # Detect AMD models (including KubeVirt CPU model names)
+    elif [[ "$model_lower" =~ amd ]] || [[ "$model_lower" =~ epyc ]] || [[ "$model_lower" =~ ryzen ]] || [[ "$model_lower" =~ opteron ]] || [[ "$model_lower" =~ athlon ]]; then
+        vendor="amd"
+        # Extract family (e.g., EPYC, Ryzen, etc.)
+        if [[ "$model_lower" =~ epyc ]]; then
+            family="epyc"
+        elif [[ "$model_lower" =~ ryzen ]]; then
+            family="ryzen"
+        elif [[ "$model_lower" =~ opteron ]]; then
+            family="opteron"
+        elif [[ "$model_lower" =~ athlon ]]; then
+            family="athlon"
+        else
+            family="other"
+        fi
+        
+        # Extract version number
+        if [[ "$model" =~ -v([0-9]+) ]]; then
+            version="${BASH_REMATCH[1]}"
+        elif [[ "$model" =~ -([0-9]+) ]]; then
+            version="${BASH_REMATCH[1]}"
+        elif [[ "$model" =~ ([0-9]+) ]]; then
+            version="${BASH_REMATCH[1]}"
+        fi
+    fi
+    
+    echo "$vendor|$family|$version"
+}
+
+# Function to get CPU family generation order (higher number = newer)
+get_cpu_family_generation() {
+    local family="$1"
+    case "$family" in
+        "penryn") echo "1" ;;
+        "nehalem") echo "2" ;;
+        "westmere") echo "3" ;;
+        "sandybridge") echo "4" ;;
+        "ivybridge") echo "5" ;;
+        "haswell") echo "6" ;;
+        "broadwell") echo "7" ;;
+        "skylake") echo "8" ;;
+        "cascadelake") echo "9" ;;
+        *) echo "0" ;;
+    esac
+}
+
+# Function to compare CPU model versions (higher number = newer)
+compare_cpu_versions() {
+    local version1="$1"
+    local version2="$2"
+    local family1="$3"
+    local family2="$4"
+    
+    # Handle empty versions
+    if [[ -z "$version1" && -z "$version2" ]]; then
+        return 0
+    elif [[ -z "$version1" ]]; then
+        return 1
+    elif [[ -z "$version2" ]]; then
+        return 0
+    fi
+    
+    # For numeric versions, higher number is newer
+    if [[ "$version1" =~ ^[0-9]+$ && "$version2" =~ ^[0-9]+$ ]]; then
+        if [[ "$version1" -gt "$version2" ]]; then
+            return 0
+        elif [[ "$version1" -lt "$version2" ]]; then
+            return 1
+        else
+            return 0
+        fi
+    fi
+    
+    # For non-numeric versions, use string comparison
+    if [[ "$version1" > "$version2" ]]; then
+        return 0
+    else
+        return 1
+    fi
+}
+
+# Function to compare CPU models (considers both family generation and version)
+compare_cpu_models() {
+    local model1="$1"
+    local model2="$2"
+    
+    local parsed1=$(parse_cpu_model "$model1")
+    local vendor1=$(echo "$parsed1" | cut -d'|' -f1)
+    local family1=$(echo "$parsed1" | cut -d'|' -f2)
+    local version1=$(echo "$parsed1" | cut -d'|' -f3)
+    
+    local parsed2=$(parse_cpu_model "$model2")
+    local vendor2=$(echo "$parsed2" | cut -d'|' -f1)
+    local family2=$(echo "$parsed2" | cut -d'|' -f2)
+    local version2=$(echo "$parsed2" | cut -d'|' -f3)
+    
+    # Must be same vendor
+    if [[ "$vendor1" != "$vendor2" ]]; then
+        return 1
+    fi
+    
+    # Compare family generations first
+    local gen1=$(get_cpu_family_generation "$family1")
+    local gen2=$(get_cpu_family_generation "$family2")
+    
+    if [[ "$gen1" -gt "$gen2" ]]; then
+        return 0
+    elif [[ "$gen1" -lt "$gen2" ]]; then
+        return 1
+    fi
+    
+    # Same family, compare versions
+    compare_cpu_versions "$version1" "$version2" "$family1" "$family2"
+}
+
+# Find newest Intel and AMD models from common models
+find_newest_models() {
+    local newest_intel=""
+    local newest_amd=""
+    
+    for model in $COMMON_MODELS; do
+        local parsed=$(parse_cpu_model "$model")
+        local vendor=$(echo "$parsed" | cut -d'|' -f1)
+        local family=$(echo "$parsed" | cut -d'|' -f2)
+        local version=$(echo "$parsed" | cut -d'|' -f3)
+        
+        if [[ "$DEBUG_MODE" == "true" ]]; then
+            echo "  DEBUG: $model -> vendor=$vendor, family=$family, version=$version"
+        fi
+        
+        if [[ "$vendor" == "intel" ]]; then
+            if [[ -z "$newest_intel" ]] || compare_cpu_models "$model" "$newest_intel"; then
+                newest_intel="$model"
+            fi
+        elif [[ "$vendor" == "amd" ]]; then
+            if [[ -z "$newest_amd" ]] || compare_cpu_models "$model" "$newest_amd"; then
+                newest_amd="$model"
+            fi
+        fi
+    done
+    
+    echo "$newest_intel|$newest_amd"
+}
+
+# Display results
+echo "=== RESULTS ==="
+echo ""
+
+if [[ -z "$COMMON_MODELS" ]]; then
+    echo "No common CPU models found across all nodes."
+    echo ""
+    echo "All CPU models found in the cluster:"
+    for model in "${!ALL_CPU_MODELS[@]}"; do
+        echo "  - $model"
+    done | sort
+else
+    echo "Common CPU models across all nodes:"
+    for model in $COMMON_MODELS; do
+        echo "  - $model"
+    done | sort
+    
+    echo ""
+    echo "=== NEWEST MODELS ==="
+    
+    # Find newest Intel and AMD models
+    newest_models=$(find_newest_models)
+    newest_intel=$(echo "$newest_models" | cut -d'|' -f1)
+    newest_amd=$(echo "$newest_models" | cut -d'|' -f2)
+    
+    if [[ -n "$newest_intel" ]]; then
+        echo "Newest Intel model: $newest_intel"
+    else
+        echo "No Intel models found in common models"
+    fi
+    
+    if [[ -n "$newest_amd" ]]; then
+        echo "Newest AMD model: $newest_amd"
+    else
+        echo "No AMD models found in common models"
+    fi
+fi
+
+echo ""
+echo "Summary:"
+echo "  Total nodes: $(echo $NODES | wc -w)"
+echo "  Total unique CPU models: ${#ALL_CPU_MODELS[@]}"
+echo "  Common CPU models: $(echo $COMMON_MODELS | wc -w)"
+```

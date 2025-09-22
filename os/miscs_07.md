@@ -7907,3 +7907,30 @@ echo "  Total nodes: $(echo $NODES | wc -w)"
 echo "  Total unique CPU models: ${#ALL_CPU_MODELS[@]}"
 echo "  Common CPU models: $(echo $COMMON_MODELS | wc -w)"
 ```
+
+### 设置集群的defaultCPUModel
+https://docs.okd.io/4.15/virt/virtual_machines/advanced_vm_management/virt-configuring-default-cpu-model.html
+https://www.qemu.org/docs/master/system/qemu-cpu-models.html
+```
+### 设置集群的defaultCPUModel
+### https://www.qemu.org/docs/master/system/qemu-cpu-models.html
+
+oc patch hyperconverged kubevirt-hyperconverged -n openshift-cnv --type='json' -p='
+[
+  {
+    "op": "add",
+    "path": "/spec/defaultCPUModel",
+    "value": "IvyBridge-v1"
+  }
+]
+'
+oc patch hyperconverged kubevirt-hyperconverged -n openshift-cnv --type='json' -p='
+[
+  {
+    "op": "replace",
+    "path": "/spec/defaultCPUModel",
+    "value": "IvyBridge-v1"
+  }
+]
+'
+```

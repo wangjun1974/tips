@@ -1,0 +1,116 @@
+
+安装 csi-driver-nfs
+
+拷贝镜像到本地镜像仓库
+skopeo copy --format v2s2 --all dir:/tmp/csi-driver-nfs/livenessprobe docker://helper.ocp.mtr.com.cn:5000/sig-storage/livenessprobe:v2.15.0
+skopeo copy --format v2s2 --all dir:/tmp/csi-driver-nfs/csi-node-driver-registrar docker://helper.ocp.mtr.com.cn:5000/sig-storage/csi-node-driver-registrar:v2.13.0
+skopeo copy --format v2s2 --all dir:/tmp/csi-driver-nfs/nfsplugin docker://helper.ocp.mtr.com.cn:5000/sig-storage/nfsplugin:v4.11.0
+skopeo copy --format v2s2 --all dir:/tmp/csi-driver-nfs/csi-provisioner docker://helper.ocp.mtr.com.cn:5000/sig-storage/csi-provisioner:v5.2.0
+skopeo copy --format v2s2 --all dir:/tmp/csi-driver-nfs/csi-resizer docker://helper.ocp.mtr.com.cn:5000/sig-storage/csi-resizer:v1.13.1
+skopeo copy --format v2s2 --all dir:/tmp/csi-driver-nfs/csi-snapshotter docker://helper.ocp.mtr.com.cn:5000/sig-storage/csi-snapshotter:v8.2.0
+skopeo copy --format v2s2 --all dir:/tmp/csi-driver-nfs/snapshot-controller docker://helper.ocp.mtr.com.cn:5000/sig-storage/snapshot-controller:v8.2.0
+
+创建 values.yaml 文件，根据实际情况填写
+### storageClass.parameters.server
+### storageClass.parameters.share
+### nfs服务器需配置share的默认userid和groupid为107(qemu:qemu)
+
+
+
+cat <<'EOF' > values.yaml
+---
+image:
+    baseRepo: registry.ocp4.example.com
+    nfs:
+        repository: helper.ocp.mtr.com.cn:5000/sig-storage/nfsplugin
+        tag: v4.11.0
+        pullPolicy: IfNotPresent
+    csiProvisioner:
+        repository: helper.ocp.mtr.com.cn:5000/sig-storage/csi-provisioner
+        tag: v5.2.0
+        pullPolicy: IfNotPresent
+    csiResizer:
+        repository: helper.ocp.mtr.com.cn:5000/sig-storage/csi-resizer
+        tag: v1.13.1
+        pullPolicy: IfNotPresent
+    csiSnapshotter:
+        repository: helper.ocp.mtr.com.cn:5000/sig-storage/csi-snapshotter
+        tag: v8.2.0
+        pullPolicy: IfNotPresent
+    livenessProbe:
+        repository: helper.ocp.mtr.com.cn:5000/sig-storage/livenessprobe
+        tag: v2.15.0
+        pullPolicy: IfNotPresent
+    nodeDriverRegistrar:
+        repository: helper.ocp.mtr.com.cn:5000/sig-storage/csi-node-driver-registrar
+        tag: v2.13.0
+        pullPolicy: IfNotPresent
+    externalSnapshotter:
+        repository: helper.ocp.mtr.com.cn:5000/sig-storage/snapshot-controller
+        tag: v8.2.0
+        pullPolicy: IfNotPresent
+
+controller:
+  resources:
+    csiProvisioner:
+      limits:
+        memory: 1024Mi
+    csiSnapshotter:
+      limits:
+        memory: 1024Mi
+    livenessProbe:
+      limits:
+        memory: 1024Mi
+    nfs:
+      limits:
+        memory: 1024Mi
+
+externalSnapshotter:
+  enabled: true
+  customResourceDefinitions:
+    enabled: false
+
+## StorageClass resource example:
+storageClass:
+  create: true
+  name: nfs-csi
+  annotations:
+    storageclass.kubevirt.io/is-default-virt-class: "true"
+    storageclass.kubernetes.io/is-default-class: "true"
+  parameters:
+    server: 10.120.88.123
+    share: /var/nfsshare
+    subDir: ${pvc.metadata.namespace}-${pvc.metadata.name}-${pv.metadata.name}
+    mountPermissions: '0777'
+
+
+安装 csi-driver-nfs helm charts
+$ oc new-project csi-driver-nfs
+$ oc label namespace csi-driver-nfs pod-security.kubernetes.io/audit=privileged pod-security.kubernetes.io/enforce=privileged pod-security.kubernetes.io/warn=privileged --overwrite=true
+
+
+$ helm install \
+  csi-driver-nfs \
+  --namespace csi-driver-nfs \
+  --version v4.11.0 \
+  --values values.yaml \
+  csi-driver-nfs-4.11.0.tgz
+
+为用户添加scc
+$ oc adm policy add-scc-to-user privileged -z csi-nfs-node-sa -n csi-driver-nfs
+$ oc adm policy add-scc-to-user privileged -z csi-nfs-controller-sa -n csi-driver-nfs
+
+$ oc rollout restart deployment csi-nfs-controller -n csi-driver-nfs
+$ oc rollout restart daemonset csi-nfs-node -n csi-driver-nfs
+
+$ oc get events -n csi-driver-nfs
+$ oc get pods -n csi-driver-nfs
+
+
+创建VolumeSnapshotClass
+apiVersion: snapshot.storage.k8s.io/v1
+kind: VolumeSnapshotClass
+metadata:
+  name: nfs-snapshot-class
+driver: nfs.csi.k8s.io
+deletionPolicy: Delete

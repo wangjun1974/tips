@@ -7943,3 +7943,21 @@ oc patch hyperconverged kubevirt-hyperconverged -n openshift-cnv --type='json' -
 ]
 '
 ```
+
+### 卸载时检查validationwebhookconfiguration
+```
+### 查询validatingwebhookconfiguration，选择webhooks[].name等于kubevirt-validator.kubevirt.io的validatingwebhookconfiguration，输出validatingwebhookconfiguration的metadata.name
+$ oc get validatingwebhookconfiguration -ojson | jq -r '.items[] | select(.webhooks[].name=="kubevirt-validator.kubevirt.io") | .metadata.name'
+
+### 查询validatingwebhookconfiguration，遍历所有webhooks[]，检查.name包含kubevirt.io的validatingwebhookconfiguration，输出validatingwebhookconfiguration的metadata.name
+$ oc get validatingwebhookconfiguration -o json | jq -r '.items[] | select(any(.webhooks[]; .name | test("kubevirt\\.io"))) | .metadata.name'
+
+### 查询mutatingwebhookconfiguration，遍历所有webhooks[]，检查.name包含kubevirt.io的mutatingwebhookconfiguration，输出mutatingwebhookconfiguration的metadata.name
+$ oc get mutatingwebhookconfiguration -o json | jq -r '.items[] | select(any(.webhooks[]; .name | test("kubevirt\\.io"))) | .metadata.name'
+
+### 查询mutatingwebhookconfiguration，检查具有标签app.kubernetes.io/part-of=hyperconverged-cluster的mutatingwebhookconfiguration
+$ oc get mutatingwebhookconfiguration -lapp.kubernetes.io/part-of=hyperconverged-cluster
+
+### 查询validatingwebhookconfiguration，检查具有标签app.kubernetes.io/part-of=hyperconverged-cluster的validatingwebhookconfiguration
+$ oc get validatingwebhookconfiguration -lapp.kubernetes.io/part-of=hyperconverged-cluster
+```

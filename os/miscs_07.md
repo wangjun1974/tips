@@ -7982,7 +7982,7 @@ Password:
 
 ### 生成的passwdhash放在machineconfig里，用双引号包围
 
-cat <<EOF | oc apply -f -
+cat <<'EOF' | oc apply -f -
 apiVersion: machineconfiguration.openshift.io/v1
 kind: MachineConfig
 metadata:
@@ -7999,7 +7999,7 @@ spec:
         passwordHash: "<password-hash-remove>"
 EOF
 
-cat <<EOF | oc apply -f -
+cat <<'EOF' | oc apply -f -
 apiVersion: machineconfiguration.openshift.io/v1
 kind: MachineConfig
 metadata:

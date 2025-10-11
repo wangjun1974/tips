@@ -7972,3 +7972,24 @@ Password:
 Verifying - Password: 
 $6$SXXj.Gzz6n73EfKz$.j0OR1tWM8A70dPginx9OgawmHbLph0YOcKSpTzZWlcbJ17v3zEWk2NtMSM7MDRNe9RFcSVxtAFWxy0CHU2Pm.
 ```
+
+### 为 core 用户设置 hashed passwd
+https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html-single/machine_configuration/index
+```
+cat <<EOF | oc apply -f -
+apiVersion: machineconfiguration.openshift.io/v1
+kind: MachineConfig
+metadata:
+  labels:
+    machineconfiguration.openshift.io/role: master
+  name: 99-master-set-core-user-password
+spec:
+  config:
+    ignition:
+      version: 3.4.0
+    passwd:
+      users:
+      - name: core 
+        passwordHash: $6$SXXj.Gzz6n73EfKz$.j0OR1tWM8A70dPginx9OgawmHbLph0YOcKSpTzZWlcbJ17v3zEWk2NtMSM7MDRNe9RFcSVxtAFWxy0CHU2Pm.
+EOF
+```

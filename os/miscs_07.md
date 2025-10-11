@@ -7961,3 +7961,14 @@ $ oc get mutatingwebhookconfiguration -lapp.kubernetes.io/part-of=hyperconverged
 ### 查询validatingwebhookconfiguration，检查具有标签app.kubernetes.io/part-of=hyperconverged-cluster的validatingwebhookconfiguration
 $ oc get validatingwebhookconfiguration -lapp.kubernetes.io/part-of=hyperconverged-cluster
 ```
+
+### 生成 hashed passwd 的命令
+https://access.redhat.com/solutions/221403
+```
+https://access.redhat.com/solutions/221403
+$ openssl passwd -help 2>&1 | grep SHA
+$ openssl passwd -6
+Password: 
+Verifying - Password: 
+$6$SXXj.Gzz6n73EfKz$.j0OR1tWM8A70dPginx9OgawmHbLph0YOcKSpTzZWlcbJ17v3zEWk2NtMSM7MDRNe9RFcSVxtAFWxy0CHU2Pm.
+```

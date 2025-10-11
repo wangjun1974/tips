@@ -7976,6 +7976,12 @@ $6$SXXj.Gzz6n73EfKz$.j0OR1tWM8A70dPginx9OgawmHbLph0YOcKSpTzZWlcbJ17v3zEWk2NtMSM7
 ### 为 core 用户设置 hashed passwd
 https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html-single/machine_configuration/index
 ```
+podman run --rm -it --entrypoint /bin/sh quay.io/coreos/mkpasswd:latest
+sh-5.2# mkpasswd -m SHA-512
+Password: 
+
+### 生成的passwdhash放在machineconfig里，用单引号包围
+
 cat <<EOF | oc apply -f -
 apiVersion: machineconfiguration.openshift.io/v1
 kind: MachineConfig
@@ -7990,6 +7996,6 @@ spec:
     passwd:
       users:
       - name: core 
-        passwordHash: $6$SXXj.Gzz6n73EfKz$.j0OR1tWM8A70dPginx9OgawmHbLph0YOcKSpTzZWlcbJ17v3zEWk2NtMSM7MDRNe9RFcSVxtAFWxy0CHU2Pm.
+        passwordHash: '<password-hash-remove>'
 EOF
 ```

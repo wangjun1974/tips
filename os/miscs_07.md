@@ -7980,7 +7980,7 @@ podman run --rm -it --entrypoint /bin/sh quay.io/coreos/mkpasswd:latest
 sh-5.2# mkpasswd -m SHA-512
 Password: 
 
-### 生成的passwdhash放在machineconfig里，用单引号包围
+### 生成的passwdhash放在machineconfig里，用双引号包围
 
 cat <<EOF | oc apply -f -
 apiVersion: machineconfiguration.openshift.io/v1
@@ -7996,6 +7996,27 @@ spec:
     passwd:
       users:
       - name: core 
-        passwordHash: '<password-hash-remove>'
+        passwordHash: "<password-hash-remove>"
 EOF
+
+cat <<EOF | oc apply -f -
+apiVersion: machineconfiguration.openshift.io/v1
+kind: MachineConfig
+metadata:
+  labels:
+    machineconfiguration.openshift.io/role: worker
+  name: 99-worker-set-core-user-password
+spec:
+  config:
+    ignition:
+      version: 3.4.0
+    passwd:
+      users:
+      - name: core 
+        passwordHash: "<password-hash-remove>"
+EOF
+
+oc debug node/master1.ocp.ap.vwg -q -- chroot /host cat /etc/shadow | grep core
+oc debug node/worker1.ocp.ap.vwg -q -- chroot /host cat /etc/shadow | grep core
+
 ```

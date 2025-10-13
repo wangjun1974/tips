@@ -8109,9 +8109,11 @@ metadata:
   generateName: test-
   namespace: openshift-adp
 spec:
+  csiSnapshotTimeout: 10m0s
+  defaultVolumesToFsBackup: false
   includedNamespaces:
   - test
-  snapshotVolumes: false
+  snapshotVolumes: true
   snapshotMoveData: true
   storageLocation: velero-sample-1
   ttl: 72h0m0s

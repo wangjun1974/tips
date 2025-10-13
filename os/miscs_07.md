@@ -8097,6 +8097,9 @@ spec:
     - EnableCSI
 EOF
 
+
+# https://docs.okd.io/4.18/backup_and_restore/application_backup_and_restore/installing/oadp-backup-restore-csi-snapshots.html#oadp-1-3-backing-csi-snapshots_oadp-backup-restore-csi-snapshots
+
 cat <<EOF | oc create -f -
 apiVersion: velero.io/v1
 kind: Backup

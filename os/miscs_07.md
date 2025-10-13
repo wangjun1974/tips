@@ -8074,7 +8074,7 @@ spec:
         profile: default
         region: minio
         s3ForcePathStyle: "true"
-        s3Url: http://minio.velero.svc:9000
+        s3Url: http://minio-velero.apps.ocp.ap.vwg
       credential:
         key: cloud
         name: cloud-credentials
@@ -8126,7 +8126,7 @@ metadata:
   name: restore-test
   namespace: openshift-adp
 spec:
-  backupName: test-n2gt4
+  backupName: test-49wh5
   excludedResources:
     - nodes
     - events
@@ -8138,9 +8138,18 @@ spec:
 EOF
 
 ### 下载 velero 的地址
-https://github.com/vmware-tanzu/velero/releases/tag/v1.12.2
+https://github.com/vmware-tanzu/velero/releases/tag/v1.14.1
 
-oc rsh <velero-pod> ./velero
+$ oc rsh <velero-pod> ./velero
 
+$ velero -n openshift-adp get backups
+
+$ velero -n openshift-adp describe backups test-49wh5 --details
+
+$ velero get restores -n openshift-adp 
+NAME           BACKUP       STATUS      STARTED                         COMPLETED                       ERRORS   WARNINGS   CREATED                         SELECTOR
+restore-test   test-49wh5   Completed   2025-10-13 16:01:03 +0800 CST   2025-10-13 16:04:00 +0800 CST   0        10         2025-10-13 16:01:03 +0800 CST   <none>
+
+$ velero describe restores restore-test -n openshift-adp
 
 ```

@@ -8166,3 +8166,10 @@ restore-test   test-49wh5   Completed   2025-10-13 16:01:03 +0800 CST   2025-10-
 $ velero describe restores restore-test -n openshift-adp
 
 ```
+
+### 关于 SPIFFE 和 SPIRE 的介绍系列
+https://medium.com/@huang195/developer-friendly-zero-trust-using-spiffe-spire-part-1-introduction-a184cbdaf67e 
+https://medium.com/@huang195/developer-friendly-zero-trust-using-spiffe-spire-part-2-spiffe-helper-0b5495159336
+https://medium.com/@huang195/developer-friendly-zero-trust-using-spiffe-spire-part-3-seccomp-unotify-2cdf3da86033
+https://medium.com/@huang195/developer-friendly-zero-trust-using-spiffe-spire-part-4-container-lifecycle-hooks-0375881bd88a
+https://medium.com/@huang195/developer-friendly-zero-trust-using-spiffe-spire-part-5-container-storage-interface-csi-6119770cdfea

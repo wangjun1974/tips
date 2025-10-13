@@ -8100,6 +8100,19 @@ EOF
 oc get dpa -A 
 oc get backupstoragelocations -A 
 
+oc get storageclass
+NAME                PROVISIONER      RECLAIMPOLICY   VOLUMEBINDINGMODE   ALLOWVOLUMEEXPANSION   AGE
+nfs-csi (default)   nfs.csi.k8s.io   Delete          Immediate           true                   169d
+
+oc get volumestorageclass
+NAME                 DRIVER           DELETIONPOLICY   AGE
+nfs-snapshot-class   nfs.csi.k8s.io   Delete           60d
+
+2. add label to VolumeSnapshotClass 
+oc label volumesnapshotclass nfs-snapshot-class velero.io/csi-volumesnapshot-class=true
+oc patch volumesnapshotclass nfs-snapshot-class --type=merge -p '{"deletionPolicy": "Retain"}'
+
+
 # https://docs.okd.io/4.18/backup_and_restore/application_backup_and_restore/installing/oadp-backup-restore-csi-snapshots.html#oadp-1-3-backing-csi-snapshots_oadp-backup-restore-csi-snapshots
 
 cat <<EOF | oc create -f -

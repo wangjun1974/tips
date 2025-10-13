@@ -8173,3 +8173,6 @@ https://medium.com/@huang195/developer-friendly-zero-trust-using-spiffe-spire-pa
 https://medium.com/@huang195/developer-friendly-zero-trust-using-spiffe-spire-part-3-seccomp-unotify-2cdf3da86033
 https://medium.com/@huang195/developer-friendly-zero-trust-using-spiffe-spire-part-4-container-lifecycle-hooks-0375881bd88a
 https://medium.com/@huang195/developer-friendly-zero-trust-using-spiffe-spire-part-5-container-storage-interface-csi-6119770cdfea
+
+### 零信任安全：SPIFFE 和 SPIRE 通用身份验证的标准和实现
+https://atbug.com/what-is-spiffe-and-spire/

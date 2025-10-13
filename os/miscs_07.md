@@ -8020,3 +8020,113 @@ oc debug node/master1.ocp.ap.vwg -q -- chroot /host cat /etc/shadow | grep core
 oc debug node/worker1.ocp.ap.vwg -q -- chroot /host cat /etc/shadow | grep core
 
 ```
+
+### Backup and Restore vm
+https://portal.nutanix.com/page/documents/solutions/details?targetId=TN-2030-Red-Hat-OpenShift-on-Nutanix:applications.html
+```
+skopeo copy --format v2s2 --all dir:/tmp/minio/minio docker://helper.ocp.ap.vwg:5000/minio/minio:latest  
+skopeo copy --format v2s2 --all dir:/tmp/minio/mc docker://helper.ocp.ap.vwg:5000/minio/mc:latest
+
+
+tar zxvf github-velero.tar.gz
+cd velero/examples/minio/
+# edit /tmp/velero/examples/minio/00-minio-deployment.yaml
+[root@helper minio]# cat 00-minio-deployment.yaml | grep "image: "
+        image: helper.ocp.ap.vwg:5000/minio/minio:latest
+        image: helper.ocp.ap.vwg:5000/minio/mc:latest
+
+oc apply -f ./00-minio-deployment.yaml
+oc get pods
+oc expose svc/minio
+
+unzip awscliv2.zip
+sudo ./aws/install
+
+aws --endpoint=http://$(oc get route -n velero minio -o json | jq -r .spec.host) s3 ls
+aws --endpoint=http://$(oc get route -n velero minio -o jsonpath='{.spec.host}') s3 ls
+aws --endpoint=http://$(oc get route -n velero minio -o jsonpath='{.spec.host}') s3 mb s3://oadp-backups 
+aws --endpoint=http://$(oc get route -n velero minio -o jsonpath='{.spec.host}') s3 ls
+
+NAMESPACE=openshift-adp
+
+export ACCESS_KEY='minio'
+export SECRET_KEY='minio123'
+
+cat << EOF > ./credentials-velero
+[default]
+aws_access_key_id=${ACCESS_KEY}
+aws_secret_access_key=${SECRET_KEY}
+EOF
+
+oc create secret generic cloud-credentials -n openshift-adp --from-file cloud=credentials-velero
+
+cat <<EOF | oc apply -f -
+apiVersion: oadp.openshift.io/v1alpha1
+kind: DataProtectionApplication
+metadata:
+  name: velero-sample
+  namespace: openshift-adp
+spec:
+  backupLocations:
+  - velero:
+      config:
+        insecureSkipTLSVerify: "true"
+        profile: default
+        region: minio
+        s3ForcePathStyle: "true"
+        s3Url: http://minio.velero.svc:9000
+      credential:
+        key: cloud
+        name: cloud-credentials
+      default: true
+      objectStorage:
+        bucket: oadp-backups
+        prefix: velero
+      provider: aws
+  configuration:
+    nodeAgent:
+      enable: true
+      uploaderType: kopia
+    velero:
+      defaultPlugins:
+      - openshift
+      - aws
+      - csi
+      - kubevirt
+    featureFlags:
+    - EnableCSI
+EOF
+
+cat <<EOF | oc create -f -
+apiVersion: velero.io/v1
+kind: Backup
+metadata:
+  generateName: test-
+  namespace: openshift-adp
+spec:
+  includedNamespaces:
+  - test
+  snapshotVolumes: false
+  snapshotMoveData: true
+  storageLocation: velero-sample-1
+  ttl: 72h0m0s
+EOF
+
+cat <<EOF | oc create -f -
+apiVersion: velero.io/v1
+kind: Restore
+metadata:
+  name: restore-test
+  namespace: openshift-adp
+spec:
+  backupName: test-n2gt4
+  excludedResources:
+    - nodes
+    - events
+    - events.events.k8s.io
+    - backups.velero.io
+    - restores.velero.io
+    - resticrepositories.velero.io
+  restorePVs: true
+EOF
+```

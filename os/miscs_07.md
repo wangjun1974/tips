@@ -8097,6 +8097,8 @@ spec:
     - EnableCSI
 EOF
 
+oc get dpa -A 
+oc get backupstoragelocations -A 
 
 # https://docs.okd.io/4.18/backup_and_restore/application_backup_and_restore/installing/oadp-backup-restore-csi-snapshots.html#oadp-1-3-backing-csi-snapshots_oadp-backup-restore-csi-snapshots
 
@@ -8132,4 +8134,11 @@ spec:
     - resticrepositories.velero.io
   restorePVs: true
 EOF
+
+### 下载 velero 的地址
+https://github.com/vmware-tanzu/velero/releases/tag/v1.12.2
+
+oc rsh <velero-pod> ./velero
+
+
 ```

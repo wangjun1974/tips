@@ -8176,3 +8176,6 @@ https://medium.com/@huang195/developer-friendly-zero-trust-using-spiffe-spire-pa
 
 ### 零信任安全：SPIFFE 和 SPIRE 通用身份验证的标准和实现
 https://atbug.com/what-is-spiffe-and-spire/
+
+### redhat servicemesh3 安装
+https://docs.redhat.com/en/documentation/red_hat_openshift_service_mesh/3.1/html/installing/ossm-installing-service-mesh

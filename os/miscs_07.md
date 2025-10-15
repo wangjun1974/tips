@@ -8212,3 +8212,10 @@ pc-q35-rhel8.0.0     RHEL-8.0.0 PC (Q35 + ICH9, 2009) (deprecated)
 pc-q35-rhel7.6.0     RHEL-7.6.0 PC (Q35 + ICH9, 2009) (deprecated)
 none                 empty machine
 ```
+
+### RHEL/CentOS 6 VM doesn't start after migration
+
+https://access.redhat.com/solutions/6672391
+```
+$ oc patch vm ${VM_NAME} --type='json' -p='[{"op": "add", "path": "/spec/template/spec/domain/devices/useVirtioTransitional", "value": true }]' -n ${VM_NAMESPACE}
+```

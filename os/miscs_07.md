@@ -8182,3 +8182,12 @@ https://docs.redhat.com/en/documentation/red_hat_openshift_service_mesh/3.1/html
 
 ### 安装 red hat service mesh 3 和 kiali 以及 openshift-monitoring
 https://medium.com/kialiproject/installing-openshift-service-mesh-3-with-kiali-and-openshift-monitoring-584cbddb8c24
+
+### 为 OpenShift Virtualization 增加 machine type
+https://access.redhat.com/solutions/6571471
+```
+### /spec/configuration/architectureConfiguration/amd64/emulatedMachines 里增加 pc-i440fx-rhel7.6.0
+$ oc annotate --overwrite -n openshift-cnv hco kubevirt-hyperconverged   kubevirt.kubevirt.io/jsonpatch='[ {"op": "add", "path": "/spec/configuration/architectureConfiguration", "value": {} },  {"op": "add", "path": "/spec/configuration/architectureConfiguration/amd64", "value": {} },{"op": "add", "path": "/spec/configuration/architectureConfiguration/amd64/emulatedMachines", "value": ["q35*", "pc-q35*", "pc-i440fx-rhel7.6.0"] } ]'
+
+$ oc get kv kubevirt-kubevirt-hyperconverged -n openshift-cnv -o yaml  | grep -A 3 emulated
+```

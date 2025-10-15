@@ -8179,3 +8179,6 @@ https://atbug.com/what-is-spiffe-and-spire/
 
 ### redhat servicemesh3 安装
 https://docs.redhat.com/en/documentation/red_hat_openshift_service_mesh/3.1/html/installing/ossm-installing-service-mesh
+
+### 安装 red hat service mesh 3 和 kiali 以及 openshift-monitoring
+https://medium.com/kialiproject/installing-openshift-service-mesh-3-with-kiali-and-openshift-monitoring-584cbddb8c24

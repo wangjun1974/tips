@@ -8222,3 +8222,4 @@ $ oc patch vm ${VM_NAME} --type='json' -p='[{"op": "add", "path": "/spec/templat
 
 ### Red Hat Service Mesh 3 w/ OpenTelemetry, Grafana Tempo, Kiali
 https://medium.com/kialiproject/installing-openshift-service-mesh-3-tp1-with-kiali-and-grafana-tempo-6b76881ceaef
+https://github.com/michaelalang/ossm-distributed-tracing

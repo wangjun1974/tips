@@ -8219,3 +8219,6 @@ https://access.redhat.com/solutions/6672391
 ```
 $ oc patch vm ${VM_NAME} --type='json' -p='[{"op": "add", "path": "/spec/template/spec/domain/devices/useVirtioTransitional", "value": true }]' -n ${VM_NAMESPACE}
 ```
+
+### Red Hat Service Mesh 3 w/ OpenTelemetry, Grafana Tempo, Kiali
+https://medium.com/kialiproject/installing-openshift-service-mesh-3-tp1-with-kiali-and-grafana-tempo-6b76881ceaef

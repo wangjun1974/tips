@@ -8223,3 +8223,27 @@ $ oc patch vm ${VM_NAME} --type='json' -p='[{"op": "add", "path": "/spec/templat
 ### Red Hat Service Mesh 3 w/ OpenTelemetry, Grafana Tempo, Kiali
 https://medium.com/kialiproject/installing-openshift-service-mesh-3-tp1-with-kiali-and-grafana-tempo-6b76881ceaef
 https://github.com/michaelalang/ossm-distributed-tracing
+
+### OpenShift AI 如何与 Service Mesh 3 并存在一个 Cluster 里
+https://developers.redhat.com/articles/2025/07/16/how-deploy-openshift-ai-service-mesh-3-one-cluster#testing_and_validation
+```
+### 安装测试 Service Mesh 3 
+git clone https://github.com/bugbiteme/ossm-3-demo.git
+cd ossm-3-demo
+git checkout rhoai-cluster
+
+oc login --token=sha256xxxx --server=https://api.xxx.com:6443
+oc get crd gateways.gateway.networking.k8s.io &> /dev/null ||  { oc kustomize "github.com/kubernetes-sigs/gateway-api/config/crd?ref=v1.0.0" | oc apply -f -; }
+
+sh install_ossm3_demo.sh
+Installing Minio for Tempo...
+Installing TempoCR...
+Installing OpenTelemetryCollector...
+Installing OSSM3...
+Installing IstioCR...
+Installing Kiali...
+Installing Bookinfo...
+...
+Ingress route for Bookinfo: http://istio-ingressgateway-istio-ingress.apps.xxxx.com/productpage  
+Kiali route: https://kiali-istio-system-3.apps.xxxx.com
+```

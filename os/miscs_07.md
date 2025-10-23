@@ -8247,3 +8247,100 @@ Installing Bookinfo...
 Ingress route for Bookinfo: http://istio-ingressgateway-istio-ingress.apps.xxxx.com/productpage  
 Kiali route: https://kiali-istio-system-3.apps.xxxx.com
 ```
+
+### 如何为虚拟机添加
+https://issues.redhat.com/browse/CNV-51056
+```
+$ oc get kubevirt -n openshift-cnv  kubevirt-kubevirt-hyperconverged -o jsonpath='{.spec.configuration.developerConfiguration.featureGates}'  | jq . 
+[
+  "CPUManager",
+  "Snapshot",
+  "HotplugVolumes",
+  "ExpandDisks",
+  "GPU",
+  "HostDevices",
+  "VMExport",
+  "DisableCustomSELinuxPolicy",
+  "KubevirtSeccompProfile",
+  "VMPersistentState",
+  "NetworkBindingPlugins",
+  "VMLiveUpdateFeatures",
+  "DynamicPodInterfaceNaming",
+  "VolumesUpdateStrategy",
+  "VolumeMigration",
+  "WithHostModelCPU",
+  "HypervStrictCheck"
+]
+
+$ oc annotate --overwrite -n openshift-cnv hco kubevirt-hyperconverged kubevirt.kubevirt.io/jsonpatch='[{"op": "add", "path": "/spec/configuration/developerConfiguration/featureGates/-", "value": "Sidecar" }]'
+
+$ oc get kubevirt -n openshift-cnv  kubevirt-kubevirt-hyperconverged -o jsonpath='{.spec.configuration.developerConfiguration.featureGates}'  | jq . 
+[
+  "CPUManager",
+  "Snapshot",
+  "HotplugVolumes",
+  "ExpandDisks",
+  "GPU",
+  "HostDevices",
+  "VMExport",
+  "DisableCustomSELinuxPolicy",
+  "KubevirtSeccompProfile",
+  "VMPersistentState",
+  "NetworkBindingPlugins",
+  "VMLiveUpdateFeatures",
+  "DynamicPodInterfaceNaming",
+  "VolumesUpdateStrategy",
+  "VolumeMigration",
+  "WithHostModelCPU",
+  "HypervStrictCheck",
+  "Sidecar"
+]
+
+$ cat <<EOF | oc apply -f -
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pcihole64
+  namespace: test4
+data:
+  pcihole64.py: |
+    #!/usr/bin/env python3
+    """
+    This module can be used as an onDefineDomain sidecar hook in KubeVirt to
+    ensure compatibility with Windows XP when using the q35 machine type.
+    """
+
+    import xml.etree.ElementTree as ET
+    import sys
+
+
+    def main(domain: str):
+        """
+        This function parses the domain XML passed in the domain argument, adds a
+        pcihole64 element with value 0 to every pcie-root controller and then
+        prints the modified XML to stdout.
+        """
+
+        xml = ET.ElementTree(ET.fromstring(domain))
+
+        controllers = xml.findall("./devices/controller[@model='pcie-root']")
+        for controller in controllers:
+            element = ET.Element("pcihole64", {"unit": "KiB"})
+            element.text = "0"
+            controller.insert(0, element)
+
+        ET.indent(xml)
+        xml.write(sys.stdout, encoding="unicode")
+
+
+    if __name__ == "__main__":
+        main(sys.argv[4])
+EOF
+
+$ oc get configmap -n test4 pcihole64 -o jsonpath='{.data.pcihole64\.py}'
+
+$ oc patch vm win2k3-test-01 -n test4 \
+  --type merge \
+  -p '{"spec":{"template":{"metadata":{"annotations":{"hooks.kubevirt.io/hookSidecars":"[{\"args\": [\"--version\", \"v1alpha3\"], \"configMap\": {\"name\": \"pcihole64\", \"key\": \"pcihole64.py\", \"hookPath\": \"/usr/bin/onDefineDomain\"}}]"}}}}}'
+
+```

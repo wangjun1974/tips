@@ -8344,3 +8344,16 @@ $ oc patch vm win2k3-test-01 -n test4 \
   -p '{"spec":{"template":{"metadata":{"annotations":{"hooks.kubevirt.io/hookSidecars":"[{\"args\": [\"--version\", \"v1alpha3\"], \"configMap\": {\"name\": \"pcihole64\", \"key\": \"pcihole64.py\", \"hookPath\": \"/usr/bin/onDefineDomain\"}}]"}}}}}'
 
 ```
+
+### memory overcommit 
+```
+$ oc -n openshift-cnv patch HyperConverged/kubevirt-hyperconverged --type='json' -p='[ \
+  { \
+  "op": "replace", \
+  "path": "/spec/higherWorkloadDensity/memoryOvercommitPercentage", \
+  "value": 150 \
+  } \
+]'
+hyperconverged.hco.kubevirt.io/kubevirt-hyperconverged patched
+$
+```

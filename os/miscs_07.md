@@ -8346,6 +8346,7 @@ $ oc patch vm win2k3-test-01 -n test4 \
 ```
 
 ### memory overcommit 
+https://developers.redhat.com/blog/2025/01/31/memory-management-openshift-virtualization#reservation_and_utilization
 ```
 $ oc -n openshift-cnv patch HyperConverged/kubevirt-hyperconverged --type='json' -p='[ \
   { \

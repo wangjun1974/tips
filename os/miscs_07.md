@@ -8366,3 +8366,15 @@ https://github.com/kubevirt/common-templates/blob/master/templates/rhel7.tpl.yam
 需要设置
 spec.template.spec.domain.devices.useVirtioTransitional: true
 ```
+
+### RHEL4 MTV迁移后处理
+```
+### 1. 用 RHEL 4 ISO启动
+### 2. 进入恢复模式 linux rescure
+### 3. chroot /mnt/sysimage
+
+### 4. 创建带sata驱动的initrd
+mkinitrd --preload=sr_mod --preload=sd_mod --preload=scsi_mod --preload=achi --preload=libata /boot/initrd-$(uname -r).img $(uname -r)
+
+mkinitrd --preload=sr_mod --preload=sd_mod --preload=scsi_mod --preload=achi --preload=libata /boot/initrd-$(uname -r)smp.img $(uname -r)smp
+```

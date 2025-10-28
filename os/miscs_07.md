@@ -8358,3 +8358,11 @@ $ oc -n openshift-cnv patch HyperConverged/kubevirt-hyperconverged --type='json'
 hyperconverged.hco.kubevirt.io/kubevirt-hyperconverged patched
 $
 ```
+
+### CentOS6 Template
+https://github.com/kubevirt/common-templates/blob/master/templates/centos6.tpl.yaml
+https://github.com/kubevirt/common-templates/blob/master/templates/rhel7.tpl.yaml
+```
+需要设置
+spec.template.spec.domain.devices.useVirtioTransitional: true
+```

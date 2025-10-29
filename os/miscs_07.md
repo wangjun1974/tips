@@ -8367,7 +8367,7 @@ https://github.com/kubevirt/common-templates/blob/master/templates/rhel7.tpl.yam
 spec.template.spec.domain.devices.useVirtioTransitional: true
 ```
 
-### RHEL4 MTV迁移后处理
+### RHEL4/5 MTV迁移后处理
 ```
 ### 1. 用 RHEL 4 ISO启动
 ### 2. 进入恢复模式 linux rescure

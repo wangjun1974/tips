@@ -8385,8 +8385,8 @@ mkinitrd --preload=sr_mod --preload=sd_mod --preload=scsi_mod --preload=achi --p
 ### 2. 进入恢复模式 linux rescure
 ### 3. chroot /mnt/sysimage
 
-### 4. 创建带sata驱动的initrd
-mkinitrd --preload=sr_mod --preload=sd_mod --preload=scsi_mod --preload=achi --preload=libata /boot/initrd-2.6.18-398.el5-new.img 2.6.18-398.el5
+### 4. 创建带virtio，带sata驱动的initrd
+mkinitrd --preload=virtio-pci --preload=virtio-blk --preload=virtio-net --preload=virtio-ring --preload=sr_mod --preload=sd_mod --preload=scsi_mod --preload=achi --preload=libata /boot/initrd-2.6.18-398.el5-new.img 2.6.18-398.el5
 mv /boot/initrd-2.6.18-398.el5-new.img /boot/initrd-2.6.18-398.el5.img
 ```
 

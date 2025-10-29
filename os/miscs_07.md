@@ -8388,6 +8388,8 @@ mkinitrd --preload=sr_mod --preload=sd_mod --preload=scsi_mod --preload=achi --p
 ### 4. 创建带virtio，带sata驱动的initrd
 mkinitrd --preload=virtio-pci --preload=virtio-blk --preload=virtio-net --preload=virtio-ring --preload=sr_mod --preload=sd_mod --preload=scsi_mod --preload=achi --preload=libata /boot/initrd-2.6.18-398.el5-new.img 2.6.18-398.el5
 mv /boot/initrd-2.6.18-398.el5-new.img /boot/initrd-2.6.18-398.el5.img
+
+### RHEL5 virtio 驱动与 OpenShift Virtualization不兼容
 ```
 
 ### HDS VSP5500 static provision PV里VolumeHandle的写法

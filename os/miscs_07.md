@@ -8378,3 +8378,12 @@ mkinitrd --preload=sr_mod --preload=sd_mod --preload=scsi_mod --preload=achi --p
 
 mkinitrd --preload=sr_mod --preload=sd_mod --preload=scsi_mod --preload=achi --preload=libata /boot/initrd-$(uname -r)smp.img $(uname -r)smp
 ```
+
+### HDS VSP5500 static provision PV里VolumeHandle的写法
+```
+01--<IO-protocol>--<storagedevice-ID>--<LDEV-ID>--<LDEVnickname>
+The format of the nickname is spc-<10-digit-hexadecimal-number>.
+<LDEV-ID>Check these values by using the storage system management software. Specify a value by using a decimal number.
+
+volumeHandle: 01--scsi--886000416138--15--spc-20d9858ee1
+```

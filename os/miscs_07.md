@@ -8414,3 +8414,29 @@ The format of the nickname is spc-<10-digit-hexadecimal-number>.
 
 volumeHandle: 01--scsi--886000416138--15--spc-20d9858ee1
 ```
+
+### 从远程 HTTPS 服务提取 TLS 证书，创建 Kubernetes ConfigMap，将证书挂载到容器，动态更新 Deployment
+```
+### 这段命令链条展示了一个完整流程：从远程 HTTPS 服务提取 TLS 证书 → 创建 Kubernetes ConfigMap → 将证书挂载到容器 → 动态更新 Deployment。它用于让某个服务（如 Authorino）信任一个外部服务（如 Keycloak）的 TLS 证书，实现安全通信。
+$ echo quit | openssl s_client -showcerts -servername keycloak-eguzki.apps.dev-eng-ocp4-6-operator.dev.3sca.net -connect keycloak-eguzki.apps.dev-eng-ocp4-6-operator.dev.3sca.net:443 | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' > dev-eng-ocp4-6.pem
+
+$ kubectl create configmap ca-pemstore-dev-eng-ocp4-6 --from-file=dev-eng-ocp4-6.pem -n kuadrant-system 
+
+$ cat tls-deployment-patch.yaml
+spec:
+  template:
+    spec:
+      containers:
+      - name: manager
+        volumeMounts:
+        - name: ca-pemstore-dev-eng-ocp4-6
+          mountPath: /etc/ssl/certs/dev-eng-ocp4-6.pem
+          subPath: dev-eng-ocp4-6.pem
+          readOnly: false
+      volumes:
+      - name: ca-pemstore-dev-eng-ocp4-6
+        configMap:
+          name: ca-pemstore-dev-eng-ocp4-6
+
+$ kubectl patch deployment authorino-controller-manager --type=strategic --patch "$(cat tls-deployment-patch.yaml)" -n kuadrant-system
+```

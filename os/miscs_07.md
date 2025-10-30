@@ -8399,10 +8399,11 @@ mv /boot/initrd-2.6.18-398.el5-new.img /boot/initrd-2.6.18-398.el5.img
 ### 3. 设置 PATH export PATH=$PATH:/sbin:/bin:/usr/sbin:/usr/bin
 
 ### 4. 创建带virtio，带sata驱动的initrd
-mkinitrd --preload=virtio-pci --preload=virtio-blk --preload=virtio-net --preload=virtio-ring --preload=sd_mod --preload=achi /boot/initrd-2.6.32-754.el6-new.x86_64.img 2.6.32-754.el6.x86_64
+mkinitrd --preload=virtio_pci --preload=virtio_blk --preload=virtio_scsi --preload=virtio_net --preload=virtio_ring --preload=sd_mod --preload=achi /boot/initrd-2.6.32-754.el6-new.x86_64.img 2.6.32-754.el6.x86_64
 mv /boot/initrd-2.6.32-754.el6-new.x86_64.img /boot/initrd-2.6.32-754.el6.x86_64.img
 
 ### RHEL5 virtio 驱动与 OpenShift Virtualization不兼容
+### 需要把 Disk 从 DataVolume 改为 PVC
 ```
 
 ### HDS VSP5500 static provision PV里VolumeHandle的写法

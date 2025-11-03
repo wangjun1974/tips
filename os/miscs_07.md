@@ -8440,3 +8440,7 @@ spec:
 
 $ kubectl patch deployment authorino-controller-manager --type=strategic --patch "$(cat tls-deployment-patch.yaml)" -n kuadrant-system
 ```
+
+### old vmware tools
+https://archive.org/details/winPreVista 
+https://archive.org/details/darwin_202204

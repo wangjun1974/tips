@@ -8381,7 +8381,7 @@ mkinitrd --preload=sr_mod --preload=sd_mod --preload=scsi_mod --preload=achi --p
 
 ### RHEL5 MTV迁移后处理
 ```
-### 1. 用 RHEL 4 ISO启动
+### 1. 用 RHEL 5 ISO启动
 ### 2. 进入恢复模式 linux rescure
 ### 3. chroot /mnt/sysimage
 

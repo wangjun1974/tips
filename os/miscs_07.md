@@ -8444,3 +8444,7 @@ $ kubectl patch deployment authorino-controller-manager --type=strategic --patch
 ### old vmware tools
 https://archive.org/details/winPreVista 
 https://archive.org/details/darwin_202204
+
+
+### Leveraging Fiber Channel Protocol with Trident 25.02 for Persistent Storage on OpenShift 
+https://community.netapp.com/t5/Tech-ONTAP-Blogs/Leveraging-Fiber-Channel-Protocol-with-Trident-25-02-for-Persistent-Storage-on/ba-p/460091

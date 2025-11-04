@@ -8451,3 +8451,9 @@ https://community.netapp.com/t5/Tech-ONTAP-Blogs/Leveraging-Fiber-Channel-Protoc
 
 ### Trident configuration for on prem openshift cluster
 https://docs.netapp.com/us-en/netapp-solutions-virtualization/openshift/osv-trident-install.html#trident-configuration-for-on-prem-openshift-cluster
+
+### 配置 NetApp TridentBackendConfig
+https://access.redhat.com/articles/7091879#prepare-ocp-nodes-netapp
+```
+https://access.redhat.com/articles/7091879#prepare-ocp-nodes-netapp
+```

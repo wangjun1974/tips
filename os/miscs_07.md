@@ -8460,3 +8460,23 @@ https://access.redhat.com/articles/7091879#prepare-ocp-nodes-netapp
 
 ### firefox in Podman
 https://github.com/grzegorzk/ff_in_podman/tree/main
+
+### run firefox in docker container
+https://www.edureka.co/community/66870/how-to-run-firefox-inside-docker-container 
+```
+### Run xauth list command in your host machine and copy the cookies.
+$ xauth list
+vm1/unix:0  MIT-MAGIC-COOKIE-1  b4c39c85be9a907749dd9395f4175b0d
+
+### Run docker container with environment variable Display and also mount /tmp/.X11-unix folder to your container.
+$ docker run -it --name firefox --net=host -e DISPLAY=$DISPLAY -v /tmp/.X11-unix centos:7 bash
+
+### Install firefox and xauth inside container.
+$ yum install firefox xauth
+
+### Add cookies that you copy from your host machine.
+$ xauth add <cookies>
+
+### Run firefox inside docker container, it will work.
+$ firefox
+```

@@ -8587,3 +8587,9 @@ iscsiadm -m node -T iqn.2025-09.com.example:storage.target01 -p 192.168.56.64:32
 iscsiadm -m node -T iqn.2025-09.com.example:storage.target01 -p 192.168.56.64:3260 -o delete
 
 ```
+
+### Fusion Access for SAN Cluster Maintenance Shutting down cluster
+```
+maintenance shutting down cluster
+https://www.ibm.com/docs/en/scalecontainernative/5.2.3?topic=maintenance-shutting-down-cluster
+```

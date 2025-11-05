@@ -7383,6 +7383,32 @@ kubectl label filesystem localfilesystem -n ibm-spectrum-scale scale.spectrum.ib
 ### 将文件系统设置为maintenanceMode=false
 kubectl label filesystem localfilesystem -n ibm-spectrum-scale scale.spectrum.ibm.com/maintenanceMode=false --overwrite
 
+### 检查 GPFS 的命令
+https://gist.github.com/mvazquezc/ca0243452a058b730fa94e13116b4419#file-01-verify-deployment-md
+https://www.ibm.com/docs/en/scalecontainernative/5.2.1?topic=installation-verifying-storage-scale-container-native-cluster
+
+### 检查 GPFS cluster 状态
+oc exec $(oc get pods -lapp.kubernetes.io/name=core \
+   -ojsonpath="{.items[0].metadata.name}" -n ibm-spectrum-scale)  \
+   -c gpfs -n ibm-spectrum-scale -- mmlscluster
+
+### 检查 GPFS status
+oc exec $(oc get pods -lapp.kubernetes.io/name=core \
+   -ojsonpath="{.items[0].metadata.name}" -n ibm-spectrum-scale)  \
+   -c gpfs -n ibm-spectrum-scale -- mmgetstate -a
+
+### 检查文件系统挂载状态
+oc exec $(oc get pods -lapp.kubernetes.io/name=core \
+   -ojsonpath="{.items[0].metadata.name}" -n ibm-spectrum-scale)  \
+   -c gpfs -n ibm-spectrum-scale -- mmlsmount localfilesystem -L
+
+### 检查活跃NSD
+oc exec $(oc get pods -lapp.kubernetes.io/name=core \
+   -ojsonpath="{.items[0].metadata.name}" -n ibm-spectrum-scale)  \
+   -c gpfs -n ibm-spectrum-scale -- mmlsnsd -M
+
+
+
 ### 收集 must-gather
 oc adm must-gather --image=registry.ocp4.example.com/fafso/cpopen/ibm-spectrum-scale-must-gather:v5.2.3.1
 

@@ -7313,6 +7313,30 @@ spec:
   existingDataSkipVerify: true
 EOF
 
+### 创建 Filesystem - 只包含一个localdisk
+cat <<EOF | oc apply -f -
+apiVersion: scale.spectrum.ibm.com/v1beta1
+kind: Filesystem
+metadata:
+  name: localfilesystem
+  namespace: ibm-spectrum-scale
+spec:
+  local:
+    blockSize: 4M
+    pools:
+    - name: system
+      disks:
+      - shareddisk1
+    # Only 1-way is supported for LFS https://www.ibm.com/docs/en/scalecontainernative/5.2.1?topic=systems-local-file-system#filesystem-spec
+    replication: 1-way
+    type: shared
+  seLinuxOptions:
+    level: s0
+    role: object_r
+    type: container_file_t
+    user: system_u
+EOF
+
 ### 创建 Filesystem
 cat <<EOF | oc apply -f -
 apiVersion: scale.spectrum.ibm.com/v1beta1

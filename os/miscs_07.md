@@ -7337,7 +7337,19 @@ spec:
     user: system_u
 EOF
 
-### 创建 Filesystem
+### 用命令为Filesystem localfilesystem 添加 localdisk sharedisk2
+kubectl patch filesystem localfilesystem \
+  -n ibm-spectrum-scale \
+  --type='json' \
+  -p='[
+    {
+      "op": "add",
+      "path": "/spec/local/pools/0/disks/-",
+      "value": "sharedisk2"
+    }
+  ]'
+
+### 创建 Filesystem 包含 2 个 localdisk (可选)
 cat <<EOF | oc apply -f -
 apiVersion: scale.spectrum.ibm.com/v1beta1
 kind: Filesystem

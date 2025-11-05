@@ -7377,6 +7377,12 @@ EOF
 ### 查看 ibm-spectrum-scale-operator 日志
 oc -n ibm-spectrum-scale-operator logs $(oc get pods -n ibm-spectrum-scale-operator -l app.kubernetes.io/name="operator" -o name)
 
+### 将文件系统设置为maintenanceMode=true
+kubectl label filesystem localfilesystem -n ibm-spectrum-scale scale.spectrum.ibm.com/maintenanceMode=true
+
+### 将文件系统设置为maintenanceMode=false
+kubectl label filesystem localfilesystem -n ibm-spectrum-scale scale.spectrum.ibm.com/maintenanceMode=false --overwrite
+
 ### 收集 must-gather
 oc adm must-gather --image=registry.ocp4.example.com/fafso/cpopen/ibm-spectrum-scale-must-gather:v5.2.3.1
 

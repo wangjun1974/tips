@@ -7284,6 +7284,35 @@ spec:
   existingDataSkipVerify: true
 EOF
 
+cat <<EOF | oc apply -f -
+apiVersion: scale.spectrum.ibm.com/v1beta1
+kind: LocalDisk
+metadata:
+  name: shareddisk2
+  namespace: ibm-spectrum-scale
+spec:
+  # After successful creation of the local disk, this parameter is no longer used
+  device: /dev/sdb
+  # The Kubernetes node where the specified device exists at creation time.
+  node: m2-ocp4test.ocp4.example.com
+  # nodeConnectionSelector defines the nodes that have the shared lun directly attached to them. If left commented out, all the nodes with the label “scale.spectrum.ibm.com/role=storage” will be used
+  # nodeConnectionSelector:
+  #  matchExpressions:
+  #  - key: node-role.kubernetes.io/worker
+  #    operator: Exists
+  # You could also list the node names instead
+  # nodeConnectionSelector:
+  #  matchExpressions:
+  #  - key: kubernetes.io/hostname
+  #    operator: In
+  #    values:
+  #      - ip-10-0-17-96.eu-central-1.compute.internal
+  #      - ip-10-0-39-125.eu-central-1.compute.internal
+  #      - ip-10-0-40-135.eu-central-1.compute.internal
+  # set below only during testing, this will wipe existing stuff
+  existingDataSkipVerify: true
+EOF
+
 ### 创建 Filesystem
 cat <<EOF | oc apply -f -
 apiVersion: scale.spectrum.ibm.com/v1beta1
@@ -7298,6 +7327,7 @@ spec:
     - name: system
       disks:
       - shareddisk1
+      - shareddisk2
     # Only 1-way is supported for LFS https://www.ibm.com/docs/en/scalecontainernative/5.2.1?topic=systems-local-file-system#filesystem-spec
     replication: 1-way
     type: shared

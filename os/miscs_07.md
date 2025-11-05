@@ -8495,3 +8495,12 @@ $ sudo podman run -it --rm -u steph \
          -v ${DOWNLOAD_DIR}:/home/steph/Downloads \
          ${IMAGE} firefox
 ```
+
+### 检查 iscsi session, logout iscsi session
+```
+检查有哪些session，从session logout
+iscsiadm -m session
+iscsiadm -m node -T iqn.2017-09.com.example.ocp4.gpfs:sn.1 -p 192.168.56.78:3260 -u
+iscsiadm -m node -T iqn.2025-09.com.example:storage.target01 -p 192.168.56.64:3260 -u
+iscsiadm -m session
+```

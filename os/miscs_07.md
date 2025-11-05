@@ -8480,3 +8480,18 @@ $ xauth add <cookies>
 ### Run firefox inside docker container, it will work.
 $ firefox
 ```
+
+### Run sandboxed Firefox with image and sound inside a container
+https://hackweek.opensuse.org/22/projects/run-sandboxde-firefox-with-image-and-sound-inside-a-container
+```
+### All the DISPLAY, XAUTHORITY stuff allows you to access your X server from the container. Mounting /dev/dri will support the direct rendering interface, avoiding the costly RPC calls.
+
+$ sudo podman run -it --rm -u steph \
+         -e DISPLAY=$DISPLAY -e XAUTHORITY=$XAUTHORITY \
+         -v /dev/dri:/dev/dri \
+         -v /tmp/.X11-unix:/tmp/.X11-unix \
+         -v /run/user/1000/gdm:/run/user/1000/gdm \
+         -v /run/user/1000/pulse:/var/run/pulse \
+         -v ${DOWNLOAD_DIR}:/home/steph/Downloads \
+         ${IMAGE} firefox
+```

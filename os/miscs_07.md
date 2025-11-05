@@ -8503,4 +8503,15 @@ iscsiadm -m session
 iscsiadm -m node -T iqn.2017-09.com.example.ocp4.gpfs:sn.1 -p 192.168.56.78:3260 -u
 iscsiadm -m node -T iqn.2025-09.com.example:storage.target01 -p 192.168.56.64:3260 -u
 iscsiadm -m session
+
+强制清理iscsi session
+iscsiadm -m node -p 192.168.56.78:3260 -T iqn.2017-09.com.example.ocp4.gpfs:sn.1 --op update -n node.startup -v manual
+iscsiadm -m node -T iqn.2017-09.com.example.ocp4.gpfs:sn.1 -p 192.168.56.78:3260 -u
+iscsiadm -m node -T iqn.2017-09.com.example.ocp4.gpfs:sn.1 -p 192.168.56.78:3260 -o delete
+
+
+iscsiadm -m node -p 192.168.56.64:3260 -T iqn.2025-09.com.example:storage.target01 --op update -n node.startup -v manual
+iscsiadm -m node -T iqn.2025-09.com.example:storage.target01 -p 192.168.56.64:3260 -u
+iscsiadm -m node -T iqn.2025-09.com.example:storage.target01 -p 192.168.56.64:3260 -o delete
+
 ```

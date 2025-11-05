@@ -8457,3 +8457,6 @@ https://access.redhat.com/articles/7091879#prepare-ocp-nodes-netapp
 ```
 https://access.redhat.com/articles/7091879#prepare-ocp-nodes-netapp
 ```
+
+### firefox in Podman
+https://github.com/grzegorzk/ff_in_podman/tree/main

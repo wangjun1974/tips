@@ -7337,7 +7337,7 @@ spec:
     user: system_u
 EOF
 
-### 用命令为Filesystem localfilesystem 添加 localdisk sharedisk2
+### 用命令为Filesystem localfilesystem 添加 localdisk shareddisk2
 kubectl patch filesystem localfilesystem \
   -n ibm-spectrum-scale \
   --type='json' \
@@ -7345,7 +7345,7 @@ kubectl patch filesystem localfilesystem \
     {
       "op": "add",
       "path": "/spec/local/pools/0/disks/-",
-      "value": "sharedisk2"
+      "value": "shareddisk2"
     }
   ]'
 

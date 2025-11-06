@@ -8619,3 +8619,28 @@ iscsiadm -m node -T iqn.2025-09.com.example:storage.target01 -p 192.168.56.64:32
 maintenance shutting down cluster
 https://www.ibm.com/docs/en/scalecontainernative/5.2.3?topic=maintenance-shutting-down-cluster
 ```
+
+### 恢复错误的Fusion Access for SAN FileSystem内容的步骤
+```
+1. 停止 CNSA operator
+oc scale deployment ibm-spectrum-scale-controller-manager  -n ibm-spectrum-scale-operator --replicas=0
+
+2. 编辑webhook
+oc edit validatingwebhookconfiguration ibm-spectrum-scale-validating-webhook-configuration -n ibm-spectrum-scale
+寻找
+  failurePolicy: Fail
+  matchPolicy: Equivalent
+  name: vfilesystem.scale.spectrum.ibm.com
+  namespaceSelector: {}
+
+将 failurePolicy: Fail 修改为 failurePolicy: Ignore
+重要: 搜索关键字: vfilesystem.scale.spectrum.ibm.com 不要修改其他 webhook 的 failurePolicy.
+
+3. 从文件系统内删除掉错误的diskname
+oc edit filesystem localfilesystem -n ibm-spectrum-scale
+
+4. 将第2步修改的failurePolicy改回Fail
+
+5. 启动CNSA operator
+oc scale deployment ibm-spectrum-scale-controller-manager  -n ibm-spectrum-scale-operator --replicas=1
+```

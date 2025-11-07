@@ -8644,3 +8644,48 @@ oc edit filesystem localfilesystem -n ibm-spectrum-scale
 5. 启动CNSA operator
 oc scale deployment ibm-spectrum-scale-controller-manager  -n ibm-spectrum-scale-operator --replicas=1
 ```
+
+### macos上检查有哪些TCP端口被进程LISTEN
+```
+$ lsof -iTCP -sTCP:LISTEN -n -P
+
+COMMAND     PID  USER   FD   TYPE             DEVICE SIZE/OFF NODE NAME
+WeChat      721 jwang  150u  IPv4 0xb975f9f9cf86e73d      0t0  TCP 127.0.0.1:14013 (LISTEN)
+WeChat      721 jwang  155u  IPv4 0x4df435c6848be83a      0t0  TCP 127.0.0.1:14016 (LISTEN)
+WeChat      721 jwang  160u  IPv4 0x3a05d5f489d91140      0t0  TCP 127.0.0.1:14019 (LISTEN)
+WeChat      721 jwang  165u  IPv4 0xc191c409b5d9e1b8      0t0  TCP 127.0.0.1:14022 (LISTEN)
+WeChat      721 jwang  174u  IPv4 0xe30743a585cfaba1      0t0  TCP 127.0.0.1:14023 (LISTEN)
+netdisk_s  1230 jwang   12u  IPv4 0x4bba8c5979af5560      0t0  TCP 127.0.0.1:10000 (LISTEN)
+Ollama    11096 jwang    4u  IPv4 0x6436508ef07b22dd      0t0  TCP 127.0.0.1:55894 (LISTEN)
+ollama    11098 jwang    4u  IPv4 0x901e90deac2a60dc      0t0  TCP 127.0.0.1:11434 (LISTEN)
+ollama    11145 jwang    5u  IPv4 0x9403c35e0069aba9      0t0  TCP 127.0.0.1:56006 (LISTEN)
+```
+
+### 本地运行llamastack 
+```
+# Install uv and start Ollama
+ollama run llama3.2:3b --keepalive 60m
+
+# Install server dependencies
+uv venv llama-stack
+source llama-stack/bin/activate
+uv run --with llama-stack llama stack list-deps starter | xargs -L1 uv pip install
+
+# Run Llama Stack server
+OLLAMA_URL=http://localhost:11434 uv run --with llama-stack llama stack run starter
+
+# Try the Python SDK
+from llama_stack_client import LlamaStackClient
+
+client = LlamaStackClient(
+  base_url="http://localhost:8321"
+)
+
+response = client.chat.completions.create(
+  model="Llama3.2-3B-Instruct",
+  messages=[{
+    "role": "user",
+    "content": "What is machine learning?"
+  }]
+)
+```

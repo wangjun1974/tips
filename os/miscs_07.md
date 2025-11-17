@@ -8689,3 +8689,31 @@ response = client.chat.completions.create(
   }]
 )
 ```
+
+### 可以查看vm和vmi的clusterrole，可以启动和停止vm的clusterrole
+```
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+ name: vm-view-start-stop
+rules:
+ # --- View permissions (read-only across KubeVirt VM resources) ---
+ - apiGroups:
+   - kubevirt.io
+  resources:
+   - virtualmachines
+   - virtualmachineinstances
+  verbs:
+   - get
+   - list
+   - watch
+
+ # --- Allow start/stop via subresource endpoints ---
+ - apiGroups:
+   - subresources.kubevirt.io
+  resources:
+   - virtualmachines/start
+   - virtualmachines/stop
+  verbs:
+   - update
+```

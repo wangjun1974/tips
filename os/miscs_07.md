@@ -8722,3 +8722,25 @@ rules:
 ```
 oc explain pod --output=plaintext-openapiv2 --recursive=true
 ```
+
+### delete more than 30 days vmsnapshot
+```
+### 删除大于30天的vmsnapshot
+
+#!/bin/bash
+# delete more than 30 days VirtualMachineSnapshot
+
+# 30days timestamp
+THRESHOLD_DATE=$(date -d '30 days ago' +%s)
+
+# obtain all namespace VirtualMachineSnapshot
+kubectl get vmsnapshots -A -o json | jq -r '.items[] | 
+  select(
+    (.metadata.creationTimestamp | fromdateiso8601) < '$THRESHOLD_DATE'
+  ) | 
+  [.metadata.namespace, .metadata.name] | 
+  @tsv' | while IFS=$'\t' read -r namespace name; do
+    echo "Deleting VirtualMachineSnapshot: $name in namespace: $namespace"
+    kubectl delete vmsnapshot "$name" -n "$namespace"
+done
+```

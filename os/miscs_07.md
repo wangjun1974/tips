@@ -8717,3 +8717,8 @@ rules:
   verbs:
    - update
 ```
+
+### 用plaintext的方式提供openapiv2格式的输出 oc explain pod
+```
+oc explain pod --output=plaintext-openapiv2 --recursive=true
+```

@@ -8744,3 +8744,37 @@ kubectl get vmsnapshots -A -o json | jq -r '.items[] |
     kubectl delete vmsnapshot "$name" -n "$namespace"
 done
 ```
+
+### CUDN的例子
+```
+CUDN localnet example
+# topoloty: Localnet
+# localnet.physicalNetworkName: bridge1-network
+# localnet.vlan.mode: Access
+# localnet.vlan.access.id: 60
+# localnet.role: Secondary
+# localnet.ipam.mode: Disable
+---
+apiVersion: k8s.ovn.org/v1
+kind: ClusterUserDefinedNetwork
+metadata:
+  name: vlan-60
+spec:
+  # Select namespaces where the Network-Attachment-Definition will be generated
+  namespaceSelector:
+    matchLabels:
+      example.com/vlan-60: "enabled"
+  network:
+    topology: Localnet
+    localnet:
+      # Reference the name defined in the NNCP's bridge mapping
+      physicalNetworkName: bridge1-network
+      # Specify the VLAN ID for traffic segmentation
+      vlan:
+        mode: Access
+        access:
+          id: 60
+      role: Secondary
+      ipam:
+        mode: Disabled
+```

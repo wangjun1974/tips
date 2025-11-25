@@ -8778,3 +8778,13 @@ spec:
       ipam:
         mode: Disabled
 ```
+
+### 将vhdx的img转换为qcow2格式
+
+```
+qemu-img convert -f vhdx -O qcow2 input.vhdx output.qcow2
+
+### Convert a QCOW2, RAW, VMDK or VDI image to VHDX
+https://cloudbase.it/qemu-img-windows/
+
+```

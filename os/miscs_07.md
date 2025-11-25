@@ -8788,3 +8788,42 @@ qemu-img convert -f vhdx -O qcow2 input.vhdx output.qcow2
 https://cloudbase.it/qemu-img-windows/
 
 ```
+
+### 可查看虚拟机console/vnc，可启动停止重启虚拟机，可列出虚拟机的RBAC
+```
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: vm-manager-role
+rules:
+  - verbs:
+      - get
+    apiGroups:
+      - subresources.kubevirt.io
+    resources:
+      - virtualmachineinstances/console
+      - virtualmachineinstances/vnc
+  - verbs:
+      - update
+    apiGroups:
+      - subresources.kubevirt.io
+    resources:
+      - virtualmachines/start
+      - virtualmachines/stop
+      - virtualmachines/restart
+  - verbs:
+      - get
+      - list
+      - watch
+    apiGroups:
+      - kubevirt.io
+    resources:
+      - virtualmachines
+  - verbs:
+      - get
+      - list
+    apiGroups:
+      - config.openshift.io
+    resources:
+      - '*'
+```

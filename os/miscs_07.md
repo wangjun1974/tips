@@ -8827,3 +8827,41 @@ rules:
     resources:
       - '*'
 ```
+
+### 找到10分钟之内创建的Pod 
+```
+### 可以用于找到迁移时相关的Pod
+oc get pods -A -o json \
+  | jq -r '
+    .items[]
+    | {ns:.metadata.namespace, name:.metadata.name, created:.metadata.creationTimestamp}
+    | select((now - ( .created | fromdate )) < 600)
+  '
+
+$ oc get pods -A -o json \
+  | jq -r '
+    .items[]
+    | {ns:.metadata.namespace, name:.metadata.name, created:.metadata.creationTimestamp}
+    | select((now - ( .created | fromdate )) < 300)
+  '
+{
+  "ns": "openshift-adp",
+  "name": "test3-velero-1-kopia-65w6w-maintain-job-1764228878549-wzcd6",
+  "created": "2025-11-27T07:34:38Z"
+}
+{
+  "ns": "test4",
+  "name": "virt-export-rhel9-jwang-01",
+  "created": "2025-11-27T07:31:32Z"
+}
+{
+  "ns": "test5",
+  "name": "importer-prime-bb11bf81-ed87-4a06-a2ac-cc1b914ac9a5",
+  "created": "2025-11-27T07:32:00Z"
+}
+{
+  "ns": "test5",
+  "name": "importer-prime-f9e3c7e9-13fc-4a02-9cae-45b68ce1ef61",
+  "created": "2025-11-27T07:31:59Z"
+}  
+```

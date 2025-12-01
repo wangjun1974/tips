@@ -8865,3 +8865,40 @@ $ oc get pods -A -o json \
   "created": "2025-11-27T07:31:59Z"
 }  
 ```
+
+### install snap in RHEL 
+https://snapcraft.io/docs/installing-snap-on-red-hat
+```
+dnf install https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm
+
+dnf install -y snapd 
+systemctl enable --now snapd
+systemctl status snapd
+
+snap install apt-mirror --beta
+
+cat <<'EOF' > /var/snap/apt-mirror/current/mirrorlist
+set base_path    /var/spool/apt-mirror
+set mirror_path  $base_path/mirror
+set skel_path    $base_path/skel
+set var_path     $base_path/var
+set cleanscript  $var_path/clean.sh
+set postmirror_script $var_path/postmirror.sh
+set defaultarch  amd64
+set run_postmirror 0
+set nthreads     20
+
+############# copadata zenon 15 release for Debian 11 (bullseye) #############
+deb-amd64 https://repository.copadata.com/zenon/15/release/ bullseye main
+deb-arm64 https://repository.copadata.com/zenon/15/release/ bullseye main
+
+############# copadata zenon 15 - Ubuntu 24.04 noble #############
+deb-amd64 https://repository.copadata.com/zenon/15/release/ noble main
+deb-arm64 https://repository.copadata.com/zenon/15/release/ noble main
+
+clean https://repository.copadata.com/zenon/15/release/
+EOF
+
+
+
+```

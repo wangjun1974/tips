@@ -8912,3 +8912,26 @@ oc exec -it -n openshift-etcd etcd-master1.ocp.ap.vwg -- etcdctl member list
 b7d550fb91a1de08, started, master3.ocp.ap.vwg, https://10.120.88.127:2380, https://10.120.88.127:2379, false
 ef4840ddfb7e64aa, started, master2.ocp.ap.vwg, https://10.120.88.126:2380, https://10.120.88.126:2379, false
 ```
+
+### k8s mcp server
+```
+---
+apiVersion: toolhive.stacklok.dev/v1alpha1
+kind: MCPServer
+metadata:
+  name: openshift
+spec:
+  image: quay.io/containers/kubernetes_mcp_server:latest
+  proxyPort: 8000
+  mcpPort: 8000
+  targetPort: 8000
+  transport: sse
+  podTemplateSpec:
+    spec:
+      containers:
+      - name: mcp
+        command: ["./kubernetes-mcp-server"]
+        args:
+        - --port
+        - "8000"
+```

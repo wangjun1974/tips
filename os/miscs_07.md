@@ -8898,7 +8898,17 @@ deb-arm64 https://repository.copadata.com/zenon/15/release/ noble main
 
 clean https://repository.copadata.com/zenon/15/release/
 EOF
+```
 
+### 检查etcd健康情况
+```
+oc exec -it -n openshift-etcd etcd-master1.ocp.ap.vwg -- etcdctl endpoint health
+https://10.120.88.126:2379 is healthy: successfully committed proposal: took = 56.813904ms
+https://10.120.88.125:2379 is healthy: successfully committed proposal: took = 54.294291ms
+https://10.120.88.127:2379 is healthy: successfully committed proposal: took = 54.752224ms
 
-
+oc exec -it -n openshift-etcd etcd-master1.ocp.ap.vwg -- etcdctl member list   
+576fe01be62afa42, started, master1.ocp.ap.vwg, https://10.120.88.125:2380, https://10.120.88.125:2379, false
+b7d550fb91a1de08, started, master3.ocp.ap.vwg, https://10.120.88.127:2380, https://10.120.88.127:2379, false
+ef4840ddfb7e64aa, started, master2.ocp.ap.vwg, https://10.120.88.126:2380, https://10.120.88.126:2379, false
 ```

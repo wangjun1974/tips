@@ -8935,3 +8935,52 @@ spec:
         - --port
         - "8000"
 ```
+
+### clone pvc from namespace test4 into namespace openshift-virtualization-os-images w/ DataVolume and ClusterRole/ClusterRoleBinding
+```
+cat <<EOF | oc apply -f -
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: datavolume-cloner 
+rules:
+- apiGroups: ["cdi.kubevirt.io"]
+  resources: ["datavolumes/source"]
+  verbs: ["*"]
+EOF
+
+cat <<EOF | oc apply -f -
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: allow-clone-to-user 
+  namespace: test4 
+subjects:
+- kind: ServiceAccount
+  name: default
+  namespace: openshift-virtualization-os-images 
+roleRef:
+  kind: ClusterRole
+  name: datavolume-cloner 
+  apiGroup: rbac.authorization.k8s.io
+EOF
+
+cat <<EOF | oc apply -f -
+apiVersion: cdi.kubevirt.io/v1beta1
+kind: DataVolume
+metadata:
+  name: rhel-9-4-golden-rbd-from-test4
+  namespace: openshift-virtualization-os-images
+spec:
+  contentType: kubevirt
+  source:
+    pvc:
+      name: rhel-9-4-golden-rbd
+      namespace: test4
+  storage:
+    resources:
+      requests:
+        storage: 10Gi
+    storageClassName: ocs-external-storagecluster-ceph-rbd
+EOF
+```

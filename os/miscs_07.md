@@ -8995,3 +8995,34 @@ guidellm benchmark run \
   --data "prompt_tokens=1500,output_tokens=512" \
   --max-requests 1000
 ```
+
+### 更新crio_runtimes的ulimit
+https://access.redhat.com/solutions/6243491
+```
+$ cat << EOF | base64 -w0
+[crio.runtime]
+default_ulimits = [
+"nproc=16348:-1",
+"stack=1600000:-1"
+]
+EOF
+
+apiVersion: machineconfiguration.openshift.io/v1
+kind: MachineConfig
+metadata:
+  annotations:
+  labels:
+    machineconfiguration.openshift.io/role: worker
+  name: 02-worker-container-runtime
+spec:
+  config:
+    ignition:
+      version: 3.1.0
+    storage:
+      files:
+      - contents:
+          source: data:text/plain;charset=utf-8;base64,W2NyaW8ucnVudGltZV0KZGVmYXVsdF91bGltaXRzID0gWwoibnByb2M9MTYzNDg6LTEiLAoic3RhY2s9MTYwMDAwMDotMSIKXQo=
+        mode: 420
+        overwrite: true
+        path: /etc/crio/crio.conf.d/10-custom
+```

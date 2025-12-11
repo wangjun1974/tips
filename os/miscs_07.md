@@ -8984,3 +8984,14 @@ spec:
     storageClassName: ocs-external-storagecluster-ceph-rbd
 EOF
 ```
+
+### guidellm benchmark 进行模型测试
+```
+guidellm benchmark run \
+  --target "http://127.0.0.1:18080/v1" \
+  --model "/model/Qwen3-235B-A22B-Instruct-2507" \
+  --rate-type concurrent \
+  --rate 10,50,100,150,200,250,300,350,400 \
+  --data "prompt_tokens=1500,output_tokens=512" \
+  --max-requests 1000
+```

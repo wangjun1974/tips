@@ -9026,3 +9026,8 @@ spec:
         overwrite: true
         path: /etc/crio/crio.conf.d/10-custom
 ```
+
+### google用site://<site url> <keyword>的方式在站点搜素solutions
+```
+site://https://access.redhat.com/solutions recover install-config.yaml
+```

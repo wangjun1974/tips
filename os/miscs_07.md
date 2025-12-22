@@ -9031,3 +9031,37 @@ spec:
 ```
 site://https://access.redhat.com/solutions recover install-config.yaml
 ```
+
+### 
+```
+# 列出macos下网卡顺序
+networksetup -listnetworkserviceorder
+An asterisk (*) denotes that a network service is disabled.
+(1) USB 10/100/1000 LAN
+(Hardware Port: USB 10/100/1000 LAN, Device: en6)
+
+(2) USB 10/100/1000 LAN 2
+(Hardware Port: USB 10/100/1000 LAN, Device: en7)
+
+(3) USB 10/100/1000 LAN 3
+(Hardware Port: USB 10/100/1000 LAN, Device: en10)
+
+(*) USB 10/100/1000 LAN 4
+(Hardware Port: USB 10/100/1000 LAN, Device: en12)
+
+(4) Thunderbolt Bridge
+(Hardware Port: Thunderbolt Bridge, Device: bridge0)
+
+(5) Wi-Fi
+(Hardware Port: Wi-Fi, Device: en0)
+
+(6) iPhone USB
+(Hardware Port: iPhone USB, Device: en11)
+
+# macOS 的路由表默认不显示 metric，因为 macOS 不使用 Linux 那种 per‑route metric，而是使用 per‑interface 的 service order（服务顺序）来决定优先级
+
+# macOS 的优先级来自：
+#  网络服务顺序（Service Order）
+#  接口状态（active / inactive）
+#  路由类型（host route > network route > default route）
+```

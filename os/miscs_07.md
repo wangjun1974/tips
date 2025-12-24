@@ -9065,3 +9065,19 @@ An asterisk (*) denotes that a network service is disabled.
 #  接口状态（active / inactive）
 #  路由类型（host route > network route > default route）
 ```
+### 在 OpenShift AI 下检查 CUDA Driver Version
+```
+for pod in $(oc get pods -n nvidia-gpu-operator -o name | grep nvidia-driver-daemonset); do
+  node=$(oc get $pod -n nvidia-gpu-operator -o jsonpath='{.spec.nodeName}')
+  version=$(oc exec -n nvidia-gpu-operator $pod -c nvidia-driver-ctr -- nvidia-smi --query-gpu=driver_version --format=csv,noheader 2>/dev/null | head -1)
+  echo "$node: Driver $version"
+done
+```
+
+### Passing the following kernel arguments sets up the static ip
+```
+Passing the following kernel arguments sets up the static ip
+ip=<ipaddress>::<defaultgw>:<netmask>:<hostname>:<iface>:none:<dns server 1>:<dns server 2>
+
+ip=10.120.88.126::10.120.88.1:255.255.255.0:master2.ocp.ap.vwg:ens3:none:10.120.88.123
+```

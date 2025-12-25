@@ -9141,3 +9141,30 @@ rm -f "$DISCOVERY_ISO_WITH_PASSWORD_HOST"
 COREOS_INSTALLER iso customize --output "$DISCOVERY_ISO_WITH_PASSWORD" --force "$DISCOVERY_ISO_PATH" --live-ignition /data/"$TRANSFORMED_IGNITION_NAME"
 echo 'Created ISO with your password in "'"$DISCOVERY_ISO_WITH_PASSWORD_HOST"'", the login username is "core"'
 ```
+
+### change core user password for agent iso
+https://github.com/openshift/assisted-service/blob/master/docs/change-iso-password.sh
+```
+# Transform original ignition
+COREOS_INSTALLER iso ignition show "$DISCOVERY_ISO_PATH" | jq --arg pass "$USER_PASSWORD" '
+    . as $root |
+    [($root.passwd.users[] | select(.name != "core"))] as $non_core_users |
+    [($root.passwd.users[] | select(.name == "core"))] as $core_users |
+    $root.passwd.users |= $non_core_users + [
+        if ($core_users | length != 0) then
+            $core_users[] | .passwordHash = $pass
+        else
+            { name: "core", passwordHash: $pass, groups: ["sudo"] }
+        end
+    ]
+' >"$TRANSFORMED_IGNITION_PATH"
+
+# 对于 agent-ove.iso 需要改成
+# Transform original ignition
+COREOS_INSTALLER iso ignition show "$DISCOVERY_ISO_PATH" | jq --arg pass "$USER_PASSWORD" '
+    . as $root |
+    $root.passwd.users += [
+        { name: "core", passwordHash: $pass, groups: ["sudo"] }
+    ]
+' >"$TRANSFORMED_IGNITION_PATH"
+```

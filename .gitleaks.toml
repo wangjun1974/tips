@@ -2,6 +2,7 @@ paths = [
   "ocp/cnv-windows.md",
   "ocp/assisted-installer-acm-2.6.1.md",
   "ocp/ztp/sno-ocp4-3.yaml",
+  "ocp/helper-command-20251226.txt",
   "os/miscs_03.md",
   "os/miscs_07.md",
 ]

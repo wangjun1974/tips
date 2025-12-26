@@ -9209,3 +9209,9 @@ curl http://10.120.88.125:8090/api/assisted-install/v2/infra-envs/${infra_env_id
     }
   ' | jq
 ```
+
+### 内核参数配置linux bond bond0并为bond0配置ip地址
+```
+bond=bond0:ens3f0,ens3f1:mode=802.3ad,miimon=100,lacp_rate=1
+ip=192.168.10.50::192.168.10.1:255.255.255.0:myhost:bond0:none:8.8.8.8
+```

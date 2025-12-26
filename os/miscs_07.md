@@ -9192,10 +9192,11 @@ curl https://api.openshift.com/api/assisted-install/v2/infra-envs/${infra_env_id
 curl <>:8090/api/assisted-install/v2/infra-envs 
 [{"cluster_id":"0aebedc8-ff46-46c4-8aaa-e2981d16f885","cpu_architecture":"x86_64","created_at":"2025-12-26T02:29:03.172402Z","download_url":"http://10.120.88.125:8888/byid/7e91c20d-c09f-49fa-8a52-cdbf58a7849c/4.20.8/x86_64/full.iso","email_domain":"Unknown","expires_at":"0001-01-01T00:00:00.000Z","href":"/api/assisted-install/v2/infra-envs/7e91c20d-c09f-49fa-8a52-cdbf58a7849c","id":"7e91c20d-c09f-49fa-8a52-cdbf58a7849c","kind":"InfraEnv","name":"ocp_infra-env","openshift_version":"4.20.8","proxy":{},"pull_secret_set":true,"type":"full-iso","updated_at":"2025-12-26T02:29:14.69037Z","user_name":"admin"}]
 
+### 在UI上检查host_id
 infra_env_id="7e91c20d-c09f-49fa-8a52-cdbf58a7849c"
 master1_host_id="7f394987-7fb5-4e5b-80e2-9dc28b7be919"
 master2_host_id="ebc23564-dd5d-4a31-992c-e8c3ed69e0d5"
-arbiter_host_id=""
+arbiter_host_id="b566cc2d-52ee-448d-9054-44ca159f88c1"
 curl http://10.120.88.125:8090/api/assisted-install/v2/infra-envs/${infra_env_id}/hosts/${master1_host_id}/installer-args \
 -X PATCH \
 -H "Content-Type: application/json" \
@@ -9235,13 +9236,19 @@ curl http://10.120.88.125:8090/api/assisted-install/v2/infra-envs/${infra_env_id
     }
   ' | jq
 
+curl http://10.120.88.125:8090/api/assisted-install/v2/infra-envs/${infra_env_id}/hosts/${arbiter_host_id} | jq .installer_args
+
 ### 获取host_id
-curl http://10.120.88.125:8090/api/assisted-install/v2/infra-envs/${infra_env_id}/hosts | jq .[0].id
+在UI上查看检查对照
+infra_env_id="7e91c20d-c09f-49fa-8a52-cdbf58a7849c"
+master1_host_id="7f394987-7fb5-4e5b-80e2-9dc28b7be919"
+master2_host_id="ebc23564-dd5d-4a31-992c-e8c3ed69e0d5"
+arbiter_host_id="b566cc2d-52ee-448d-9054-44ca159f88c1"
 
 ### 查看节点interface信息
-curl http://10.120.88.125:8090/api/assisted-install/v2/infra-envs/${infra_env_id}/hosts | jq .[0].inventory | sed -e 's|,|\n\r|g' | grep interface  
-curl http://10.120.88.125:8090/api/assisted-install/v2/infra-envs/${infra_env_id}/hosts | jq .[1].inventory | sed -e 's|,|\n\r|g' | grep interface  
-curl http://10.120.88.125:8090/api/assisted-install/v2/infra-envs/${infra_env_id}/hosts | jq .[2].inventory | sed -e 's|,|\n\r|g' | grep interface  
+curl http://10.120.88.125:8090/api/assisted-install/v2/infra-envs/${infra_env_id}/hosts/${master1_host_id} | jq .inventory | sed -e 's|,|\n\r|g' | grep interface  
+curl http://10.120.88.125:8090/api/assisted-install/v2/infra-envs/${infra_env_id}/hosts/${master2_host_id} | jq .inventory | sed -e 's|,|\n\r|g' | grep interface  
+curl http://10.120.88.125:8090/api/assisted-install/v2/infra-envs/${infra_env_id}/hosts/${arbiter_host_id} | jq .inventory | sed -e 's|,|\n\r|g' | grep interface  
 
 
 ```

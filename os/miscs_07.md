@@ -9168,3 +9168,22 @@ COREOS_INSTALLER iso ignition show "$DISCOVERY_ISO_PATH" | jq --arg pass "$USER_
     ]
 ' >"$TRANSFORMED_IGNITION_PATH"
 ```
+
+### assisted installer 为节点添加 ip 地址
+```
+curl https://api.openshift.com/api/assisted-install/v2/infra-envs/${infra_env_id}/hosts/${host_id}/installer-args \
+-X PATCH \
+-H "Authorization: Bearer ${API_TOKEN}" \
+-H "Content-Type: application/json" \
+-d '
+    {
+      "args": [
+        "--append-karg",
+        "ip=<static_ip>::<gateway>:<netmask>:<hostname_1>:<interface>:none",     
+        "--save-partindex",
+        "1",
+        "-n"
+      ]
+    }
+  ' | jq
+```

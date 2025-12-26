@@ -9201,10 +9201,11 @@ curl http://10.120.88.125:8090/api/assisted-install/v2/infra-envs/${infra_env_id
     {
       "args": [
         "--append-karg",
-        "ip=10.120.88.125::10.120.88.1:255.255.255.0:master1.ocp.ap.vwg:ens3:none:10.120.88.123",     
-        "--save-partindex",
-        "1",
-        "-n"
+        "ip=10.120.88.125::10.120.88.1:255.255.255.0:master1.ocp.ap.vwg:ens3:none:10.120.88.123",
+        "--save-partlabel",
+        "agent*",
+        "--save-partlabel",
+        "rhcos-*"
       ]
     }
   ' | jq
@@ -9214,4 +9215,28 @@ curl http://10.120.88.125:8090/api/assisted-install/v2/infra-envs/${infra_env_id
 ```
 bond=bond0:ens3f0,ens3f1:mode=802.3ad,miimon=100,lacp_rate=1
 ip=192.168.10.50::192.168.10.1:255.255.255.0:myhost:bond0:none:8.8.8.8
+```
+
+### 为 rhcos 节点设置 core user passwd
+```
+pw="xxxxx"
+PASSWD_HASH=$(openssl passwd -6 --stdin <<<"$pw")
+
+cat <<EOF > 99-worker-set-core-user-password.yaml
+apiVersion: machineconfiguration.openshift.io/v1
+kind: MachineConfig
+metadata:
+  labels:
+    machineconfiguration.openshift.io/role: worker
+  name: 99-worker-set-core-user-password
+spec:
+  config:
+    ignition:
+      version: 3.4.0
+    passwd:
+      users:
+        - name: core
+          passwordHash: ${PASSWD_HASH}
+EOF
+
 ```

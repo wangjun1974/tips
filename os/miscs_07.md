@@ -9194,6 +9194,8 @@ curl <>:8090/api/assisted-install/v2/infra-envs
 
 infra_env_id="7e91c20d-c09f-49fa-8a52-cdbf58a7849c"
 master1_host_id="ddee0780-a039-4921-ae16-2129e2b9d317"
+master2_host_id=""
+arbiter_host_id=""
 curl http://10.120.88.125:8090/api/assisted-install/v2/infra-envs/${infra_env_id}/hosts/${master1_host_id}/installer-args \
 -X PATCH \
 -H "Content-Type: application/json" \
@@ -9201,14 +9203,32 @@ curl http://10.120.88.125:8090/api/assisted-install/v2/infra-envs/${infra_env_id
     {
       "args": [
         "--append-karg",
-        "ip=10.120.88.125::10.120.88.1:255.255.255.0:master1.ocp.ap.vwg:ens3:none:10.120.88.123",
-        "--save-partlabel",
-        "agent*",
-        "--save-partlabel",
-        "rhcos-*"
+        "ip=10.120.88.125::10.120.88.1:255.255.255.0:master1.ocp.ap.vwg:ens3:none:10.120.88.123"
       ]
     }
   ' | jq
+curl http://10.120.88.125:8090/api/assisted-install/v2/infra-envs/${infra_env_id}/hosts/${master2_host_id}/installer-args \
+-X PATCH \
+-H "Content-Type: application/json" \
+-d '
+    {
+      "args": [
+        "--append-karg",
+        "ip=10.120.88.125::10.120.88.1:255.255.255.0:master1.ocp.ap.vwg:ens3:none:10.120.88.123"
+      ]
+    }
+  ' | jq
+curl http://10.120.88.125:8090/api/assisted-install/v2/infra-envs/${infra_env_id}/hosts/${arbiter_host_id}/installer-args \
+-X PATCH \
+-H "Content-Type: application/json" \
+-d '
+    {
+      "args": [
+        "--append-karg",
+        "ip=10.120.88.125::10.120.88.1:255.255.255.0:master1.ocp.ap.vwg:ens3:none:10.120.88.123"
+      ]
+    }
+  ' | jq  
 ```
 
 ### 内核参数配置linux bond bond0并为bond0配置ip地址
@@ -9219,7 +9239,7 @@ ip=192.168.10.50::192.168.10.1:255.255.255.0:myhost:bond0:none:8.8.8.8
 
 ### 为 rhcos 节点设置 core user passwd
 ```
-pw="xxxxx"
+pw="xxxxxx"
 PASSWD_HASH=$(openssl passwd -6 --stdin <<<"$pw")
 
 cat <<EOF > 99-worker-set-core-user-password.yaml

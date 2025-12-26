@@ -1,0 +1,843 @@
+mkdir -p /data/kvm /data/hdd
+
+qemu-img create -f qcow2 -o preallocation=metadata /data/hdd/ocp-helper.qcow2 500G
+qemu-img create -f qcow2 -o preallocation=metadata /data/kvm/ocp-bootstrap.qcow2 120G
+qemu-img create -f qcow2 -o preallocation=metadata /data/kvm/ocp-master1.qcow2 120G
+qemu-img create -f qcow2 -o preallocation=metadata /data/kvm/ocp-master2.qcow2 120G
+qemu-img create -f qcow2 -o preallocation=metadata /data/kvm/ocp-master3.qcow2 120G
+
+$ virt-install --name ocp-helper \
+    --ram 8192 --vcpus 2 --os-variant rhel8.0 \
+    --cpu host \
+    --network network:default \
+    --boot menu=on \
+    --noautoconsole --vnc \
+    --disk path=/data/kvm/ocp-helper.qcow2,device=disk,bus=virtio,format=qcow2 \
+    --dry-run --print-xml > /tmp/ocp-helper.xml;
+$ virsh define /tmp/ocp-helper.xml
+
+
+$ virt-install --name ocp-bootstrap \
+    --ram 16384 --vcpus 4 --os-variant rhel8.0 \
+    --cpu host \
+    --network network:default \
+    --boot menu=on \
+    --noautoconsole --vnc \
+    --disk path=/data/kvm/ocp-bootstrap.qcow2,device=disk,bus=virtio,format=qcow2 \
+    --dry-run --print-xml > /tmp/ocp-bootstrap.xml;
+$ virsh define /tmp/ocp-bootstrap.xml
+
+
+$ virt-install --name ocp-master1 \
+    --ram 16384 --vcpus 4 --os-variant rhel8.0 \
+    --cpu host \
+    --network network:default \
+    --boot menu=on \
+    --noautoconsole --vnc \
+    --disk path=/data/kvm/ocp-master1.qcow2,device=disk,bus=virtio,format=qcow2 \
+    --dry-run --print-xml > /tmp/ocp-master1.xml;
+$ virsh define /tmp/ocp-master1.xml
+
+
+$ virt-install --name ocp-master2 \
+    --ram 16384 --vcpus 4 --os-variant rhel8.0 \
+    --cpu host \
+    --network network:default \
+    --boot menu=on \
+    --noautoconsole --vnc \
+    --disk path=/data/kvm/ocp-master2.qcow2,device=disk,bus=virtio,format=qcow2 \
+    --dry-run --print-xml > /tmp/ocp-master2.xml;
+$ virsh define /tmp/ocp-master2.xml
+
+$ virt-install --name ocp-master3 \
+    --ram 16384 --vcpus 4 --os-variant rhel8.0 \
+    --cpu host \
+    --network network:default \
+    --boot menu=on \
+    --noautoconsole --vnc \
+    --disk path=/data/kvm/ocp-master3.qcow2,device=disk,bus=virtio,format=qcow2 \
+    --dry-run --print-xml > /tmp/ocp-master3.xml;
+$ virsh define /tmp/ocp-master3.xml
+
+Helper 
+------
+
+systemctl stop firewalld
+systemctl disable firewalld
+systemctl mask firewalld
+
+
+sed -i 's/^SELINUX=.*/SELINUX=permissive/' /etc/selinux/config
+reboot
+
+getenforce
+mkdir /data
+
+export OCP_CLUSTER_ID="ocp"
+
+cat << EOF >> ~/.bashrc-${OCP_CLUSTER_ID}
+#######################################
+setVAR(){
+  if [ \$# = 0 ]
+  then
+    echo "USAGE: "
+    echo "   setVAR VAR_NAME VAR_VALUE    # Set VAR_NAME with VAR_VALUE"
+    echo "   setVAR VAR_NAME              # Delete VAR_NAME"
+  elif [ \$# = 1 ]
+  then
+    sed -i "/\${1}/d" ~/.bashrc-${OCP_CLUSTER_ID}
+source ~/.bashrc-${OCP_CLUSTER_ID}
+unset \${1}
+    echo \${1} is empty
+  else
+    sed -i "/\${1}/d" ~/.bashrc-${OCP_CLUSTER_ID}
+    echo export \${1}=\"\${2}\" >> ~/.bashrc-${OCP_CLUSTER_ID}
+source ~/.bashrc-${OCP_CLUSTER_ID}
+echo \${1}="\${2}"
+  fi
+  echo ${VAR_NAME}
+}
+#######################################
+EOF
+
+source ~/.bashrc-${OCP_CLUSTER_ID}
+
+setVAR OCP_MAJOR_VER 4.14
+setVAR OCP_VER 4.14.26
+setVAR RHCOS_VER 4.14.15
+setVAR YUM_PATH /data/OCP-${OCP_VER}/yum
+setVAR OCP_PATH /data/OCP-${OCP_VER}/ocp
+
+tar -xzf ${OCP_PATH}/ocp-client/openshift-client-linux-${OCP_VER}.tar.gz -C /usr/local/sbin/
+oc version
+
+mount -o loop /dev/sr0 /mnt
+cat > /etc/yum.repos.d/local.repo << EOF
+[baseos]
+name=baseos
+baseurl=file:///mnt/BaseOS
+enabled=1
+gpgcheck=0
+
+[appstream]
+name=appstream
+baseurl=file:///mnt/AppStream
+enabled=1
+gpgcheck=0
+EOF
+
+yum repolist
+yum -y install httpd bind bind-utils wget git net-tools jq tree httpd-tools skopeo haproxy tigervnc-server podman skopeo
+
+systemctl enable httpd --now
+sed -i -e 's/Listen 80/Listen 8080/g' /etc/httpd/conf/httpd.conf
+cat /etc/httpd/conf/httpd.conf |grep "Listen 8080"
+
+chmod -R 705 /data
+
+cat << EOF > /etc/httpd/conf.d/yum.conf
+Alias /repo "${YUM_PATH}"
+<Directory "${YUM_PATH}">
+  Options +Indexes +FollowSymLinks
+  Require all granted
+</Directory>
+<Location /repo>
+  SetHandler None
+</Location>
+EOF
+
+systemctl restart httpd
+curl http://localhost:8080/repo/
+
+systemctl enable named --now
+cp /etc/named.conf{,_bak}
+sed -i -e "s/listen-on port.*/listen-on port 53 { any; };/" /etc/named.conf
+sed -i -e "s/allow-query.*/allow-query { any; };/" /etc/named.conf
+rndc reload
+grep -E 'listen-on port|allow-query' /etc/named.conf 
+
+setVAR BASE_DOMAIN ap.vwg
+setVAR OCP_CLUSTER_ID ocp
+setVAR HELPER_IP 10.120.88.123
+setVAR BOOTSTRAP_IP 10.120.88.124
+setVAR MASTER1_IP 10.120.88.125
+setVAR MASTER2_IP 10.120.88.126
+setVAR MASTER3_IP 10.120.88.127
+setVAR WORKER1_IP 10.120.88.128
+setVAR WORKER2_IP 10.120.88.129
+setVAR WORKER3_IP 10.120.88.130
+setVAR WORKER4_IP 10.120.88.131
+
+cat >> /etc/named.rfc1912.zones << EOF
+
+zone "${OCP_CLUSTER_ID}.${BASE_DOMAIN}" IN {
+        type master;
+        file "${OCP_CLUSTER_ID}.${BASE_DOMAIN}.zone";
+        allow-transfer { any; };
+};
+
+
+zone "120.10.in-addr.arpa" IN {
+        type master;
+        file "120.10.in-addr.arpa.zone";
+        allow-transfer { any; };
+};
+
+zone "root-servers.net" IN {
+    	type master;
+    	file "named.localhost";
+};
+
+EOF
+cat /etc/named.rfc1912.zones
+
+
+cat > /var/named/${OCP_CLUSTER_ID}.${BASE_DOMAIN}.zone << EOF
+\$ORIGIN ${OCP_CLUSTER_ID}.${BASE_DOMAIN}.
+\$TTL 1D
+@           IN SOA  ${OCP_CLUSTER_ID}.${BASE_DOMAIN}. admin.${OCP_CLUSTER_ID}.${BASE_DOMAIN}. (
+                                        0          ; serial
+                                        1D         ; refresh
+                                        1H         ; retry
+                                        1W         ; expire
+                                        3H )       ; minimum
+
+
+@             IN NS                         helper.${OCP_CLUSTER_ID}.${BASE_DOMAIN}.
+
+
+helper         IN A                          ${HELPER_IP}
+
+api            IN A                          ${HELPER_IP}
+api-int        IN A                          ${HELPER_IP}
+*.apps         IN A                          ${HELPER_IP}
+
+bootstrap      IN A                          ${BOOTSTRAP_IP}
+
+master1       IN A                          ${MASTER1_IP}
+master2       IN A                          ${MASTER2_IP}
+master3       IN A                          ${MASTER3_IP}
+
+worker1       IN A                          ${WORKER1_IP}
+worker2       IN A                          ${WORKER2_IP}
+worker3       IN A                          ${WORKER3_IP}
+worker4       IN A                          ${WORKER4_IP}
+
+EOF
+cat /var/named/${OCP_CLUSTER_ID}.${BASE_DOMAIN}.zone
+
+
+cat > /var/named/120.10.in-addr.arpa.zone << EOF
+\$TTL 1D
+@           IN SOA  ${BASE_DOMAIN}. admin.${BASE_DOMAIN}. (
+                                        0       ; serial
+                                        1D      ; refresh
+                                        1H      ; retry
+                                        1W      ; expire
+                                        3H )    ; minimum
+                                        
+@                              IN NS       helper.${OCP_CLUSTER_ID}.${BASE_DOMAIN}.
+
+
+123.88.120.10.in-addr.arpa.    IN PTR      helper.${OCP_CLUSTER_ID}.${BASE_DOMAIN}.
+123.88.120.10.in-addr.arpa.    IN PTR      api.${OCP_CLUSTER_ID}.${BASE_DOMAIN}.
+123.88.120.10.in-addr.arpa.    IN PTR      api-int.${OCP_CLUSTER_ID}.${BASE_DOMAIN}.
+
+
+124.88.120.10.in-addr.arpa.    IN PTR      bootstrap.${OCP_CLUSTER_ID}.${BASE_DOMAIN}.
+
+
+125.88.120.10.in-addr.arpa.    IN PTR      master1.${OCP_CLUSTER_ID}.${BASE_DOMAIN}.
+126.88.120.10.in-addr.arpa.    IN PTR      master2.${OCP_CLUSTER_ID}.${BASE_DOMAIN}.
+127.88.120.10.in-addr.arpa.    IN PTR      master3.${OCP_CLUSTER_ID}.${BASE_DOMAIN}.
+
+
+128.88.120.10.in-addr.arpa.    IN PTR      worker1.${OCP_CLUSTER_ID}.${BASE_DOMAIN}.
+129.88.120.10.in-addr.arpa.    IN PTR      worker2.${OCP_CLUSTER_ID}.${BASE_DOMAIN}.
+130.88.120.10.in-addr.arpa.    IN PTR      worker3.${OCP_CLUSTER_ID}.${BASE_DOMAIN}.
+131.88.120.10.in-addr.arpa.    IN PTR      worker4.${OCP_CLUSTER_ID}.${BASE_DOMAIN}.
+
+
+EOF
+cat /var/named/120.10.in-addr.arpa.zone
+
+
+systemctl restart named
+rndc reload
+journalctl -u named
+
+
+setVAR DNS_IP="10.120.88.123"
+
+nmcli c mod $(nmcli con show |awk 'NR==2{print}'|awk '{print $1}') ipv4.dns "${DNS_IP}"
+systemctl restart network
+nmcli c show $(nmcli con show |awk 'NR==2{print}'|awk '{print $1}')| grep ipv4.dns
+
+
+dig helper.${OCP_CLUSTER_ID}.${BASE_DOMAIN} +short
+dig api.${OCP_CLUSTER_ID}.${BASE_DOMAIN} +short
+dig api-int.${OCP_CLUSTER_ID}.${BASE_DOMAIN} +short
+dig *.apps.${OCP_CLUSTER_ID}.${BASE_DOMAIN} +short
+
+dig bootstrap.${OCP_CLUSTER_ID}.${BASE_DOMAIN} +short
+dig master1.${OCP_CLUSTER_ID}.${BASE_DOMAIN} +short
+dig master2.${OCP_CLUSTER_ID}.${BASE_DOMAIN} +short
+dig master3.${OCP_CLUSTER_ID}.${BASE_DOMAIN} +short
+
+dig worker1.${OCP_CLUSTER_ID}.${BASE_DOMAIN} +short
+dig worker2.${OCP_CLUSTER_ID}.${BASE_DOMAIN} +short
+dig worker3.${OCP_CLUSTER_ID}.${BASE_DOMAIN} +short
+dig worker4.${OCP_CLUSTER_ID}.${BASE_DOMAIN} +short
+
+dig -x ${HELPER_IP} +short
+
+dig -x ${BOOTSTRAP_IP} +short
+dig -x ${MASTER1_IP} +short
+dig -x ${MASTER2_IP} +short
+dig -x ${MASTER3_IP} +short
+dig -x ${WORKER1_IP} +short
+dig -x ${WORKER2_IP} +short
+dig -x ${WORKER3_IP} +short
+dig -x ${WORKER4_IP} +short
+
+timedatectl set-timezone Asia/Shanghai
+timedatectl status | grep 'Time zone'
+
+systemctl status chronyd
+cp /etc/chrony.conf{,.bak}
+sed -i -e "s/^server*/#&/g" \
+       -e "s/#local stratum 10/local stratum 10/g" \
+       -e "s/#allow 192.168.0.0\/16/allow all/g" \
+       /etc/chrony.conf
+cat >> /etc/chrony.conf << EOF
+server helper.${OCP_CLUSTER_ID}.${BASE_DOMAIN} iburst
+EOF
+cat /etc/chrony.conf
+systemctl restart chronyd
+ps -auxw |grep chrony
+ss -lnup |grep chronyd
+chronyc sources -v
+
+
+
+
+setVAR REGISTRY_PATH /data/registry 
+mkdir -p ${REGISTRY_PATH}/{auth,certs,data}
+
+openssl req -newkey rsa:4096 -nodes -sha256 -keyout ${REGISTRY_PATH}/certs/registry.key -x509 -days 3650 \
+  -out ${REGISTRY_PATH}/certs/registry.crt \
+  -addext "subjectAltName = DNS:helper.ocp.ap.vwg" \
+  -subj "/C=CN/ST=BEIJING/L=BJ/O=VOLKSWAGEN/OU=IT/CN=helper.${OCP_CLUSTER_ID}.${BASE_DOMAIN}/emailAddress=admin@${OCP_CLUSTER_ID}.${BASE_DOMAIN}"
+
+openssl x509 -in ${REGISTRY_PATH}/certs/registry.crt -text | head -n 14
+
+yum -y install docker-distribution
+cd /tmp
+podman save -o /tmp/docker-registry-v2.tar docker.io/library/registry:2
+podman load -i /tmp/docker-registry-v2.tar
+
+htpasswd -bBc ${REGISTRY_PATH}/auth/htpasswd openshift redhat
+cat ${REGISTRY_PATH}/auth/htpasswd
+
+setVAR REGISTRY_DOMAIN helper.${OCP_CLUSTER_ID}.${BASE_DOMAIN}:5000
+
+cat <<EOF > /usr/local/bin/localregistry.sh 
+#!/bin/bash
+podman run --name poc-registry -d -p 5000:5000 \
+-v /data/registry/data:/var/lib/registry:z \
+-v /data/registry/auth:/auth:z \
+-e "REGISTRY_AUTH=htpasswd" \
+-e "REGISTRY_AUTH_HTPASSWD_REALM=Registry" \
+-e "REGISTRY_HTTP_SECRET=ALongRandomSecretForRegistry" \
+-e REGISTRY_AUTH_HTPASSWD_PATH=/auth/htpasswd \
+-v /data/registry/certs:/certs:z \
+-e REGISTRY_HTTP_TLS_CERTIFICATE=/certs/registry.crt \
+-e REGISTRY_HTTP_TLS_KEY=/certs/registry.key \
+docker.io/library/registry:2
+EOF
+
+chmod a+x /usr/local/bin/localregistry.sh/error?error=invalid_state&error_type=auth
+
+podman generate systemd poc-registry >> /etc/systemd/system/container-poc-registry.service
+systemctl enable container-poc-registry.service
+
+systemctl start container-poc-registry.service
+systemctl status container-poc-registry.service
+
+cp ${REGISTRY_PATH}/certs/registry.crt /etc/pki/ca-trust/source/anchors/
+update-ca-trust
+
+curl -u openshift:redhat https://${REGISTRY_DOMAIN}/v2/_catalog
+
+setVAR REGISTRY_REPO ocp4/openshift4
+setVAR GODEBUG 509ignoreCN=0
+
+setVAR PULL_SECRET_FILE ${OCP_PATH}/secret/redhat-pull-secret.json
+GODEBUG=x509ignoreCN=0 podman login -u openshift -p redhat --authfile ${PULL_SECRET_FILE} ${REGISTRY_DOMAIN}
+cat ${PULL_SECRET_FILE} | jq -c . | tee ${PULL_SECRET_FILE}.tmp
+mv -f ${PULL_SECRET_FILE}.tmp ${PULL_SECRET_FILE}
+
+tar -xvf ${OCP_PATH}/ocp-image/ocp-image-${OCP_VER}.tar -C ${OCP_PATH}/ocp-image/
+rm -f ${OCP_PATH}/ocp-image/ocp-image-${OCP_VER}.tar
+
+oc image mirror --insecure -a ${PULL_SECRET_FILE} \
+     --dir=${OCP_PATH}/ocp-image/mirror_${OCP_VER} file://openshift/release:${OCP_VER}* ${REGISTRY_DOMAIN}/${REGISTRY_REPO}
+
+curl -u openshift:redhat https://${REGISTRY_DOMAIN}/v2/_catalog
+curl -u openshift:redhat -s https://${REGISTRY_DOMAIN}/v2/${REGISTRY_REPO}/tags/list | jq -M '.["tags"][]' | wc -l
+curl -u openshift:redhat -s https://${REGISTRY_DOMAIN}/v2/${REGISTRY_REPO}/tags/list | jq -M '.["name"] + ":" + .["tags"][]' 
+oc adm release info --insecure -a ${PULL_SECRET_FILE} "${REGISTRY_DOMAIN}/${REGISTRY_REPO}:${OCP_VER}-x86_64" | grep -A 200 -i "Images" 
+
+
+yum -y install haproxy
+systemctl enable haproxy --now
+
+cat <<EOF > /etc/haproxy/haproxy.cfg
+
+
+# Global settings
+#---------------------------------------------------------------------
+global
+    maxconn     20000
+    log         /dev/log local0 info
+    chroot      /var/lib/haproxy
+    pidfile     /var/run/haproxy.pid
+    user        haproxy
+    group       haproxy
+    daemon
+
+
+    # turn on stats unix socket
+    stats socket /var/lib/haproxy/stats
+
+
+#---------------------------------------------------------------------
+# common defaults that all the 'listen' and 'backend' sections will
+# use if not designated in their block
+#---------------------------------------------------------------------
+defaults
+    mode                    http
+    log                     global
+    option                  httplog
+    option                  dontlognull
+#    option http-server-close
+    option forwardfor       except 127.0.0.0/8
+    option                  redispatch
+    retries                 3
+    timeout http-request    10s
+    timeout queue           1m
+    timeout connect         10s
+    timeout client          300s
+    timeout server          300s
+    timeout http-keep-alive 10s
+    timeout check           10s
+    maxconn                 20000
+
+
+listen stats
+    bind :9000
+    mode http
+    stats enable
+    stats uri /
+
+
+frontend  openshift-api-server-${OCP_CLUSTER_ID}
+    bind helper.${OCP_CLUSTER_ID}.${BASE_DOMAIN}:6443
+    mode tcp
+    option tcplog
+    default_backend openshift-api-server-${OCP_CLUSTER_ID}
+
+
+frontend  machine-config-server-${OCP_CLUSTER_ID}
+    bind helper.${OCP_CLUSTER_ID}.${BASE_DOMAIN}:22623
+    mode tcp
+    option tcplog
+    default_backend machine-config-server-${OCP_CLUSTER_ID}
+
+
+frontend  ingress-http-${OCP_CLUSTER_ID}
+    bind helper.${OCP_CLUSTER_ID}.${BASE_DOMAIN}:80
+    mode tcp
+    option tcplog
+    default_backend ingress-http-${OCP_CLUSTER_ID}
+
+
+frontend  ingress-https-${OCP_CLUSTER_ID}
+    bind helper.${OCP_CLUSTER_ID}.${BASE_DOMAIN}:443
+    mode tcp
+    option tcplog
+    default_backend ingress-https-${OCP_CLUSTER_ID}
+
+
+backend openshift-api-server-${OCP_CLUSTER_ID}
+    balance source
+    mode tcp
+    server     bootstrap bootstrap.${OCP_CLUSTER_ID}.${BASE_DOMAIN}:6443 check
+    server     master1 master1.${OCP_CLUSTER_ID}.${BASE_DOMAIN}:6443 check
+    server     master2 master2.${OCP_CLUSTER_ID}.${BASE_DOMAIN}:6443 check
+    server     master3 master3.${OCP_CLUSTER_ID}.${BASE_DOMAIN}:6443 check
+
+
+backend machine-config-server-${OCP_CLUSTER_ID}
+    balance source
+    mode tcp
+    server     bootstrap bootstrap.${OCP_CLUSTER_ID}.${BASE_DOMAIN}:22623 check
+    server     master1 master1.${OCP_CLUSTER_ID}.${BASE_DOMAIN}:22623 check
+    server     master2 master2.${OCP_CLUSTER_ID}.${BASE_DOMAIN}:22623 check
+    server     master3 master3.${OCP_CLUSTER_ID}.${BASE_DOMAIN}:22623 check
+
+
+backend ingress-http-${OCP_CLUSTER_ID}
+    balance source
+    mode tcp
+    server     worker1 worker1.${OCP_CLUSTER_ID}.${BASE_DOMAIN}:80 check
+    server     worker2 worker2.${OCP_CLUSTER_ID}.${BASE_DOMAIN}:80 check
+    server     worker3 worker3.${OCP_CLUSTER_ID}.${BASE_DOMAIN}:80 check
+    server     worker4 worker4.${OCP_CLUSTER_ID}.${BASE_DOMAIN}:80 check
+
+
+backend ingress-https-${OCP_CLUSTER_ID}
+    balance source
+    mode tcp
+    server     worker1 worker1.${OCP_CLUSTER_ID}.${BASE_DOMAIN}:443 check
+    server     worker2 worker2.${OCP_CLUSTER_ID}.${BASE_DOMAIN}:443 check
+    server     worker3 worker3.${OCP_CLUSTER_ID}.${BASE_DOMAIN}:443 check
+    server     worker4 worker4.${OCP_CLUSTER_ID}.${BASE_DOMAIN}:443 check
+
+
+EOF
+cat /etc/haproxy/haproxy.cfg
+
+systemctl restart haproxy
+ss -lntp |grep haproxy
+
+tar -xzf ${OCP_PATH}/ocp-installer/openshift-install-linux-${OCP_VER}.tar.gz -C /usr/local/sbin/
+openshift-install version
+
+setVAR REPLICA_WORKER 0
+setVAR REPLICA_MASTER 3
+setVAR CLUSTER_PATH /data/ocp-cluster/${OCP_CLUSTER_ID}
+setVAR IGN_PATH ${CLUSTER_PATH}/ignition
+setVAR PULL_SECRET_STR "\$(cat \${PULL_SECRET_FILE})" 
+setVAR SSH_KEY_PATH ${CLUSTER_PATH}/ssh-key
+setVAR SSH_PRI_FILE ${SSH_KEY_PATH}/id_rsa
+
+mkdir -p ${IGN_PATH}
+mkdir -p ${SSH_KEY_PATH}
+ssh-keygen -N '' -f ${SSH_KEY_PATH}/id_rsa
+
+ll ${SSH_KEY_PATH}
+setVAR SSH_PUB_STR "\$(cat ${SSH_KEY_PATH}/id_rsa.pub)" 
+echo ${SSH_PUB_STR}
+
+cat << EOF > ${IGN_PATH}/install-config.yaml
+apiVersion: v1
+baseDomain: ${BASE_DOMAIN}
+compute:
+- hyperthreading: Enabled
+  name: worker
+  replicas: ${REPLICA_WORKER}
+controlPlane:
+  hyperthreading: Enabled
+  name: master
+  replicas: ${REPLICA_MASTER}
+metadata:
+  name: ${OCP_CLUSTER_ID}
+networking:
+  clusterNetworks:
+  - cidr: 10.128.0.0/14
+    hostPrefix: 23
+  networkType: OVNKubernetes
+  serviceNetwork:
+  - 172.30.0.0/16
+platform:
+  none: {}
+fips: false
+pullSecret: '${PULL_SECRET_STR}'
+sshKey: '${SSH_PUB_STR}'
+imageContentSources: 
+- mirrors:
+  - ${REGISTRY_DOMAIN}/${REGISTRY_REPO}
+  source: quay.io/openshift-release-dev/ocp-release
+- mirrors:
+  - ${REGISTRY_DOMAIN}/${REGISTRY_REPO}
+  source: quay.io/openshift-release-dev/ocp-v4.0-art-dev
+EOF
+
+cat ${IGN_PATH}/install-config.yaml
+cp ${REGISTRY_PATH}/certs/registry.crt ${IGN_PATH}/
+sed -i -e 's/^/  /' ${IGN_PATH}/registry.crt
+echo "additionalTrustBundle: |" >> ${IGN_PATH}/install-config.yaml
+cat ${IGN_PATH}/registry.crt >> ${IGN_PATH}/install-config.yaml
+
+cat ${IGN_PATH}/install-config.yaml
+
+cp ${IGN_PATH}/install-config.yaml{,.`date +%Y%m%d%H%M`.bak}
+
+ll ${IGN_PATH}
+
+openshift-install create manifests --dir ${IGN_PATH}
+tree ${IGN_PATH}/manifests/ ${IGN_PATH}/openshift/
+
+sed -i 's/mastersSchedulable: true/mastersSchedulable: false/g' ${IGN_PATH}/manifests/cluster-scheduler-02-config.yml
+cat ${IGN_PATH}/manifests/cluster-scheduler-02-config.yml | grep mastersSchedulable
+
+setVAR NTP_CONF $(cat << EOF | base64 -w 0
+server helper.${OCP_CLUSTER_ID}.${BASE_DOMAIN} iburst
+driftfile /var/lib/chrony/drift
+makestep 1.0 3
+rtcsync
+logdir /var/log/chrony
+EOF)
+echo ${NTP_CONF} | base64 -d
+
+
+cat << EOF > ${IGN_PATH}/openshift/99_masters-chrony-configuration.yaml
+apiVersion: machineconfiguration.openshift.io/v1
+kind: MachineConfig
+metadata:
+  labels:
+    machineconfiguration.openshift.io/role: master
+  name: masters-chrony-configuration
+spec:
+  config:
+    ignition:
+      config: {}
+      security:
+        tls: {}
+      timeouts: {}
+      version: 3.2.0
+    networkd: {}
+    passwd: {}
+    storage:
+      files:
+      - contents:
+          source: data:text/plain;charset=utf-8;base64,${NTP_CONF}
+        mode: 420
+        overwrite: true
+        path: /etc/chrony.conf
+  osImageURL: ""
+EOF
+cat ${IGN_PATH}/openshift/99_masters-chrony-configuration.yaml
+
+cat << EOF > ${IGN_PATH}/openshift/99_workers-chrony-configuration.yaml
+apiVersion: machineconfiguration.openshift.io/v1
+kind: MachineConfig
+metadata:
+  labels:
+    machineconfiguration.openshift.io/role: worker
+  name: workers-chrony-configuration
+spec:
+  config:
+    ignition:
+      config: {}
+      security:
+        tls: {}
+      timeouts: {}
+      version: 3.2.0
+    networkd: {}
+    passwd: {}
+    storage:
+      files:
+      - contents:
+          source: data:text/plain;charset=utf-8;base64,${NTP_CONF}
+        mode: 420
+        overwrite: true
+        path: /etc/chrony.conf
+  osImageURL: ""
+EOF
+cat ${IGN_PATH}/openshift/99_workers-chrony-configuration.yaml
+
+openshift-install create ignition-configs --dir ${IGN_PATH}/
+
+ll ${IGN_PATH}/*.ign
+jq .ignition.config ${IGN_PATH}/master.ign 
+jq .ignition.config ${IGN_PATH}/worker.ign 
+
+setVAR GATEWAY_IP 10.120.88.1
+setVAR NETMASK 24
+setVAR CONNECT_NAME "Wired connection 1" 
+
+creat_auto_config_file(){
+
+cat << EOF > ${IGN_PATH}/set-${NODE_NAME}
+nmcli connection modify "${CONNECT_NAME}" ipv4.addresses ${IP}/${NETMASK}
+nmcli connection modify "${CONNECT_NAME}" ipv4.dns ${DNS_IP}
+nmcli connection modify "${CONNECT_NAME}" ipv4.gateway ${GATEWAY_IP}
+nmcli connection modify "${CONNECT_NAME}" ipv4.method manual
+nmcli connection down "${CONNECT_NAME}"
+nmcli connection up "${CONNECT_NAME}"
+
+
+sudo coreos-installer install /dev/sda --insecure-ignition --ignition-url=http://helper.${OCP_CLUSTER_ID}.${BASE_DOMAIN}:8080/${OCP_CLUSTER_ID}/ignition/${NODE_TYPE}.ign --firstboot-args 'rd.neednet=1' --copy-network
+EOF
+}
+
+creat_auto_config_file(){
+
+cat << EOF > ${IGN_PATH}/set-${NODE_NAME}
+nmcli connection modify "${CONNECT_NAME}" ipv4.addresses ${IP}/${NETMASK}
+nmcli connection modify "${CONNECT_NAME}" ipv4.dns ${HELPER_IP}
+nmcli connection modify "${CONNECT_NAME}" ipv4.gateway ${GATEWAY_IP}
+nmcli connection modify "${CONNECT_NAME}" ipv4.method manual
+nmcli connection down "${CONNECT_NAME}"
+nmcli connection up "${CONNECT_NAME}"
+
+
+sudo coreos-installer install /dev/vda --insecure-ignition --ignition-url=http://helper.${OCP_CLUSTER_ID}.${BASE_DOMAIN}:8080/${OCP_CLUSTER_ID}/ignition/${NODE_TYPE}.ign --firstboot-args 'rd.neednet=1' --copy-network
+EOF
+}
+
+NODE_TYPE="bootstrap"
+NODE_NAME="bootstrap"
+IP=${BOOTSTRAP_IP}
+creat_auto_config_file 
+cat ${IGN_PATH}/set-${NODE_NAME}
+
+NODE_TYPE="master"
+NODE_NAME="master1"
+IP=${MASTER1_IP}
+creat_auto_config_file
+
+NODE_TYPE="master"
+NODE_NAME="master2"
+IP=${MASTER2_IP}
+creat_auto_config_file
+
+NODE_TYPE="master"
+NODE_NAME="master3"
+IP=${MASTER3_IP}
+creat_auto_config_file
+
+NODE_TYPE="worker"
+NODE_NAME="worker1"
+IP=${WORKER1_IP}
+creat_auto_config_file
+
+NODE_TYPE="worker"
+NODE_NAME="worker2"
+IP=${WORKER2_IP}
+creat_auto_config_file
+
+NODE_TYPE="worker"
+NODE_NAME="worker3"
+IP=${WORKER3_IP}
+creat_auto_config_file
+
+NODE_TYPE="worker"
+NODE_NAME="worker4"
+IP=${WORKER4_IP}
+creat_auto_config_file
+
+ll ${IGN_PATH}/set-*
+
+chmod -R 705 ${IGN_PATH}/
+cat << EOF > /etc/httpd/conf.d/ignition.conf
+Alias /${OCP_CLUSTER_ID} "${IGN_PATH}/../"
+<Directory "${IGN_PATH}/../">
+  Options +Indexes +FollowSymLinks
+  Require all granted
+</Directory>
+<Location /${OCP_CLUSTER_ID}>
+  SetHandler None
+</Location>
+EOF
+systemctl restart httpd
+
+curl http://helper.${OCP_CLUSTER_ID}.${BASE_DOMAIN}:8080/${OCP_CLUSTER_ID}/ignition/bootstrap.ign | jq 
+curl http://helper.${OCP_CLUSTER_ID}.${BASE_DOMAIN}:8080/${OCP_CLUSTER_ID}/ignition/worker.ign | jq
+curl http://helper.${OCP_CLUSTER_ID}.${BASE_DOMAIN}:8080/${OCP_CLUSTER_ID}/ignition/master.ign | jq
+curl http://helper.${OCP_CLUSTER_ID}.${BASE_DOMAIN}:8080/${OCP_CLUSTER_ID}/ignition/set-bootstrap
+curl http://helper.${OCP_CLUSTER_ID}.${BASE_DOMAIN}:8080/${OCP_CLUSTER_ID}/ignition/set-master1
+curl http://helper.${OCP_CLUSTER_ID}.${BASE_DOMAIN}:8080/${OCP_CLUSTER_ID}/ignition/set-master2
+curl http://helper.${OCP_CLUSTER_ID}.${BASE_DOMAIN}:8080/${OCP_CLUSTER_ID}/ignition/set-master3
+curl http://helper.${OCP_CLUSTER_ID}.${BASE_DOMAIN}:8080/${OCP_CLUSTER_ID}/ignition/set-worker1
+curl http://helper.${OCP_CLUSTER_ID}.${BASE_DOMAIN}:8080/${OCP_CLUSTER_ID}/ignition/set-worker2
+curl http://helper.${OCP_CLUSTER_ID}.${BASE_DOMAIN}:8080/${OCP_CLUSTER_ID}/ignition/set-worker3
+curl http://helper.${OCP_CLUSTER_ID}.${BASE_DOMAIN}:8080/${OCP_CLUSTER_ID}/ignition/set-worker4
+
+rm -rf ~/.ssh/known_hosts
+ssh -i ${SSH_PRI_FILE} core@bootstrap.${OCP_CLUSTER_ID}.${BASE_DOMAIN} "sudo cat /etc/containers/registries.conf"
+ssh -i ${SSH_PRI_FILE} core@bootstrap.${OCP_CLUSTER_ID}.${BASE_DOMAIN} "curl -u openshift:redhat -s https://${REGISTRY_DOMAIN}/v2/_catalog"
+ssh -i ${SSH_PRI_FILE} core@bootstrap.${OCP_CLUSTER_ID}.${BASE_DOMAIN} "curl -u openshift:redhat -s https://${REGISTRY_DOMAIN}/v2/${REGISTRY_REPO}/tags/list" | jq -M '.["tags"][]' | wc -l
+ssh -i ${SSH_PRI_FILE} core@bootstrap.${OCP_CLUSTER_ID}.${BASE_DOMAIN} "sudo journalctl -f"
+
+
+ssh -i ${SSH_PRI_FILE} core@bootstrap.${OCP_CLUSTER_ID}.${BASE_DOMAIN} "curl -kIs https://api-int.${OCP_CLUSTER_ID}.${BASE_DOMAIN}:22623/config/master"
+
+ssh -i ${SSH_PRI_FILE} core@bootstrap.${OCP_CLUSTER_ID}.${BASE_DOMAIN} "sudo journalctl -f"
+
+
+ssh -i ${SSH_PRI_FILE} core@master1.${OCP_CLUSTER_ID}.${BASE_DOMAIN} "sudo cat /etc/containers/registries.conf"
+ssh -i ${SSH_PRI_FILE} core@master1.${OCP_CLUSTER_ID}.${BASE_DOMAIN} "curl -s -u openshift:redhat https://registry.${BASE_DOMAIN}:5000/v2/_catalog"
+ssh -i ${SSH_PRI_FILE} core@master1.${OCP_CLUSTER_ID}.${BASE_DOMAIN} "sudo journalctl -f"
+
+ssh -i ${SSH_PRI_FILE} core@master2.${OCP_CLUSTER_ID}.${BASE_DOMAIN} "sudo cat /etc/containers/registries.conf"
+ssh -i ${SSH_PRI_FILE} core@master2.${OCP_CLUSTER_ID}.${BASE_DOMAIN} "curl -s -u openshift:redhat https://registry.${BASE_DOMAIN}:5000/v2/_catalog"
+ssh -i ${SSH_PRI_FILE} core@master2.${OCP_CLUSTER_ID}.${BASE_DOMAIN} "sudo journalctl -f"
+
+ssh -i ${SSH_PRI_FILE} core@master3.${OCP_CLUSTER_ID}.${BASE_DOMAIN} "sudo cat /etc/containers/registries.conf"
+ssh -i ${SSH_PRI_FILE} core@master3.${OCP_CLUSTER_ID}.${BASE_DOMAIN} "curl -s -u openshift:redhat https://registry.${BASE_DOMAIN}:5000/v2/_catalog"
+ssh -i ${SSH_PRI_FILE} core@master3.${OCP_CLUSTER_ID}.${BASE_DOMAIN} "sudo journalctl -f"
+
+ssh -i ${SSH_PRI_FILE} core@bootstrap.${OCP_CLUSTER_ID}.${BASE_DOMAIN} "journalctl -b -f -u bootkube.service"
+ssh -i ${SSH_PRI_FILE} core@bootstrap.${OCP_CLUSTER_ID}.${BASE_DOMAIN} "sudo journalctl -f"
+
+mkdir ~/.kube
+cp ${IGN_PATH}/auth/kubeconfig ~/.kube/config
+oc get node
+
+oc get csr | grep Pending
+oc get csr | grep Pending | awk '{print $1}' | xargs oc adm certificate approve
+oc get csr | grep Pending
+oc get csr | grep Pending | awk '{print $1}' | xargs oc adm certificate approve
+
+oc get node
+oc get clusteroperators
+oc get clusterversion
+tail -f ${IGN_PATH}/.openshift_install.log
+openshift-install wait-for install-complete --log-level debug --dir ${IGN_PATH}
+
+
+htpasswd -c -B -b /root/ocp4/htpasswd admin CjdlxYrxns!23
+htpasswd -b /root/ocp4/htpasswd test1 Redhat!23
+htpasswd -b /root/ocp4/htpasswd test2 Redhat$56
+
+oc create secret generic htpass-secret --from-file=htpasswd=/root/ocp4/htpasswd -n openshift-config
+
+cat <<EOF | oc apply -f -
+apiVersion: config.openshift.io/v1
+kind: OAuth
+metadata:
+  name: cluster
+spec:
+  identityProviders:
+  - name: htpasswd_provider 
+    mappingMethod: claim 
+    type: HTPasswd
+    htpasswd:
+      fileData:
+        name: htpass-secret 
+EOF
+
+oc adm policy add-cluster-role-to-user cluster-admin admin
+oc adm policy add-role-to-user self-provisioner test1
+oc adm policy add-role-to-user self-provisioner test2
+
+oc patch OperatorHub cluster --type json -p '[{"op": "add", "path": "/spec/disableAllDefaultSources", "value": true}]'
+
+cd /data/OCP-4.14.26/ocp/oc-mirror/
+/usr/local/bin/oc-mirror --from /data/OCP-4.14.26/ocp/oc-mirror/operators_2024-06-27_mirror_seq1_000000.tar docker://helper.ocp.ap.vwg:5000 --rebuild-catalogs
+...
+Rendering catalog image "helper.ocp.ap.vwg:5000/redhat/redhat-operator-index:v4.15" with file-based catalog
+Rendering catalog image "helper.ocp.ap.vwg:5000/redhat/redhat-marketplace-index:v4.14" with file-based catalog
+Rendering catalog image "helper.ocp.ap.vwg:5000/redhat/redhat-marketplace-index:v4.15" with file-based catalog
+Rendering catalog image "helper.ocp.ap.vwg:5000/redhat/redhat-operator-index:v4.14" with file-based catalog
+Writing image mapping to oc-mirror-workspace/results-1721618410/mapping.txt
+Writing CatalogSource manifests to oc-mirror-workspace/results-1721618410
+Writing ICSP manifests to oc-mirror-workspace/results-1721618410
+
+oc apply -f catalogSource-cs-redhat-operator-index-1.yaml 
+cat imageContentSourcePolicy.yaml
+### 根据需要改变.metadata.name
+oc apply -f imageContentSourcePolicy.yaml

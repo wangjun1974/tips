@@ -9186,4 +9186,26 @@ curl https://api.openshift.com/api/assisted-install/v2/infra-envs/${infra_env_id
       ]
     }
   ' | jq
+
+### 可以访问<assisted-installer-node:8090>的/api/assisted-install/v2/infra-envs获取infra_env_id
+### 进一步获取master1_host_id
+curl <>:8090/api/assisted-install/v2/infra-envs 
+[{"cluster_id":"0aebedc8-ff46-46c4-8aaa-e2981d16f885","cpu_architecture":"x86_64","created_at":"2025-12-26T02:29:03.172402Z","download_url":"http://10.120.88.125:8888/byid/7e91c20d-c09f-49fa-8a52-cdbf58a7849c/4.20.8/x86_64/full.iso","email_domain":"Unknown","expires_at":"0001-01-01T00:00:00.000Z","href":"/api/assisted-install/v2/infra-envs/7e91c20d-c09f-49fa-8a52-cdbf58a7849c","id":"7e91c20d-c09f-49fa-8a52-cdbf58a7849c","kind":"InfraEnv","name":"ocp_infra-env","openshift_version":"4.20.8","proxy":{},"pull_secret_set":true,"type":"full-iso","updated_at":"2025-12-26T02:29:14.69037Z","user_name":"admin"}]
+
+infra_env_id="7e91c20d-c09f-49fa-8a52-cdbf58a7849c"
+master1_host_id="ddee0780-a039-4921-ae16-2129e2b9d317"
+curl http://10.120.88.125:8090/api/assisted-install/v2/infra-envs/${infra_env_id}/hosts/${master1_host_id}/installer-args \
+-X PATCH \
+-H "Content-Type: application/json" \
+-d '
+    {
+      "args": [
+        "--append-karg",
+        "ip=10.120.88.125::10.120.88.1:255.255.255.0:master1.ocp.ap.vwg:ens3:none:10.120.88.123",     
+        "--save-partindex",
+        "1",
+        "-n"
+      ]
+    }
+  ' | jq
 ```

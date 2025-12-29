@@ -9282,3 +9282,6 @@ spec:
 EOF
 
 ```
+
+### 设置 cluster wide proxy
+https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html/configuring_network_settings/enable-cluster-wide-proxy#nw-proxy-configure-object_config-cluster-wide-proxy

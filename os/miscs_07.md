@@ -9285,3 +9285,6 @@ EOF
 
 ### 设置 cluster wide proxy
 https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html/configuring_network_settings/enable-cluster-wide-proxy#nw-proxy-configure-object_config-cluster-wide-proxy
+
+### 4.16 SDN 转 OVN
+https://share.note.youdao.com/ynoteshare/index.html?id=454b7552fa0a66c4ec53661129855b69&type=note&_time=1767509060306

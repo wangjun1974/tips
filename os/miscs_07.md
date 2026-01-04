@@ -9288,3 +9288,28 @@ https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html/
 
 ### 4.16 SDN 转 OVN
 https://share.note.youdao.com/ynoteshare/index.html?id=454b7552fa0a66c4ec53661129855b69&type=note&_time=1767509060306
+```
+https://docs.redhat.com/en/documentation/openshift_container_platform/4.16/html/networking/ovn-kubernetes-network-plugin#initiating-limited-live-migration_migrate-from-openshift-sdn
+
+### limited live migration
+oc patch Network.operator.openshift.io cluster --type='merge' \
+  --patch '{ "spec": { "defaultNetwork": { "ovnKubernetesConfig": null } } }'
+
+### 1. To patch the cluster-level networking configuration and initiate the migration from OpenShift SDN to OVN-Kubernetes, enter the following command:
+
+$ oc patch Network.config.openshift.io cluster --type='merge' --patch '{"metadata":{"annotations":{"network.openshift.io/network-type-migration":""}},"spec":{"networkType":"OVNKubernetes"}}'
+
+### After running this command, the migration process begins. During this process, the Machine Config Operator reboots the nodes in your cluster twice. The migration takes approximately twice as long as a cluster upgrade.
+
+### 2. Optional: To ensure that the migration process has completed, and to check the status of the network.config, you can enter the following commands:
+$ oc get network.config.openshift.io cluster -o jsonpath='{.status.networkType}'
+oc get network.config cluster -o=jsonpath='{.status.conditions}' | jq .
+
+### check the migration process
+$ token=`oc create token prometheus-k8s -n openshift-monitoring`
+$ oc -n openshift-monitoring exec -c prometheus prometheus-k8s-0 -- curl -k -H "Authorization: Bearer $token" 'https://thanos-querier.openshift-monitoring.svc:9091/api/v1/query?' --data-urlencode 'query=openshift_network_operator_live_migration_condition' | jq
+
+### 3. After a successful migration operation, remove the network.openshift.io/network-type-migration- annotation from the network.config custom resource by entering the following command:
+$ oc annotate network.config cluster network.openshift.io/network-type-migration-
+
+```

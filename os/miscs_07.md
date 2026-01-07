@@ -9313,3 +9313,21 @@ $ oc -n openshift-monitoring exec -c prometheus prometheus-k8s-0 -- curl -k -H "
 $ oc annotate network.config cluster network.openshift.io/network-type-migration-
 
 ```
+
+### 在 Windows Server 2019 Server Core 里安装 winsdk 来运行 cdb.exe 
+```
+### https://learn.microsoft.com/zh-cn/windows/apps/windows-sdk/downloads
+### https://go.microsoft.com/fwlink/?linkid=2311805
+### 下载 winsdksetup.exe
+cd C:\
+mkdir tools
+cd tools
+curl http://10.66.208.129/winsdksetup.exe -o winsdksetup.exe
+curl http://10.66.208.129/MEMORY.DMP -o MEMORY.DMP
+
+### 安装 winsdksetup.exe
+C:\tools\winsdksetup.exe /quiet /features OptionId.WindowsDesktopDebuggers
+
+### 运行 cdb.exe
+"C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\cdb.exe" -z C:\tools\MEMORY.DMP
+```

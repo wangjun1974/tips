@@ -9315,6 +9315,7 @@ $ oc annotate network.config cluster network.openshift.io/network-type-migration
 ```
 
 ### 在 Windows Server 2019 Server Core 里安装 winsdk 来运行 cdb.exe 
+https://learn.microsoft.com/en-us/windows-hardware/drivers/debugger/opening-a-crash-dump-file-using-cdb
 ```
 ### https://learn.microsoft.com/zh-cn/windows/apps/windows-sdk/downloads
 ### https://go.microsoft.com/fwlink/?linkid=2311805

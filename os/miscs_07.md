@@ -9332,3 +9332,17 @@ C:\tools\winsdksetup.exe /quiet /features OptionId.WindowsDesktopDebuggers
 ### 运行 cdb.exe
 "C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\cdb.exe" -z C:\tools\MEMORY.DMP
 ```
+
+### 在 ocp 4.20.8 的 agent-ove 的 assisted-installer disconnected iso 上安装 two node arbiter 时
+### 为 install-config 添加 HighlyAvailableArbiter=true featureGates.
+https://github.com/openshift/assisted-service/blob/master/docs/user-guide/install-customization.md#patch-the-install-config
+```
+CLUSTER_ID="2f3f22b1-8766-4377-ac7f-ce8015ce3c6d"
+curl http://10.120.88.125:8090/api/assisted-install/v2/clusters/${CLUSTER_ID}/install-config \
+-X PATCH \
+-H "Content-Type: application/json" \
+-d '"{\"featureSet\":\"CustomNoUpgrade\",\"featureGates\":[\"NoRegistryClusterOperations=true\",\"HighlyAvailableArbiter=true\"]}"'| jq
+
+### 检查结果
+curl http://10.120.88.125:8090/api/assisted-install/v2/clusters/${CLUSTER_ID}/install-config | jq
+```

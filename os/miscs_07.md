@@ -9345,4 +9345,117 @@ curl http://10.120.88.125:8090/api/assisted-install/v2/clusters/${CLUSTER_ID}/in
 
 ### 检查结果
 curl http://10.120.88.125:8090/api/assisted-install/v2/clusters/${CLUSTER_ID}/install-config | jq
+
+### 用带 local registry 的iso 安装出来的节点，会将
+### registry.appliance.openshift.com 配置到本机
+```
+
+### 用 Assisted Installer Disconnected Local Registry ISO 安装Two Node Arbiter集群的步骤
+```
+### 节点用agent-ove iso启动时，在启动的kernel params上输入ip地址信息
+### Passing the following kernel arguments sets up the static ip
+### ip=<ipaddress>::<defaultgw>:<netmask>:<hostname>:<iface>:none:<dns server 1>:<dns server 2>
+### master1: ip=10.120.88.125::10.120.88.1:255.255.255.0:master1.ocp.ap.vwg:ens3:none:10.120.88.123
+### master2: ip=10.120.88.126::10.120.88.1:255.255.255.0:master2.ocp.ap.vwg:ens3:none:10.120.88.123
+### arbiter: ip=10.120.88.127::10.120.88.1:255.255.255.0:master3.ocp.ap.vwg:ens3:none:10.120.88.123
+
+### 可以访问<assisted-installer-node:8090>的/api/assisted-install/v2/infra-envs获取infra_env_id
+### 进一步获取master1_host_id
+
+### 在UI上检查host_id
+infra_env_id="7e91c20d-c09f-49fa-8a52-cdbf58a7849c"
+master1_host_id="7f394987-7fb5-4e5b-80e2-9dc28b7be919"
+master2_host_id="ebc23564-dd5d-4a31-992c-e8c3ed69e0d5"
+arbiter_host_id="b566cc2d-52ee-448d-9054-44ca159f88c1"
+
+curl http://10.120.88.125:8090/api/assisted-install/v2/infra-envs/${infra_env_id}/hosts/${master1_host_id}/installer-args \
+-X PATCH \
+-H "Content-Type: application/json" \
+-d '
+    {
+      "args": [
+        "--append-karg",
+        "ip=10.120.88.125::10.120.88.1:255.255.255.0:master1.ocp.ap.vwg:ens3:none:10.120.88.123"
+      ]
+    }
+  ' | jq
+curl http://10.120.88.125:8090/api/assisted-install/v2/infra-envs/${infra_env_id}/hosts/${master1_host_id} | jq .installer_args
+
+curl http://10.120.88.125:8090/api/assisted-install/v2/infra-envs/${infra_env_id}/hosts/${master2_host_id}/installer-args \
+-X PATCH \
+-H "Content-Type: application/json" \
+-d '
+    {
+      "args": [
+        "--append-karg",
+        "ip=10.120.88.126::10.120.88.1:255.255.255.0:master2.ocp.ap.vwg:ens3:none:10.120.88.123"
+      ]
+    }
+  ' | jq
+curl http://10.120.88.125:8090/api/assisted-install/v2/infra-envs/${infra_env_id}/hosts/${master2_host_id} | jq .installer_args
+
+### 测试环境里第三台节点的网络接口名是 enp1s0
+curl http://10.120.88.125:8090/api/assisted-install/v2/infra-envs/${infra_env_id}/hosts/${arbiter_host_id}/installer-args \
+-X PATCH \
+-H "Content-Type: application/json" \
+-d '
+    {
+      "args": [
+        "--append-karg",
+        "ip=10.120.88.127::10.120.88.1:255.255.255.0:master3.ocp.ap.vwg:enp1s0:none:10.120.88.123"
+      ]
+    }
+  ' | jq
+
+curl http://10.120.88.125:8090/api/assisted-install/v2/infra-envs/${infra_env_id}/hosts/${arbiter_host_id} | jq .installer_args
+
+### 获取host_id
+在UI上查看检查对照
+infra_env_id="7e91c20d-c09f-49fa-8a52-cdbf58a7849c"
+master1_host_id="7f394987-7fb5-4e5b-80e2-9dc28b7be919"
+master2_host_id="ebc23564-dd5d-4a31-992c-e8c3ed69e0d5"
+arbiter_host_id="b566cc2d-52ee-448d-9054-44ca159f88c1"
+
+### 查看节点interface信息
+curl http://10.120.88.125:8090/api/assisted-install/v2/infra-envs/${infra_env_id}/hosts/${master1_host_id} | jq .inventory | sed -e 's|,|\n\r|g' | grep interface  
+curl http://10.120.88.125:8090/api/assisted-install/v2/infra-envs/${infra_env_id}/hosts/${master2_host_id} | jq .inventory | sed -e 's|,|\n\r|g' | grep interface  
+curl http://10.120.88.125:8090/api/assisted-install/v2/infra-envs/${infra_env_id}/hosts/${arbiter_host_id} | jq .inventory | sed -e 's|,|\n\r|g' | grep interface  
+
+
+### 用4.20.8对应的agent-ove进行安装时Two Node Arbiter时
+### 网络选择Cluster-Managed Network
+### 在Download Credentials步骤遇到报错的处理方法
+### 报错信息按F12检查Get credentials?...
+### failed generating install config for cluster 2f3f22b1-8766-4377-ac7f-ce8015ce3c6d: error running openshift-install manifests,  level=warning msg=Host master3.ocp.ap.vwg hasn't any role configuredlevel=warning msg=Found override for release image (quay.io/openshift-release-dev/ocp-release@sha256:91606a5f04331ed3293f71034d4f480e38645560534805fe5a821e6b64a3f203). Release Image Architecture is unknownlevel=error msg=failed to fetch Master Machines: failed to load asset "Install Config": failed to create install config: invalid "install-config.yaml" file: arbiter: Forbidden: HighlyAvailableArbiter feature must be enabled i <TRUNCATED>: exit status 3
+
+### 启用HighlyAvailableArbiter
+https://github.com/openshift/assisted-service/blob/master/docs/user-guide/install-customization.md#patch-the-install-config
+CLUSTER_ID="2f3f22b1-8766-4377-ac7f-ce8015ce3c6d"
+curl http://10.120.88.125:8090/api/assisted-install/v2/clusters/${CLUSTER_ID}/install-config \
+-X PATCH \
+-H "Content-Type: application/json" \
+-d '"{\"featureSet\":\"CustomNoUpgrade\",\"featureGates\":[\"NoRegistryClusterOperations=true\",\"HighlyAvailableArbiter=true\"]}"'| jq
+
+### 检查结果
+curl http://10.120.88.125:8090/api/assisted-install/v2/clusters/${CLUSTER_ID}/install-config | jq
+
+### 在安装过程中，节点会在本地启动local registry服务
+### start-local-registry
+$ sudo systemctl status start-local-registry
+● start-local-registry.service - Local Registry
+     Loaded: loaded (/etc/systemd/system/start-local-registry.service; enabled; preset: disabled)
+     Active: active (running) since Thu 2026-01-08 06:01:59 UTC; 1h 58min ago
+   Main PID: 2991 (podman)
+      Tasks: 11 (limit: 101635)
+     Memory: 37.9M
+        CPU: 5min 45.664s
+     CGroup: /system.slice/start-local-registry.service
+$ sudo podman ps 
+CONTAINER ID  IMAGE                      COMMAND           CREATED      STATUS      PORTS       NAMES
+4e03969db9ad  localhost/registry:latest  serve config.yml  2 hours ago  Up 2 hours  5000/tcp    registry
+
+### 用带 local registry 的iso 安装出来的节点，会将
+### registry.appliance.openshift.com 配置到本机
+$ cat /etc/hosts  | grep registry
+127.0.0.1 registry.appliance.openshift.com
 ```

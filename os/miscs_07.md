@@ -9428,9 +9428,17 @@ curl http://10.120.88.125:8090/api/assisted-install/v2/infra-envs/${infra_env_id
 ### 报错信息按F12检查Get credentials?...
 ### failed generating install config for cluster 2f3f22b1-8766-4377-ac7f-ce8015ce3c6d: error running openshift-install manifests,  level=warning msg=Host master3.ocp.ap.vwg hasn't any role configuredlevel=warning msg=Found override for release image (quay.io/openshift-release-dev/ocp-release@sha256:91606a5f04331ed3293f71034d4f480e38645560534805fe5a821e6b64a3f203). Release Image Architecture is unknownlevel=error msg=failed to fetch Master Machines: failed to load asset "Install Config": failed to create install config: invalid "install-config.yaml" file: arbiter: Forbidden: HighlyAvailableArbiter feature must be enabled i <TRUNCATED>: exit status 3
 
+### 获取CLUSTER_ID
+curl http://10.120.88.125:8090/api/assisted-install/v2/clusters | jq -r '.[0].id'
+
+### 获取cluster object
+curl http://10.120.88.125:8090/api/assisted-install/v2/clusters | jq -r '.[0].id' 
+CLUSTER_ID="feb85443-b76f-44a3-892e-1d7981bc25df"
+curl http://10.120.88.125:8090/api/assisted-install/v2/clusters/${CLUSTER_ID} | tee cluster_object.json
+
 ### 启用HighlyAvailableArbiter
 https://github.com/openshift/assisted-service/blob/master/docs/user-guide/install-customization.md#patch-the-install-config
-CLUSTER_ID="2f3f22b1-8766-4377-ac7f-ce8015ce3c6d"
+CLUSTER_ID="feb85443-b76f-44a3-892e-1d7981bc25df"
 curl http://10.120.88.125:8090/api/assisted-install/v2/clusters/${CLUSTER_ID}/install-config \
 -X PATCH \
 -H "Content-Type: application/json" \

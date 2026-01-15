@@ -9467,3 +9467,47 @@ CONTAINER ID  IMAGE                      COMMAND           CREATED      STATUS  
 $ cat /etc/hosts  | grep registry
 127.0.0.1 registry.appliance.openshift.com
 ```
+
+### test openshift application
+```
+mkdir -p /tmp/hello-openshift
+skopeo copy --format v2s2 --all docker://quay.io/jwang1/hello-openshift:latest  dir:/tmp/hello-openshift
+skopeo copy --format v2s2 --all dir:/tmp/hello-openshift docker://helper.ocp.ap.vwg:5000/jwang1/hello-openshift:latest  
+
+cat <<EOF | oc apply -f -
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hello-openshift-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: hello-openshift
+  template:
+    metadata:
+      labels:
+        app: hello-openshift
+    spec:
+      containers:
+      - name: hello-openshift
+        image: helper.ocp.ap.vwg:5000/jwang1/hello-openshift:latest
+        ports:
+        - containerPort: 8080
+EOF
+
+cat <<EOF | oc apply -f -
+apiVersion: v1
+kind: Service
+metadata:
+  name: hello-openshift-service
+spec:
+  selector:
+    app: hello-openshift
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8080
+  type: ClusterIP # Use LoadBalancer or NodePort depending on your cluster setup
+EOF
+```

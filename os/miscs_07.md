@@ -9511,3 +9511,127 @@ spec:
   type: ClusterIP # Use LoadBalancer or NodePort depending on your cluster setup
 EOF
 ```
+
+### 
+```
+### 安装servicemesh3 operator
+oc create ns istio-system
+oc create ns istio-cni
+
+cat <<EOF | oc apply -f -
+apiVersion: sailoperator.io/v1
+kind: Istio
+metadata:
+  name: default
+spec:
+  namespace: istio-system
+  updateStrategy:
+    inactiveRevisionDeletionGracePeriodSeconds: 30
+    type: InPlace
+  version: v1.26.4
+EOF
+
+cat <<EOF | oc apply -f -
+apiVersion: sailoperator.io/v1
+kind: IstioCNI
+metadata:
+  name: default
+spec:
+  namespace: istio-cni
+  version: v1.26.4
+EOF
+
+### 安装metallb operator
+### 创建metallb对象
+
+cat <<EOF | oc apply -f -
+apiVersion: metallb.io/v1beta1
+kind: IPAddressPool
+metadata:
+  name: api-public-ip
+  namespace: metallb-system
+spec:
+  protocol: layer2
+  autoAssign: true
+  addresses:
+    - 10.120.88.50-10.120.88.50
+---
+apiVersion: metallb.io/v1beta1
+kind: L2Advertisement
+metadata:
+  name: api-public-ip
+  namespace: metallb-system
+spec:
+  nodeSelectors:
+  - matchLabels:
+      node-role.kubernetes.io/worker: ""
+EOF
+
+### 创建GatewayClass
+### controllerName需要固定
+cat <<EOF | oc apply -f -
+apiVersion: gateway.networking.k8s.io/v1
+kind: GatewayClass
+metadata:
+  name: test
+spec:
+  controllerName: openshift.io/gateway-controller/v1
+EOF
+
+### 创建证书
+openssl req -newkey rsa:4096 -nodes -sha256 -keyout ./wildcard.key -x509 -days 3650 \
+  -out ./wildcard.crt \
+  -addext "subjectAltName = DNS:*.gwapi.ocp.ap.vwg" \
+  -subj "/C=CN/ST=BEIJING/L=BJ/O=VOLKSWAGEN/OU=IT/CN=*.gwapi.ocp.ap.vwg/emailAddress=admin@ocp.ap.vwg"
+
+### 创建secret
+oc -n openshift-ingress create secret tls gwapi-wildcard --cert=wildcard.crt --key=wildcard.key
+
+### 创建Gateway
+cat <<EOF | oc apply -f -
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: example-gateway
+  namespace: openshift-ingress
+spec:
+  gatewayClassName: test
+  listeners:
+  - name: https
+    hostname: "*.gwapi.ocp.ap.vwg"
+    port: 443
+    protocol: HTTPS
+    tls:
+      mode: Terminate
+      certificateRefs:
+      - name: gwapi-wildcard
+    allowedRoutes:
+      namespaces:
+        from: All
+EOF
+
+### 创建HTTPRoute
+cat <<EOF | oc apply -f -
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: hello-openshift-route
+  namespace: default
+spec:
+  parentRefs:
+  - name: example-gateway
+    namespace: openshift-ingress
+  hostnames: ["hello.gwapi.ocp.ap.vwg"]
+  rules:
+  - backendRefs:
+    - name: hello-openshift-service 
+      port: 80
+EOF
+
+### 配置域名解析
+$ dig hello.gwapi.ocp.ap.vwg +short
+10.120.88.50
+
+### 访问域名hello.gwapi.ocp.ap.vwg
+curl -k hello.gwapi.ocp.ap.vwg
+```

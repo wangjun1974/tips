@@ -9635,3 +9635,36 @@ $ dig hello.gwapi.ocp.ap.vwg +short
 ### 访问域名hello.gwapi.ocp.ap.vwg
 curl -k hello.gwapi.ocp.ap.vwg
 ```
+
+### 为离线集群添加新增registry的pull secret
+```
+### 生成registry-ca.crt
+cd /tmp
+openssl s_client -connect helper.ocp.ap.vwg:5000 -showcerts </dev/null 2>/dev/null | \
+  openssl x509 -outform PEM > registry-ca.crt
+
+### 用registry-ca.crt创建configmap
+oc create configmap registry-ca \
+  --from-file=helper.ocp.ap.vwg..5000=registry-ca.crt \
+  -n openshift-config
+
+### 用configmap添加到image.config.openshift.io/cluster的spec.additionalTrustedCA
+oc patch image.config.openshift.io/cluster --type=merge \
+  --patch '{"spec":{"additionalTrustedCA":{"name":"registry-ca"}}}'
+
+### 提取现有的 pull secret
+cd /tmp
+oc get secret pull-secret -n openshift-config -o json | \
+  jq -r '.data.".dockerconfigjson"' | base64 -d > pull-secret.json
+
+### 创建新的认证信息(base64编码)
+AUTH=$(echo -n 'username:password' | base64 -w0)
+
+### 添加新的 registry 认证
+jq '.auths += {"helper.ocp.ap.vwg:5000": {"auth": "'"$AUTH"'", "email": "admin@example.com"}}' \
+  pull-secret.json > pull-secret-updated.json
+
+### 更新集群 Pull Secret
+oc set data secret/pull-secret -n openshift-config \
+  --from-file=.dockerconfigjson=pull-secret-updated.json
+```

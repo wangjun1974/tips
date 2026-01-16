@@ -9510,9 +9510,12 @@ spec:
       targetPort: 8080
   type: ClusterIP # Use LoadBalancer or NodePort depending on your cluster setup
 EOF
+
+### 创建route
+oc expose svc/hello-openshift-service
 ```
 
-### 
+### 用 gatewayapi 暴露 hello-openshift-service
 ```
 ### 安装servicemesh3 operator
 oc create ns istio-system

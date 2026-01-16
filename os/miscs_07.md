@@ -9671,3 +9671,11 @@ jq '.auths += {"helper.ocp.ap.vwg:5000": {"auth": "'"$AUTH"'", "email": "admin@e
 oc set data secret/pull-secret -n openshift-config \
   --from-file=.dockerconfigjson=pull-secret-updated.json
 ```
+
+### 为 helper 节点准备 dns server registry 和 ntp
+```
+按照helper节点准备步骤
+1. 为helper节点准备dns server
+2. 为helper节点准备registry
+3. 为helper节点准备ntp
+```

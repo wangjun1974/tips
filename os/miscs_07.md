@@ -9691,4 +9691,16 @@ curl -sk -X POST "https://ocp-kcs-rag-gmeghnag.apps.ipi-baremetal.sbr-shift.gssl
         "rerank_top_k": 20,
         "filters": {"tag": {"$any": ["ocp_4"]}, "caseCount": {"$gt": 2}}
       }' | jq -r '.[].view_uri' 
+
+# 带标签的格式化输出
+curl -sk -X POST "https://ocp-kcs-rag-gmeghnag.apps.ipi-baremetal.sbr-shift.gsslab.brq2.redhat.com/search" \
+  -H "Content-Type: application/json" \
+  -d '{
+        "query": "Unable to apply 4.15.39: error during syncRequiredMachineConfigPools: [context deadline exceeded, failed to update clusteroperator: [client rate limiter Wait returned an error: context deadline exceeded, MachineConfigPool master has not progressed to latest configuration: controller version mismatch for rendered-master-4b227ea905c84264cead8d259db905be expected 657ab58b76a99f2e566714bead33674c08ff9301 has ea6671e27ec6683aa986b7072b022f0393a0e15a: 0 (ready 0) out of 3 nodes are updating to latest configuration rendered-master-99ace27ed437fbae7426e7a19d356582, retrying]]",
+        "limit": 5,
+        "use_reranker": false,
+        "rerank_top_k": 20,
+        "filters": {"tag": {"$any": ["ocp_4"]}, "caseCount": {"$gt": 2}}
+      }' | jq -r '.[] | "View URI: \(.view_uri)\nIssue: \(.Issue)\nResolution: \(.Resolution)\nRoot Cause: \(.RootCause)\n\n---\n\n"'
+
 ```

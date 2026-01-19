@@ -9704,3 +9704,26 @@ curl -sk -X POST "https://ocp-kcs-rag-gmeghnag.apps.ipi-baremetal.sbr-shift.gssl
       }' | jq -r '.[] | "View URI: \(.view_uri)\nIssue: \(.Issue)\nResolution: \(.Resolution)\nRoot Cause: \(.RootCause)\n\n---\n\n"'
 
 ```
+
+### coreos.inst params
+https://coreos.github.io/coreos-installer/getting-started/ 
+```
+coreos.inst.install_dev=/dev/vda
+coreos.inst.ignition_url=http://helper.ocp.ap.vwg:8080/ocp/ignition/bootstrap.ign
+coreos.inst.insecure
+```
+
+### 用 virt-install 安装 openshift cluster
+```
+LC_ALL=en_US.UTF-8 virt-install --name=bootstrap --vcpus=4 --memory=16384 --disk size=100,bus=virtio,format=qcow2 --network bridge=virbr0,model=virtio --os-variant=rhel8.0 --boot menu=on --console pty,target_type=serial --location=/var/lib/libvirt/images/rhcos-live.x86_64.iso --extra-args 'console=tty0 console=ttyS0 rw coreos.liveiso=rhcos-9.6.20250826-1 igniton.firstboot ignition.platform=baremetal ip=10.120.88.124::10.120.88.1:255.255.255.0:bootstrap.ocp.ap.vwg:ens3:none:10.120.88.123 coreos.inst.install_dev=/dev/vda coreos.inst.ignition_url=http://helper.ocp.ap.vwg:8080/ocp/ignition/bootstrap.ign coreos.inst.insecure'
+
+LC_ALL=en_US.UTF-8 virt-install --name=master1 --vcpus=4 --memory=16384 --disk size=100,bus=virtio,format=qcow2 --network bridge=virbr0,model=virtio --os-variant=rhel8.0 --boot menu=on --console pty,target_type=serial --location=/var/lib/libvirt/images/rhcos-live.x86_64.iso --extra-args 'console=tty0 console=ttyS0 rw coreos.liveiso=rhcos-9.6.20250826-1 igniton.firstboot ignition.platform=baremetal ip=10.120.88.125::10.120.88.1:255.255.255.0:master1.ocp.ap.vwg:ens3:none:10.120.88.123 coreos.inst.install_dev=/dev/vda coreos.inst.ignition_url=http://helper.ocp.ap.vwg:8080/ocp/ignition/bootstrap.ign coreos.inst.insecure'
+
+LC_ALL=en_US.UTF-8 virt-install --name=master2 --vcpus=4 --memory=16384 --disk size=100,bus=virtio,format=qcow2 --network bridge=virbr0,model=virtio --os-variant=rhel8.0 --boot menu=on --console pty,target_type=serial --location=/var/lib/libvirt/images/rhcos-live.x86_64.iso --extra-args 'console=tty0 console=ttyS0 rw coreos.liveiso=rhcos-9.6.20250826-1 igniton.firstboot ignition.platform=baremetal ip=10.120.88.126::10.120.88.1:255.255.255.0:master2.ocp.ap.vwg:ens3:none:10.120.88.123 coreos.inst.install_dev=/dev/vda coreos.inst.ignition_url=http://helper.ocp.ap.vwg:8080/ocp/ignition/bootstrap.ign coreos.inst.insecure'
+
+LC_ALL=en_US.UTF-8  virt-install --name=master3 --vcpus=4 --memory=16384 --disk size=100,bus=virtio,format=qcow2 --network bridge=virbr0,model=virtio --os-variant=rhel8.0 --boot menu=on --console pty,target_type=serial --location=/var/lib/libvirt/images/rhcos-live.x86_64.iso --extra-args 'console=tty0 console=ttyS0 rw coreos.liveiso=rhcos-9.6.20250826-1 igniton.firstboot ignition.platform=baremetal ip=10.120.88.127::10.120.88.1:255.255.255.0:master3.ocp.ap.vwg:ens3:none:10.120.88.123 coreos.inst.install_dev=/dev/vda coreos.inst.ignition_url=http://helper.ocp.ap.vwg:8080/ocp/ignition/bootstrap.ign coreos.inst.insecure'
+
+LC_ALL=en_US.UTF-8 virt-install --name=worker1 --vcpus=4 --memory=16384 --disk size=100,bus=virtio,format=qcow2 --network bridge=virbr0,model=virtio --os-variant=rhel8.0 --boot menu=on --console pty,target_type=serial --location=/var/lib/libvirt/images/rhcos-live.x86_64.iso --extra-args 'console=tty0 console=ttyS0 rw coreos.liveiso=rhcos-9.6.20250826-1 igniton.firstboot ignition.platform=baremetal ip=10.120.88.128::10.120.88.1:255.255.255.0:worker1.ocp.ap.vwg:ens3:none:10.120.88.123 coreos.inst.install_dev=/dev/vda coreos.inst.ignition_url=http://helper.ocp.ap.vwg:8080/ocp/ignition/bootstrap.ign coreos.inst.insecure'
+
+LC_ALL=en_US.UTF-8 virt-install --name=worker2 --vcpus=4 --memory=16384 --disk size=100,bus=virtio,format=qcow2 --network bridge=virbr0,model=virtio --os-variant=rhel8.0 --boot menu=on --console pty,target_type=serial --location=/var/lib/libvirt/images/rhcos-live.x86_64.iso --extra-args 'console=tty0 console=ttyS0 rw coreos.liveiso=rhcos-9.6.20250826-1 igniton.firstboot ignition.platform=baremetal ip=10.120.88.129::10.120.88.1:255.255.255.0:worker2.ocp.ap.vwg:ens3:none:10.120.88.123 coreos.inst.install_dev=/dev/vda coreos.inst.ignition_url=http://helper.ocp.ap.vwg:8080/ocp/ignition/bootstrap.ign coreos.inst.insecure'
+```

@@ -9726,4 +9726,8 @@ LC_ALL=en_US.UTF-8  virt-install --name=master3 --vcpus=4 --memory=16384 --disk 
 LC_ALL=en_US.UTF-8 virt-install --name=worker1 --vcpus=4 --memory=16384 --disk size=100,bus=virtio,format=qcow2 --network bridge=virbr0,model=virtio --os-variant=rhel8.0 --boot menu=on --console pty,target_type=serial --location=/var/lib/libvirt/images/rhcos-live.x86_64.iso --extra-args 'console=tty0 console=ttyS0 rw coreos.liveiso=rhcos-9.6.20250826-1 igniton.firstboot ignition.platform=baremetal ip=10.120.88.128::10.120.88.1:255.255.255.0:worker1.ocp.ap.vwg:ens3:none:10.120.88.123 coreos.inst.install_dev=/dev/vda coreos.inst.ignition_url=http://helper.ocp.ap.vwg:8080/ocp/ignition/worker.ign coreos.inst.insecure'
 
 LC_ALL=en_US.UTF-8 virt-install --name=worker2 --vcpus=4 --memory=16384 --disk size=100,bus=virtio,format=qcow2 --network bridge=virbr0,model=virtio --os-variant=rhel8.0 --boot menu=on --console pty,target_type=serial --location=/var/lib/libvirt/images/rhcos-live.x86_64.iso --extra-args 'console=tty0 console=ttyS0 rw coreos.liveiso=rhcos-9.6.20250826-1 igniton.firstboot ignition.platform=baremetal ip=10.120.88.129::10.120.88.1:255.255.255.0:worker2.ocp.ap.vwg:ens3:none:10.120.88.123 coreos.inst.install_dev=/dev/vda coreos.inst.ignition_url=http://helper.ocp.ap.vwg:8080/ocp/ignition/worker.ign coreos.inst.insecure'
+
+### 在安装完成后，停止并且删除虚拟机bootstrap
+LC_ALL=en_US.UTF-8 virsh destroy bootstrap
+LC_ALL=en_US.UTF-8 virsh undefine bootstrap --storage /var/lib/libvirt/images/bootstrap.qcow2
 ```

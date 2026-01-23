@@ -10390,5 +10390,33 @@ thanos-querier-metrics-api-56f5b8647b-4klvb   1/1     Running   0          5m59s
     }
   ]
 }
+```
+
+### Korrel8r - Set up OpenShift for testing
+https://github.com/korrel8r/config/blob/main/openshift/README.adoc
+```
+[lab-user@bastion ~]$ git clone https://github.com/korrel8r/config
+Cloning into 'config'...
+remote: Enumerating objects: 229, done.
+remote: Counting objects: 100% (229/229), done.
+remote: Compressing objects: 100% (156/156), done.
+remote: Total 229 (delta 96), reused 183 (delta 58), pack-reused 0 (from 0)
+Receiving objects: 100% (229/229), 3.07 MiB | 8.40 MiB/s, done.
+Resolving deltas: 100% (96/96), done.
+
+[lab-user@bastion openshift]$ oc get pods -n openshift-cluster-observability-operator 
+NAME                                                         READY   STATUS    RESTARTS   AGE
+alertmanager-sample-monitoring-stack-0                       2/2     Running   0          54m
+alertmanager-sample-monitoring-stack-1                       2/2     Running   0          54m
+monitoring-649c75598-s4xf6                                   1/1     Running   0          31m
+obo-prometheus-operator-6845999f79-thzgw                     1/1     Running   0          58m
+obo-prometheus-operator-admission-webhook-54845dc487-5v9ww   1/1     Running   0          58m
+obo-prometheus-operator-admission-webhook-54845dc487-l6wnd   1/1     Running   0          58m
+observability-operator-bf4b85c86-fdpb6                       1/1     Running   0          58m
+perses-0                                                     1/1     Running   0          31m
+perses-operator-7cbd85444f-hlxbg                             1/1     Running   0          58m
+prometheus-sample-monitoring-stack-0                         3/3     Running   0          54m
+prometheus-sample-monitoring-stack-1                         3/3     Running   0          54m
+
 
 ```

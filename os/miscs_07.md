@@ -10083,4 +10083,233 @@ spec:
                 # Sleep for the random delay
                 sleep "$delay"
               done
+[lab-user@bastion observability-operator]$ oc apply -f docs/user-guides/thanos_querier/install 
+namespace/project-a created
+namespace/project-b created
+namespace/project-c created
+namespace/project-d created
+monitoringstack.monitoring.rhobs/api-monitoring created
+monitoringstack.monitoring.rhobs/backend-monitoring created
+thanosquerier.monitoring.rhobs/metrics-api created
+deployment.apps/api created
+service/api created
+deployment.apps/api created
+service/api created
+deployment.apps/backend created
+service/backend created
+servicemonitor.monitoring.rhobs/api created
+servicemonitor.monitoring.rhobs/api created
+servicemonitor.monitoring.rhobs/backend created
+deployment.apps/load-gen created
+[lab-user@bastion observability-operator]$ kubectl wait --for=condition=Available -A --timeout=10s -l app.kubernetes.io/part-of=monitoring monitoringstacks
+monitoringstack.monitoring.rhobs/api-monitoring condition met
+monitoringstack.monitoring.rhobs/backend-monitoring condition met
+[lab-user@bastion observability-operator]$ kubectl wait --for=condition=Available -A --timeout=10s -l app.kubernetes.io/managed-by=observability-operator deployments
+deployment.apps/thanos-querier-metrics-api condition met
+[lab-user@bastion observability-operator]$ kubectl wait --for=condition=Available -A --timeout=10s -l app.kubernetes.io/part-of=myapp deployments
+deployment.apps/api condition met
+deployment.apps/api condition met
+deployment.apps/backend condition met
+deployment.apps/load-gen condition met
+[lab-user@bastion observability-operator]$ ls -l docs/user-guides/thanos_querier/console
+total 12
+-rw-r--r--. 1 lab-user users  163 Jan 23 06:45 00-plugin.yaml
+-rw-r--r--. 1 lab-user users  470 Jan 23 06:45 01-datasource.yaml
+-rw-r--r--. 1 lab-user users 3709 Jan 23 06:45 03_dashboard.yaml
+[lab-user@bastion observability-operator]$ cat docs/user-guides/thanos_querier/console/00-plugin.yaml 
+apiVersion: observability.openshift.io/v1alpha1
+kind: UIPlugin
+metadata:
+  name: monitoring
+spec:
+  type: Monitoring
+  monitoring:
+    perses:
+      enabled: true
+[lab-user@bastion observability-operator]$ cat docs/user-guides/thanos_querier/console/01-datasource.yaml 
+apiVersion: perses.dev/v1alpha1
+kind: PersesDatasource
+metadata:
+  name: metrics-api
+  namespace: project-d
+  labels:
+    app.kubernetes.io/name: datasource
+    app.kubernetes.io/part-of: monitoring
+spec:
+  config:
+    display:
+      name: "Thanos Querier (myapp)"
+    default: true
+    plugin:
+      kind: PrometheusDatasource
+      spec:
+        proxy:
+          kind: HTTPProxy
+          spec:
+            url: "http://thanos-querier-metrics-api.project-d.svc:10902"
+[lab-user@bastion observability-operator]$ cat docs/user-guides/thanos_querier/console/00-plugin.yaml 
+apiVersion: observability.openshift.io/v1alpha1
+kind: UIPlugin
+metadata:
+  name: monitoring
+spec:
+  type: Monitoring
+  monitoring:
+    perses:
+      enabled: true
+[lab-user@bastion observability-operator]$ cat docs/user-guides/thanos_querier/console/01-datasource.yaml 
+apiVersion: perses.dev/v1alpha1
+kind: PersesDatasource
+metadata:
+  name: metrics-api
+  namespace: project-d
+  labels:
+    app.kubernetes.io/name: datasource
+    app.kubernetes.io/part-of: monitoring
+spec:
+  config:
+    display:
+      name: "Thanos Querier (myapp)"
+    default: true
+    plugin:
+      kind: PrometheusDatasource
+      spec:
+        proxy:
+          kind: HTTPProxy
+          spec:
+            url: "http://thanos-querier-metrics-api.project-d.svc:10902"
+[lab-user@bastion observability-operator]$ cat docs/user-guides/thanos_querier/console/03_dashboard.yaml 
+---
+apiVersion: perses.dev/v1alpha1
+kind: PersesDashboard
+metadata:
+  name: app-overview
+  namespace: project-d
+  labels:
+    app.kubernetes.io/name: dashboard
+    app.kubernetes.io/part-of: monitoring
+spec:
+  display:
+    name: Overview
+  variables:
+    - kind: ListVariable
+      spec:
+        display:
+          hidden: false
+        allowAllValue: true
+        allowMultiple: true
+        sort: alphabetical-asc
+        plugin:
+          kind: PrometheusLabelValuesVariable
+          spec:
+            labelName: service
+            matchers:
+              - up{service=~"api|backend"}
+        name: service
+    - kind: ListVariable
+      spec:
+        display:
+          hidden: false
+        allowAllValue: true
+        allowMultiple: true
+        sort: alphabetical-asc
+        plugin:
+          kind: PrometheusLabelValuesVariable
+          spec:
+            labelName: namespace
+            matchers:
+              - up{service=~"$service"}
+        name: namespace
+  panels:
+    "0_0":
+      kind: Panel
+      spec:
+        display:
+          name: Requests rate (req/s)
+        plugin:
+          kind: TimeSeriesChart
+          spec: {}
+        queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                  query: sum by(service, namespace, code) (rate(http_requests_total{service=~"$service",namespace=~"$namespace"}[$__rate_interval]))
+                  seriesNameFormat: svc={{service}},code={{code}},namespace={{namespace}}
+    "0_1":
+      kind: Panel
+      spec:
+        display:
+          name: Errors
+        plugin:
+          kind: TimeSeriesChart
+          spec: {}
+        queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                  query: |-
+                    sum by(service, namespace) (rate(http_requests_total{service=~"$service",namespace=~"$namespace",code!~"2.."}[$__rate_interval]))
+                    /
+                    sum by(service, namespace) (rate(http_requests_total{service=~"$service",namespace=~"$namespace"}[$__rate_interval]))
+                  seriesNameFormat: svc={{service}},namespace={{namespace}}
+    "0_2":
+      kind: Panel
+      spec:
+        display:
+          name: Duration (90th percentile)
+        plugin:
+          kind: TimeSeriesChart
+          spec: {}
+        queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                  query: |-
+                    histogram_quantile(0.9, sum by (le,namespace,service) (rate(http_request_duration_seconds_bucket{service=~"$service",namespace=~"$namespace"}[$__rate_interval])))
+                  seriesNameFormat: svc={{service}},namespace={{namespace}}
+  layouts:
+    - kind: Grid
+      spec:
+        display:
+          title: Rate/Errors/Duration
+          collapse:
+            open: true
+        items:
+          - x: 0
+            "y": 1
+            width: 24
+            height: 7
+            content:
+              $ref: "#/spec/panels/0_0"
+          - x: 0
+            "y": 2
+            width: 24
+            height: 7
+            content:
+              $ref: "#/spec/panels/0_1"
+          - x: 0
+            "y": 3
+            width: 24
+            height: 7
+            content:
+              $ref: "#/spec/panels/0_2"
+  duration: 30m
+[lab-user@bastion observability-operator]$ kubectl apply -f docs/user-guides/thanos_querier/console
+uiplugin.observability.openshift.io/monitoring created
+persesdatasource.perses.dev/metrics-api created
+persesdashboard.perses.dev/app-overview created
+[lab-user@bastion observability-operator]$ kubectl wait --for=condition=Available uiplugins monitoring
+uiplugin.observability.openshift.io/monitoring condition met
 ```

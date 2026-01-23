@@ -9731,3 +9731,356 @@ LC_ALL=en_US.UTF-8 virt-install --name=worker2 --vcpus=4 --memory=16384 --disk s
 LC_ALL=en_US.UTF-8 virsh destroy bootstrap
 LC_ALL=en_US.UTF-8 virsh undefine bootstrap --storage /var/lib/libvirt/images/bootstrap.qcow2
 ```
+
+### COO - Using ThanosQuerier to federate MonitoringStacks
+https://github.com/rhobs/observability-operator/blob/main/docs/user-guides/thanos_querier.md
+```
+[lab-user@bastion ~]$ git clone https://github.com/rhobs/observability-operator 
+Cloning into 'observability-operator'...
+remote: Enumerating objects: 10019, done.
+remote: Counting objects: 100% (1262/1262), done.
+remote: Compressing objects: 100% (275/275), done.
+remote: Total 10019 (delta 1143), reused 987 (delta 987), pack-reused 8757 (from 2)
+Receiving objects: 100% (10019/10019), 29.64 MiB | 16.14 MiB/s, done.
+Resolving deltas: 100% (6113/6113), done.
+[lab-user@bastion observability-operator]$ ls -l docs/user-guides/thanos_querier/install/
+total 24
+-rw-r--r--. 1 lab-user users  595 Jan 23 06:45 00-namespaces.yaml
+-rw-r--r--. 1 lab-user users  803 Jan 23 06:45 01-monitoringstacks.yaml
+-rw-r--r--. 1 lab-user users  377 Jan 23 06:45 03-thanosquerier.yaml
+-rw-r--r--. 1 lab-user users 2809 Jan 23 06:45 04-applications.yaml
+-rw-r--r--. 1 lab-user users 1115 Jan 23 06:45 05-monitors.yaml
+-rw-r--r--. 1 lab-user users 1567 Jan 23 06:45 06_load_generator.yaml
+[lab-user@bastion observability-operator]$ cat docs/user-guides/thanos_querier/install/00-namespaces.yaml 
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: project-a
+  labels:
+    app.kubernetes.io/name: api-service
+    app.kubernetes.io/part-of: myapp
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: project-b
+  labels:
+    app.kubernetes.io/name: api-service
+    app.kubernetes.io/part-of: myapp
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: project-c
+  labels:
+    app.kubernetes.io/name: backend
+    app.kubernetes.io/part-of: myapp
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: project-d
+  labels:
+    app.kubernetes.io/name: query
+    app.kubernetes.io/part-of: monitoring
+[lab-user@bastion observability-operator]$ cat docs/user-guides/thanos_querier/install/01-monitoringstacks.yaml 
+---
+apiVersion: monitoring.rhobs/v1alpha1
+kind: MonitoringStack
+metadata:
+  name: api-monitoring
+  namespace: project-a
+  labels:
+    app.kubernetes.io/name: metrics
+    app.kubernetes.io/part-of: monitoring
+spec:
+  alertmanagerConfig:
+    disabled: true
+  prometheusConfig:
+    replicas: 2
+  resourceSelector: {}
+  namespaceSelector:
+    matchLabels:
+      app.kubernetes.io/name: api-service
+      app.kubernetes.io/part-of: myapp
+---
+apiVersion: monitoring.rhobs/v1alpha1
+kind: MonitoringStack
+metadata:
+  name: backend-monitoring
+  namespace: project-c
+  labels:
+    app.kubernetes.io/name: metrics
+    app.kubernetes.io/part-of: monitoring
+spec:
+  alertmanagerConfig:
+    disabled: true
+  prometheusConfig:
+    replicas: 2
+  resourceSelector:
+    matchLabels:
+      app.kubernetes.io/name: backend
+[lab-user@bastion observability-operator]$ cat docs/user-guides/thanos_querier/install/03-thanosquerier.yaml 
+---
+apiVersion: monitoring.rhobs/v1alpha1
+kind: ThanosQuerier
+metadata:
+  name: metrics-api
+  namespace: project-d
+  labels:
+    app.kubernetes.io/name: metrics-api
+    app.kubernetes.io/part-of: monitoring
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/part-of: monitoring
+  namespaceSelector:
+    matchNames:
+      - project-a
+      - project-b
+      - project-c
+[lab-user@bastion observability-operator]$ cat docs/user-guides/thanos_querier/install/04-applications.yaml 
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/name: api-service
+    app.kubernetes.io/part-of: myapp
+  name: api
+  namespace: project-a
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: api-service
+      app.kubernetes.io/part-of: myapp
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: api-service
+        app.kubernetes.io/part-of: myapp
+    spec:
+      containers:
+        - image: ghcr.io/rhobs/prometheus-example-app:0.5.1
+          imagePullPolicy: IfNotPresent
+          name: app
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubernetes.io/name: api-service
+    app.kubernetes.io/part-of: myapp
+  name: api
+  namespace: project-a
+spec:
+  ports:
+    - port: 8080
+      protocol: TCP
+      targetPort: 8080
+      name: web
+  selector:
+    app.kubernetes.io/name: api-service
+    app.kubernetes.io/part-of: myapp
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/name: api-service
+    app.kubernetes.io/part-of: myapp
+  name: api
+  namespace: project-b
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: api-service
+      app.kubernetes.io/part-of: myapp
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: api-service
+        app.kubernetes.io/part-of: myapp
+    spec:
+      containers:
+        - image: ghcr.io/rhobs/prometheus-example-app:0.5.1
+          imagePullPolicy: IfNotPresent
+          name: app
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubernetes.io/name: api-service
+    app.kubernetes.io/part-of: myapp
+  name: api
+  namespace: project-b
+spec:
+  ports:
+    - port: 8080
+      protocol: TCP
+      targetPort: 8080
+      name: web
+  selector:
+    app.kubernetes.io/name: api-service
+    app.kubernetes.io/part-of: myapp
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/name: backend
+    app.kubernetes.io/part-of: myapp
+  name: backend
+  namespace: project-c
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: backend
+      app.kubernetes.io/part-of: myapp
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: backend
+        app.kubernetes.io/part-of: myapp
+    spec:
+      containers:
+        - image: ghcr.io/rhobs/prometheus-example-app:0.5.1
+          imagePullPolicy: IfNotPresent
+          name: backend
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubernetes.io/name: backend
+    app.kubernetes.io/part-of: myapp
+  name: backend
+  namespace: project-c
+spec:
+  ports:
+    - port: 8080
+      protocol: TCP
+      targetPort: 8080
+      name: web
+  selector:
+    app.kubernetes.io/name: backend
+    app.kubernetes.io/part-of: myapp
+  type: ClusterIP
+[lab-user@bastion observability-operator]$ cat docs/user-guides/thanos_querier/install/05-monitors.yaml     
+---
+apiVersion: monitoring.rhobs/v1
+kind: ServiceMonitor
+metadata:
+  name: api
+  namespace: project-a
+  labels:
+    app.kubernetes.io/name: api-service
+    app.kubernetes.io/part-of: myapp
+spec:
+  endpoints:
+    - interval: 30s
+      port: web
+      scheme: http
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: api-service
+      app.kubernetes.io/part-of: myapp
+---
+apiVersion: monitoring.rhobs/v1
+kind: ServiceMonitor
+metadata:
+  name: api
+  namespace: project-b
+  labels:
+    app.kubernetes.io/name: api-service
+    app.kubernetes.io/part-of: myapp
+spec:
+  endpoints:
+    - interval: 30s
+      port: web
+      scheme: http
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: api-service
+      app.kubernetes.io/part-of: myapp
+---
+apiVersion: monitoring.rhobs/v1
+kind: ServiceMonitor
+metadata:
+  name: backend
+  namespace: project-c
+  labels:
+    app.kubernetes.io/name: backend
+    app.kubernetes.io/part-of: myapp
+spec:
+  endpoints:
+    - interval: 30s
+      port: web
+      scheme: http
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: backend
+      app.kubernetes.io/part-of: myapp
+[lab-user@bastion observability-operator]$ cat docs/user-guides/thanos_querier/install/06_load_generator.yaml 
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/name: load-gen
+    app.kubernetes.io/part-of: myapp
+  name: load-gen
+  namespace: project-d
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: load-gen
+      app.kubernetes.io/part-of: myapp
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: load-gen
+        app.kubernetes.io/part-of: myapp
+    spec:
+      containers:
+        - image: registry.redhat.io/ubi9/ubi-minimal
+          imagePullPolicy: IfNotPresent
+          name: load-gen
+          command:
+            - /bin/sh
+            - -c
+            - |
+              # List of URLs to query
+              urls=(
+                "http://api.project-a.svc:8080/"
+                "http://api.project-b.svc:8080/"
+                "http://api.project-b.svc:8080/err"
+                "http://backend.project-c.svc:8080/"
+              )
+
+              while true; do
+                # Pick a random URL from the array
+                random_index=$((RANDOM % ${#urls[@]}))
+                url="${urls[$random_index]}"
+
+                # Query the URL (suppress output)
+                curl -s -o /dev/null "$url"
+
+                echo "Queried: $url"
+
+                # Generate random delay between 0 and 1 second (in milliseconds)
+                # RANDOM gives 0-32767, so we divide by 32767 to get 0-1 range
+                delay=$(awk -v r=$RANDOM 'BEGIN{printf "%.3f", r/32767}')
+
+                # Sleep for the random delay
+                sleep "$delay"
+              done
+```

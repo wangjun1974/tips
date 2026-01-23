@@ -10312,4 +10312,83 @@ persesdatasource.perses.dev/metrics-api created
 persesdashboard.perses.dev/app-overview created
 [lab-user@bastion observability-operator]$ kubectl wait --for=condition=Available uiplugins monitoring
 uiplugin.observability.openshift.io/monitoring condition met
+[lab-user@bastion observability-operator]$ oc get pods -n project-a; oc get pods -n project-b ; oc get pods -n project-c ; oc get pods -n project-d
+NAME                          READY   STATUS    RESTARTS   AGE
+api-68cb887977-xcpxp          1/1     Running   0          5m58s
+api-68cb887977-zbrv5          1/1     Running   0          5m58s
+prometheus-api-monitoring-0   3/3     Running   0          5m58s
+prometheus-api-monitoring-1   3/3     Running   0          5m58s
+NAME                   READY   STATUS    RESTARTS   AGE
+api-68cb887977-2d7kc   1/1     Running   0          5m58s
+api-68cb887977-8k89t   1/1     Running   0          5m58s
+api-68cb887977-fhztd   1/1     Running   0          5m58s
+NAME                              READY   STATUS    RESTARTS   AGE
+backend-67858d779b-d8qwx          1/1     Running   0          5m58s
+backend-67858d779b-thv58          1/1     Running   0          5m58s
+backend-67858d779b-w46g8          1/1     Running   0          5m58s
+prometheus-backend-monitoring-0   3/3     Running   0          5m57s
+prometheus-backend-monitoring-1   3/3     Running   0          5m57s
+NAME                                          READY   STATUS    RESTARTS   AGE
+load-gen-7f8ff886db-6d6tc                     1/1     Running   0          5m59s
+load-gen-7f8ff886db-r2hnn                     1/1     Running   0          5m59s
+thanos-querier-metrics-api-56f5b8647b-4klvb   1/1     Running   0          5m59s
+[lab-user@bastion observability-operator]$ oc get monitoringstack -n project-a api-monitoring -o json | jq .status 
+{
+  "conditions": [
+    {
+      "lastTransitionTime": "2026-01-23T06:55:12Z",
+      "message": "Resource discovery is operational",
+      "observedGeneration": 1,
+      "reason": "None",
+      "status": "True",
+      "type": "ResourceDiscovery"
+    },
+    {
+      "lastTransitionTime": "2026-01-23T06:55:12Z",
+      "message": "Monitoring Stack is available",
+      "observedGeneration": 1,
+      "reason": "MonitoringStackAvailable",
+      "status": "True",
+      "type": "Available"
+    },
+    {
+      "lastTransitionTime": "2026-01-23T06:55:12Z",
+      "message": "Monitoring Stack is successfully reconciled",
+      "observedGeneration": 1,
+      "reason": "MonitoringStackReconciled",
+      "status": "True",
+      "type": "Reconciled"
+    }
+  ]
+}
+[lab-user@bastion observability-operator]$ oc get monitoringstack -n project-c backend-monitoring -o json | jq .status 
+{
+  "conditions": [
+    {
+      "lastTransitionTime": "2026-01-23T06:55:13Z",
+      "message": "Resource discovery is operational",
+      "observedGeneration": 1,
+      "reason": "None",
+      "status": "True",
+      "type": "ResourceDiscovery"
+    },
+    {
+      "lastTransitionTime": "2026-01-23T06:55:13Z",
+      "message": "Monitoring Stack is available",
+      "observedGeneration": 1,
+      "reason": "MonitoringStackAvailable",
+      "status": "True",
+      "type": "Available"
+    },
+    {
+      "lastTransitionTime": "2026-01-23T06:55:13Z",
+      "message": "Monitoring Stack is successfully reconciled",
+      "observedGeneration": 1,
+      "reason": "MonitoringStackReconciled",
+      "status": "True",
+      "type": "Reconciled"
+    }
+  ]
+}
+
 ```

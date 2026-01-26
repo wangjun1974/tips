@@ -10817,4 +10817,42 @@ spec:
             - --otlp-attributes=k8s.namespace.name="tempo-rbac-sa-a"
       restartPolicy: Never
 EOF
+
+### 部署测试 pod
+### namespace system-a 的 serviceaccount default 有 tempostack-traces-reader-rbac 
+cat <<EOF | oc apply -f -
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nettest-deployment
+  namespace: tempo-test
+  labels:
+    app: nettest
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nettest
+  template:
+    metadata:
+      labels:
+        app: nettest
+    spec:
+      serviceAccountName: default
+      automountServiceAccountToken: true
+      containers:
+      - name: nettest
+        image: quay.io/curl/curl:latest
+        command: ["/bin/sh"] 
+        args: ["-c", "sleep infinity"]
+        imagePullPolicy: IfNotPresent
+EOF
+
+### 可以测试 tempo 的 trace 信息
+oc exec -it $(oc get pods -l app=nettest -o name ) -- sh
+oc exec -it $(oc get pods -l app=nettest -o name ) -- curl -k -G \
+          --header "Authorization: Bearer $(cat /var/run/secrets/kubernetes.io/serviceaccount/token)" \
+          --cacert /var/run/secrets/kubernetes.io/serviceaccount/service-ca.crt \
+          --data-urlencode 'q={ resource.service.name="http-rbac-1" }' \
+          https://tempo-simplest-gateway.tempo-test.svc:8080/api/traces/v1/system-a/tempo/api/search 
 ```

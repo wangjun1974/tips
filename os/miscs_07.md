@@ -10420,3 +10420,22 @@ prometheus-sample-monitoring-stack-1                         3/3     Running   0
 
 
 ```
+
+### RoleBinding image-puller
+```
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  annotations:
+    openshift.io/description: Allows all pods in all namespaces to pull images from this namespace.
+  name: allow-image-pullers
+  namespace: tools #<-- namespace in which the image is stored.
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: system:image-puller
+subjects:
+- apiGroup: rbac.authorization.k8s.io
+  kind: Group
+  name: system:authenticated
+```

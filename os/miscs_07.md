@@ -10558,7 +10558,7 @@ metadata:
   name: tempostack-traces-reader-rbac
 roleRef:
   apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRolepermission
+  kind: ClusterRole
   name: tempostack-traces-reader-rbac
 subjects:
   - kind: Group
@@ -10575,9 +10575,22 @@ roleRef:
   kind: ClusterRole
   name: view
 subjects:
-- kind: ServiceAccount
-  name: default
-  namespace: tempo-test
+  - kind: ServiceAccount
+    name: default
+    namespace: tempo-test
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: tempostack-traces-reader-rbac-default
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: tempostack-traces-reader-rbac
+subjects:
+  - kind: ServiceAccount
+    name: default
+    namespace: tempo-test
 EOF
 
 ### 创建 COO 的 Tracing UIPlugin 

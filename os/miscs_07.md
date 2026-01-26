@@ -10439,3 +10439,369 @@ subjects:
   kind: Group
   name: system:authenticated
 ```
+
+### 在 OpenShift 里测试 Tempo Trace 的方式
+https://fabreur.medium.com/openshift-telemetry-configuring-tempostack-and-opentelemetry-6d19daea6c8a
+```
+### 首先安装
+### Openshift 4.16+
+### Cluster Observability Operator
+### Red Hat build of OpenTelemetry
+### Tempo Operator
+### S3 Storage: Bucket, Access Key, and Secret Key.
+oc new-project velero
+oc apply -f ./00-minio-deployment.yaml
+oc get pods
+oc expose svc/minio
+
+unzip awscliv2.zip
+sudo ./aws/install
+
+[root@helper tmp]# aws configure
+AWS Access Key ID [None]: minio
+AWS Secret Access Key [None]: 
+Default region name [None]: 
+Default output format [None]: 
+
+aws --endpoint=http://$(oc get route -n velero minio -o jsonpath='{.spec.host}') s3 ls
+aws --endpoint=http://$(oc get route -n velero minio -o jsonpath='{.spec.host}') s3 mb s3://tempostack 
+aws --endpoint=http://$(oc get route -n velero minio -o jsonpath='{.spec.host}') s3 ls
+
+### create namespace
+cat <<EOF | oc apply -f -
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: tempo-test
+
+# Namespace for OpenTelemetry
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: system-a
+
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: system-b
+EOF
+
+### 创建 secret tempo-s3
+kubectl -n tempo-test create secret generic tempo-s3 \
+  --from-literal=access_key_id=minio \
+  --from-literal=access_key_secret=<minio_secret_key> \
+  --from-literal=bucket=tempostack \
+  --from-literal=endpoint='minio.velero.svc.cluster.local:9000' \
+  -o yaml --dry-run=client > tempo-s3.yaml
+
+oc apply -f tempo-s3.yaml
+
+### 创建 TempoStack
+cat <<EOF | oc apply -f -
+---
+apiVersion: tempo.grafana.com/v1alpha1
+kind:  TempoStack
+metadata:
+  name: simplest
+  namespace: tempo-test
+spec:
+  storage:
+    secret:
+      name: tempo-s3
+      type: s3
+    tls:
+      enabled: false
+  storageSize: 1Gi
+  resources:
+    total:
+      limits:
+        memory: 4Gi
+        cpu: 2000m
+  tenants:
+    mode: openshift
+    authentication:
+      - tenantName: system-a
+        tenantId: "1610b0c3-c509-4592-a256-a1871353dbfa"
+      - tenantName: system-b
+        tenantId: "1610b0c3-c509-4592-a256-a1871353dbfb"
+  template:
+    gateway:
+      enabled: true
+      rbac:
+        enabled: true
+EOF
+
+### 创建 tempo 所需的 RBAC 
+cat <<EOF | oc apply -f -
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: tempostack-traces-reader-rbac
+rules:
+  - apiGroups:
+      - 'tempo.grafana.com'
+    resources:
+      - system-a
+      - system-b
+    resourceNames:
+      - traces
+    verbs:
+      - 'get'
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: tempostack-traces-reader-rbac
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRolepermission
+  name: tempostack-traces-reader-rbac
+subjects:
+  - kind: Group
+    apiGroup: rbac.authorization.k8s.io
+    name: system:authenticated
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: view
+  namespace: tempo-test
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: view
+subjects:
+- kind: ServiceAccount
+  name: default
+  namespace: tempo-test
+EOF
+
+### 创建 COO 的 Tracing UIPlugin 
+cat <<EOF | oc apply -f -
+apiVersion: observability.openshift.io/v1alpha1
+kind: UIPlugin
+metadata:
+  name: distributed-tracing
+  namespace: openshift-operators
+spec:
+  type: DistributedTracing
+EOF
+
+### 配置 system-a 的 opentelemetry collector 所需的 RBAC
+cat <<EOF | oc apply -f -
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: otel-collector-deployment
+  namespace: tempo-test
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: tempo-test-clusterrole
+rules:
+- apiGroups: [""]
+  resources: ["pods", "namespaces", "nodes"]
+  verbs: ["get", "watch", "list"]
+- apiGroups: ["apps"]
+  resources: ["replicasets"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["extensions"]
+  resources: ["replicasets"]
+  verbs: ["get", "list", "watch"]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: tempo-test-clusterrole-binding
+subjects:
+- kind: ServiceAccount
+  name: otel-collector-deployment
+  namespace: tempo-test
+roleRef:
+  kind: ClusterRole
+  name: tempo-test-clusterrole
+  apiGroup: rbac.authorization.k8s.io
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: tempostack-traces-write-rbac
+rules:
+  - apiGroups:
+      - 'tempo.grafana.com'
+    # this needs to match tenant name in the CR/tenants.yaml and the tenant has be sent in X-Scope-OrgID
+    # The API gateway sends the tenantname as resource (res) to OPA sidecar
+    resources:
+      - system-a
+    resourceNames:
+      - traces
+    verbs:
+      - 'create'
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: tempostack-traces-rbac
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: tempostack-traces-write-rbac
+subjects:
+  - kind: ServiceAccount
+    name: otel-collector-deployment
+    namespace: tempo-test
+EOF
+
+### 创建 system-a 的 OpenTelemetryCollector
+cat <<EOF | oc apply -f -
+---
+apiVersion: opentelemetry.io/v1alpha1
+kind: OpenTelemetryCollector
+metadata:
+  name: system-a
+  namespace: tempo-test
+spec:
+  serviceAccount: otel-collector-deployment
+  config: |
+    extensions:
+      bearertokenauth:
+        filename: "/var/run/secrets/kubernetes.io/serviceaccount/token"
+    receivers:
+      otlp/grpc:
+        protocols:
+          grpc:
+      otlp/http:
+        protocols:
+          http:
+    processors:
+      k8sattributes:
+        extract:
+          metadata:
+            - k8s.pod.name
+            - k8s.pod.uid
+            - k8s.deployment.name
+            - k8s.namespace.name
+            - k8s.node.name
+        pod_association:
+          - sources:
+              - from: resource_attribute
+                name: k8s.pod.ip
+          - sources:
+              - from: connection
+    exporters:
+      debug:
+        verbosity: detailed
+      otlp:
+        endpoint: tempo-simplst-gateway.tempo-test.svc.cluster.local:8090
+        tls:
+          insecure: false
+          ca_file: "/var/run/secrets/kubernetes.io/serviceaccount/service-ca.crt"
+        auth:
+          authenticator: bearertokenauth
+        headers:
+          X-Scope-OrgID: "system-a"
+      otlphttp:
+        endpoint: https://tempo-simplest-gateway.tempo-test.svc.cluster.local:8080/api/traces/v1/system-a
+        tls:
+          insecure: false
+          ca_file: "/var/run/secrets/kubernetes.io/serviceaccount/service-ca.crt"
+        auth:
+          authenticator: bearertokenauth
+        headers:
+          X-Scope-OrgID: "system-a"
+    service:
+      telemetry:
+        logs:
+          level: "DEBUG"
+          development: true
+      extensions: [bearertokenauth]
+      pipelines:
+        traces/grpc:
+          receivers: [otlp/grpc]
+          processors: [k8sattributes]
+          exporters: [otlp,debug]
+        traces/http:
+          receivers: [otlp/http]
+          processors: [k8sattributes]
+          exporters: [otlphttp,debug]
+EOF
+
+### 继续创建 system-a 的 serviceaccount 和 rbac
+cat <<EOF | oc apply -f -
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: tempo-rbac-sa-a
+  namespace: system-a
+---
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: system-a-admin-rb
+  namespace: system-a
+subjects:
+  - kind: ServiceAccount
+    name: tempo-rbac-sa-a
+    namespace: system-a
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: admin
+EOF
+
+### 创建测试 Job
+cat <<EOF | oc apply -f -
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: generate-traces-grpc
+  namespace: system-a
+spec:
+  template:
+    spec:
+      containers:
+      - name: telemetrygen
+        image: ghcr.io/open-telemetry/opentelemetry-collector-contrib/telemetrygen:v0.92.0
+        args:
+        - traces
+        - --otlp-endpoint=system-a-collector.tempo-test.svc:4317
+        - --service=grpc-rbac-1
+        - --otlp-insecure
+        - --traces=10
+        - --otlp-attributes=k8s.container.name="telemetrygen"
+        - --otlp-attributes=k8s.namespace.name="tempo-rbac-sa-a"
+      restartPolicy: Never
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: generate-traces-http
+  namespace: system-a
+spec:
+  template:
+    spec:
+      containers:
+        - name: telemetrygen
+          image: ghcr.io/open-telemetry/opentelemetry-collector-contrib/telemetrygen:v0.92.0
+          args:
+            - traces
+            - --otlp-endpoint=system-a-collector.tempo-test.svc:4318
+            - --otlp-http
+            - --otlp-insecure
+            - --service=http-rbac-1
+            - --traces=10
+            - --otlp-attributes=k8s.container.name="telemetrygen"
+            - --otlp-attributes=k8s.namespace.name="tempo-rbac-sa-a"
+      restartPolicy: Never
+EOF
+```

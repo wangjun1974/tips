@@ -10974,3 +10974,148 @@ spec:
 EOF
 
 ```
+
+### OpenShift Logging and LokiStack
+https://myopenshiftblog.com/single-node-openshift-sno-observability/
+```
+### Install OpenShift Logging Operator
+### create bucket loki-logging
+aws --endpoint=http://$(oc get route -n velero minio -o jsonpath='{.spec.host}') s3 mb s3://loki-logging
+### 创建 secret loki-logging
+kubectl -n openshift-logging create secret generic loki-logging \
+  --from-literal=access_key_id=minio \
+  --from-literal=access_key_secret=<minio_secret_key> \
+  --from-literal=bucketnames=loki-logging \
+  --from-literal=endpoint='http://minio-velero.apps.cluster-wv2t2.wv2t2.sandbox1395.opentlc.com' \
+  -o yaml --dry-run=client > loki-logging.yaml
+oc apply -f loki-logging.yaml
+
+### 创建 namespace openshift-logging
+cat <<EOF | oc apply -f -
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: openshift-logging
+  labels:
+    openshift.io/cluster-monitoring: "true"
+EOF
+
+### 创建 serviceaccount
+cat <<EOF | oc apply -f -
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: logging-collector
+  namespace: openshift-logging
+EOF
+
+### 创建 ClusterRoleBinding 给 serviceaccount openshift-logging/logging-collector 
+### 增加角色 ClusterRole logging-collector-logs-writer, collect-application-logs, collect-infrastructure-logs
+cat <<EOF | oc apply -f -
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: logging-collector:write-logs
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: logging-collector-logs-writer
+subjects:
+- kind: ServiceAccount
+  name: logging-collector
+  namespace: openshift-logging
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: logging-collector:collect-application
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: collect-application-logs
+subjects:
+- kind: ServiceAccount
+  name: logging-collector
+  namespace: openshift-logging
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: logging-collector:collect-infrastructure
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: collect-infrastructure-logs
+subjects:
+- kind: ServiceAccount
+  name: logging-collector
+  namespace: openshift-logging
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: logging-collector:collect-audit
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: collect-audit-logs
+subjects:
+- kind: ServiceAccount
+  name: logging-collector
+  namespace: openshift-logging
+EOF
+
+### 创建 LokiStack
+cat <<EOF | oc apply -f -
+apiVersion: loki.grafana.com/v1
+kind: LokiStack
+metadata:
+  name: logging-loki
+  namespace: openshift-logging
+spec:
+  size: 1x.demo
+  storage:
+    schemas:
+    - version: v13
+      effectiveDate: "2024-04-02"
+    secret:
+      name: loki-logging
+      type: s3
+  storageClassName: lvms-vg1
+  tenants:
+    mode: openshift-logging
+EOF
+
+### 创建 ClusterLogForwarder
+cat <<EOF | oc apply -f -
+kind: ClusterLogForwarder
+apiVersion: observability.openshift.io/v1
+metadata:
+  name: instance
+  namespace: openshift-logging
+spec:
+  serviceAccount:
+    name: logging-collector
+  outputs:
+  - name: lokistack-out
+    type: lokiStack
+    lokiStack:
+      target:
+        name: loki-logging
+        namespace: openshift-logging
+      authentication:
+        token:
+          from: serviceAccount
+    tls:
+      ca:
+        key: service-ca.crt
+        configMapName: openshift-service-ca.crt
+  pipelines:
+  - name: infra-app-logs
+    inputRefs:
+    - application
+    - infrastructure
+    outputRefs:
+    - lokistack-out
+EOF
+```

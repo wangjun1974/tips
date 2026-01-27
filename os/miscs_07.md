@@ -11119,3 +11119,26 @@ spec:
     - lokistack-out
 EOF
 ```
+
+### Troubleshooting panel and Logging panel
+```
+apiVersion: observability.openshift.io/v1alpha1
+kind: UIPlugin
+metadata:
+  name: troubleshooting-panel
+  namespace: openshift-operators
+spec:
+  type: TroubleshootingPanel
+
+apiVersion: observability.openshift.io/v1alpha1
+kind: UIPlugin
+metadata:
+  name: logging
+spec:
+  type: Logging
+  logging:
+    lokiStack:
+      name: loki-logging
+    logsLimit: 50
+    timeout: 30s
+```

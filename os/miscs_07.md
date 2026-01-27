@@ -10856,3 +10856,106 @@ oc exec -it $(oc get pods -l app=nettest -o name ) -- curl -k -G \
           --data-urlencode 'q={ resource.service.name="http-rbac-1" }' \
           https://tempo-simplest-gateway.tempo-test.svc:8080/api/traces/v1/system-a/tempo/api/search 
 ```
+
+### Install Network Observability Operator 
+https://myopenshiftblog.com/single-node-openshift-sno-observability/
+```
+### Install Network Observability Operator
+### create netobserv project
+### create bucket loki-netobserv
+aws --endpoint=http://$(oc get route -n velero minio -o jsonpath='{.spec.host}') s3 mb s3://loki-netobserv
+
+### 创建 secret loki-s3
+kubectl -n netobserv create secret generic loki-s3 \
+  --from-literal=access_key_id=minio \
+  --from-literal=access_key_secret=<minio_secret_key> \
+  --from-literal=bucket=loki-netobserv \
+  --from-literal=endpoint='minio.velero.svc.cluster.local:9000' \
+  -o yaml --dry-run=client > loki-s3.yaml
+oc apply -f loki-s3.yaml
+
+### 创建 namespace netobserv 下的 LokiStack loki
+cat <<EOF | oc apply -f -
+apiVersion: loki.grafana.com/v1
+kind: LokiStack
+metadata:
+  name: loki
+  namespace: netobserv
+spec:
+  size: 1x.demo
+  storage:
+    schemas:
+    - version: v13
+      effectiveDate: '2024-04-02'
+    secret:
+      name: loki-s3
+      type: s3
+    tls:
+      caName: openshift-service-ca.crt
+  storageClassName: gp3-csi
+  tenants:
+    mode: openshift-network
+EOF
+
+### 创建 FlowCollector
+cat <<EOF | oc apply -f -
+apiVersion: flows.netobserv.io/v1beta2
+kind: FlowCollector
+metadata:
+  name: cluster
+spec:
+  namespace: netobserv
+  deploymentModel: Direct
+  agent:
+    type: eBPF
+    ebpf:
+      sampling: 50
+      logLevel: info
+      privileged: false
+      resources:
+        requests:
+          memory: 50Mi
+          cpu: 100m
+        limits:
+          memory: 800Mi
+  processor:
+    logLevel: info
+    resources:
+      requests:
+        memory: 100Mi
+        cpu: 100m
+      limits:
+        memory: 800Mi
+    logTypes: Flows
+    advanced:
+      conversationEndTimeout: 10s
+      conversationHeartbeatInterval: 30s
+  loki:
+    mode: LokiStack
+  consolePlugin:
+    register: true
+    logLevel: info
+    portNaming:
+      enable: true
+      portNames:
+        "3100": loki
+    quickFilters:
+    - name: Applications
+      filter:
+        src_namespace!: 'openshift-,netobserv'
+        dst_namespace!: 'openshift-,netobserv'
+      default: true
+    - name: Infrastructure
+      filter:
+        src_namespace: 'openshift-,netobserv'
+        dst_namespace: 'openshift-,netobserv'
+    - name: Pods network
+      filter:
+        src_kind: 'Pod'
+        dst_kind: 'Pod'
+      default: true
+    - name: Services network
+      filter:
+        dst_kind: 'Service'
+EOF
+```

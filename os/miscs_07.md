@@ -10869,8 +10869,8 @@ aws --endpoint=http://$(oc get route -n velero minio -o jsonpath='{.spec.host}')
 kubectl -n netobserv create secret generic loki-s3 \
   --from-literal=access_key_id=minio \
   --from-literal=access_key_secret=<minio_secret_key> \
-  --from-literal=bucket=loki-netobserv \
-  --from-literal=endpoint='minio.velero.svc.cluster.local:9000' \
+  --from-literal=bucketnames=loki-netobserv \
+  --from-literal=endpoint='http://minio-velero.apps.cluster-wv2t2.wv2t2.sandbox1395.opentlc.com' \
   -o yaml --dry-run=client > loki-s3.yaml
 oc apply -f loki-s3.yaml
 
@@ -10890,8 +10890,6 @@ spec:
     secret:
       name: loki-s3
       type: s3
-    tls:
-      caName: openshift-service-ca.crt
   storageClassName: gp3-csi
   tenants:
     mode: openshift-network
@@ -10958,4 +10956,21 @@ spec:
       filter:
         dst_kind: 'Service'
 EOF
+
+### Network Trafic UIPlugin 会默认找 http://prometheus:9090
+### 创建 service 来将 http://prometheus:9090 的请求转发到 thanos-querier.openshift-monitoring.svc.cluster.local
+cat <<EOF | oc apply -f -
+apiVersion: v1
+kind: Service
+metadata:
+  name: prometheus
+  namespace: netobserv
+spec:
+  type: ExternalName
+  externalName: thanos-querier.openshift-monitoring.svc.cluster.local
+  ports:
+  - port: 9090
+    targetPort: 9091
+EOF
+
 ```

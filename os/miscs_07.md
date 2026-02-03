@@ -11142,3 +11142,6 @@ spec:
     logsLimit: 50
     timeout: 30s
 ```
+
+### How to Upgrade From RHEL 8 to RHEL 9
+https://jumpcloud.com/blog/how-to-upgrade-rhel-8-to-rhel-9

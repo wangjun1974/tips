@@ -11145,3 +11145,28 @@ spec:
 
 ### How to Upgrade From RHEL 8 to RHEL 9
 https://jumpcloud.com/blog/how-to-upgrade-rhel-8-to-rhel-9
+
+### RHEL10启用GNOME Remote Desktop
+```
+### 安装图形界面
+dnf groupinstall "Server with GUI"
+
+### 启用图形鸡面
+systemctl set-default graphical.target
+systemctl start graphical.target
+
+### 启用 GNOME Remote Desktop
+#### 启用 RDP 服务
+gsettings set org.gnome.desktop.remote-desktop.rdp enable true
+#### 设置用户名密码认证
+gsettings set org.gnome.desktop.remote-desktop.rdp auth-methods "['password']"
+
+#### 启用 GNOME Sharing
+gsettings set org.gnome.desktop.remote-desktop.rdp view-only false
+gsettings set org.gnome.desktop.remote-access enable true
+```
+
+### RHEL10 kvm 上用 virt-install 创建 rhcos 虚拟机的命令
+```
+LC_ALL=en_US.UTF-8 virt-install --debug --name=bootstrap --vcpus=4 --memory=8192 --disk size=100,bus=virtio,format=qcow2 --network bridge=virbr0,model=virtio --osinfo detect=on,require=off --machine q35 --boot menu=on --console pty,target_type=serial --location=/var/lib/libvirt/images/isos/rhcos-4.20.0-x86_64-live-iso.x86_64.iso,kernel=images/pxeboot/vmlinuz,initrd=images/pxeboot/initrd.img --extra-args 'console=tty0 console=ttyS0 rw coreos.liveiso=rhcos-9.6.20250826-1 ignition.firstboot ignition.platform=baremetal ignition.platform.id=metal ip=10.120.88.124::10.120.88.1:255.255.255.0:bootstrap.ocp.ap.vwg:ens3:none:10.120.88.123 coreos.inst.install_dev=/dev/vda coreos.inst.ignition_url=http://helper.ocp.ap.vwg:8080/ocp/ignition/bootstrap.ign coreos.inst.insecure' --wait=-1
+```

@@ -11170,3 +11170,93 @@ gsettings set org.gnome.desktop.remote-access enable true
 ```
 LC_ALL=en_US.UTF-8 virt-install --debug --name=bootstrap --vcpus=4 --memory=8192 --disk size=100,bus=virtio,format=qcow2 --network bridge=virbr0,model=virtio --osinfo detect=on,require=off --machine q35 --boot menu=on --console pty,target_type=serial --location=/var/lib/libvirt/images/isos/rhcos-4.20.0-x86_64-live-iso.x86_64.iso,kernel=images/pxeboot/vmlinuz,initrd=images/pxeboot/initrd.img --extra-args 'console=tty0 console=ttyS0 rw coreos.liveiso=rhcos-9.6.20250826-1 ignition.firstboot ignition.platform=baremetal ignition.platform.id=metal ip=10.120.88.124::10.120.88.1:255.255.255.0:bootstrap.ocp.ap.vwg:enp1s0:none:10.120.88.123 coreos.inst.install_dev=/dev/vda coreos.inst.ignition_url=http://helper.ocp.ap.vwg:8080/ocp/ignition/bootstrap.ign coreos.inst.insecure' --wait=-1
 ```
+
+### How to import provider network routes to OpenShift via BGP
+https://developers.redhat.com/articles/2025/10/21/how-import-provider-network-routes-openshift-bgp#kubernetes_networking_limitations?source=sso
+```
+### Enable OpenShift's additional routing capabilities.
+oc patch Network.operator.openshift.io cluster --type=merge -p='{"spec":{"additionalRoutingCapabilities": {"providers": ["FRR"]}, "defaultNetwork":{"ovnKubernetesConfig":{"routeAdvertisements":"Enabled"}}}}'
+
+### Import provider routes to the default cluster network
+apiVersion: frrk8s.metallb.io/v1beta1
+kind: FRRConfiguration
+metadata:
+  name: receive-filtered-default-network
+  namespace: openshift-frr-k8s
+spec:
+  nodeSelector: {}
+  bgp:
+    bfdProfiles:
+    - detectMultiplier: 4
+      name: bfd-default
+      receiveInterval: 200
+      transmitInterval: 200
+    routers:
+    - asn: 64512
+      neighbors:
+      - address: 172.18.0.6
+        asn: 64600
+        bfdProfile: bfd-default
+        toReceive:
+          allowed:
+            mode: filtered
+            prefixes:
+            - prefix: 172.26.0.0/16
+
+### Import provider routes to a cluster UDN
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: blue
+  labels:
+    k8s.ovn.org/primary-user-defined-network: ""
+---
+apiVersion: k8s.ovn.org/v1
+kind: ClusterUserDefinedNetwork
+metadata:
+  name: happy-tenant
+spec:
+  namespaceSelector:
+    matchExpressions:
+    - key: kubernetes.io/metadata.name
+      operator: In
+      values:
+        - blue
+  network:
+    topology: Layer2
+    layer2:
+      role: Primary
+      ipam:
+        lifecycle: Persistent
+      subnets:
+        - 200.200.0.0/16
+---
+apiVersion: frrk8s.metallb.io/v1beta1
+kind: FRRConfiguration
+metadata:
+  name: receive-filtered-blue-cudn
+  namespace: openshift-frr-k8s
+spec:
+  bgp:
+    bfdProfiles:
+    - detectMultiplier: 4
+      name: bfd-default
+      receiveInterval: 200
+      transmitInterval: 200
+    routers:
+    - asn: 64512
+      neighbors:
+      - address: 172.18.0.6
+        asn: 64600
+        bfdProfile: bfd-default
+        toReceive:
+          allowed:
+            mode: filtered
+            prefixes:
+            - prefix: 172.26.0.0/16
+    - asn: 64512
+      imports:
+      - vrf: default
+      vrf: happy-tenant
+```

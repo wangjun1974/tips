@@ -11260,3 +11260,10 @@ spec:
       - vrf: default
       vrf: happy-tenant
 ```
+
+### CNV: 在宿主机底层直接观察 KVM 内核事件，实时分析虚拟机的运行效率
+```
+oc debug node/<node>
+## DO NOT chroot /host
+timeout -s INT 120 perf kvm stat live -d 119 -k time
+```

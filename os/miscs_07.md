@@ -11265,5 +11265,8 @@ spec:
 ```
 oc debug node/<node>
 ## DO NOT chroot /host
+## 查看整体的运行效率性能数据
 timeout -s INT 120 perf kvm stat live -d 119 -k time
+## 查看某个 qemu-kvm 进程的运行效率性能数据
+timeout -s INT 120 perf kvm stat live -p <pid> -d 119 -k time
 ```

@@ -11270,3 +11270,28 @@ timeout -s INT 120 perf kvm stat live -d 119 -k time
 ## 查看某个 qemu-kvm 进程的运行效率性能数据
 timeout -s INT 120 perf kvm stat live -p <pid> -d 119 -k time
 ```
+
+### Static provisioning for Dell PowerStore
+```
+Static provisioning for Dell PowerStore involves manually creating a volume in the PowerStore Manager, retrieving its WWN (volume-id), and defining a Kubernetes PersistentVolume (PV) YAML using the csi-powerstore.dellemc.com driver. The PV must contain the exact volume handle (<volume-id/globalID/protocol>) to map the existing storage to a PersistentVolumeClaim
+
+Steps for Static Provisioning (PowerStore with CSI Driver):
+1. 在 PowerStore Manager 里获取已经存在的 PVC/PV对应的 its unique Volume ID (WWN).
+
+2. Retrieve Details: Obtain the volume-id``globalID, and protocol (e.g.scsi or nfs).
+
+3. Create PV Manifest: Create a PersistentVolume (PV) YAML file:
+3.1 storageClassName: Define a name (e.g.powerstore-static).
+3.2 volumeHandle: Use format volume-id/globalID/protocol. Example: 4555558c-5ae1-4ed1-b421-6f5a9475c19f/5555558c-5ae1-4ed1-b421-6f5a9475c19f/scsi.
+3.3 capacity: Must match the actual PowerStore volume size.
+
+4. Create PVC: Create a PersistentVolumeClaim (PVC) YAML that matches the storageClassName, capacity, and access modes of the PV.
+
+5. Apply Manifests: Apply the PV and PVC using kubectl apply -f. 
+
+Important Notes:
+1. Metro Volumes: For Metro volumes, use the format <volume-id/globalID/protocol:remote-volume-id/remote-globalID>.
+2. Deletion Policy: Set persistentVolumeReclaimPolicy to Retain to prevent accidental deletion of data when the PVC is deleted.
+3. Automation: Tools like the dell-csi-static-pv script can help automate this process. 
+
+```

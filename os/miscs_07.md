@@ -11272,6 +11272,7 @@ timeout -s INT 120 perf kvm stat live -p <pid> -d 119 -k time
 ```
 
 ### Static provisioning for Dell PowerStore
+https://dell.github.io/csm-docs/v3/csidriver/features/powerstore/
 ```
 Static provisioning for Dell PowerStore involves manually creating a volume in the PowerStore Manager, retrieving its WWN (volume-id), and defining a Kubernetes PersistentVolume (PV) YAML using the csi-powerstore.dellemc.com driver. The PV must contain the exact volume handle (<volume-id/globalID/protocol>) to map the existing storage to a PersistentVolumeClaim
 

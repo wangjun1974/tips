@@ -11306,3 +11306,6 @@ Important Notes:
 ### 过滤掉来自 
 -from:"CNV Infra Stand Up" in:#forum-cnv-infra
 ```
+
+### oc-mirror v2 Image Delete Funcion
+https://github.com/openshift/oc-mirror/blob/main/docs/features/delete-functionality.md 

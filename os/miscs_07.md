@@ -10981,14 +10981,6 @@ https://myopenshiftblog.com/single-node-openshift-sno-observability/
 ### Install OpenShift Logging Operator
 ### create bucket loki-logging
 aws --endpoint=http://$(oc get route -n velero minio -o jsonpath='{.spec.host}') s3 mb s3://loki-logging
-### 创建 secret loki-logging
-kubectl -n openshift-logging create secret generic loki-logging \
-  --from-literal=access_key_id=minio \
-  --from-literal=access_key_secret=<minio_secret_key> \
-  --from-literal=bucketnames=loki-logging \
-  --from-literal=endpoint='http://minio-velero.apps.cluster-wv2t2.wv2t2.sandbox1395.opentlc.com' \
-  -o yaml --dry-run=client > loki-logging.yaml
-oc apply -f loki-logging.yaml
 
 ### 创建 namespace openshift-logging
 cat <<EOF | oc apply -f -
@@ -10999,6 +10991,15 @@ metadata:
   labels:
     openshift.io/cluster-monitoring: "true"
 EOF
+
+### 创建 secret loki-logging
+kubectl -n openshift-logging create secret generic loki-logging \
+  --from-literal=access_key_id=minio \
+  --from-literal=access_key_secret=<minio_secret_key> \
+  --from-literal=bucketnames=loki-logging \
+  --from-literal=endpoint='http://minio-velero.apps.cluster-wv2t2.wv2t2.sandbox1395.opentlc.com' \
+  -o yaml --dry-run=client > loki-logging.yaml
+oc apply -f loki-logging.yaml
 
 ### 创建 serviceaccount
 cat <<EOF | oc apply -f -
@@ -11296,4 +11297,12 @@ Important Notes:
 2. Deletion Policy: Set persistentVolumeReclaimPolicy to Retain to prevent accidental deletion of data when the PVC is deleted.
 3. Automation: Tools like the dell-csi-static-pv script can help automate this process. 
 
+```
+
+### 在 slack channel 里过滤掉来自 APP 或者 Workflow 的消息
+```
+### 过滤掉来自 APP 的消息
+-from:@cnv-qe-devops in:#forum-cnv-compute
+### 过滤掉来自 
+-from:"CNV Infra Stand Up" in:#forum-cnv-infra
 ```

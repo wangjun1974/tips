@@ -11572,3 +11572,15 @@ oc debug node/m1-ocp4test.ocp4.example.com -q -- chroot /host grep '"resource":"
 {"kind":"Event","apiVersion":"audit.k8s.io/v1","level":"Metadata","auditID":"200afc21-b8d4-4000-851d-9bc6781a4644","stage":"ResponseComplete","requestURI":"/apis/kubevirt.io/v1/namespaces/test4/virtualmachineinstances/rhel9-jwang-audit-01","verb":"delete","user":{"username":"system:serviceaccount:openshift-cnv:kubevirt-controller","uid":"6c19ca5c-79a8-4ee0-b3a0-0a695e202ed1","groups":["system:serviceaccounts","system:serviceaccounts:openshift-cnv","system:authenticated"],"extra":{"authentication.kubernetes.io/credential-id":["JTI=57d56776-49a7-4cd7-9c72-5176c3d0227f"],"authentication.kubernetes.io/node-name":["m2-ocp4test.ocp4.example.com"],"authentication.kubernetes.io/node-uid":["37bea6bd-12e5-4184-9e64-2ad77e618ae5"],"authentication.kubernetes.io/pod-name":["virt-controller-546cb8f97f-6lc88"],"authentication.kubernetes.io/pod-uid":["6f4da074-79ea-4347-a399-b93050f26da6"]}},"sourceIPs":["192.168.56.68"],"userAgent":"virt-controller/v0.0.0 (linux/amd64) kubernetes/$Format","objectRef":{"resource":"virtualmachineinstances","namespace":"test4","name":"rhel9-jwang-audit-01","apiGroup":"kubevirt.io","apiVersion":"v1"},"responseStatus":{"metadata":{},"code":200},"requestReceivedTimestamp":"2026-03-03T06:07:24.469411Z","stageTimestamp":"2026-03-03T06:07:24.487349Z","annotations":{"authorization.k8s.io/decision":"allow","authorization.k8s.io/reason":"RBAC: allowed by ClusterRoleBinding \"kubevirt-controller\" of ClusterRole \"kubevirt-controller\" to ServiceAccount \"kubevirt-controller/openshift-cnv\""}}
 
 ```
+
+
+### alertmanager config example
+```
+"global":
+  resolve_timeout: 5m
+  smtp_smarthost: 'smtp.office365.com:587'
+  smtp_from: '<your_hotmail_account>@hotmail.com'
+  smtp_auth_username: '<your_hotmail_account>@hotmail.com'
+  smtp_auth_password: '<your_auth_password>'
+  smtp_require_tls: true
+```

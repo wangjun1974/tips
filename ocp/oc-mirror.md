@@ -3696,3 +3696,56 @@ $ rm -rf output-dir
 $ /usr/local/bin/oc-mirror --v2 --config ./image-config-realse-local.yaml file://output-dir --log-level debug 2>&1 | tee /tmp/oc-mirror
 $ /usr/local/bin/oc-mirror --v2 --config ./image-config-realse-local.yaml --from file://output-dir docker://registry.ocp4.example.com/fafso --log-level debug 2>&1 | tee /tmp/err
 ```
+
+### mirror cluster-observability-operator operator
+```
+/usr/local/bin/oc-mirror list operators  --catalog=registry.redhat.io/redhat/redhat-operator-index:v4.18 | tee -a /tmp/oc-mirror
+cat > /tmp/mirror.sh <<'EEOOFF'
+#!/bin/bash
+
+CATALOG='registry.redhat.io/redhat/redhat-operator-index:v4.18'
+
+for packagename in cluster-observability-operator
+do
+output=$(/usr/local/bin/oc-mirror list operators --catalog=$CATALOG --package=${packagename})
+echo $output
+
+package_name=$packagename
+echo "package_name is $package_name"
+
+default_channel=$(echo "$output" | awk -F' +' 'NR==2 {print $NF}')
+echo "default_channel is $default_channel"
+
+latest_version=$(echo "$output" | grep $default_channel | tail -1 | awk '{print $NF}' | sed -e "s|^[^.]*\.||")
+
+echo "Latest version in default channel: $latest_version"
+
+cat > ./image-config-realse-local.yaml <<EOF
+apiVersion: mirror.openshift.io/v1alpha2
+kind: ImageSetConfiguration
+mirror:
+  operators:
+    - catalog: $CATALOG
+      targetCatalog: ${package_name}-$(date +"%Y%m%d")
+      packages:
+        - name: $package_name
+          channels:
+            - name: $default_channel
+              minVersion: $latest_version
+              maxVersion: $latest_version
+EOF
+
+rm -rf output-dir
+cat ./image-config-realse-local.yaml
+/usr/local/bin/oc-mirror --config ./image-config-realse-local.yaml file://output-dir 2>&1 | tee /tmp/${package_name}-$(date +"%Y%m%d").log
+
+if [ $? -eq 0 ]; then
+  mv -f ./output-dir/mirror_seq1_000000.tar /var/www/html/${package_name}-$(date +"%Y%m%d")-mirror_seq1_000000.tar
+fi
+
+done
+
+restorecon -Rv /var/www/html
+EEOOFF
+
+```

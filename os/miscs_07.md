@@ -11312,6 +11312,88 @@ https://github.com/openshift/oc-mirror/blob/main/docs/features/delete-functional
 
 ### 配置 Cluster Logging
 ```
+### 创建 PVC velero/minio
+cat <<EOF | oc apply -f -
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: minio
+  namespace: velero
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 100Gi
+  storageClassName: ocs-external-storagecluster-ceph-rbd
+  volumeMode: Filesystem
+EOF
+
+### 更新 Deployment velero/minio
+###      volumes:
+###      - name: storage
+###        persistentVolumeClaim:
+###          claimName: minio
+cat <<EOF | oc apply -f -
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    component: minio
+  name: minio
+  namespace: velero
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      component: minio
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        component: minio
+    spec:
+      containers:
+      - args:
+        - server
+        - /storage
+        - --config-dir=/config
+        env:
+        - name: MINIO_ACCESS_KEY
+          value: minio
+        - name: MINIO_SECRET_KEY
+          value: minio123
+        image: registry.ocp4.example.com/quay_io/jwang1/minio:latest
+        imagePullPolicy: IfNotPresent
+        name: minio
+        ports:
+        - containerPort: 9000
+          protocol: TCP
+        resources: {}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        volumeMounts:
+        - mountPath: /storage
+          name: storage
+        - mountPath: /config
+          name: config
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
+      volumes:
+      - name: storage
+        persistentVolumeClaim:
+          claimName: minio
+      - emptyDir: {}
+        name: config
+EOF
+
 ### 创建 bucket loki-logging
 aws --endpoint=http://$(oc get route -n velero minio -o jsonpath='{.spec.host}') s3 ls s3://
 aws --endpoint=http://$(oc get route -n velero minio -o jsonpath='{.spec.host}') s3 mb s3://loki-logging

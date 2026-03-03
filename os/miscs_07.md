@@ -11309,3 +11309,176 @@ Important Notes:
 
 ### oc-mirror v2 Image Delete Funcion
 https://github.com/openshift/oc-mirror/blob/main/docs/features/delete-functionality.md 
+
+### 配置 Cluster Logging
+```
+### 创建 bucket loki-logging
+aws --endpoint=http://$(oc get route -n velero minio -o jsonpath='{.spec.host}') s3 ls s3://
+aws --endpoint=http://$(oc get route -n velero minio -o jsonpath='{.spec.host}') s3 mb s3://loki-logging
+aws --endpoint=http://$(oc get route -n velero minio -o jsonpath='{.spec.host}') s3 ls s3://
+
+### 创建 namespace openshift-logging
+cat <<EOF | oc apply -f -
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: openshift-logging
+  labels:
+    openshift.io/cluster-monitoring: "true"
+EOF
+
+### 创建 secret loki-loggint
+kubectl -n openshift-logging create secret generic loki-logging \
+  --from-literal=access_key_id=minio \
+  --from-literal=access_key_secret=minio123 \
+  --from-literal=bucketnames=loki-logging \
+  --from-literal=endpoint='http://minio-velero.apps.ocp4.example.com' \
+  -o yaml --dry-run=client > loki-logging.yaml
+
+oc apply -f loki-logging.yaml
+
+### 创建 serviceaccount
+cat <<EOF | oc apply -f -
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: logging-collector
+  namespace: openshift-logging
+EOF
+
+cat <<EOF | oc apply -f -
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: logging-collector:write-logs
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: logging-collector-logs-writer
+subjects:
+- kind: ServiceAccount
+  name: logging-collector
+  namespace: openshift-logging
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: logging-collector:collect-application
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: collect-application-logs
+subjects:
+- kind: ServiceAccount
+  name: logging-collector
+  namespace: openshift-logging
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: logging-collector:collect-infrastructure
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: collect-infrastructure-logs
+subjects:
+- kind: ServiceAccount
+  name: logging-collector
+  namespace: openshift-logging
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: logging-collector:collect-audit
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: collect-audit-logs
+subjects:
+- kind: ServiceAccount
+  name: logging-collector
+  namespace: openshift-logging
+EOF
+
+### 安装 Loki operator
+
+### 创建 LokiStack logging-loki
+cat <<EOF | oc apply -f -
+apiVersion: loki.grafana.com/v1
+kind: LokiStack
+metadata:
+  name: logging-loki
+  namespace: openshift-logging
+spec:
+  size: 1x.demo
+  storage:
+    schemas:
+    - version: v13
+      effectiveDate: "2024-04-02"
+    secret:
+      name: loki-logging
+      type: s3
+  storageClassName: ocs-external-storagecluster-ceph-rbd
+  tenants:
+    mode: openshift-logging
+EOF
+
+### 安装 Red Hat OpenShift Logging Operator
+### 创建 ClusterLogForwarder
+### output 指向 LokiStack logging-loki
+cat <<EOF | oc apply -f -
+kind: ClusterLogForwarder
+apiVersion: observability.openshift.io/v1
+metadata:
+  name: instance
+  namespace: openshift-logging
+  annotations:
+    observability.openshift.io/log-level: debug
+    observability.openshift.io/use-apiserver-cache: "true"  
+spec:
+  collector:
+    resources:
+      limits:
+        memory: 16Gi
+  serviceAccount:
+    name: logging-collector
+  outputs:
+  - name: lokistack-out
+    type: lokiStack
+    lokiStack:
+      target:
+        name: logging-loki
+        namespace: openshift-logging
+      authentication:
+        token:
+          from: serviceAccount
+    tls:
+      ca:
+        key: service-ca.crt
+        configMapName: openshift-service-ca.crt
+  pipelines:
+  - name: infra-app-logs
+    inputRefs:
+    - application
+    - infrastructure
+    outputRefs:
+    - lokistack-out
+EOF
+
+### 安装 Cluster Observability Operator
+### 创建 UIPlugin logging
+cat <<EOF | oc apply -f -
+apiVersion: observability.openshift.io/v1alpha1
+kind: UIPlugin
+metadata:
+  name: logging
+spec:
+  type: Logging
+  logging:
+    lokiStack:
+      name: logging-loki
+    logsLimit: 50
+    timeout: 30s
+EOF
+
+```

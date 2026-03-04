@@ -11596,3 +11596,34 @@ oc exec -it $AM_POD -n openshift-monitoring -- amtool alert --alertmanager.url h
 
 ### Step by Step - Using Keycloak Authentication in OpenShift
 https://blog.stderr.at/openshift-platform/security/authentication/2025-05-17-step-by-step-keycloak-and-openshift/
+
+### VMMemoryLow Alert 
+```
+cat <<EOF | oc apply -f -
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: jwang-vmi-memory-alerts
+  namespace: test4
+spec:
+  groups:
+  - name: kubevirt-vmi-alerts
+    rules:
+    - alert: VMMemoryLow
+      annotations:
+        description: namespace {{ $labels.namespace }} vm {{ $labels.name }} available
+          memory lower than 90% about five minutes.
+        summary: vm {{ $labels.name }} memory low
+      expr: |
+        kubevirt_vmi_memory_available_bytes / kubevirt_vmi_memory_domain_bytes < 0.9
+      for: 5m
+      labels:
+        kubernetes_operator_part_of: kubevirt
+        severity: warning
+EOF
+
+# 在 Pod 内部执行 amtool 查询
+oc exec -it $AM_POD -n openshift-monitoring -- amtool alert --alertmanager.url http://localhost:9093
+...
+VMMemoryLow                                                                                2026-03-03 07:22:11 UTC  vm rhel9-jwang-audit-01 memory low  
+```

@@ -11584,3 +11584,15 @@ oc debug node/m1-ocp4test.ocp4.example.com -q -- chroot /host grep '"resource":"
   smtp_auth_password: '<your_auth_password>'
   smtp_require_tls: true
 ```
+
+### 在 Openshift 的 alertmanager 里查看有哪些告警
+```
+# 获取 Alertmanager Pod 名称
+AM_POD=$(oc get pods -n openshift-monitoring -l app.kubernetes.io/name=alertmanager -o name | head -n 1)
+
+# 在 Pod 内部执行 amtool 查询
+oc exec -it $AM_POD -n openshift-monitoring -- amtool alert --alertmanager.url http://localhost:9093
+```
+
+### Step by Step - Using Keycloak Authentication in OpenShift
+https://blog.stderr.at/openshift-platform/security/authentication/2025-05-17-step-by-step-keycloak-and-openshift/

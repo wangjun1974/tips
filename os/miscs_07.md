@@ -11627,3 +11627,54 @@ oc exec -it $AM_POD -n openshift-monitoring -- amtool alert --alertmanager.url h
 ...
 VMMemoryLow                                                                                2026-03-03 07:22:11 UTC  vm rhel9-jwang-audit-01 memory low  
 ```
+
+### Kubevirt 与 ApplicationAwareQuota 
+```
+### 启用 HCO enableApplicationAwareQuota featureGates
+oc patch hco kubevirt-hyperconverged -n openshift-cnv \
+ --type json -p '[{"op": "add", "path": "/spec/featureGates/enableApplicationAwareQuota","value": true}]'
+
+### 检查 HCO enableApplicationAwareQuota featureGates 已启用
+$ oc get hco -n openshift-cnv kubevirt-hyperconverged -o json | jq .spec.featureGates
+{
+  "alignCPUs": false,
+  "autoResourceLimits": false,
+  "deployKubeSecondaryDNS": false,
+  "deployVmConsoleProxy": false,
+  "disableMDevConfiguration": false,
+  "downwardMetrics": false,
+  "enableApplicationAwareQuota": true, <==
+  "enableCommonBootImageImport": true,
+  "persistentReservation": false
+}
+
+$ oc get pods -n openshift-cnv  | grep aaq                                           
+aaq-controller-75cccb885b-28x9h                       1/1     Running   0             2m39s
+aaq-controller-75cccb885b-wwvbh                       1/1     Running   0             2m39s
+aaq-operator-867c64799b-wqcwc                         1/1     Running   3             72d
+aaq-server-565b5db675-srr2l                           1/1     Running   0             2m40s
+aaq-server-565b5db675-tjv68                           1/1     Running   0             2m40s
+
+### namespace 设置 application-aware-quota/enable-gating='true' label
+$ oc label namespace test4 application-aware-quota/enable-gating='true'
+
+### 设置 ApplicationAwareResourceQuota
+cat <<EOF | oc apply -f -
+apiVersion: aaq.kubevirt.io/v1alpha1
+kind: ApplicationAwareResourceQuota
+metadata:
+  name: jwang-test4-resource-quota
+  namespace: test4
+spec:
+  hard:
+    requests.cpu/vmi: "1"
+    requests.memory/vmi: 2Gi
+EOF
+
+### 启动虚拟机 rhel9-jwang-audit-02
+### 这个虚拟机对应的 virt-launcher pod 处于 SchedulingGated 状态
+$ oc get pods -n test4                                                          
+NAME                                       READY   STATUS            RESTARTS   AGE
+virt-launcher-rhel9-jwang-audit-01-v7qhh   1/1     Running           0          25h
+virt-launcher-rhel9-jwang-audit-02-vt8k4   0/1     SchedulingGated   0          2m18s
+```

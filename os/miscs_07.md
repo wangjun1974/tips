@@ -11629,6 +11629,7 @@ VMMemoryLow                                                                     
 ```
 
 ### Kubevirt 与 ApplicationAwareQuota 
+https://docs.redhat.com/en/documentation/openshift_container_platform/4.17/html-single/virtualization/index#virt-about-aaq-operator_virt-understanding-aaq-operator
 ```
 ### 启用 HCO enableApplicationAwareQuota featureGates
 oc patch hco kubevirt-hyperconverged -n openshift-cnv \

@@ -11679,3 +11679,88 @@ NAME                                       READY   STATUS            RESTARTS   
 virt-launcher-rhel9-jwang-audit-01-v7qhh   1/1     Running           0          25h
 virt-launcher-rhel9-jwang-audit-02-vt8k4   0/1     SchedulingGated   0          2m18s
 ```
+
+### 从 etcd 备份恢复集群
+```
+### 备份 etcd
+/usr/local/bin/cluster-backup.sh /home/core/assets/backup
+### 关闭 master2, master3 
+### 在 master1 上执行 quorum-restore.sh
+### 等待 etcd 恢复运行
+### 检查 endpoint status
+master1> crictl exec -it $(crictl ps --state running --name ^etcd$ -q) etcdctl endpoint status -w table
+{"level":"warn","ts":"2026-03-05T07:57:55.326075Z","logger":"etcd-client","caller":"v3@v3.5.24/retry_interceptor.go:63","msg":"retrying of unary invoker failed","target":"etcd-endpoints://0xc0001f2960/10.120.88.125:2379","attempt":0,"error":"rpc error: code = DeadlineExceeded desc = latest balancer error: connection error: desc = \"transport: Error while dialing: dial tcp 10.120.88.126:2379: connect: no route to host\""}
+Failed to get the status of endpoint https://10.120.88.126:2379 (context deadline exceeded)
+{"level":"warn","ts":"2026-03-05T07:58:00.328109Z","logger":"etcd-client","caller":"v3@v3.5.24/retry_interceptor.go:63","msg":"retrying of unary invoker failed","target":"etcd-endpoints://0xc0001f2960/10.120.88.125:2379","attempt":0,"error":"rpc error: code = DeadlineExceeded desc = latest balancer error: connection error: desc = \"transport: Error while dialing: dial tcp 10.120.88.127:2379: connect: no route to host\""}
+Failed to get the status of endpoint https://10.120.88.127:2379 (context deadline exceeded)
++----------------------------+------------------+---------+---------+-----------+------------+-----------+------------+--------------------+--------+
+|          ENDPOINT          |        ID        | VERSION | DB SIZE | IS LEADER | IS LEARNER | RAFT TERM | RAFT INDEX | RAFT APPLIED INDEX | ERRORS |
++----------------------------+------------------+---------+---------+-----------+------------+-----------+------------+--------------------+--------+
+| https://10.120.88.125:2379 | 1915c82073ff6a5f |  3.5.24 |   86 MB |      true |      false |        51 |   15434055 |           15434055 |        |
++----------------------------+------------------+---------+---------+-----------+------------+-----------+------------+--------------------+--------+
+
+### 从备份恢复 etcd
+/usr/local/bin/cluster-restore.sh /home/core/assets/backup 
+565dde196f66efb19036ded8eaf5e67ded0766a6efc958bbe8d84aeb3aa085cd
+etcdctl version: 3.5.24
+API version: 3.5
+{"hash":1923432422,"revision":21171645,"totalKey":12577,"totalSize":86421504}
+...stopping etcd-pod.yaml
+Waiting for container etcd to stop
+.........................complete
+Waiting for container etcdctl to stop
+complete
+Waiting for container etcd-metrics to stop
+complete
+Waiting for container etcd-readyz to stop
+complete
+Waiting for container etcd-rev to stop
+complete
+Waiting for container etcd-backup-server to stop
+complete
+Moving etcd data-dir /var/lib/etcd/member to /var/lib/etcd-backup
+starting restore-etcd static pod
+
+### 等待 master1 的 etcd 恢复正常
+master1> crictl ps | grep etcd
+master1> crictl exec -it $(crictl ps --state running --name ^etcd$ -q) etcdctl endpoint status -w table
+
+### 检查 oc get nodes
+oc get nodes
+NAME                 STATUS     ROLES                  AGE   VERSION
+master1.ocp.ap.vwg   Ready      control-plane,master   42d   v1.33.6
+master2.ocp.ap.vwg   NotReady   control-plane,master   83m   v1.33.6 <==
+master3.ocp.ap.vwg   NotReady   control-plane,master   46m   v1.33.6 <==
+worker1.ocp.ap.vwg   Ready      worker                 42d   v1.33.6
+worker2.ocp.ap.vwg   Ready      worker                 42d   v1.33.6
+
+### 移除 NotReady 的 master2
+oc delete node master2.ocp.ap.vwg
+oc get nodes
+NAME                 STATUS     ROLES                  AGE   VERSION
+master1.ocp.ap.vwg   Ready      control-plane,master   42d   v1.33.6
+master3.ocp.ap.vwg   NotReady   control-plane,master   47m   v1.33.6
+worker1.ocp.ap.vwg   Ready      worker                 42d   v1.33.6
+worker2.ocp.ap.vwg   Ready      worker                 42d   v1.33.6
+
+### 重建 master2
+sh create-master2-vm.sh
+
+### 移除 NotReady 的 master3
+oc delete node master3.ocp.ap.vwg
+oc get nodes
+NAME                 STATUS   ROLES                  AGE     VERSION
+master1.ocp.ap.vwg   Ready    control-plane,master   42d     v1.33.6
+master2.ocp.ap.vwg   Ready    control-plane,master   3m36s   v1.33.6
+worker1.ocp.ap.vwg   Ready    worker                 42d     v1.33.6
+worker2.ocp.ap.vwg   Ready    worker                 42d     v1.33.6
+
+### 重建 master3
+sh create-master3-vm.sh
+
+### 获取节点
+oc get nodes
+
+### 等待集群控制平面恢复正常
+oc adm wait-for-stable-cluster 
+```

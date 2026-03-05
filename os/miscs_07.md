@@ -11764,3 +11764,39 @@ oc get nodes
 ### 等待集群控制平面恢复正常
 oc adm wait-for-stable-cluster 
 ```
+
+### 执行备份
+```
+ssh -i /data/ocp-cluster/ocp/ssh-key/id_rsa core@master1.ocp.ap.vwg sudo /usr/local/bin/cluster-backup.sh /home/core/assets/backup
+Certificate /etc/kubernetes/static-pod-certs/configmaps/etcd-all-bundles/server-ca-bundle.crt is missing. Checking in different directory
+Certificate /etc/kubernetes/static-pod-resources/etcd-certs/configmaps/etcd-all-bundles/server-ca-bundle.crt found!
+found latest kube-apiserver: /etc/kubernetes/static-pod-resources/kube-apiserver-pod-23
+found latest kube-controller-manager: /etc/kubernetes/static-pod-resources/kube-controller-manager-pod-7
+found latest kube-scheduler: /etc/kubernetes/static-pod-resources/kube-scheduler-pod-6
+found latest etcd: /etc/kubernetes/static-pod-resources/etcd-pod-33
+ea999998f22ca3b4d940dbc21920a7a36eca46f161c68ec372a47e70ab2b39aa
+etcdctl version: 3.5.24
+API version: 3.5
+{"level":"info","ts":"2026-03-05T08:50:03.541142Z","caller":"snapshot/v3_snapshot.go:65","msg":"created temporary db file","path":"/home/core/assets/backup/snapshot_2026-03-05_084959.db.part"}
+{"level":"info","ts":"2026-03-05T08:50:03.571973Z","logger":"client","caller":"v3@v3.5.24/maintenance.go:212","msg":"opened snapshot stream; downloading"}
+{"level":"info","ts":"2026-03-05T08:50:03.572078Z","caller":"snapshot/v3_snapshot.go:73","msg":"fetching snapshot","endpoint":"https://10.120.88.125:2379"}
+{"level":"info","ts":"2026-03-05T08:50:07.009011Z","logger":"client","caller":"v3@v3.5.24/maintenance.go:220","msg":"completed snapshot read; closing"}
+{"level":"info","ts":"2026-03-05T08:50:07.467964Z","caller":"snapshot/v3_snapshot.go:88","msg":"fetched snapshot","endpoint":"https://10.120.88.125:2379","size":"86 MB","took":"3 seconds ago"}
+{"level":"info","ts":"2026-03-05T08:50:07.468851Z","caller":"snapshot/v3_snapshot.go:97","msg":"saved","path":"/home/core/assets/backup/snapshot_2026-03-05_084959.db"}
+Snapshot saved at /home/core/assets/backup/snapshot_2026-03-05_084959.db
+{"hash":682403774,"revision":39707528,"totalKey":14929,"totalSize":86421504}
+snapshot db and kube resources are successfully saved to /home/core/assets/backup
+
+### 将备份拷贝到本地
+mkdir -p /var/www/html/backup/$(date -I)
+
+### 将备份拷贝到本地
+ssh -i /data/ocp-cluster/ocp/ssh-key/id_rsa core@master1.ocp.ap.vwg sudo chmod 644 /home/core/assets/backup/*
+scp -i /data/ocp-cluster/ocp/ssh-key/id_rsa core@master1.ocp.ap.vwg:/home/core/assets/backup/* /var/www/html/backup/$(date -I)/
+
+### 将备份拷贝到master1
+ssh -i /data/ocp-cluster/ocp/ssh-key/id_rsa core@master1.ocp.ap.vwg sudo rm -rf /home/core/assets/backup
+ssh -i /data/ocp-cluster/ocp/ssh-key/id_rsa core@master1.ocp.ap.vwg sudo mkdir -p /home/core/assets/backup
+ssh -i /data/ocp-cluster/ocp/ssh-key/id_rsa core@master1.ocp.ap.vwg sudo chmod 777 /home/core/assets/backup
+scp -i /data/ocp-cluster/ocp/ssh-key/id_rsa /var/www/html/backup/$(date -I)/* core@master1.ocp.ap.vwg:/home/core/assets/backup 
+```

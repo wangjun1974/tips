@@ -11722,6 +11722,8 @@ Failed to get the status of endpoint https://10.120.88.127:2379 (context deadlin
 | https://10.120.88.125:2379 | 1915c82073ff6a5f |  3.5.24 |   86 MB |      true |      false |        51 |   15434055 |           15434055 |        |
 +----------------------------+------------------+---------+---------+-----------+------------+-----------+------------+--------------------+--------+
 
+### 从外面把 etcd 备份拷贝到 master1
+
 ### 从备份恢复 etcd
 /usr/local/bin/cluster-restore.sh /home/core/assets/backup 
 565dde196f66efb19036ded8eaf5e67ded0766a6efc958bbe8d84aeb3aa085cd
@@ -11821,7 +11823,7 @@ scp -i /data/ocp-cluster/ocp/ssh-key/id_rsa core@master1.ocp.ap.vwg:/home/core/a
 ssh -i /data/ocp-cluster/ocp/ssh-key/id_rsa core@master1.ocp.ap.vwg sudo rm -rf /home/core/assets/backup
 ssh -i /data/ocp-cluster/ocp/ssh-key/id_rsa core@master1.ocp.ap.vwg sudo mkdir -p /home/core/assets/backup
 ssh -i /data/ocp-cluster/ocp/ssh-key/id_rsa core@master1.ocp.ap.vwg sudo chmod 777 /home/core/assets/backup
-scp -i /data/ocp-cluster/ocp/ssh-key/id_rsa /var/www/html/backup/$(date -I)/* core@master1.ocp.ap.vwg:/home/core/assets/backup 
+scp -i /data/ocp-cluster/ocp/ssh-key/id_rsa /var/www/html/backup/2026-03-05/* core@master1.ocp.ap.vwg:/home/core/assets/backup 
 ```
 
 ### CUDN secondary localnet 的例子 

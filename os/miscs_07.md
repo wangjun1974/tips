@@ -11684,11 +11684,34 @@ virt-launcher-rhel9-jwang-audit-02-vt8k4   0/1     SchedulingGated   0          
 ```
 ### 备份 etcd
 /usr/local/bin/cluster-backup.sh /home/core/assets/backup
+
 ### 关闭 master2, master3 
+
 ### 在 master1 上执行 quorum-restore.sh
+master1> sudo -i
+master1> /usr/local/bin/quorum-restore.sh
+...stopping etcd-pod.yaml
+Waiting for container etcd to stop
+.........................complete
+Waiting for container etcdctl to stop
+...complete
+Waiting for container etcd-metrics to stop
+complete
+Waiting for container etcd-readyz to stop
+complete
+Waiting for container etcd-rev to stop
+complete
+Waiting for container etcd-backup-server to stop
+complete
+starting restore-etcd static pod
+
 ### 等待 etcd 恢复运行
+master1> crictl ps --state running --name ^etcd$
+CONTAINER           IMAGE                                                              CREATED             STATE               NAME                ATTEMPT             POD ID              POD                       NAMESPACE
+5d95135b6d70f       f48188b3ba23d36930ad3d494ea0399840882dbca0895240c3134f4f0c01285c   34 seconds ago      Running             etcd                0                   0526a89333967       etcd-master1.ocp.ap.vwg   openshift-etcd
+
 ### 检查 endpoint status
-master1> crictl exec -it $(crictl ps --state running --name ^etcd$ -q) etcdctl endpoint status -w table
+master1> sudo crictl exec -it $(sudo crictl ps --state running --name ^etcd$ -q) etcdctl endpoint status -w table
 {"level":"warn","ts":"2026-03-05T07:57:55.326075Z","logger":"etcd-client","caller":"v3@v3.5.24/retry_interceptor.go:63","msg":"retrying of unary invoker failed","target":"etcd-endpoints://0xc0001f2960/10.120.88.125:2379","attempt":0,"error":"rpc error: code = DeadlineExceeded desc = latest balancer error: connection error: desc = \"transport: Error while dialing: dial tcp 10.120.88.126:2379: connect: no route to host\""}
 Failed to get the status of endpoint https://10.120.88.126:2379 (context deadline exceeded)
 {"level":"warn","ts":"2026-03-05T07:58:00.328109Z","logger":"etcd-client","caller":"v3@v3.5.24/retry_interceptor.go:63","msg":"retrying of unary invoker failed","target":"etcd-endpoints://0xc0001f2960/10.120.88.125:2379","attempt":0,"error":"rpc error: code = DeadlineExceeded desc = latest balancer error: connection error: desc = \"transport: Error while dialing: dial tcp 10.120.88.127:2379: connect: no route to host\""}
@@ -11799,4 +11822,122 @@ ssh -i /data/ocp-cluster/ocp/ssh-key/id_rsa core@master1.ocp.ap.vwg sudo rm -rf 
 ssh -i /data/ocp-cluster/ocp/ssh-key/id_rsa core@master1.ocp.ap.vwg sudo mkdir -p /home/core/assets/backup
 ssh -i /data/ocp-cluster/ocp/ssh-key/id_rsa core@master1.ocp.ap.vwg sudo chmod 777 /home/core/assets/backup
 scp -i /data/ocp-cluster/ocp/ssh-key/id_rsa /var/www/html/backup/$(date -I)/* core@master1.ocp.ap.vwg:/home/core/assets/backup 
+```
+
+### CUDN secondary localnet 的例子 
+```
+### NNCP bond1
+apiVersion: nmstate.io/v1
+kind: NodeNetworkConfigurationPolicy
+metadata:
+  name: ocp2-eno1-eno2-bond1
+spec:
+  nodeSelector:
+    kubernetes.io/hostname: ocp2
+  desiredState:
+    interfaces:
+      - name: eno1
+        type: ethernet
+        state: up
+        mac-address: 02:00:00:00:00:01
+      - name: eno2
+        type: ethernet
+        state: up
+        mac-address: 02:00:00:00:00:02
+      - name: bond1
+        type: bond
+        state: up
+        link-aggregation:
+          mode: 802.3ad          
+          port:
+            - eno1
+            - eno2
+          options:
+            miimon: '100'        
+            lacp_rate: fast  
+            xmit_hash_policy: layer3+4
+
+### NNCP ovs-bridge-trunk
+### 定义了 ovs-bridge ovs-bridge-trunk
+### port 为 bond1
+### 定义了 ovn bridge-mappings
+apiVersion: nmstate.io/v1
+kind: NodeNetworkConfigurationPolicy
+metadata:
+  name: ovs-bridge-trunk
+spec:
+  nodeSelector:
+    node-role.kubernetes.io/worker: ""
+  desiredState:
+    interfaces:
+      - name: ovs-bridge-trunk
+        type: ovs-bridge
+        state: up
+        bridge:
+          allow-extra-patch-ports: true
+          options:
+            stp: false
+          port:
+            - name: bond1
+    ovn:
+      bridge-mappings:
+        - localnet: localnet-bridge-trunk  # This is referenced below
+          bridge: ovs-bridge-trunk
+          state: present
+
+### 定义CUDN secondary localnet 
+### CUDN vlan4
+### 生效的 namespace 为 project1 和 project2
+apiVersion: k8s.ovn.org/v1
+kind: ClusterUserDefinedNetwork
+metadata:
+ name: vlan4
+spec:
+  namespaceSelector:
+    matchExpressions:
+      - key: kubernetes.io/metadata.name
+        operator: In
+        values: ["project1", "project2"] 
+  network:
+    topology: Localnet
+    localnet:
+      role: Secondary
+      physicalNetworkName: localnet-bridge-trunk  # this is referenced above
+      vlan:
+        mode: Access
+        access:
+          id: 4
+      subnets:
+        - "10.4.0.0/24"
+      excludeSubnets:
+        - "10.4.0.0/31"           # excludes 10.4.0.0 – 10.4.0.1
+        - "10.4.0.255/32"         # excludes 10.4.0.255
+      ipam:
+        mode: Enabled             # DEFAULT!
+        lifecycle: Persistent
+
+### CUDN vlan37
+apiVersion: k8s.ovn.org/v1
+kind: ClusterUserDefinedNetwork
+metadata:
+ name: vlan37
+spec:
+  namespaceSelector:
+    matchExpressions:
+      - key: kubernetes.io/metadata.name
+        operator: In
+        values: ["project1", "project2"] 
+  network:
+    topology: Localnet
+    localnet:
+      role: Secondary
+      physicalNetworkName: localnet-bridge-trunk
+      vlan:
+        mode: Access
+        access:
+          id: 37
+      ipam:
+        mode: Disabled
+
+
 ```

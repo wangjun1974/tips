@@ -11756,24 +11756,25 @@ master1> crictl exec -it $(crictl ps --state running --name ^etcd$ -q) etcdctl e
 
 ### 检查 oc get nodes
 oc get nodes
-NAME                 STATUS     ROLES                  AGE   VERSION
-master1.ocp.ap.vwg   Ready      control-plane,master   42d   v1.33.6
-master2.ocp.ap.vwg   NotReady   control-plane,master   83m   v1.33.6 <==
-master3.ocp.ap.vwg   NotReady   control-plane,master   46m   v1.33.6 <==
-worker1.ocp.ap.vwg   Ready      worker                 42d   v1.33.6
-worker2.ocp.ap.vwg   Ready      worker                 42d   v1.33.6
+NAME                 STATUS     ROLES                  AGE     VERSION
+master1.ocp.ap.vwg   Ready      control-plane,master   46d     v1.33.6
+master2.ocp.ap.vwg   NotReady   control-plane,master   4d17h   v1.33.6 <==
+master3.ocp.ap.vwg   NotReady   control-plane,master   4d16h   v1.33.6 <==
+worker1.ocp.ap.vwg   NotReady   worker                 46d     v1.33.6 <==
+worker2.ocp.ap.vwg   NotReady   worker                 46d     v1.33.6 <==
 
 ### 移除 NotReady 的 master2
 oc delete node master2.ocp.ap.vwg
 oc get nodes
-NAME                 STATUS     ROLES                  AGE   VERSION
-master1.ocp.ap.vwg   Ready      control-plane,master   42d   v1.33.6
-master3.ocp.ap.vwg   NotReady   control-plane,master   47m   v1.33.6
-worker1.ocp.ap.vwg   Ready      worker                 42d   v1.33.6
-worker2.ocp.ap.vwg   Ready      worker                 42d   v1.33.6
+master1.ocp.ap.vwg   Ready      control-plane,master   46d     v1.33.6
+master3.ocp.ap.vwg   NotReady   control-plane,master   4d16h   v1.33.6
+worker1.ocp.ap.vwg   NotReady   worker                 46d     v1.33.6
+worker2.ocp.ap.vwg   NotReady   worker                 46d     v1.33.6
 
 ### 重建 master2
 sh create-master2-vm.sh
+
+### 等待 master2 状态变为 Ready
 
 ### 移除 NotReady 的 master3
 oc delete node master3.ocp.ap.vwg
@@ -11791,7 +11792,9 @@ sh create-master3-vm.sh
 oc get nodes
 
 ### 等待集群控制平面恢复正常
-oc adm wait-for-stable-cluster 
+oc adm wait-for-stable-cluster
+
+### 按照需要添加 worker 节点
 ```
 
 ### 执行备份

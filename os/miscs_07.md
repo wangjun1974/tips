@@ -11685,7 +11685,7 @@ virt-launcher-rhel9-jwang-audit-02-vt8k4   0/1     SchedulingGated   0          
 ### 备份 etcd
 /usr/local/bin/cluster-backup.sh /home/core/assets/backup
 
-### 关闭 master2, master3 
+### 关闭 master2, master3, worker1, worker2 
 
 ### 在 master1 上执行 quorum-restore.sh
 master1> sudo -i
@@ -11723,9 +11723,13 @@ Failed to get the status of endpoint https://10.120.88.127:2379 (context deadlin
 +----------------------------+------------------+---------+---------+-----------+------------+-----------+------------+--------------------+--------+
 
 ### 从外面把 etcd 备份拷贝到 master1
+ssh -i /data/ocp-cluster/ocp/ssh-key/id_rsa core@master1.ocp.ap.vwg sudo rm -rf /home/core/assets/backup
+ssh -i /data/ocp-cluster/ocp/ssh-key/id_rsa core@master1.ocp.ap.vwg sudo mkdir -p /home/core/assets/backup
+ssh -i /data/ocp-cluster/ocp/ssh-key/id_rsa core@master1.ocp.ap.vwg sudo chmod 777 /home/core/assets/backup
+scp -i /data/ocp-cluster/ocp/ssh-key/id_rsa /var/www/html/backup/2026-03-05/* core@master1.ocp.ap.vwg:/home/core/assets/backup 
 
 ### 从备份恢复 etcd
-/usr/local/bin/cluster-restore.sh /home/core/assets/backup 
+master1>/usr/local/bin/cluster-restore.sh /home/core/assets/backup 
 565dde196f66efb19036ded8eaf5e67ded0766a6efc958bbe8d84aeb3aa085cd
 etcdctl version: 3.5.24
 API version: 3.5

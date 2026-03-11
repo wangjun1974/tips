@@ -11682,6 +11682,8 @@ virt-launcher-rhel9-jwang-audit-02-vt8k4   0/1     SchedulingGated   0          
 
 ### 从 etcd 备份恢复集群
 ```
+### 备份 helper 的 qcow2 disk 和配置文件 
+### 备份 master1 的 qcow2 disk 和配置文件
 ### 备份 etcd
 ssh -i /data/ocp-cluster/ocp/ssh-key/id_rsa core@master1.ocp.ap.vwg sudo /usr/local/bin/cluster-backup.sh /home/core/assets/backup
 Certificate /etc/kubernetes/static-pod-certs/configmaps/etcd-all-bundles/server-ca-bundle.crt is missing. Checking in different directory

@@ -12000,3 +12000,6 @@ spec:
 
 
 ```
+
+### 麒麟系统V10 SP2 KVM 虚拟化
+https://cloud.tencent.com/developer/article/2168930

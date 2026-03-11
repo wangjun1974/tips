@@ -11832,6 +11832,9 @@ worker2.ocp.ap.vwg   NotReady   worker                 46d     v1.33.6
 oc adm wait-for-stable-cluster
 
 ### 按照需要添加 worker 节点
+### 添加 worker 节点可以采用物理节点安装好操作系统
+### 拷贝 rhcos live iso 到操作系统中
+### 通过调整 Grub 启动 Entry 的方式进行安装
 ```
 
 ### 执行备份

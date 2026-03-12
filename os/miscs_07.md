@@ -12003,3 +12003,10 @@ spec:
 
 ### 麒麟系统V10 SP2 KVM 虚拟化
 https://cloud.tencent.com/developer/article/2168930
+
+### macos 将 iso 文件写入到 usb disk
+```
+diskutil list
+diskutil unmountDisk /dev/disk4
+sudo dd if=/Users/jwang/Downloads/Kylin-Server-V10-SP3-2403-Release-20240426-x86_64.iso of=/dev/rdisk4 bs=1m status=progress
+```

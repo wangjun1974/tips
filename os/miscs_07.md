@@ -12010,3 +12010,93 @@ diskutil list
 diskutil unmountDisk /dev/disk4
 sudo dd if=/Users/jwang/Downloads/Kylin-Server-V10-SP3-2403-Release-20240426-x86_64.iso of=/dev/rdisk4 bs=1m status=progress
 ```
+
+### 在 Linux 上运行 RustFS 
+https://medium.com/@technbd/rustfs-a-modern-lightweight-alternative-to-minio-for-s3-object-storage-4377a425ccb4
+
+### Install rustfs in openshift4.18
+```
+cd /tmp/
+mkdir -p /tmp/rustfs/busybox
+mkdir -p /tmp/rustfs/rustfs
+skopeo copy --format v2s2 --all docker://quay.io/prometheus/busybox:latest  dir:/tmp/rustfs/busybox
+skopeo copy --format v2s2 --all docker://docker.io/rustfs/rustfs:1.0.0-alpha.89  dir:/tmp/rustfs/rustfs
+...
+skopeo copy --format v2s2 --all dir:/tmp/rustfs/busybox docker://registry.ocp4.example.com/jwang/busybox:latest
+skopeo copy --format v2s2 --all dir:/tmp/rustfs/rustfs docker://registry.ocp4.example.com/jwang/rustfs:latest 
+
+oc new-project rustfs
+helm install rustfs --namespace rustfs --version 0.0.85 \
+  --set 'podSecurityContext.fsGroup=null' \
+  --set 'podSecurityContext.runAsUser=null' \
+  --set 'podSecurityContext.runAsGroup=null' \
+  --set 'containerSecurityContext.readOnlyRootFilesystem=null' \
+  --set 'containerSecurityContext.allowPrivilegeEscalation=null' \
+  --set 'containerSecurityContext.runAsNonRoot=null' \
+  --set image.rustfs.repository=registry.ocp4.example.com/jwang/rustfs \
+  --set image.rustfs.tag=latest \
+  --set image.initImage.repository=registry.ocp4.example.com/jwang/busybox \
+  --set image.initImage.tag=latest \
+  --set ingress.enabled=false \
+  --set mode.standalone.enabled=true \
+  --set mode.distributed.enabled=false \
+  --set storageclass.name=ocs-external-storagecluster-ceph-rbd \
+  rustfs-0.0.89.tgz
+
+cat <<EOF | oc apply -f -
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  labels:
+    app.kubernetes.io/instance: rustfs
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: rustfs
+    app.kubernetes.io/version: 1.0.0-alpha.89
+    helm.sh/chart: rustfs-0.0.89
+  name: rustfs-portal
+  namespace: rustfs
+spec:
+  host: rustfs-portal.apps.ocp4.example.com
+  port:
+    targetPort: 9001
+  to:
+    kind: Service
+    name: rustfs-svc
+    weight: 100
+  wildcardPolicy: None
+EOF
+
+cat <<EOF | oc apply -f -
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  labels:
+    app.kubernetes.io/instance: rustfs
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: rustfs
+    app.kubernetes.io/version: 1.0.0-alpha.89
+    helm.sh/chart: rustfs-0.0.89
+  name: rustfs-s3
+  namespace: rustfs
+spec:
+  host: rustfs-s3.apps.ocp4.example.com
+  port:
+    targetPort: 9000
+  to:
+    kind: Service
+    name: rustfs-svc
+    weight: 100
+  wildcardPolicy: None
+EOF
+
+[root@helper tmp]# aws configure
+AWS Access Key ID [None]: rustfsadmin
+AWS Secret Access Key [None]: rustfsadmin
+Default region name [None]: 
+Default output format [None]: 
+
+aws --endpoint=http://$(oc get route -n rustfs rustfs-s3 -o jsonpath='{.spec.host}') s3 ls
+aws --endpoint=http://$(oc get route -n rustfs rustfs-s3 -o jsonpath='{.spec.host}') s3 mb s3://oadp-backups 
+aws --endpoint=http://$(oc get route -n rustfs rustfs-s3 -o jsonpath='{.spec.host}') s3 ls
+
+```

@@ -12015,6 +12015,8 @@ sudo dd if=/Users/jwang/Downloads/Kylin-Server-V10-SP3-2403-Release-20240426-x86
 https://medium.com/@technbd/rustfs-a-modern-lightweight-alternative-to-minio-for-s3-object-storage-4377a425ccb4
 
 ### Install rustfs in openshift4.18
+https://artifacthub.io/packages/helm/rustfs/rustfs
+https://github.com/rustfs/rustfs/issues/2063
 ```
 cd /tmp/
 mkdir -p /tmp/rustfs/busybox

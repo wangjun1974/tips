@@ -12102,3 +12102,24 @@ aws --endpoint=http://$(oc get route -n rustfs rustfs-s3 -o jsonpath='{.spec.hos
 aws --endpoint=http://$(oc get route -n rustfs rustfs-s3 -o jsonpath='{.spec.host}') s3 ls
 
 ```
+
+### 在 1 个 master 的情况下 router-default 无法调度到 worker 节点的处理方法
+```
+### router-default 处于 Pending 状态
+oc describe pods -n openshift-ingress router-default-65568cbc8-k9trf
+...
+Events:
+  Type     Reason            Age    From               Message
+  ----     ------            ----   ----               -------
+  Warning  FailedScheduling  3m12s  default-scheduler  0/3 nodes are available: 1 node(s) had untolerated taint {node-role.kubernetes.io/master: }, 2 node(s) didn't match Pod's node affinity/selector. preemption: 0/3 nodes are available: 3 Preemption is not helpful for scheduling.
+
+### 编辑 ingresscontroller default
+oc edit ingresscontroller default -n openshift-ingress-operator
+
+### 添加 nodePlacement
+spec:
+  nodePlacement:
+    nodeSelector:
+      matchLabels:
+        node-role.kubernetes.io/worker: ""
+```

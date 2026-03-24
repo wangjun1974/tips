@@ -12123,3 +12123,10 @@ spec:
       matchLabels:
         node-role.kubernetes.io/worker: ""
 ```
+
+
+### RHEL9 添加防火墙规则 
+```
+firewall-cmd --permanent --add-rich-rule='rule family="ipv4" source address="10.66.192.0/23" port protocol="tcp" port="8080" accept'
+firewall-cmd --reload
+```

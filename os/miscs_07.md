@@ -12130,3 +12130,6 @@ spec:
 firewall-cmd --permanent --add-rich-rule='rule family="ipv4" source address="10.66.192.0/23" port protocol="tcp" port="8080" accept'
 firewall-cmd --reload
 ```
+
+### Promethesu Writing exporters
+https://prometheus.io/docs/instrumenting/writing_exporters/

@@ -12133,3 +12133,9 @@ firewall-cmd --reload
 
 ### Promethesu Writing exporters
 https://prometheus.io/docs/instrumenting/writing_exporters/
+
+### 检查端口是否可访问
+```
+sh-5.1$ echo > /dev/tcp/192.168.10.33/9185  && echo "Port is open"
+Port is open
+```

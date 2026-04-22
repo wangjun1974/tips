@@ -12162,3 +12162,26 @@ aws --region default s3 ls
 aws --region default s3 mb s3://my-bucket
 aws --region default s3 ls
 ```
+
+### 设置 ocp internal registry 的 CA Trust
+```
+oc create configmap registry-cas -n openshift-config \
+--from-file=helper.ocp.ap.vwg..5000=/data/registry/certs/registry.crt
+oc patch image.config.openshift.io/cluster --type=merge \
+-p '{"spec":{"additionalTrustedCA":{"name":"registry-cas"}}}'
+
+### 重新导入 imagestream s2i-minimal-notebook:2025.2 
+oc -n redhat-ods-applications import-image s2i-minimal-notebook:2025.2 --confirm
+```
+
+### 借助 s3 下载文件
+```
+### 将文件上传到Bucket
+aws s3 cp cluster-observability-operator-20260422-mirror_seq1_000000.tar s3://bucket/
+
+### 生成 presign https 短期有效链接
+aws s3 presign s3://test.1776842000346.cluster-bnjpc.bnjpc.sandbox549.opentlc.com/cluster-observability-operator-20260422-mirror_seq1_000000.tar --expires-in 7200
+
+### 下载 presign https 短期有效链接
+aria2c --file-allocation=none -c -x 10 -s 10 -d . '<上条命令返回的链接>‘
+```

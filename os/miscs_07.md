@@ -12167,7 +12167,8 @@ aws --region default s3 ls
 ```
 oc create configmap registry-cas -n openshift-config \
 --from-file=helper.ocp.ap.vwg..5000=/data/registry/certs/registry.crt
-oc patch image.config.openshift.io/cluster --type=merge \
+oc patch image.config
+.openshift.io/cluster --type=merge \
 -p '{"spec":{"additionalTrustedCA":{"name":"registry-cas"}}}'
 
 ### 重新导入 imagestream s2i-minimal-notebook:2025.2 
@@ -12184,4 +12185,11 @@ aws s3 presign s3://test.1776842000346.cluster-bnjpc.bnjpc.sandbox549.opentlc.co
 
 ### 下载 presign https 短期有效链接
 aria2c --file-allocation=none -c -x 10 -s 10 -d . '<上条命令返回的链接>‘
+```
+
+### 将单体系结构的集群变为多体系结构集群
+```
+oc adm upgrade --to-multi-arch
+
+### Once you upgrade to multi-arch images, you can just add a secondary machineset
 ```

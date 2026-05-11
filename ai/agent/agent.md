@@ -44,4 +44,22 @@
 - **研究与分析**：自动收集资料、生成报告  
 - **多 Agent 协作**：多个 Agent 分工合作完成复杂任务  
 
+---
 
+## 🛠️ AI Agent 框架对比表
+
+| 框架 | 特点 | 适用场景 |
+|------|------|----------|
+| **AutoGen** | 微软开源，支持多智能体协作、工具调用、对话驱动 | 多 Agent 协同、研究型 Agent |
+| **CrewAI** | 轻量级 Python 框架，强调角色/任务/工具分离 | 快速构建多角色 Agent 团队 |
+| **LangGraph** | 基于 LangChain，支持状态持久化、流程编排、人类干预 | 企业级 Agent 流程、多步骤推理 |
+| **Semantic Kernel** | 微软生态，支持 Planner、Memory、Skill 插件 | 与 Azure、OpenAI 集成的企业应用 |
+| **Claude Code** | Anthropic Claude 的代码代理，强调安全与解释性 | 编程助手、代码生成与调试 |
+| **Codex** | OpenAI 的代码模型，支持自然语言到代码转换 | 开发辅助、自动化脚本生成 |
+
+---
+
+## 📘 总结
+- **多智能体协作**：推荐 AutoGen、CrewAI  
+- **企业集成与稳定性**：推荐 LangGraph + Semantic Kernel  
+- **代码生成与开发辅助**：荐 Claude Code、Codex 

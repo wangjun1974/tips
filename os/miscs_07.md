@@ -12193,3 +12193,20 @@ oc adm upgrade --to-multi-arch
 
 ### Once you upgrade to multi-arch images, you can just add a secondary machineset
 ```
+
+### ollama and Codex 
+```
+1. 拉取 ollama qwen3.6:9b 量化版本
+ollama pull qwen3.6:9b
+
+2. 
+ollma list
+NAME          ID              SIZE      MODIFIED       
+qwen3.5:9b    6488c96fa5fa    6.6 GB    29 seconds ago
+
+
+3.
+启动Codex App，配置 profile 指向 ollama 托管的模型
+ollama launch codex-app
+To restore your usual Codex profile, run: ollama launch codex-app --restore
+```

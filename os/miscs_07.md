@@ -12210,3 +12210,20 @@ qwen3.5:9b    6488c96fa5fa    6.6 GB    29 seconds ago
 ollama launch codex-app
 To restore your usual Codex profile, run: ollama launch codex-app --restore
 ```
+
+### How to request pull-secret rotation
+https://console.redhat.com/openshift/token/show
+https://access.redhat.com/solutions/6992996
+```
+1. 登录 ocm - Option 2 (for browserless environment)
+ocm login --use-device-code
+
+2. 获取 user id
+$ ocm whoami | jq -r '.id'
+
+3. Request pull-secret rotation
+$ echo '{}' | ocm post /api/accounts_mgmt/v1/accounts/{id}/pull_secret_rotation 
+
+4. Verify status of request
+$ ocm get /api/accounts_mgmt/v1/accounts/{id}/pull_secret_rotation
+```

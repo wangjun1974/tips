@@ -12227,3 +12227,12 @@ $ echo '{}' | ocm post /api/accounts_mgmt/v1/accounts/{id}/pull_secret_rotation
 4. Verify status of request
 $ ocm get /api/accounts_mgmt/v1/accounts/{id}/pull_secret_rotation
 ```
+
+### Mimo2Codex
+https://mp.weixin.qq.com/s/WvVKu5U0xVJX6-2Y6JUCcw
+```
+### mimo
+mimo2codex 
+### deepseek
+mimo2codex --model ds  
+```

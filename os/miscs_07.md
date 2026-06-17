@@ -12236,3 +12236,32 @@ mimo2codex
 ### deepseek
 mimo2codex --model ds  
 ```
+
+### 迁移时改变 IP 地址
+```
+1. MigrationPlan 里禁用 preserveStaticIPs
+
+2. 在 openshift-mtv 下创建 change-ip-scripts configmap 
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: change-ip-scripts
+  namespace: openshift-mtv
+data:
+  50_win_firstboot_change_ip.ps1: |
+    # Reconfigure NIC to new datacenter IP
+    $adapter = Get-NetAdapter | Where-Object { $_.Status -eq "Up" } | Select-Object -First 1
+    New-NetIPAddress -InterfaceIndex $adapter.ifIndex -IPAddress "10.20.30.40" -PrefixLength 24 -DefaultGateway "10.20.30.1"
+    Set-DnsClientServerAddress -InterfaceIndex $adapter.ifIndex -ServerAddresses ("10.20.30.2","10.20.30.3")
+
+3. 在 MigrationPlan 的 spec.customizationScripts 里引用 change-ip-scripts
+spec:
+  customizationScripts:
+    - namespace: openshift-mtv
+      name: change-ip-scripts
+```
+
+### rclone 拷贝文件到本地
+```
+rclone copyto <remoteip>:/var/www/html/mirror_seq1_000000.tar ~/Users/jwang~/Downloads/4.21/mirror_seq1_000000.tar --transfers 16 --checkers 16 --progress
+```
